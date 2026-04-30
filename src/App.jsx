@@ -3,6 +3,458 @@ import { translations } from './translations';
 import './index.css';
 import logoImg from './public/logo_bznsflow.png';
 
+const SERVICES = [
+  // ── FOUNDATION ──────────────────────────────────────────────────────────
+  {
+    icon: '🌐',
+    name: 'Conversion-Optimized Website',
+    tag: 'Your website isn\'t a brochure — it\'s your best salesperson. We engineer it to sell.',
+    bullets: [
+      'Built to convert visitors into booked leads, not just impress',
+      'Fast-loading, mobile-first, ranked for GCC & European searches',
+      'Captures inquiries 24/7 so no visitor leaves without a follow-up',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '🤖',
+    name: 'AI Smart Receptionist',
+    tag: '68% of SMEs lose leads by not responding within 5 minutes. This eliminates that permanently.',
+    bullets: [
+      'Replies to every inquiry in under 30 seconds — at 2am, on weekends',
+      'Qualifies prospects automatically so you only speak to buyers',
+      'Works across WhatsApp, web chat, and email without lifting a finger',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '💬',
+    name: 'WhatsApp Business Automation System',
+    tag: 'WhatsApp is where your customers decide. We engineer it to close deals, not just chat.',
+    bullets: [
+      'Intelligent auto-replies that understand context and buying intent',
+      'Segments leads by interest and routes them through your sales flow',
+      'Turns conversations into booked appointments and paid orders',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '📊',
+    name: 'Custom Business CRM',
+    tag: 'Deals don\'t die in meetings. They die in missed follow-ups and forgotten chats.',
+    bullets: [
+      'Every lead tracked, every deal stage visible — nothing slips through',
+      'Automated follow-up sequences that nurture leads until they buy',
+      'Real-time pipeline view so you know exactly where revenue is stalling',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '📅',
+    name: 'Online Booking & Appointment System',
+    tag: 'Every no-show is stolen revenue. Every manual booking is wasted staff time. Both end here.',
+    bullets: [
+      'Clients self-book 24/7 — no calls, no waiting, no back-and-forth',
+      'Smart reminders that eliminate no-shows before they happen',
+      'Auto-synced to your calendar — zero double-bookings, zero admin',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '⭐',
+    name: 'Customer Loyalty & Retention System',
+    tag: 'Acquiring a new customer costs 5x more than keeping one. Stop losing clients you already won.',
+    bullets: [
+      'Automated loyalty rewards that make clients choose you every time',
+      'Tracks purchase behaviour and triggers perfectly-timed retention offers',
+      'Turns one-time buyers into lifetime revenue streams',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '📍',
+    name: 'Google Business & Local SEO System',
+    tag: 'If your business doesn\'t show up when they search, you don\'t exist. We fix that.',
+    bullets: [
+      'Optimized Google Business Profile that dominates local search results',
+      'Strategic SEO engineered for GCC and European market intent',
+      'More qualified inbound — without paying for ads',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '🏆',
+    name: 'Online Reputation Management',
+    tag: '92% of buyers read reviews before deciding. What decision are yours driving right now?',
+    bullets: [
+      'Automated system that generates reviews from every satisfied client',
+      'Real-time monitoring so you catch problems before they damage trust',
+      'Positions your brand as the obvious, trusted choice in your market',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '🎯',
+    name: 'AI Lead Qualification Chatbot',
+    tag: 'Stop burning hours on prospects who will never buy. Let AI filter them out instantly.',
+    bullets: [
+      'Qualifies every lead by budget, intent, and readiness — automatically',
+      'Delivers only sales-ready prospects to your team, nothing else',
+      'Active around the clock across your website, WhatsApp, and social',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '📡',
+    name: 'Business Intelligence Dashboard',
+    tag: 'You can\'t dominate a market you don\'t understand. We give you the intelligence to move first.',
+    bullets: [
+      'Real-time view of leads, revenue, conversion rates, and bottlenecks',
+      'Custom KPI dashboards built for your exact business model',
+      'Spot growth opportunities and threats before your competitors do',
+    ],
+    category: 'foundation',
+  },
+  // ── GROWTH ──────────────────────────────────────────────────────────────
+  {
+    icon: '🛒',
+    name: 'E-commerce Store',
+    tag: 'Your products deserve a storefront that sells — not one that just sits there looking good.',
+    bullets: [
+      'Built to convert browsers into buyers from the very first visit',
+      'Integrated with payments, inventory management, and your CRM',
+      'Optimized for GCC and European buyer behaviour from day one',
+    ],
+    category: 'growth',
+  },
+  {
+    icon: '📲',
+    name: 'Social Media Management System',
+    tag: 'Posting without a strategy is noise. We engineer your social presence into a lead machine.',
+    bullets: [
+      'AI-powered content strategy and scheduling that builds real authority',
+      'Engagement automation that grows your audience without burning your team',
+      'Turns followers into qualified leads flowing directly into your pipeline',
+    ],
+    category: 'growth',
+  },
+  {
+    icon: '✉️',
+    name: 'Email & SMS Marketing Automation',
+    tag: 'Your customer list is generating zero revenue right now. That\'s your most valuable asset doing nothing.',
+    bullets: [
+      'Automated sequences generate 320% more revenue than one-off campaigns',
+      'Recover 15–20% of lost sales with abandoned cart and win-back flows',
+      'Highest ROI of any digital channel — $10–36 returned per $1 spent',
+    ],
+    category: 'growth',
+  },
+  {
+    icon: '🎯',
+    name: 'Paid Ads Management — Google + Meta + TikTok',
+    tag: 'Most SMEs waste 60–70% of their ad budget on poor targeting. Every dirham should be tracked to revenue.',
+    bullets: [
+      'Campaigns built around cost per lead and ROAS — never vanity metrics',
+      'A/B testing always live, weekly optimization, zero budget wasted',
+      'Professionally managed campaigns average 200–800% ROAS',
+    ],
+    category: 'growth',
+  },
+  {
+    icon: '👥',
+    name: 'HR & Payroll Automation System',
+    tag: 'Every WPS deadline you miss is a fine. Every manual payroll is an error waiting to happen. Both end here.',
+    bullets: [
+      'UAE WPS-compliant payroll that runs itself — no spreadsheets, no errors',
+      'Visa expiry alerts, leave tracking, and gratuity calculations — fully automated',
+      'HR admin time cut by 40% and your data is audit-ready at all times',
+    ],
+    category: 'growth',
+  },
+  // ── SCALE ───────────────────────────────────────────────────────────────
+  {
+    icon: '🎬',
+    name: 'Short-Form Video Content System',
+    tag: 'Video drives 82% of all internet traffic. If your brand isn\'t in the feed, your competitor is.',
+    bullets: [
+      '4–12 professionally produced Reels per month — filmed, edited, published',
+      'Consistent video presence drives 3× more inbound inquiries on average',
+      'Arabic + English subtitles, trend-aware, optimized for Instagram, TikTok & YouTube',
+    ],
+    category: 'scale',
+  },
+  {
+    icon: '✍️',
+    name: 'AI Content Creation & SEO System',
+    tag: 'Your customers search before they buy. If you\'re not on page one, you\'re invisible — and your competitor isn\'t.',
+    bullets: [
+      '4–8 SEO articles per month — AI-drafted, human-edited, built to rank',
+      'Keyword strategy for Arabic + English GCC and European search intent',
+      'Compounds every month — month 6 generates 5–10× the traffic of month 1',
+    ],
+    category: 'scale',
+  },
+  {
+    icon: '📦',
+    name: 'Inventory & Operations Management System',
+    tag: 'Stockouts cost you sales. Overstock costs you cash. Manual tracking costs you both.',
+    bullets: [
+      'Real-time stock visibility across every location — no more surprise gaps',
+      'Automated reorder alerts, supplier PO generation, and waste tracking',
+      'Reduces overstock by 20% and stockouts by 30% from day one',
+    ],
+    category: 'scale',
+  },
+  {
+    icon: '🖥️',
+    name: 'Digital Menu & Smart Display System',
+    tag: 'Printed materials you can\'t update in real time are losing you money — every single day.',
+    bullets: [
+      'Update menus, prices, and offers from your phone — live in seconds',
+      'Digital upsell prompts increase average order value by 20–30%',
+      'Bilingual Arabic/English, scheduled content rotations, QR ordering built in',
+    ],
+    category: 'scale',
+  },
+  {
+    icon: '🎓',
+    name: 'Staff Training & Knowledge Base Platform',
+    tag: 'New staff cost AED 8,000–25,000 to train manually. Most quit before you recover that investment.',
+    bullets: [
+      'Onboard new hires in 2 days instead of 2 weeks — with zero manager time',
+      'Role-based training tracks, quizzes, and certifications — fully automated',
+      'Mobile-optimized, Arabic + English, with compliance modules built in',
+    ],
+    category: 'scale',
+  },
+];
+
+const SERVICES_AR = [
+  // ── أساس ────────────────────────────────────────────────────────────────
+  {
+    icon: '🌐',
+    name: 'موقع إلكتروني مُحسَّن للتحويل',
+    tag: 'موقعك ليس كتيّباً — بل أفضل موظف مبيعات لديك. نهندسه ليبيع.',
+    bullets: [
+      'مبني لتحويل الزوار إلى عملاء محتملين حاجزين، لا لمجرد الإعجاب',
+      'سريع التحميل، مُحسَّن للجوال، ومُرتَّب في نتائج البحث في الخليج وأوروبا',
+      'يلتقط الاستفسارات 24/7 حتى لا يغادر أي زائر دون متابعة',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '🤖',
+    name: 'موظف استقبال ذكي بالذكاء الاصطناعي',
+    tag: '68% من الشركات تخسر عملاءها لعدم الرد خلال 5 دقائق. هذا يُنهي تلك المشكلة للأبد.',
+    bullets: [
+      'يرد على كل استفسار في أقل من 30 ثانية — في الساعة 2 فجراً، في العطل، بلا استثناء',
+      'يؤهّل العملاء المحتملين تلقائياً حتى تتحدث فقط مع المستعدين للشراء',
+      'يعمل عبر واتساب والدردشة على الموقع والبريد الإلكتروني دون أن ترفع إصبعاً',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '💬',
+    name: 'نظام أتمتة واتساب للأعمال',
+    tag: 'واتساب هو المكان الذي يقرر فيه عملاؤك. نهندسه ليُغلق الصفقات، لا لمجرد الدردشة.',
+    bullets: [
+      'ردود آلية ذكية تفهم السياق ونية الشراء',
+      'يصنّف العملاء المحتملين حسب الاهتمام ويوجّههم عبر مسار مبيعاتك',
+      'يحوّل المحادثات إلى مواعيد محجوزة وطلبات مدفوعة',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '📊',
+    name: 'نظام CRM مخصص لأعمالك',
+    tag: 'الصفقات لا تموت في الاجتماعات. تموت في المتابعات الفائتة والمحادثات المنسية.',
+    bullets: [
+      'كل عميل محتمل مُتتَبَّع، كل مرحلة مرئية — لا شيء يفلت من بين الأصابع',
+      'تسلسلات متابعة آلية تُرعى العملاء المحتملين حتى يصبحوا جاهزين للشراء',
+      'عرض مباشر للمسار حتى تعرف بالضبط أين تتعطل الصفقات وتتسرب الإيرادات',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '📅',
+    name: 'نظام الحجز والمواعيد الإلكتروني',
+    tag: 'كل موعد غائب هو إيراد مسروق. كل حجز يدوي هو وقت موظف مهدر. كلاهما ينتهي هنا.',
+    bullets: [
+      'العملاء يحجزون ذاتياً 24/7 — بلا مكالمات، بلا انتظار، بلا تبادل رسائل',
+      'تذكيرات ذكية تقضي على الغيابات قبل أن تحدث',
+      'مزامنة تلقائية مع تقويمك — لا ازدواجية في الحجوزات، لا إدارة يدوية',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '⭐',
+    name: 'نظام الولاء والاحتفاظ بالعملاء',
+    tag: 'اكتساب عميل جديد يكلّف 5 أضعاف الاحتفاظ بعميل موجود. أوقف خسارة من فزت بهم مسبقاً.',
+    bullets: [
+      'مكافآت ولاء آلية تجعل العملاء يختارونك في كل مرة',
+      'يتتبع سلوك الشراء ويُطلق عروضاً في التوقيت المثالي للاحتفاظ بالعميل',
+      'يحوّل المشترين لمرة واحدة إلى مصادر إيراد مستمرة مدى الحياة',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '📍',
+    name: 'نظام جوجل بيزنس وتحسين البحث المحلي',
+    tag: 'إذا لم يجدك عملاؤك على جوجل، أنت غير موجود. ونحن نُصلح ذلك.',
+    bullets: [
+      'ملف تجاري محسَّن على جوجل يهيمن على نتائج البحث المحلي وخرائط جوجل',
+      'استراتيجية SEO مهندسة لنية البحث بالعربية والإنجليزية في الخليج وأوروبا',
+      'المزيد من الزوار المؤهلين — بلا إنفاق على إعلانات',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '🏆',
+    name: 'إدارة السمعة الإلكترونية',
+    tag: '92% من المشترين يقرؤون التقييمات قبل اتخاذ القرار. ما الذي تقوله تقييماتك الآن؟',
+    bullets: [
+      'نظام آلي يستخرج تقييمات من كل عميل راضٍ',
+      'مراقبة فورية حتى تكتشف المشكلات قبل أن تضر بالثقة',
+      'يضع علامتك التجارية كالخيار الواضح والموثوق في سوقك',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '🎯',
+    name: 'روبوت محادثة ذكي لتأهيل العملاء المحتملين',
+    tag: 'أوقف إهدار ساعاتك مع عملاء محتملين لن يشتروا أبداً. دع الذكاء الاصطناعي يُصفيهم فوراً.',
+    bullets: [
+      'يؤهّل كل عميل محتمل حسب الميزانية والنية والاستعداد — تلقائياً',
+      'يُسلّم لفريقك المبيعات جاهزة فقط — لا شيء غيرها',
+      'يعمل على مدار الساعة عبر موقعك وواتساب ومنصات التواصل الاجتماعي',
+    ],
+    category: 'foundation',
+  },
+  {
+    icon: '📡',
+    name: 'لوحة تحكم الذكاء التجاري',
+    tag: 'لا تستطيع السيطرة على سوق لا تفهمه. نمنحك الذكاء الذي يجعلك تتحرك أولاً.',
+    bullets: [
+      'عرض مباشر للعملاء المحتملين والإيرادات ومعدلات التحويل والعقبات',
+      'لوحات مؤشرات KPI مخصصة لنموذج عملك بالضبط',
+      'اكتشف فرص النمو والتهديدات قبل أن يراها منافسوك',
+    ],
+    category: 'foundation',
+  },
+  // ── نمو ─────────────────────────────────────────────────────────────────
+  {
+    icon: '🛒',
+    name: 'متجر إلكتروني متكامل',
+    tag: 'منتجاتك تستحق واجهة تبيع — لا واجهة تجلس فيها تبدو جيدة فحسب.',
+    bullets: [
+      'مبني لتحويل الزوار إلى مشترين من أول زيارة',
+      'مدمج مع بوابات الدفع وإدارة المخزون ونظام CRM',
+      'مُحسَّن لسلوك المشترين في الخليج وأوروبا من اليوم الأول',
+    ],
+    category: 'growth',
+  },
+  {
+    icon: '📲',
+    name: 'نظام إدارة منصات التواصل الاجتماعي',
+    tag: 'النشر بلا استراتيجية هو ضجيج. نهندس حضورك الاجتماعي ليصبح ماكينة استقطاب عملاء.',
+    bullets: [
+      'استراتيجية محتوى مدعومة بالذكاء الاصطناعي وجدولة تبني سلطة حقيقية',
+      'أتمتة التفاعل التي تنمي جمهورك دون إرهاق فريقك',
+      'يحوّل المتابعين إلى عملاء محتملين مؤهلين يتدفقون إلى مسار مبيعاتك مباشرة',
+    ],
+    category: 'growth',
+  },
+  {
+    icon: '✉️',
+    name: 'أتمتة التسويق عبر البريد الإلكتروني والرسائل القصيرة',
+    tag: 'قائمة عملائك تُولّد صفر إيرادات الآن. هذه أقيم أصولك وهي لا تعمل.',
+    bullets: [
+      'التسلسلات الآلية تُولّد 320% إيرادات أكثر من الحملات الفردية',
+      'استعادة 15–20% من المبيعات الضائعة بمتابعات السلة المتروكة وحملات إعادة الاستهداف',
+      'أعلى عائد استثمار في أي قناة رقمية — 10–36 دولار لكل دولار يُنفق',
+    ],
+    category: 'growth',
+  },
+  {
+    icon: '🎯',
+    name: 'إدارة الإعلانات المدفوعة — جوجل + ميتا + تيك توك',
+    tag: 'معظم الشركات تُهدر 60–70% من ميزانية الإعلانات على استهداف ضعيف. كل درهم يجب أن يُتتبّع حتى الإيراد.',
+    bullets: [
+      'حملات مبنية حول تكلفة الاستحواذ والعائد على الإنفاق — لا مقاييس وهمية أبداً',
+      'اختبار A/B دائم التشغيل، تحسين أسبوعي، لا ميزانية تُهدر',
+      'الحملات المُدارة احترافياً تحقق في المتوسط 200–800% عائد على الإنفاق الإعلاني',
+    ],
+    category: 'growth',
+  },
+  {
+    icon: '👥',
+    name: 'نظام أتمتة الموارد البشرية والرواتب',
+    tag: 'كل موعد WPS تفوّته هو غرامة. كل راتب يدوي هو خطأ ينتظر أن يحدث. كلاهما ينتهي هنا.',
+    bullets: [
+      'رواتب متوافقة مع WPS الإماراتي تعمل من تلقاء نفسها — لا جداول، لا أخطاء',
+      'تنبيهات انتهاء التأشيرات وتتبع الإجازات وحسابات مكافأة نهاية الخدمة — مؤتمتة بالكامل',
+      'وقت إدارة الموارد البشرية يتقلص 40% وبياناتك جاهزة للتدقيق في أي وقت',
+    ],
+    category: 'growth',
+  },
+  // ── توسع ────────────────────────────────────────────────────────────────
+  {
+    icon: '🎬',
+    name: 'نظام محتوى الفيديو القصير',
+    tag: 'الفيديو يقود 82% من حركة الإنترنت. إذا لم تكن علامتك في الخلاصة، فمنافسك موجود هناك.',
+    bullets: [
+      '4–12 ريلز منتجة احترافياً شهرياً — تصوير ومونتاج ونشر',
+      'الحضور المستمر بالفيديو يزيد الاستفسارات الواردة 3× في المتوسط',
+      'ترجمة عربية وإنجليزية، مواكبة للتريندات، مُحسَّن لإنستغرام وتيك توك ويوتيوب',
+    ],
+    category: 'scale',
+  },
+  {
+    icon: '✍️',
+    name: 'نظام إنشاء المحتوى بالذكاء الاصطناعي وتحسين محركات البحث',
+    tag: 'عملاؤك يبحثون قبل الشراء. إذا لم تكن في الصفحة الأولى، أنت غير مرئي — ومنافسك موجود.',
+    bullets: [
+      '4–8 مقالات SEO شهرياً — مُسوَّدة بالذكاء الاصطناعي، مُراجَعة بشرياً، مبنية للتصدر',
+      'استراتيجية كلمات مفتاحية للبحث بالعربية والإنجليزية في أسواق الخليج وأوروبا',
+      'تتضاعف كل شهر — الشهر السادس يُولّد 5–10 أضعاف حركة الشهر الأول',
+    ],
+    category: 'scale',
+  },
+  {
+    icon: '📦',
+    name: 'نظام إدارة المخزون والعمليات',
+    tag: 'نفاد المخزون يُكلّفك مبيعات. الإفراط في التخزين يُكلّفك سيولة. التتبع اليدوي يُكلّفك كليهما.',
+    bullets: [
+      'رؤية مباشرة للمخزون عبر كل موقع — لا مفاجآت ولا فجوات بعد الآن',
+      'تنبيهات إعادة الطلب الآلية وإنشاء أوامر الشراء وتتبع الهدر',
+      'يُخفّض الإفراط في التخزين 20% ونفاد المخزون 30% من اليوم الأول',
+    ],
+    category: 'scale',
+  },
+  {
+    icon: '🖥️',
+    name: 'نظام القوائم الرقمية وشاشات العرض الذكية',
+    tag: 'المواد المطبوعة التي لا يمكنك تحديثها لحظياً تُكلّفك أموالاً — كل يوم.',
+    bullets: [
+      'حدّث القوائم والأسعار والعروض من هاتفك — مباشرة في ثوانٍ',
+      'نداءات البيع الذكية الرقمية ترفع متوسط قيمة الطلب 20–30%',
+      'محتوى ثنائي اللغة عربي/إنجليزي، تدوير جداول زمني، طلب QR مدمج',
+    ],
+    category: 'scale',
+  },
+  {
+    icon: '🎓',
+    name: 'منصة تدريب الموظفين وقاعدة المعرفة',
+    tag: 'تدريب موظف جديد يكلّف 8,000–25,000 درهم يدوياً. ومعظمهم يستقيلون قبل أن تسترد استثمارك.',
+    bullets: [
+      'أهّل موظفين جدد في يومين بدلاً من أسبوعين — بدون وقت مدير',
+      'مسارات تدريب حسب الدور، اختبارات، وشهادات — مؤتمتة بالكامل',
+      'مُحسَّن للجوال، عربي وإنجليزي، مع وحدات الامتثال القانوني مدمجة',
+    ],
+    category: 'scale',
+  },
+];
+
 function App() {
   const [lang, setLang] = useState(localStorage.getItem('bznsflow_lang') || 'en');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,6 +463,7 @@ function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
 
   const t = translations[lang];
+  const activeServices = lang === 'ar' ? SERVICES_AR : SERVICES;
 
   // Language Toggle
   const toggleLang = () => {
@@ -130,6 +583,7 @@ function App() {
           <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`} id="navLinks">
             <li><a href="#problem" className={`nav-link ${activeLink === 'problem' ? 'active' : ''}`} onClick={(e) => handleSmoothScroll(e, '#problem')}>{t.nav_problem}</a></li>
             <li><a href="#benefits" className={`nav-link ${activeLink === 'benefits' ? 'active' : ''}`} onClick={(e) => handleSmoothScroll(e, '#benefits')}>{t.nav_solution}</a></li>
+            <li><a href="#services" className={`nav-link ${activeLink === 'services' ? 'active' : ''}`} onClick={(e) => handleSmoothScroll(e, '#services')}>{t.nav_services}</a></li>
             <li><a href="#tiers" className={`nav-link ${activeLink === 'tiers' ? 'active' : ''}`} onClick={(e) => handleSmoothScroll(e, '#tiers')}>{t.nav_tiers}</a></li>
             <li><a href="#how-it-works" className={`nav-link ${activeLink === 'how-it-works' ? 'active' : ''}`} onClick={(e) => handleSmoothScroll(e, '#how-it-works')}>{t.nav_how}</a></li>
             <li><a href="#use-cases" className={`nav-link ${activeLink === 'use-cases' ? 'active' : ''}`} onClick={(e) => handleSmoothScroll(e, '#use-cases')}>{t.nav_cases}</a></li>
@@ -292,6 +746,258 @@ function App() {
               <h3 className="benefit-title">{t.b3_title}</h3>
               <p className="benefit-desc">{t.b3_desc}</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICES SECTION */}
+      <section className="section section--dark" id="services">
+        <div className="container">
+          <div className="section-label fade-in">{t.services_label}</div>
+          <h2 className="section-title fade-in" dangerouslySetInnerHTML={{ __html: t.services_title }}></h2>
+          <p className="section-subtitle fade-in">{t.services_sub}</p>
+
+          {/* Foundation Services */}
+          <div className="services-category fade-in">
+            <div className="services-category-header">
+              <span className="services-category-badge services-category-badge--foundation">Foundation</span>
+              <div className="services-category-info">
+                <h3 className="services-category-title">{t.services_foundation_label}</h3>
+                <p className="services-category-sub">{t.services_foundation_sub}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="services-grid">
+            {activeServices.filter(s => s.category === 'foundation').map((svc, i) => (
+              <div className="service-card fade-in" key={i}>
+                <div className="svc-icon-wrap">
+                  <span className="svc-icon">{svc.icon}</span>
+                </div>
+                <h3 className="svc-name">{svc.name}</h3>
+                <p className="svc-tag">{svc.tag}</p>
+                <ul className="svc-bullets">
+                  {svc.bullets.map((b, j) => (
+                    <li key={j}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-ghost svc-btn">{t.services_cta}</a>
+              </div>
+            ))}
+          </div>
+
+          {/* Growth Services */}
+          <div className="services-category fade-in" style={{ marginTop: '64px' }}>
+            <div className="services-category-header">
+              <span className="services-category-badge services-category-badge--growth">Growth</span>
+              <div className="services-category-info">
+                <h3 className="services-category-title">{t.services_growth_label}</h3>
+                <p className="services-category-sub">{t.services_growth_sub}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="services-grid">
+            {activeServices.filter(s => s.category === 'growth').map((svc, i) => (
+              <div className="service-card service-card--growth fade-in" key={i}>
+                <div className="svc-icon-wrap svc-icon-wrap--growth">
+                  <span className="svc-icon">{svc.icon}</span>
+                </div>
+                <h3 className="svc-name">{svc.name}</h3>
+                <p className="svc-tag">{svc.tag}</p>
+                <ul className="svc-bullets">
+                  {svc.bullets.map((b, j) => (
+                    <li key={j}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-ghost svc-btn">{t.services_cta}</a>
+              </div>
+            ))}
+          </div>
+
+          {/* Scale Services */}
+          <div className="services-category fade-in" style={{ marginTop: '64px' }}>
+            <div className="services-category-header">
+              <span className="services-category-badge services-category-badge--scale">Scale</span>
+              <div className="services-category-info">
+                <h3 className="services-category-title">{t.services_scale_label}</h3>
+                <p className="services-category-sub">{t.services_scale_sub}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="services-grid">
+            {activeServices.filter(s => s.category === 'scale').map((svc, i) => (
+              <div className="service-card service-card--scale fade-in" key={i}>
+                <div className="svc-icon-wrap svc-icon-wrap--scale">
+                  <span className="svc-icon">{svc.icon}</span>
+                </div>
+                <h3 className="svc-name">{svc.name}</h3>
+                <p className="svc-tag svc-tag--scale">{svc.tag}</p>
+                <ul className="svc-bullets">
+                  {svc.bullets.map((b, j) => (
+                    <li key={j}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-ghost svc-btn">{t.services_cta}</a>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="services-bottom-cta fade-in">
+            <p className="services-bottom-text">{t.services_bottom_text}</p>
+            <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-large">
+              <span>{t.services_bottom_btn}</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* COMPETITOR COMPARISON SECTION */}
+      <section className="section" id="comparison">
+        <div className="container">
+          <div className="section-label fade-in">{t.cmp_label}</div>
+          <h2 className="section-title fade-in" dangerouslySetInnerHTML={{ __html: t.cmp_title }}></h2>
+          <p className="section-subtitle fade-in">{t.cmp_sub}</p>
+
+          <div className="comparison-scroll fade-in">
+            <div className="comparison-table">
+              {/* Header row */}
+              <div className="cmp-header-row">
+                <div className="cmp-feature-header"></div>
+                <div className="cmp-col-header cmp-col--bzns">
+                  <div className="cmp-winner-badge">{t.cmp_winner}</div>
+                  <div className="cmp-brand">BznsFlow</div>
+                  <div className="cmp-brand-sub">{t.cmp_brand_sub}</div>
+                </div>
+                <div className="cmp-col-header">
+                  <div className="cmp-alt-name">{t.cmp_alt1}</div>
+                  <div className="cmp-alt-eg">{t.cmp_alt1_eg}</div>
+                </div>
+                <div className="cmp-col-header">
+                  <div className="cmp-alt-name">{t.cmp_alt2}</div>
+                  <div className="cmp-alt-eg">{t.cmp_alt2_eg}</div>
+                </div>
+                <div className="cmp-col-header">
+                  <div className="cmp-alt-name">{t.cmp_alt3}</div>
+                  <div className="cmp-alt-eg">{t.cmp_alt3_eg}</div>
+                </div>
+              </div>
+
+              {/* Time to Go Live */}
+              <div className="cmp-row">
+                <div className="cmp-feature">{t.cmp_r1}</div>
+                <div className="cmp-cell cmp-cell--bzns"><span className="cmp-bzns-text">3–5 days</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">Weeks of setup</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">2–3 months</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">Unknown</span></div>
+              </div>
+
+              {/* Monthly Cost */}
+              <div className="cmp-row">
+                <div className="cmp-feature">{t.cmp_r2}</div>
+                <div className="cmp-cell cmp-cell--bzns"><span className="cmp-bzns-text">From $197/mo</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">$50–300 + your time</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">$3,000+/mo</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">$500–2k one-time</span></div>
+              </div>
+
+              {/* Done-For-You */}
+              <div className="cmp-row">
+                <div className="cmp-feature">{t.cmp_r3}</div>
+                <div className="cmp-cell cmp-cell--bzns">
+                  <span className="cmp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">Partial</span></div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+              </div>
+
+              {/* AI-Native */}
+              <div className="cmp-row">
+                <div className="cmp-feature">{t.cmp_r4}</div>
+                <div className="cmp-cell cmp-cell--bzns">
+                  <span className="cmp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">Maybe</span></div>
+              </div>
+
+              {/* WhatsApp + Multi-Channel */}
+              <div className="cmp-row">
+                <div className="cmp-feature">{t.cmp_r5}</div>
+                <div className="cmp-cell cmp-cell--bzns">
+                  <span className="cmp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+                <div className="cmp-cell"><span className="cmp-dim">Limited</span></div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">Maybe</span></div>
+              </div>
+
+              {/* Arabic & English */}
+              <div className="cmp-row">
+                <div className="cmp-feature">{t.cmp_r6}</div>
+                <div className="cmp-cell cmp-cell--bzns">
+                  <span className="cmp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">Depends</span></div>
+              </div>
+
+              {/* Europe & GCC Expertise */}
+              <div className="cmp-row">
+                <div className="cmp-feature">{t.cmp_r7}</div>
+                <div className="cmp-cell cmp-cell--bzns">
+                  <span className="cmp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+              </div>
+
+              {/* Ongoing Optimization */}
+              <div className="cmp-row">
+                <div className="cmp-feature">{t.cmp_r8}</div>
+                <div className="cmp-cell cmp-cell--bzns">
+                  <span className="cmp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-dim">Extra cost</span></div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+              </div>
+
+              {/* Revenue Guarantee */}
+              <div className="cmp-row">
+                <div className="cmp-feature">{t.cmp_r9}</div>
+                <div className="cmp-cell cmp-cell--bzns">
+                  <span className="cmp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+                <div className="cmp-cell"><span className="cmp-cross">✕</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="comparison-cta fade-in">
+            <p className="cmp-cta-text">{t.cmp_cta_text}</p>
+            <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-large">
+              <span>{t.cmp_cta_btn}</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
           </div>
         </div>
       </section>
