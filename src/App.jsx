@@ -603,6 +603,7 @@ function App() {
         </div>
       </nav>
 
+      <main id="main-content">
       {/* HERO SECTION */}
       <section className="hero" id="hero">
         <div className="shooting-stars">
@@ -1270,6 +1271,7 @@ function App() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* FOOTER */}
       <footer className="footer" id="footer">
