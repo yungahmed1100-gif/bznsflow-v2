@@ -141,7 +141,7 @@ function App() {
               </button>
             </li>
             <li>
-              <a href="https://calendar.app.google/PjncJidpLfqP6yFX8" target="_blank" rel="noopener noreferrer" className="btn btn-primary nav-cta">
+              <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-primary nav-cta">
                 {t.nav_cta}
               </a>
             </li>
@@ -183,7 +183,7 @@ function App() {
               <p className="hero-subheadline">{t.hero_sub}</p>
 
               <div className="hero-ctas">
-                <a href="https://calendar.app.google/PjncJidpLfqP6yFX8" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-large">
+                <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-large">
                   <span>{t.hero_cta_primary}</span>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
@@ -320,7 +320,7 @@ function App() {
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>{t.t1_f2}</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>{t.t1_f3}</span></li>
               </ul>
-              <a href="https://calendar.app.google/PjncJidpLfqP6yFX8" target="_blank" rel="noopener noreferrer" className="btn btn-ghost pricing-btn">{t.nav_cta}</a>
+              <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-ghost pricing-btn">{t.nav_cta}</a>
             </div>
 
             {/* Tier 2 */}
@@ -341,7 +341,7 @@ function App() {
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>{t.t2_f3}</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>{t.t2_f4}</span></li>
               </ul>
-              <a href="https://calendar.app.google/PjncJidpLfqP6yFX8" target="_blank" rel="noopener noreferrer" className="btn btn-primary pricing-btn">{t.nav_cta}</a>
+              <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-primary pricing-btn">{t.nav_cta}</a>
             </div>
 
             {/* Tier 3 */}
@@ -363,7 +363,7 @@ function App() {
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>{t.t3_f5}</span></li>
                 <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>{t.t3_f6}</span></li>
               </ul>
-              <a href="https://calendar.app.google/PjncJidpLfqP6yFX8" target="_blank" rel="noopener noreferrer" className="btn btn-ghost pricing-btn">{t.nav_cta}</a>
+              <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-ghost pricing-btn">{t.nav_cta}</a>
             </div>
           </div>
 
@@ -417,7 +417,7 @@ function App() {
           </div>
 
           <div className="steps-cta fade-in">
-            <a href="https://calendar.app.google/PjncJidpLfqP6yFX8" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-large">
+            <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-large">
               <span>{t.how_cta}</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
@@ -529,7 +529,7 @@ function App() {
               </div>
 
               <div className="about-ctas">
-                <a href="https://calendar.app.google/PjncJidpLfqP6yFX8" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                   <span>{t.about_cta1}</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
@@ -552,7 +552,7 @@ function App() {
             <h2 className="cta-headline" dangerouslySetInnerHTML={{ __html: t.cta_title }}></h2>
             <p className="cta-subtext">{t.cta_sub}</p>
             <div className="cta-buttons">
-              <a href="https://calendar.app.google/PjncJidpLfqP6yFX8" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-xlarge">
+              <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-xlarge">
                 <span>{t.cta_btn}</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               </a>
@@ -618,7 +618,7 @@ function App() {
                 </li>
                 <li>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                  <a href="https://calendar.app.google/PjncJidpLfqP6yFX8" target="_blank" rel="noopener noreferrer">{t.footer_book}</a>
+                  <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer">{t.footer_book}</a>
                 </li>
               </ul>
             </div>
