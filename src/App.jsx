@@ -200,7 +200,7 @@ function App() {
 
           <div className="hero-stats">
             <div className="stat-item">
-              <span className="stat-number">3x</span>
+              <span className="stat-number">{'<'}30s</span>
               <span className="stat-label">{t.stat_1}</span>
             </div>
             <div className="stat-divider"></div>
@@ -303,6 +303,11 @@ function App() {
           <h2 className="section-title fade-in" dangerouslySetInnerHTML={{ __html: t.tiers_title }}></h2>
           <p className="section-subtitle fade-in">{t.tiers_sub}</p>
 
+          <div className="pricing-roi-hook fade-in">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            {t.pricing_roi}
+          </div>
+
           <div className="pricing-grid">
             {/* Tier 1 */}
             <div className="pricing-card fade-in">
@@ -310,6 +315,7 @@ function App() {
                 <h3 className="pricing-tier">{t.t1_title}</h3>
                 <div className="pricing-cost">
                   <span className="price-amount">{t.t1_price}</span>
+                  <span className="price-anchor">{t.t1_price_anchor}</span>
                   <span className="price-setup">{t.setup_fee}</span>
                 </div>
                 <p className="pricing-desc">{t.t1_desc}</p>
@@ -325,11 +331,12 @@ function App() {
 
             {/* Tier 2 */}
             <div className="pricing-card pricing-card--popular fade-in">
-              <div className="popular-badge">Most Popular</div>
+              <div className="popular-badge">{t.popular_badge}</div>
               <div className="pricing-header">
                 <h3 className="pricing-tier">{t.t2_title}</h3>
                 <div className="pricing-cost">
                   <span className="price-amount">{t.t2_price}</span>
+                  <span className="price-anchor price-anchor--contrast">{t.t2_price_anchor}</span>
                   <span className="price-setup">{t.setup_fee}</span>
                 </div>
                 <p className="pricing-desc">{t.t2_desc}</p>
@@ -350,6 +357,7 @@ function App() {
                 <h3 className="pricing-tier">{t.t3_title}</h3>
                 <div className="pricing-cost">
                   <span className="price-amount">{t.t3_price}</span>
+                  <span className="price-anchor">{t.t3_price_anchor}</span>
                   <span className="price-setup">{t.setup_fee}</span>
                 </div>
                 <p className="pricing-desc">{t.t3_desc}</p>
