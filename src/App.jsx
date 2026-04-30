@@ -303,11 +303,6 @@ function App() {
           <h2 className="section-title fade-in" dangerouslySetInnerHTML={{ __html: t.tiers_title }}></h2>
           <p className="section-subtitle fade-in">{t.tiers_sub}</p>
 
-          <div className="pricing-roi-hook fade-in">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            {t.pricing_roi}
-          </div>
-
           <div className="pricing-grid">
             {/* Tier 1 */}
             <div className="pricing-card fade-in">
