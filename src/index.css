@@ -1731,41 +1731,39 @@ html {
 }
 
 /* ============================================================
-   LANGUAGE TOGGLE BUTTON
+   LANGUAGE SELECTOR
  ============================================================ */
-.lang-toggle {
-  display: inline-flex;
+.lang-selector {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 4px 8px;
+}
+
+.lang-flag {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
   cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
   transition: all var(--transition);
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-  font-family: inherit;
+  opacity: 0.6;
 }
 
-.lang-toggle:hover {
-  background: rgba(79, 142, 247, 0.1);
-  border-color: rgba(79, 142, 247, 0.35);
-  color: var(--accent-blue);
-  transform: translateY(-1px);
+.lang-flag:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.lang-toggle-icon {
-  font-size: 0.9rem;
-  line-height: 1;
-}
-
-.lang-toggle-label {
-  font-family: 'Cairo', 'Inter', sans-serif;
-  font-size: 0.85rem;
+.lang-flag.active {
+  opacity: 1;
+  background: rgba(79, 142, 247, 0.2);
+  transform: scale(1.1);
 }
 
 /* ============================================================

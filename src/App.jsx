@@ -465,12 +465,19 @@ function App() {
   const t = translations[lang];
   const activeServices = lang === 'ar' ? SERVICES_AR : SERVICES;
 
-  // Language Toggle
-  const toggleLang = () => {
-    const newLang = lang === 'en' ? 'ar' : 'en';
+  // Language Selection
+  const setLanguage = (newLang) => {
     setLang(newLang);
     localStorage.setItem('bznsflow_lang', newLang);
   };
+
+  const LANGUAGES = [
+    { code: 'en', flag: '🇬🇧', label: 'English' },
+    { code: 'ar', flag: '🇦🇪', label: 'عربي' },
+    { code: 'nl', flag: '🇳🇱', label: 'Nederlands' },
+    { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
+    { code: 'es', flag: '🇪🇸', label: 'Español' }
+  ];
 
   // Navbar Scroll Logic
   useEffect(() => {
@@ -588,11 +595,18 @@ function App() {
             <li><a href="#how-it-works" className={`nav-link ${activeLink === 'how-it-works' ? 'active' : ''}`} onClick={(e) => handleSmoothScroll(e, '#how-it-works')}>{t.nav_how}</a></li>
             <li><a href="#use-cases" className={`nav-link ${activeLink === 'use-cases' ? 'active' : ''}`} onClick={(e) => handleSmoothScroll(e, '#use-cases')}>{t.nav_cases}</a></li>
             <li><a href="#about" className={`nav-link ${activeLink === 'about' ? 'active' : ''}`} onClick={(e) => handleSmoothScroll(e, '#about')}>{t.nav_about}</a></li>
-            <li>
-              <button className="lang-toggle" onClick={toggleLang} aria-label="Switch language">
-                <span className="lang-toggle-icon">🌐</span>
-                <span className="lang-toggle-label">{lang === 'ar' ? 'English' : 'عربي'}</span>
-              </button>
+            <li className="lang-selector">
+              {LANGUAGES.map(l => (
+                <button 
+                  key={l.code}
+                  className={`lang-flag ${lang === l.code ? 'active' : ''}`}
+                  onClick={() => setLanguage(l.code)}
+                  title={l.label}
+                  aria-label={l.label}
+                >
+                  {l.flag}
+                </button>
+              ))}
             </li>
             <li>
               <a href="https://calendar.app.google/JbRGCCbMXzaEUVrT7" target="_blank" rel="noopener noreferrer" className="btn btn-primary nav-cta">
