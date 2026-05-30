@@ -1,0 +1,65 @@
+# BznsFlow
+
+> BznsFlow is a done-for-you AI automation and growth-engineering company for high-growth businesses in the GCC (UAE, Saudi Arabia, Qatar, Kuwait, Bahrain, Oman) and Europe (Netherlands, UK, Germany). We design, deploy, and manage AI infrastructure that captures every lead, qualifies every inquiry, and converts conversations into revenue — bilingual Arabic and English, live in 3–5 days.
+
+## What we build
+
+- AI Smart Receptionist — replies to every inquiry in under 30 seconds, 24/7, across WhatsApp, web chat, and email.
+- WhatsApp Business Automation — official WhatsApp Business API, intelligent auto-replies, lead qualification, broadcast campaigns, appointment booking.
+- Custom Business CRM — full pipeline visibility, automated follow-up sequences, real-time revenue tracking.
+- Online Booking & Appointment System — self-serve booking, smart reminders, zero double-bookings.
+- AI Lead Qualification Chatbot — qualifies by budget, intent, and readiness; routes only sales-ready prospects to human teams.
+- Conversion-Optimized Websites — fast, mobile-first, SEO-ranked for GCC and European search.
+- Google Business & Local SEO — Google Business Profile optimization, structured local SEO for GCC + EU intent.
+- Online Reputation Management — automated review generation, real-time monitoring.
+- Customer Loyalty & Retention — automated loyalty rewards triggered by purchase behavior.
+- E-commerce Stores — payment + inventory + CRM integration, GCC and EU buyer behavior optimization.
+- Social Media Management — AI content strategy, scheduling, engagement automation.
+- Email & SMS Marketing Automation — abandoned cart, win-back, nurture sequences.
+- Paid Ads Management — Google + Meta + TikTok, ROAS-driven, weekly optimization.
+- HR & Payroll Automation — UAE WPS-compliant payroll, visa expiry alerts, gratuity calculations.
+- Short-Form Video Content — 4–12 Reels per month, Arabic + English subtitles.
+- AI Content Creation & SEO — 4–8 SEO articles per month, bilingual GCC + EU search intent.
+- Inventory & Operations Management — multi-location stock visibility, automated reorder.
+- Digital Menu & Smart Display — bilingual, real-time price/menu updates, QR ordering.
+- Staff Training & Knowledge Base — role-based tracks, mobile-optimized, Arabic + English.
+- Business Intelligence Dashboards — real-time KPI dashboards built per business model.
+
+## Service tiers
+
+- The Catalyst — $30/month. Instant AI response system. For businesses needing to stop losing leads.
+- The Ascend — $197/month. Full AI-powered CRM, booking, lead qualification, payment automation. Most popular tier.
+- The Apex — $997/month. End-to-end custom AI ecosystem, predictive business intelligence, Meta Ads management, executive growth-engineering partnership. Limited to 3 clients per month.
+
+## Markets served
+
+GCC: United Arab Emirates (Dubai, Abu Dhabi, Sharjah), Saudi Arabia (Riyadh, Jeddah, Dammam), Qatar, Kuwait, Bahrain, Oman.
+Europe: Netherlands, United Kingdom, Germany.
+
+## Industries
+
+Aesthetic clinics, plastic surgery clinics, dental clinics, real estate, automotive, hospitality, restaurants, retail, fitness, beauty salons, professional services, enterprise B2B.
+
+## Differentiators
+
+- Done-for-you managed service — no software learning curve, no technical knowledge required.
+- Bilingual Arabic + English by default, with native GCC/MENA cultural understanding.
+- 3–5 day deployment vs. industry average of 2–3 months.
+- WhatsApp-first communication architecture, using official WhatsApp Business API.
+- UAE VAT and WPS compliance built in.
+- GDPR-aware for European clients.
+
+## Founder
+
+Ahmed Darwish — based in Dubai, UAE. Founded 2024.
+
+## Contact
+
+- WhatsApp: https://wa.me/201036755930
+- Email: ahmed@bznsflowai.com
+- Book a strategy call: https://calendar.app.google/JbRGCCbMXzaEUVrT7
+- Website: https://www.bznsflowai.com
+
+## Key pages
+
+- [Home](https://www.bznsflowai.com/)
