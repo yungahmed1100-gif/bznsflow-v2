@@ -127,16 +127,13 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
 
         <div className="trust-strip">
           <span className="trust-label">{t.trust_label}</span>
+          <span className="trust-flag" title="United States">🇺🇸 USA</span>
           <span className="trust-flag" title="United Arab Emirates">🇦🇪 UAE</span>
-          <span className="trust-flag" title="Saudi Arabia">🇸🇦 KSA</span>
-          <span className="trust-flag" title="Qatar">🇶🇦 Qatar</span>
-          <span className="trust-flag" title="Kuwait">🇰🇼 Kuwait</span>
-          <span className="trust-flag" title="Bahrain">🇧🇭 Bahrain</span>
-          <span className="trust-flag" title="Oman">🇴🇲 Oman</span>
-          <span className="trust-divider" aria-hidden="true">·</span>
-          <span className="trust-flag" title="Netherlands">🇳🇱 NL</span>
           <span className="trust-flag" title="United Kingdom">🇬🇧 UK</span>
-          <span className="trust-flag" title="Germany">🇩🇪 DE</span>
+          <span className="trust-flag" title="Canada">🇨🇦 Canada</span>
+          <span className="trust-flag" title="Australia">🇦🇺 Australia</span>
+          <span className="trust-divider" aria-hidden="true">·</span>
+          <span className="trust-flag" title="Real estate teams worldwide">🌍 &amp; worldwide</span>
         </div>
       </div>
 

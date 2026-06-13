@@ -79,6 +79,8 @@ export function TiersSection({ t, CALENDAR_URL }) {
           <p className="fomo-desc" dangerouslySetInnerHTML={{ __html: t.t3_fomo_desc }}></p>
         </div>
 
+        {/* DRAFT — add-on bundles section, hidden for now. Re-enable later.
+            Translation keys addons_title / addons_1..3 are retained in all i18n files.
         <div className="addons-block fade-in">
           <h4 className="addons-title">{t.addons_title}</h4>
           <div className="addons-list">
@@ -87,6 +89,7 @@ export function TiersSection({ t, CALENDAR_URL }) {
             <span className="addon-tag">{t.addons_3}</span>
           </div>
         </div>
+        */}
       </div>
     </section>
   );

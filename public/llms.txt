@@ -1,63 +1,64 @@
 # BznsFlow
 
-> BznsFlow is a done-for-you AI automation and growth-engineering company for high-growth businesses in the GCC (UAE, Saudi Arabia, Qatar, Kuwait, Bahrain, Oman) and Europe (Netherlands, UK, Germany). We design, deploy, and manage AI infrastructure that captures every lead, qualifies every inquiry, and converts conversations into revenue — bilingual Arabic and English, live in 3–5 days.
+> BznsFlow is the done-for-you AI growth engine for real estate teams and brokerages worldwide. We design, deploy, and manage the AI infrastructure that captures every buyer and seller lead, qualifies it by budget, area and intent, routes it to the right agent in seconds, books showings, and nurtures prospects until they close. Built for speed-to-lead, multilingual by default, live in 3–5 days.
+
+## Who it's for
+
+Real estate brokerages, agent teams, high-volume individual agents, property developers, luxury and off-plan sales, property management, and commercial real estate — anywhere lead volume outpaces the team's ability to respond.
 
 ## What we build
 
-- AI Smart Receptionist — replies to every inquiry in under 30 seconds, 24/7, across WhatsApp, web chat, and email.
-- WhatsApp Business Automation — official WhatsApp Business API, intelligent auto-replies, lead qualification, broadcast campaigns, appointment booking.
-- Custom Business CRM — full pipeline visibility, automated follow-up sequences, real-time revenue tracking.
-- Online Booking & Appointment System — self-serve booking, smart reminders, zero double-bookings.
-- AI Lead Qualification Chatbot — qualifies by budget, intent, and readiness; routes only sales-ready prospects to human teams.
-- Conversion-Optimized Websites — fast, mobile-first, SEO-ranked for GCC and European search.
-- Google Business & Local SEO — Google Business Profile optimization, structured local SEO for GCC + EU intent.
-- Online Reputation Management — automated review generation, real-time monitoring.
-- Customer Loyalty & Retention — automated loyalty rewards triggered by purchase behavior.
-- E-commerce Stores — payment + inventory + CRM integration, GCC and EU buyer behavior optimization.
-- Social Media Management — AI content strategy, scheduling, engagement automation.
-- Email & SMS Marketing Automation — abandoned cart, win-back, nurture sequences.
-- Paid Ads Management — Google + Meta + TikTok, ROAS-driven, weekly optimization.
-- HR & Payroll Automation — UAE WPS-compliant payroll, visa expiry alerts, gratuity calculations.
-- Short-Form Video Content — 4–12 Reels per month, Arabic + English subtitles.
-- AI Content Creation & SEO — 4–8 SEO articles per month, bilingual GCC + EU search intent.
-- Inventory & Operations Management — multi-location stock visibility, automated reorder.
-- Digital Menu & Smart Display — bilingual, real-time price/menu updates, QR ordering.
-- Staff Training & Knowledge Base — role-based tracks, mobile-optimized, Arabic + English.
-- Business Intelligence Dashboards — real-time KPI dashboards built per business model.
+- AI Lead Response Agent — replies to every buyer and seller lead in under 60 seconds, 24/7, across portals, website, WhatsApp, and missed calls.
+- AI Lead Qualification — qualifies every lead by budget, area, intent, and timeline; passes only sales-ready buyers and sellers to agents.
+- Smart Lead Routing — auto-assigns leads to the right agent by area, price band, language, and load, with instant context hand-off.
+- WhatsApp & Portal Automation — official WhatsApp Business API plus portal integrations (Bayut, Property Finder, Zillow, Rightmove and more); turns inquiries into booked viewings.
+- Real Estate Deal CRM — every lead, agent, and deal stage in one pipeline with automated follow-up and commission visibility.
+- Showing & Viewing Scheduler — self-serve booking, smart reminders, no-show reduction, synced to every agent's calendar.
+- Listing & Lead-Capture Site — fast, mobile-first site with IDX/portal-synced listings built to convert visitors into booked leads.
+- Agent Reputation Engine — automated review requests and monitoring to make agents the trusted choice in their area.
+- Pipeline Intelligence Dashboard — real-time leads, sources, agent conversion, cost per lead, and speed-to-lead.
+- Buyer & Seller Nurture — behaviour-triggered drip sequences (new listings, price drops, saved searches) that keep cold leads warm for months.
+- Property Ad Management — Meta, Google, and portal campaigns built around cost per qualified lead, flowing straight into the CRM.
+- Email & SMS Lead Reactivation — revives cold and dead leads from the existing database into booked viewings.
+- Listing & Reels Video Engine — property reels and listing videos produced and published monthly.
+- Market-Report Content & SEO — area guides and market reports built to rank and pull in buyer/seller intent.
+- Referral & Past-Client Engine — stay-in-touch automation that turns closed deals into future referral pipeline.
+- Brokerage Growth Partnership — custom AI workforce, multi-team management, and executive-level growth engineering.
 
-## Service tiers
+## Service plans
 
-- The Catalyst — $30/month. Instant AI response system. For businesses needing to stop losing leads.
-- The Ascend — $197/month. Full AI-powered CRM, booking, lead qualification, payment automation. Most popular tier.
-- The Apex — $997/month. End-to-end custom AI ecosystem, predictive business intelligence, Meta Ads management, executive growth-engineering partnership. Limited to 3 clients per month.
+- The Catalyst — $30/month. AI lead response for solo agents who can't be everywhere.
+- The Ascend — $197/month. AI lead qualification, routing, showing booking, nurture, and deal CRM for teams. Most popular.
+- The Apex — $997/month. Brokerage growth engine: done-for-you property ads, predictive pipeline intelligence, multi-team management, executive partnership. Limited to 3 brokerages per month.
 
 ## Markets served
 
-GCC: United Arab Emirates (Dubai, Abu Dhabi, Sharjah), Saudi Arabia (Riyadh, Jeddah, Dammam), Qatar, Kuwait, Bahrain, Oman.
-Europe: Netherlands, United Kingdom, Germany.
-
-## Industries
-
-Aesthetic clinics, plastic surgery clinics, dental clinics, real estate, automotive, hospitality, restaurants, retail, fitness, beauty salons, professional services, enterprise B2B.
+Global. Real estate teams worldwide — including the United States, United Arab Emirates, United Kingdom, Canada, Australia, and beyond. Multilingual lead handling adapts to each market's language, currency, and portals.
 
 ## Differentiators
 
-- Done-for-you managed service — no software learning curve, no technical knowledge required.
-- Bilingual Arabic + English by default, with native GCC/MENA cultural understanding.
-- 3–5 day deployment vs. industry average of 2–3 months.
-- WhatsApp-first communication architecture, using official WhatsApp Business API.
-- UAE VAT and WPS compliance built in.
-- GDPR-aware for European clients.
+- Done-for-you managed service — no software learning curve, no technical work required.
+- Speed-to-lead obsessed — under 60-second first response, the single biggest predictor of which agent wins the deal.
+- Multilingual by default — the AI handles leads in any language buyers write in.
+- Works with the portals and channels each market actually uses, WhatsApp-first.
+- 3–5 day deployment vs. industry average of weeks to months.
+- Lead-to-close engine, not a CRM you have to feed or a tool you have to maintain.
+
+## Key real-estate statistics we build around
+
+- 78% of buyers and sellers work with the first agent who responds (National Association of Realtors).
+- Leads contacted within 5 minutes are up to 21× more likely to convert than after 30 minutes (lead-response research).
+- 80% of deals require five or more follow-up touches, yet most leads never receive a second one.
 
 ## Founder
 
-Ahmed Darwish — based in Dubai, UAE. Founded 2024.
+Ahmed Darwish. Founded 2024.
 
 ## Contact
 
 - WhatsApp: https://wa.me/201036755930
 - Email: ahmed@bznsflowai.com
-- Book a strategy call: https://calendar.app.google/JbRGCCbMXzaEUVrT7
+- Book a growth call: https://calendar.app.google/JbRGCCbMXzaEUVrT7
 - Website: https://www.bznsflowai.com
 
 ## Key pages

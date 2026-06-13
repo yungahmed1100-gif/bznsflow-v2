@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "npm run gen:faq && vite build",
+    "preview": "vite preview",
+    "gen:faq": "node scripts/gen-faq-schema.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

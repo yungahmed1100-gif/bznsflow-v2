@@ -1,8 +1,8 @@
 // BznsFlow i18n loader.
 //
-// English + Arabic ship in the main bundle (the two primary GCC markets, and the
-// most common first-paint languages). Dutch / German / Spanish are lazy-loaded on
-// demand so their strings never weigh down the initial download.
+// English + Arabic ship in the main bundle (the two primary first-paint
+// languages). Dutch / German / Spanish are lazy-loaded on demand so their
+// strings never weigh down the initial download.
 
 import en from './en.js';
 import ar from './ar.js';
