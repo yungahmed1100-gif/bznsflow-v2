@@ -88,6 +88,167 @@ const SERVICES_AR = [
   {"icon":"🏢","name":"شراكة نمو الوساطة العقارية","tag":"توسيع شركة وساطة مشكلة هندسية. نُشغّل محرك النمو بالكامل معك.","bullets":["قوة عمل ذكاء اصطناعي مُدرَّبة خصيصاً لشركتك وأسواقك","إدارة عملاء ووكلاء عبر فرق وأسواق متعددة","استراتيجية وتقارير وتحسين مستمر على مستوى تنفيذي"],"category":"scale"},
 ];
 
+// ─── Pricing tiers (Catch → Convert → Dominate ladder) ───────────────────────
+const TIERS = [
+  {
+    key: 'catalyst',
+    name: 'Catalyst',
+    price: '$199',
+    cadence: '/mo',
+    flag: null,
+    popular: false,
+    stage: 'Catch',
+    bottleneck: 'Leads die before anyone answers',
+    intro: 'After 6pm and on weekends, inquiries hit WhatsApp, Instagram, your website, and the portals — and sit. Teams lose 30–40% of after-hours leads to whoever replies first.',
+    insideLabel: "What's inside",
+    inside: [
+      'Layla on WhatsApp Business API (Meta-verified) — answers every inquiry in seconds, 24/7, in any language',
+      'Four-question qualification — budget, area, financing, timeline — so only real buyers reach your team',
+      'Auto-booking — qualified leads dropped straight into the team calendar, with confirmations sent',
+      'Instant hot-lead alert to the right agent, with the full conversation as context',
+      'Capture from everywhere — click-to-WhatsApp on Instagram and the website widget feed one brain',
+      'Daily lead digest + transcripts to the owner — nothing lost, every conversation logged',
+    ],
+    roiReplaces: 'A part-time receptionist ($1,100–2,200/mo)',
+    roiLine: 'Under one-fifth the cost of part-time coverage — with none of the gaps. Break-even is the first deal you would otherwise have lost.',
+    payback: 'First recovered deal',
+    pull: '$199/mo to stop losing the leads you already paid to generate.',
+    nextStep: 'Layla catches and qualifies — but the 80% who say “not yet” still slip away, and you still can’t see which agent actually converts.',
+    cta: 'Book Your Growth Call',
+  },
+  {
+    key: 'ascend',
+    name: 'Ascend',
+    price: '$699',
+    cadence: '/mo',
+    flag: 'Most agencies start here',
+    popular: true,
+    stage: 'Convert',
+    bottleneck: 'Leads leak in the middle of the funnel',
+    intro: 'You’re catching leads now — but deals die between first contact and close. The “call me next month” buyers get no follow-up, leads live scattered in chats, and the owner is blind to who’s performing.',
+    insideLabel: 'Everything in Catalyst, plus',
+    inside: [
+      'Khaled — inbound voice AI — answers calls, qualifies, and books, running the same brain as Layla',
+      'Full custom CRM — a visual pipeline (lead → contacted → viewing → offer → closed), auto-logged',
+      'Automated nurture sequences (WhatsApp + email) — drip the “not ready” leads until they are',
+      'Review-generation engine — automated requests on Bayut, Property Finder, and Google, with a private-feedback intercept',
+      'Owner BI dashboard — revenue, conversion by agent, response time, viewings, no-show rate',
+      'Weekly performance digest to the owner',
+    ],
+    roiReplaces: 'A CRM build ($12K+) plus review & BI retainers',
+    roiLine: 'A bespoke CRM build alone runs $12,000+. Ascend bundles all of it for ~$8,400 a year. One additional closed deal per quarter covers the entire year.',
+    payback: 'One extra deal per quarter',
+    pull: '$699/mo to stop deals dying in the gap you can’t see.',
+    nextStep: 'You convert what comes in — but you’re still waiting for the phone to ring. No outbound, no forecast, no way to go and take the market.',
+    cta: 'Book Your Growth Call',
+  },
+  {
+    key: 'apex',
+    name: 'Apex',
+    price: '$1,799',
+    cadence: '/mo',
+    flag: null,
+    popular: false,
+    stage: 'Dominate',
+    bottleneck: 'Growth is capped by your own reach',
+    intro: 'You’re winning, but you’ve hit the ceiling of inbound volume and human outreach. You react to what arrives instead of going to get it, your dormant database sits cold, and the owner is still firefighting.',
+    insideLabel: 'Everything in Ascend, plus',
+    inside: [
+      'ARIA — outbound AI calling agent — works lead lists, reactivates your dormant database, and books viewings proactively',
+      'Modeer — autonomous monitoring — watches system KPIs, self-heals reversible issues, flags breakages before you notice',
+      'Predictive BI — pipeline forecasting, which leads are likely to close, and where next quarter’s revenue is coming from',
+      'Full 20-MVP stack access — paid ads, social, e-commerce, and more, switched on as you need them',
+      'Dedicated growth strategist + a quarterly roadmap reviewed with you',
+    ],
+    roiReplaces: 'A full agency retainer ($3K–12K/mo)',
+    roiLine: 'A comparable managed retainer runs $3,000–12,000/mo — for less capability and no outbound AI. ARIA reactivates leads you’d otherwise never touch. One reactivated deal pays for months.',
+    payback: 'One reactivated deal',
+    pull: '$1,799/mo to stop reacting and start dominating.',
+    nextStep: null,
+    cta: 'Book Your Growth Call',
+  },
+];
+
+const TIERS_AR = [
+  {
+    key: 'catalyst',
+    name: 'كاتاليست',
+    price: '$199',
+    cadence: '/شهرياً',
+    flag: null,
+    popular: false,
+    stage: 'الالتقاط',
+    bottleneck: 'العملاء يموتون قبل أن يردّ أحد',
+    intro: 'بعد المساء وفي العطل، تصل الاستفسارات إلى واتساب وإنستغرام والموقع والبوابات — وتبقى دون رد. الفِرَق تخسر 30–40% من عملاء ما بعد الدوام لمن يرد أولاً.',
+    insideLabel: 'ما الذي بالداخل',
+    inside: [
+      'ليلى على واتساب للأعمال (موثّق من Meta) — ترد على كل استفسار في ثوانٍ، 24/7، بأي لغة',
+      'تأهيل بأربعة أسئلة — الميزانية، المنطقة، التمويل، التوقيت — فلا يصل فريقك إلا المشترون الجادون',
+      'حجز آلي — العملاء المؤهلون يُدرَجون مباشرة في تقويم الفريق مع تأكيدات',
+      'تنبيه فوري بالعميل الساخن للوكيل المناسب، مع كامل المحادثة كسياق',
+      'التقاط من كل مكان — زر واتساب على إنستغرام وأداة الموقع يغذّيان عقلاً واحداً',
+      'ملخص عملاء يومي + نصوص المحادثات للمالك — لا شيء يُفقد، كل محادثة مُسجّلة',
+    ],
+    roiReplaces: 'موظف استقبال بدوام جزئي (1,100–2,200$ شهرياً)',
+    roiLine: 'أقل من خُمس تكلفة التغطية الجزئية — وبلا أي فجوات. نقطة التعادل هي أول صفقة كنت ستخسرها.',
+    payback: 'أول صفقة مُستردّة',
+    pull: '199$ شهرياً لإيقاف خسارة العملاء الذين دفعت بالفعل لتوليدهم.',
+    nextStep: 'ليلى تلتقط وتؤهّل — لكن الـ80% الذين يقولون «ليس الآن» ما زالوا ينزلقون، وما زلت لا ترى أي وكيل يحوّل فعلاً.',
+    cta: 'احجز مكالمة النمو',
+  },
+  {
+    key: 'ascend',
+    name: 'أسيند',
+    price: '$699',
+    cadence: '/شهرياً',
+    flag: 'معظم الوكالات تبدأ هنا',
+    popular: true,
+    stage: 'التحويل',
+    bottleneck: 'العملاء يتسربون في منتصف المسار',
+    intro: 'أنت تلتقط العملاء الآن — لكن الصفقات تموت بين أول تواصل والإغلاق. عملاء «اتصل بي الشهر القادم» بلا متابعة، والعملاء مبعثرون في المحادثات، والمالك أعمى عن الأداء.',
+    insideLabel: 'كل ما في كاتاليست، بالإضافة إلى',
+    inside: [
+      'خالد — ذكاء صوتي للمكالمات الواردة — يرد ويؤهّل ويحجز، بنفس عقل ليلى',
+      'نظام CRM مخصص كامل — مسار مرئي (عميل ← تواصل ← معاينة ← عرض ← إغلاق)، يُسجَّل آلياً',
+      'تسلسلات رعاية آلية (واتساب + بريد) — تُرعى العملاء غير الجاهزين حتى يصبحوا كذلك',
+      'محرك توليد التقييمات — طلبات آلية على Bayut وProperty Finder وGoogle، مع اعتراض للتغذية الخاصة',
+      'لوحة ذكاء أعمال للمالك — الإيرادات، التحويل لكل وكيل، زمن الرد، المعاينات، نسبة الغياب',
+      'ملخص أداء أسبوعي للمالك',
+    ],
+    roiReplaces: 'بناء CRM (12 ألف$+) مع باقات التقييمات وذكاء الأعمال',
+    roiLine: 'بناء CRM مخصص وحده يكلّف 12,000$+. أسيند يجمع كل ذلك مقابل ~8,400$ سنوياً. صفقة إضافية واحدة كل ربع تغطي السنة كاملة.',
+    payback: 'صفقة إضافية كل ربع',
+    pull: '699$ شهرياً لإيقاف موت الصفقات في الفجوة التي لا تراها.',
+    nextStep: 'أنت تحوّل ما يصل — لكنك ما زلت تنتظر رنين الهاتف. لا تواصل خارجي، لا توقّعات، لا طريقة للذهاب وأخذ السوق.',
+    cta: 'احجز مكالمة النمو',
+  },
+  {
+    key: 'apex',
+    name: 'أبيكس',
+    price: '$1,799',
+    cadence: '/شهرياً',
+    flag: null,
+    popular: false,
+    stage: 'السيطرة',
+    bottleneck: 'النمو مقيّد بحدود وصولك',
+    intro: 'أنت تربح، لكنك بلغت سقف حجم الوارد وقدرة التواصل البشري. تتفاعل مع ما يصل بدل الذهاب لأخذه، وقاعدتك الخاملة باردة، والمالك ما زال يطفئ الحرائق.',
+    insideLabel: 'كل ما في أسيند، بالإضافة إلى',
+    inside: [
+      'آريا — وكيل اتصال خارجي بالذكاء الاصطناعي — يعمل على قوائم العملاء، يعيد تنشيط قاعدتك الخاملة، ويحجز المعاينات استباقياً',
+      'مدير — مراقبة ذاتية — يراقب مؤشرات النظام، يُصلح المشاكل القابلة للعكس ذاتياً، ويُنبّه قبل أن تلاحظ',
+      'ذكاء أعمال تنبؤي — توقّع المسار، أي العملاء أقرب للإغلاق، ومن أين تأتي إيرادات الربع القادم',
+      'وصول كامل لحزمة الـ20 منتجاً — إعلانات مدفوعة، سوشال، متاجر، وأكثر، تُفعَّل حسب حاجتك',
+      'استراتيجي نمو مخصص + خارطة طريق ربع سنوية تُراجَع معك',
+    ],
+    roiReplaces: 'باقة وكالة كاملة (3–12 ألف$ شهرياً)',
+    roiLine: 'باقة مُدارة مماثلة تكلّف 3,000–12,000$ شهرياً — بقدرات أقل وبلا ذكاء خارجي. آريا يعيد تنشيط عملاء لم تكن لتلمسهم. صفقة مُعاد تنشيطها واحدة تدفع لأشهر.',
+    payback: 'صفقة واحدة مُعاد تنشيطها',
+    pull: '1,799$ شهرياً لتتوقف عن التفاعل وتبدأ السيطرة.',
+    nextStep: null,
+    cta: 'احجز مكالمة النمو',
+  },
+];
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [lang, setLang] = useState(() => {
@@ -117,6 +278,7 @@ export default function App() {
   const activeLang    = isLoaded(lang) ? lang : 'en';
   const t             = getStrings(activeLang);
   const activeServices = activeLang === 'ar' ? SERVICES_AR : SERVICES;
+  const activeTiers    = activeLang === 'ar' ? TIERS_AR : TIERS;
 
   // ── Effects ────────────────────────────────────────────────────────────────
 
@@ -300,7 +462,7 @@ export default function App() {
           <ROISection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
           <ServicesSection t={t} activeServices={activeServices} CALENDAR_URL={CALENDAR_URL} />
           <ComparisonSection t={t} CALENDAR_URL={CALENDAR_URL} />
-          <TiersSection t={t} CALENDAR_URL={CALENDAR_URL} />
+          <TiersSection t={t} tiers={activeTiers} CALENDAR_URL={CALENDAR_URL} />
           <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} />
           <UseCasesSection t={t} lang={lang} />
           <TestimonialsSection t={t} lang={lang} />

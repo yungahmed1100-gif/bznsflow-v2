@@ -25,11 +25,16 @@ Real estate brokerages, agent teams, high-volume individual agents, property dev
 - Referral & Past-Client Engine — stay-in-touch automation that turns closed deals into future referral pipeline.
 - Brokerage Growth Partnership — custom AI workforce, multi-team management, and executive-level growth engineering.
 
-## Service plans
+## Service plans (Catch → Convert → Dominate ladder)
 
-- The Catalyst — $30/month. AI lead response for solo agents who can't be everywhere.
-- The Ascend — $197/month. AI lead qualification, routing, showing booking, nurture, and deal CRM for teams. Most popular.
-- The Apex — $997/month. Brokerage growth engine: done-for-you property ads, predictive pipeline intelligence, multi-team management, executive partnership. Limited to 3 brokerages per month.
+- Catalyst — $199/month. Catches and qualifies leads. Layla on the WhatsApp Business API answers every inquiry in seconds 24/7, qualifies by budget/area/financing/timeline, auto-books viewings, and alerts the right agent. Replaces a part-time receptionist ($1,100–2,200/mo).
+- Ascend — $699/month (most popular). Converts leads. Everything in Catalyst plus Khaled inbound voice AI, a full custom deal CRM, automated WhatsApp + email nurture, a review-generation engine, and an owner BI dashboard. Replaces a $12K+ CRM build plus review and BI retainers.
+- Apex — $1,799/month. Dominates the market. Everything in Ascend plus ARIA outbound AI calling (reactivates dormant databases), Modeer autonomous monitoring, predictive pipeline BI, full 20-MVP stack access, and a dedicated growth strategist. Replaces a $3K–12K/mo agency retainer.
+
+## Terms & guarantee
+
+- No setup fees on any plan. Annual billing = two months free. Prices are published and fixed.
+- The 30-Day Leak Guarantee: if, in the first month on Catalyst, Layla doesn't book the agreed number of qualified viewings, you don't pay for month two.
 
 ## Markets served
 

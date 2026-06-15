@@ -1,4 +1,3 @@
-// BznsFlow translations — es (auto-split from translations.js)
 export default {
   "nav_tagline": "Growth Engineers",
   "nav_problem": "Problema",
@@ -47,9 +46,9 @@ export default {
   "b2_desc": "Un centro de comando muestra cada lead, cada etapa del pipeline, cada oportunidad pendiente. No más chats y hojas de cálculo. Mira exactamente dónde se estancan los tratos, dónde se filtran los ingresos y qué arreglar — en tiempo real.",
   "b3_title": "Motor de Inteligencia Operativa",
   "b3_desc": "Auto-reservas, recordatorios inteligentes, generación de facturas, sincronización multiplataforma — diseñamos y automatizamos los procesos que consumen el día de tu equipo. Ellos se enfocan en cerrar. El sistema diseña todo lo demás.",
-  "tiers_label": "Planes de Growth Engineering",
-  "tiers_title": "Diseñados para <span class=\"gradient-text\">Cada Etapa</span> de Crecimiento",
-  "tiers_sub": "Cada plan cuesta menos que un solo trato perdido. Elige dónde estás — y dónde quieres estar.",
+  "tiers_label": "Growth Plans",
+  "tiers_title": "We Show You the Revenue You're <span class=\"gradient-text\">Bleeding</span><br />— Then Engineer the System That Stops It",
+  "tiers_sub": "Three plans. Each one kills a specific bottleneck. Monthly, no setup fees, published and fixed.",
   "popular_badge": "El Más Elegido",
   "t1_title": "El Catalizador (The Catalyst)",
   "t1_price": "$30/mes",
@@ -190,5 +189,24 @@ export default {
   "sticky_chat": "Escríbenos por WhatsApp",
   "lead_submit": "Envíame el manual",
   "lead_close": "Cerrar",
-  "lead_success_cta": "Reserva una llamada de estrategia de 15 minutos"
+  "lead_success_cta": "Reserva una llamada de estrategia de 15 minutos",
+  "ladder_1": "Catch",
+  "ladder_1_sub": "Stop losing the leads you already pay to generate.",
+  "ladder_2": "Convert",
+  "ladder_2_sub": "Turn the \"not-yet\" buyers into booked, closed deals.",
+  "ladder_3": "Dominate",
+  "ladder_3_sub": "Go take the market instead of waiting for the phone.",
+  "tier_kills": "Kills",
+  "tier_replaces": "Replaces",
+  "tier_payback": "Payback",
+  "compare_label": "At a glance",
+  "compare_bottleneck": "Bottleneck killed",
+  "compare_price": "Price",
+  "compare_replaces": "Replaces",
+  "compare_payback": "Payback",
+  "terms_1": "No setup fees — everything is in the monthly.",
+  "terms_2": "Annual billing = two months free.",
+  "terms_3": "Prices published and fixed — what you see is what everyone pays.",
+  "guarantee_title": "The 30-Day Leak Guarantee",
+  "guarantee_desc": "If Layla doesn't book the agreed number of qualified viewings in your first month on Catalyst, you don't pay for month two. We put the target on a spreadsheet before we start."
 };
