@@ -30,9 +30,11 @@ import { LeadModal }          from './components/LeadModal';
 const CALENDAR_URL  = 'https://calendar.app.google/JbRGCCbMXzaEUVrT7';
 const WHATSAPP_URL  = 'https://wa.me/201036755930';
 
-// Lead-capture endpoint. Set to a Formspree / Make.com / Resend webhook to activate.
-// When null: form shows success state without posting (safe dev default).
-const LEAD_ENDPOINT = null;
+// Lead-capture endpoint → Google Sheet via Apps Script Web App (see apps-script/Code.gs).
+// Set VITE_LEAD_ENDPOINT in Vercel to the deployed /exec URL, or paste it here.
+// When empty: form shows success state without posting (safe dev default).
+const LEAD_ENDPOINT = import.meta.env.VITE_LEAD_ENDPOINT ||
+  'https://script.google.com/macros/s/AKfycbwWWbWYl3Kb1LszrgwOwiIx8xBFeh6FIguhx8KY6oENg6ASPKkqHhvzh1nkf0nACE0CHg/exec';
 
 const LANGUAGES = [
   { code: 'en', flag: '🇬🇧', label: 'English' },
@@ -425,12 +427,18 @@ export default function App() {
     trackEvent('LeadSubmit', { source: 'exit-intent' });
     try {
       if (LEAD_ENDPOINT) {
-        const res = await fetch(LEAD_ENDPOINT, {
+        // text/plain keeps this a "simple" request — Apps Script has no CORS
+        // preflight handler, so application/json would be rejected.
+        await fetch(LEAD_ENDPOINT, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ email, source: 'exit-intent', lang }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            email,
+            sourceCta: 'Exit-intent modal',
+            language: lang,
+            pageUrl: typeof window !== 'undefined' ? window.location.href : '',
+          }),
         });
-        if (!res.ok) throw new Error(`Lead endpoint ${res.status}`);
       }
       setLeadStatus('success');
     } catch (err) {
