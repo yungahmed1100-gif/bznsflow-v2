@@ -19,7 +19,7 @@
   --border-hover:     rgba(0, 0, 0, 0.15);
   --text-primary:     #1A1A1A;
   --text-secondary:   #4B5563;
-  --text-muted:       #6B7280;
+  --text-muted:       #565E6B;
   --accent-blue:      #5C95C6;
   --accent-purple:    #F28C54;
   --accent-cyan:      #51A47B;
@@ -3615,4 +3615,93 @@ html {
   width: 100%;
   justify-content: center;
   margin-top: 4px;
+}
+
+/* ============================================================
+   Responsive + accessibility hardening (additive — desktop
+   unchanged; new selectors or small-screen / state / focus only)
+ ============================================================ */
+
+/* Skip-to-content link — off-screen until focused */
+.skip-to-content {
+  position: fixed;
+  left: 50%;
+  top: 8px;
+  transform: translate(-50%, -160%);
+  z-index: 2000;
+  background: var(--accent-blue);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition);
+}
+.skip-to-content:focus,
+.skip-to-content:focus-visible {
+  transform: translate(-50%, 0);
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+/* Language menu also reveals when toggled open or focused (keyboard + touch) */
+.lang-selector.open .lang-menu,
+.lang-selector:focus-within .lang-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Visible focus ring on the ROI range slider thumb */
+.roi-input input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(92, 149, 198, 0.35);
+}
+.roi-input input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px rgba(92, 149, 198, 0.35);
+}
+
+/* WCAG AA contrast — darker same-hue variants for small bold labels on tinted
+   backgrounds (scoped to these labels; the accent button tokens are unchanged) */
+.tier-stage-tag { color: #2f6296; }
+.tier-bottleneck-label { color: #b8333a; }
+.tier-roi-val--accent { color: #2e7150; }
+
+/* Tap targets ≥44px + touch press feedback */
+.lead-modal-close { width: 44px; height: 44px; }
+.lang-toggle { min-height: 40px; }
+.btn:active { transform: translateY(1px); }
+
+/* Pricing-compare table: scroll hint on phones (matches comparison table) */
+@media (max-width: 600px) {
+  .pricing-compare-scroll::after {
+    content: 'Scroll to compare →';
+    display: block;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 10px;
+    letter-spacing: 0.04em;
+  }
+}
+[dir="rtl"] .comparison-scroll::after,
+[dir="rtl"] .pricing-compare-scroll::after { content: '← مرّر للمقارنة'; }
+
+/* Pipeline diagram never overflows a phone viewport */
+@media (max-width: 480px) {
+  .pipeline-node { min-width: 0; flex: 1 1 calc(50% - 8px); }
+  .btn { white-space: normal; }
+  .trust-flag { white-space: normal; }
+  .section { padding: 64px 0; }
+}
+@media (max-width: 375px) {
+  .pipeline-diagram { flex-direction: column; }
+  .pipeline-node { flex: 1 1 100%; width: 100%; }
+  .container { padding: 0 14px; }
+  .hero-content { padding: 104px 14px 56px; }
+  .cta-wrapper { padding: 32px 16px; }
+  .services-bottom-cta { padding: 28px 16px; }
+  .section { padding: 52px 0; }
+  .lead-modal { padding: 30px 18px 22px; }
 }

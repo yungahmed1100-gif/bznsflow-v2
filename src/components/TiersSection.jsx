@@ -101,7 +101,7 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL }) {
 
         {/* At-a-glance comparison */}
         <div className="pricing-compare fade-in">
-          <div className="pricing-compare-scroll">
+          <div className="pricing-compare-scroll" tabIndex={0} role="region" aria-label={t.compare_label || 'Plan comparison'}>
             <table className="pricing-compare-table">
               <thead>
                 <tr>
@@ -135,7 +135,7 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL }) {
 
         {/* Terms */}
         <div className="pricing-terms fade-in">
-          <div className="term-item"><Icon name="check" size={16} strokeWidth={2.5} /><span>{t.terms_1 || 'No setup fees — everything is in the monthly.'}</span></div>
+          <div className="term-item"><Icon name="check" size={16} strokeWidth={2.5} /><span>{t.terms_1 || 'No setup fees — a one-time payment, nothing recurring.'}</span></div>
           <div className="term-item"><Icon name="check" size={16} strokeWidth={2.5} /><span>{t.terms_2 || 'Annual billing = two months free.'}</span></div>
           <div className="term-item"><Icon name="check" size={16} strokeWidth={2.5} /><span>{t.terms_3 || 'Prices published and fixed — what you see is what everyone pays.'}</span></div>
         </div>

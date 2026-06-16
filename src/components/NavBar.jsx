@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import logoImg from '../public/logo_bznsflow.png';
 
 export function NavBar({
@@ -6,8 +6,18 @@ export function NavBar({
   LANGUAGES, CALENDAR_URL,
   onOpenMenu, onCloseMenu, onSmoothScroll, onSetLanguage,
 }) {
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const langToggleRef = useRef(null);
+
+  const closeLang = () => setIsLangOpen(false);
+  const handleLangSelect = (code) => { onSetLanguage(code); closeLang(); langToggleRef.current?.focus(); };
+  // Close the menu (and restore focus) on Escape, or when focus leaves the group.
+  const handleLangKeyDown = (e) => { if (e.key === 'Escape') { closeLang(); langToggleRef.current?.focus(); } };
+  const handleLangBlur = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) closeLang(); };
+
   return (
     <>
+      <a href="#main-content" className="skip-to-content">{t.skip_to_content || 'Skip to main content'}</a>
       <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} aria-hidden="true" />
 
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`} id="navbar">
@@ -40,20 +50,35 @@ export function NavBar({
             <li><a href="#use-cases"  className={`nav-link ${activeLink === 'use-cases'  ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#use-cases')}>{t.nav_cases}</a></li>
             <li><a href="#about"      className={`nav-link ${activeLink === 'about'      ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#about')}>{t.nav_about}</a></li>
 
-            <li className="lang-selector">
-              <button className="lang-toggle" aria-haspopup="true">
-                {LANGUAGES.find(l => l.code === lang)?.flag || '🌐'} <span className="dropdown-arrow">▼</span>
+            <li
+              className={`lang-selector ${isLangOpen ? 'open' : ''}`}
+              onKeyDown={handleLangKeyDown}
+              onBlur={handleLangBlur}
+            >
+              <button
+                ref={langToggleRef}
+                type="button"
+                className="lang-toggle"
+                aria-haspopup="true"
+                aria-expanded={isLangOpen}
+                aria-label={t.lang_label || 'Choose language'}
+                onClick={() => setIsLangOpen(o => !o)}
+              >
+                {LANGUAGES.find(l => l.code === lang)?.flag || '🌐'} <span className="dropdown-arrow" aria-hidden="true">▼</span>
               </button>
-              <div className="lang-menu">
+              <div className="lang-menu" role="menu">
                 {LANGUAGES.map(l => (
                   <button
                     key={l.code}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={lang === l.code}
                     className={`lang-item ${lang === l.code ? 'active' : ''}`}
-                    onClick={() => onSetLanguage(l.code)}
+                    onClick={() => handleLangSelect(l.code)}
                     title={l.label}
                     aria-label={l.label}
                   >
-                    <span className="flag">{l.flag}</span>
+                    <span className="flag" aria-hidden="true">{l.flag}</span>
                     <span className="label">{l.label}</span>
                   </button>
                 ))}

@@ -17,6 +17,7 @@ export function LeadModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="lead-modal-title"
+        aria-describedby="lead-modal-sub"
         onClick={(e) => e.stopPropagation()}
       >
         <button className="lead-modal-close" onClick={onClose} aria-label={t.lead_close}>
@@ -52,7 +53,7 @@ export function LeadModal({
               className="lead-modal-title"
               dangerouslySetInnerHTML={{ __html: t.lead_title }}
             />
-            <p className="lead-modal-sub">{t.lead_sub}</p>
+            <p className="lead-modal-sub" id="lead-modal-sub">{t.lead_sub}</p>
 
             <ul className="lead-modal-bullets">
               {bullets.map((bullet, i) => (

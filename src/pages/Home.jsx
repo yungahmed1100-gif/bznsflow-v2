@@ -121,7 +121,7 @@ const TIERS = [
     key: 'catalyst',
     name: 'Catalyst',
     price: '$199',
-    cadence: '/mo',
+    cadence: ' one-time',
     flag: null,
     popular: false,
     stage: 'Catch',
@@ -137,9 +137,9 @@ const TIERS = [
       'Daily lead digest + transcripts to the owner — nothing lost, every conversation logged',
     ],
     roiReplaces: 'A part-time receptionist ($1,100–2,200/mo)',
-    roiLine: 'Under one-fifth the cost of part-time coverage — with none of the gaps. Break-even is the first deal you would otherwise have lost.',
+    roiLine: 'A one-time $199 — less than a single week of part-time reception cover, with none of the gaps. Break-even is the first deal you would otherwise have lost.',
     payback: 'First recovered deal',
-    pull: '$199/mo to stop losing the leads you already paid to generate.',
+    pull: '$199 once to stop losing the leads you already paid to generate.',
     nextStep: 'Layla catches and qualifies — but the 80% who say “not yet” still slip away, and you still can’t see which agent actually converts.',
     cta: 'Book Your Growth Call',
   },
@@ -147,7 +147,7 @@ const TIERS = [
     key: 'ascend',
     name: 'Ascend',
     price: '$699',
-    cadence: '/mo',
+    cadence: ' one-time',
     flag: 'Most agencies start here',
     popular: true,
     stage: 'Convert',
@@ -163,9 +163,9 @@ const TIERS = [
       'Weekly performance digest to the owner',
     ],
     roiReplaces: 'A CRM build ($12K+) plus review & BI retainers',
-    roiLine: 'A bespoke CRM build alone runs $12,000+. Ascend bundles all of it for ~$8,400 a year. One additional closed deal per quarter covers the entire year.',
-    payback: 'One extra deal per quarter',
-    pull: '$699/mo to stop deals dying in the gap you can’t see.',
+    roiLine: 'A bespoke CRM build alone runs $12,000+. Ascend bundles all of it for a one-time $699 — a single extra closed deal pays it back many times over.',
+    payback: 'One extra closed deal',
+    pull: '$699 once to stop deals dying in the gap you can’t see.',
     nextStep: 'You convert what comes in — but you’re still waiting for the phone to ring. No outbound, no forecast, no way to go and take the market.',
     cta: 'Book Your Growth Call',
   },
@@ -173,7 +173,7 @@ const TIERS = [
     key: 'apex',
     name: 'Apex',
     price: '$1,799',
-    cadence: '/mo',
+    cadence: ' one-time',
     flag: null,
     popular: false,
     stage: 'Dominate',
@@ -188,9 +188,9 @@ const TIERS = [
       'Dedicated growth strategist + a quarterly roadmap reviewed with you',
     ],
     roiReplaces: 'A full agency retainer ($3K–12K/mo)',
-    roiLine: 'A comparable managed retainer runs $3,000–12,000/mo — for less capability and no outbound AI. ARIA reactivates leads you’d otherwise never touch. One reactivated deal pays for months.',
+    roiLine: 'A comparable managed retainer runs $3,000–12,000 every month — for less capability and no outbound AI. Apex is a one-time $1,799, and ARIA reactivates leads you’d otherwise never touch. One reactivated deal covers it outright.',
     payback: 'One reactivated deal',
-    pull: '$1,799/mo to stop reacting and start dominating.',
+    pull: '$1,799 once to stop reacting and start dominating.',
     nextStep: null,
     cta: 'Book Your Growth Call',
   },
@@ -201,7 +201,7 @@ const TIERS_AR = [
     key: 'catalyst',
     name: 'كاتاليست',
     price: '$199',
-    cadence: '/شهرياً',
+    cadence: ' دفعة واحدة',
     flag: null,
     popular: false,
     stage: 'الالتقاط',
@@ -217,9 +217,9 @@ const TIERS_AR = [
       'ملخص عملاء يومي + نصوص المحادثات للمالك — لا شيء يُفقد، كل محادثة مُسجّلة',
     ],
     roiReplaces: 'موظف استقبال بدوام جزئي (1,100–2,200$ شهرياً)',
-    roiLine: 'أقل من خُمس تكلفة التغطية الجزئية — وبلا أي فجوات. نقطة التعادل هي أول صفقة كنت ستخسرها.',
+    roiLine: 'دفعة واحدة 199$ — أقل من تكلفة أسبوع من تغطية استقبال جزئية، وبلا أي فجوات. نقطة التعادل هي أول صفقة كنت ستخسرها.',
     payback: 'أول صفقة مُستردّة',
-    pull: '199$ شهرياً لإيقاف خسارة العملاء الذين دفعت بالفعل لتوليدهم.',
+    pull: '199$ مرة واحدة لإيقاف خسارة العملاء الذين دفعت بالفعل لتوليدهم.',
     nextStep: 'ليلى تلتقط وتؤهّل — لكن الـ80% الذين يقولون «ليس الآن» ما زالوا ينزلقون، وما زلت لا ترى أي وكيل يحوّل فعلاً.',
     cta: 'احجز مكالمة النمو',
   },
@@ -227,7 +227,7 @@ const TIERS_AR = [
     key: 'ascend',
     name: 'أسيند',
     price: '$699',
-    cadence: '/شهرياً',
+    cadence: ' دفعة واحدة',
     flag: 'معظم الوكالات تبدأ هنا',
     popular: true,
     stage: 'التحويل',
@@ -243,9 +243,9 @@ const TIERS_AR = [
       'ملخص أداء أسبوعي للمالك',
     ],
     roiReplaces: 'بناء CRM (12 ألف$+) مع باقات التقييمات وذكاء الأعمال',
-    roiLine: 'بناء CRM مخصص وحده يكلّف 12,000$+. أسيند يجمع كل ذلك مقابل ~8,400$ سنوياً. صفقة إضافية واحدة كل ربع تغطي السنة كاملة.',
-    payback: 'صفقة إضافية كل ربع',
-    pull: '699$ شهرياً لإيقاف موت الصفقات في الفجوة التي لا تراها.',
+    roiLine: 'بناء CRM مخصص وحده يكلّف 12,000$+. أسيند يجمع كل ذلك مقابل دفعة واحدة 699$ — صفقة إضافية واحدة تُعيد ثمنه أضعافاً.',
+    payback: 'صفقة إضافية واحدة',
+    pull: '699$ مرة واحدة لإيقاف موت الصفقات في الفجوة التي لا تراها.',
     nextStep: 'أنت تحوّل ما يصل — لكنك ما زلت تنتظر رنين الهاتف. لا تواصل خارجي، لا توقّعات، لا طريقة للذهاب وأخذ السوق.',
     cta: 'احجز مكالمة النمو',
   },
@@ -253,7 +253,7 @@ const TIERS_AR = [
     key: 'apex',
     name: 'أبيكس',
     price: '$1,799',
-    cadence: '/شهرياً',
+    cadence: ' دفعة واحدة',
     flag: null,
     popular: false,
     stage: 'السيطرة',
@@ -268,9 +268,9 @@ const TIERS_AR = [
       'استراتيجي نمو مخصص + خارطة طريق ربع سنوية تُراجَع معك',
     ],
     roiReplaces: 'باقة وكالة كاملة (3–12 ألف$ شهرياً)',
-    roiLine: 'باقة مُدارة مماثلة تكلّف 3,000–12,000$ شهرياً — بقدرات أقل وبلا ذكاء خارجي. آريا يعيد تنشيط عملاء لم تكن لتلمسهم. صفقة مُعاد تنشيطها واحدة تدفع لأشهر.',
+    roiLine: 'باقة مُدارة مماثلة تكلّف 3,000–12,000$ شهرياً — بقدرات أقل وبلا ذكاء خارجي. أبيكس دفعة واحدة 1,799$، وآريا يعيد تنشيط عملاء لم تكن لتلمسهم. صفقة مُعاد تنشيطها واحدة تغطي ثمنه بالكامل.',
     payback: 'صفقة واحدة مُعاد تنشيطها',
-    pull: '1,799$ شهرياً لتتوقف عن التفاعل وتبدأ السيطرة.',
+    pull: '1,799$ مرة واحدة لتتوقف عن التفاعل وتبدأ السيطرة.',
     nextStep: null,
     cta: 'احجز مكالمة النمو',
   },
@@ -376,6 +376,7 @@ export default function Home({ lang: routeLang = 'en' }) {
   // Body-scroll lock + Esc-to-close when lead modal open
   useEffect(() => {
     if (!isLeadOpen) return;
+    const lastFocused = document.activeElement;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const handleKey = (e) => { if (e.key === 'Escape') setIsLeadOpen(false); };
@@ -384,6 +385,7 @@ export default function Home({ lang: routeLang = 'en' }) {
     return () => {
       document.body.style.overflow = prev;
       document.removeEventListener('keydown', handleKey);
+      if (lastFocused && lastFocused.focus) lastFocused.focus();   // restore focus on close
     };
   }, [isLeadOpen]);
 
@@ -415,13 +417,16 @@ export default function Home({ lang: routeLang = 'en' }) {
   // Body-scroll lock + Esc-to-close for the playbook modal.
   useEffect(() => {
     if (!isPlaybookOpen) return;
+    const lastFocused = document.activeElement;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const handleKey = (e) => { if (e.key === 'Escape') setIsPlaybookOpen(false); };
     document.addEventListener('keydown', handleKey);
+    document.getElementById('playbook-name')?.focus();
     return () => {
       document.body.style.overflow = prev;
       document.removeEventListener('keydown', handleKey);
+      if (lastFocused && lastFocused.focus) lastFocused.focus();   // restore focus on close
     };
   }, [isPlaybookOpen]);
 

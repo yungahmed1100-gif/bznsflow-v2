@@ -11,7 +11,7 @@ export function ComparisonSection({ t, CALENDAR_URL }) {
         <h2 className="section-title fade-in" dangerouslySetInnerHTML={{ __html: t.cmp_title }}></h2>
         <p className="section-subtitle fade-in">{t.cmp_sub}</p>
 
-        <div className="comparison-scroll fade-in">
+        <div className="comparison-scroll fade-in" tabIndex={0} role="region" aria-label={t.cmp_title || 'Comparison'}>
           <div className="comparison-table">
             <div className="cmp-header-row">
               <div className="cmp-feature-header"></div>
@@ -44,7 +44,7 @@ export function ComparisonSection({ t, CALENDAR_URL }) {
 
             <div className="cmp-row">
               <div className="cmp-feature">{t.cmp_r2}</div>
-              <div className="cmp-cell cmp-cell--bzns"><span className="cmp-bzns-text">From $197/mo</span></div>
+              <div className="cmp-cell cmp-cell--bzns"><span className="cmp-bzns-text">From $199 one-time</span></div>
               <div className="cmp-cell"><span className="cmp-dim">$50–300 + your time</span></div>
               <div className="cmp-cell"><span className="cmp-dim">$3,000+/mo</span></div>
               <div className="cmp-cell"><span className="cmp-dim">$500–2k one-time</span></div>

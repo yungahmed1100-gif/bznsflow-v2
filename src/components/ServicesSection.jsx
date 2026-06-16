@@ -36,7 +36,7 @@ export function ServicesSection({ t, activeServices, CALENDAR_URL }) {
 
         <div className="services-category fade-in">
           <div className="services-category-header">
-            <span className="services-category-badge services-category-badge--foundation">Foundation</span>
+            <span className="services-category-badge services-category-badge--foundation">{t.cat_foundation || 'Foundation'}</span>
             <div className="services-category-info">
               <h3 className="services-category-title">{t.services_foundation_label}</h3>
               <p className="services-category-sub">{t.services_foundation_sub}</p>
@@ -47,7 +47,7 @@ export function ServicesSection({ t, activeServices, CALENDAR_URL }) {
 
         <div className="services-category fade-in" style={CATEGORY_MARGIN}>
           <div className="services-category-header">
-            <span className="services-category-badge services-category-badge--growth">Growth</span>
+            <span className="services-category-badge services-category-badge--growth">{t.cat_growth || 'Growth'}</span>
             <div className="services-category-info">
               <h3 className="services-category-title">{t.services_growth_label}</h3>
               <p className="services-category-sub">{t.services_growth_sub}</p>
@@ -58,7 +58,7 @@ export function ServicesSection({ t, activeServices, CALENDAR_URL }) {
 
         <div className="services-category fade-in" style={CATEGORY_MARGIN}>
           <div className="services-category-header">
-            <span className="services-category-badge services-category-badge--scale">Scale</span>
+            <span className="services-category-badge services-category-badge--scale">{t.cat_scale || 'Scale'}</span>
             <div className="services-category-info">
               <h3 className="services-category-title">{t.services_scale_label}</h3>
               <p className="services-category-sub">{t.services_scale_sub}</p>

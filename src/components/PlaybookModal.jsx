@@ -32,6 +32,7 @@ export function PlaybookModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="playbook-modal-title"
+        aria-describedby="playbook-modal-sub"
         onClick={(e) => e.stopPropagation()}
       >
         <button className="lead-modal-close" onClick={onClose} aria-label={t.lead_close}>
@@ -70,7 +71,7 @@ export function PlaybookModal({
               className="lead-modal-title"
               dangerouslySetInnerHTML={{ __html: t.playbook_title }}
             />
-            <p className="lead-modal-sub">{t.playbook_sub}</p>
+            <p className="lead-modal-sub" id="playbook-modal-sub">{t.playbook_sub}</p>
 
             <form className="lead-form lead-form--stack" onSubmit={handleSubmit} noValidate>
               {/* Honeypot — visually hidden, off the tab order. */}

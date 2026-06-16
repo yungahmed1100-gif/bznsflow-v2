@@ -23,7 +23,7 @@ function PipelineDiagram({ t, lang }) {
       {steps.map((step, i) => (
         <React.Fragment key={i}>
           <div className={`pipeline-node${step.accent ? ' pipeline-node--accent' : ''}${step.revenue ? ' pipeline-node--revenue' : ''}`}>
-            <div className="pipeline-node-icon">{PIPELINE_ICONS[i]}</div>
+            <div className="pipeline-node-icon" aria-hidden="true">{PIPELINE_ICONS[i]}</div>
             <div className="pipeline-node-label">{step.label}</div>
             <div className="pipeline-node-sub">{step.sub}</div>
           </div>
