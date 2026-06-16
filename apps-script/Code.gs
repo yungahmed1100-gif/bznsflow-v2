@@ -24,7 +24,7 @@ var HEADER_ROW = 2;            // Row 1 is the banner (CAPTURE/QUALIFICATION/...
 var SENDER_EMAIL  = 'ahmed@bznsflowai.com';   // must be the script account OR a verified "Send mail as" alias
 var SENDER_NAME   = 'Ahmed — BznsFlow';
 var EMAIL_SUBJECT = 'دليل عملي للتطور بمشروعك — BznsFlow Growth Playbook';
-var TEASER_URL    = 'https://www.bznsflowai.com/bznsflow-email-teaser.html';
+var TEASER_URL    = 'https://www.bznsflowai.com/bznsflow-email-teaser';   // extensionless — Vercel cleanUrls 308-redirects the .html form
 var PLAYBOOK_URL  = 'https://www.bznsflowai.com/bznsflow-growth-playbook-realestate.pdf';
 
 function doPost(e) {
