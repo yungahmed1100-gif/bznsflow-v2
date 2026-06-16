@@ -20,7 +20,7 @@ var CAL_SHEET_ID = '1vjw4E63p8lTRHuPNBcqlz4PenhbPWQdzqHost7d4JMs';
 var CAL_SHEET_NAME = '';          // '' = first/active tab
 var CAL_HEADER_ROW = 2;           // real headers on row 2 (row 1 is the banner)
 var CALENDAR_ID = '';             // '' = your primary calendar (where bookings land)
-var APPOINTMENT_KEYWORD = '';     // e.g. 'Growth Call' — only events whose title contains this are synced. '' = any event with a guest.
+var APPOINTMENT_KEYWORD = 'introduction call';  // matches "introduction call with Bznsflow" bookings; ignores personal meetings.
 var LOOKBACK_DAYS = 2;            // also catch bookings made for the last couple of days
 var LOOKAHEAD_DAYS = 120;         // upcoming bookings window
 

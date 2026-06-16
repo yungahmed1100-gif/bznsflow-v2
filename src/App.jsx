@@ -28,7 +28,7 @@ import { StickyMobileCTA }    from './components/StickyMobileCTA';
 import { LeadModal }          from './components/LeadModal';
 
 // ─── Shared constants ────────────────────────────────────────────────────────
-const CALENDAR_URL  = 'https://calendar.app.google/JbRGCCbMXzaEUVrT7';
+const CALENDAR_URL  = 'https://calendar.app.google/KS48NKMVXPugQEhm6';
 const WHATSAPP_URL  = 'https://wa.me/201036755930';
 
 const LANGUAGES = [
