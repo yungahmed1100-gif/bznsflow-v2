@@ -1,9 +1,7 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
+import { ViteReactSSG } from 'vite-react-ssg';
+import { routes } from './routes';
+import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+// vite-react-ssg entry: prerenders each route to static HTML at build time and
+// hydrates on the client. Replaces the old ReactDOM.createRoot CSR mount.
+export const createRoot = ViteReactSSG({ routes });

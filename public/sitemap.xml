@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://www.bznsflowai.com/</loc>
-    <lastmod>2026-06-14T00:00:00+00:00</lastmod>
+    <lastmod>2026-06-16T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/" />
-    <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/?lang=ar" />
-    <xhtml:link rel="alternate" hreflang="nl" href="https://www.bznsflowai.com/?lang=nl" />
-    <xhtml:link rel="alternate" hreflang="de" href="https://www.bznsflowai.com/?lang=de" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.bznsflowai.com/?lang=es" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/" />
-    <image:image>
-      <image:loc>https://www.bznsflowai.com/og-image.jpg</image:loc>
-      <image:title>BznsFlow — AI Growth Engine for Real Estate Teams</image:title>
-    </image:image>
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/" />
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/ar" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/" />
+  </url>
+  <url>
+    <loc>https://www.bznsflowai.com/ar</loc>
+    <lastmod>2026-06-16T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/" />
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/ar" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/" />
   </url>
 </urlset>

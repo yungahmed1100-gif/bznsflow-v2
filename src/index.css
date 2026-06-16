@@ -3603,3 +3603,16 @@ html {
   .ladder-arrow { transform: rotate(90deg); }
   .pricing-guarantee { flex-direction: column; gap: 12px; }
 }
+
+/* ---- Playbook lead-magnet modal (additive — reuses .lead-modal / .lead-form) ---- */
+.lead-form--stack { display: block; }
+.lead-form--stack .lead-form-input {
+  display: block;
+  width: 100%;
+  margin-bottom: 16px;
+}
+.lead-form-submit--block {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}

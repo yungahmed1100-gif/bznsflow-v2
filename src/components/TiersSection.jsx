@@ -2,7 +2,7 @@ import React from 'react';
 import { Icon } from './Icon';
 
 // Premium pricing — Catch → Convert → Dominate ladder.
-// Tier content comes from the `tiers` array (TIERS / TIERS_AR in App.jsx);
+// Tier content comes from the `tiers` array (TIERS / TIERS_AR in pages/Home.jsx);
 // section chrome (labels, terms, guarantee) comes from translations `t`.
 export function TiersSection({ t, tiers = [], CALENDAR_URL }) {
   const Check = () => <Icon name="check" size={15} strokeWidth={2.5} />;

@@ -1,6 +1,7 @@
 /**
  * BznsFlow — Lead capture → Google Sheet
- * Bound Web App for: https://docs.google.com/spreadsheets/d/1vjw4E63p8lTRHuPNBcqlz4PenhbPWQdzqHost7d4JMs
+ * Bound Web App for: https://docs.google.com/spreadsheets/d/125VxXDHIlesWDZijAkzwCOKcSBDT-sSMXMQnwSmcSYY
+ * Hosted on ahmed@bznsflowai.com → GmailApp sends from ahmed natively (no send-as alias needed).
  *
  * Appends one row per lead. Matches incoming JSON keys to the sheet's HEADER ROW
  * by normalized name (case/space/punctuation-insensitive), so the same endpoint
@@ -12,9 +13,19 @@
  *   copy the /exec URL.
  */
 
-var SHEET_ID = '1vjw4E63p8lTRHuPNBcqlz4PenhbPWQdzqHost7d4JMs';
+var SHEET_ID = '125VxXDHIlesWDZijAkzwCOKcSBDT-sSMXMQnwSmcSYY';
 var SHEET_NAME = '';            // '' = first/active tab. Set to your tab name if different.
 var HEADER_ROW = 2;            // Row 1 is the banner (CAPTURE/QUALIFICATION/...). Real headers live on row 2.
+
+// ── Playbook lead-magnet email delivery ─────────────────────────────────────
+// When a submission carries { playbook: true }, the visitor is auto-emailed the
+// playbook (teaser HTML as the body, PDF attached). Both assets are fetched from
+// the live site, so they must be deployed first.
+var SENDER_EMAIL  = 'ahmed@bznsflowai.com';   // must be the script account OR a verified "Send mail as" alias
+var SENDER_NAME   = 'Ahmed — BznsFlow';
+var EMAIL_SUBJECT = 'دليل عملي للتطور بمشروعك — BznsFlow Growth Playbook';
+var TEASER_URL    = 'https://www.bznsflowai.com/bznsflow-email-teaser.html';
+var PLAYBOOK_URL  = 'https://www.bznsflowai.com/bznsflow-growth-playbook-realestate.pdf';
 
 function doPost(e) {
   try {
@@ -35,10 +46,42 @@ function doPost(e) {
     });
 
     sheet.appendRow(row);
+
+    // Auto-deliver the playbook — never let an email failure break lead capture.
+    if (data.playbook === true && data.email) {
+      try { sendPlaybook_(String(data.email).trim(), data.name ? String(data.name).trim() : ''); }
+      catch (mailErr) { /* logged below; row is already saved */ console.error('Playbook email failed: ' + mailErr); }
+    }
+
     return json_({ ok: true });
   } catch (err) {
     return json_({ ok: false, error: String(err) });
   }
+}
+
+// Emails the playbook: teaser HTML body + PDF attachment, sent from SENDER_EMAIL.
+function sendPlaybook_(email, name) {
+  // Guard the fetches — a non-200 would otherwise email an error page / bad PDF.
+  var teaserResp = UrlFetchApp.fetch(TEASER_URL, { muteHttpExceptions: true });
+  if (teaserResp.getResponseCode() !== 200) throw new Error('Teaser fetch ' + teaserResp.getResponseCode());
+  var html = teaserResp.getContentText();
+  if (name) {
+    // Prepend a short personalized greeting above the teaser body.
+    html = '<p style="font-family:Arial,sans-serif;font-size:15px;color:#1A1A1A;margin:0 0 12px;">'
+         + 'مرحباً ' + escapeHtml_(name) + '، إليك دليلك العملي 👇 / Hi ' + escapeHtml_(name) + ', here is your playbook 👇'
+         + '</p>' + html;
+  }
+  var pdfResp = UrlFetchApp.fetch(PLAYBOOK_URL, { muteHttpExceptions: true });
+  if (pdfResp.getResponseCode() !== 200) throw new Error('PDF fetch ' + pdfResp.getResponseCode());
+  var pdf = pdfResp.getBlob().setName('BznsFlow-Growth-Playbook.pdf');
+
+  GmailApp.sendEmail(email, EMAIL_SUBJECT,
+    'Your BznsFlow Growth Playbook is attached. If it doesn\'t open, reply and we\'ll resend it.',
+    { htmlBody: html, attachments: [pdf], name: SENDER_NAME, from: SENDER_EMAIL });
+}
+
+function escapeHtml_(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // Health check — open the /exec URL in a browser to confirm it's live.

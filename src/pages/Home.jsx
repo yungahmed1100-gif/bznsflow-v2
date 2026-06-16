@@ -1,35 +1,35 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { getStrings, isLoaded, loadLang, ALL_LANGS, EAGER_LANGS } from './i18n';
-import { postLead } from './lib/leads';
-import './index.css';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getStrings, isLoaded, loadLang } from '../i18n';
+import { postLead } from '../lib/leads';
+import { Seo } from '../components/Seo';
+import { SITE } from '../routes-manifest';
 
-// ── Above-the-fold: eager (in the critical render path) ──────────────────────
-import { NavBar }             from './components/NavBar';
-import { HeroSection }        from './components/HeroSection';
-import { ProblemSection }     from './components/ProblemSection';
-
-// ── Below-the-fold: lazy-loaded so they don't block first paint ──────────────
-// Default exports aren't used by these modules, so map the named export through.
-const BenefitsSection     = lazy(() => import('./components/BenefitsSection').then(m => ({ default: m.BenefitsSection })));
-const ROISection          = lazy(() => import('./components/ROISection').then(m => ({ default: m.ROISection })));
-const ServicesSection     = lazy(() => import('./components/ServicesSection').then(m => ({ default: m.ServicesSection })));
-const ComparisonSection   = lazy(() => import('./components/ComparisonSection').then(m => ({ default: m.ComparisonSection })));
-const TiersSection        = lazy(() => import('./components/TiersSection').then(m => ({ default: m.TiersSection })));
-const HowItWorksSection   = lazy(() => import('./components/HowItWorksSection').then(m => ({ default: m.HowItWorksSection })));
-const UseCasesSection     = lazy(() => import('./components/UseCasesSection').then(m => ({ default: m.UseCasesSection })));
-const TestimonialsSection = lazy(() => import('./components/TestimonialsSection').then(m => ({ default: m.TestimonialsSection })));
-const AboutSection        = lazy(() => import('./components/AboutSection').then(m => ({ default: m.AboutSection })));
-const CTASection          = lazy(() => import('./components/CTASection').then(m => ({ default: m.CTASection })));
-const FAQSection          = lazy(() => import('./components/FAQSection').then(m => ({ default: m.FAQSection })));
-const Footer              = lazy(() => import('./components/Footer').then(m => ({ default: m.Footer })));
-
-// Small interactive widgets — eager (tiny, and the modal/sticky CTA must be ready).
-import { StickyMobileCTA }    from './components/StickyMobileCTA';
-import { LeadModal }          from './components/LeadModal';
+// All sections are STATIC imports — they must be in the prerendered HTML for SEO.
+// (Previously React.lazy behind <Suspense>, which rendered nothing during SSG.)
+import { NavBar }             from '../components/NavBar';
+import { HeroSection }        from '../components/HeroSection';
+import { ProblemSection }     from '../components/ProblemSection';
+import { BenefitsSection }    from '../components/BenefitsSection';
+import { ROISection }         from '../components/ROISection';
+import { ServicesSection }    from '../components/ServicesSection';
+import { ComparisonSection }  from '../components/ComparisonSection';
+import { TiersSection }       from '../components/TiersSection';
+import { HowItWorksSection }  from '../components/HowItWorksSection';
+import { UseCasesSection }    from '../components/UseCasesSection';
+import { TestimonialsSection } from '../components/TestimonialsSection';
+import { AboutSection }       from '../components/AboutSection';
+import { FAQSection }         from '../components/FAQSection';
+import { CTASection }         from '../components/CTASection';
+import { Footer }             from '../components/Footer';
+import { StickyMobileCTA }    from '../components/StickyMobileCTA';
+import { LeadModal }          from '../components/LeadModal';
+import { PlaybookModal }      from '../components/PlaybookModal';
 
 // ─── Shared constants ────────────────────────────────────────────────────────
 const CALENDAR_URL  = 'https://calendar.app.google/KS48NKMVXPugQEhm6';
 const WHATSAPP_URL  = 'https://wa.me/201036755930';
+const PLAYBOOK_DOWNLOAD_URL = '/bznsflow-growth-playbook-realestate.pdf';
 
 const LANGUAGES = [
   { code: 'en', flag: '🇬🇧', label: 'English' },
@@ -38,12 +38,42 @@ const LANGUAGES = [
   { code: 'es', flag: '🇪🇸', label: 'Español' },
   { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
 ];
-const SUPPORTED_LANGS = ALL_LANGS;
 
 const trackEvent = (name, props) => {
   if (typeof window !== 'undefined' && typeof window.plausible === 'function') {
     window.plausible(name, props ? { props } : undefined);
   }
+};
+
+// Per-locale homepage SEO copy (en/ar are the prerendered locales).
+const HOME_SEO = {
+  en: {
+    title: 'BznsFlow | AI Growth Engine for Real Estate Teams & Brokerages',
+    description: 'BznsFlow is the AI growth engine for real estate teams worldwide. Capture, qualify, and route every buyer and seller lead in under 60 seconds, book more showings, and close more deals — done for you. Live in 3–5 days.',
+  },
+  ar: {
+    title: 'BznsFlow | محرك النمو بالذكاء الاصطناعي لفِرَق ووسطاء العقارات',
+    description: 'BznsFlow هو محرك النمو بالذكاء الاصطناعي لفرق العقارات حول العالم. التقط وأهّل ووجّه كل عميل مشترٍ أو بائع في أقل من 60 ثانية، احجز معاينات أكثر، وأغلق صفقات أكثر — منجز لك بالكامل. جاهز خلال 3–5 أيام.',
+  },
+};
+
+// SoftwareApplication schema — the AI lead system + pricing offers. Language-
+// neutral, shipped on the home route (and later /pricing).
+const SOFTWARE_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'BznsFlow',
+  applicationCategory: 'BusinessApplication',
+  applicationSubCategory: 'Real Estate Lead Automation',
+  operatingSystem: 'Web, WhatsApp, iOS, Android',
+  url: SITE,
+  description: 'Done-for-you AI growth engine for real estate teams: AI lead response in under 60 seconds, lead qualification and routing, WhatsApp and portal automation, deal CRM, showing scheduling, and buyer/seller nurture.',
+  provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
+  offers: [
+    { '@type': 'Offer', name: 'Catalyst', price: '199', priceCurrency: 'USD', description: 'Catch & qualify leads — Layla on WhatsApp Business API answers, qualifies, and books 24/7.' },
+    { '@type': 'Offer', name: 'Ascend', price: '699', priceCurrency: 'USD', description: 'Convert leads — inbound voice AI, custom CRM, nurture sequences, review engine, owner BI dashboard.' },
+    { '@type': 'Offer', name: 'Apex', price: '1799', priceCurrency: 'USD', description: 'Dominate the market — outbound AI calling, autonomous monitoring, predictive BI, dedicated strategist.' },
+  ],
 };
 
 // ─── Service catalogue ───────────────────────────────────────────────────────
@@ -246,12 +276,16 @@ const TIERS_AR = [
   },
 ];
 
-// ─── App ─────────────────────────────────────────────────────────────────────
-export default function App() {
-  const [lang, setLang] = useState(() => {
-    const stored = localStorage.getItem('bznsflow_lang');
-    return SUPPORTED_LANGS.includes(stored) ? stored : 'en';
-  });
+// ─── Home page ───────────────────────────────────────────────────────────────
+// `lang` is the locale of THIS prerendered route ('en' at /, 'ar' at /ar).
+export default function Home({ lang: routeLang = 'en' }) {
+  const navigate = useNavigate();
+
+  // Base language = the route's locale. nl/de/es are client-only "soft" switches
+  // (no route) — they update this state without changing the URL.
+  const [lang, setLang] = useState(routeLang);
+  useEffect(() => { setLang(routeLang); }, [routeLang]);
+
   const [isMenuOpen,    setIsMenuOpen]    = useState(false);
   const [isScrolled,    setIsScrolled]    = useState(false);
   const [activeLink,    setActiveLink]    = useState('');
@@ -263,21 +297,27 @@ export default function App() {
   const [leadStatus,  setLeadStatus]  = useState('idle');
   const exitIntentFired = useRef(false);
 
-  // Flips once below-the-fold chunks have been prefetched so the fade-in observer
-  // re-attaches to the freshly-mounted lazy sections.
-  const [sectionsReady, setSectionsReady] = useState(false);
+  // Playbook lead-magnet modal (entry trigger). Kept separate from the
+  // exit-intent modal; a shared ref stops the two from ever stacking.
+  const [isPlaybookOpen, setIsPlaybookOpen] = useState(false);
+  const [playbookName,   setPlaybookName]   = useState('');
+  const [playbookEmail,  setPlaybookEmail]  = useState('');
+  const [playbookStatus, setPlaybookStatus] = useState('idle');
+  const playbookFired = useRef(false);
+  const anyModalOpenRef = useRef(false);
 
   // Bump to force a re-render when a lazily-loaded language finishes loading.
   const [, setLangTick] = useState(0);
 
   // Use the requested language only if its strings are loaded; otherwise render
   // English until the chunk resolves (avoids a flash of missing keys).
-  const activeLang    = isLoaded(lang) ? lang : 'en';
-  const t             = getStrings(activeLang);
+  const activeLang     = isLoaded(lang) ? lang : 'en';
+  const t              = getStrings(activeLang);
   const activeServices = activeLang === 'ar' ? SERVICES_AR : SERVICES;
   const activeTiers    = activeLang === 'ar' ? TIERS_AR : TIERS;
+  const seo            = HOME_SEO[routeLang] || HOME_SEO.en;
 
-  // ── Effects ────────────────────────────────────────────────────────────────
+  // ── Effects (all browser-only work lives here — never runs during SSG) ──────
 
   useEffect(() => {
     const sections = Array.from(document.querySelectorAll('section[id]'));
@@ -301,31 +341,7 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Prefetch below-the-fold chunks during browser idle time, then signal the
-  // fade-in observer to re-scan once they've mounted. Keeps scrolling seamless.
-  useEffect(() => {
-    const prefetch = () => {
-      Promise.all([
-        import('./components/BenefitsSection'),
-        import('./components/ROISection'),
-        import('./components/ServicesSection'),
-        import('./components/ComparisonSection'),
-        import('./components/TiersSection'),
-        import('./components/HowItWorksSection'),
-        import('./components/UseCasesSection'),
-        import('./components/TestimonialsSection'),
-        import('./components/AboutSection'),
-        import('./components/CTASection'),
-        import('./components/FAQSection'),
-        import('./components/Footer'),
-      ]).then(() => setSectionsReady(true));
-    };
-    const ric = window.requestIdleCallback || ((cb) => setTimeout(cb, 200));
-    const id = ric(prefetch);
-    return () => (window.cancelIdleCallback || clearTimeout)(id);
-  }, []);
-
-  // Fade-in observer. Re-runs on language switch and once lazy sections mount.
+  // Fade-in observer. Re-runs on language switch.
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => entries.forEach(entry => {
@@ -338,19 +354,6 @@ export default function App() {
     );
     document.querySelectorAll('.fade-in:not(.visible)').forEach(el => observer.observe(el));
     return () => observer.disconnect();
-  }, [lang, sectionsReady]);
-
-  // If a returning visitor's saved language is lazy-loaded, fetch it on mount.
-  useEffect(() => {
-    if (!isLoaded(lang)) {
-      loadLang(lang).then(() => setLangTick(n => n + 1));
-    }
-  }, []);
-
-  // HTML lang + dir
-  useEffect(() => {
-    document.documentElement.setAttribute('lang', lang);
-    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
   }, [lang]);
 
   // Exit-intent (desktop only, fires once per session)
@@ -359,8 +362,9 @@ export default function App() {
     if (window.matchMedia('(max-width: 768px)').matches) return;
 
     const handleMouseLeave = (e) => {
-      if (e.clientY > 0 || exitIntentFired.current) return;
+      if (e.clientY > 0 || exitIntentFired.current || anyModalOpenRef.current) return;
       exitIntentFired.current = true;
+      anyModalOpenRef.current = true;   // set synchronously so the playbook timer can't double-open this tick
       sessionStorage.setItem('bznsflow_exit_seen', '1');
       setIsLeadOpen(true);
       trackEvent('ExitIntentShown');
@@ -383,14 +387,53 @@ export default function App() {
     };
   }, [isLeadOpen]);
 
+  // Keep a ref of "is any modal open" so the entry + exit popups never stack.
+  useEffect(() => { anyModalOpenRef.current = isLeadOpen || isPlaybookOpen; }, [isLeadOpen, isPlaybookOpen]);
+
+  // Playbook offer on entry — once per session, after a short delay or first scroll.
+  useEffect(() => {
+    if (sessionStorage.getItem('bznsflow_playbook_seen')) return;
+    const open = () => {
+      if (playbookFired.current || anyModalOpenRef.current) return;
+      playbookFired.current = true;
+      anyModalOpenRef.current = true;   // set synchronously so exit-intent can't double-open this tick
+      sessionStorage.setItem('bznsflow_playbook_seen', '1');
+      setIsPlaybookOpen(true);
+      trackEvent('PlaybookModalShown');
+      cleanup();
+    };
+    const onScroll = () => { if (window.scrollY > 400) open(); };
+    const timer = setTimeout(open, 7000);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    function cleanup() {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', onScroll);
+    }
+    return cleanup;
+  }, []);
+
+  // Body-scroll lock + Esc-to-close for the playbook modal.
+  useEffect(() => {
+    if (!isPlaybookOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKey = (e) => { if (e.key === 'Escape') setIsPlaybookOpen(false); };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [isPlaybookOpen]);
+
   // ── Handlers ───────────────────────────────────────────────────────────────
 
+  // en/ar are real prerendered routes → navigate. nl/es/de are client-only soft
+  // switches → swap strings in place (lazy-load the chunk if needed).
   const setLanguage = (code) => {
+    if (code === 'en') { navigate('/'); return; }
+    if (code === 'ar') { navigate('/ar'); return; }
     setLang(code);
-    localStorage.setItem('bznsflow_lang', code);
-    if (!isLoaded(code)) {
-      loadLang(code).then(() => setLangTick(n => n + 1));
-    }
+    if (!isLoaded(code)) loadLang(code).then(() => setLangTick(n => n + 1));
   };
 
   const closeMenu = () => { setIsMenuOpen(false); document.body.style.overflow = ''; };
@@ -429,9 +472,44 @@ export default function App() {
     }
   };
 
+  // Playbook lead-magnet handlers
+  const closePlaybook = () => {
+    setIsPlaybookOpen(false);
+    if (playbookStatus === 'success') { setPlaybookStatus('idle'); setPlaybookName(''); setPlaybookEmail(''); }
+  };
+  const handlePlaybookNameChange = (e) => setPlaybookName(e.target.value);
+  const handlePlaybookEmailChange = (e) => {
+    setPlaybookEmail(e.target.value);
+    if (playbookStatus === 'error') setPlaybookStatus('idle');
+  };
+  const handlePlaybookSubmit = async (e) => {
+    e.preventDefault();
+    const name = playbookName.trim();
+    const email = playbookEmail.trim();
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setPlaybookStatus('error'); return; }
+    setPlaybookStatus('submitting');
+    trackEvent('PlaybookSubmit');
+    try {
+      // `playbook: true` tells the Apps Script to auto-email the PDF.
+      await postLead({ name, email, sourceCta: 'Playbook lead magnet', playbook: true }, { lang });
+      setPlaybookStatus('success');
+    } catch (err) {
+      console.error('Playbook submission failed:', err);
+      setPlaybookStatus('error');
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
+      <Seo
+        lang={routeLang}
+        path="/"  /* TODO Phase 2: derive `path` from the route for /pricing, /blog, etc. */
+        title={seo.title}
+        description={seo.description}
+        jsonLd={[SOFTWARE_SCHEMA]}
+      />
+
       <NavBar
         t={t} lang={lang} isScrolled={isScrolled} isMenuOpen={isMenuOpen}
         activeLink={activeLink} scrollProgress={scrollProgress}
@@ -447,28 +525,24 @@ export default function App() {
           onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent}
         />
         <ProblemSection t={t} />
-        <Suspense fallback={null}>
-          <BenefitsSection t={t} />
-          <ROISection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
-          <ServicesSection t={t} activeServices={activeServices} CALENDAR_URL={CALENDAR_URL} />
-          <ComparisonSection t={t} CALENDAR_URL={CALENDAR_URL} />
-          <TiersSection t={t} tiers={activeTiers} CALENDAR_URL={CALENDAR_URL} />
-          <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} />
-          <UseCasesSection t={t} lang={lang} />
-          <TestimonialsSection t={t} lang={lang} />
-          <AboutSection t={t} lang={lang} CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL} />
-          <FAQSection t={t} />
-          <CTASection t={t} CALENDAR_URL={CALENDAR_URL} />
-        </Suspense>
+        <BenefitsSection t={t} />
+        <ROISection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
+        <ServicesSection t={t} activeServices={activeServices} CALENDAR_URL={CALENDAR_URL} />
+        <ComparisonSection t={t} CALENDAR_URL={CALENDAR_URL} />
+        <TiersSection t={t} tiers={activeTiers} CALENDAR_URL={CALENDAR_URL} />
+        <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} />
+        <UseCasesSection t={t} lang={lang} />
+        <TestimonialsSection t={t} lang={lang} />
+        <AboutSection t={t} lang={lang} CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL} />
+        <FAQSection t={t} />
+        <CTASection t={t} CALENDAR_URL={CALENDAR_URL} />
       </main>
 
-      <Suspense fallback={null}>
-        <Footer
-          t={t} lang={lang}
-          CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL}
-          onSmoothScroll={handleSmoothScroll}
-        />
-      </Suspense>
+      <Footer
+        t={t} lang={lang}
+        CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL}
+        onSmoothScroll={handleSmoothScroll}
+      />
 
       <StickyMobileCTA
         t={t}
@@ -484,6 +558,18 @@ export default function App() {
         onClose={closeLeadModal}
         onEmailChange={handleLeadEmailChange}
         onSubmit={handleLeadSubmit}
+        trackEvent={trackEvent}
+      />
+
+      <PlaybookModal
+        t={t} lang={lang}
+        isOpen={isPlaybookOpen}
+        name={playbookName} email={playbookEmail} status={playbookStatus}
+        downloadUrl={PLAYBOOK_DOWNLOAD_URL}
+        onClose={closePlaybook}
+        onNameChange={handlePlaybookNameChange}
+        onEmailChange={handlePlaybookEmailChange}
+        onSubmit={handlePlaybookSubmit}
         trackEvent={trackEvent}
       />
     </>
