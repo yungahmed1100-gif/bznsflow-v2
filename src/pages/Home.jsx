@@ -482,21 +482,18 @@ export default function Home({ lang: routeLang = 'en' }) {
     setPlaybookEmail(e.target.value);
     if (playbookStatus === 'error') setPlaybookStatus('idle');
   };
-  const handlePlaybookSubmit = async (e) => {
+  const handlePlaybookSubmit = (e) => {
     e.preventDefault();
     const name = playbookName.trim();
     const email = playbookEmail.trim();
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setPlaybookStatus('error'); return; }
-    setPlaybookStatus('submitting');
     trackEvent('PlaybookSubmit');
-    try {
-      // `playbook: true` tells the Apps Script to auto-email the PDF.
-      await postLead({ name, email, sourceCta: 'Playbook lead magnet', playbook: true }, { lang });
-      setPlaybookStatus('success');
-    } catch (err) {
-      console.error('Playbook submission failed:', err);
-      setPlaybookStatus('error');
-    }
+    // Show success + the instant download immediately. The backend logs the lead
+    // and sends the email in the background — the email send is slow, so we don't
+    // make the visitor wait on it (they have the download link regardless).
+    setPlaybookStatus('success');
+    postLead({ name, email, sourceCta: 'Playbook lead magnet', playbook: true }, { lang })
+      .catch((err) => console.error('Playbook submission failed:', err));
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────

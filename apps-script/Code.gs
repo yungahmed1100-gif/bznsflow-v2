@@ -14,7 +14,8 @@
  */
 
 var SHEET_ID = '125VxXDHIlesWDZijAkzwCOKcSBDT-sSMXMQnwSmcSYY';
-var SHEET_NAME = '';            // '' = first/active tab. Set to your tab name if different.
+var SHEET_NAME = '';            // '' = use SHEET_GID / first tab. Set to a tab name to force it.
+var SHEET_GID = 580821186;     // the tab from the URL (#gid=...). Targets the RIGHT tab even if it isn't leftmost.
 var HEADER_ROW = 2;            // Row 1 is the banner (CAPTURE/QUALIFICATION/...). Real headers live on row 2.
 
 // ── Playbook lead-magnet email delivery ─────────────────────────────────────
@@ -31,7 +32,8 @@ function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var sheet = getSheet_();
-    var headers = sheet.getRange(HEADER_ROW, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var hr = detectHeaderRow_(sheet);
+    var headers = sheet.getRange(hr, 1, 1, sheet.getLastColumn()).getValues()[0];
 
     // Server-stamped timestamp always wins (don't trust the client clock).
     data.Timestamp = new Date();
@@ -84,14 +86,57 @@ function escapeHtml_(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// Health check — open the /exec URL in a browser to confirm it's live.
+// Diagnostic health check — open the /exec URL in a browser to see exactly which
+// tab the script writes to, its headers, and all tabs in the spreadsheet.
 function doGet() {
-  return json_({ ok: true, status: 'alive' });
+  try {
+    var ss = SpreadsheetApp.openById(SHEET_ID);
+    var tabs = ss.getSheets().map(function (s) {
+      return { name: s.getName(), gid: s.getSheetId(), rows: s.getLastRow(), cols: s.getLastColumn() };
+    });
+    var target = getSheet_();
+    var hr = detectHeaderRow_(target);
+    var cols = target.getLastColumn();
+    var lastRow = target.getLastRow();
+    var headers = cols ? target.getRange(hr, 1, 1, cols).getValues()[0] : [];
+    var lastRowValues = (cols && lastRow >= hr) ? target.getRange(lastRow, 1, 1, cols).getValues()[0] : [];
+    return json_({
+      ok: true, status: 'alive',
+      writesTo: { name: target.getName(), gid: target.getSheetId() },
+      detectedHeaderRow: hr, headers: headers,
+      lastRow: lastRow, lastRowValues: lastRowValues,
+      allTabs: tabs,
+    });
+  } catch (err) {
+    return json_({ ok: false, error: String(err) });
+  }
 }
 
 function getSheet_() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
-  return SHEET_NAME ? ss.getSheetByName(SHEET_NAME) : ss.getSheets()[0];
+  if (SHEET_NAME) return ss.getSheetByName(SHEET_NAME);
+  if (SHEET_GID !== '' && SHEET_GID != null) {
+    var sheets = ss.getSheets();
+    for (var i = 0; i < sheets.length; i++) {
+      if (sheets[i].getSheetId() === SHEET_GID) return sheets[i];
+    }
+  }
+  return ss.getSheets()[0];
+}
+
+// Auto-find the real header row: the first of the top rows that contains an
+// "Email" or "Timestamp" cell. Resilient to title/banner rows above it.
+function detectHeaderRow_(sheet) {
+  var n = Math.min(6, sheet.getLastRow() || 1);
+  var cols = sheet.getLastColumn() || 1;
+  var probe = sheet.getRange(1, 1, n, cols).getValues();
+  for (var r = 0; r < probe.length; r++) {
+    for (var c = 0; c < probe[r].length; c++) {
+      var v = norm_(probe[r][c]);
+      if (v === 'email' || v === 'timestamp') return r + 1;
+    }
+  }
+  return HEADER_ROW; // fallback
 }
 
 // "Phone / WhatsApp" -> "phonewhatsapp", "Page URL" -> "pageurl", "Language" -> "language"
