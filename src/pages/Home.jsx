@@ -48,12 +48,12 @@ const trackEvent = (name, props) => {
 // Per-locale homepage SEO copy (en/ar are the prerendered locales).
 const HOME_SEO = {
   en: {
-    title: 'BznsFlow | AI Growth Engine for Real Estate Teams & Brokerages',
-    description: 'BznsFlow is the AI growth engine for real estate teams worldwide. Capture, qualify, and route every buyer and seller lead in under 60 seconds, book more showings, and close more deals — done for you. Live in 3–5 days.',
+    title: 'BznsFlow | AI Growth Engine for Real Estate Teams & Business Automation',
+    description: 'BznsFlow is the AI growth engine for real estate teams worldwide. Capture, qualify, and route every buyer and seller lead in under 60 seconds. Our business solutions and growth hacks help you scale fast.',
   },
   ar: {
-    title: 'BznsFlow | محرك النمو بالذكاء الاصطناعي لفِرَق ووسطاء العقارات',
-    description: 'BznsFlow هو محرك النمو بالذكاء الاصطناعي لفرق العقارات حول العالم. التقط وأهّل ووجّه كل عميل مشترٍ أو بائع في أقل من 60 ثانية، احجز معاينات أكثر، وأغلق صفقات أكثر — منجز لك بالكامل. جاهز خلال 3–5 أيام.',
+    title: 'BznsFlow | محرك النمو بالذكاء الاصطناعي لفِرَق ووسطاء العقارات وأتمتة المبيعات',
+    description: 'BznsFlow هو محرك النمو بالذكاء الاصطناعي لفرق العقارات حول العالم ويوفر حلول الأعمال لزيادة الأرباح ونمو الشركات. التقط وأهّل ووجّه كل عميل مشترٍ أو بائع في أقل من 60 ثانية.',
   },
 };
 
@@ -64,10 +64,10 @@ const SOFTWARE_SCHEMA = {
   '@type': 'SoftwareApplication',
   name: 'BznsFlow',
   applicationCategory: 'BusinessApplication',
-  applicationSubCategory: 'Real Estate Lead Automation',
+  applicationSubCategory: 'Real Estate Lead Automation & Business Scaling Solutions',
   operatingSystem: 'Web, WhatsApp, iOS, Android',
   url: SITE,
-  description: 'Done-for-you AI growth engine for real estate teams: AI lead response in under 60 seconds, lead qualification and routing, WhatsApp and portal automation, deal CRM, showing scheduling, and buyer/seller nurture.',
+  description: 'Done-for-you AI growth engine for real estate teams and business solutions for scaling: AI lead response in under 60 seconds, lead qualification and routing, WhatsApp and portal automation, deal CRM, showing scheduling, and buyer/seller nurture.',
   provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
   offers: [
     { '@type': 'Offer', name: 'Catalyst', price: '199', priceCurrency: 'USD', description: 'Catch & qualify leads — Layla on WhatsApp Business API answers, qualifies, and books 24/7.' },
