@@ -48,33 +48,116 @@ const trackEvent = (name, props) => {
 // Per-locale homepage SEO copy (en/ar are the prerendered locales).
 const HOME_SEO = {
   en: {
-    title: 'BznsFlow | AI Growth Engine for Real Estate Teams & Business Automation',
-    description: 'BznsFlow is the AI growth engine for real estate teams worldwide. Capture, qualify, and route every buyer and seller lead in under 60 seconds. Our business solutions and growth hacks help you scale fast.',
+    title: 'BznsFlow | AI Lead Automation & Business Growth Engine for Sales Teams',
+    description: 'BznsFlow qualifies and routes every inbound lead in under 60 seconds — 24/7, on WhatsApp and the web. AI-powered lead response, deal CRM, and business scaling done entirely for you. Live in 3–5 days.',
   },
   ar: {
-    title: 'BznsFlow | محرك النمو بالذكاء الاصطناعي لفِرَق ووسطاء العقارات وأتمتة المبيعات',
-    description: 'BznsFlow هو محرك النمو بالذكاء الاصطناعي لفرق العقارات حول العالم ويوفر حلول الأعمال لزيادة الأرباح ونمو الشركات. التقط وأهّل ووجّه كل عميل مشترٍ أو بائع في أقل من 60 ثانية.',
+    title: 'BznsFlow | محرك النمو بالذكاء الاصطناعي — أتمتة العملاء وتوسيع المبيعات',
+    description: 'BznsFlow يرد على كل عميل خلال 60 ثانية، 24/7 — عبر واتساب والويب. ذكاء اصطناعي لتأهيل العملاء وإدارة الصفقات وتوسيع المبيعات. حلول الأعمال الأكثر طلباً. جاهز خلال 3–5 أيام.',
   },
 };
 
-// SoftwareApplication schema — the AI lead system + pricing offers. Language-
-// neutral, shipped on the home route (and later /pricing).
-const SOFTWARE_SCHEMA = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'BznsFlow',
-  applicationCategory: 'BusinessApplication',
-  applicationSubCategory: 'Real Estate Lead Automation & Business Scaling Solutions',
-  operatingSystem: 'Web, WhatsApp, iOS, Android',
-  url: SITE,
-  description: 'Done-for-you AI growth engine for real estate teams and business solutions for scaling: AI lead response in under 60 seconds, lead qualification and routing, WhatsApp and portal automation, deal CRM, showing scheduling, and buyer/seller nurture.',
-  provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
-  offers: [
-    { '@type': 'Offer', name: 'Catalyst', price: '199', priceCurrency: 'USD', description: 'Catch & qualify leads — Layla on WhatsApp Business API answers, qualifies, and books 24/7.' },
-    { '@type': 'Offer', name: 'Ascend', price: '699', priceCurrency: 'USD', description: 'Convert leads — inbound voice AI, custom CRM, nurture sequences, review engine, owner BI dashboard.' },
-    { '@type': 'Offer', name: 'Apex', price: '1799', priceCurrency: 'USD', description: 'Dominate the market — outbound AI calling, autonomous monitoring, predictive BI, dedicated strategist.' },
-  ],
-};
+// Build fully-localized structured data schemas from the active language's
+// translation strings. Called at render time, so the SSG build will bake the
+// correct Arabic schemas into dist/ar.html and English into dist/index.html.
+function buildSchemas(t, lang, tiers) {
+  const isAr = lang === 'ar';
+
+  const organization = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'BznsFlow',
+    url: SITE,
+    logo: `${SITE}/logo.png`,
+    description: isAr
+      ? 'BznsFlow — محرك النمو بالذكاء الاصطناعي للشركات الطموحة. يرد على كل عميل في أقل من 60 ثانية، يؤهّل حسب الميزانية والنية، ويحجز الاجتماعات آلياً — منجز بالكامل لك. حلول الأعمال لزيادة المبيعات وتوسيع الشركات.'
+      : 'BznsFlow is the AI growth engine for ambitious businesses worldwide. Qualifies and routes every lead in under 60 seconds, books meetings automatically, and delivers measurable revenue growth — done entirely for you.',
+    founder: { '@type': 'Person', name: 'Ahmed Darwish' },
+    foundingDate: '2024',
+    areaServed: 'Worldwide',
+    knowsAbout: isAr
+      ? ['أتمتة المبيعات', 'حلول الأعمال', 'نمو الشركات', 'زيادة الأرباح', 'الذكاء الاصطناعي للشركات', 'إدارة العملاء', 'توسيع المبيعات', 'CRM الذكي', 'أتمتة واتساب']
+      : ['AI lead automation', 'Business scaling', 'Sales team automation', 'CRM', 'Lead qualification', 'WhatsApp automation', 'Business growth', 'Revenue optimization'],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      availableLanguage: ['English', 'Arabic'],
+      url: 'https://wa.me/201036755930',
+    },
+    sameAs: ['https://wa.me/201036755930'],
+  };
+
+  const website = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'BznsFlow',
+    url: SITE,
+    inLanguage: lang,
+    description: isAr
+      ? 'محرك النمو بالذكاء الاصطناعي للشركات حول العالم — حلول الأعمال لتوسيع المبيعات وزيادة الأرباح'
+      : 'The AI growth engine for ambitious businesses worldwide — lead automation, sales scaling, and revenue growth',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${SITE}#{search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
+  const software = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'BznsFlow',
+    applicationCategory: 'BusinessApplication',
+    applicationSubCategory: isAr ? 'أتمتة المبيعات وتوسيع الأعمال' : 'AI Lead Automation & Business Scaling',
+    operatingSystem: 'Web, WhatsApp, iOS, Android',
+    url: SITE,
+    description: isAr
+      ? 'منصة نمو الأعمال بالذكاء الاصطناعي: رد فوري على العملاء في أقل من 60 ثانية، تأهيل وتوجيه ذكي، أتمتة واتساب، CRM للصفقات، جدولة اجتماعات، ورعاية العملاء — منجز بالكامل لك.'
+      : 'Done-for-you AI growth engine: lead response in under 60 seconds, smart qualification and routing, WhatsApp automation, deal CRM, meeting scheduling, and lead nurture — built and run entirely for you.',
+    provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
+    offers: tiers.map((tier) => ({
+      '@type': 'Offer',
+      name: tier.name,
+      price: tier.price.replace(/[^0-9.]/g, ''),
+      priceCurrency: 'USD',
+      description: tier.intro || tier.desc || '',
+    })),
+  };
+
+  // Build FAQ schema from the active locale's translation strings.
+  const faqItems = [];
+  for (let i = 1; i <= 6; i++) {
+    const q = (t[`faq_q${i}`] || '').trim();
+    const a = (t[`faq_a${i}`] || '').trim().replace(/<[^>]+>/g, '');
+    if (q && a) faqItems.push({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } });
+  }
+  const faq = faqItems.length
+    ? { '@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: lang, mainEntity: faqItems }
+    : null;
+
+  const serviceList = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: isAr ? 'خطط BznsFlow لنمو الأعمال' : 'BznsFlow AI Growth Plans',
+    description: isAr ? 'أنظمة نمو بالذكاء الاصطناعي منجزة لك — لكل نوع من الأعمال' : 'Done-for-you AI growth systems for every business type worldwide',
+    url: SITE,
+    numberOfItems: tiers.length,
+    itemListElement: tiers.map((tier, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      item: {
+        '@type': 'Service',
+        name: tier.name,
+        description: tier.intro || '',
+        provider: { '@type': 'Organization', name: 'BznsFlow' },
+        areaServed: 'Worldwide',
+        offers: { '@type': 'Offer', price: tier.price.replace(/[^0-9.]/g, ''), priceCurrency: 'USD', category: 'one-time payment' },
+      },
+    })),
+  };
+
+  return [organization, website, software, serviceList, ...(faq ? [faq] : [])];
+}
 
 // ─── Service catalogue ───────────────────────────────────────────────────────
 const SERVICES = [
@@ -316,6 +399,7 @@ export default function Home({ lang: routeLang = 'en' }) {
   const activeServices = activeLang === 'ar' ? SERVICES_AR : SERVICES;
   const activeTiers    = activeLang === 'ar' ? TIERS_AR : TIERS;
   const seo            = HOME_SEO[routeLang] || HOME_SEO.en;
+  const jsonLd         = buildSchemas(t, routeLang, activeLang === 'ar' ? TIERS_AR : TIERS);
 
   // ── Effects (all browser-only work lives here — never runs during SSG) ──────
 
@@ -506,10 +590,10 @@ export default function Home({ lang: routeLang = 'en' }) {
     <>
       <Seo
         lang={routeLang}
-        path="/"  /* TODO Phase 2: derive `path` from the route for /pricing, /blog, etc. */
+        path="/"
         title={seo.title}
         description={seo.description}
-        jsonLd={[SOFTWARE_SCHEMA]}
+        jsonLd={jsonLd}
       />
 
       <NavBar

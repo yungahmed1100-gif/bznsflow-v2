@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run gen:faq && vite-react-ssg build && npm run gen:sitemap",
+    "build": "vite-react-ssg build && npm run gen:sitemap",
     "preview": "vite preview",
-    "gen:faq": "node scripts/gen-faq-schema.mjs",
     "gen:sitemap": "node scripts/gen-sitemap.mjs"
   },
   "dependencies": {
