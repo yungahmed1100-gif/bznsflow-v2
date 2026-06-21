@@ -27,9 +27,9 @@ Real estate brokerages, agent teams, high-volume individual agents, property dev
 
 ## Service plans (Catch → Convert → Dominate ladder)
 
-- Catalyst — $199 one-time. Catches and qualifies leads. Layla on the WhatsApp Business API answers every inquiry in seconds 24/7, qualifies by budget/area/financing/timeline, auto-books viewings, and alerts the right agent. Replaces a part-time receptionist ($1,100–2,200/mo).
-- Ascend — $699 one-time (most popular). Converts leads. Everything in Catalyst plus Khaled inbound voice AI, a full custom deal CRM, automated WhatsApp + email nurture, a review-generation engine, and an owner BI dashboard. Replaces a $12K+ CRM build plus review and BI retainers.
-- Apex — $1,799 one-time. Dominates the market. Everything in Ascend plus ARIA outbound AI calling (reactivates dormant databases), Modeer autonomous monitoring, predictive pipeline BI, full 20-MVP stack access, and a dedicated growth strategist. Replaces a $3K–12K/mo agency retainer.
+- Catalyst — Catches and qualifies leads. Layla on the WhatsApp Business API answers every inquiry in seconds 24/7, qualifies by budget/area/financing/timeline, auto-books viewings, and alerts the right agent. Replaces a part-time receptionist.
+- Ascend — Converts leads. Everything in Catalyst plus Khaled inbound voice AI, a full custom deal CRM, automated WhatsApp + email nurture, a review-generation engine, and an owner BI dashboard. Replaces a CRM build plus review and BI retainers.
+- Apex — Dominates the market. Everything in Ascend plus ARIA outbound AI calling (reactivates dormant databases), Modeer autonomous monitoring, predictive pipeline BI, full 20-MVP stack access, and a dedicated growth strategist. Replaces an agency retainer.
 
 ## Terms & guarantee
 
