@@ -115,13 +115,6 @@ function buildSchemas(t, lang, tiers) {
       ? 'منصة نمو الأعمال بالذكاء الاصطناعي: رد فوري على العملاء في أقل من 60 ثانية، تأهيل وتوجيه ذكي، أتمتة واتساب، CRM للصفقات، جدولة اجتماعات، ورعاية العملاء — منجز بالكامل لك.'
       : 'Done-for-you AI growth engine: lead response in under 60 seconds, smart qualification and routing, WhatsApp automation, deal CRM, meeting scheduling, and lead nurture — built and run entirely for you.',
     provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
-    offers: tiers.map((tier) => ({
-      '@type': 'Offer',
-      name: tier.name,
-      price: tier.price.replace(/[^0-9.]/g, ''),
-      priceCurrency: 'USD',
-      description: tier.intro || tier.desc || '',
-    })),
   };
 
   // Build FAQ schema from the active locale's translation strings.
@@ -151,7 +144,6 @@ function buildSchemas(t, lang, tiers) {
         description: tier.intro || '',
         provider: { '@type': 'Organization', name: 'BznsFlow' },
         areaServed: 'Worldwide',
-        offers: { '@type': 'Offer', price: tier.price.replace(/[^0-9.]/g, ''), priceCurrency: 'USD', category: 'one-time payment' },
       },
     })),
   };
@@ -177,6 +169,7 @@ const SERVICES = [
   { icon: '✍️', name: 'Market-Report Content & SEO',         tag: 'Buyers and sellers search before they pick an agent. Own page one in your market.',                                        bullets: ['Area guides and market reports — AI-drafted, human-edited, built to rank', 'Local keyword strategy that pulls in buyer and seller intent', 'Compounds monthly — becomes a durable source of organic leads'],                            category: 'scale' },
   { icon: '🤝', name: 'Referral & Past-Client Engine',       tag: 'Repeat and referral business is the cheapest commission you\'ll ever earn. Automate it.',                                  bullets: ['Stay-in-touch automation that keeps you top-of-mind for years', 'Home-anniversary, market-update, and referral-ask sequences', 'Turns every closed deal into a future pipeline of warm leads'],                                category: 'scale' },
   { icon: '🏢', name: 'Brokerage Growth Partnership',        tag: 'Scaling a brokerage is an engineering problem. We run the whole growth engine with you.',                                  bullets: ['Custom-trained AI workforce built for your brokerage and markets', 'Multi-team, multi-market lead and agent management', 'Executive-level strategy, reporting, and continuous optimization'],                                  category: 'scale' },
+  { icon: '📱', name: 'Custom Apps',                         tag: 'Tailor-made applications to run your business exactly how you need.',                                                      bullets: ['Bespoke web and mobile applications tailored to your exact workflow', 'Seamless integration with your existing CRM and tools', 'Scalable architecture designed for performance and growth'],                                            category: 'scale' },
 ];
 
 const SERVICES_AR = [
@@ -196,6 +189,7 @@ const SERVICES_AR = [
   {"icon":"✍️","name":"محتوى تقارير السوق والسيو","tag":"المشترون والبائعون يبحثون قبل اختيار وكيل. سيطر على الصفحة الأولى في سوقك.","bullets":["أدلة مناطق وتقارير سوق — صُيغت بالذكاء، حُرّرت بشرياً، مبنية للترتيب","استراتيجية كلمات محلية تجذب نية المشتري والبائع","تتراكم شهرياً — تصبح مصدراً دائماً للعملاء العضويين"],"category":"scale"},
   {"icon":"🤝","name":"محرك الإحالات والعملاء السابقين","tag":"العملاء المتكررون والإحالات أرخص عمولة ستكسبها. أتمتها.","bullets":["أتمتة بقاء على تواصل تُبقيك في الذهن لسنوات","تسلسلات ذكرى الشراء وتحديثات السوق وطلب الإحالة","تحوّل كل صفقة مُغلقة إلى مسار عملاء دافئين مستقبلاً"],"category":"scale"},
   {"icon":"🏢","name":"شراكة نمو الوساطة العقارية","tag":"توسيع شركة وساطة مشكلة هندسية. نُشغّل محرك النمو بالكامل معك.","bullets":["قوة عمل ذكاء اصطناعي مُدرَّبة خصيصاً لشركتك وأسواقك","إدارة عملاء ووكلاء عبر فرق وأسواق متعددة","استراتيجية وتقارير وتحسين مستمر على مستوى تنفيذي"],"category":"scale"},
+  {"icon":"📱","name":"تطبيقات مخصصة","tag":"تطبيقات مصممة خصيصاً لإدارة أعمالك بالطريقة التي تحتاجها بالضبط.","bullets":["تطبيقات ويب وهواتف ذكية مصممة لتناسب مسار عملك بدقة","تكامل سلس مع نظام CRM وأدواتك الحالية","بنية قابلة للتوسع مصممة للأداء والنمو"],"category":"scale"},
 ];
 
 // ─── Pricing tiers (Catch → Convert → Dominate ladder) ───────────────────────
@@ -220,9 +214,9 @@ const TIERS = [
       'Daily lead digest + transcripts to the owner — nothing lost, every conversation logged',
     ],
     roiReplaces: 'A part-time receptionist ($1,100–2,200/mo)',
-    roiLine: 'A one-time $199 — less than a single week of part-time reception cover, with none of the gaps. Break-even is the first deal you would otherwise have lost.',
+    roiLine: 'A one-time investment — less than a single week of part-time reception cover, with none of the gaps. Break-even is the first deal you would otherwise have lost.',
     payback: 'First recovered deal',
-    pull: '$199 once to stop losing the leads you already paid to generate.',
+    pull: 'A one-time investment to stop losing the leads you already paid to generate.',
     nextStep: 'Layla catches and qualifies — but the 80% who say “not yet” still slip away, and you still can’t see which agent actually converts.',
     cta: 'Book Your Growth Call',
   },
@@ -246,9 +240,9 @@ const TIERS = [
       'Weekly performance digest to the owner',
     ],
     roiReplaces: 'A CRM build ($12K+) plus review & BI retainers',
-    roiLine: 'A bespoke CRM build alone runs $12,000+. Ascend bundles all of it for a one-time $699 — a single extra closed deal pays it back many times over.',
+    roiLine: 'A bespoke CRM build alone runs $12,000+. Ascend bundles all of it for a one-time investment — a single extra closed deal pays it back many times over.',
     payback: 'One extra closed deal',
-    pull: '$699 once to stop deals dying in the gap you can’t see.',
+    pull: 'A one-time investment to stop deals dying in the gap you can’t see.',
     nextStep: 'You convert what comes in — but you’re still waiting for the phone to ring. No outbound, no forecast, no way to go and take the market.',
     cta: 'Book Your Growth Call',
   },
@@ -271,9 +265,9 @@ const TIERS = [
       'Dedicated growth strategist + a quarterly roadmap reviewed with you',
     ],
     roiReplaces: 'A full agency retainer ($3K–12K/mo)',
-    roiLine: 'A comparable managed retainer runs $3,000–12,000 every month — for less capability and no outbound AI. Apex is a one-time $1,799, and ARIA reactivates leads you’d otherwise never touch. One reactivated deal covers it outright.',
+    roiLine: 'A comparable managed retainer runs $3,000–12,000 every month — for less capability and no outbound AI. Apex is a one-time investment, and ARIA reactivates leads you’d otherwise never touch. One reactivated deal covers it outright.',
     payback: 'One reactivated deal',
-    pull: '$1,799 once to stop reacting and start dominating.',
+    pull: 'A one-time investment to stop reacting and start dominating.',
     nextStep: null,
     cta: 'Book Your Growth Call',
   },
@@ -300,9 +294,9 @@ const TIERS_AR = [
       'ملخص عملاء يومي + نصوص المحادثات للمالك — لا شيء يُفقد، كل محادثة مُسجّلة',
     ],
     roiReplaces: 'موظف استقبال بدوام جزئي (1,100–2,200$ شهرياً)',
-    roiLine: 'دفعة واحدة 199$ — أقل من تكلفة أسبوع من تغطية استقبال جزئية، وبلا أي فجوات. نقطة التعادل هي أول صفقة كنت ستخسرها.',
+    roiLine: 'استثمار لمرة واحدة — أقل من تكلفة أسبوع من تغطية استقبال جزئية، وبلا أي فجوات. نقطة التعادل هي أول صفقة كنت ستخسرها.',
     payback: 'أول صفقة مُستردّة',
-    pull: '199$ مرة واحدة لإيقاف خسارة العملاء الذين دفعت بالفعل لتوليدهم.',
+    pull: 'استثمار لمرة واحدة لإيقاف خسارة العملاء الذين دفعت بالفعل لتوليدهم.',
     nextStep: 'ليلى تلتقط وتؤهّل — لكن الـ80% الذين يقولون «ليس الآن» ما زالوا ينزلقون، وما زلت لا ترى أي وكيل يحوّل فعلاً.',
     cta: 'احجز مكالمة النمو',
   },
@@ -326,9 +320,9 @@ const TIERS_AR = [
       'ملخص أداء أسبوعي للمالك',
     ],
     roiReplaces: 'بناء CRM (12 ألف$+) مع باقات التقييمات وذكاء الأعمال',
-    roiLine: 'بناء CRM مخصص وحده يكلّف 12,000$+. أسيند يجمع كل ذلك مقابل دفعة واحدة 699$ — صفقة إضافية واحدة تُعيد ثمنه أضعافاً.',
+    roiLine: 'بناء CRM مخصص وحده يكلّف 12,000$+. أسيند يجمع كل ذلك كاستثمار لمرة واحدة — صفقة إضافية واحدة تُعيد ثمنه أضعافاً.',
     payback: 'صفقة إضافية واحدة',
-    pull: '699$ مرة واحدة لإيقاف موت الصفقات في الفجوة التي لا تراها.',
+    pull: 'استثمار لمرة واحدة لإيقاف موت الصفقات في الفجوة التي لا تراها.',
     nextStep: 'أنت تحوّل ما يصل — لكنك ما زلت تنتظر رنين الهاتف. لا تواصل خارجي، لا توقّعات، لا طريقة للذهاب وأخذ السوق.',
     cta: 'احجز مكالمة النمو',
   },
@@ -351,9 +345,9 @@ const TIERS_AR = [
       'استراتيجي نمو مخصص + خارطة طريق ربع سنوية تُراجَع معك',
     ],
     roiReplaces: 'باقة وكالة كاملة (3–12 ألف$ شهرياً)',
-    roiLine: 'باقة مُدارة مماثلة تكلّف 3,000–12,000$ شهرياً — بقدرات أقل وبلا ذكاء خارجي. أبيكس دفعة واحدة 1,799$، وآريا يعيد تنشيط عملاء لم تكن لتلمسهم. صفقة مُعاد تنشيطها واحدة تغطي ثمنه بالكامل.',
+    roiLine: 'باقة مُدارة مماثلة تكلّف 3,000–12,000$ شهرياً — بقدرات أقل وبلا ذكاء خارجي. أبيكس هو استثمار لمرة واحدة، وآريا يعيد تنشيط عملاء لم تكن لتلمسهم. صفقة مُعاد تنشيطها واحدة تغطي ثمنه بالكامل.',
     payback: 'صفقة واحدة مُعاد تنشيطها',
-    pull: '1,799$ مرة واحدة لتتوقف عن التفاعل وتبدأ السيطرة.',
+    pull: 'استثمار لمرة واحدة لتتوقف عن التفاعل وتبدأ السيطرة.',
     nextStep: null,
     cta: 'احجز مكالمة النمو',
   },

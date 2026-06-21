@@ -42,13 +42,6 @@ export function ComparisonSection({ t, CALENDAR_URL }) {
               <div className="cmp-cell"><span className="cmp-dim">Unknown</span></div>
             </div>
 
-            <div className="cmp-row">
-              <div className="cmp-feature">{t.cmp_r2}</div>
-              <div className="cmp-cell cmp-cell--bzns"><span className="cmp-bzns-text">From $199 one-time</span></div>
-              <div className="cmp-cell"><span className="cmp-dim">$50–300 + your time</span></div>
-              <div className="cmp-cell"><span className="cmp-dim">$3,000+/mo</span></div>
-              <div className="cmp-cell"><span className="cmp-dim">$500–2k one-time</span></div>
-            </div>
 
             <div className="cmp-row">
               <div className="cmp-feature">{t.cmp_r3}</div>

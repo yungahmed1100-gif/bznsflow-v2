@@ -47,11 +47,6 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL }) {
                   <h3 className="pricing-tier">{tier.name}</h3>
                   <span className="tier-stage-tag">{tier.stage}</span>
                 </div>
-                <div className="pricing-cost">
-                  <span className="price-amount">
-                    {tier.price}<span className="price-cadence">{tier.cadence}</span>
-                  </span>
-                </div>
                 <div className="tier-bottleneck">
                   <span className="tier-bottleneck-label">{t.tier_kills || 'Kills'}</span>
                   <span className="tier-bottleneck-text">{tier.bottleneck}</span>
@@ -117,10 +112,6 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL }) {
                   {tiers.map((tier) => <td key={tier.key} className={tier.popular ? 'pc-col--popular' : ''}>{tier.bottleneck}</td>)}
                 </tr>
                 <tr>
-                  <td className="pc-rowhead">{t.compare_price || 'Price'}</td>
-                  {tiers.map((tier) => <td key={tier.key} className={tier.popular ? 'pc-col--popular' : ''}><strong>{tier.price}{tier.cadence}</strong></td>)}
-                </tr>
-                <tr>
                   <td className="pc-rowhead">{t.compare_replaces || 'Replaces'}</td>
                   {tiers.map((tier) => <td key={tier.key} className={tier.popular ? 'pc-col--popular' : ''}>{tier.roiReplaces}</td>)}
                 </tr>
@@ -133,12 +124,6 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL }) {
           </div>
         </div>
 
-        {/* Terms */}
-        <div className="pricing-terms fade-in">
-          <div className="term-item"><Icon name="check" size={16} strokeWidth={2.5} /><span>{t.terms_1 || 'No setup fees — a one-time payment, nothing recurring.'}</span></div>
-          <div className="term-item"><Icon name="check" size={16} strokeWidth={2.5} /><span>{t.terms_2 || 'Annual billing = two months free.'}</span></div>
-          <div className="term-item"><Icon name="check" size={16} strokeWidth={2.5} /><span>{t.terms_3 || 'Prices published and fixed — what you see is what everyone pays.'}</span></div>
-        </div>
 
         {/* Guarantee */}
         <div className="pricing-guarantee fade-in">
