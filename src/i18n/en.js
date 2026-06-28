@@ -211,7 +211,7 @@ export default {
   "cmp_r9": "Lead-Volume Growth Guarantee",
   "cmp_cta_text": "No tool or agency combines all of this for real estate teams that want to scale lead conversion.",
   "cmp_cta_btn": "Book Your Free Strategy Call",
-  "trust_label": "Done-for-you AI. Proven in Oman.",
+  "trust_label": "An AI front desk built for",
   "trust_featured": "Built for",
   "trust_case1": "Muscat Heights · Real Estate",
   "trust_case2": "Mazoon Dental · Dental",

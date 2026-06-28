@@ -127,10 +127,14 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
 
         <div className="trust-strip">
           <span className="trust-label">{t.trust_label}</span>
-          <span className="trust-flag" title="Muscat Heights — Real Estate, Oman">🏢 {t.trust_case1}</span>
-          <span className="trust-flag" title="Mazoon Dental — Dental, Oman">🦷 {t.trust_case2}</span>
-          <span className="trust-divider" aria-hidden="true">·</span>
-          <span className="trust-flag" title="Built for businesses worldwide">🌍 {t.trust_worldwide}</span>
+          <span className="trust-flag">🏢 {t.trackA_v1}</span>
+          <span className="trust-flag">🦷 {t.trackA_v2}</span>
+          <span className="trust-flag">🩺 {t.trackA_v3}</span>
+          <span className="trust-flag">❄️ {t.trackA_v4}</span>
+          <span className="trust-flag">🏗️ {t.trackA_v5}</span>
+          <span className="trust-flag">🎂 {t.trackB_v1}</span>
+          <span className="trust-flag">☕ {t.trackB_v2}</span>
+          <span className="trust-flag">🍽️ {t.trackB_v3}</span>
         </div>
       </div>
 
