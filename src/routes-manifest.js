@@ -12,7 +12,7 @@ export const LOCALES = ['en', 'ar'];
 // Each page lists its English (canonical) path. The /ar mirror is derived.
 // lastmod is explicit + deterministic so rebuilds don't churn the sitemap.
 export const PAGES = [
-  { path: '/', changefreq: 'weekly', priority: 1.0, lastmod: '2026-06-16' },
+  { path: '/', changefreq: 'weekly', priority: 1.0, lastmod: '2026-06-28' },
   // Phase 2 adds: /pricing, /real-estate-lead-automation,
   // /whatsapp-automation-real-estate, /speed-to-lead, /how-it-works, /blog, ...
 ];

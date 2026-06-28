@@ -10,13 +10,9 @@ import { SITE } from '../routes-manifest';
 import { NavBar }             from '../components/NavBar';
 import { HeroSection }        from '../components/HeroSection';
 import { ProblemSection }     from '../components/ProblemSection';
+import { TwoTrackSection }    from '../components/TwoTrackSection';
 import { BenefitsSection }    from '../components/BenefitsSection';
-import { ROISection }         from '../components/ROISection';
-import { ServicesSection }    from '../components/ServicesSection';
-import { ComparisonSection }  from '../components/ComparisonSection';
-import { TiersSection }       from '../components/TiersSection';
 import { HowItWorksSection }  from '../components/HowItWorksSection';
-import { UseCasesSection }    from '../components/UseCasesSection';
 import { TestimonialsSection } from '../components/TestimonialsSection';
 import { AboutSection }       from '../components/AboutSection';
 import { FAQSection }         from '../components/FAQSection';
@@ -48,19 +44,19 @@ const trackEvent = (name, props) => {
 // Per-locale homepage SEO copy (en/ar are the prerendered locales).
 const HOME_SEO = {
   en: {
-    title: 'BznsFlow | AI Lead Automation & Business Growth Engine for Sales Teams',
-    description: 'BznsFlow qualifies and routes every inbound lead in under 60 seconds — 24/7, on WhatsApp and the web. AI-powered lead response, deal CRM, and business scaling done entirely for you. Live in 3–5 days.',
+    title: 'BznsFlow — AI Receptionist, Booking & WhatsApp Order Automation',
+    description: 'Stop losing customers to slow replies. BznsFlow builds done-for-you AI receptionists, booking systems & WhatsApp order automation for real estate, dental & medical clinics, HVAC, construction, cafés, bakeries & restaurants. Reply 24/7 in Arabic & English. Proven in Oman.',
   },
   ar: {
-    title: 'BznsFlow | محرك النمو بالذكاء الاصطناعي — أتمتة العملاء وتوسيع المبيعات',
-    description: 'BznsFlow يرد على كل عميل خلال 60 ثانية، 24/7 — عبر واتساب والويب. ذكاء اصطناعي لتأهيل العملاء وإدارة الصفقات وتوسيع المبيعات. حلول الأعمال الأكثر طلباً. جاهز خلال 3–5 أيام.',
+    title: 'BznsFlow — موظف استقبال آلي وحجز وأتمتة طلبات واتساب بالذكاء الاصطناعي',
+    description: 'لا تخسر عملاءك بسبب بطء الرد. BznsFlow يبني موظف استقبال آلي وأنظمة حجز وأتمتة طلبات واتساب — للعقارات وعيادات الأسنان والعيادات الطبية والتكييف والمقاولات والمقاهي والمخابز والمطاعم. رد 24/7 بالعربية والإنجليزية. مُثبَت في عُمان.',
   },
 };
 
 // Build fully-localized structured data schemas from the active language's
 // translation strings. Called at render time, so the SSG build will bake the
 // correct Arabic schemas into dist/ar.html and English into dist/index.html.
-function buildSchemas(t, lang, tiers) {
+function buildSchemas(t, lang) {
   const isAr = lang === 'ar';
 
   const organization = {
@@ -70,14 +66,14 @@ function buildSchemas(t, lang, tiers) {
     url: SITE,
     logo: `${SITE}/logo.png`,
     description: isAr
-      ? 'BznsFlow — محرك النمو بالذكاء الاصطناعي للشركات الطموحة. يرد على كل عميل في أقل من 60 ثانية، يؤهّل حسب الميزانية والنية، ويحجز الاجتماعات آلياً — منجز بالكامل لك. حلول الأعمال لزيادة المبيعات وتوسيع الشركات.'
-      : 'BznsFlow is the AI growth engine for ambitious businesses worldwide. Qualifies and routes every lead in under 60 seconds, books meetings automatically, and delivers measurable revenue growth — done entirely for you.',
+      ? 'BznsFlow يبني موظف استقبال آلي وأنظمة حجز وأتمتة طلبات واتساب بالذكاء الاصطناعي — منجز لك. يرد على كل رسالة في ثوانٍ، ويؤهّل العملاء، ويحجز المواعيد، ويستقبل الطلبات 24/7 بالعربية والإنجليزية. للعقارات وعيادات الأسنان والعيادات الطبية والتكييف والمقاولات والمقاهي والمخابز والمطاعم. مُثبَت في عُمان.'
+      : 'BznsFlow builds done-for-you AI receptionists, booking systems, and WhatsApp order automation. It answers every message in seconds, qualifies leads, books appointments, and takes orders 24/7 in Arabic and English — for real estate, dental and medical clinics, HVAC, construction, cafés, bakeries, and restaurants. Proven in Oman.',
     founder: { '@type': 'Person', name: 'Ahmed Darwish' },
     foundingDate: '2024',
     areaServed: 'Worldwide',
     knowsAbout: isAr
-      ? ['أتمتة المبيعات', 'حلول الأعمال', 'نمو الشركات', 'زيادة الأرباح', 'الذكاء الاصطناعي للشركات', 'إدارة العملاء', 'توسيع المبيعات', 'CRM الذكي', 'أتمتة واتساب']
-      : ['AI lead automation', 'Business scaling', 'Sales team automation', 'CRM', 'Lead qualification', 'WhatsApp automation', 'Business growth', 'Revenue optimization'],
+      ? ['موظف استقبال بالذكاء الاصطناعي', 'الرد الآلي على العملاء', 'أتمتة واتساب', 'حجز المواعيد', 'استقبال الطلبات', 'أتمتة عيادات الأسنان', 'أتمتة العيادات الطبية', 'أتمتة العقارات', 'أتمتة التكييف والتبريد', 'أتمتة المقاولات', 'أتمتة طلبات المطاعم', 'أتمتة طلبات المقاهي', 'تأهيل العملاء', 'CRM']
+      : ['AI receptionist', 'AI lead response', 'WhatsApp automation', 'appointment booking automation', 'AI order taking', 'real estate lead automation', 'dental clinic automation', 'medical clinic automation', 'HVAC lead automation', 'construction lead automation', 'restaurant order automation', 'cafe order automation', 'bakery order automation', 'lead qualification', 'CRM'],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
@@ -94,8 +90,8 @@ function buildSchemas(t, lang, tiers) {
     url: SITE,
     inLanguage: lang,
     description: isAr
-      ? 'محرك النمو بالذكاء الاصطناعي للشركات حول العالم — حلول الأعمال لتوسيع المبيعات وزيادة الأرباح'
-      : 'The AI growth engine for ambitious businesses worldwide — lead automation, sales scaling, and revenue growth',
+      ? 'موظف استقبال آلي وحجز وأتمتة طلبات واتساب بالذكاء الاصطناعي للأعمال حول العالم — رد فوري وتأهيل وحجز واستقبال طلبات بالعربية والإنجليزية.'
+      : 'AI receptionist, booking, and WhatsApp order automation for businesses worldwide — instant replies, lead qualification, appointment booking, and order taking in Arabic and English.',
     potentialAction: {
       '@type': 'SearchAction',
       target: `${SITE}#{search_term_string}`,
@@ -108,12 +104,12 @@ function buildSchemas(t, lang, tiers) {
     '@type': 'SoftwareApplication',
     name: 'BznsFlow',
     applicationCategory: 'BusinessApplication',
-    applicationSubCategory: isAr ? 'أتمتة المبيعات وتوسيع الأعمال' : 'AI Lead Automation & Business Scaling',
+    applicationSubCategory: isAr ? 'موظف استقبال ومحرك طلبات بالذكاء الاصطناعي' : 'AI Receptionist & Order Engine',
     operatingSystem: 'Web, WhatsApp, iOS, Android',
     url: SITE,
     description: isAr
-      ? 'منصة نمو الأعمال بالذكاء الاصطناعي: رد فوري على العملاء في أقل من 60 ثانية، تأهيل وتوجيه ذكي، أتمتة واتساب، CRM للصفقات، جدولة اجتماعات، ورعاية العملاء — منجز بالكامل لك.'
-      : 'Done-for-you AI growth engine: lead response in under 60 seconds, smart qualification and routing, WhatsApp automation, deal CRM, meeting scheduling, and lead nurture — built and run entirely for you.',
+      ? 'مكتب استقبال كامل بالذكاء الاصطناعي منجز لك: رد على كل رسالة في ثوانٍ، تأهيل العملاء، حجز المواعيد، استقبال الطلبات والحجوزات، تذكيرات ومتابعة، ونظام CRM — 24/7 بالعربية والإنجليزية.'
+      : 'Done-for-you AI front desk: answers every message in seconds, qualifies leads, books appointments, takes orders and reservations, sends reminders and follow-ups, and logs to a CRM — 24/7 in Arabic and English.',
     provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
   };
 
@@ -128,22 +124,49 @@ function buildSchemas(t, lang, tiers) {
     ? { '@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: lang, mainEntity: faqItems }
     : null;
 
+  // Two engines, modelled as Service items with serviceType + audience so search
+  // and answer engines can match per-vertical "AI receptionist / order taking" queries.
+  const engines = [
+    {
+      name: isAr ? 'محرك العملاء' : 'Lead Engine',
+      serviceType: isAr ? 'موظف استقبال آلي وتأهيل العملاء بالذكاء الاصطناعي' : 'AI receptionist & lead qualification',
+      description: isAr
+        ? 'موظف استقبال آلي يرد في ثوانٍ، يؤهّل العميل، يحجز المعاينة أو الموعد، ويتابع آلياً — للأعمال التي تعيش على العملاء عالي القيمة.'
+        : 'AI receptionist that replies in seconds, qualifies the lead, books the viewing or appointment, and follows up automatically — for high-value lead businesses.',
+      audience: isAr
+        ? 'العقارات، عيادات الأسنان، العيادات الطبية، التكييف والتبريد، المقاولات'
+        : 'Real estate, dental clinics, medical clinics, HVAC, and construction businesses',
+    },
+    {
+      name: isAr ? 'محرك الطلبات' : 'Order Engine',
+      serviceType: isAr ? 'استقبال الطلبات والحجوزات بالذكاء الاصطناعي عبر واتساب' : 'AI order taking & customer response (WhatsApp)',
+      description: isAr
+        ? 'الذكاء الاصطناعي يستقبل الطلبات والحجوزات والأسئلة فوراً، ويؤكّدها آلياً، ويعيد العملاء بالتذكيرات — للأعمال عالية حجم الطلبات.'
+        : 'AI that takes orders, reservations, and FAQs instantly, confirms automatically, and brings customers back with reminders — for high-volume order businesses.',
+      audience: isAr
+        ? 'معارض الكيك، المقاهي ومحلات الحلويات، المطاعم'
+        : 'Cake galleries, coffee & dessert shops, and restaurants',
+    },
+  ];
+
   const serviceList = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: isAr ? 'خطط BznsFlow لنمو الأعمال' : 'BznsFlow AI Growth Plans',
-    description: isAr ? 'أنظمة نمو بالذكاء الاصطناعي منجزة لك — لكل نوع من الأعمال' : 'Done-for-you AI growth systems for every business type worldwide',
+    name: isAr ? 'محرّكا BznsFlow بالذكاء الاصطناعي' : 'BznsFlow AI Engines',
+    description: isAr ? 'محرّكان بالذكاء الاصطناعي منجزان لك — محرك العملاء ومحرك الطلبات' : 'Two done-for-you AI engines — Lead Engine and Order Engine',
     url: SITE,
-    numberOfItems: tiers.length,
-    itemListElement: tiers.map((tier, idx) => ({
+    numberOfItems: engines.length,
+    itemListElement: engines.map((engine, idx) => ({
       '@type': 'ListItem',
       position: idx + 1,
       item: {
         '@type': 'Service',
-        name: tier.name,
-        description: tier.intro || '',
-        provider: { '@type': 'Organization', name: 'BznsFlow' },
+        name: engine.name,
+        serviceType: engine.serviceType,
+        description: engine.description,
+        provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
         areaServed: 'Worldwide',
+        audience: { '@type': 'Audience', audienceType: engine.audience },
       },
     })),
   };
@@ -378,10 +401,8 @@ export default function Home({ lang: routeLang = 'en' }) {
   // English until the chunk resolves (avoids a flash of missing keys).
   const activeLang     = isLoaded(lang) ? lang : 'en';
   const t              = getStrings(activeLang);
-  const activeServices = activeLang === 'ar' ? SERVICES_AR : SERVICES;
-  const activeTiers    = activeLang === 'ar' ? TIERS_AR : TIERS;
   const seo            = HOME_SEO[routeLang] || HOME_SEO.en;
-  const jsonLd         = buildSchemas(t, routeLang, activeLang === 'ar' ? TIERS_AR : TIERS);
+  const jsonLd         = buildSchemas(t, routeLang);
 
   // ── Effects (all browser-only work lives here — never runs during SSG) ──────
 
@@ -593,13 +614,9 @@ export default function Home({ lang: routeLang = 'en' }) {
           onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent}
         />
         <ProblemSection t={t} />
-        <BenefitsSection t={t} />
-        <ROISection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
-        <ServicesSection t={t} activeServices={activeServices} CALENDAR_URL={CALENDAR_URL} />
-        <ComparisonSection t={t} CALENDAR_URL={CALENDAR_URL} />
-        <TiersSection t={t} tiers={activeTiers} CALENDAR_URL={CALENDAR_URL} />
+        <TwoTrackSection t={t} onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent} />
         <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} />
-        <UseCasesSection t={t} lang={lang} />
+        <BenefitsSection t={t} />
         <TestimonialsSection t={t} lang={lang} />
         <AboutSection t={t} lang={lang} CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL} />
         <FAQSection t={t} />

@@ -43,11 +43,9 @@ export function NavBar({
 
           <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`} id="navLinks">
             <li><a href="#problem"    className={`nav-link ${activeLink === 'problem'    ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#problem')}>{t.nav_problem}</a></li>
-            <li><a href="#benefits"   className={`nav-link ${activeLink === 'benefits'   ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#benefits')}>{t.nav_solution}</a></li>
-            <li><a href="#services"   className={`nav-link ${activeLink === 'services'   ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#services')}>{t.nav_services}</a></li>
-            <li><a href="#tiers"      className={`nav-link ${activeLink === 'tiers'      ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.nav_tiers}</a></li>
+            <li><a href="#two-track"  className={`nav-link ${activeLink === 'two-track'  ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.nav_solution}</a></li>
             <li><a href="#how-it-works" className={`nav-link ${activeLink === 'how-it-works' ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#how-it-works')}>{t.nav_how}</a></li>
-            <li><a href="#use-cases"  className={`nav-link ${activeLink === 'use-cases'  ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#use-cases')}>{t.nav_cases}</a></li>
+            <li><a href="#testimonials" className={`nav-link ${activeLink === 'testimonials' ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#testimonials')}>{t.testimonials_label}</a></li>
             <li><a href="#about"      className={`nav-link ${activeLink === 'about'      ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#about')}>{t.nav_about}</a></li>
 
             <li

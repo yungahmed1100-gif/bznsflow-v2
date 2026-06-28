@@ -10,9 +10,9 @@ export function TestimonialsSection({ t, lang }) {
 
         <div className="testimonials-grid">
           {[
-            { quote: t.tst1_quote, name: t.tst1_name, title: t.tst1_title, location: t.tst1_location, initial: 'A' },
-            { quote: t.tst2_quote, name: t.tst2_name, title: t.tst2_title, location: t.tst2_location, initial: 'M' },
-            { quote: t.tst3_quote, name: t.tst3_name, title: t.tst3_title, location: t.tst3_location, initial: 'S' },
+            { quote: t.tst1_quote, name: t.tst1_name, title: t.tst1_title, location: t.tst1_location, initial: 'MH' },
+            { quote: t.tst2_quote, name: t.tst2_name, title: t.tst2_title, location: t.tst2_location, initial: 'MD' },
+            { quote: t.tst3_quote, name: t.tst3_name, title: t.tst3_title, location: t.tst3_location, initial: '★' },
           ].map((tst, i) => (
             <figure className="testimonial-card fade-in" key={i}>
               <svg className="testimonial-mark" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

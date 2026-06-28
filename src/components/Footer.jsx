@@ -24,9 +24,9 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
               <h4 className="footer-heading">{t.footer_nav_heading}</h4>
               <ul className="footer-links">
                 <li><a href="#problem" onClick={(e) => onSmoothScroll(e, '#problem')}>{t.footer_nav_1}</a></li>
-                <li><a href="#benefits" onClick={(e) => onSmoothScroll(e, '#benefits')}>{t.footer_nav_2}</a></li>
-                <li><a href="#tiers" onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.footer_nav_3}</a></li>
-                <li><a href="#how-it-works" onClick={(e) => onSmoothScroll(e, '#how-it-works')}>{t.footer_nav_4}</a></li>
+                <li><a href="#two-track" onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.footer_nav_2}</a></li>
+                <li><a href="#how-it-works" onClick={(e) => onSmoothScroll(e, '#how-it-works')}>{t.footer_nav_3}</a></li>
+                <li><a href="#testimonials" onClick={(e) => onSmoothScroll(e, '#testimonials')}>{t.footer_nav_4}</a></li>
                 <li><a href="#about" onClick={(e) => onSmoothScroll(e, '#about')}>{t.footer_nav_5}</a></li>
               </ul>
             </div>
@@ -34,11 +34,11 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             <div className="footer-col">
               <h4 className="footer-heading">{t.footer_services_heading}</h4>
               <ul className="footer-links">
-                <li><a href="#services" onClick={(e) => onSmoothScroll(e, '#services')}>{t.footer_svc_1}</a></li>
-                <li><a href="#services" onClick={(e) => onSmoothScroll(e, '#services')}>{t.footer_svc_2}</a></li>
-                <li><a href="#services" onClick={(e) => onSmoothScroll(e, '#services')}>{t.footer_svc_3}</a></li>
-                <li><a href="#services" onClick={(e) => onSmoothScroll(e, '#services')}>{t.footer_svc_4}</a></li>
-                <li><a href="#services" onClick={(e) => onSmoothScroll(e, '#services')}>{t.footer_svc_5}</a></li>
+                <li><a href="#two-track" onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.footer_svc_1}</a></li>
+                <li><a href="#two-track" onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.footer_svc_2}</a></li>
+                <li><a href="#two-track" onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.footer_svc_3}</a></li>
+                <li><a href="#benefits" onClick={(e) => onSmoothScroll(e, '#benefits')}>{t.footer_svc_4}</a></li>
+                <li><a href="#benefits" onClick={(e) => onSmoothScroll(e, '#benefits')}>{t.footer_svc_5}</a></li>
               </ul>
             </div>
 

@@ -776,7 +776,7 @@ img, video {
  ============================================================ */
 .benefits-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 
@@ -2871,6 +2871,107 @@ html {
   .trust-strip { gap: 10px; padding: 12px 16px; font-size: 0.78rem; }
   .trust-label { display: none; }
 }
+
+/* ============================================================
+   TWO-TRACK SECTION — Lead Engine / Order Engine (additive)
+   Reuses existing tokens: --bg-card, --border, --radius-lg,
+   --accent-blue, --orange, --shadow-glow, --text-*
+ ============================================================ */
+.two-track-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 48px;
+}
+.track-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 36px 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.track-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--accent-blue);
+  opacity: 0.9;
+}
+.track-card--order::before { background: var(--orange); }
+.track-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(92, 149, 198, 0.35);
+  box-shadow: var(--shadow-glow);
+}
+.track-card--order:hover { border-color: rgba(242, 140, 84, 0.35); }
+.track-card-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-blue);
+  margin-bottom: 14px;
+}
+.track-card--order .track-card-tag { color: var(--orange); }
+.track-card-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+.track-card-promise {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.track-verticals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+}
+.track-vertical-chip {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.track-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  font-weight: 700;
+  color: var(--accent-blue);
+  transition: gap var(--transition), color var(--transition);
+}
+.track-card--order .track-card-cta { color: var(--orange); }
+.track-card-cta:hover { gap: 12px; }
+
+@media (max-width: 768px) {
+  .two-track-grid { grid-template-columns: 1fr; gap: 18px; }
+  .track-card { padding: 28px 24px; }
+  .track-card-name { font-size: 1.4rem; }
+}
+
+/* RTL mirror — chips/CTA flow right-to-left, accent bar full-width unaffected */
+[dir="rtl"] .track-card-tag,
+[dir="rtl"] .track-card-cta { align-self: flex-end; }
+[dir="rtl"] .track-verticals { justify-content: flex-start; }
+[dir="rtl"] .track-card-cta .icon,
+[dir="rtl"] .track-card-cta svg { transform: scaleX(-1); }
 
 /* ============================================================
    PHASE B — ROI CALCULATOR

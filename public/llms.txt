@@ -1,58 +1,69 @@
 # BznsFlow
 
-> BznsFlow is the done-for-you AI growth engine for real estate teams and brokerages worldwide. We design, deploy, and manage the AI infrastructure that captures every buyer and seller lead, qualifies it by budget, area and intent, routes it to the right agent in seconds, books showings, and nurtures prospects until they close. Built for speed-to-lead, multilingual by default, live in 3–5 days.
+> BznsFlow builds done-for-you AI receptionists, booking systems, and WhatsApp order automation that answer every message, qualify every lead, and book more business — 24/7, in Arabic and English. One promise: stop losing customers to slow replies. Built for businesses worldwide. Proven in Oman.
+
+## Two engines, one promise
+
+Most businesses lose customers the same way: a message arrives, nobody replies fast enough, and the customer goes to whoever answered first. BznsFlow plugs that leak with two AI engines.
+
+- **Lead Engine** — an AI receptionist that replies in seconds, qualifies the lead by intent, books the viewing or appointment, and follows up automatically. For businesses where one lead is worth thousands.
+- **Order Engine** — AI that takes orders, reservations, and FAQs instantly over WhatsApp, confirms automatically, and brings customers back with reminders. For businesses drowning in high-volume messages.
+
+It's done entirely for you — receptionist, booking, order-taking, and CRM, built and run by BznsFlow. No software to learn. Live in days.
 
 ## Who it's for
 
-Real estate brokerages, agent teams, high-volume individual agents, property developers, luxury and off-plan sales, property management, and commercial real estate — anywhere lead volume outpaces the team's ability to respond.
+### Lead Engine (Track A)
+- **Real estate** — AI receptionist for brokerages and agents: answers portal and WhatsApp leads in seconds, qualifies by budget and area, books viewings. Built for real estate teams.
+- **Dental clinics** — AI receptionist and appointment booking for dental practices: answers patients 24/7, books and confirms appointments, cuts no-shows with reminders. Proven with Mazoon Dental.
+- **Medical clinics** — AI patient receptionist for clinics: answers inquiries, books appointments, and routes urgent cases. Built for medical and healthcare practices.
+- **HVAC** — AI answering service for heating, ventilation, and air-conditioning companies: captures emergency and quote requests instantly, books service calls. Built for HVAC businesses.
+- **Construction & contractors** — AI lead capture for contractors: answers quote requests, qualifies the job, and follows up so no estimate goes cold. Built for construction businesses.
 
-## What we build
+### Order Engine (Track B)
+- **Cake galleries & bakeries** — AI WhatsApp order taking for bakeries: handles cake orders, dates, and prices automatically, confirms, and reminds. Built for cake shops and bakeries.
+- **Coffee & dessert shops** — AI order and reservation bot for cafés: takes orders, answers FAQs, and runs loyalty reminders. Built for coffee shops and dessert businesses.
+- **Restaurants** — AI reservation and WhatsApp ordering for restaurants: takes bookings and orders, confirms automatically, and brings diners back. Built for restaurants.
 
-- AI Lead Response Agent — replies to every buyer and seller lead in under 60 seconds, 24/7, across portals, website, WhatsApp, and missed calls.
-- AI Lead Qualification — qualifies every lead by budget, area, intent, and timeline; passes only sales-ready buyers and sellers to agents.
-- Smart Lead Routing — auto-assigns leads to the right agent by area, price band, language, and load, with instant context hand-off.
-- WhatsApp & Portal Automation — official WhatsApp Business API plus portal integrations (Bayut, Property Finder, Zillow, Rightmove and more); turns inquiries into booked viewings.
-- Real Estate Deal CRM — every lead, agent, and deal stage in one pipeline with automated follow-up and commission visibility.
-- Showing & Viewing Scheduler — self-serve booking, smart reminders, no-show reduction, synced to every agent's calendar.
-- Listing & Lead-Capture Site — fast, mobile-first site with IDX/portal-synced listings built to convert visitors into booked leads.
-- Agent Reputation Engine — automated review requests and monitoring to make agents the trusted choice in their area.
-- Pipeline Intelligence Dashboard — real-time leads, sources, agent conversion, cost per lead, and speed-to-lead.
-- Buyer & Seller Nurture — behaviour-triggered drip sequences (new listings, price drops, saved searches) that keep cold leads warm for months.
-- Property Ad Management — Meta, Google, and portal campaigns built around cost per qualified lead, flowing straight into the CRM.
-- Email & SMS Lead Reactivation — revives cold and dead leads from the existing database into booked viewings.
-- Listing & Reels Video Engine — property reels and listing videos produced and published monthly.
-- Market-Report Content & SEO — area guides and market reports built to rank and pull in buyer/seller intent.
-- Referral & Past-Client Engine — stay-in-touch automation that turns closed deals into future referral pipeline.
-- Brokerage Growth Partnership — custom AI workforce, multi-team management, and executive-level growth engineering.
+Honest scope: BznsFlow is **proven with** named deployments in real estate and dental (below). The other verticals are **built for** the same engine — not yet named case studies.
 
-## Service plans (Catch → Convert → Dominate ladder)
+## Proof (Oman)
 
-- Catalyst — Catches and qualifies leads. Layla on the WhatsApp Business API answers every inquiry in seconds 24/7, qualifies by budget/area/financing/timeline, auto-books viewings, and alerts the right agent. Replaces a part-time receptionist.
-- Ascend — Converts leads. Everything in Catalyst plus Khaled inbound voice AI, a full custom deal CRM, automated WhatsApp + email nurture, a review-generation engine, and an owner BI dashboard. Replaces a CRM build plus review and BI retainers.
-- Apex — Dominates the market. Everything in Ascend plus ARIA outbound AI calling (reactivates dormant databases), Modeer autonomous monitoring, predictive pipeline BI, full 20-MVP stack access, and a dedicated growth strategist. Replaces an agency retainer.
+- **Muscat Heights — Real Estate (Oman).** Live BznsFlow AI receptionist: answers property inquiries in seconds, qualifies buyers, and books viewings 24/7 in Arabic and English.
+- **Mazoon Dental Clinic — Dental (Oman).** Live BznsFlow AI front desk: answers patients, books appointments, and sends reminders automatically, around the clock in Arabic and English.
 
-## Terms & guarantee
+## Sound familiar? (the problems we remove)
 
-- The 30-Day Leak Guarantee: if, in the first 30 days on Catalyst, Layla doesn't book the agreed number of qualified viewings, you get a full refund.
+These are the exact problems customers describe, and what BznsFlow does about each:
 
-## Markets served
+- "Nobody replied." — A customer messages after hours and books with whoever answered first. BznsFlow replies in seconds, 24/7.
+- "We forgot to call back." — A high-value lead slips through while the team is busy. BznsFlow captures, qualifies, and follows up every inquiry.
+- "We're too busy." — Orders and questions pile up on WhatsApp faster than anyone can type. BznsFlow takes orders and bookings automatically.
+- "They keep asking the same thing." — The team repeats prices, hours, and dates all day. BznsFlow answers the repeat questions instantly.
 
-Global. Real estate teams worldwide — including the United States, United Arab Emirates, United Kingdom, Canada, Australia, and beyond. Multilingual lead handling adapts to each market's language, currency, and portals.
+## How it works (3 steps)
+
+1. **Free Growth Audit** — we map exactly where you're losing customers. No cost, no obligation.
+2. **We build your system** — AI receptionist, booking, and CRM, trained in your voice, in Arabic and English. Done for you, live in days.
+3. **You watch bookings rise** — we track the ROI so you see the revenue, not just the tech, and keep tuning it every month.
+
+## Outcomes
+
+- Reply in seconds, 24/7 — even at 2am, even when you're slammed.
+- Never drop a lead — every inquiry captured, qualified, and followed up.
+- More bookings, fewer no-shows — automated confirmations and reminders.
+- Cheaper than a hire — an AI employee that doesn't sleep, quit, or call in sick.
+
+## Markets & languages
+
+Global / worldwide. Proven in Oman. Bilingual by default — fluent Arabic and English, switching automatically based on how customers write.
 
 ## Differentiators
 
-- Done-for-you managed service — no software learning curve, no technical work required.
-- Speed-to-lead obsessed — under 60-second first response, the single biggest predictor of which agent wins the deal.
-- Multilingual by default — the AI handles leads in any language buyers write in.
-- Works with the portals and channels each market actually uses, WhatsApp-first.
-- 3–5 day deployment vs. industry average of weeks to months.
-- Lead-to-close engine, not a CRM you have to feed or a tool you have to maintain.
-
-## Key real-estate statistics we build around
-
-- 78% of buyers and sellers work with the first agent who responds (National Association of Realtors).
-- Leads contacted within 5 minutes are up to 21× more likely to convert than after 30 minutes (lead-response research).
-- 80% of deals require five or more follow-up touches, yet most leads never receive a second one.
+- Done-for-you, managed service — no software learning curve, no technical work.
+- Answers in seconds, 24/7, across WhatsApp, web, and calls.
+- An AI receptionist that qualifies, books, takes orders, follows up, and logs to a CRM — not a basic chatbot.
+- Honest proof: named deployments where they exist; "built for" everywhere else.
 
 ## Founder
 
@@ -62,9 +73,10 @@ Ahmed Darwish. Founded 2024.
 
 - WhatsApp: https://wa.me/201036755930
 - Email: ahmed@bznsflowai.com
-- Book a growth call: https://calendar.app.google/KS48NKMVXPugQEhm6
+- Book a free growth audit: https://calendar.app.google/KS48NKMVXPugQEhm6
 - Website: https://www.bznsflowai.com
 
 ## Key pages
 
 - [Home](https://www.bznsflowai.com/)
+- [Arabic home / الصفحة بالعربية](https://www.bznsflowai.com/ar)
