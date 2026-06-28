@@ -10,9 +10,12 @@ import { SITE } from '../routes-manifest';
 import { NavBar }             from '../components/NavBar';
 import { HeroSection }        from '../components/HeroSection';
 import { ProblemSection }     from '../components/ProblemSection';
+import { ROISection }         from '../components/ROISection';
 import { TwoTrackSection }    from '../components/TwoTrackSection';
-import { BenefitsSection }    from '../components/BenefitsSection';
+import { AITeamSection }      from '../components/AITeamSection';
 import { HowItWorksSection }  from '../components/HowItWorksSection';
+import { TiersSection }       from '../components/TiersSection';
+import { BenefitsSection }    from '../components/BenefitsSection';
 import { TestimonialsSection } from '../components/TestimonialsSection';
 import { AboutSection }       from '../components/AboutSection';
 import { FAQSection }         from '../components/FAQSection';
@@ -20,12 +23,10 @@ import { CTASection }         from '../components/CTASection';
 import { Footer }             from '../components/Footer';
 import { StickyMobileCTA }    from '../components/StickyMobileCTA';
 import { LeadModal }          from '../components/LeadModal';
-import { PlaybookModal }      from '../components/PlaybookModal';
 
 // ─── Shared constants ────────────────────────────────────────────────────────
 const CALENDAR_URL  = 'https://calendar.app.google/KS48NKMVXPugQEhm6';
 const WHATSAPP_URL  = 'https://wa.me/201036755930';
-const PLAYBOOK_DOWNLOAD_URL = '/bznsflow-growth-playbook-realestate.pdf';
 
 const LANGUAGES = [
   { code: 'en', flag: '🇬🇧', label: 'English' },
@@ -215,7 +216,7 @@ const SERVICES_AR = [
   {"icon":"📱","name":"تطبيقات مخصصة","tag":"تطبيقات مصممة خصيصاً لإدارة أعمالك بالطريقة التي تحتاجها بالضبط.","bullets":["تطبيقات ويب وهواتف ذكية مصممة لتناسب مسار عملك بدقة","تكامل سلس مع نظام CRM وأدواتك الحالية","بنية قابلة للتوسع مصممة للأداء والنمو"],"category":"scale"},
 ];
 
-// ─── Pricing tiers (Catch → Convert → Dominate ladder) ───────────────────────
+// ─── Plans (no prices) — Catch → Convert → Dominate ladder ────────────────────
 const TIERS = [
   {
     key: 'catalyst',
@@ -223,47 +224,47 @@ const TIERS = [
     flag: null,
     popular: false,
     stage: 'Catch',
-    bottleneck: 'Leads die before anyone answers',
-    intro: 'After 6pm and on weekends, inquiries hit WhatsApp, Instagram, your website, and the portals — and sit. Teams lose 30–40% of after-hours leads to whoever replies first.',
-    insideLabel: "What's inside",
+    bottleneck: 'Enquiries go unanswered',
+    intro: 'The starting point. Catalyst plugs the first and biggest leak — enquiries that go unanswered. Your WhatsApp gets a tireless front desk that replies in seconds, day or night, captures every enquiry, and never lets a hot lead sit.',
+    insideLabel: 'What it covers',
     inside: [
-      'Layla on WhatsApp Business API (Meta-verified) — answers every inquiry in seconds, 24/7, in any language',
-      'Four-question qualification — budget, area, financing, timeline — so only real buyers reach your team',
-      'Auto-booking — qualified leads dropped straight into the team calendar, with confirmations sent',
-      'Instant hot-lead alert to the right agent, with the full conversation as context',
-      'Capture from everywhere — click-to-WhatsApp on Instagram and the website widget feed one brain',
-      'Daily lead digest + transcripts to the owner — nothing lost, every conversation logged',
+      'Layla — your AI front desk: replies on WhatsApp in seconds, 24/7, in your customers’ language',
+      'Automatic enquiry capture straight into your pipeline',
+      'Basic qualification — know who’s serious before you follow up',
+      'Covers one service line or business area',
+      'Hands anything that needs a human straight to you — never oversteps',
     ],
     roiReplaces: 'A part-time receptionist',
-    roiLine: 'An investment that costs less than a single week of part-time reception cover, with none of the gaps. Break-even is the first deal you would otherwise have lost.',
-    payback: 'First recovered deal',
-    pull: 'An investment to stop losing the leads you already paid to generate.',
-    nextStep: 'Layla catches and qualifies — but the 80% who say “not yet” still slip away, and you still can’t see which agent actually converts.',
-    cta: 'Book Your Growth Call',
+    roiLine: 'Annual coverage that’s live through every season, campaign, and after-hours message — with two months free versus paying month to month.',
+    payback: 'First recovered customer',
+    pull: 'For the owner who just needs to stop missing enquiries.',
+    nextStep: 'Layla answers everything — but the customers who don’t reply yet still need follow-up, and you still need them booked.',
+    cta: 'Get Catalyst on WhatsApp',
   },
   {
     key: 'ascend',
     name: 'Ascend',
-    flag: 'Most agencies start here',
+    flag: 'Most popular',
     popular: true,
     stage: 'Convert',
-    bottleneck: 'Leads leak in the middle of the funnel',
-    intro: 'You’re catching leads now — but deals die between first contact and close. The “call me next month” buyers get no follow-up, leads live scattered in chats, and the owner is blind to who’s performing.',
+    bottleneck: 'Answered enquiries never get booked',
+    intro: 'The complete customer engine — with a home of its own. A done-for-you lead-capture website and the system behind it: it answers, follows up, nurtures, and books. This is where most businesses recover the customers they were quietly losing — the ones who reached out once and were never followed up.',
     insideLabel: 'Everything in Catalyst, plus',
     inside: [
-      'Khaled — inbound voice AI — answers calls, qualifies, and books, running the same brain as Layla',
-      'Full custom CRM — a visual pipeline (lead → contacted → viewing → offer → closed), auto-logged',
-      'Automated nurture sequences (WhatsApp + email) — drip the “not ready” leads until they are',
-      'Review-generation engine — automated requests on Bayut, Property Finder, and Google, with a private-feedback intercept',
-      'Owner BI dashboard — revenue, conversion by agent, response time, viewings, no-show rate',
-      'Weekly performance digest to the owner',
+      'A done-for-you lead-capture website — your brand, built to turn visitors into booked appointments and feed the engine',
+      'Automated multi-touch follow-up and nurture sequences',
+      'Smart booking flow — appointments scheduled straight into your calendar',
+      'Live customer dashboard — every enquiry, score, and stage in one view',
+      'Multiple service lines + full multi-language coverage',
+      'Mahmood — security & data: de-duplicates enquiries, scores every lead hot/warm/cold, keeps records secure and updated',
+      'Ali — manager & oversight: a daily report every evening, KPI tracking, quality grading, and an alert the moment an enquiry needs a human',
     ],
-    roiReplaces: 'A CRM build plus review & BI retainers',
-    roiLine: 'A bespoke CRM build alone can be very expensive. Ascend bundles all of it into a single package — a single extra closed deal pays it back many times over.',
-    payback: 'One extra closed deal',
-    pull: 'An investment to stop deals dying in the gap you can’t see.',
-    nextStep: 'You convert what comes in — but you’re still waiting for the phone to ring. No outbound, no forecast, no way to go and take the market.',
-    cta: 'Book Your Growth Call',
+    roiReplaces: 'A CRM build, a lead-gen website, and reporting retainers',
+    roiLine: 'A year of compounding follow-up — the nurture engine gets stronger the longer it runs on your pipeline, with two months free built in.',
+    payback: 'One extra customer booked',
+    pull: 'For the business that wants the whole funnel handled — website, capture, nurture, book.',
+    nextStep: 'You convert what comes in — but across staff and locations, enquiries start falling between people.',
+    cta: 'Get Ascend on WhatsApp',
   },
   {
     key: 'apex',
@@ -271,22 +272,22 @@ const TIERS = [
     flag: null,
     popular: false,
     stage: 'Dominate',
-    bottleneck: 'Growth is capped by your own reach',
-    intro: 'You’re winning, but you’ve hit the ceiling of inbound volume and human outreach. You react to what arrives instead of going to get it, your dormant database sits cold, and the owner is still firefighting.',
+    bottleneck: 'Enquiries fall between staff & locations',
+    intro: 'The command tier. Apex adds the structure a larger operation needs — enquiries routed to the right person automatically, priority handling, and the controls to run customer flow like an operation instead of a scramble.',
     insideLabel: 'Everything in Ascend, plus',
     inside: [
-      'ARIA — outbound AI calling agent — works lead lists, reactivates your dormant database, and books viewings proactively',
-      'Modeer — autonomous monitoring — watches system KPIs, self-heals reversible issues, flags breakages before you notice',
-      'Predictive BI — pipeline forecasting, which leads are likely to close, and where next quarter’s revenue is coming from',
-      'Full 20-MVP stack access — paid ads, social, e-commerce, and more, switched on as you need them',
-      'Dedicated growth strategist + a quarterly roadmap reviewed with you',
+      'Automatic routing and assignment across your team',
+      'Multiple AI agents tuned per service line or per location',
+      'ARIA — outbound AI: reactivates dormant customers and old lists proactively',
+      'Khaled — AI voice (coming soon, included): answers inbound calls with the same intelligence as Layla',
+      'Priority response, priority support, advanced team reporting, and white-glove setup',
     ],
-    roiReplaces: 'A full agency retainer',
-    roiLine: 'A comparable managed retainer is costly every month — for less capability and no outbound AI. Apex is a comprehensive package, and ARIA reactivates leads you’d otherwise never touch. One reactivated deal covers it outright.',
-    payback: 'One reactivated deal',
-    pull: 'An investment to stop reacting and start dominating.',
+    roiReplaces: 'A full agency retainer plus a sales-ops hire',
+    roiLine: 'Built for teams that plan in quarters — a full year of routing, reporting, and priority coverage across the team, with two months free.',
+    payback: 'One reactivated customer',
+    pull: 'For multi-location and multi-team businesses where enquiries can’t fall through the cracks.',
     nextStep: null,
-    cta: 'Book Your Growth Call',
+    cta: 'Get Apex on WhatsApp',
   },
 ];
 
@@ -297,47 +298,47 @@ const TIERS_AR = [
     flag: null,
     popular: false,
     stage: 'الالتقاط',
-    bottleneck: 'العملاء يموتون قبل أن يردّ أحد',
-    intro: 'بعد المساء وفي العطل، تصل الاستفسارات إلى واتساب وإنستغرام والموقع والبوابات — وتبقى دون رد. الفِرَق تخسر 30–40% من عملاء ما بعد الدوام لمن يرد أولاً.',
-    insideLabel: 'ما الذي بالداخل',
+    bottleneck: 'الاستفسارات تبقى دون رد',
+    intro: 'نقطة البداية. كاتاليست يسدّ أول وأكبر تسرّب — الاستفسارات التي تبقى دون رد. واتساب لديك يحصل على مكتب استقبال لا يكلّ يرد في ثوانٍ ليلاً ونهاراً، يلتقط كل استفسار، ولا يترك عميلاً ساخناً ينتظر.',
+    insideLabel: 'ما الذي يغطّيه',
     inside: [
-      'ليلى على واتساب للأعمال (موثّق من Meta) — ترد على كل استفسار في ثوانٍ، 24/7، بأي لغة',
-      'تأهيل بأربعة أسئلة — الميزانية، المنطقة، التمويل، التوقيت — فلا يصل فريقك إلا المشترون الجادون',
-      'حجز آلي — العملاء المؤهلون يُدرَجون مباشرة في تقويم الفريق مع تأكيدات',
-      'تنبيه فوري بالعميل الساخن للوكيل المناسب، مع كامل المحادثة كسياق',
-      'التقاط من كل مكان — زر واتساب على إنستغرام وأداة الموقع يغذّيان عقلاً واحداً',
-      'ملخص عملاء يومي + نصوص المحادثات للمالك — لا شيء يُفقد، كل محادثة مُسجّلة',
+      'ليلى — مكتب استقبالك الذكي: ترد على واتساب في ثوانٍ، 24/7، بلغة عملائك',
+      'التقاط آلي للاستفسارات مباشرة في مسارك',
+      'تأهيل أساسي — تعرف من هو الجاد قبل أن تتابع',
+      'يغطّي خط خدمة أو مجال عمل واحد',
+      'يُسلّم أي شيء يحتاج إنساناً إليك مباشرة — دون تجاوز',
     ],
     roiReplaces: 'موظف استقبال بدوام جزئي',
-    roiLine: 'استثمار أقل من تكلفة أسبوع من تغطية استقبال جزئية، وبلا أي فجوات. نقطة التعادل هي أول صفقة كنت ستخسرها.',
-    payback: 'أول صفقة مُستردّة',
-    pull: 'استثمار لإيقاف خسارة العملاء الذين دفعت بالفعل لتوليدهم.',
-    nextStep: 'ليلى تلتقط وتؤهّل — لكن الـ80% الذين يقولون «ليس الآن» ما زالوا ينزلقون، وما زلت لا ترى أي وكيل يحوّل فعلاً.',
-    cta: 'احجز مكالمة النمو',
+    roiLine: 'تغطية سنوية حيّة عبر كل موسم وحملة ورسالة بعد الدوام — مع شهرين مجاناً مقارنةً بالدفع الشهري.',
+    payback: 'أول عميل مُستردّ',
+    pull: 'للمالك الذي يحتاج فقط أن يتوقف عن تفويت الاستفسارات.',
+    nextStep: 'ليلى ترد على الجميع — لكن العملاء الذين لا يردّون بعد يحتاجون متابعة، وما زلت تحتاج حجزهم.',
+    cta: 'احصل على كاتاليست عبر واتساب',
   },
   {
     key: 'ascend',
     name: 'أسيند',
-    flag: 'معظم الوكالات تبدأ هنا',
+    flag: 'الأكثر شيوعاً',
     popular: true,
     stage: 'التحويل',
-    bottleneck: 'العملاء يتسربون في منتصف المسار',
-    intro: 'أنت تلتقط العملاء الآن — لكن الصفقات تموت بين أول تواصل والإغلاق. عملاء «اتصل بي الشهر القادم» بلا متابعة، والعملاء مبعثرون في المحادثات، والمالك أعمى عن الأداء.',
+    bottleneck: 'الاستفسارات المُجابة لا تُحجَز',
+    intro: 'محرك العملاء الكامل — مع بيت خاص به. موقع التقاط عملاء منجز لك والنظام خلفه: يرد، يتابع، يرعى، ويحجز. هنا تستعيد معظم الأعمال العملاء الذين كانوا يخسرونهم بصمت — الذين تواصلوا مرة ولم تتم متابعتهم أبداً.',
     insideLabel: 'كل ما في كاتاليست، بالإضافة إلى',
     inside: [
-      'خالد — ذكاء صوتي للمكالمات الواردة — يرد ويؤهّل ويحجز، بنفس عقل ليلى',
-      'نظام CRM مخصص كامل — مسار مرئي (عميل ← تواصل ← معاينة ← عرض ← إغلاق)، يُسجَّل آلياً',
-      'تسلسلات رعاية آلية (واتساب + بريد) — تُرعى العملاء غير الجاهزين حتى يصبحوا كذلك',
-      'محرك توليد التقييمات — طلبات آلية على Bayut وProperty Finder وGoogle، مع اعتراض للتغذية الخاصة',
-      'لوحة ذكاء أعمال للمالك — الإيرادات، التحويل لكل وكيل، زمن الرد، المعاينات، نسبة الغياب',
-      'ملخص أداء أسبوعي للمالك',
+      'موقع التقاط عملاء منجز لك — بعلامتك، مبني لتحويل الزوار إلى مواعيد محجوزة ويغذّي المحرك',
+      'متابعة ورعاية آلية متعددة اللمسات',
+      'تدفق حجز ذكي — المواعيد تُجدوَل مباشرة في تقويمك',
+      'لوحة عملاء حيّة — كل استفسار ودرجة ومرحلة في عرض واحد',
+      'خطوط خدمة متعددة + تغطية كاملة متعددة اللغات',
+      'محمود — الأمن والبيانات: يزيل الاستفسارات المكررة، يُقيّم كل عميل ساخن/دافئ/بارد، ويُبقي السجلات آمنة ومحدّثة',
+      'علي — الإدارة والإشراف: تقرير يومي كل مساء، تتبّع المؤشرات، تقييم جودة المحادثات، وتنبيه فور حاجة الاستفسار إلى إنسان',
     ],
-    roiReplaces: 'بناء CRM مع باقات التقييمات وذكاء الأعمال',
-    roiLine: 'بناء CRM مخصص وحده مُكلِف جداً. أسيند يجمع كل ذلك في باقة واحدة — صفقة إضافية واحدة تُعيد ثمنه أضعافاً.',
-    payback: 'صفقة إضافية واحدة',
-    pull: 'استثمار لإيقاف موت الصفقات في الفجوة التي لا تراها.',
-    nextStep: 'أنت تحوّل ما يصل — لكنك ما زلت تنتظر رنين الهاتف. لا تواصل خارجي، لا توقّعات، لا طريقة للذهاب وأخذ السوق.',
-    cta: 'احجز مكالمة النمو',
+    roiReplaces: 'بناء CRM وموقع لجذب العملاء وباقات تقارير',
+    roiLine: 'سنة من المتابعة المتراكمة — محرك الرعاية يزداد قوة كلما طال تشغيله على مسارك، مع شهرين مجاناً.',
+    payback: 'عميل إضافي واحد محجوز',
+    pull: 'للأعمال التي تريد المسار كله منجزاً — موقع، التقاط، رعاية، حجز.',
+    nextStep: 'أنت تحوّل ما يصل — لكن عبر الموظفين والفروع، تبدأ الاستفسارات بالسقوط بين الأشخاص.',
+    cta: 'احصل على أسيند عبر واتساب',
   },
   {
     key: 'apex',
@@ -345,22 +346,22 @@ const TIERS_AR = [
     flag: null,
     popular: false,
     stage: 'السيطرة',
-    bottleneck: 'النمو مقيّد بحدود وصولك',
-    intro: 'أنت تربح، لكنك بلغت سقف حجم الوارد وقدرة التواصل البشري. تتفاعل مع ما يصل بدل الذهاب لأخذه، وقاعدتك الخاملة باردة، والمالك ما زال يطفئ الحرائق.',
+    bottleneck: 'الاستفسارات تسقط بين الموظفين والفروع',
+    intro: 'تير القيادة. أبيكس يضيف البنية التي تحتاجها العمليات الأكبر — استفسارات تُوجَّه للشخص المناسب تلقائياً، معالجة بأولوية، وأدوات لإدارة تدفق العملاء كعملية منظّمة لا كفوضى.',
     insideLabel: 'كل ما في أسيند، بالإضافة إلى',
     inside: [
-      'آريا — وكيل اتصال خارجي بالذكاء الاصطناعي — يعمل على قوائم العملاء، يعيد تنشيط قاعدتك الخاملة، ويحجز المعاينات استباقياً',
-      'مدير — مراقبة ذاتية — يراقب مؤشرات النظام، يُصلح المشاكل القابلة للعكس ذاتياً، ويُنبّه قبل أن تلاحظ',
-      'ذكاء أعمال تنبؤي — توقّع المسار، أي العملاء أقرب للإغلاق، ومن أين تأتي إيرادات الربع القادم',
-      'وصول كامل لحزمة الـ20 منتجاً — إعلانات مدفوعة، سوشال، متاجر، وأكثر، تُفعَّل حسب حاجتك',
-      'استراتيجي نمو مخصص + خارطة طريق ربع سنوية تُراجَع معك',
+      'توجيه وتعيين آلي عبر فريقك',
+      'وكلاء ذكاء اصطناعي متعددون مُهيَّأون لكل خط خدمة أو فرع',
+      'آريا — تواصل صادر بالذكاء: يعيد تنشيط العملاء الخاملين والقوائم القديمة استباقياً',
+      'خالد — الصوت الذكي (قريباً، مشمول): يرد على المكالمات الواردة بنفس ذكاء ليلى',
+      'استجابة بأولوية، دعم بأولوية، تقارير فريق متقدمة، وإعداد فاخر',
     ],
-    roiReplaces: 'باقة وكالة كاملة',
-    roiLine: 'باقة مُدارة مماثلة تكلّف الكثير شهرياً — بقدرات أقل وبلا ذكاء خارجي. أبيكس يوفر قدرات أعلى بكثير، وآريا يعيد تنشيط عملاء لم تكن لتلمسهم. صفقة مُعاد تنشيطها واحدة تغطي ثمنه بالكامل.',
-    payback: 'صفقة واحدة مُعاد تنشيطها',
-    pull: 'استثمار لتتوقف عن التفاعل وتبدأ السيطرة.',
+    roiReplaces: 'باقة وكالة كاملة مع توظيف عمليات مبيعات',
+    roiLine: 'مبني للفِرَق التي تخطط بالأرباع — سنة كاملة من التوجيه والتقارير وتغطية الأولوية عبر الفريق، مع شهرين مجاناً.',
+    payback: 'عميل واحد مُعاد تنشيطه',
+    pull: 'للأعمال متعددة الفروع والفِرَق حيث لا يمكن أن تسقط الاستفسارات بين الشقوق.',
     nextStep: null,
-    cta: 'احجز مكالمة النمو',
+    cta: 'احصل على أبيكس عبر واتساب',
   },
 ];
 
@@ -380,19 +381,11 @@ export default function Home({ lang: routeLang = 'en' }) {
   const [scrollProgress, setScrollProgress] = useState(0);
 
   // Lead-capture modal
+  // Exit-intent lead modal — the only popup. Fires when the user moves to leave.
   const [isLeadOpen,  setIsLeadOpen]  = useState(false);
   const [leadEmail,   setLeadEmail]   = useState('');
   const [leadStatus,  setLeadStatus]  = useState('idle');
   const exitIntentFired = useRef(false);
-
-  // Playbook lead-magnet modal (entry trigger). Kept separate from the
-  // exit-intent modal; a shared ref stops the two from ever stacking.
-  const [isPlaybookOpen, setIsPlaybookOpen] = useState(false);
-  const [playbookName,   setPlaybookName]   = useState('');
-  const [playbookEmail,  setPlaybookEmail]  = useState('');
-  const [playbookStatus, setPlaybookStatus] = useState('idle');
-  const playbookFired = useRef(false);
-  const anyModalOpenRef = useRef(false);
 
   // Bump to force a re-render when a lazily-loaded language finishes loading.
   const [, setLangTick] = useState(0);
@@ -401,6 +394,7 @@ export default function Home({ lang: routeLang = 'en' }) {
   // English until the chunk resolves (avoids a flash of missing keys).
   const activeLang     = isLoaded(lang) ? lang : 'en';
   const t              = getStrings(activeLang);
+  const activeTiers    = activeLang === 'ar' ? TIERS_AR : TIERS;
   const seo            = HOME_SEO[routeLang] || HOME_SEO.en;
   const jsonLd         = buildSchemas(t, routeLang);
 
@@ -449,9 +443,8 @@ export default function Home({ lang: routeLang = 'en' }) {
     if (window.matchMedia('(max-width: 768px)').matches) return;
 
     const handleMouseLeave = (e) => {
-      if (e.clientY > 0 || exitIntentFired.current || anyModalOpenRef.current) return;
+      if (e.clientY > 0 || exitIntentFired.current) return;
       exitIntentFired.current = true;
-      anyModalOpenRef.current = true;   // set synchronously so the playbook timer can't double-open this tick
       sessionStorage.setItem('bznsflow_exit_seen', '1');
       setIsLeadOpen(true);
       trackEvent('ExitIntentShown');
@@ -475,47 +468,6 @@ export default function Home({ lang: routeLang = 'en' }) {
       if (lastFocused && lastFocused.focus) lastFocused.focus();   // restore focus on close
     };
   }, [isLeadOpen]);
-
-  // Keep a ref of "is any modal open" so the entry + exit popups never stack.
-  useEffect(() => { anyModalOpenRef.current = isLeadOpen || isPlaybookOpen; }, [isLeadOpen, isPlaybookOpen]);
-
-  // Playbook offer on entry — once per session, after a short delay or first scroll.
-  useEffect(() => {
-    if (sessionStorage.getItem('bznsflow_playbook_seen')) return;
-    const open = () => {
-      if (playbookFired.current || anyModalOpenRef.current) return;
-      playbookFired.current = true;
-      anyModalOpenRef.current = true;   // set synchronously so exit-intent can't double-open this tick
-      sessionStorage.setItem('bznsflow_playbook_seen', '1');
-      setIsPlaybookOpen(true);
-      trackEvent('PlaybookModalShown');
-      cleanup();
-    };
-    const onScroll = () => { if (window.scrollY > 400) open(); };
-    const timer = setTimeout(open, 7000);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    function cleanup() {
-      clearTimeout(timer);
-      window.removeEventListener('scroll', onScroll);
-    }
-    return cleanup;
-  }, []);
-
-  // Body-scroll lock + Esc-to-close for the playbook modal.
-  useEffect(() => {
-    if (!isPlaybookOpen) return;
-    const lastFocused = document.activeElement;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const handleKey = (e) => { if (e.key === 'Escape') setIsPlaybookOpen(false); };
-    document.addEventListener('keydown', handleKey);
-    document.getElementById('playbook-name')?.focus();
-    return () => {
-      document.body.style.overflow = prev;
-      document.removeEventListener('keydown', handleKey);
-      if (lastFocused && lastFocused.focus) lastFocused.focus();   // restore focus on close
-    };
-  }, [isPlaybookOpen]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -564,30 +516,6 @@ export default function Home({ lang: routeLang = 'en' }) {
     }
   };
 
-  // Playbook lead-magnet handlers
-  const closePlaybook = () => {
-    setIsPlaybookOpen(false);
-    if (playbookStatus === 'success') { setPlaybookStatus('idle'); setPlaybookName(''); setPlaybookEmail(''); }
-  };
-  const handlePlaybookNameChange = (e) => setPlaybookName(e.target.value);
-  const handlePlaybookEmailChange = (e) => {
-    setPlaybookEmail(e.target.value);
-    if (playbookStatus === 'error') setPlaybookStatus('idle');
-  };
-  const handlePlaybookSubmit = (e) => {
-    e.preventDefault();
-    const name = playbookName.trim();
-    const email = playbookEmail.trim();
-    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setPlaybookStatus('error'); return; }
-    trackEvent('PlaybookSubmit');
-    // Show success + the instant download immediately. The backend logs the lead
-    // and sends the email in the background — the email send is slow, so we don't
-    // make the visitor wait on it (they have the download link regardless).
-    setPlaybookStatus('success');
-    postLead({ name, email, sourceCta: 'Playbook lead magnet', playbook: true }, { lang })
-      .catch((err) => console.error('Playbook submission failed:', err));
-  };
-
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
@@ -614,13 +542,16 @@ export default function Home({ lang: routeLang = 'en' }) {
           onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent}
         />
         <ProblemSection t={t} />
+        <ROISection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <TwoTrackSection t={t} onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent} />
-        <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} />
+        <AITeamSection t={t} />
+        <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
+        <TiersSection t={t} tiers={activeTiers} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <BenefitsSection t={t} />
         <TestimonialsSection t={t} lang={lang} />
-        <AboutSection t={t} lang={lang} CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL} />
-        <FAQSection t={t} />
-        <CTASection t={t} CALENDAR_URL={CALENDAR_URL} />
+        <AboutSection t={t} lang={lang} CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL} trackEvent={trackEvent} />
+        <FAQSection t={t} trackEvent={trackEvent} />
+        <CTASection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
       </main>
 
       <Footer
@@ -643,18 +574,6 @@ export default function Home({ lang: routeLang = 'en' }) {
         onClose={closeLeadModal}
         onEmailChange={handleLeadEmailChange}
         onSubmit={handleLeadSubmit}
-        trackEvent={trackEvent}
-      />
-
-      <PlaybookModal
-        t={t} lang={lang}
-        isOpen={isPlaybookOpen}
-        name={playbookName} email={playbookEmail} status={playbookStatus}
-        downloadUrl={PLAYBOOK_DOWNLOAD_URL}
-        onClose={closePlaybook}
-        onNameChange={handlePlaybookNameChange}
-        onEmailChange={handlePlaybookEmailChange}
-        onSubmit={handlePlaybookSubmit}
         trackEvent={trackEvent}
       />
     </>

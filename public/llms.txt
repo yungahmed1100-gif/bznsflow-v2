@@ -1,6 +1,15 @@
 # BznsFlow
 
-> BznsFlow builds done-for-you AI receptionists, booking systems, and WhatsApp order automation that answer every message, qualify every lead, and book more business — 24/7, in Arabic and English. One promise: stop losing customers to slow replies. Built for businesses worldwide. Proven in Oman.
+> BznsFlow is a "business in a box" SaaS: a done-for-you team of AI systems that runs your whole front office — an AI receptionist, booking, WhatsApp order-taking, follow-up, and CRM — answering every message, qualifying every lead, and booking more business 24/7, in Arabic and English. One promise: stop losing customers to slow replies. Primary contact channel is WhatsApp. Built for businesses worldwide. Proven in Oman.
+
+## The AI team (your front office, done for you)
+
+BznsFlow isn't one bot — it's a team of named AI systems:
+- **Layla** — AI receptionist. Answers every message in seconds on WhatsApp and the website, qualifies, books appointments, takes orders, follows up.
+- **Khaled** — AI voice. Answers phone calls, qualifies, and books — no call goes to voicemail.
+- **ARIA** — AI outreach. Reactivates dormant leads and old customer lists with smart outbound follow-up.
+- **Ali** — AI operations. Oversees the whole system 24/7, watches performance, and keeps everything running.
+- **Mahmood** — AI security & data. Guards customer data, keeps conversations private, handles compliance.
 
 ## Two engines, one promise
 
@@ -53,6 +62,14 @@ These are the exact problems customers describe, and what BznsFlow does about ea
 - Never drop a lead — every inquiry captured, qualified, and followed up.
 - More bookings, fewer no-shows — automated confirmations and reminders.
 - Cheaper than a hire — an AI employee that doesn't sleep, quit, or call in sick.
+
+## Plans (Catch → Convert → Dominate)
+
+Packaged, done-for-you plans. Pricing is shared on a quick WhatsApp chat (no public price list).
+- **Catalyst (Catch)** — stop customers leaving before anyone replies. Layla on WhatsApp Business API answers, qualifies, books appointments and takes orders 24/7; instant hot-lead alerts; daily digest. Replaces a part-time receptionist.
+- **Ascend (Convert)** — most businesses start here. Everything in Catalyst, plus Khaled (inbound voice AI), a full CRM, automated nurture, a review-generation engine, and an owner dashboard.
+- **Apex (Dominate)** — everything in Ascend, plus ARIA (outbound reactivation), Ali (AI operations), Mahmood (AI security & data), predictive insights, and a dedicated strategist.
+- **30-Day Leak Guarantee** — if the system doesn't book the agreed number of qualified appointments in the first 30 days, you get a full refund.
 
 ## Markets & languages
 

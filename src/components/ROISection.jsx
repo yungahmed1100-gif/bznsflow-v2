@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Icon } from './Icon';
+import { waLink } from '../lib/whatsapp';
 
 const _usdFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const fmtUSD = (n) => _usdFmt.format(n);
@@ -84,14 +85,14 @@ export function ROISection({ t, CALENDAR_URL, trackEvent }) {
             </span>
             <p className="roi-assumption">{t.roi_assumption}</p>
             <a
-              href={CALENDAR_URL}
+              href={waLink(`${t.wa_msg_roi} (~${fmtUSD(roiMonthly)}/mo)`)}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary btn-large"
-              onClick={() => trackEvent('ROICTAClick', { lossUSD: roiMonthly })}
+              onClick={() => trackEvent('WhatsAppClick', { source: 'roi', lossUSD: roiMonthly })}
             >
+              <Icon name="whatsapp" size={20} />
               <span>{t.roi_cta}</span>
-              <Icon name="arrow-right" size={18} strokeWidth={2.5} />
             </a>
           </div>
         </div>

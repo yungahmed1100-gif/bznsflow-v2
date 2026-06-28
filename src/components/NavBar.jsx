@@ -42,10 +42,10 @@ export function NavBar({
           </button>
 
           <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`} id="navLinks">
-            <li><a href="#problem"    className={`nav-link ${activeLink === 'problem'    ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#problem')}>{t.nav_problem}</a></li>
             <li><a href="#two-track"  className={`nav-link ${activeLink === 'two-track'  ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.nav_solution}</a></li>
+            <li><a href="#ai-team"    className={`nav-link ${activeLink === 'ai-team'    ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#ai-team')}>{t.team_label}</a></li>
             <li><a href="#how-it-works" className={`nav-link ${activeLink === 'how-it-works' ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#how-it-works')}>{t.nav_how}</a></li>
-            <li><a href="#testimonials" className={`nav-link ${activeLink === 'testimonials' ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#testimonials')}>{t.testimonials_label}</a></li>
+            <li><a href="#tiers"      className={`nav-link ${activeLink === 'tiers'      ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.tiers_label}</a></li>
             <li><a href="#about"      className={`nav-link ${activeLink === 'about'      ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#about')}>{t.nav_about}</a></li>
 
             <li

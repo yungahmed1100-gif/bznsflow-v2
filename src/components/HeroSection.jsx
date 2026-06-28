@@ -1,5 +1,8 @@
 import React from 'react';
 import { Icon } from './Icon';
+import { Parallax } from './motion/Parallax';
+import { MagneticButton } from './motion/MagneticButton';
+import { waLink } from '../lib/whatsapp';
 
 const PIPELINE_ICONS = [
   <svg key="a" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
@@ -52,7 +55,12 @@ const STARS = [
 export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL, WHATSAPP_URL }) {
 
   return (
-    <section className="hero" id="hero">
+    <section className="hero grain" id="hero">
+      <div className="aurora" aria-hidden="true">
+        <span className="aurora-blob aurora-blob--a" />
+        <span className="aurora-blob aurora-blob--b" />
+        <span className="aurora-blob aurora-blob--c" />
+      </div>
       <div className="shooting-stars" aria-hidden="true">
         {STARS.map((s, i) => (
           <div
@@ -72,39 +80,51 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
               <span>{t.hero_badge}</span>
             </div>
 
-            <h1
-              className="hero-headline"
-              dangerouslySetInnerHTML={{ __html: t.hero_headline }}
-            />
+            <div className="hero-brand-lockup">
+              <img
+                src="/logo.png"
+                alt="BznsFlow"
+                className="hero-logo"
+                width="500"
+                height="500"
+                fetchpriority="high"
+              />
+              <h1
+                className="hero-headline"
+                dangerouslySetInnerHTML={{ __html: t.hero_headline }}
+              />
+            </div>
 
             <p className="hero-subheadline">{t.hero_sub}</p>
 
             <div className="hero-ctas">
+              <MagneticButton
+                href={waLink(t.wa_msg_hero)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary btn-large hero-wa-cta"
+                onClick={() => trackEvent('WhatsAppClick', { source: 'hero' })}
+              >
+                <Icon name="whatsapp" size={20} />
+                <span>{t.hero_cta_primary}</span>
+              </MagneticButton>
               <a
                 href={CALENDAR_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-primary btn-large"
-                onClick={() => trackEvent('HeroCTAClick')}
+                className="btn btn-ghost btn-large"
+                onClick={() => trackEvent('HeroCallClick')}
               >
-                <span>{t.hero_cta_primary}</span>
-                <Icon name="arrow-right" size={18} strokeWidth={2.5} />
-              </a>
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary btn-large hero-wa-cta"
-                onClick={() => trackEvent('HeroWACTAClick')}
-              >
-                <Icon name="whatsapp" size={20} />
-                <span>{t.hero_cta_secondary}</span>
+                <Icon name="calendar" size={18} />
+                <span>{t.secondary_cta_call}</span>
               </a>
             </div>
           </div>
 
-          <div className="hero-image-block fade-in visible">
-            <PipelineDiagram t={t} lang={lang} />
+          <div className="hero-image-block">
+            <Parallax speed={0.16}>
+              <PipelineDiagram t={t} lang={lang} />
+            </Parallax>
           </div>
         </div>
 

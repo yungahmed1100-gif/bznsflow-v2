@@ -1,46 +1,48 @@
 import React from 'react';
 import { Icon } from './Icon';
+import { Reveal } from './motion/Reveal';
+import { StaggerGroup, StaggerItem } from './motion/Stagger';
+import { MagneticButton } from './motion/MagneticButton';
+import { waLink } from '../lib/whatsapp';
 
-export function HowItWorksSection({ t, CALENDAR_URL }) {
+export function HowItWorksSection({ t, CALENDAR_URL, trackEvent }) {
+  const steps = [
+    { n: '01', title: t.step1_title, desc: t.step1_desc, connector: true },
+    { n: '02', title: t.step2_title, desc: t.step2_desc, connector: true },
+    { n: '03', title: t.step3_title, desc: t.step3_desc, connector: false },
+  ];
   return (
     <section className="section" id="how-it-works">
       <div className="container">
-        <div className="section-label fade-in">{t.how_label}</div>
-        <h2 className="section-title fade-in" dangerouslySetInnerHTML={{ __html: t.how_title }}></h2>
-        <p className="section-subtitle fade-in">{t.how_sub}</p>
+        <Reveal className="section-label">{t.how_label}</Reveal>
+        <Reveal as="h2" className="section-title" dangerouslySetInnerHTML={{ __html: t.how_title }} />
+        <Reveal as="p" className="section-subtitle">{t.how_sub}</Reveal>
 
-        <div className="steps-container">
-          <div className="step fade-in">
-            <div className="step-number">01</div>
-            <div className="step-content">
-              <div className="step-connector"></div>
-              <h3 className="step-title">{t.step1_title}</h3>
-              <p className="step-desc">{t.step1_desc}</p>
-            </div>
-          </div>
-          <div className="step fade-in">
-            <div className="step-number">02</div>
-            <div className="step-content">
-              <div className="step-connector"></div>
-              <h3 className="step-title">{t.step2_title}</h3>
-              <p className="step-desc">{t.step2_desc}</p>
-            </div>
-          </div>
-          <div className="step fade-in">
-            <div className="step-number">03</div>
-            <div className="step-content">
-              <h3 className="step-title">{t.step3_title}</h3>
-              <p className="step-desc">{t.step3_desc}</p>
-            </div>
-          </div>
-        </div>
+        <StaggerGroup className="steps-container" stagger={0.12}>
+          {steps.map((s) => (
+            <StaggerItem key={s.n} className="step">
+              <div className="step-number">{s.n}</div>
+              <div className="step-content">
+                {s.connector && <div className="step-connector"></div>}
+                <h3 className="step-title">{s.title}</h3>
+                <p className="step-desc">{s.desc}</p>
+              </div>
+            </StaggerItem>
+          ))}
+        </StaggerGroup>
 
-        <div className="steps-cta fade-in">
-          <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-large">
+        <Reveal className="steps-cta">
+          <MagneticButton
+            href={waLink(t.wa_msg_how)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary btn-large"
+            onClick={() => trackEvent?.('WhatsAppClick', { source: 'how-it-works' })}
+          >
+            <Icon name="whatsapp" size={20} />
             <span>{t.how_cta}</span>
-            <Icon name="arrow-right" size={18} strokeWidth={2.5} />
-          </a>
-        </div>
+          </MagneticButton>
+        </Reveal>
       </div>
     </section>
   );

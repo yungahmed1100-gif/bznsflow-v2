@@ -1,15 +1,16 @@
 import React from 'react';
 import { Icon } from './Icon';
+import { waLink } from '../lib/whatsapp';
 
 export function StickyMobileCTA({ t, CALENDAR_URL, WHATSAPP_URL, trackEvent }) {
   return (
     <div className="sticky-mobile-cta" role="region" aria-label="Quick contact">
       <a
-        href={WHATSAPP_URL}
+        href={waLink(t.wa_msg_hero)}
         target="_blank"
         rel="noopener noreferrer"
         className="sticky-mobile-btn sticky-mobile-btn--wa"
-        onClick={() => trackEvent('StickyCTAClick', { action: 'whatsapp' })}
+        onClick={() => trackEvent('WhatsAppClick', { source: 'sticky' })}
         aria-label={t.sticky_chat}
       >
         <Icon name="whatsapp" size={20} />

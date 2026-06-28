@@ -1,12 +1,15 @@
 import React from 'react';
 import { Icon } from './Icon';
+import { Reveal } from './motion/Reveal';
+import { MagneticButton } from './motion/MagneticButton';
+import { waLink } from '../lib/whatsapp';
 
-export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL }) {
+export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL, trackEvent }) {
   return (
     <section className="section" id="about">
       <div className="container">
         <div className="about-wrapper">
-          <div className="about-visual fade-in">
+          <Reveal className="about-visual">
             <div className="about-avatar">
               <div className="avatar-ring"></div>
               <div className="avatar-placeholder">
@@ -29,9 +32,9 @@ export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL }) {
                 <span>{t.about_founder_role}</span>
               </div>
             </div>
-          </div>
+          </Reveal>
 
-          <div className="about-content fade-in">
+          <Reveal className="about-content" delay={0.1}>
             <div className="section-label">{t.about_label}</div>
             <h2 className="section-title about-title" dangerouslySetInnerHTML={{ __html: t.about_title }}></h2>
 
@@ -42,16 +45,22 @@ export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL }) {
             </div>
 
             <div className="about-ctas">
-              <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-                <span>{t.about_cta1}</span>
-                <Icon name="arrow-right" size={16} strokeWidth={2.5} />
-              </a>
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
+              <MagneticButton
+                href={waLink(t.wa_msg_about)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                onClick={() => trackEvent?.('WhatsAppClick', { source: 'about' })}
+              >
                 <Icon name="whatsapp" size={18} />
-                <span>{t.about_cta2}</span>
+                <span>{t.about_cta1}</span>
+              </MagneticButton>
+              <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" onClick={() => trackEvent?.('AboutCallClick')}>
+                <Icon name="calendar" size={16} />
+                <span>{t.secondary_cta_call}</span>
               </a>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

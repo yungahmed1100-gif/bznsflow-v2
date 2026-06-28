@@ -1,10 +1,13 @@
 import React from 'react';
 import { Icon } from './Icon';
+import { waLink } from '../lib/whatsapp';
 
-// Premium pricing — Catch → Convert → Dominate ladder.
+// Packaged plans (no prices) — Catch → Convert → Dominate ladder.
 // Tier content comes from the `tiers` array (TIERS / TIERS_AR in pages/Home.jsx);
 // section chrome (labels, terms, guarantee) comes from translations `t`.
-export function TiersSection({ t, tiers = [], CALENDAR_URL }) {
+// CTAs go to WhatsApp with the plan name prefilled.
+export function TiersSection({ t, tiers = [], CALENDAR_URL, trackEvent }) {
+  const planMsg = (name) => (t.wa_msg_plan || 'Hi BznsFlow — I am interested in the {plan} plan.').replace('{plan}', name);
   const Check = () => <Icon name="check" size={15} strokeWidth={2.5} />;
   const ladder = [
     { stage: t.ladder_1 || 'Catch',     sub: t.ladder_1_sub || 'Stop losing the leads you already pay for' },
@@ -76,12 +79,14 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL }) {
               <p className="tier-pull">{tier.pull}</p>
 
               <a
-                href={CALENDAR_URL}
+                href={waLink(planMsg(tier.name))}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`btn ${tier.popular ? 'btn-primary' : 'btn-ghost'} pricing-btn`}
+                onClick={() => trackEvent?.('WhatsAppClick', { source: 'plan', plan: tier.name })}
               >
-                {tier.cta}
+                <Icon name="whatsapp" size={18} />
+                <span>{tier.cta}</span>
               </a>
 
               {tier.nextStep && (

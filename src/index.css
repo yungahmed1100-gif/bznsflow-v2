@@ -72,10 +72,16 @@ img, video {
 
 /* ---- TYPOGRAPHY ---- */
 .gradient-text {
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  background: linear-gradient(110deg, var(--gradient-start), var(--orange), var(--gradient-end), var(--gradient-start));
+  background-size: 300% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: gradientSweep 8s ease-in-out infinite;
+}
+@keyframes gradientSweep {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
 }
 
 /* ---- CONTAINER ---- */
@@ -398,7 +404,7 @@ img, video {
   flex-direction: column;
   gap: 0;
   width: 100%;
-  max-width: 320px;
+  max-width: 560px;            /* fill the right column to match the text box */
 }
 
 .pipeline-node {
@@ -2352,6 +2358,29 @@ html {
   animation: float 5.5s ease-in-out infinite;
 }
 
+/* Hero brand lockup — logo sits right next to the headline, enlarged */
+.hero-brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 8px;
+}
+.hero-logo {
+  flex-shrink: 0;
+  width: auto;
+  height: 110px;                /* enlarged so it reads clearly beside the text */
+  animation: float 6s ease-in-out infinite;
+}
+.hero-brand-lockup .hero-headline { margin: 0; }
+[dir="rtl"] .hero-brand-lockup { flex-direction: row-reverse; }  /* logo on the right in Arabic */
+@media (max-width: 1024px) {
+  .hero-brand-lockup,
+  [dir="rtl"] .hero-brand-lockup { flex-direction: column; align-items: center; gap: 14px; }
+}
+@media (max-width: 640px) {
+  .hero-logo { height: 84px; }
+}
+
 /* Primary CTA shimmer sweep */
 .btn-primary {
   position: relative;
@@ -3809,3 +3838,157 @@ html {
   .section { padding: 52px 0; }
   .lead-modal { padding: 30px 18px 22px; }
 }
+
+/* ============================================================
+   LIVING-WEBSITE MOTION LAYER (additive — on-theme, GPU-friendly)
+   Ambient atmosphere in CSS; reveals/parallax/tilt handled by motion/react.
+   transform/opacity only. Frozen automatically by the reduced-motion block.
+ ============================================================ */
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 160ms;
+  --duration-normal: 320ms;
+  --duration-slow: 640ms;
+}
+
+/* ---- Aurora: slow drifting brand-colour blobs behind content ---- */
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.aurora-blob {
+  position: absolute;
+  width: 46vw;
+  height: 46vw;
+  max-width: 640px;
+  max-height: 640px;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  will-change: transform;
+  mix-blend-mode: multiply;
+}
+.aurora-blob--a { top: -8%;  left: -6%;  background: radial-gradient(circle at 50% 50%, rgba(92,149,198,0.55), transparent 70%); animation: auroraDrift 26s ease-in-out infinite; }
+.aurora-blob--b { top: 18%;  right: -10%; background: radial-gradient(circle at 50% 50%, rgba(242,140,84,0.42), transparent 70%); animation: auroraDrift 32s ease-in-out infinite reverse; animation-delay: -6s; }
+.aurora-blob--c { bottom: -14%; left: 28%; background: radial-gradient(circle at 50% 50%, rgba(81,164,123,0.45), transparent 70%); animation: auroraDrift 30s ease-in-out infinite; animation-delay: -12s; }
+@keyframes auroraDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(6%, 8%, 0) scale(1.12); }
+  66%      { transform: translate3d(-5%, 4%, 0) scale(0.95); }
+}
+
+/* ---- Grain: faint film texture for depth ---- */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Keep hero content above the aurora/grain layers */
+.hero .hero-content,
+.hero .shooting-stars,
+.hero .hero-overlay,
+.hero .scroll-indicator { position: relative; z-index: 2; }
+.hero .shooting-stars { z-index: 1; }
+
+/* ---- Chip hover-pop (track verticals + industry chips) ---- */
+.track-vertical-chip {
+  transition: transform var(--duration-fast) var(--ease-out-expo),
+              border-color var(--duration-fast) var(--ease-out-expo),
+              background var(--duration-fast) var(--ease-out-expo);
+}
+.track-vertical-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+}
+
+/* ---- Accent bar grow-in for track cards on reveal ---- */
+.track-card::before { transform-origin: left center; transition: transform var(--duration-slow) var(--ease-out-expo); }
+[dir="rtl"] .track-card::before { transform-origin: right center; }
+
+/* ---- Reveal wrappers must not clip 3D tilt children ---- */
+.tilt-3d { transform-style: preserve-3d; }
+
+/* Hide aurora entirely when motion is reduced (avoid stray GPU layers) */
+@media (prefers-reduced-motion: reduce) {
+  .aurora, .grain::after { display: none; }
+}
+
+/* ============================================================
+   MEET THE AI TEAM (additive, on-theme — reuses card tokens)
+ ============================================================ */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+  margin-top: 48px;
+}
+.team-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 26px 22px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.team-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--accent-blue);
+}
+.team-card--order::before { background: var(--orange); }
+.team-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(92, 149, 198, 0.32);
+  box-shadow: var(--shadow-glow);
+}
+.team-avatar {
+  font-size: 2rem;
+  line-height: 1;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border);
+}
+.team-meta { display: flex; flex-direction: column; gap: 2px; }
+.team-name { font-size: 1.15rem; font-weight: 800; line-height: 1.1; }
+.team-role {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-blue);
+}
+.team-card--order .team-role { color: var(--orange); }
+.team-desc { color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; }
+.team-cta { margin-top: 40px; display: flex; justify-content: center; }
+
+@media (max-width: 1024px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .team-grid { grid-template-columns: 1fr; } }
+[dir="rtl"] .team-card { align-items: flex-end; text-align: right; }
+[dir="rtl"] .team-card::before { inset: 0 0 auto auto; }
+
+/* FAQ + CTA secondary action spacing (additive) */
+.faq-cta { margin-top: 40px; display: flex; justify-content: center; }
+.cta-secondary { margin-top: 14px; }
