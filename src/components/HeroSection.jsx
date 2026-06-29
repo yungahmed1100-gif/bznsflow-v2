@@ -80,20 +80,10 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
               <span>{t.hero_badge}</span>
             </div>
 
-            <div className="hero-brand-lockup">
-              <img
-                src="/logo.png"
-                alt="BznsFlow"
-                className="hero-logo"
-                width="500"
-                height="500"
-                fetchpriority="high"
-              />
-              <h1
-                className="hero-headline"
-                dangerouslySetInnerHTML={{ __html: t.hero_headline }}
-              />
-            </div>
+            <h1
+              className="hero-headline"
+              dangerouslySetInnerHTML={{ __html: t.hero_headline }}
+            />
 
             <p className="hero-subheadline">{t.hero_sub}</p>
 
@@ -121,10 +111,25 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
             </div>
           </div>
 
-          <div className="hero-image-block">
-            <Parallax speed={0.16}>
-              <PipelineDiagram t={t} lang={lang} />
-            </Parallax>
+          <div className="hero-visual">
+            <div className="hero-image-block">
+              <Parallax speed={0.16}>
+                <PipelineDiagram t={t} lang={lang} />
+              </Parallax>
+            </div>
+
+            <div className="hero-logo-block">
+              <Parallax speed={0.1}>
+                <img
+                  src="/logo.png"
+                  alt="BznsFlow"
+                  className="hero-logo-feature"
+                  width="500"
+                  height="500"
+                  fetchpriority="high"
+                />
+              </Parallax>
+            </div>
           </div>
         </div>
 

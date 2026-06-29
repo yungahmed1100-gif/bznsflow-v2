@@ -11,6 +11,7 @@ import { NavBar }             from '../components/NavBar';
 import { HeroSection }        from '../components/HeroSection';
 import { ProblemSection }     from '../components/ProblemSection';
 import { ROISection }         from '../components/ROISection';
+import { SolutionsSection }   from '../components/SolutionsSection';
 import { TwoTrackSection }    from '../components/TwoTrackSection';
 import { AITeamSection }      from '../components/AITeamSection';
 import { HowItWorksSection }  from '../components/HowItWorksSection';
@@ -30,7 +31,7 @@ const WHATSAPP_URL  = 'https://wa.me/201036755930';
 
 const LANGUAGES = [
   { code: 'en', flag: '🇬🇧', label: 'English' },
-  { code: 'ar', flag: '🇦🇪', label: 'عربي' },
+  { code: 'ar', flag: '🇴🇲', label: 'عربي' },
   { code: 'nl', flag: '🇳🇱', label: 'Nederlands' },
   { code: 'es', flag: '🇪🇸', label: 'Español' },
   { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
@@ -45,12 +46,12 @@ const trackEvent = (name, props) => {
 // Per-locale homepage SEO copy (en/ar are the prerendered locales).
 const HOME_SEO = {
   en: {
-    title: 'BznsFlow — AI Receptionist, Booking & WhatsApp Order Automation',
-    description: 'Stop losing customers to slow replies. BznsFlow builds done-for-you AI receptionists, booking systems & WhatsApp order automation for real estate, dental & medical clinics, HVAC, construction, cafés, bakeries & restaurants. Reply 24/7 in Arabic & English. Proven in Oman.',
+    title: 'BznsFlow — Business-in-a-Box Tech Solutions, Done For You',
+    description: 'BznsFlow builds the tech that runs and grows your business — an AI front office, lead-capture websites, CRM, automation, AI agents, and custom apps. Done for you, 24/7, in Arabic & English. Built for businesses worldwide, proven in Oman.',
   },
   ar: {
-    title: 'BznsFlow — موظف استقبال آلي وحجز وأتمتة طلبات واتساب بالذكاء الاصطناعي',
-    description: 'لا تخسر عملاءك بسبب بطء الرد. BznsFlow يبني موظف استقبال آلي وأنظمة حجز وأتمتة طلبات واتساب — للعقارات وعيادات الأسنان والعيادات الطبية والتكييف والمقاولات والمقاهي والمخابز والمطاعم. رد 24/7 بالعربية والإنجليزية. مُثبَت في عُمان.',
+    title: 'BznsFlow — حلول تقنية متكاملة لأعمالك، منجزة لك',
+    description: 'BznsFlow يبني التقنية التي تُشغّل أعمالك وتُنمّيها — مكتب استقبال ذكي، مواقع لجذب العملاء، نظام CRM، أتمتة، وكلاء ذكاء اصطناعي، وتطبيقات مخصصة. منجز لك، 24/7، بالعربية والإنجليزية. لأعمال حول العالم، ومُثبَت في عُمان.',
   },
 };
 
@@ -67,14 +68,14 @@ function buildSchemas(t, lang) {
     url: SITE,
     logo: `${SITE}/logo.png`,
     description: isAr
-      ? 'BznsFlow يبني موظف استقبال آلي وأنظمة حجز وأتمتة طلبات واتساب بالذكاء الاصطناعي — منجز لك. يرد على كل رسالة في ثوانٍ، ويؤهّل العملاء، ويحجز المواعيد، ويستقبل الطلبات 24/7 بالعربية والإنجليزية. للعقارات وعيادات الأسنان والعيادات الطبية والتكييف والمقاولات والمقاهي والمخابز والمطاعم. مُثبَت في عُمان.'
-      : 'BznsFlow builds done-for-you AI receptionists, booking systems, and WhatsApp order automation. It answers every message in seconds, qualifies leads, books appointments, and takes orders 24/7 in Arabic and English — for real estate, dental and medical clinics, HVAC, construction, cafés, bakeries, and restaurants. Proven in Oman.',
+      ? 'BznsFlow شركة حلول تقنية متكاملة لأعمالك — منجزة لك. نبني التقنية التي تُشغّل أعمالك وتُنمّيها: مكتب استقبال ذكي، مواقع لجذب العملاء، نظام CRM، أتمتة وتكاملات، وكلاء ذكاء اصطناعي، وتطبيقات مخصصة. 24/7 بالعربية والإنجليزية. لأعمال حول العالم، ومُثبَت في عُمان.'
+      : 'BznsFlow is a business-in-a-box tech solutions company — done for you. We build the tech that runs and grows your business: an AI front office, lead-capture websites, a CRM, automation and integrations, AI agents, and custom apps. 24/7 in Arabic and English. For businesses worldwide, proven in Oman.',
     founder: { '@type': 'Person', name: 'Ahmed Darwish' },
     foundingDate: '2024',
     areaServed: 'Worldwide',
     knowsAbout: isAr
-      ? ['موظف استقبال بالذكاء الاصطناعي', 'الرد الآلي على العملاء', 'أتمتة واتساب', 'حجز المواعيد', 'استقبال الطلبات', 'أتمتة عيادات الأسنان', 'أتمتة العيادات الطبية', 'أتمتة العقارات', 'أتمتة التكييف والتبريد', 'أتمتة المقاولات', 'أتمتة طلبات المطاعم', 'أتمتة طلبات المقاهي', 'تأهيل العملاء', 'CRM']
-      : ['AI receptionist', 'AI lead response', 'WhatsApp automation', 'appointment booking automation', 'AI order taking', 'real estate lead automation', 'dental clinic automation', 'medical clinic automation', 'HVAC lead automation', 'construction lead automation', 'restaurant order automation', 'cafe order automation', 'bakery order automation', 'lead qualification', 'CRM'],
+      ? ['حلول تقنية للأعمال', 'البرمجيات كخدمة', 'تطوير المواقع', 'تطبيقات مخصصة', 'أتمتة الأعمال', 'تكاملات الأنظمة', 'نظام CRM', 'وكلاء ذكاء اصطناعي', 'مكتب استقبال ذكي', 'أتمتة واتساب', 'مواقع لجذب العملاء', 'التسويق الرقمي', 'إدارة العملاء']
+      : ['business tech solutions', 'business-in-a-box SaaS', 'web development', 'custom apps', 'business automation', 'system integrations', 'CRM', 'AI agents', 'AI front office', 'WhatsApp automation', 'lead-capture websites', 'digital marketing', 'customer management'],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
@@ -105,12 +106,12 @@ function buildSchemas(t, lang) {
     '@type': 'SoftwareApplication',
     name: 'BznsFlow',
     applicationCategory: 'BusinessApplication',
-    applicationSubCategory: isAr ? 'موظف استقبال ومحرك طلبات بالذكاء الاصطناعي' : 'AI Receptionist & Order Engine',
+    applicationSubCategory: isAr ? 'حلول تقنية متكاملة للأعمال' : 'Business-in-a-Box Tech Solutions',
     operatingSystem: 'Web, WhatsApp, iOS, Android',
     url: SITE,
     description: isAr
-      ? 'مكتب استقبال كامل بالذكاء الاصطناعي منجز لك: رد على كل رسالة في ثوانٍ، تأهيل العملاء، حجز المواعيد، استقبال الطلبات والحجوزات، تذكيرات ومتابعة، ونظام CRM — 24/7 بالعربية والإنجليزية.'
-      : 'Done-for-you AI front desk: answers every message in seconds, qualifies leads, books appointments, takes orders and reservations, sends reminders and follow-ups, and logs to a CRM — 24/7 in Arabic and English.',
+      ? 'حلول تقنية متكاملة منجزة لك: مكتب استقبال ذكي، مواقع لجذب العملاء، نظام CRM، أتمتة وتكاملات، وكلاء ذكاء اصطناعي، وتطبيقات مخصصة — 24/7 بالعربية والإنجليزية.'
+      : 'Done-for-you tech solutions: an AI front office, lead-capture websites, a CRM, automation and integrations, AI agents, and custom apps — 24/7 in Arabic and English.',
     provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
   };
 
@@ -299,7 +300,7 @@ const TIERS_AR = [
     popular: false,
     stage: 'الالتقاط',
     bottleneck: 'الاستفسارات تبقى دون رد',
-    intro: 'نقطة البداية. كاتاليست يسدّ أول وأكبر تسرّب — الاستفسارات التي تبقى دون رد. واتساب لديك يحصل على مكتب استقبال لا يكلّ يرد في ثوانٍ ليلاً ونهاراً، يلتقط كل استفسار، ولا يترك عميلاً ساخناً ينتظر.',
+    intro: 'نقطة البداية. كاتاليست يعالج أول وأكبر سبب لخسارة العملاء — الاستفسارات التي تبقى دون رد. يصبح لواتساب عملك مكتب استقبال لا يكلّ، يرد في ثوانٍ ليلاً ونهاراً، يلتقط كل استفسار، ولا يترك عميلاً مهتماً ينتظر.',
     insideLabel: 'ما الذي يغطّيه',
     inside: [
       'ليلى — مكتب استقبالك الذكي: ترد على واتساب في ثوانٍ، 24/7، بلغة عملائك',
@@ -347,7 +348,7 @@ const TIERS_AR = [
     popular: false,
     stage: 'السيطرة',
     bottleneck: 'الاستفسارات تسقط بين الموظفين والفروع',
-    intro: 'تير القيادة. أبيكس يضيف البنية التي تحتاجها العمليات الأكبر — استفسارات تُوجَّه للشخص المناسب تلقائياً، معالجة بأولوية، وأدوات لإدارة تدفق العملاء كعملية منظّمة لا كفوضى.',
+    intro: 'الباقة الأعلى. أبيكس يضيف البنية التي تحتاجها العمليات الأكبر — استفسارات تُوجَّه للشخص المناسب تلقائياً، أولوية في المعالجة، وأدوات لإدارة تدفق العملاء كعملية منظّمة لا كفوضى.',
     insideLabel: 'كل ما في أسيند، بالإضافة إلى',
     inside: [
       'توجيه وتعيين آلي عبر فريقك',
@@ -543,8 +544,9 @@ export default function Home({ lang: routeLang = 'en' }) {
         />
         <ProblemSection t={t} />
         <ROISection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
+        <SolutionsSection t={t} trackEvent={trackEvent} />
         <TwoTrackSection t={t} onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent} />
-        <AITeamSection t={t} />
+        <AITeamSection t={t} trackEvent={trackEvent} />
         <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <TiersSection t={t} tiers={activeTiers} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <BenefitsSection t={t} />

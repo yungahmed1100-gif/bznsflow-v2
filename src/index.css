@@ -39,6 +39,22 @@
   --shadow-glow:      0 0 40px rgba(92, 149, 198, 0.15);
   --transition:       0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow:  0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- SPACING SCALE (8px base) ---- */
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-section: clamp(72px, 9vw, 120px); /* vertical section padding */
+  --grid-gap:      24px;                     /* one gap for all card grids */
+  --card-pad:      32px;                     /* one padding for all cards */
+  --header-gap:    56px;                     /* header trio → content below */
+  --container-pad: 24px;
 }
 
 html {
@@ -89,12 +105,12 @@ img, video {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--container-pad);
 }
 
 /* ---- SECTIONS ---- */
 .section {
-  padding: 120px 0;
+  padding: var(--space-section) 0;
   position: relative;
 }
 
@@ -130,7 +146,7 @@ img, video {
   color: var(--text-secondary);
   max-width: 600px;
   line-height: 1.75;
-  margin-bottom: 64px;
+  margin-bottom: var(--header-gap);
 }
 
 /* ---- BUTTONS ---- */
@@ -366,24 +382,40 @@ img, video {
   z-index: 3;
   width: 100%;
   max-width: 1200px;
+  min-width: 0;
+  margin: 0 auto;
   padding: 140px 24px 100px;
 }
 
+/* Centered hero: text column on top, pipeline + logo centered below.
+   Pure flex centering — no grid columns, can't go off-centre. */
 .hero-layout {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 60px;
-  text-align: left;
+  text-align: center;
+  gap: 32px;
+  width: 100%;
 }
 
 .hero-text-block {
-  flex: 1;
-  max-width: 650px;
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
 }
 
-.hero-image-block {
-  flex: 1;
+/* The visual row beneath the copy: pipeline + enlarged logo, centered */
+.hero-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 56px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.hero-image-block,
+.hero-logo-block {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -404,7 +436,7 @@ img, video {
   flex-direction: column;
   gap: 0;
   width: 100%;
-  max-width: 560px;            /* fill the right column to match the text box */
+  max-width: 400px;            /* middle column of the 3-col hero */
 }
 
 .pipeline-node {
@@ -570,10 +602,10 @@ img, video {
 }
 
 .hero-headline {
-  font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+  font-size: clamp(2.6rem, 5vw, 4.4rem);
   font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: -0.04em;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
   color: var(--text-primary);
   margin-bottom: 28px;
   text-shadow: none;
@@ -583,17 +615,17 @@ img, video {
   font-size: clamp(1rem, 2vw, 1.2rem);
   color: var(--text-secondary);
   line-height: 1.8;
-  max-width: 720px;
-  margin: 0 0 48px;
+  max-width: 680px;
+  margin: 0 auto 40px;
 }
 
 .hero-ctas {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 72px;
+  margin-bottom: 0;
 }
 
 .hero-stats {
@@ -602,6 +634,7 @@ img, video {
   justify-content: center;
   gap: 0;
   flex-wrap: wrap;
+  margin-top: 32px;
   padding: 28px 40px;
   background: rgba(255, 255, 255, 0.8);
   border: 1px solid var(--border);
@@ -783,11 +816,11 @@ img, video {
 .benefits-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  gap: var(--grid-gap);
 }
 
 .benefit-card {
-  padding: 32px;
+  padding: var(--card-pad);
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -840,7 +873,7 @@ img, video {
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: var(--grid-gap);
   align-items: start;
 }
 
@@ -1576,10 +1609,12 @@ img, video {
  ============================================================ */
 @media (max-width: 1024px) {
   .hero-layout {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    justify-items: center;
     text-align: center;
     gap: 40px;
   }
+  .hero-text-block { max-width: 620px; }
 
   .hero-subheadline {
     margin: 0 auto 48px;
@@ -1621,11 +1656,10 @@ img, video {
 @media (max-width: 768px) {
   :root {
     --navbar-height: 64px;
+    --container-pad: 20px;
   }
 
-  .section {
-    padding: 80px 0;
-  }
+  /* .section padding handled by the clamp() in :root; phone steps below */
 
   /* Navbar Mobile */
   .hamburger {
@@ -2358,27 +2392,20 @@ html {
   animation: float 5.5s ease-in-out infinite;
 }
 
-/* Hero brand lockup — logo sits right next to the headline, enlarged */
-.hero-brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  margin-bottom: 8px;
-}
-.hero-logo {
-  flex-shrink: 0;
-  width: auto;
-  height: 110px;                /* enlarged so it reads clearly beside the text */
+/* Hero feature logo — fills its column to cover the space */
+.hero-logo-feature {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 0 auto;
   animation: float 6s ease-in-out infinite;
 }
-.hero-brand-lockup .hero-headline { margin: 0; }
-[dir="rtl"] .hero-brand-lockup { flex-direction: row-reverse; }  /* logo on the right in Arabic */
 @media (max-width: 1024px) {
-  .hero-brand-lockup,
-  [dir="rtl"] .hero-brand-lockup { flex-direction: column; align-items: center; gap: 14px; }
+  .hero-logo-feature { max-width: 260px; }   /* hero stacks */
 }
 @media (max-width: 640px) {
-  .hero-logo { height: 84px; }
+  .hero-logo-feature { max-width: 200px; }
 }
 
 /* Primary CTA shimmer sweep */
@@ -2912,14 +2939,14 @@ html {
 .two-track-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  margin-top: 48px;
+  gap: var(--grid-gap);
+  margin-top: 0;
 }
 .track-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 36px 32px;
+  padding: var(--card-pad);
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -3128,8 +3155,8 @@ html {
 .testimonials-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-top: 48px;
+  gap: var(--grid-gap);
+  margin-top: 0;
 }
 .testimonial-card {
   background: var(--bg-card);
@@ -3894,11 +3921,13 @@ html {
 }
 
 /* Keep hero content above the aurora/grain layers */
-.hero .hero-content,
-.hero .shooting-stars,
-.hero .hero-overlay,
-.hero .scroll-indicator { position: relative; z-index: 2; }
+/* Layering only — keep the background/overlay layers ABSOLUTE (out of flow) so
+   they don't become flex items and push the content sideways. */
+.hero .hero-content { position: relative; z-index: 3; }
+.hero .aurora { z-index: 0; }
 .hero .shooting-stars { z-index: 1; }
+.hero .hero-overlay { z-index: 2; }
+.hero .scroll-indicator { z-index: 3; }
 
 /* ---- Chip hover-pop (track verticals + industry chips) ---- */
 .track-vertical-chip {
@@ -3930,15 +3959,15 @@ html {
 .team-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 18px;
-  margin-top: 48px;
+  gap: var(--grid-gap);
+  margin-top: 0;
 }
 .team-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
-  padding: 26px 22px;
+  gap: var(--space-3);
+  padding: var(--space-6);
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -3982,7 +4011,55 @@ html {
 }
 .team-card--order .team-role { color: var(--orange); }
 .team-desc { color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; }
-.team-cta { margin-top: 40px; display: flex; justify-content: center; }
+.team-cta { margin-top: var(--space-12); display: flex; justify-content: center; }
+
+/* ============================================================
+   SOLUTIONS MENU (additive, on-theme — reuses card tokens)
+ ============================================================ */
+.solutions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--grid-gap);
+  margin-top: 0;
+  width: 100%;
+}
+.solution-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  height: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.solution-tile:hover {
+  transform: translateY(-4px);
+  border-color: rgba(92, 149, 198, 0.32);
+  box-shadow: var(--shadow-glow);
+}
+.solution-emoji {
+  font-size: 1.7rem;
+  line-height: 1;
+  width: 52px;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border);
+}
+.solution-tile-title { font-size: 1.08rem; font-weight: 800; line-height: 1.15; }
+.solution-tile-desc { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+.solutions-cta { margin-top: var(--space-12); display: flex; justify-content: center; }
+
+@media (max-width: 1024px) { .solutions-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .solutions-grid { grid-template-columns: 1fr; } }
+[dir="rtl"] .solution-tile { align-items: flex-end; text-align: right; }
 
 @media (max-width: 1024px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px)  { .team-grid { grid-template-columns: 1fr; } }
@@ -3990,5 +4067,47 @@ html {
 [dir="rtl"] .team-card::before { inset: 0 0 auto auto; }
 
 /* FAQ + CTA secondary action spacing (additive) */
-.faq-cta { margin-top: 40px; display: flex; justify-content: center; }
+.faq-cta { margin-top: var(--space-12); display: flex; justify-content: center; }
 .cta-secondary { margin-top: 14px; }
+
+/* ============================================================
+   CENTERED LAYOUT PASS (additive) — center section headers,
+   CTAs and the AI-team cards; symmetric so RTL mirrors cleanly.
+   text-align based (no flex on .container) so the About 2-col,
+   pricing table and grids keep their own widths/layout.
+ ============================================================ */
+/* Header trio centered (scoped to direct children — no cascade into cards) */
+.section > .container > .section-label {
+  display: block;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+.section > .container > .section-title { text-align: center; }
+.section > .container > .section-subtitle {
+  text-align: center;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: var(--header-gap);
+}
+[dir="rtl"] .section > .container > .section-subtitle { text-align: center; }
+
+/* Section-level CTAs centered */
+.steps-cta, .team-cta, .faq-cta { display: flex; justify-content: center; }
+
+/* AI-team cards: center their (short) content; bar stays full-width on top */
+.team-card,
+[dir="rtl"] .team-card { align-items: center; text-align: center; }
+.team-card::before,
+[dir="rtl"] .team-card::before { inset: 0 0 auto 0; }
+
+/* Card BODY copy stays start-aligned for readability, mirrored in RTL */
+.track-card, .benefit-card, .pricing-card { text-align: left; }
+[dir="rtl"] .track-card,
+[dir="rtl"] .benefit-card,
+[dir="rtl"] .pricing-card { text-align: right; }
+
+/* Header→content rhythm is owned by .section-subtitle margin-bottom
+   (--header-gap); grids carry no extra margin-top so every section
+   has the same gap below its header. */

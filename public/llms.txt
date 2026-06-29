@@ -1,6 +1,6 @@
 # BznsFlow
 
-> BznsFlow is a "business in a box" SaaS: a done-for-you team of AI systems that runs your whole front office — an AI receptionist, booking, WhatsApp order-taking, follow-up, and CRM — answering every message, qualifying every lead, and booking more business 24/7, in Arabic and English. One promise: stop losing customers to slow replies. Primary contact channel is WhatsApp. Built for businesses worldwide. Proven in Oman.
+> BznsFlow is a business-in-a-box tech solutions company — done for you. We build the tech that runs and grows your business: an AI front office (receptionist, booking, WhatsApp order-taking, CRM), lead-capture websites, automation and integrations, AI agents, and custom apps. 24/7, in Arabic and English. One promise: stop losing customers to slow replies. Primary contact channel is WhatsApp. Built for businesses worldwide. Proven in Oman.
 
 ## The AI team (your front office, done for you)
 

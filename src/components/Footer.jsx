@@ -66,7 +66,7 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
           </div>
 
           <div className="footer-bottom">
-            <p className="footer-copy">{t.footer_copy}</p>
+            <p className="footer-copy">{t.footer_copy.replace(/©\s*\d{4}/, `© ${new Date().getFullYear()}`)}</p>
             <p className="footer-founder">{t.footer_founder}</p>
           </div>
         </div>
