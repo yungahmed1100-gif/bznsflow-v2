@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { LazyMotion, domAnimation, MotionConfig } from 'motion/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { spring } from '../lib/motion';
 
 // Shared shell for every route. vite-react-ssg already wraps the tree in
@@ -13,6 +14,7 @@ export function RootLayout() {
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion="user" transition={spring.smooth}>
         <Outlet />
+        <SpeedInsights />
       </MotionConfig>
     </LazyMotion>
   );
