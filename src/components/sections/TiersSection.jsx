@@ -1,6 +1,6 @@
 import React from 'react';
-import { Icon } from './Icon';
-import { waLink } from '../lib/whatsapp';
+import { Icon } from '../ui/Icon';
+import { waLink } from '../../lib/whatsapp';
 
 // Packaged plans (no prices) — Catch → Convert → Dominate ladder.
 // Tier content comes from the `tiers` array (TIERS / TIERS_AR in pages/Home.jsx);

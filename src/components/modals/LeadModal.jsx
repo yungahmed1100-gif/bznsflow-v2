@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from './Icon';
+import { Icon } from '../ui/Icon';
 
 export function LeadModal({
   t, lang, isOpen, leadEmail, leadStatus,

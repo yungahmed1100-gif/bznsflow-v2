@@ -2,28 +2,28 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStrings, isLoaded, loadLang } from '../i18n';
 import { postLead } from '../lib/leads';
-import { Seo } from '../components/Seo';
+import { Seo } from '../components/ui/Seo';
 import { SITE } from '../routes-manifest';
 
 // All sections are STATIC imports — they must be in the prerendered HTML for SEO.
 // (Previously React.lazy behind <Suspense>, which rendered nothing during SSG.)
-import { NavBar }             from '../components/NavBar';
-import { HeroSection }        from '../components/HeroSection';
-import { ProblemSection }     from '../components/ProblemSection';
-import { ROISection }         from '../components/ROISection';
-import { SolutionsSection }   from '../components/SolutionsSection';
-import { TwoTrackSection }    from '../components/TwoTrackSection';
-import { AITeamSection }      from '../components/AITeamSection';
-import { HowItWorksSection }  from '../components/HowItWorksSection';
-import { TiersSection }       from '../components/TiersSection';
-import { BenefitsSection }    from '../components/BenefitsSection';
-import { TestimonialsSection } from '../components/TestimonialsSection';
-import { AboutSection }       from '../components/AboutSection';
-import { FAQSection }         from '../components/FAQSection';
-import { CTASection }         from '../components/CTASection';
-import { Footer }             from '../components/Footer';
-import { StickyMobileCTA }    from '../components/StickyMobileCTA';
-import { LeadModal }          from '../components/LeadModal';
+import { NavBar }             from '../components/layout/NavBar';
+import { HeroSection }        from '../components/sections/HeroSection';
+import { ProblemSection }     from '../components/sections/ProblemSection';
+import { ROISection }         from '../components/sections/ROISection';
+import { SolutionsSection }   from '../components/sections/SolutionsSection';
+import { TwoTrackSection }    from '../components/sections/TwoTrackSection';
+import { AITeamSection }      from '../components/sections/AITeamSection';
+import { HowItWorksSection }  from '../components/sections/HowItWorksSection';
+import { TiersSection }       from '../components/sections/TiersSection';
+import { BenefitsSection }    from '../components/sections/BenefitsSection';
+import { TestimonialsSection } from '../components/sections/TestimonialsSection';
+import { AboutSection }       from '../components/sections/AboutSection';
+import { FAQSection }         from '../components/sections/FAQSection';
+import { CTASection }         from '../components/sections/CTASection';
+import { Footer }             from '../components/layout/Footer';
+import { StickyMobileCTA }    from '../components/ui/StickyMobileCTA';
+import { LeadModal }          from '../components/modals/LeadModal';
 
 // ─── Shared constants ────────────────────────────────────────────────────────
 const CALENDAR_URL  = 'https://calendar.app.google/KS48NKMVXPugQEhm6';

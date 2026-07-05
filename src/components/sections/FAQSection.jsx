@@ -1,9 +1,9 @@
 import React from 'react';
-import { Icon } from './Icon';
-import { Reveal } from './motion/Reveal';
-import { StaggerGroup, StaggerItem } from './motion/Stagger';
-import { MagneticButton } from './motion/MagneticButton';
-import { waLink } from '../lib/whatsapp';
+import { Icon } from '../ui/Icon';
+import { Reveal } from '../motion/Reveal';
+import { StaggerGroup, StaggerItem } from '../motion/Stagger';
+import { MagneticButton } from '../motion/MagneticButton';
+import { waLink } from '../../lib/whatsapp';
 
 const FAQ_KEYS = ['faq_q1', 'faq_q2', 'faq_q3', 'faq_q4', 'faq_q5', 'faq_q6'];
 

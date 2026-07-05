@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from './Icon';
+import { Icon } from '../ui/Icon';
 
 export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) {
   return (

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Icon } from './Icon';
-import { Reveal } from './motion/Reveal';
-import { StaggerGroup, StaggerItem } from './motion/Stagger';
-import { TiltCard } from './motion/TiltCard';
-import { scaleIn } from '../lib/motion';
+import { Icon } from '../ui/Icon';
+import { Reveal } from '../motion/Reveal';
+import { StaggerGroup, StaggerItem } from '../motion/Stagger';
+import { TiltCard } from '../motion/TiltCard';
+import { scaleIn } from '../../lib/motion';
 
 // Two-engine self-select section: visitors pick the track their business runs on.
 // Track A = Lead Engine (high-value lead businesses), Track B = Order Engine

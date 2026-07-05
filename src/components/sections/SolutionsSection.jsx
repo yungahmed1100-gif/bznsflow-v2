@@ -1,10 +1,10 @@
 import React from 'react';
-import { Icon } from './Icon';
-import { Reveal } from './motion/Reveal';
-import { StaggerGroup, StaggerItem } from './motion/Stagger';
-import { TiltCard } from './motion/TiltCard';
-import { MagneticButton } from './motion/MagneticButton';
-import { waLink } from '../lib/whatsapp';
+import { Icon } from '../ui/Icon';
+import { Reveal } from '../motion/Reveal';
+import { StaggerGroup, StaggerItem } from '../motion/Stagger';
+import { TiltCard } from '../motion/TiltCard';
+import { MagneticButton } from '../motion/MagneticButton';
+import { waLink } from '../../lib/whatsapp';
 
 // The menu of tech solutions — BznsFlow as a "business in a box" tech company.
 // The AI front office is one solution among websites, CRM, automation, apps, etc.

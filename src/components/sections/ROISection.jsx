@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Icon } from './Icon';
-import { waLink } from '../lib/whatsapp';
+import { Icon } from '../ui/Icon';
+import { waLink } from '../../lib/whatsapp';
 
 const _usdFmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const fmtUSD = (n) => _usdFmt.format(n);

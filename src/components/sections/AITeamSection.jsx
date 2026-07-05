@@ -1,10 +1,10 @@
 import React from 'react';
-import { Icon } from './Icon';
-import { Reveal } from './motion/Reveal';
-import { StaggerGroup, StaggerItem } from './motion/Stagger';
-import { TiltCard } from './motion/TiltCard';
-import { MagneticButton } from './motion/MagneticButton';
-import { waLink } from '../lib/whatsapp';
+import { Icon } from '../ui/Icon';
+import { Reveal } from '../motion/Reveal';
+import { StaggerGroup, StaggerItem } from '../motion/Stagger';
+import { TiltCard } from '../motion/TiltCard';
+import { MagneticButton } from '../motion/MagneticButton';
+import { waLink } from '../../lib/whatsapp';
 
 // "Meet the AI team" — makes the business-in-a-box product concrete: five named
 // AI systems that run the front office. Reuses the motion primitives for a

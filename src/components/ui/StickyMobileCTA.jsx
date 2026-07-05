@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from './Icon';
-import { waLink } from '../lib/whatsapp';
+import { waLink } from '../../lib/whatsapp';
 
 export function StickyMobileCTA({ t, CALENDAR_URL, WHATSAPP_URL, trackEvent }) {
   return (

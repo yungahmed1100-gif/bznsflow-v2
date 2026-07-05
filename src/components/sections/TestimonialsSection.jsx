@@ -1,6 +1,6 @@
 import React from 'react';
-import { Reveal } from './motion/Reveal';
-import { StaggerGroup, StaggerItem } from './motion/Stagger';
+import { Reveal } from '../motion/Reveal';
+import { StaggerGroup, StaggerItem } from '../motion/Stagger';
 
 export function TestimonialsSection({ t, lang }) {
   return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head } from 'vite-react-ssg';
-import { SITE, urlFor } from '../routes-manifest';
+import { SITE, urlFor } from '../../routes-manifest';
 
 // Per-page head: title, description, canonical, reciprocal hreflang (en/ar/
 // x-default), OpenGraph/Twitter, and optional JSON-LD. Rendered into the static

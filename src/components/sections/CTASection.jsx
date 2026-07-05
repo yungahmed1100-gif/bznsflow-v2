@@ -1,9 +1,9 @@
 import React from 'react';
-import { Icon } from './Icon';
-import { Reveal } from './motion/Reveal';
-import { MagneticButton } from './motion/MagneticButton';
-import { scaleIn } from '../lib/motion';
-import { waLink } from '../lib/whatsapp';
+import { Icon } from '../ui/Icon';
+import { Reveal } from '../motion/Reveal';
+import { MagneticButton } from '../motion/MagneticButton';
+import { scaleIn } from '../../lib/motion';
+import { waLink } from '../../lib/whatsapp';
 
 export function CTASection({ t, CALENDAR_URL, trackEvent }) {
   return (
