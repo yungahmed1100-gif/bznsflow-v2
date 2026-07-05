@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import logoImg from '../public/logo_bznsflow.png';
+import logoImg from '../assets/logo_bznsflow.png';
 
 export function NavBar({
   t, lang, isScrolled, isMenuOpen, activeLink, scrollProgress,
