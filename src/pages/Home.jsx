@@ -10,8 +10,8 @@ import { SITE } from '../routes-manifest';
 import { NavBar }             from '../components/layout/NavBar';
 import { HeroSection }        from '../components/sections/HeroSection';
 import { ProblemSection }     from '../components/sections/ProblemSection';
-import { ROISection }         from '../components/sections/ROISection';
 import { SolutionsSection }   from '../components/sections/SolutionsSection';
+import { ChatWidget }         from '../components/chat/ChatWidget';
 import { TwoTrackSection }    from '../components/sections/TwoTrackSection';
 import { AITeamSection }      from '../components/sections/AITeamSection';
 import { HowItWorksSection }  from '../components/sections/HowItWorksSection';
@@ -543,7 +543,6 @@ export default function Home({ lang: routeLang = 'en' }) {
           onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent}
         />
         <ProblemSection t={t} />
-        <ROISection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <SolutionsSection t={t} trackEvent={trackEvent} />
         <TwoTrackSection t={t} onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent} />
         <AITeamSection t={t} trackEvent={trackEvent} />
@@ -567,6 +566,8 @@ export default function Home({ lang: routeLang = 'en' }) {
         CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL}
         trackEvent={trackEvent}
       />
+
+      <ChatWidget t={t} lang={lang} trackEvent={trackEvent} />
 
       <LeadModal
         t={t} lang={lang}

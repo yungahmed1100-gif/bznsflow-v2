@@ -183,7 +183,6 @@ export default {
   "cmp_r9": "Garantía de Crecimiento de Ingresos",
   "cmp_cta_text": "Ninguna herramienta o agencia combina todo esto para pymes que operan en Europa y el GCC.",
   "cmp_cta_btn": "Reserva Tu Llamada de Estrategia Gratuita",
-  "roi_cta": "Tapa la fuga — reserva una llamada de estrategia",
   "sticky_book": "Reservar Llamada",
   "sticky_chat": "Escríbenos por WhatsApp",
   "lead_submit": "Envíame el manual",

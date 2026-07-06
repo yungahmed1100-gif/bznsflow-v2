@@ -183,7 +183,6 @@ export default {
   "cmp_r9": "Garantie op Omzetgroei",
   "cmp_cta_text": "Geen enkele tool of bureau combineert dit allemaal voor mkb-bedrijven in Europa en de GCC.",
   "cmp_cta_btn": "Boek Je Gratis Strategiegesprek",
-  "roi_cta": "Dicht het lek — boek een strategiegesprek",
   "sticky_book": "Boek Gesprek",
   "sticky_chat": "WhatsApp Ons",
   "lead_submit": "Stuur me het playbook",

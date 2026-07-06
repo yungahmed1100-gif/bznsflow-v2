@@ -183,7 +183,6 @@ export default {
   "cmp_r9": "Umsatzwachstumsgarantie",
   "cmp_cta_text": "Kein Tool oder keine Agentur kombiniert all dies für KMU, die in Europa und der GCC tätig sind.",
   "cmp_cta_btn": "Buche Dein Kostenloses Strategiegespräch",
-  "roi_cta": "Stoppe das Leck — buche ein Strategiegespräch",
   "sticky_book": "Termin Buchen",
   "sticky_chat": "Schreib auf WhatsApp",
   "lead_submit": "Schick mir das Playbook",
