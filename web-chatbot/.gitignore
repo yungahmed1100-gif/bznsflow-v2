@@ -1,0 +1,8 @@
+# Never commit real secrets. Only .env.example (names, no values) is tracked.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+secrets.json
