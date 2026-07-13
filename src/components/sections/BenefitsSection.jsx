@@ -1,7 +1,4 @@
 import React from 'react';
-import { Reveal } from '../motion/Reveal';
-import { StaggerGroup, StaggerItem } from '../motion/Stagger';
-import { TiltCard } from '../motion/TiltCard';
 
 const CARDS = [
   { t: 'b1', icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> },
@@ -14,21 +11,19 @@ export function BenefitsSection({ t }) {
   return (
     <section className="section section--dark" id="benefits">
       <div className="container">
-        <Reveal className="section-label">{t.benefits_label}</Reveal>
-        <Reveal as="h2" className="section-title" dangerouslySetInnerHTML={{ __html: t.benefits_title }} />
-        <Reveal as="p" className="section-subtitle" dangerouslySetInnerHTML={{ __html: t.benefits_sub }} />
+        <div className="section-label" data-reveal>{t.benefits_label}</div>
+        <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.benefits_title }} />
+        <p className="section-subtitle" data-reveal dangerouslySetInnerHTML={{ __html: t.benefits_sub }} />
 
-        <StaggerGroup className="benefits-grid" stagger={0.09}>
+        <div className="benefits-grid">
           {CARDS.map(({ t: key, icon }) => (
-            <StaggerItem key={key}>
-              <TiltCard className="benefit-card tilt-3d" max={5}>
-                <div className="benefit-icon">{icon}</div>
-                <h3 className="benefit-title">{t[`${key}_title`]}</h3>
-                <p className="benefit-desc">{t[`${key}_desc`]}</p>
-              </TiltCard>
-            </StaggerItem>
+            <div key={key} className="benefit-card" data-reveal>
+              <div className="benefit-icon">{icon}</div>
+              <h3 className="benefit-title">{t[`${key}_title`]}</h3>
+              <p className="benefit-desc">{t[`${key}_desc`]}</p>
+            </div>
           ))}
-        </StaggerGroup>
+        </div>
       </div>
     </section>
   );

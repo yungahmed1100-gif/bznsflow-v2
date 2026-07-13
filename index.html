@@ -40,6 +40,17 @@
     </noscript>
     <meta name="facebook-domain-verification" content="gp7mxwceshctr5x1y0hrrmukfa1q0j" />
 
+    <!-- ═══ SCROLL-REVEAL GATE — runs pre-paint so prerendered content is only
+         hidden when JS + IntersectionObserver are available and the visitor
+         has not requested reduced motion. The failsafe re-shows everything
+         if hydration ever fails after the gate opens. ═══════════════════════ -->
+    <script>
+      if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('js-reveal');
+        setTimeout(function () { document.documentElement.classList.add('reveal-failsafe'); }, 4000);
+      }
+    </script>
+
     <!-- ═══ META PIXEL ═════════════════════════════════════════════════════ -->
     <script>
       !function(f,b,e,v,n,t,s)

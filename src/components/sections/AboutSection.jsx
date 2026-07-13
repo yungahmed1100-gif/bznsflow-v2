@@ -1,7 +1,5 @@
 import React from 'react';
 import { Icon } from '../ui/Icon';
-import { Reveal } from '../motion/Reveal';
-import { MagneticButton } from '../motion/MagneticButton';
 import { waLink } from '../../lib/whatsapp';
 
 export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL, trackEvent }) {
@@ -9,7 +7,7 @@ export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL, trackEvent }
     <section className="section" id="about">
       <div className="container">
         <div className="about-wrapper">
-          <Reveal className="about-visual">
+          <div className="about-visual" data-reveal>
             <div className="about-avatar">
               <div className="avatar-ring"></div>
               <div className="avatar-placeholder">
@@ -32,9 +30,9 @@ export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL, trackEvent }
                 <span>{t.about_founder_role}</span>
               </div>
             </div>
-          </Reveal>
+          </div>
 
-          <Reveal className="about-content" delay={0.1}>
+          <div className="about-content" data-reveal>
             <div className="section-label">{t.about_label}</div>
             <h2 className="section-title about-title" dangerouslySetInnerHTML={{ __html: t.about_title }}></h2>
 
@@ -45,7 +43,7 @@ export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL, trackEvent }
             </div>
 
             <div className="about-ctas">
-              <MagneticButton
+              <a
                 href={waLink(t.wa_msg_about)}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -54,13 +52,13 @@ export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL, trackEvent }
               >
                 <Icon name="whatsapp" size={18} />
                 <span>{t.about_cta1}</span>
-              </MagneticButton>
+              </a>
               <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" onClick={() => trackEvent?.('AboutCallClick')}>
                 <Icon name="calendar" size={16} />
                 <span>{t.secondary_cta_call}</span>
               </a>
             </div>
-          </Reveal>
+          </div>
         </div>
       </div>
     </section>

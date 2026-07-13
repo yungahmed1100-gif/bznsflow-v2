@@ -1,8 +1,5 @@
 import React from 'react';
 import { Icon } from '../ui/Icon';
-import { Reveal } from '../motion/Reveal';
-import { StaggerGroup, StaggerItem } from '../motion/Stagger';
-import { MagneticButton } from '../motion/MagneticButton';
 import { waLink } from '../../lib/whatsapp';
 
 export function HowItWorksSection({ t, CALENDAR_URL, trackEvent }) {
@@ -14,25 +11,25 @@ export function HowItWorksSection({ t, CALENDAR_URL, trackEvent }) {
   return (
     <section className="section" id="how-it-works">
       <div className="container">
-        <Reveal className="section-label">{t.how_label}</Reveal>
-        <Reveal as="h2" className="section-title" dangerouslySetInnerHTML={{ __html: t.how_title }} />
-        <Reveal as="p" className="section-subtitle">{t.how_sub}</Reveal>
+        <div className="section-label" data-reveal>{t.how_label}</div>
+        <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.how_title }} />
+        <p className="section-subtitle" data-reveal>{t.how_sub}</p>
 
-        <StaggerGroup className="steps-container" stagger={0.12}>
+        <div className="steps-container">
           {steps.map((s) => (
-            <StaggerItem key={s.n} className="step">
+            <div key={s.n} className="step" data-reveal>
               <div className="step-number">{s.n}</div>
               <div className="step-content">
                 {s.connector && <div className="step-connector"></div>}
                 <h3 className="step-title">{s.title}</h3>
                 <p className="step-desc">{s.desc}</p>
               </div>
-            </StaggerItem>
+            </div>
           ))}
-        </StaggerGroup>
+        </div>
 
-        <Reveal className="steps-cta">
-          <MagneticButton
+        <div className="steps-cta" data-reveal>
+          <a
             href={waLink(t.wa_msg_how)}
             target="_blank"
             rel="noopener noreferrer"
@@ -41,8 +38,8 @@ export function HowItWorksSection({ t, CALENDAR_URL, trackEvent }) {
           >
             <Icon name="whatsapp" size={20} />
             <span>{t.how_cta}</span>
-          </MagneticButton>
-        </Reveal>
+          </a>
+        </div>
       </div>
     </section>
   );

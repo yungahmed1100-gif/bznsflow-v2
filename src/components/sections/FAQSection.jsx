@@ -1,8 +1,5 @@
 import React from 'react';
 import { Icon } from '../ui/Icon';
-import { Reveal } from '../motion/Reveal';
-import { StaggerGroup, StaggerItem } from '../motion/Stagger';
-import { MagneticButton } from '../motion/MagneticButton';
 import { waLink } from '../../lib/whatsapp';
 
 const FAQ_KEYS = ['faq_q1', 'faq_q2', 'faq_q3', 'faq_q4', 'faq_q5', 'faq_q6'];
@@ -11,14 +8,14 @@ export function FAQSection({ t, trackEvent }) {
   return (
     <section className="section" id="faq">
       <div className="container">
-        <Reveal className="section-label">{t.faq_label}</Reveal>
-        <Reveal as="h2" className="section-title" dangerouslySetInnerHTML={{ __html: t.faq_title }} />
+        <div className="section-label" data-reveal>{t.faq_label}</div>
+        <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.faq_title }} />
 
-        <StaggerGroup className="faq-list" stagger={0.07}>
+        <div className="faq-list">
           {FAQ_KEYS.map((qKey) => {
             const aKey = qKey.replace('_q', '_a');
             return (
-              <StaggerItem as="details" key={qKey} className="faq-item">
+              <details key={qKey} className="faq-item" data-reveal>
                 <summary className="faq-question">
                   <span>{t[qKey]}</span>
                   <svg className="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -26,13 +23,13 @@ export function FAQSection({ t, trackEvent }) {
                   </svg>
                 </summary>
                 <p className="faq-answer">{t[aKey]}</p>
-              </StaggerItem>
+              </details>
             );
           })}
-        </StaggerGroup>
+        </div>
 
-        <Reveal className="faq-cta">
-          <MagneticButton
+        <div className="faq-cta" data-reveal>
+          <a
             href={waLink(t.wa_msg_faq)}
             target="_blank"
             rel="noopener noreferrer"
@@ -41,8 +38,8 @@ export function FAQSection({ t, trackEvent }) {
           >
             <Icon name="whatsapp" size={20} />
             <span>{t.wa_cta}</span>
-          </MagneticButton>
-        </Reveal>
+          </a>
+        </div>
       </div>
     </section>
   );

@@ -18,12 +18,12 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL, trackEvent }) {
   return (
     <section className="section section--dark" id="tiers">
       <div className="container">
-        <div className="section-label fade-in">{t.tiers_label}</div>
-        <h2 className="section-title fade-in" dangerouslySetInnerHTML={{ __html: t.tiers_title }}></h2>
-        <p className="section-subtitle fade-in">{t.tiers_sub}</p>
+        <div className="section-label" data-reveal>{t.tiers_label}</div>
+        <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.tiers_title }}></h2>
+        <p className="section-subtitle" data-reveal>{t.tiers_sub}</p>
 
         {/* Ladder strip: Catch → Convert → Dominate */}
-        <div className="pricing-ladder fade-in" role="list">
+        <div className="pricing-ladder" data-reveal role="list">
           {ladder.map((step, i) => (
             <React.Fragment key={i}>
               <div className="ladder-step" role="listitem">
@@ -31,7 +31,11 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL, trackEvent }) {
                 <span className="ladder-stage">{step.stage}</span>
                 <span className="ladder-sub">{step.sub}</span>
               </div>
-              {i < ladder.length - 1 && <span className="ladder-arrow" aria-hidden="true">→</span>}
+              {i < ladder.length - 1 && (
+                <span className="ladder-arrow" aria-hidden="true">
+                  <Icon name="arrow-right" size={18} strokeWidth={2} className="icon-flip-rtl" />
+                </span>
+              )}
             </React.Fragment>
           ))}
         </div>
@@ -91,7 +95,9 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL, trackEvent }) {
 
               {tier.nextStep && (
                 <div className="tier-nextstep">
-                  <span className="tier-nextstep-arrow" aria-hidden="true">↑</span>
+                  <span className="tier-nextstep-arrow" aria-hidden="true">
+                    <Icon name="arrow-up" size={16} strokeWidth={2.5} />
+                  </span>
                   <span>{tier.nextStep}</span>
                 </div>
               )}
@@ -100,7 +106,7 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL, trackEvent }) {
         </div>
 
         {/* At-a-glance comparison */}
-        <div className="pricing-compare fade-in">
+        <div className="pricing-compare" data-reveal>
           <div className="pricing-compare-scroll" tabIndex={0} role="region" aria-label={t.compare_label || 'Plan comparison'}>
             <table className="pricing-compare-table">
               <thead>
@@ -131,7 +137,7 @@ export function TiersSection({ t, tiers = [], CALENDAR_URL, trackEvent }) {
 
 
         {/* Guarantee */}
-        <div className="pricing-guarantee fade-in">
+        <div className="pricing-guarantee" data-reveal>
           <span className="guarantee-badge" aria-hidden="true"><Icon name="shield" size={22} /></span>
           <div className="guarantee-body">
             <h4 className="guarantee-title">{t.guarantee_title || 'The 30-Day Leak Guarantee'}</h4>

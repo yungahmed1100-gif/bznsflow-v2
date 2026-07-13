@@ -1,7 +1,5 @@
 import React from 'react';
 import { Icon } from '../ui/Icon';
-import { Parallax } from '../motion/Parallax';
-import { MagneticButton } from '../motion/MagneticButton';
 import { waLink } from '../../lib/whatsapp';
 
 const PIPELINE_ICONS = [
@@ -12,7 +10,10 @@ const PIPELINE_ICONS = [
   <svg key="e" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
 ];
 
-function PipelineDiagram({ t, lang }) {
+// One industry chip per vertical the two engines serve.
+const TRUST_ICONS = ['building-2', 'tooth', 'stethoscope', 'snowflake', 'hard-hat', 'cake', 'coffee', 'utensils'];
+
+function PipelineDiagram({ t }) {
   const steps = [
     { label: t.hero_pipeline_step1, sub: t.hero_pipeline_step1_sub },
     { label: t.hero_pipeline_step2, sub: t.hero_pipeline_step2_sub },
@@ -25,15 +26,15 @@ function PipelineDiagram({ t, lang }) {
     <div className="pipeline-diagram" aria-label="AI lead pipeline" role="img">
       {steps.map((step, i) => (
         <React.Fragment key={i}>
-          <div className={`pipeline-node${step.accent ? ' pipeline-node--accent' : ''}${step.revenue ? ' pipeline-node--revenue' : ''}`}>
+          <div className="pipeline-node" style={{ '--i': i }}>
             <div className="pipeline-node-icon" aria-hidden="true">{PIPELINE_ICONS[i]}</div>
             <div className="pipeline-node-label">{step.label}</div>
             <div className="pipeline-node-sub">{step.sub}</div>
           </div>
           {i < steps.length - 1 && (
-            <div className="pipeline-arrow" aria-hidden="true">
+            <div className="pipeline-arrow" aria-hidden="true" style={{ '--i': i }}>
               <div className="pipeline-arrow-track">
-                <div className="pipeline-arrow-pulse" style={{ animationDelay: `${i * 0.4}s` }} />
+                <div className="pipeline-arrow-fill" />
               </div>
             </div>
           )}
@@ -43,16 +44,11 @@ function PipelineDiagram({ t, lang }) {
   );
 }
 
-const STARS = [
-  { color: 'var(--accent-blue)',   top: '12%', left: '18%', delay: '0s'   },
-  { color: 'var(--accent-cyan)',   top: '28%', left: '72%', delay: '1.4s' },
-  { color: 'var(--accent-purple)', top: '62%', left: '42%', delay: '0.7s' },
-  { color: 'var(--orange)',        top: '78%', left: '82%', delay: '2.1s' },
-  { color: 'var(--accent-blue)',   top: '44%', left: '8%',  delay: '2.9s' },
-  { color: 'var(--accent-cyan)',   top: '16%', left: '52%', delay: '1.1s' },
-];
-
 export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL, WHATSAPP_URL }) {
+  const trustVerticals = [
+    t.trackA_v1, t.trackA_v2, t.trackA_v3, t.trackA_v4, t.trackA_v5,
+    t.trackB_v1, t.trackB_v2, t.trackB_v3,
+  ];
 
   return (
     <section className="hero grain" id="hero">
@@ -61,18 +57,9 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
         <span className="aurora-blob aurora-blob--b" />
         <span className="aurora-blob aurora-blob--c" />
       </div>
-      <div className="shooting-stars" aria-hidden="true">
-        {STARS.map((s, i) => (
-          <div
-            key={i}
-            className="star"
-            style={{ '--star-color': s.color, top: s.top, left: s.left, '--star-delay': s.delay }}
-          />
-        ))}
-      </div>
       <div className="hero-overlay" aria-hidden="true" />
 
-      <div className="hero-content fade-in visible">
+      <div className="hero-content">
         <div className="hero-layout">
           <div className="hero-text-block">
             <div className="hero-badge">
@@ -88,7 +75,7 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
             <p className="hero-subheadline">{t.hero_sub}</p>
 
             <div className="hero-ctas">
-              <MagneticButton
+              <a
                 href={waLink(t.wa_msg_hero)}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -97,7 +84,7 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
               >
                 <Icon name="whatsapp" size={20} />
                 <span>{t.hero_cta_primary}</span>
-              </MagneticButton>
+              </a>
               <a
                 href={CALENDAR_URL}
                 target="_blank"
@@ -113,22 +100,18 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
 
           <div className="hero-visual">
             <div className="hero-image-block">
-              <Parallax speed={0.16}>
-                <PipelineDiagram t={t} lang={lang} />
-              </Parallax>
+              <PipelineDiagram t={t} />
             </div>
 
             <div className="hero-logo-block">
-              <Parallax speed={0.1}>
-                <img
-                  src="/logo.png"
-                  alt="BznsFlow"
-                  className="hero-logo-feature"
-                  width="500"
-                  height="500"
-                  fetchpriority="high"
-                />
-              </Parallax>
+              <img
+                src="/logo.png"
+                alt="BznsFlow"
+                className="hero-logo-feature"
+                width="500"
+                height="500"
+                fetchpriority="high"
+              />
             </div>
           </div>
         </div>
@@ -152,14 +135,12 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
 
         <div className="trust-strip">
           <span className="trust-label">{t.trust_label}</span>
-          <span className="trust-flag">🏢 {t.trackA_v1}</span>
-          <span className="trust-flag">🦷 {t.trackA_v2}</span>
-          <span className="trust-flag">🩺 {t.trackA_v3}</span>
-          <span className="trust-flag">❄️ {t.trackA_v4}</span>
-          <span className="trust-flag">🏗️ {t.trackA_v5}</span>
-          <span className="trust-flag">🎂 {t.trackB_v1}</span>
-          <span className="trust-flag">☕ {t.trackB_v2}</span>
-          <span className="trust-flag">🍽️ {t.trackB_v3}</span>
+          {trustVerticals.map((label, i) => (
+            <span key={i} className="trust-flag">
+              <Icon name={TRUST_ICONS[i]} size={15} strokeWidth={1.8} aria-hidden="true" />
+              {label}
+            </span>
+          ))}
         </div>
       </div>
 

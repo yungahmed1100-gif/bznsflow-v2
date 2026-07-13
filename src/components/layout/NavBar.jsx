@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import logoImg from '../../assets/logo_bznsflow.png';
+import { Icon } from '../ui/Icon';
 
 export function NavBar({
   t, lang, isScrolled, isMenuOpen, activeLink, scrollProgress,
@@ -62,7 +63,9 @@ export function NavBar({
                 aria-label={t.lang_label || 'Choose language'}
                 onClick={() => setIsLangOpen(o => !o)}
               >
-                {LANGUAGES.find(l => l.code === lang)?.flag || '🌐'} <span className="dropdown-arrow" aria-hidden="true">▼</span>
+                <Icon name="globe" size={15} aria-hidden="true" />
+                <span className="lang-toggle-code">{LANGUAGES.find(l => l.code === lang)?.code2 || 'EN'}</span>
+                <Icon name="chevron-down" size={13} className="dropdown-arrow" aria-hidden="true" />
               </button>
               <div className="lang-menu" role="menu">
                 {LANGUAGES.map(l => (
@@ -76,7 +79,7 @@ export function NavBar({
                     title={l.label}
                     aria-label={l.label}
                   >
-                    <span className="flag" aria-hidden="true">{l.flag}</span>
+                    <span className="lang-code" aria-hidden="true">{l.code2}</span>
                     <span className="label">{l.label}</span>
                   </button>
                 ))}
