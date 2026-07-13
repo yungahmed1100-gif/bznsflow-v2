@@ -3381,12 +3381,13 @@ html {
 
 .team-meta { grid-area: meta; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .team-name { font-size: 1.05rem; font-weight: 800; line-height: 1.15; }
-.team-name-ar {
-  font-family: 'Cairo', sans-serif;
+/* Secondary name in the other script (Arabic on /en, Latin on /) */
+.team-name-sub {
   font-weight: 600;
   font-size: 0.9em;
   color: var(--text-muted);
 }
+.team-name-sub[lang="ar"] { font-family: 'Cairo', sans-serif; }
 .team-role {
   font-size: 0.7rem;
   font-weight: 700;

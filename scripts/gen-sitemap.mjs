@@ -15,9 +15,9 @@ const xmlEscape = (s) => s.replace(/&/g, '&amp;');
 
 function alternates(path) {
   const links = [
-    `      <xhtml:link rel="alternate" hreflang="en" href="${xmlEscape(urlFor(path, 'en'))}" />`,
     `      <xhtml:link rel="alternate" hreflang="ar" href="${xmlEscape(urlFor(path, 'ar'))}" />`,
-    `      <xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(urlFor(path, 'en'))}" />`,
+    `      <xhtml:link rel="alternate" hreflang="en" href="${xmlEscape(urlFor(path, 'en'))}" />`,
+    `      <xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(urlFor(path, 'ar'))}" />`,
   ];
   return links.join('\n');
 }

@@ -95,5 +95,5 @@ Ahmed Darwish. Founded 2024.
 
 ## Key pages
 
-- [Home](https://www.bznsflowai.com/)
-- [Arabic home / الصفحة بالعربية](https://www.bznsflowai.com/ar)
+- [Home / الصفحة الرئيسية (Arabic)](https://www.bznsflowai.com/)
+- [English home](https://www.bznsflowai.com/en)

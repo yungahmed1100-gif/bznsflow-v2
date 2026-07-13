@@ -8,8 +8,8 @@ import { SITE, urlFor } from '../../routes-manifest';
 // Organization/WebSite JSON-LD) stay in index.html and are copied to every page.
 //
 // Props:
-//   lang     — 'en' | 'ar' (the locale of THIS prerendered page)
-//   path     — the English/canonical path, e.g. '/' or '/pricing'
+//   lang     — 'ar' | 'en' (the locale of THIS prerendered page)
+//   path     — the canonical (Arabic, unprefixed) path, e.g. '/' or '/pricing'
 //   title, description — page-specific copy
 //   ogImage  — absolute or root-relative image (defaults to og-image.jpg)
 //   jsonLd   — array of schema.org objects to embed
@@ -38,10 +38,10 @@ export function Seo({
       <link rel="canonical" href={canonical} />
       {noindex && <meta name="robots" content="noindex, follow" />}
 
-      {/* Reciprocal hreflang — en/ar only (nl/de/es are not prerendered). */}
-      <link rel="alternate" hrefLang="en" href={enUrl} />
+      {/* Reciprocal hreflang — Arabic is the primary/default language. */}
       <link rel="alternate" hrefLang="ar" href={arUrl} />
-      <link rel="alternate" hrefLang="x-default" href={enUrl} />
+      <link rel="alternate" hrefLang="en" href={enUrl} />
+      <link rel="alternate" hrefLang="x-default" href={arUrl} />
 
       {/* OpenGraph */}
       <meta property="og:url" content={canonical} />

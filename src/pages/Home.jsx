@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getStrings, isLoaded, loadLang } from '../i18n';
+import { getStrings } from '../i18n';
 import { initReveals } from '../lib/reveal';
 import { trackEvent } from '../lib/analytics';
 import { CALENDAR_URL, WHATSAPP_URL, LANGUAGES } from '../lib/constants';
@@ -28,29 +28,20 @@ import { Footer }             from '../components/layout/Footer';
 import { StickyMobileCTA }    from '../components/ui/StickyMobileCTA';
 
 // ─── Home page ───────────────────────────────────────────────────────────────
-// `lang` is the locale of THIS prerendered route ('en' at /, 'ar' at /ar).
-export default function Home({ lang: routeLang = 'en' }) {
+// `lang` is the locale of THIS prerendered route ('ar' at /, 'en' at /en).
+export default function Home({ lang: routeLang = 'ar' }) {
   const navigate = useNavigate();
 
-  // Base language = the route's locale. nl/de/es are client-only "soft" switches
-  // (no route) — they update this state without changing the URL.
-  const [lang, setLang] = useState(routeLang);
-  useEffect(() => { setLang(routeLang); }, [routeLang]);
+  const lang = routeLang;
 
   const [isMenuOpen,    setIsMenuOpen]    = useState(false);
   const [isScrolled,    setIsScrolled]    = useState(false);
   const [activeLink,    setActiveLink]    = useState('');
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  // Bump to force a re-render when a lazily-loaded language finishes loading.
-  const [, setLangTick] = useState(0);
-
-  // Use the requested language only if its strings are loaded; otherwise render
-  // English until the chunk resolves (avoids a flash of missing keys).
-  const activeLang     = isLoaded(lang) ? lang : 'en';
-  const t              = getStrings(activeLang);
-  const activeTiers    = activeLang === 'ar' ? TIERS_AR : TIERS;
-  const seo            = HOME_SEO[routeLang] || HOME_SEO.en;
+  const t              = getStrings(lang);
+  const activeTiers    = lang === 'ar' ? TIERS_AR : TIERS;
+  const seo            = HOME_SEO[routeLang] || HOME_SEO.ar;
   const jsonLd         = buildSchemas(t, routeLang);
 
   // ── Effects (all browser-only work lives here — never runs during SSG) ──────
@@ -82,13 +73,9 @@ export default function Home({ lang: routeLang = 'en' }) {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  // en/ar are real prerendered routes → navigate. nl/es/de are client-only soft
-  // switches → swap strings in place (lazy-load the chunk if needed).
+  // Both languages are prerendered routes — switching = navigating.
   const setLanguage = (code) => {
-    if (code === 'en') { navigate('/'); return; }
-    if (code === 'ar') { navigate('/ar'); return; }
-    setLang(code);
-    if (!isLoaded(code)) loadLang(code).then(() => setLangTick(n => n + 1));
+    navigate(code === 'en' ? '/en' : '/');
   };
 
   const closeMenu = () => { setIsMenuOpen(false); document.body.style.overflow = ''; };
@@ -130,7 +117,7 @@ export default function Home({ lang: routeLang = 'en' }) {
         <ProblemSection t={t} />
         <SolutionsSection t={t} trackEvent={trackEvent} />
         <TwoTrackSection t={t} onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent} />
-        <AITeamSection t={t} trackEvent={trackEvent} />
+        <AITeamSection t={t} lang={lang} trackEvent={trackEvent} />
         <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <TiersSection t={t} tiers={activeTiers} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <BenefitsSection t={t} />

@@ -3,20 +3,20 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://www.bznsflowai.com/</loc>
-    <lastmod>2026-06-28T00:00:00+00:00</lastmod>
+    <lastmod>2026-07-13T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/" />
-      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/ar" />
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en" />
       <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/" />
   </url>
   <url>
-    <loc>https://www.bznsflowai.com/ar</loc>
-    <lastmod>2026-06-28T00:00:00+00:00</lastmod>
+    <loc>https://www.bznsflowai.com/en</loc>
+    <lastmod>2026-07-13T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/" />
-      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/ar" />
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en" />
       <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/" />
   </url>
 </urlset>
