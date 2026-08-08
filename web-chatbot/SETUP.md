@@ -179,6 +179,39 @@ Three `SECURITY DEFINER` functions, granted to `service_role` only:
 > 200, letting anyone burn the global daily budget. Any new function here needs
 > an explicit `REVOKE ... FROM public, anon, authenticated`.
 
+### Running a migration
+
+There is no SQL console in this repo; use the Dashboard, or psql through the
+**pooler** host (the direct host is IPv6-only):
+
+```bash
+PW=$(grep '^SUPABASE_DB_PASSWORD=' .env | cut -d= -f2-)
+docker run --rm -i -e PGPASSWORD="$PW" postgres:15-alpine psql \
+  "postgresql://postgres.svmrfzahbgmvesclbqke@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" \
+  -v ON_ERROR_STOP=1 < web-chatbot/migrations/002-serverless-chat.sql
+```
+
+Note `aws-1`, not `aws-0` — `aws-0` resolves but rejects the tenant.
+
+### Project pausing
+
+**Supabase pauses free-tier projects after 7 days of inactivity.** Before
+`/api/keepalive` existed, Layla's chat was the only traffic to this database, so
+one quiet week would have paused the project and broken the chat with no deploy
+and no code change to blame — it would simply look like the backend died again.
+
+`api/keepalive.js` runs daily at 06:00 UTC (`crons` in `vercel.json`) and issues
+a real query, not a health ping, since only database activity counts. It is
+protected by `CRON_SECRET`, which Vercel sends as a bearer token; unauthenticated
+callers get 401.
+
+Verify it is scheduled with `npx vercel crons ls`. Cron runs only against
+**Production** deployments.
+
+> This is a mitigation, not a guarantee. Supabase can change how inactivity is
+> measured, and the free tier also takes **no backups** — which matters more as
+> real conversations accumulate. Supabase Pro removes both problems.
+
 ---
 
 ## Testing

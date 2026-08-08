@@ -5,9 +5,13 @@
   "functions": {
     "api/chat.js": {
       "maxDuration": 30
+    },
+    "api/keepalive.js": {
+      "maxDuration": 10
     }
   },
   "regions": ["sin1"],
+  "crons": [{ "path": "/api/keepalive", "schedule": "0 6 * * *" }],
   "redirects": [
     { "source": "/ar", "destination": "/", "permanent": true },
     { "source": "/ar/:path*", "destination": "/:path*", "permanent": true }
