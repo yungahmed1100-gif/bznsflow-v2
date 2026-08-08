@@ -15,8 +15,18 @@ dist-ssr
 # MCP config holds an auth token — never commit
 .mcp.json
 
-# API keys (GEMINI_API_KEY for avatar generation) — never commit
+# Secrets — never commit. Broad on purpose: `vercel env pull` writes real
+# credentials to .env.local by default, and it is easy to name a dump
+# .env.production or .env.bak and lose the protection of an exact-match rule.
+# .env.example is the one file that must stay tracked.
 .env
+.env.*
+!.env.example
+
+# `vercel env pull` / credential dumps landing anywhere in the linked-project
+# directory. .vercel/project.json itself is tracked and holds no secrets.
+.vercel/*.txt
+.vercel/.env*
 
 # Editor directories and files
 .vscode/*
@@ -28,3 +38,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.env.backup-*
