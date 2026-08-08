@@ -1,0 +1,303 @@
+/* ============================================================
+   HOW IT WORKS SECTION
+ ============================================================ */
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 800px;
+  margin: 0 auto 64px;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 32px;
+  position: relative;
+}
+
+.step:not(:last-child) {
+  padding-bottom: 48px;
+}
+
+.step-number {
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  background: linear-gradient(135deg, rgba(79, 142, 247, 0.6), rgba(139, 92, 246, 0.3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  padding-top: 4px;
+  flex-shrink: 0;
+}
+
+.step-content {
+  padding-top: 4px;
+  position: relative;
+}
+
+.step-connector {
+  position: absolute;
+  inset-inline-start: -52px;
+  top: 60px;
+  bottom: -48px;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(79, 142, 247, 0.4), transparent);
+}
+
+.step-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.step-desc {
+  font-size: 0.97rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.steps-cta {
+  text-align: center;
+}
+
+/* ============================================================
+   USE CASES SECTION
+ ============================================================ */
+.use-cases-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.use-case-card {
+  padding: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition);
+  cursor: default;
+}
+
+.use-case-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(79, 142, 247, 0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.use-case-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(79, 142, 247, 0.1), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(79, 142, 247, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-blue);
+  margin-bottom: 20px;
+  transition: all var(--transition);
+}
+
+.use-case-card:hover .use-case-icon {
+  background: linear-gradient(135deg, rgba(79, 142, 247, 0.18), rgba(139, 92, 246, 0.18));
+  border-color: rgba(79, 142, 247, 0.3);
+}
+
+.use-case-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.use-case-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 20px;
+}
+
+.use-case-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-blue);
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: rgba(79, 142, 247, 0.08);
+  border: 1px solid rgba(79, 142, 247, 0.2);
+}
+
+/* ============================================================
+   ABOUT SECTION
+ ============================================================ */
+.about-wrapper {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.about-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.about-avatar {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.avatar-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  z-index: 0;
+}
+
+.avatar-placeholder {
+  position: relative;
+  z-index: 1;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 3px solid var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  overflow: hidden;
+}
+
+.about-card-detail {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.detail-icon {
+  color: var(--accent-blue);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.about-content {
+  padding-top: 8px;
+}
+
+.about-title {
+  margin-bottom: 32px;
+}
+
+.about-text {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.about-text p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.85;
+}
+
+.about-ctas {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   CTA SECTION
+ ============================================================ */
+.cta-section {
+  text-align: center;
+  overflow: hidden;
+}
+
+.cta-bg-glow {
+  position: absolute;
+  top: 50%;
+  inset-inline: 0;
+  margin-inline: auto;
+  transform: translateY(-50%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(ellipse at center,
+    rgba(79, 142, 247, 0.12) 0%,
+    rgba(139, 92, 246, 0.06) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cta-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 80px 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.cta-headline {
+  font-size: clamp(2.4rem, 5vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  margin-bottom: 20px;
+}
+
+.cta-subtext {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 48px;
+}
+
+.cta-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.cta-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}

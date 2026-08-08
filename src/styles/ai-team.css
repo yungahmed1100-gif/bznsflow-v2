@@ -1,0 +1,178 @@
+/* ============================================================
+   MEET THE AI TEAM (additive, on-theme — reuses card tokens)
+ ============================================================ */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--grid-gap);
+  margin-top: 0;
+  align-items: start; /* an expanded card must not stretch its row siblings */
+}
+.team-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.team-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--accent-blue);
+}
+.team-card--order::before { background: var(--orange); }
+.team-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(92, 149, 198, 0.32);
+  box-shadow: var(--shadow-glow);
+}
+.team-card[open] {
+  border-color: var(--accent-blue);
+}
+.team-card--order[open] {
+  border-color: var(--orange);
+}
+
+/* Card face (always visible) — the <summary> */
+.team-summary {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    "avatar meta chevron"
+    "tagline tagline tagline";
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: var(--space-3);
+  padding: var(--space-6);
+  cursor: pointer;
+  list-style: none;
+}
+.team-summary::-webkit-details-marker { display: none; }
+.team-summary:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: -2px;
+  border-radius: var(--radius-lg);
+}
+
+.team-avatar {
+  grid-area: avatar;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border);
+  color: var(--accent-blue);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.team-card--order .team-avatar { color: var(--orange); }
+.team-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.team-meta { grid-area: meta; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.team-name { font-size: 1.05rem; font-weight: 800; line-height: 1.15; }
+/* Secondary name in the other script (Arabic on /en, Latin on /) */
+.team-name-sub {
+  font-weight: 600;
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+.team-name-sub[lang="ar"] { font-family: 'Cairo', sans-serif; }
+.team-role {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-blue);
+}
+.team-card--order .team-role { color: var(--orange); }
+
+.team-chevron {
+  grid-area: chevron;
+  color: var(--text-muted);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+  flex-shrink: 0;
+}
+.team-card[open] .team-chevron { transform: rotate(180deg); }
+
+.team-tagline {
+  grid-area: tagline;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* Expanded body */
+.team-detail {
+  padding: 0 var(--space-6) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.team-problem {
+  padding: 12px 14px;
+  background: var(--bg-secondary);
+  border-inline-start: 3px solid var(--red);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.team-duties {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.team-duties li {
+  display: flex;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.team-outcome {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.55;
+  padding-inline-start: 14px;
+  border-inline-start: 3px solid var(--green);
+}
+
+/* Closing pitch */
+.team-pitch {
+  max-width: 720px;
+  margin: var(--space-12) auto 0;
+  text-align: center;
+}
+.team-pitch-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+.team-pitch-body {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.team-pitch-promise {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  color: var(--accent-blue);
+  white-space: nowrap;
+}
+
+.team-cta { margin-top: var(--space-10); display: flex; justify-content: center; }

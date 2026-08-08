@@ -1,0 +1,362 @@
+/* ============================================================
+   PREMIUM PRICING LADDER (additive — uses existing tokens only)
+ ============================================================ */
+.pricing-ladder {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px auto 48px;
+  max-width: 880px;
+  flex-wrap: wrap;
+}
+.ladder-step {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  position: relative;
+}
+.ladder-index {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--accent-blue);
+}
+.ladder-stage {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.ladder-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+.ladder-arrow {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent-blue);
+}
+
+/* Ladder cards — extend .pricing-card */
+.pricing-card--ladder {
+  padding: 36px 28px;
+}
+.tier-stage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.tier-stage-tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-blue);
+  background: rgba(79, 142, 247, 0.1);
+  padding: 4px 10px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+.price-cadence {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0;
+  margin-inline-start: 2px;
+}
+.tier-bottleneck {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 14px 0 14px;
+  padding: 12px 14px;
+  background: var(--bg-secondary);
+  border-inline-start: 3px solid var(--red);
+  border-radius: var(--radius-sm);
+}
+.tier-bottleneck-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--red);
+}
+.tier-bottleneck-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+.tier-inside-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+.tier-roi {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tier-roi-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tier-roi-key {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.tier-roi-val {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.tier-roi-val--accent {
+  color: var(--green);
+  font-weight: 700;
+}
+.tier-roi-line {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.tier-pull {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.45;
+  margin-bottom: 20px;
+  padding-inline-start: 14px;
+  border-inline-start: 3px solid var(--accent-blue);
+}
+.tier-nextstep {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--border);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-style: italic;
+}
+.tier-nextstep-arrow {
+  color: var(--accent-blue);
+  font-style: normal;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* At-a-glance comparison */
+.pricing-compare {
+  margin-top: 56px;
+}
+.pricing-compare-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+.pricing-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+  background: var(--bg-card);
+}
+.pricing-compare-table th,
+.pricing-compare-table td {
+  padding: 16px 18px;
+  text-align: start;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.pricing-compare-table thead th {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+.pricing-compare-table .pc-rowhead {
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  width: 200px;
+}
+.pricing-compare-table .pc-col--popular {
+  background: rgba(79, 142, 247, 0.06);
+  color: var(--text-primary);
+}
+.pricing-compare-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Terms band */
+.pricing-terms {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 32px;
+  margin-top: 40px;
+}
+.term-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.term-item svg {
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+/* Guarantee callout */
+.pricing-guarantee {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  max-width: 760px;
+  margin: 40px auto 0;
+  padding: 26px 28px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.guarantee-badge {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: #fff;
+}
+.guarantee-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.guarantee-desc {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .pricing-ladder { flex-direction: column; }
+  .ladder-arrow { transform: rotate(90deg); }
+  .pricing-guarantee { flex-direction: column; gap: 12px; }
+}
+
+/* ============================================================
+   Responsive + accessibility hardening (additive — desktop
+   unchanged; new selectors or small-screen / state / focus only)
+ ============================================================ */
+
+/* Skip-to-content link — off-screen until focused */
+.skip-to-content {
+  position: fixed;
+  inset-inline: 0;
+  margin-inline: auto;
+  width: fit-content;
+  top: 8px;
+  transform: translateY(-160%);
+  z-index: 2000;
+  background: var(--accent-blue);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition);
+}
+.skip-to-content:focus,
+.skip-to-content:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+/* Language menu also reveals when toggled open or focused (keyboard + touch) */
+.lang-selector.open .lang-menu,
+.lang-selector:focus-within .lang-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* WCAG AA contrast — darker same-hue variants for small bold labels on tinted
+   backgrounds (scoped to these labels; the accent button tokens are unchanged) */
+.tier-stage-tag { color: #2f6296; }
+.tier-bottleneck-label { color: #b8333a; }
+.tier-roi-val--accent { color: #2e7150; }
+
+/* Tap targets ≥44px + touch press feedback */
+.lang-toggle { min-height: 40px; }
+.btn:active { transform: translateY(1px); }
+
+/* Pricing-compare table: scroll hint on phones (matches comparison table) */
+@media (max-width: 600px) {
+  .pricing-compare-scroll::after {
+    content: 'Scroll to compare →';
+    display: block;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 10px;
+    letter-spacing: 0.04em;
+  }
+}
+[dir="rtl"] .comparison-scroll::after,
+[dir="rtl"] .pricing-compare-scroll::after { content: '← مرّر للمقارنة'; }
+
+/* Pipeline diagram never overflows a phone viewport */
+@media (max-width: 480px) {
+  .pipeline-node { min-width: 0; flex: 1 1 calc(50% - 8px); }
+  .btn { white-space: normal; }
+  .trust-flag { white-space: normal; }
+  .section { padding: 64px 0; }
+}
+@media (max-width: 375px) {
+  .pipeline-diagram { flex-direction: column; }
+  .pipeline-node { flex: 1 1 100%; width: 100%; }
+  .container { padding: 0 14px; }
+  .hero-content { padding: 104px 14px 56px; }
+  .cta-wrapper { padding: 32px 16px; }
+  .services-bottom-cta { padding: 28px 16px; }
+  .section { padding: 52px 0; }
+}

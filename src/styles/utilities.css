@@ -1,0 +1,245 @@
+/* ============================================================
+   UTILITY
+ ============================================================ */
+::selection {
+  background: rgba(79, 142, 247, 0.3);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Smooth scroll for all internal anchors */
+html {
+  scroll-padding-top: var(--navbar-height);
+}
+
+/* ============================================================
+   LANGUAGE SELECTOR
+ ============================================================ */
+.lang-selector {
+  position: relative;
+}
+
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all var(--transition);
+  color: var(--text-primary);
+}
+
+.lang-toggle:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.dropdown-arrow {
+  opacity: 0.7;
+  transition: transform var(--transition);
+}
+
+.lang-selector:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.lang-menu {
+  position: absolute;
+  top: 100%;
+  inset-inline-end: 0;
+  margin-top: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--transition);
+  z-index: 100;
+  min-width: 140px;
+}
+
+.lang-selector:hover .lang-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.lang-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: start;
+}
+
+.lang-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
+}
+
+.lang-item.active {
+  background: rgba(79, 142, 247, 0.1);
+  color: var(--accent-blue);
+  font-weight: 600;
+}
+
+.lang-item .lang-code {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  min-width: 26px;
+  padding: 3px 5px;
+  text-align: center;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-muted);
+}
+
+.lang-item.active .lang-code {
+  background: rgba(92, 149, 198, 0.15);
+  color: var(--accent-blue);
+}
+
+/* ============================================================
+   ARABIC / RTL MODE
+   Applied when <html> has dir="rtl" and lang="ar"
+ ============================================================ */
+
+/* Switch to Cairo font for Arabic — beautiful, premium Arabic type */
+[dir="rtl"] body {
+  font-family: 'Cairo', -apple-system, sans-serif;
+}
+
+/* The layout itself mirrors automatically: <html dir="rtl"> flips flex
+   order, text-align: start/end, and every -inline-* logical property.
+   Only what CSS can't derive from the writing mode stays below. */
+
+/* Directional glyphs (arrows) that must point the other way in RTL.
+   Applied per-icon via .icon-flip-rtl — never blanket-flip .btn svg,
+   or WhatsApp/calendar/check icons would mirror too. */
+[dir="rtl"] .icon-flip-rtl {
+  transform: scaleX(-1);
+}
+
+/* ============================================================
+   REDUCED MOTION — all motion off, content fully visible
+ ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Pipeline loop + connector draw off; nodes render static, line full. */
+  .pipeline-node::after { animation: none !important; }
+  .pipeline-arrow-fill { animation: none !important; transform: scaleY(1); opacity: 0; }
+}
+
+/* ============================================================
+   PRICING PSYCHOLOGY ELEMENTS
+ ============================================================ */
+
+/* ROI hook strip above the pricing grid */
+.pricing-roi-hook {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 40px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, rgba(86, 155, 213, 0.08), rgba(225, 107, 113, 0.08));
+  border: 1px solid rgba(86, 155, 213, 0.2);
+  border-radius: 100px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 600px;
+  margin-inline: auto;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.pricing-roi-hook svg {
+  color: var(--accent-blue);
+  flex-shrink: 0;
+}
+
+/* Price anchor comparison lines */
+.price-anchor {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--green);
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+
+.price-anchor--contrast {
+  color: var(--accent-blue);
+}
+
+/* ============================================================
+   QUALITY ENHANCEMENTS
+ ============================================================ */
+
+/* Scroll progress bar */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  inset-inline-start: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+  z-index: 2000;
+  transition: width 0.08s linear;
+  pointer-events: none;
+  border-radius: 0;
+  border-start-end-radius: 2px;
+  border-end-end-radius: 2px;
+}
+
+/* Active nav link */
+.nav-link.active {
+  color: var(--accent-blue);
+  background: rgba(79, 142, 247, 0.08);
+}
+
+/* Hero feature logo — fills its column to cover the space */
+.hero-logo-feature {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 0 auto;
+}
+@media (max-width: 1024px) {
+  .hero-logo-feature { max-width: 260px; }   /* hero stacks */
+}
+@media (max-width: 640px) {
+  .hero-logo-feature { max-width: 200px; }
+}

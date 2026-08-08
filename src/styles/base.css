@@ -1,0 +1,209 @@
+/* ============================================================
+   BZNSFLOW — styles.css
+   Premium Dark Theme · Production Ready
+   ============================================================ */
+
+/* ---- RESET & BASE ---- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary:       #F6EFDF;
+  --bg-secondary:     #EBE1C9;
+  --bg-card:          #FFFFFF;
+  --bg-card-hover:    #FCF9F2;
+  --border:           rgba(0, 0, 0, 0.08);
+  --border-hover:     rgba(0, 0, 0, 0.15);
+  --text-primary:     #1A1A1A;
+  --text-secondary:   #4B5563;
+  --text-muted:       #565E6B;
+  --accent-blue:      #5C95C6;
+  --accent-purple:    #F28C54;
+  --accent-cyan:      #51A47B;
+  --gradient-start:   #5C95C6;
+  --gradient-end:     #51A47B;
+  --green:            #51A47B;
+  --red:              #E16B71;
+  --orange:           #F28C54;
+  --yellow:           #EEB462;
+  --whatsapp:         #25D366;
+  --navbar-height:    72px;
+  --radius-sm:        8px;
+  --radius-md:        12px;
+  --radius-lg:        20px;
+  --radius-xl:        28px;
+  --shadow-card:      0 1px 3px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.04);
+  --shadow-glow:      0 0 40px rgba(92, 149, 198, 0.15);
+  --transition:       0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:  0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- SPACING SCALE (8px base) ---- */
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-section: clamp(72px, 9vw, 120px); /* vertical section padding */
+  --grid-gap:      24px;                     /* one gap for all card grids */
+  --card-pad:      32px;                     /* one padding for all cards */
+  --header-gap:    56px;                     /* header trio → content below */
+  --container-pad: 24px;
+
+  /* Directional sign for x-axis transforms (logical props don't cover
+     transform), flipped for RTL so nudges/slides mirror automatically. */
+  --x-sign: 1;
+}
+
+[dir="rtl"] {
+  --x-sign: -1;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+img, video {
+  display: block;
+  max-width: 100%;
+}
+
+/* ---- TYPOGRAPHY ---- */
+.gradient-text {
+  background: linear-gradient(110deg, var(--gradient-start), var(--orange), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---- CONTAINER ---- */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--container-pad);
+}
+
+/* ---- SECTIONS ---- */
+.section {
+  padding: var(--space-section) 0;
+  position: relative;
+}
+
+.section--dark {
+  background-color: var(--bg-secondary);
+}
+
+.section-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-blue);
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  border: 1px solid rgba(79, 142, 247, 0.25);
+  border-radius: 100px;
+  background: rgba(79, 142, 247, 0.06);
+}
+
+.section-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  line-height: 1.75;
+  margin-bottom: var(--header-gap);
+}
+
+/* ---- BUTTONS ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(79, 142, 247, 0.35);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(79, 142, 247, 0.5);
+  filter: brightness(1.08);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-ghost {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+
+.btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.btn-large {
+  padding: 15px 30px;
+  font-size: 1rem;
+}
+
+.btn-xlarge {
+  padding: 18px 40px;
+  font-size: 1.1rem;
+  border-radius: var(--radius-lg);
+}

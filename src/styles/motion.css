@@ -1,0 +1,76 @@
+/* ============================================================
+   LIVING-WEBSITE MOTION LAYER (additive — on-theme, GPU-friendly)
+   Ambient atmosphere in CSS; reveals/parallax/tilt handled by motion/react.
+   transform/opacity only. Frozen automatically by the reduced-motion block.
+ ============================================================ */
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 160ms;
+  --duration-normal: 320ms;
+  --duration-slow: 640ms;
+}
+
+/* ---- Aurora: slow drifting brand-colour blobs behind content ---- */
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.aurora-blob {
+  position: absolute;
+  width: 46vw;
+  height: 46vw;
+  max-width: 640px;
+  max-height: 640px;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+}
+.aurora-blob--a { top: -8%;  inset-inline-start: -6%;  background: radial-gradient(circle at 50% 50%, rgba(92,149,198,0.55), transparent 70%); }
+.aurora-blob--b { top: 18%;  inset-inline-end: -10%; background: radial-gradient(circle at 50% 50%, rgba(242,140,84,0.42), transparent 70%); }
+.aurora-blob--c { bottom: -14%; inset-inline-start: 28%; background: radial-gradient(circle at 50% 50%, rgba(81,164,123,0.45), transparent 70%); }
+
+/* ---- Grain: faint film texture for depth ---- */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Keep hero content above the aurora/grain layers */
+/* Layering only — keep the background/overlay layers ABSOLUTE (out of flow) so
+   they don't become flex items and push the content sideways. */
+.hero .hero-content { position: relative; z-index: 3; }
+.hero .aurora { z-index: 0; }
+.hero .hero-overlay { z-index: 2; }
+.hero .scroll-indicator { z-index: 3; }
+
+/* ---- Chip hover-pop (track verticals + industry chips) ---- */
+.track-vertical-chip {
+  transition: transform var(--duration-fast) var(--ease-out-expo),
+              border-color var(--duration-fast) var(--ease-out-expo),
+              background var(--duration-fast) var(--ease-out-expo);
+}
+.track-vertical-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+}
+
+/* ---- Accent bar transition for track cards ----
+   transform-origin has no logical equivalent; this LTR/RTL pair is an
+   intentional survivor of the logical-property migration. */
+.track-card::before { transform-origin: left center; transition: transform var(--duration-slow) var(--ease-out-expo); }
+[dir="rtl"] .track-card::before { transform-origin: right center; }
+
+/* Aurora and grain are static washes — they stay visible under
+   reduced motion (nothing animates). */
