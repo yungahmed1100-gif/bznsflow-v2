@@ -84,6 +84,16 @@ export async function sendChatMessage(message, sessionId) {
   // Guard/rate-limit responses (400/403/429) still carry a friendly `reply`;
   // surface it. Only throw when there's genuinely nothing usable to show.
   if (!reply) {
+    // `vite dev` serves the frontend only — it does not run Vercel functions,
+    // so /api/chat 404s and the widget shows its generic error. That looks
+    // exactly like a broken bot, so say what it actually is.
+    if (import.meta.env.DEV && res.status === 404) {
+      throw new Error(
+        `${CHAT_ENDPOINT} returned 404. The Vite dev server does not run Vercel ` +
+          'functions — run `npm run dev:api` (vercel dev) to serve the chat backend ' +
+          'locally, or test the chat on the deployed site.'
+      );
+    }
     throw new Error(`Empty chat reply (status ${res.status})`);
   }
 

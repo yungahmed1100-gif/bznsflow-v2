@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "vercel dev",
     "prebuild": "node scripts/gen-kb.mjs --check",
     "build": "vite-react-ssg build && npm run gen:sitemap",
     "preview": "vite preview",

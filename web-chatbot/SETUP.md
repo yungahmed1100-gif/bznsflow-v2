@@ -243,6 +243,30 @@ Reset with `delete from public.web_rate_limits where bucket_key like 'ip:%';`.
 
 ---
 
+## Running it locally
+
+> **`npm run dev` cannot serve the chat.** Vite serves the frontend only; it does
+> not run Vercel functions. `/api/chat` 404s, the fetch fails, and the widget
+> falls back to `t.chat_error` — *"عذراً، صار خطأ بسيط 🙏 جرّب مرة ثانية."* That
+> looks identical to a broken backend, but the deployed site is unaffected.
+>
+> Tell the two apart by the reply text: the widget's own error has **no English
+> half**. Every message the *backend* produces is bilingual, `العربية / English`.
+
+```bash
+npm run dev        # UI work — fast HMR, chat will not respond
+npm run dev:api    # vercel dev — serves the site AND /api/chat on :3000
+```
+
+`vercel dev` needs the function's env vars locally:
+
+```bash
+npx vercel env pull        # writes .env.local (gitignored)
+```
+
+In dev, a 404 from `/api/chat` throws with an explicit message pointing here
+rather than a bare status code — see `src/lib/chat.js`.
+
 ## Deploying
 
 ```bash
