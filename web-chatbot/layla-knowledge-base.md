@@ -12,7 +12,7 @@
 ---
 
 ## 00 — Who We Are / من نحن
-**Keywords:** bznsflow, who are you, about, من أنتم, شركة, growth engineering, وكالة, agency
+**Keywords:** bznsflow, who are you, about, من أنتم, شركة, growth engineering, وكالة, agency, عنكم
 
 **EN:** BZNSFLOW is a Growth Engineering company — not a marketing agency. We engineer revenue infrastructure for SMEs in Oman, the GCC, and Europe: systems that capture the customer, convert them, collect the money through licensed Omani payment gateways, run your operations, and show you your numbers live. Every system we deliver ends in a financial transaction, not a conversation.
 
@@ -42,7 +42,7 @@
 ---
 
 ## 02 — Revenue Intelligence Platform (Owner Dashboard) / منصة ذكاء الإيراد (لوحة المالك)
-**Keywords:** dashboard, لوحة, تقارير, reports, analytics, تحليلات, KPI, أرقام, cash flow, تدفق نقدي, ذكاء الأعمال, BI
+**Keywords:** dashboard, لوحة, تقارير, reports, analytics, تحليلات, KPI, أرقام, cash flow, تدفق نقدي, ذكاء الأعمال, business intelligence
 
 **EN:** The owner's command view: cash position, overdue invoices and their aging, margins per product/service/doctor/branch, collection speed, no-show cost — plus a daily report in Arabic delivered to the owner every evening on WhatsApp. Decisions by numbers, not by feel.
 
@@ -51,7 +51,7 @@
 ---
 
 ## 03 — Sales & Revenue Capture System (24/7 AI Workforce) / نظام المبيعات والالتقاط (فريق عمل ذكي 24/7)
-**Keywords:** sales system, نظام مبيعات, chatbot, شات بوت, بوت, رد آلي, واتساب, whatsapp, receptionist, استقبال, booking, حجز, مواعيد, leads, عملاء محتملين, تأهيل, voice, مكالمات, رد على الاتصالات
+**Keywords:** sales system, نظام مبيعات, chatbot, شات بوت, بوت, رد آلي, واتساب, whatsapp, receptionist, استقبال, booking, حجز, مواعيد, leads, عملاء محتملين, تأهيل, voice call, voice agent, voice assistant, مكالمات, رد على الاتصالات
 
 **EN:** A 24/7 AI workforce that answers every WhatsApp inquiry and phone call in seconds — in Gulf Arabic and English — qualifies the customer (budget, need, location, timing), books the appointment or viewing into your calendar, scores every lead hot/warm/cold, filters out tire-kickers, and hands negotiation or sensitive questions to your human team. The owner receives a daily Arabic report. Evidence: responding within 5 minutes makes a lead 21x more likely to qualify (MIT / InsideSales Lead Response Study).
 
@@ -147,42 +147,42 @@
 # GENERAL ANSWERS / إجابات عامة
 
 ## 20 — Industries We Serve / القطاعات التي نخدمها
-**Keywords:** industries, قطاعات, sectors, من تخدمون, هل تشتغلون مع
+**Keywords:** industries, قطاعات, sectors, من تخدمون, هل تشتغلون مع, clinic, عيادة, dental, أسنان, restaurant, مطعم, cafe, مقهى, cake, كيك, salon, صالون, gym, نادي, جيم, car service, سيارات, construction, مقاولات, retail, تجزئة, professional services, خدمات مهنية
 
 **EN:** Twelve SME sectors: medical clinics, dental clinics, restaurants, cafes, cake shops, real estate agencies, construction companies, retail stores, beauty salons, gyms, car services, and professional services. Markets: Oman first, then the wider GCC (UAE, Saudi), and Europe secondarily. If your sector isn't listed, ask — the five-layer architecture adapts.
 
 **AR:** اثنا عشر قطاعًا: العيادات الطبية، عيادات الأسنان، المطاعم، المقاهي، محلات الكيك، الوكالات العقارية، شركات المقاولات، متاجر التجزئة، صالونات التجميل، الصالات الرياضية، خدمات السيارات، والخدمات المهنية. الأسواق: عُمان أولًا، ثم الخليج (الإمارات والسعودية)، وأوروبا ثانويًا. إن لم يكن قطاعك مذكورًا، اسأل — البنية الخماسية قابلة للتكييف.
 
 ## 21 — Pricing / الأسعار
-**Keywords:** price, سعر, كم التكلفة, cost, تكلفة, باقات, plans, كم يكلف, أسعاركم
+**Keywords:** price, سعر, كم التكلفة, cost, تكلفة, باقات, plans, كم يكلف, أسعاركم, pricing, بكم, كم سعر, الأسعار
 
 **EN:** Pricing depends on which leak we're stopping and which layers you need — so we never quote blind numbers. The entry point for everything is a free 20-minute diagnosis session on WhatsApp: we identify exactly where your revenue leaks, what it costs you monthly, and the smallest system that stops it with the fastest payback. Your operations, your numbers, and a clear plan before any rial is paid.
 
 **AR:** التسعير يعتمد على النزيف الذي نوقفه والطبقات التي تحتاجها — لذلك لا نعطي أرقامًا عمياء. الدخول لكل شيء واحد: جلسة تشخيص مجانية 20 دقيقة على واتساب، نحدد فيها أين يتسرّب إيرادك بالضبط، وكم يكلّفك شهريًا، وأصغر نظام يوقفه بأسرع عائد. عملياتك أنت، أرقامك أنت، وخطة واضحة قبل أي ريال يُدفع.
 
 ## 22 — How Fast Can You Deploy? / كم تستغرق مدة التنفيذ؟
-**Keywords:** how long, كم المدة, timeline, مدة التنفيذ, متى يجهز, deployment
+**Keywords:** how long, كم المدة, timeline, مدة التنفيذ, متى يجهز, deployment, deliver, تستغرق
 
 **EN:** We deploy in modular MVPs — the smallest system that stops the biggest leak goes live first, then we expand layer by layer. Exact timelines depend on scope and are confirmed in the diagnosis session. We don't do year-long enterprise projects.
 
 **AR:** ننفّذ بأنظمة مصغّرة معيارية — أصغر نظام يوقف أكبر نزيف يعمل أولًا، ثم نتوسع طبقة بعد طبقة. المدد الدقيقة تعتمد على النطاق وتُؤكَّد في جلسة التشخيص. لا ننفّذ مشاريع ضخمة تمتد سنة.
 
 ## 23 — Data Privacy & Security / خصوصية البيانات والأمان
-**Keywords:** privacy, خصوصية, security, أمان, بياناتي, تشفير, encryption, آمن
+**Keywords:** privacy, خصوصية, security, أمان, بياناتي, تشفير, encryption, آمن, secure
 
 **EN:** Customer phone numbers are stored encrypted, always. We never hold your money or your customers' card data — payments live entirely inside licensed gateways like Thawani. Your business data is stored in a structured, secure database that you benefit from (reporting, compliance readiness, loan-readiness).
 
 **AR:** أرقام هواتف العملاء تُخزَّن مشفّرة دائمًا. لا نحتفظ بأموالك ولا ببيانات بطاقات عملائك — المدفوعات تعيش بالكامل داخل بوابات مرخّصة مثل «ثواني». بيانات منشأتك في قاعدة بيانات منظمة وآمنة تستفيد منها أنت (تقارير، جاهزية امتثال، جاهزية تمويل).
 
 ## 24 — Do You Replace My Staff? / هل تستبدلون موظفيني؟
-**Keywords:** replace staff, استبدال الموظفين, وظائف, jobs, يحل محل
+**Keywords:** replace staff, استبدال الموظفين, وظائف, jobs, يحل محل, موظفين
 
 **EN:** No. Our systems replace repetitive work — answering at midnight, copying leads, chasing invoices — never human judgment. Your team receives only qualified, scored leads and handles negotiation, care, and decisions. Agents close; they don't type.
 
 **AR:** لا. أنظمتنا تستبدل العمل المتكرر — الرد منتصف الليل، نسخ العملاء، مطاردة الفواتير — لا الحكم البشري أبدًا. فريقك يستلم فقط عملاء مؤهَّلين مصنَّفين، ويتولى التفاوض والعناية والقرار. الفريق يُغلق الصفقات، لا يكتب الرسائل.
 
 ## 25 — Book a Diagnosis Session / احجز جلسة تشخيص
-**Keywords:** book, احجز, demo, عرض, تواصل, contact, جلسة, consultation, استشارة, رقم, واتساب
+**Keywords:** book, احجز, demo, عرض, تجربة, تواصل, contact, جلسة, consultation, استشارة, رقم, اتصال, واتساب, sign up, التسجيل, ابدأ, get started
 
 **EN:** One entry for everything: a free 20-minute engineering diagnosis on WhatsApp — numbers, not a sales pitch. WhatsApp: **+20 1036755930** · Call: **+968 99656590**. Real estate agencies can request a live demo on their own listings, in their own dialect.
 
