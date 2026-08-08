@@ -8,6 +8,9 @@
     "prebuild": "node scripts/gen-kb.mjs --check",
     "build": "vite-react-ssg build && npm run gen:sitemap",
     "preview": "vite preview",
+    "test": "node tests/api-chat.test.mjs",
+    "test:e2e": "node tests/e2e-chat.mjs",
+    "test:stack": "./scripts/chat-test-stack.sh",
     "gen:kb": "node scripts/gen-kb.mjs",
     "gen:sitemap": "node scripts/gen-sitemap.mjs"
   },

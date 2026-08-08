@@ -2,6 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/chat.js": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["sin1"],
   "redirects": [
     { "source": "/ar", "destination": "/", "permanent": true },
     { "source": "/ar/:path*", "destination": "/:path*", "permanent": true }

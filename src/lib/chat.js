@@ -1,18 +1,22 @@
-// ─── Layla web chat → n8n webhook ────────────────────────────────────────────
-// Single door to the Layla chat backend (n8n on Railway → Groq → Supabase).
+// ─── Layla web chat → /api/chat ──────────────────────────────────────────────
+// Single door to the Layla chat backend (Vercel function → Groq → Supabase).
 // The widget POSTs { message, sessionId } and gets back
-// { reply, sessionId, handoff, handoff_context }. Backend enforces the origin
-// allowlist, input validation, and rate limits — see web-chatbot/SETUP.md.
+// { reply, sessionId, handoff, handoff_context }. The backend enforces origin,
+// input validation, and rate limits — see web-chatbot/SETUP.md.
 //
-// Endpoint is env-overridable (VITE_CHAT_ENDPOINT in Vercel) with the deployed
-// production /webhook/chat URL as the baked-in fallback.
+// Same-origin by default, so there is no CORS preflight and no cross-origin
+// failure mode. VITE_CHAT_ENDPOINT still overrides it, which is the rollback
+// lever: point it at any absolute URL and redeploy.
 
-export const CHAT_ENDPOINT =
-  import.meta.env.VITE_CHAT_ENDPOINT ||
-  'https://n8n-production-0b39.up.railway.app/webhook/chat';
+export const CHAT_ENDPOINT = import.meta.env.VITE_CHAT_ENDPOINT || '/api/chat';
+
+/** Give up on a hung backend. Must stay above the function's own Groq timeout
+ *  (12s) plus its DB round trips, so a slow-but-working turn is never killed
+ *  client-side, and below Vercel's 30s function ceiling. */
+export const CHAT_TIMEOUT_MS = 20000;
 
 const SESSION_KEY = 'bznsflow_chat_session';
-const MAX_CHARS = 800; // must match the backend Guard & Validate cap
+const MAX_CHARS = 800; // must match MAX_CHARS in api/_lib/guard.js
 
 /**
  * Get (or lazily create) a stable per-visitor session id, persisted in
@@ -48,13 +52,26 @@ export function getSessionId() {
 export async function sendChatMessage(message, sessionId) {
   const trimmed = (message || '').trim().slice(0, MAX_CHARS);
 
-  // A network/CORS failure rejects here — the caller catches it and shows a
-  // friendly error instead of a blank bubble.
-  const res = await fetch(CHAT_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: trimmed, sessionId }),
-  });
+  // Manual AbortController rather than AbortSignal.timeout(): the latter is
+  // Safari 16+ only, and this is a static site with no polyfills. Without a
+  // timeout a hung backend leaves the widget spinning forever — which is
+  // exactly what visitors saw while the old backend was returning nothing.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
+
+  // A network failure or timeout rejects here — the caller catches it and shows
+  // a friendly error instead of a blank bubble.
+  let res;
+  try {
+    res = await fetch(CHAT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: trimmed, sessionId }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 
   let body = null;
   try {
