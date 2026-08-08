@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/gen-kb.mjs --check",
     "build": "vite-react-ssg build && npm run gen:sitemap",
     "preview": "vite preview",
+    "gen:kb": "node scripts/gen-kb.mjs",
     "gen:sitemap": "node scripts/gen-sitemap.mjs"
   },
   "dependencies": {
