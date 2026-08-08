@@ -314,5 +314,7 @@ export default {
   "chat_error": "Sorry, a small glitch on my end 🙏 Please try again.",
   "chat_footnote": "Powered by BznsFlow AI",
   "chat_wa_cta": "Continue on WhatsApp",
+  "chat_email_cta": "Or email us",
+  "chat_email_subject": "Enquiry from the BznsFlow site",
   "chat_wa_prefix": "Hi BznsFlow — I was chatting with Layla and want to continue"
 };

@@ -183,6 +183,26 @@
 }
 .chat-wa-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(37,211,102,0.5); }
 
+/* Handoff actions — WhatsApp is the primary route, email the alternative.
+   Stacked so the hierarchy is unmistakable in a narrow bubble. */
+.chat-handoff-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.chat-email-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 12px;
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: 999px;
+  font-size: 0.8rem; font-weight: 600;
+  text-decoration: none;
+  transition: color var(--transition), border-color var(--transition), transform var(--transition);
+}
+.chat-email-btn:hover {
+  color: var(--accent-blue); border-color: var(--accent-blue);
+  transform: translateY(-1px);
+}
+.chat-email-btn:focus-visible {
+  outline: 2px solid var(--accent-blue); outline-offset: 2px;
+}
+
 /* Typing indicator */
 .chat-typing { display: inline-flex; gap: 4px; align-items: center; }
 .chat-typing span {

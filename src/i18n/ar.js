@@ -322,5 +322,7 @@ export default {
   "chat_error": "عذراً، صار خطأ بسيط 🙏 جرّب مرة ثانية.",
   "chat_footnote": "مدعوم بذكاء BznsFlow",
   "chat_wa_cta": "أكمل على واتساب",
+  "chat_email_cta": "أو راسلنا بالبريد",
+  "chat_email_subject": "استفسار من موقع BznsFlow",
   "chat_wa_prefix": "مرحباً BznsFlow — كنت أتحدث مع ليلى وأريد المتابعة"
 };

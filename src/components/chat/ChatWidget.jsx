@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Icon } from '../ui/Icon';
 import { waLink } from '../../lib/whatsapp';
+import { mailtoLink } from '../../lib/constants';
 import { getSessionId, sendChatMessage, CHAT_MAX_CHARS } from '../../lib/chat';
 import laylaAvatar from '../../assets/layla-avatar.png';
 
@@ -147,20 +148,37 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {} }) {
               <div className="chat-msg-bubble">
                 <p>{m.text}</p>
                 {m.handoff && (
-                  <a
-                    href={waLink(
-                      m.handoffContext
-                        ? `${t.chat_wa_prefix}: ${m.handoffContext}`
-                        : t.chat_wa_prefix,
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="chat-wa-btn"
-                    onClick={() => trackEvent('WhatsAppClick', { source: 'chat-handoff' })}
-                  >
-                    <Icon name="whatsapp" size={18} />
-                    <span>{t.chat_wa_cta}</span>
-                  </a>
+                  // Two routes, never one: a visitor who does not use WhatsApp
+                  // would otherwise hit a dead end at the moment they converted.
+                  <div className="chat-handoff-actions">
+                    <a
+                      href={waLink(
+                        m.handoffContext
+                          ? `${t.chat_wa_prefix}: ${m.handoffContext}`
+                          : t.chat_wa_prefix,
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="chat-wa-btn"
+                      onClick={() => trackEvent('WhatsAppClick', { source: 'chat-handoff' })}
+                    >
+                      <Icon name="whatsapp" size={18} />
+                      <span>{t.chat_wa_cta}</span>
+                    </a>
+                    <a
+                      href={mailtoLink(
+                        t.chat_email_subject,
+                        m.handoffContext
+                          ? `${t.chat_wa_prefix}: ${m.handoffContext}`
+                          : t.chat_wa_prefix,
+                      )}
+                      className="chat-email-btn"
+                      onClick={() => trackEvent('EmailClick', { source: 'chat-handoff' })}
+                    >
+                      <Icon name="mail" size={16} />
+                      <span>{t.chat_email_cta}</span>
+                    </a>
+                  </div>
                 )}
               </div>
             </div>

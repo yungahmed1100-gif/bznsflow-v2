@@ -7,7 +7,8 @@
 > - Never call systems "chatbot", "CRM", "automation", "marketing", or "website" in isolation — use the outcome names below.
 > - Real Estate AI Workforce is the ONLY system live with real clients. Every other system is fully engineered and ready to build — say so honestly if asked.
 > - If a question is not covered here → escalate to the human team. Never invent capabilities, prices, or statistics.
-> - Contacts: WhatsApp **+20 1036755930** · Call **+968 99656590**
+> - Contacts: WhatsApp **+20 1036755930** · Email **ahmed@bznsflowai.com** · Call **+968 99656590**
+> - Every closing message offers BOTH routes — WhatsApp first, email as the alternative.
 
 ---
 
@@ -182,11 +183,11 @@
 **AR:** لا. أنظمتنا تستبدل العمل المتكرر — الرد منتصف الليل، نسخ العملاء، مطاردة الفواتير — لا الحكم البشري أبدًا. فريقك يستلم فقط عملاء مؤهَّلين مصنَّفين، ويتولى التفاوض والعناية والقرار. الفريق يُغلق الصفقات، لا يكتب الرسائل.
 
 ## 25 — Book a Diagnosis Session / احجز جلسة تشخيص
-**Keywords:** book, احجز, demo, عرض, تجربة, تواصل, contact, جلسة, consultation, استشارة, رقم, اتصال, واتساب, sign up, التسجيل, ابدأ, get started
+**Keywords:** book, احجز, demo, عرض, تجربة, تواصل, contact, جلسة, consultation, استشارة, رقم, اتصال, واتساب, sign up, التسجيل, ابدأ, get started, email, mail, إيميل, ايميل, بريد, بريد إلكتروني
 
-**EN:** One entry for everything: a free 20-minute engineering diagnosis on WhatsApp — numbers, not a sales pitch. WhatsApp: **+20 1036755930** · Call: **+968 99656590**. Real estate agencies can request a live demo on their own listings, in their own dialect.
+**EN:** One entry for everything: a free 20-minute engineering diagnosis — numbers, not a sales pitch. Two ways to start, whichever suits you: WhatsApp **+20 1036755930** (fastest) or email **ahmed@bznsflowai.com**. Phone: **+968 99656590**. Real estate agencies can request a live demo on their own listings, in their own dialect.
 
-**AR:** الدخول لكل شيء واحد: جلسة تشخيص هندسية مجانية 20 دقيقة على واتساب — بالأرقام، لا عرض مبيعات. واتساب: **‎+20 1036755930** · اتصال: **‎+968 99656590**. الوكالات العقارية يمكنها طلب عرض حي على عقاراتها هي، وبلهجتها.
+**AR:** الدخول لكل شيء واحد: جلسة تشخيص هندسية مجانية 20 دقيقة — بالأرقام، لا عرض مبيعات. طريقتان للبدء، اختر ما يناسبك: واتساب **‎+20 1036755930** (الأسرع) أو البريد الإلكتروني **ahmed@bznsflowai.com**. للاتصال: **‎+968 99656590**. الوكالات العقارية يمكنها طلب عرض حي على عقاراتها هي، وبلهجتها.
 
 ---
 
