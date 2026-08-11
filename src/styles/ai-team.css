@@ -1,66 +1,157 @@
 /* ============================================================
-   MEET THE AI TEAM (additive, on-theme — reuses card tokens)
+   MEET THE AI TEAM — orbit carousel
+   Cards arc around a centre point on a perspective stage; the active
+   agent is foregrounded with its description underneath, and a name
+   rail below jumps straight to any of the twelve.
+   Motion is transform/opacity only, and the global reduced-motion
+   block in utilities.css freezes it into an instant-snap carousel.
  ============================================================ */
-.team-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--grid-gap);
-  margin-top: 0;
-  align-items: start; /* an expanded card must not stretch its row siblings */
+
+.orbit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  /* The receding cards are wider than the container by design — trim them at
+     the edges so they fade off-screen instead of forcing a horizontal scroll.
+     `clip` rather than `hidden` so it never becomes a scroll container and the
+     vertical nav-button hover lift isn't cut off. */
+  overflow-x: clip;
+  /* Drag surface. Horizontal drags belong to the carousel; vertical ones stay
+     with the page. Without `user-select`/`user-drag` off, a drag starting on a
+     portrait becomes a native image drag, which fires `pointercancel` and
+     swallows the swipe. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-drag: none;
 }
-.team-card {
+.orbit img { -webkit-user-drag: none; }
+
+/* ---- Stage ---- */
+.orbit-stage {
+  position: relative;
+  flex: 1;
+  height: 272px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  /* The stage sits at z=0 while every card is pushed behind it, so as a
+     hit-testable box it would intercept each pointer before it reached a
+     card. Transparent to pointers; the cards opt back in below, and the
+     drag listeners live on `.orbit` so empty space still starts a swipe. */
+  pointer-events: none;
+}
+.orbit-stage:active { cursor: grabbing; }
+
+.orbit-card {
+  position: absolute;
+  inset-inline-start: 50%;
+  top: 50%;
+  width: 220px;
+  /* Half the card's fixed width/height, so `inset-inline-start:50% / top:50%`
+     lands its centre on the stage centre and the depth transforms below start
+     from a known origin. */
+  margin-inline-start: -110px;
+  margin-top: -116px;
+  pointer-events: auto;
+  cursor: pointer;
+  transition:
+    transform var(--duration-slow) var(--ease-out-expo),
+    opacity var(--duration-slow) var(--ease-out-expo);
+  will-change: transform, opacity;
+}
+
+/* Depth positions. `--x-sign` (base.css) is -1 under RTL, so the whole
+   orbit mirrors from these five rules with no duplicated selectors. */
+.orbit-card[data-d="0"] {
+  transform: translateX(0) translateZ(0) rotateY(0deg) scale(1);
+  opacity: 1;
+  z-index: 5;
+}
+.orbit-card[data-d="1"],
+.orbit-card[data-d="-1"] {
+  opacity: 0.55;
+  z-index: 4;
+}
+.orbit-card[data-d="1"] {
+  transform: translateX(calc(var(--x-sign) * 204px)) translateZ(-140px) rotateY(calc(var(--x-sign) * -34deg)) scale(0.88);
+}
+.orbit-card[data-d="-1"] {
+  transform: translateX(calc(var(--x-sign) * -204px)) translateZ(-140px) rotateY(calc(var(--x-sign) * 34deg)) scale(0.88);
+}
+.orbit-card[data-d="2"],
+.orbit-card[data-d="-2"] {
+  opacity: 0.28;
+  z-index: 3;
+}
+.orbit-card[data-d="2"] {
+  transform: translateX(calc(var(--x-sign) * 368px)) translateZ(-300px) rotateY(calc(var(--x-sign) * -46deg)) scale(0.76);
+}
+.orbit-card[data-d="-2"] {
+  transform: translateX(calc(var(--x-sign) * -368px)) translateZ(-300px) rotateY(calc(var(--x-sign) * 46deg)) scale(0.76);
+}
+.orbit-card[data-d="hidden"] {
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  transform: translateZ(-420px) scale(0.7);
+}
+
+/* ---- Card face ---- */
+.orbit-card-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  /* Fixed so a two-line role doesn't make one card taller than its
+     neighbours — the ring must read as evenly spaced. */
+  height: 232px;
+  padding: var(--space-5);
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
   position: relative;
   overflow: hidden;
-  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
 }
-.team-card::before {
+.orbit-card-face::before {
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
   height: 3px;
   background: var(--accent-blue);
 }
-.team-card--order::before { background: var(--orange); }
-.team-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(92, 149, 198, 0.32);
-  box-shadow: var(--shadow-glow);
+.orbit-card--order .orbit-card-face::before { background: var(--orange); }
+
+.orbit-card[data-d="0"] .orbit-card-face {
+  border-color: rgba(92, 149, 198, 0.4);
+  box-shadow: var(--shadow-card), var(--shadow-glow);
 }
-.team-card[open] {
-  border-color: var(--accent-blue);
-}
-.team-card--order[open] {
-  border-color: var(--orange);
+.orbit-card--order[data-d="0"] .orbit-card-face {
+  border-color: rgba(242, 140, 84, 0.4);
 }
 
-/* Card face (always visible) — the <summary> */
-.team-summary {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas:
-    "avatar meta chevron"
-    "tagline tagline tagline";
-  align-items: center;
-  column-gap: var(--space-3);
-  row-gap: var(--space-3);
-  padding: var(--space-6);
-  cursor: pointer;
-  list-style: none;
+/* Portraits are 160×160 sources — 104px keeps them crisp on 2× screens. */
+.orbit-avatar {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
 }
-.team-summary::-webkit-details-marker { display: none; }
-.team-summary:focus-visible {
-  outline: 2px solid var(--accent-blue);
-  outline-offset: -2px;
-  border-radius: var(--radius-lg);
-}
+.orbit-card-name { font-size: 1.1rem; }
+.orbit-card-role { font-size: 0.68rem; }
 
+/* Shared card chrome (also used by the tier chips' sibling styles) */
 .team-avatar {
-  grid-area: avatar;
-  width: 56px;
-  height: 56px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -71,16 +162,14 @@
   flex-shrink: 0;
   overflow: hidden;
 }
-.team-card--order .team-avatar { color: var(--orange); }
+.orbit-card--order .team-avatar { color: var(--orange); }
 .team-avatar img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
-.team-meta { grid-area: meta; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.team-name { font-size: 1.05rem; font-weight: 800; line-height: 1.15; }
+.team-name { font-weight: 800; line-height: 1.15; }
 /* Secondary name in the other script (Arabic on /en, Latin on /) */
 .team-name-sub {
   font-weight: 600;
@@ -89,68 +178,143 @@
 }
 .team-name-sub[lang="ar"] { font-family: 'Cairo', sans-serif; }
 .team-role {
-  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--accent-blue);
 }
-.team-card--order .team-role { color: var(--orange); }
+.orbit-card--order .team-role { color: var(--orange); }
 
-.team-chevron {
-  grid-area: chevron;
-  color: var(--text-muted);
-  transition: transform var(--duration-fast) var(--ease-out-expo);
+/* ---- Prev / next ---- */
+.orbit-nav {
   flex-shrink: 0;
-}
-.team-card[open] .team-chevron { transform: rotate(180deg); }
-
-.team-tagline {
-  grid-area: tagline;
-  font-size: 0.88rem;
-  font-style: italic;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   color: var(--text-secondary);
-  line-height: 1.55;
+  cursor: pointer;
+  z-index: 6;
+  transition: border-color var(--transition), color var(--transition), transform var(--transition);
 }
+.orbit-nav:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  transform: translateY(-2px);
+}
+.orbit-nav:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+/* Only `arrow-right` exists in the icon set, so prev is a mirrored copy —
+   and both mirror again under RTL. */
+.orbit-nav--prev .orbit-nav-icon { transform: scaleX(-1); }
+[dir="rtl"] .orbit-nav--prev .orbit-nav-icon { transform: none; }
+[dir="rtl"] .orbit-nav--next .orbit-nav-icon { transform: scaleX(-1); }
 
-/* Expanded body */
-.team-detail {
-  padding: 0 var(--space-6) var(--space-6);
+/* ---- Description panel ---- */
+.orbit-panel {
+  max-width: 640px;
+  /* Holds its height so the rail below doesn't jump as cards advance. */
+  min-height: 190px;
+  margin: var(--space-6) auto 0;
+  text-align: center;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
-.team-problem {
-  padding: 12px 14px;
-  background: var(--bg-secondary);
-  border-inline-start: 3px solid var(--red);
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  line-height: 1.55;
-}
-.team-duties {
+/* Capability specs for the active agent — what it actually does, in numbers.
+   Dot-separated rather than pills, so it doesn't echo the name rail below. */
+.orbit-specs {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-.team-duties li {
-  display: flex;
-  gap: 10px;
-  font-size: 0.85rem;
+.orbit-spec {
+  position: relative;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.orbit-spec + .orbit-spec::before {
+  content: "·";
+  position: absolute;
+  inset-inline-start: -11px;
+  color: var(--accent-blue);
+  font-weight: 800;
+}
+/* Long specs (a list of four objection types, say) may need to wrap on
+   narrow screens — `nowrap` only holds while there's room for it. */
+@media (max-width: 560px) {
+  .orbit-spec { white-space: normal; }
+}
+.orbit-problem {
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  line-height: 1.55;
+  line-height: 1.65;
 }
-.team-outcome {
-  font-size: 0.88rem;
+.orbit-outcome {
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.55;
+  line-height: 1.6;
   padding-inline-start: 14px;
   border-inline-start: 3px solid var(--green);
+  text-align: start;
+  align-self: center;
+  max-width: 52ch;
 }
 
-/* Closing pitch */
+/* ---- Name rail ---- */
+.orbit-rail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  list-style: none;
+  margin: var(--space-6) auto 0;
+  padding: 0;
+  max-width: 780px;
+}
+.orbit-rail-btn {
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+}
+.orbit-rail-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+.orbit-rail-btn[aria-current="true"] {
+  background: var(--bg-card);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+.orbit-rail-btn:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* ---- Closing pitch ---- */
 .team-pitch {
   max-width: 720px;
   margin: var(--space-12) auto 0;
@@ -176,3 +340,47 @@
 }
 
 .team-cta { margin-top: var(--space-10); display: flex; justify-content: center; }
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .orbit-stage { height: 256px; }
+  .orbit-card { width: 190px; margin-inline-start: -95px; margin-top: -108px; }
+  .orbit-card-face { height: 216px; }
+  .orbit-card[data-d="1"]  { transform: translateX(calc(var(--x-sign) * 168px))  translateZ(-150px) rotateY(calc(var(--x-sign) * -34deg)) scale(0.85); }
+  .orbit-card[data-d="-1"] { transform: translateX(calc(var(--x-sign) * -168px)) translateZ(-150px) rotateY(calc(var(--x-sign) * 34deg))  scale(0.85); }
+  .orbit-card[data-d="2"]  { transform: translateX(calc(var(--x-sign) * 290px))  translateZ(-320px) rotateY(calc(var(--x-sign) * -46deg)) scale(0.72); }
+  .orbit-card[data-d="-2"] { transform: translateX(calc(var(--x-sign) * -290px)) translateZ(-320px) rotateY(calc(var(--x-sign) * 46deg))  scale(0.72); }
+  .orbit-panel { min-height: 220px; }
+}
+
+@media (max-width: 560px) {
+  .orbit { gap: var(--space-2); }
+  .orbit-stage { height: 228px; }
+  .orbit-card { width: 150px; margin-inline-start: -75px; margin-top: -96px; }
+  .orbit-card-face { height: 192px; }
+  .orbit-avatar { width: 84px; height: 84px; }
+  /* Only the active card and its immediate neighbours — at this width the
+     ±2 cards would be slivers. Offsets are sized so the ±1 cards land inside
+     the container even where `overflow: clip` isn't supported. */
+  .orbit-card[data-d="1"]  { transform: translateX(calc(var(--x-sign) * min(96px, 25vw)))  translateZ(-180px) rotateY(calc(var(--x-sign) * -38deg)) scale(0.8); opacity: 0.4; }
+  .orbit-card[data-d="-1"] { transform: translateX(calc(var(--x-sign) * min(96px, 25vw) * -1)) translateZ(-180px) rotateY(calc(var(--x-sign) * 38deg))  scale(0.8); opacity: 0.4; }
+  .orbit-card[data-d="2"],
+  .orbit-card[data-d="-2"] { opacity: 0; pointer-events: none; }
+  /* Rail becomes a single scrolling row rather than five wrapped lines. The
+     scrollbar is hidden, so a fade at the inline-end edge is what signals
+     there are more names past the fold. */
+  .orbit-rail {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+  }
+  [dir="rtl"] .orbit-rail {
+    mask-image: linear-gradient(to left, #000 88%, transparent 100%);
+  }
+  .orbit-rail::-webkit-scrollbar { display: none; }
+  .orbit-panel { min-height: 250px; }
+}

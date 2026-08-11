@@ -1,5 +1,22 @@
 // Packaged plans (no prices) — Catch → Convert → Dominate ladder.
 // EN + AR variants; consumed by TiersSection via pages/Home.jsx.
+
+// Which roster agents each tier adds, by `key` in data/agents.js. Tiers never
+// hard-code an agent name — the card renders the name and role straight from
+// the roster, so the two can't drift apart the way Khaled/Mahmood/ARIA/Ali did.
+// Cumulative, matching the "Everything in X, plus" convention: a tier lists
+// only the agents it adds on top of the one below it.
+const TIER_AGENTS = {
+  catalyst: ['layla'],
+  ascend: ['hatif', 'haris', 'hasib'],
+  apex: ['raqib', 'wisal', 'saqr', 'rashid'],
+};
+
+// Demand generation — these fill the funnel rather than work it, so they sit
+// beside the ladder as an add-on instead of inside a tier whose bottleneck is
+// about inquiries already coming in.
+export const GROWTH_AGENTS = ['samira', 'adiba', 'dalil', 'rasil'];
+
 export const TIERS = [
   {
     key: 'catalyst',
@@ -11,12 +28,13 @@ export const TIERS = [
     intro: 'The starting point. Catalyst plugs the first and biggest leak — enquiries that go unanswered. Your WhatsApp gets a tireless front desk that replies in seconds, day or night, captures every enquiry, and never lets a hot lead sit.',
     insideLabel: 'What it covers',
     inside: [
-      'Layla — your AI front desk: replies on WhatsApp in seconds, 24/7, in your customers’ language',
+      'Every WhatsApp enquiry answered in seconds, 24/7, in your customers’ language',
       'Automatic enquiry capture straight into your pipeline',
       'Basic qualification — know who’s serious before you follow up',
       'Covers one service line or business area',
       'Hands anything that needs a human straight to you — never oversteps',
     ],
+    agents: TIER_AGENTS.catalyst,
     roiReplaces: 'A part-time receptionist',
     roiLine: 'Annual coverage that’s live through every season, campaign, and after-hours message — with two months free versus paying month to month.',
     payback: 'First recovered customer',
@@ -35,13 +53,13 @@ export const TIERS = [
     insideLabel: 'Everything in Catalyst, plus',
     inside: [
       'A done-for-you lead-capture website — your brand, built to turn visitors into booked appointments and feed the engine',
-      'Automated multi-touch follow-up and nurture sequences',
-      'Smart booking flow — appointments scheduled straight into your calendar',
-      'Live customer dashboard — every enquiry, score, and stage in one view',
+      'Inbound calls answered by AI voice — first ring, every time, no call left in voicemail',
+      'Automated multi-touch follow-up that nurtures until the appointment lands in your calendar',
+      'Live dashboard with de-duplicated records and hot/warm/cold scoring on every lead',
+      'A daily evening report, KPI tracking, and an alert the moment an enquiry needs a human',
       'Multiple service lines + full multi-language coverage',
-      'Mahmood — security & data: de-duplicates enquiries, scores every lead hot/warm/cold, keeps records secure and updated',
-      'Ali — manager & oversight: a daily report every evening, KPI tracking, quality grading, and an alert the moment an enquiry needs a human',
     ],
+    agents: TIER_AGENTS.ascend,
     roiReplaces: 'A CRM build, a lead-gen website, and reporting retainers',
     roiLine: 'A year of compounding follow-up — the nurture engine gets stronger the longer it runs on your pipeline, with two months free built in.',
     payback: 'One extra customer booked',
@@ -59,12 +77,13 @@ export const TIERS = [
     intro: 'The command tier. Apex adds the structure a larger operation needs — enquiries routed to the right person automatically, priority handling, and the controls to run customer flow like an operation instead of a scramble.',
     insideLabel: 'Everything in Ascend, plus',
     inside: [
-      'Automatic routing and assignment across your team',
+      'Automatic routing and assignment across your team, watched 24/7',
       'Multiple AI agents tuned per service line or per location',
-      'ARIA — outbound AI: reactivates dormant customers and old lists proactively',
-      'Khaled — AI voice (coming soon, included): answers inbound calls with the same intelligence as Layla',
+      'Proactive outbound that reactivates dormant customers and old lead lists',
+      'Deal-closing support on hot leads, plus a growth plan reviewed each quarter',
       'Priority response, priority support, advanced team reporting, and white-glove setup',
     ],
+    agents: TIER_AGENTS.apex,
     roiReplaces: 'A full agency retainer plus a sales-ops hire',
     roiLine: 'Built for teams that plan in quarters — a full year of routing, reporting, and priority coverage across the team, with two months free.',
     payback: 'One reactivated customer',
@@ -85,12 +104,13 @@ export const TIERS_AR = [
     intro: 'نقطة البداية. كاتاليست يعالج أول وأكبر سبب لخسارة العملاء — الاستفسارات التي تبقى دون رد. يصبح لواتساب عملك مكتب استقبال لا يكلّ، يرد في ثوانٍ ليلاً ونهاراً، يلتقط كل استفسار، ولا يترك عميلاً مهتماً ينتظر.',
     insideLabel: 'ما الذي يغطّيه',
     inside: [
-      'ليلى — مكتب استقبالك الذكي: ترد على واتساب في ثوانٍ، 24/7، بلغة عملائك',
+      'رد على كل استفسار واتساب في ثوانٍ، 24/7، بلغة عملائك',
       'التقاط آلي للاستفسارات مباشرة في مسارك',
       'تأهيل أساسي — تعرف من هو الجاد قبل أن تتابع',
       'يغطّي خط خدمة أو مجال عمل واحد',
       'يُسلّم أي شيء يحتاج إنساناً إليك مباشرة — دون تجاوز',
     ],
+    agents: TIER_AGENTS.catalyst,
     roiReplaces: 'موظف استقبال بدوام جزئي',
     roiLine: 'تغطية سنوية حيّة عبر كل موسم وحملة ورسالة بعد الدوام — مع شهرين مجاناً مقارنةً بالدفع الشهري.',
     payback: 'أول عميل مُستردّ',
@@ -109,13 +129,13 @@ export const TIERS_AR = [
     insideLabel: 'كل ما في كاتاليست، بالإضافة إلى',
     inside: [
       'موقع التقاط عملاء منجز لك — بعلامتك، مبني لتحويل الزوار إلى مواعيد محجوزة ويغذّي المحرك',
-      'متابعة ورعاية آلية متعددة اللمسات',
-      'تدفق حجز ذكي — المواعيد تُجدوَل مباشرة في تقويمك',
-      'لوحة عملاء حيّة — كل استفسار ودرجة ومرحلة في عرض واحد',
+      'رد صوتي ذكي على المكالمات الواردة — من أول رنة، ولا مكالمة تذهب للبريد الصوتي',
+      'متابعة آلية متعددة اللمسات ترعى العميل حتى يستقر الموعد في تقويمك',
+      'لوحة حيّة بسجلات منزوعة التكرار وتصنيف ساخن/دافئ/بارد لكل عميل',
+      'تقرير يومي كل مساء، تتبّع المؤشرات، وتنبيه فور حاجة الاستفسار إلى إنسان',
       'خطوط خدمة متعددة + تغطية كاملة متعددة اللغات',
-      'محمود — الأمن والبيانات: يزيل الاستفسارات المكررة، يُقيّم كل عميل ساخن/دافئ/بارد، ويُبقي السجلات آمنة ومحدّثة',
-      'علي — الإدارة والإشراف: تقرير يومي كل مساء، تتبّع المؤشرات، تقييم جودة المحادثات، وتنبيه فور حاجة الاستفسار إلى إنسان',
     ],
+    agents: TIER_AGENTS.ascend,
     roiReplaces: 'بناء CRM وموقع لجذب العملاء وباقات تقارير',
     roiLine: 'سنة من المتابعة المتراكمة — محرك الرعاية يزداد قوة كلما طال تشغيله على مسارك، مع شهرين مجاناً.',
     payback: 'عميل إضافي واحد محجوز',
@@ -133,12 +153,13 @@ export const TIERS_AR = [
     intro: 'الباقة الأعلى. أبيكس يضيف البنية التي تحتاجها العمليات الأكبر — استفسارات تُوجَّه للشخص المناسب تلقائياً، أولوية في المعالجة، وأدوات لإدارة تدفق العملاء كعملية منظّمة لا كفوضى.',
     insideLabel: 'كل ما في أسيند، بالإضافة إلى',
     inside: [
-      'توجيه وتعيين آلي عبر فريقك',
+      'توجيه وتعيين آلي عبر فريقك، تحت مراقبة 24/7',
       'وكلاء ذكاء اصطناعي متعددون مُهيَّأون لكل خط خدمة أو فرع',
-      'آريا — تواصل صادر بالذكاء: يعيد تنشيط العملاء الخاملين والقوائم القديمة استباقياً',
-      'خالد — الصوت الذكي (قريباً، مشمول): يرد على المكالمات الواردة بنفس ذكاء ليلى',
+      'تواصل صادر استباقي يعيد تنشيط العملاء الخاملين وقوائم العملاء القديمة',
+      'دعم إغلاق الصفقات على العملاء الساخنين، مع خطة نمو تُراجَع كل ربع',
       'استجابة بأولوية، دعم بأولوية، تقارير فريق متقدمة، وإعداد فاخر',
     ],
+    agents: TIER_AGENTS.apex,
     roiReplaces: 'باقة وكالة كاملة مع توظيف عمليات مبيعات',
     roiLine: 'مبني للفِرَق التي تخطط بالأرباع — سنة كاملة من التوجيه والتقارير وتغطية الأولوية عبر الفريق، مع شهرين مجاناً.',
     payback: 'عميل واحد مُعاد تنشيطه',

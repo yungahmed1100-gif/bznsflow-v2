@@ -65,11 +65,11 @@
 ---
 
 ## 04 — Real Estate AI Workforce — LIVE / فريق العقارات الذكي — مشغَّل فعليًا
-**Keywords:** real estate, عقارات, وكالة عقارية, ليلى, layla, خالد, معاينة, viewing, portal, بوابات, bayut, إيجارات, rent collection, عمولات
+**Keywords:** real estate, عقارات, وكالة عقارية, ليلى, layla, هاتف, hatif, معاينة, viewing, portal, بوابات, bayut, إيجارات, rent collection, عمولات
 
-**EN:** Our flagship live deployment. Four AI agents: Layla (WhatsApp sales assistant — qualifies, searches live listings, books viewings, never invents a price), Khaled (voice assistant for inbound calls — coming soon), Mahmood (operations & data — dedup, lead scoring, secure storage, calendar sync), Modeer (manager — daily Arabic owner report, KPIs, human-handoff alerts, conversation quality grading). Extensions: portal lead capture (Bayut and others enter the same qualification line automatically), commission pipeline visibility, and recurring rent invoicing with automatic escalation for late payers. Customer numbers stay encrypted, always. Ask for a live 20-minute demo on your own listings.
+**EN:** Our flagship live deployment. Four AI agents: Layla (WhatsApp sales assistant — qualifies, searches live listings, books viewings, never invents a price), Hatif (voice agent for inbound calls), Haris (security & data — dedup, lead scoring, secure storage, calendar sync), Raqib (operations overseer — daily Arabic owner report, KPIs, human-handoff alerts, conversation quality grading). Extensions: portal lead capture (Bayut and others enter the same qualification line automatically), commission pipeline visibility, and recurring rent invoicing with automatic escalation for late payers. Customer numbers stay encrypted, always. Ask for a live 20-minute demo on your own listings.
 
-**AR:** نظامنا الرائد المشغَّل فعليًا. أربعة وكلاء: ليلى (مساعدة مبيعات واتساب — تؤهل، تبحث في عقاراتك الحية، تحجز المعاينات، ولا تخترع سعرًا أبدًا)، خالد (المساعد الصوتي للمكالمات — قريبًا)، محمود (العمليات والبيانات — إزالة التكرار، تصنيف العملاء، تخزين مشفّر، مزامنة التقويم)، مدير (الإدارة — تقرير عربي يومي للمالك، مؤشرات أداء، تنبيهات التحويل البشري، تقييم جودة المحادثات). إضافات: التقاط عملاء البوابات العقارية تلقائيًا، رؤية خط العمولات، وفوترة إيجارات دورية بتصعيد آلي للمتأخرين. أرقام العملاء مشفّرة دائمًا. اطلب عرضًا حيًا 20 دقيقة على عقاراتك أنت.
+**AR:** نظامنا الرائد المشغَّل فعليًا. أربعة وكلاء: ليلى (مساعدة مبيعات واتساب — تؤهل، تبحث في عقاراتك الحية، تحجز المعاينات، ولا تخترع سعرًا أبدًا)، هاتف (وكيل الصوت للمكالمات الواردة)، حارس (الأمن والبيانات — إزالة التكرار، تصنيف العملاء، تخزين مشفّر، مزامنة التقويم)، رقيب (مراقب العمليات — تقرير عربي يومي للمالك، مؤشرات أداء، تنبيهات التحويل البشري، تقييم جودة المحادثات). إضافات: التقاط عملاء البوابات العقارية تلقائيًا، رؤية خط العمولات، وفوترة إيجارات دورية بتصعيد آلي للمتأخرين. أرقام العملاء مشفّرة دائمًا. اطلب عرضًا حيًا 20 دقيقة على عقاراتك أنت.
 
 ---
 

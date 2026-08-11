@@ -9,7 +9,7 @@
 export const AGENTS = [
   {
     key: 'layla', name: 'Layla', nameSub: 'ليلى', subLang: 'ar', role: 'AI Receptionist', icon: 'message-circle', accent: 'lead',
-    tagline: 'Every message answered in seconds. Every lead followed up. Even at 3 AM.',
+    specs: ['24/7 · 365', '<60s first reply', '2 Arabic dialects + EN', 'WhatsApp + web', 'Unlimited parallel chats'],
     problem: '78% of customers buy from the business that responds first. Your competitors take hours. Layla takes seconds.',
     duties: [
       'Answers every WhatsApp and website message instantly — 24/7, weekends, Eid holidays, all of it',
@@ -23,7 +23,7 @@ export const AGENTS = [
   },
   {
     key: 'hatif', name: 'Hatif', nameSub: 'هاتف', subLang: 'ar', role: 'AI Voice Agent', icon: 'phone', accent: 'order',
-    tagline: 'A voice you hear, always there. No ringing call ever dies in voicemail again.',
+    specs: ['Answers on ring 1', '24/7 incl. after-hours', 'AR + EN voice', 'Books mid-call', 'Transcript + summary per call'],
     problem: 'Every unanswered call is a customer dialing your competitor next. Voicemail is where revenue goes to die.',
     duties: [
       'Answers every phone call in a natural, professional voice — first ring, every time',
@@ -37,7 +37,7 @@ export const AGENTS = [
   },
   {
     key: 'samira', name: 'Samira', nameSub: 'سميرة', subLang: 'ar', role: 'AI Social Media Manager', icon: 'megaphone', accent: 'lead',
-    tagline: 'Your brand, posting consistently, in flawless Arabic and English — without you touching it.',
+    specs: ['3 platforms: IG · FB · LinkedIn', 'AR + EN, written natively', 'Timezone-aware scheduling', 'Nothing publishes without approval', 'Ramadan · Eid · National Day planning'],
     problem: "Businesses don't fail at social media. They abandon it — because it's one more job nobody has time for.",
     duties: [
       'Builds your social strategy: goals, channels, content pillars, posting cadence',
@@ -51,7 +51,7 @@ export const AGENTS = [
   },
   {
     key: 'wisal', name: 'Wisal', nameSub: 'وصال', subLang: 'ar', role: 'AI Outreach & Reactivation', icon: 'repeat', accent: 'order',
-    tagline: 'The revenue you already paid for is sitting in your old lead list. Wisal goes and gets it.',
+    specs: ['3 segments: buyers · ghosted · expired', 'Multi-touch cadences', 'AR + EN', 'Automatic re-qualification', 'Hot leads routed in real time'],
     problem: "You paid ad money for every lead in your CRM. Most went quiet. That's not a dead list — it's buried revenue.",
     duties: [
       'Reactivates dormant leads and old customer lists with intelligent, personalized outbound sequences',
@@ -65,7 +65,7 @@ export const AGENTS = [
   },
   {
     key: 'saqr', name: 'Saqr', nameSub: 'صقر', subLang: 'ar', role: 'AI Sales Closer', icon: 'target', accent: 'lead',
-    tagline: "The falcon doesn't chase everything. It watches, waits, and strikes the right moment.",
+    specs: ['4 objection classes: price · timing · trust · delay', 'Proposals, quotes + payment links', 'Full deal-stage tracking', '3 lead sources: Layla · Hatif · Wisal', 'Escalates with full context'],
     problem: 'Leads don\'t die because your offer is weak. They die in the gap between "interested" and "signed" — where nobody followed up with precision.',
     duties: [
       'Takes qualified leads from Layla, Hatif, and Wisal and drives them to a decision',
@@ -79,7 +79,7 @@ export const AGENTS = [
   },
   {
     key: 'hasib', name: 'Hasib', nameSub: 'حاسب', subLang: 'ar', role: 'AI Data & Reporting Analyst', icon: 'bar-chart', accent: 'order',
-    tagline: 'The one who counts. Every dirham of ROI, proven in a weekly report.',
+    specs: ['Weekly branded report', '5 metrics: leads · calls · bookings · deals · revenue', 'Per-agent performance tracking', 'Month-over-month benchmarking', '3 next actions per report'],
     problem: "Business owners don't quit marketing because it fails — they quit because nobody proves it's working.",
     duties: [
       'Produces your weekly business report: leads captured, calls answered, appointments booked, deals closed, revenue attributed',
@@ -93,7 +93,7 @@ export const AGENTS = [
   },
   {
     key: 'rashid', name: 'Rashid', nameSub: 'رشيد', subLang: 'ar', role: 'AI Business Growth Strategist', icon: 'compass', accent: 'lead',
-    tagline: "Rashid thinks three moves ahead, so you don't have to.",
+    specs: ['Quarterly goals + launch roadmap', 'Competitor pricing + positioning analysis', 'Investor updates & partnership proposals', 'Voice memo → structured decisions', 'Go/no-go verdict before spend'],
     problem: 'SME owners work in the business all day. Nobody is left to work on it.',
     duties: [
       'Analyzes your market and competitors: pricing, positioning, gaps you can attack',
@@ -107,7 +107,7 @@ export const AGENTS = [
   },
   {
     key: 'adiba', name: 'Adiba', nameSub: 'أديبة', subLang: 'ar', role: 'AI Copywriter', icon: 'feather', accent: 'order',
-    tagline: 'Words that sell, crafted like literature, delivered like clockwork.',
+    specs: ['Pages · ads · brochures · proposals', 'AR + EN, each written natively', 'Multi-variant ad hooks for testing', '3 tone registers: B2B · consumer · government', 'One documented brand voice'],
     problem: "Weak copy quietly kills strong offers. Most businesses describe what they do — nobody's writing why it matters.",
     duties: [
       'Writes conversion copy for your website: headlines, landing pages, service pages, CTAs',
@@ -121,7 +121,7 @@ export const AGENTS = [
   },
   {
     key: 'dalil', name: 'Dalil', nameSub: 'دليل', subLang: 'ar', role: 'AI SEO Specialist', icon: 'search', accent: 'lead',
-    tagline: 'When they search, Dalil makes sure they find you — not your competitor.',
+    specs: ['AR + EN keyword research', 'Titles · structure · speed · internal links', 'Programmatic long-tail pages', 'Rank tracking incl. competitors', 'Technical audit + fixes'],
     problem: "Ads stop the moment you stop paying. Search traffic compounds — and in Arabic, it's nearly uncontested territory.",
     duties: [
       'Researches what your customers actually search for — in Arabic AND English (your competitors ignore the Arabic half)',
@@ -135,7 +135,7 @@ export const AGENTS = [
   },
   {
     key: 'rasil', name: 'Rasil', nameSub: 'راسل', subLang: 'ar', role: 'AI Email Marketing', icon: 'mail', accent: 'order',
-    tagline: 'The correspondent. Every message sent on time, to the right person, with a reason.',
+    specs: ['4-stage lifecycle: lead → nurture → offer → win-back', 'Segmented sends', 'A/B on subject lines + send times', 'Opens · clicks · revenue per send', 'Welcome, nurture + post-purchase flows'],
     problem: 'Your email list is an owned audience — no algorithm, no ad auction. Most businesses let it rot.',
     duties: [
       'Builds and runs your email sequences: welcome series, nurture flows, post-purchase follow-up',
@@ -149,7 +149,7 @@ export const AGENTS = [
   },
   {
     key: 'raqib', name: 'Raqib', nameSub: 'رقيب', subLang: 'ar', role: 'AI Operations Overseer', icon: 'eye', accent: 'lead',
-    tagline: 'The watcher. While your team works, Raqib makes sure everything works.',
+    specs: ['24/7 monitoring', '3 signals: uptime · response time · error rate', 'Baseline drift alerts', 'Live operational log', 'Escalates only on real faults'],
     problem: 'Automated systems fail silently. You find out when a customer complains — which is the most expensive way to find out.',
     duties: [
       'Monitors every agent and system around the clock — uptime, response times, error rates',
@@ -163,7 +163,7 @@ export const AGENTS = [
   },
   {
     key: 'haris', name: 'Haris', nameSub: 'حارس', subLang: 'ar', role: 'AI Security & Data Guardian', icon: 'shield-check', accent: 'order',
-    tagline: "The guardian. Your customers' trust, protected like it's your reputation — because it is.",
+    specs: ['Encrypted in transit + at rest', 'GDPR (EU) + GCC regional compliance', 'Per-agent access control', 'Exportable · deletable · never sold', 'Full audit trail'],
     problem: 'One data leak destroys years of trust. GCC customers are rightfully sensitive about privacy — and most SMEs have no answer when asked "is my data safe with you?"',
     duties: [
       'Guards every customer conversation and record — encrypted in transit and at rest',
@@ -180,7 +180,9 @@ export const AGENTS = [
 export const AGENTS_AR = [
   {
     key: 'layla', name: 'ليلى', nameSub: 'Layla', subLang: 'en', role: 'موظفة الاستقبال الذكية', icon: 'message-circle', accent: 'lead',
-    tagline: 'كل رسالة تُجاب خلال ثوانٍ. كل عميل يُتابَع. حتى في الثالثة فجرًا.',
+    // Not "24/7 · 365" — a neutral separator between two numerals gets
+    // reordered by the bidi algorithm and renders backwards under RTL.
+    specs: ['24/7 طوال السنة', 'رد أول خلال أقل من 60 ثانية', 'لهجتان عربيتان + الإنجليزية', 'واتساب + الموقع', 'محادثات متزامنة بلا حد'],
     problem: '78% من العملاء يشترون من أول من يرد عليهم. منافسوك يتأخرون ساعات — وليلى ترد خلال ثوانٍ.',
     duties: [
       'ترد فورًا على كل رسالة واتساب وموقع — 24/7، في العطل وأيام العيد',
@@ -194,7 +196,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'hatif', name: 'هاتف', nameSub: 'Hatif', subLang: 'en', role: 'وكيل الصوت الذكي', icon: 'phone', accent: 'order',
-    tagline: 'صوت تسمعه، حاضر دائمًا. لا مكالمة تموت في البريد الصوتي بعد اليوم.',
+    specs: ['ترد من الرنة الأولى', '24/7 وبعد الدوام', 'صوت عربي + إنجليزي', 'تحجز أثناء المكالمة', 'نص وملخص لكل مكالمة'],
     problem: 'كل مكالمة بلا رد هي عميل يتصل بمنافسك بعدها. البريد الصوتي هو المكان الذي يموت فيه الإيراد.',
     duties: [
       'يرد على كل مكالمة بصوت طبيعي واحترافي — من أول رنة، في كل مرة',
@@ -208,7 +210,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'samira', name: 'سميرة', nameSub: 'Samira', subLang: 'en', role: 'مديرة السوشيال ميديا الذكية', icon: 'megaphone', accent: 'lead',
-    tagline: 'علامتك تنشر بانتظام، بعربية وإنجليزية متقنتين — دون أن تلمس شيئًا.',
+    specs: ['3 منصات: إنستغرام · فيسبوك · لينكدإن', 'عربي + إنجليزي بكتابة أصلية', 'جدولة حسب التوقيت المحلي', 'لا نشر دون موافقتك', 'رمضان · العيد · اليوم الوطني'],
     problem: 'الأعمال لا تفشل في السوشيال ميديا، بل تهجرها — لأنها مهمة إضافية لا وقت لها عند أحد.',
     duties: [
       'تبني استراتيجيتك: الأهداف، القنوات، محاور المحتوى، وإيقاع النشر',
@@ -222,7 +224,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'wisal', name: 'وصال', nameSub: 'Wisal', subLang: 'en', role: 'التواصل وإعادة التنشيط', icon: 'repeat', accent: 'order',
-    tagline: 'الإيراد الذي دفعت ثمنه بالفعل نائم في قائمتك القديمة. وصال يذهب ويحضره.',
+    specs: ['3 شرائح: مشترون · متجاهلون · منتهية', 'تسلسلات متعددة اللمسات', 'عربي + إنجليزي', 'إعادة تأهيل آلية', 'تحويل فوري للعملاء الساخنين'],
     problem: 'دفعت مال إعلانات عن كل عميل في نظامك. معظمهم صمت. هذه ليست قائمة ميتة — بل إيراد مدفون.',
     duties: [
       'يعيد تنشيط العملاء الخاملين والقوائم القديمة بتسلسلات صادرة ذكية ومخصصة',
@@ -236,7 +238,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'saqr', name: 'صقر', nameSub: 'Saqr', subLang: 'en', role: 'مُتمم المبيعات الذكي', icon: 'target', accent: 'lead',
-    tagline: 'الصقر لا يطارد كل شيء. يراقب، ينتظر، وينقضّ في اللحظة الصحيحة.',
+    specs: ['4 اعتراضات: السعر · التوقيت · الثقة · التأجيل', 'عروض وأسعار وروابط دفع', 'تتبع كامل لمراحل الصفقة', '3 مصادر: ليلى · هاتف · وصال', 'تصعيد بسياق كامل'],
     problem: 'العملاء لا يضيعون لأن عرضك ضعيف، بل في الفجوة بين «مهتم» و«وقّع» — حيث لم يتابع أحد بدقة.',
     duties: [
       'يستلم العملاء المؤهلين من ليلى وهاتف ووصال ويقودهم نحو القرار',
@@ -250,7 +252,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'hasib', name: 'حاسب', nameSub: 'Hasib', subLang: 'en', role: 'محلل البيانات والتقارير', icon: 'bar-chart', accent: 'order',
-    tagline: 'من يحسب. كل ريال من العائد، مُثبَت في تقرير أسبوعي.',
+    specs: ['تقرير أسبوعي بعلامتك', '5 مؤشرات: عملاء · مكالمات · مواعيد · صفقات · إيراد', 'تتبع أداء كل وكيل', 'مقارنة شهرًا بشهر', '3 خطوات تالية في كل تقرير'],
     problem: 'أصحاب الأعمال لا يوقفون التسويق لأنه فشل — بل لأن أحدًا لا يثبت لهم أنه ينجح.',
     duties: [
       'يُعدّ تقريرك الأسبوعي: عملاء مُلتقطون، مكالمات مُجابة، مواعيد محجوزة، صفقات مُتمّة، وإيراد منسوب لمصدره',
@@ -264,7 +266,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'rashid', name: 'رشيد', nameSub: 'Rashid', subLang: 'en', role: 'مستشار نمو الأعمال', icon: 'compass', accent: 'lead',
-    tagline: 'رشيد يفكر ثلاث خطوات للأمام، حتى لا تضطر أنت لذلك.',
+    specs: ['أهداف وخارطة طريق ربعية', 'تحليل تسعير ومواقع المنافسين', 'تحديثات المستثمرين ومقترحات الشراكة', 'مذكرة صوتية ← قرارات منظمة', 'حكم واضح قبل الإنفاق'],
     problem: 'أصحاب المشاريع يعملون داخل العمل طوال اليوم. لا يبقى أحد ليعمل على تطوير العمل نفسه.',
     duties: [
       'يحلل سوقك ومنافسيك: التسعير، التموضع، والثغرات التي يمكنك اقتناصها',
@@ -278,7 +280,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'adiba', name: 'أديبة', nameSub: 'Adiba', subLang: 'en', role: 'كاتبة المحتوى الإعلاني', icon: 'feather', accent: 'order',
-    tagline: 'كلمات تبيع، تُصاغ كالأدب، وتُسلَّم بدقة الساعة.',
+    specs: ['صفحات · إعلانات · بروشورات · عروض', 'عربي + إنجليزي بكتابة أصلية', 'صيغ إعلانية متعددة للاختبار', '3 نبرات: أعمال · أفراد · حكومي', 'صوت علامة واحد موثّق'],
     problem: 'النصوص الضعيفة تقتل العروض القوية بصمت. معظم الأعمال تصف ما تفعله — ولا أحد يكتب لماذا يهم ذلك.',
     duties: [
       'تكتب نصوص التحويل لموقعك: العناوين، صفحات الهبوط، صفحات الخدمات، وأزرار الدعوة',
@@ -292,7 +294,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'dalil', name: 'دليل', nameSub: 'Dalil', subLang: 'en', role: 'أخصائي تحسين محركات البحث', icon: 'search', accent: 'lead',
-    tagline: 'حين يبحثون، دليل يضمن أن يجدوك أنت — لا منافسك.',
+    specs: ['بحث كلمات بالعربية والإنجليزية', 'عناوين · بنية · سرعة · روابط داخلية', 'صفحات طويلة الذيل برمجيًا', 'تتبع ترتيبك وترتيب المنافسين', 'تدقيق تقني وإصلاح'],
     problem: 'الإعلانات تتوقف لحظة توقف الدفع. زيارات البحث تتراكم — وبالعربية، الساحة شبه خالية من المنافسة.',
     duties: [
       'يبحث عمّا يكتبه عملاؤك فعلًا في البحث — بالعربية والإنجليزية (منافسوك يتجاهلون النصف العربي)',
@@ -306,7 +308,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'rasil', name: 'راسل', nameSub: 'Rasil', subLang: 'en', role: 'التسويق عبر البريد', icon: 'mail', accent: 'order',
-    tagline: 'المراسل. كل رسالة في وقتها، للشخص الصحيح، وبسبب وجيه.',
+    specs: ['دورة من 4 مراحل: عميل ← رعاية ← عرض ← استعادة', 'إرسال مقسّم حسب الشريحة', 'اختبار العناوين وأوقات الإرسال', 'فتح · نقر · إيراد لكل إرسال', 'تدفقات ترحيب ورعاية وما بعد الشراء'],
     problem: 'قائمتك البريدية جمهور تملكه أنت — لا خوارزمية ولا مزاد إعلانات. ومعظم الأعمال تتركها تذبل.',
     duties: [
       'يبني ويدير تسلسلاتك البريدية: سلسلة الترحيب، مسارات الرعاية، ومتابعة ما بعد الشراء',
@@ -320,7 +322,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'raqib', name: 'رقيب', nameSub: 'Raqib', subLang: 'en', role: 'مراقب العمليات', icon: 'eye', accent: 'lead',
-    tagline: 'الرقيب. بينما يعمل فريقك، رقيب يتأكد أن كل شيء يعمل.',
+    specs: ['مراقبة 24/7', '3 مؤشرات: التشغيل · زمن الرد · معدل الأخطاء', 'تنبيه عند الانحراف عن الأساس', 'سجل تشغيلي حي', 'تصعيد عند الأعطال الحقيقية فقط'],
     problem: 'الأنظمة الآلية تتعطل بصمت. وتكتشف ذلك حين يشتكي عميل — وهي أغلى طريقة للاكتشاف.',
     duties: [
       'يراقب كل وكيل ونظام على مدار الساعة — الجاهزية، أزمنة الاستجابة، ومعدلات الأخطاء',
@@ -334,7 +336,7 @@ export const AGENTS_AR = [
   },
   {
     key: 'haris', name: 'حارس', nameSub: 'Haris', subLang: 'en', role: 'حارس الأمن والبيانات', icon: 'shield-check', accent: 'order',
-    tagline: 'الحارس. ثقة عملائك محمية كأنها سمعتك — لأنها كذلك فعلًا.',
+    specs: ['تشفير أثناء النقل والتخزين', 'GDPR أوروبا + امتثال إقليمي للخليج', 'تحكم بالوصول لكل وكيل', 'قابل للتصدير والحذف · لا يُباع أبدًا', 'سجل تدقيق كامل'],
     problem: 'تسريب واحد للبيانات يهدم سنوات من الثقة. عملاء الخليج حساسون للخصوصية بحق — ومعظم المنشآت لا تملك جوابًا حين تُسأل: «هل بياناتي آمنة عندكم؟»',
     duties: [
       'يحرس كل محادثة وسجل عميل — مشفّرة أثناء النقل وفي التخزين',
@@ -358,3 +360,9 @@ export const PITCH = {
     body: 'يردّون في الثالثة فجرًا. يتابعون في اليوم الرابع عشر. يرفعون تقاريرهم كل أسبوع. لا ينسون عميلًا ولا مكالمة ولا وعدًا. وكل واحد منهم سُمّي على وظيفته بالضبط — ',
   },
 };
+
+// Keyed lookups so other sections can name an agent without re-typing it.
+// The tier cards index these by the keys listed in data/tiers.js — a rename
+// here carries through to the pricing ladder instead of drifting from it.
+export const AGENT_BY_KEY = Object.fromEntries(AGENTS.map((a) => [a.key, a]));
+export const AGENT_BY_KEY_AR = Object.fromEntries(AGENTS_AR.map((a) => [a.key, a]));

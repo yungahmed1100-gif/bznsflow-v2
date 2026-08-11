@@ -171,6 +171,134 @@
   margin-top: 1px;
 }
 
+/* ============================================================
+   Team chips — the roster agents each tier adds. Names and roles
+   come from data/agents.js, so this is the visual join between the
+   pricing ladder and the "Meet the AI team" section.
+ ============================================================ */
+.tier-team {
+  margin-bottom: 20px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--border);
+}
+.tier-team-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.tier-team-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tier-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  /* Logical inline padding — tight at the avatar edge, roomy past the text,
+     and it flips correctly under RTL */
+  padding-block: 6px;
+  padding-inline: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  transition: border-color var(--transition), transform var(--transition);
+}
+.tier-chip:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+
+.tier-chip-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  color: var(--accent-blue);
+}
+.tier-chip-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.tier-chip-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.tier-chip-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.tier-chip-role {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+/* Growth pack — demand generation, sold beside the ladder not inside it */
+.growth-pack {
+  max-width: 860px;
+  margin: 40px auto 0;
+  padding: 28px 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+.growth-pack-label {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--orange);
+  padding: 5px 12px;
+  border: 1px solid rgba(242, 140, 84, 0.3);
+  background: rgba(242, 140, 84, 0.08);
+  border-radius: 100px;
+  margin-bottom: 12px;
+}
+.growth-pack-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 10px;
+}
+.growth-pack-body {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  max-width: 60ch;
+  margin: 0 auto 20px;
+}
+.growth-pack-chips {
+  justify-content: center;
+  margin-bottom: 22px;
+}
+/* The pack is an orange-track offer — tint its chip avatars to match */
+.growth-pack-chips .tier-chip-avatar { color: var(--orange); }
+
+.growth-pack-btn {
+  display: inline-flex;
+}
+
 /* At-a-glance comparison */
 .pricing-compare {
   margin-top: 56px;
@@ -278,6 +406,9 @@
   .pricing-ladder { flex-direction: column; }
   .ladder-arrow { transform: rotate(90deg); }
   .pricing-guarantee { flex-direction: column; gap: 12px; }
+  .growth-pack { padding: 24px 20px; }
+  /* Chips go full-width so two never wrap into a cramped half-row */
+  .growth-pack-chips .tier-chip { flex: 1 1 100%; }
 }
 
 /* ============================================================

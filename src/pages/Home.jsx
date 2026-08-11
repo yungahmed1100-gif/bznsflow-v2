@@ -119,7 +119,7 @@ export default function Home({ lang: routeLang = 'ar' }) {
         <TwoTrackSection t={t} onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent} />
         <AITeamSection t={t} lang={lang} trackEvent={trackEvent} />
         <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
-        <TiersSection t={t} tiers={activeTiers} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
+        <TiersSection t={t} tiers={activeTiers} lang={lang} trackEvent={trackEvent} />
         <BenefitsSection t={t} />
         <TestimonialsSection t={t} lang={lang} />
         <AboutSection t={t} lang={lang} CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL} trackEvent={trackEvent} />

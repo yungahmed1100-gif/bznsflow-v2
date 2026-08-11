@@ -44,9 +44,6 @@
 @media (max-width: 1024px) { .solutions-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px)  { .solutions-grid { grid-template-columns: 1fr; } }
 
-@media (max-width: 1024px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px)  { .team-grid { grid-template-columns: 1fr; } }
-
 /* FAQ + CTA secondary action spacing (additive) */
 .faq-cta { margin-top: var(--space-12); display: flex; justify-content: center; }
 .cta-secondary { margin-top: 14px; }

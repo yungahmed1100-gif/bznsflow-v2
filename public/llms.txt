@@ -6,10 +6,17 @@
 
 BznsFlow isn't one bot — it's a team of named AI systems:
 - **Layla** — AI receptionist. Answers every message in seconds on WhatsApp and the website, qualifies, books appointments, takes orders, follows up.
-- **Khaled** — AI voice. Answers phone calls, qualifies, and books — no call goes to voicemail.
-- **ARIA** — AI outreach. Reactivates dormant leads and old customer lists with smart outbound follow-up.
-- **Ali** — AI operations. Oversees the whole system 24/7, watches performance, and keeps everything running.
-- **Mahmood** — AI security & data. Guards customer data, keeps conversations private, handles compliance.
+- **Hatif** — AI voice agent. Answers phone calls, qualifies, and books — no call goes to voicemail.
+- **Haris** — AI security & data guardian. Guards customer data, keeps conversations private, handles compliance.
+- **Hasib** — AI data & reporting analyst. Turns activity into a live dashboard and a daily owner report.
+- **Raqib** — AI operations overseer. Watches the whole system 24/7, routes work, and flags anything that needs a human.
+- **Wisal** — AI outreach & reactivation. Revives dormant leads and old customer lists with smart outbound follow-up.
+- **Saqr** — AI sales closer. Works hot leads through objections to a signed deal.
+- **Rashid** — AI business growth strategist. Reads the numbers and sets the next quarter's plan.
+- **Samira** — AI social media manager. Plans, writes, and publishes the content calendar in Arabic and English.
+- **Adiba** — AI copywriter. Writes the ads, pages, and offers that make people enquire.
+- **Dalil** — AI SEO specialist. Gets the business found in search.
+- **Rasil** — AI email marketing. Runs the newsletters and lifecycle campaigns.
 
 ## Two engines, one promise
 
@@ -66,9 +73,10 @@ These are the exact problems customers describe, and what BznsFlow does about ea
 ## Plans (Catch → Convert → Dominate)
 
 Packaged, done-for-you plans. Pricing is shared on a quick WhatsApp chat (no public price list).
-- **Catalyst (Catch)** — stop customers leaving before anyone replies. Layla on WhatsApp Business API answers, qualifies, books appointments and takes orders 24/7; instant hot-lead alerts; daily digest. Replaces a part-time receptionist.
-- **Ascend (Convert)** — most businesses start here. Everything in Catalyst, plus Khaled (inbound voice AI), a full CRM, automated nurture, a review-generation engine, and an owner dashboard.
-- **Apex (Dominate)** — everything in Ascend, plus ARIA (outbound reactivation), Ali (AI operations), Mahmood (AI security & data), predictive insights, and a dedicated strategist.
+- **Catalyst (Catch)** — stop customers leaving before anyone replies. Layla on WhatsApp Business API answers, qualifies, books appointments and takes orders 24/7; instant hot-lead alerts; covers one service line. Replaces a part-time receptionist. Team: Layla.
+- **Ascend (Convert)** — most businesses start here. Everything in Catalyst, plus a done-for-you lead-capture website, inbound voice AI, automated multi-touch nurture, a live dashboard with lead scoring, a daily owner report, and multi-language coverage across several service lines. Team adds: Hatif, Haris, Hasib.
+- **Apex (Dominate)** — everything in Ascend, plus automatic routing across your team, agents tuned per service line or location, outbound reactivation of dormant lists, deal-closing support, a quarterly growth plan, and priority support with white-glove setup. Team adds: Raqib, Wisal, Saqr, Rashid.
+- **Growth Pack (add-on)** — bolts onto any plan and creates demand rather than handling it: social, copy, SEO, and email. Team: Samira, Adiba, Dalil, Rasil.
 - **30-Day Leak Guarantee** — if the system doesn't book the agreed number of qualified appointments in the first 30 days, you get a full refund.
 
 ## Markets & languages
