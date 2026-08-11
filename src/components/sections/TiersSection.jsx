@@ -16,6 +16,26 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
   const Check = () => <Icon name="check" size={15} strokeWidth={2.5} />;
   const roster = lang === 'ar' ? AGENT_BY_KEY_AR : AGENT_BY_KEY;
 
+  // Western digits with thousands separators on both pages — the Arabic side
+  // already writes numerals this way throughout (78%, 24/7, 5 مؤشرات).
+  const num = (n) => n.toLocaleString('en-US');
+  const currency = t.price_currency || 'OMR';
+
+  // `bdi` isolates the price from the surrounding direction: without it the
+  // bidi algorithm reorders "OMR 40" inside RTL text.
+  const Price = ({ pricing }) => (
+    <div className="pricing-cost">
+      <div className="price-row">
+        <bdi className="price-amount">{currency} {num(pricing.monthly)}</bdi>
+        <span className="price-cadence">{t.price_per_month || '/month'}</span>
+      </div>
+      <bdi className="price-usd">≈ USD {num(pricing.monthlyUsd)} {t.price_per_month || '/month'}</bdi>
+      <bdi className="price-setup">
+        + {currency} {num(pricing.setup)} {t.price_setup || 'one-time setup'} · ≈ USD {num(pricing.setupUsd)}
+      </bdi>
+    </div>
+  );
+
   // One chip = one agent's portrait, name, and role, read straight from the roster.
   // A missing portrait degrades to the agent's line icon rather than a blank circle.
   const AgentChip = ({ agentKey }) => {
@@ -87,6 +107,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
                   <h3 className="pricing-tier">{tier.name}</h3>
                   <span className="tier-stage-tag">{tier.stage}</span>
                 </div>
+                {tier.pricing && <Price pricing={tier.pricing} />}
                 <div className="tier-bottleneck">
                   <span className="tier-bottleneck-label">{t.tier_kills || 'Kills'}</span>
                   <span className="tier-bottleneck-text">{tier.bottleneck}</span>
@@ -182,6 +203,14 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
                 </tr>
               </thead>
               <tbody>
+                <tr>
+                  <td className="pc-rowhead">{t.compare_price || 'Monthly'}</td>
+                  {tiers.map((tier) => (
+                    <td key={tier.key} className={tier.popular ? 'pc-col--popular' : ''}>
+                      <bdi className="pc-price">{currency} {num(tier.pricing.monthly)}</bdi>
+                    </td>
+                  ))}
+                </tr>
                 <tr>
                   <td className="pc-rowhead">{t.compare_bottleneck || 'Bottleneck killed'}</td>
                   {tiers.map((tier) => <td key={tier.key} className={tier.popular ? 'pc-col--popular' : ''}>{tier.bottleneck}</td>)}

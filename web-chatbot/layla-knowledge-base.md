@@ -3,7 +3,7 @@
 
 > **KB usage rules (system-facing, do not read to customer):**
 > - Answer in the customer's language (Gulf Arabic or English). Arabic replies are always RTL.
-> - Never quote a price. All pricing questions → free 20-minute diagnosis session on WhatsApp.
+> - Prices are public — quote them plainly when asked (see section 21), then offer the free 20-minute diagnosis session to confirm which plan fits. Never invent a number that is not in section 21.
 > - Never call systems "chatbot", "CRM", "automation", "marketing", or "website" in isolation — use the outcome names below.
 > - Real Estate AI Workforce is the ONLY system live with real clients. Every other system is fully engineered and ready to build — say so honestly if asked.
 > - If a question is not covered here → escalate to the human team. Never invent capabilities, prices, or statistics.
@@ -157,9 +157,9 @@
 ## 21 — Pricing / الأسعار
 **Keywords:** price, سعر, كم التكلفة, cost, تكلفة, باقات, plans, كم يكلف, أسعاركم, pricing, بكم, كم سعر, الأسعار
 
-**EN:** Pricing depends on which leak we're stopping and which layers you need — so we never quote blind numbers. The entry point for everything is a free 20-minute diagnosis session on WhatsApp: we identify exactly where your revenue leaks, what it costs you monthly, and the smallest system that stops it with the fastest payback. Your operations, your numbers, and a clear plan before any rial is paid.
+**EN:** Prices are public. Three plans, each a monthly subscription plus a one-time setup fee — no annual lock-in. Catalyst: OMR 40/month + OMR 70 setup (~USD 104/month + USD 182) — one service line, WhatsApp answered, qualified and booked 24/7. Ascend (most popular): OMR 120/month + OMR 210 setup (~USD 312/month + USD 546) — adds a lead-capture website, inbound voice AI, nurture sequences, a live dashboard and a daily owner report. Apex: OMR 300/month + OMR 525 setup (~USD 780/month + USD 1,365) — adds routing across the team, agents per location, outbound reactivation, deal-closing support and priority coverage. The 30-Day Leak Guarantee applies: if the system does not book the agreed number of qualified appointments in the first 30 days, you get a refund. Not sure which plan fits? Take the free 20-minute diagnosis on WhatsApp — we map where the revenue is leaking and recommend the smallest plan that stops it.
 
-**AR:** التسعير يعتمد على النزيف الذي نوقفه والطبقات التي تحتاجها — لذلك لا نعطي أرقامًا عمياء. الدخول لكل شيء واحد: جلسة تشخيص مجانية 20 دقيقة على واتساب، نحدد فيها أين يتسرّب إيرادك بالضبط، وكم يكلّفك شهريًا، وأصغر نظام يوقفه بأسرع عائد. عملياتك أنت، أرقامك أنت، وخطة واضحة قبل أي ريال يُدفع.
+**AR:** الأسعار معلنة. ثلاث باقات، كل واحدة اشتراك شهري مع رسوم إعداد لمرة واحدة — بلا التزام سنوي. كاتاليست: 40 ر.ع. شهريًا + 70 ر.ع. إعداد (حوالي 104 دولار شهريًا + 182 دولار) — خط خدمة واحد، رد على واتساب وتأهيل وحجز 24/7. أسيند (الأكثر طلبًا): 120 ر.ع. شهريًا + 210 ر.ع. إعداد (حوالي 312 دولار شهريًا + 546 دولار) — تضيف موقع التقاط عملاء، ردًا صوتيًا ذكيًا على المكالمات، تسلسلات متابعة، لوحة حيّة وتقريرًا يوميًا للمالك. أبيكس: 300 ر.ع. شهريًا + 525 ر.ع. إعداد (حوالي 780 دولار شهريًا + 1,365 دولار) — تضيف التوجيه عبر الفريق، ووكلاء لكل فرع، وتواصلًا صادرًا لإعادة التنشيط، ودعم إغلاق الصفقات وتغطية بأولوية. ضمان الثلاثين يومًا ساري: إذا لم يحجز النظام العدد المتفق عليه من المواعيد المؤهلة خلال أول 30 يومًا، تسترد أموالك. غير متأكد أي باقة تناسبك؟ خذ جلسة التشخيص المجانية 20 دقيقة على واتساب — نحدد أين يتسرّب إيرادك ونرشّح أصغر باقة توقفه.
 
 ## 22 — How Fast Can You Deploy? / كم تستغرق مدة التنفيذ؟
 **Keywords:** how long, كم المدة, timeline, مدة التنفيذ, متى يجهز, deployment, deliver, تستغرق

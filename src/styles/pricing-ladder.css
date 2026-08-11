@@ -344,27 +344,6 @@
   border-bottom: none;
 }
 
-/* Terms band */
-.pricing-terms {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 14px 32px;
-  margin-top: 40px;
-}
-.term-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-.term-item svg {
-  color: var(--green);
-  flex-shrink: 0;
-}
-
 /* Guarantee callout */
 .pricing-guarantee {
   display: flex;
@@ -400,6 +379,19 @@
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
+}
+
+/* Price row in the comparison table — the figure people scan for */
+.pc-price {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* Three 2.25rem figures plus their conversion lines is the tightest case in
+   the whole grid; ease the type down before the cards start wrapping. */
+@media (max-width: 1024px) {
+  .price-amount { font-size: 2rem; }
 }
 
 @media (max-width: 720px) {

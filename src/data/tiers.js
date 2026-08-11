@@ -17,6 +17,17 @@ const TIER_AGENTS = {
 // about inquiries already coming in.
 export const GROWTH_AGENTS = ['samira', 'adiba', 'dalil', 'rasil'];
 
+// Published pricing: a monthly subscription plus a one-time setup fee, no
+// annual commitment. OMR is what we invoice; the USD figures are the pegged
+// equivalent (1 OMR = 2.6008 USD) shown for visitors outside Oman. Kept here
+// rather than in the tier objects so EN and AR can never quote different
+// numbers — if the peg moves, this is the only block to touch.
+const TIER_PRICING = {
+  catalyst: { monthly: 40, setup: 70, monthlyUsd: 104, setupUsd: 182 },
+  ascend: { monthly: 120, setup: 210, monthlyUsd: 312, setupUsd: 546 },
+  apex: { monthly: 300, setup: 525, monthlyUsd: 780, setupUsd: 1365 },
+};
+
 export const TIERS = [
   {
     key: 'catalyst',
@@ -35,8 +46,9 @@ export const TIERS = [
       'Hands anything that needs a human straight to you — never oversteps',
     ],
     agents: TIER_AGENTS.catalyst,
+    pricing: TIER_PRICING.catalyst,
     roiReplaces: 'A part-time receptionist',
-    roiLine: 'Annual coverage that’s live through every season, campaign, and after-hours message — with two months free versus paying month to month.',
+    roiLine: 'Less per month than a single day of a receptionist’s salary — and it covers every night, weekend, and holiday. The setup fee builds it around your business once; after that it just runs.',
     payback: 'First recovered customer',
     pull: 'For the owner who just needs to stop missing enquiries.',
     nextStep: 'Layla answers everything — but the customers who don’t reply yet still need follow-up, and you still need them booked.',
@@ -60,8 +72,9 @@ export const TIERS = [
       'Multiple service lines + full multi-language coverage',
     ],
     agents: TIER_AGENTS.ascend,
+    pricing: TIER_PRICING.ascend,
     roiReplaces: 'A CRM build, a lead-gen website, and reporting retainers',
-    roiLine: 'A year of compounding follow-up — the nurture engine gets stronger the longer it runs on your pipeline, with two months free built in.',
+    roiLine: 'One monthly fee instead of three separate invoices — a website build, a CRM, and a reporting retainer would each cost more than this on their own. The setup fee covers the build; the follow-up compounds every month it runs.',
     payback: 'One extra customer booked',
     pull: 'For the business that wants the whole funnel handled — website, capture, nurture, book.',
     nextStep: 'You convert what comes in — but across staff and locations, enquiries start falling between people.',
@@ -84,8 +97,9 @@ export const TIERS = [
       'Priority response, priority support, advanced team reporting, and white-glove setup',
     ],
     agents: TIER_AGENTS.apex,
+    pricing: TIER_PRICING.apex,
     roiReplaces: 'A full agency retainer plus a sales-ops hire',
-    roiLine: 'Built for teams that plan in quarters — a full year of routing, reporting, and priority coverage across the team, with two months free.',
+    roiLine: 'A fraction of one sales-ops salary, covering routing, reporting, and outbound across every branch and every service line. The setup fee tunes it per location once, then it runs on your team.',
     payback: 'One reactivated customer',
     pull: 'For multi-location and multi-team businesses where enquiries can’t fall through the cracks.',
     nextStep: null,
@@ -111,8 +125,9 @@ export const TIERS_AR = [
       'يُسلّم أي شيء يحتاج إنساناً إليك مباشرة — دون تجاوز',
     ],
     agents: TIER_AGENTS.catalyst,
+    pricing: TIER_PRICING.catalyst,
     roiReplaces: 'موظف استقبال بدوام جزئي',
-    roiLine: 'تغطية سنوية حيّة عبر كل موسم وحملة ورسالة بعد الدوام — مع شهرين مجاناً مقارنةً بالدفع الشهري.',
+    roiLine: 'شهرياً أقل من أجر يوم واحد لموظف استقبال — ويغطّي كل ليلة وعطلة وإجازة. رسوم الإعداد تبنيه حول أعمالك مرة واحدة، وبعدها يعمل وحده.',
     payback: 'أول عميل مُستردّ',
     pull: 'للمالك الذي يحتاج فقط أن يتوقف عن تفويت الاستفسارات.',
     nextStep: 'ليلى ترد على الجميع — لكن العملاء الذين لا يردّون بعد يحتاجون متابعة، وما زلت تحتاج حجزهم.',
@@ -136,8 +151,9 @@ export const TIERS_AR = [
       'خطوط خدمة متعددة + تغطية كاملة متعددة اللغات',
     ],
     agents: TIER_AGENTS.ascend,
+    pricing: TIER_PRICING.ascend,
     roiReplaces: 'بناء CRM وموقع لجذب العملاء وباقات تقارير',
-    roiLine: 'سنة من المتابعة المتراكمة — محرك الرعاية يزداد قوة كلما طال تشغيله على مسارك، مع شهرين مجاناً.',
+    roiLine: 'رسم شهري واحد بدل ثلاث فواتير منفصلة — بناء موقع، ونظام CRM، وباقة تقارير، كل واحد منها يكلّف أكثر من هذا وحده. رسوم الإعداد تغطي البناء، والمتابعة تتراكم كل شهر يعمل فيه.',
     payback: 'عميل إضافي واحد محجوز',
     pull: 'للأعمال التي تريد المسار كله منجزاً — موقع، التقاط، رعاية، حجز.',
     nextStep: 'أنت تحوّل ما يصل — لكن عبر الموظفين والفروع، تبدأ الاستفسارات بالسقوط بين الأشخاص.',
@@ -160,8 +176,9 @@ export const TIERS_AR = [
       'استجابة بأولوية، دعم بأولوية، تقارير فريق متقدمة، وإعداد فاخر',
     ],
     agents: TIER_AGENTS.apex,
+    pricing: TIER_PRICING.apex,
     roiReplaces: 'باقة وكالة كاملة مع توظيف عمليات مبيعات',
-    roiLine: 'مبني للفِرَق التي تخطط بالأرباع — سنة كاملة من التوجيه والتقارير وتغطية الأولوية عبر الفريق، مع شهرين مجاناً.',
+    roiLine: 'جزء بسيط من راتب موظف عمليات مبيعات واحد، يغطّي التوجيه والتقارير والتواصل الصادر عبر كل فرع وكل خط خدمة. رسوم الإعداد تُهيّئه لكل موقع مرة واحدة، ثم يعمل مع فريقك.',
     payback: 'عميل واحد مُعاد تنشيطه',
     pull: 'للأعمال متعددة الفروع والفِرَق حيث لا يمكن أن تسقط الاستفسارات بين الشقوق.',
     nextStep: null,

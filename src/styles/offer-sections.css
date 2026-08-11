@@ -227,14 +227,31 @@
   margin-bottom: 16px;
   display: flex;
   flex-direction: column;
+  gap: 2px;
+}
+
+/* Amount and cadence share a baseline so "/month" sits with the figure */
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .price-amount {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
   font-weight: 900;
   color: var(--text-primary);
   line-height: 1.1;
   letter-spacing: -0.03em;
+}
+
+/* Secondary conversion for visitors outside Oman — must not compete with
+   the OMR figure, which is what we actually invoice. */
+.price-usd {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .price-setup {
@@ -242,6 +259,9 @@
   font-weight: 600;
   color: var(--text-secondary);
   margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  line-height: 1.5;
 }
 
 .pricing-desc {

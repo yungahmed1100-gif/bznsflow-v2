@@ -72,10 +72,10 @@ These are the exact problems customers describe, and what BznsFlow does about ea
 
 ## Plans (Catch → Convert → Dominate)
 
-Packaged, done-for-you plans. Pricing is shared on a quick WhatsApp chat (no public price list).
-- **Catalyst (Catch)** — stop customers leaving before anyone replies. Layla on WhatsApp Business API answers, qualifies, books appointments and takes orders 24/7; instant hot-lead alerts; covers one service line. Replaces a part-time receptionist. Team: Layla.
-- **Ascend (Convert)** — most businesses start here. Everything in Catalyst, plus a done-for-you lead-capture website, inbound voice AI, automated multi-touch nurture, a live dashboard with lead scoring, a daily owner report, and multi-language coverage across several service lines. Team adds: Hatif, Haris, Hasib.
-- **Apex (Dominate)** — everything in Ascend, plus automatic routing across your team, agents tuned per service line or location, outbound reactivation of dormant lists, deal-closing support, a quarterly growth plan, and priority support with white-glove setup. Team adds: Raqib, Wisal, Saqr, Rashid.
+Packaged, done-for-you plans with public pricing. Each plan is a monthly subscription plus a one-time setup fee — no annual lock-in. Priced in Omani rial (OMR); USD figures are the pegged equivalent (1 OMR = 2.6008 USD).
+- **Catalyst (Catch)** — OMR 40/month (~USD 104) + OMR 70 one-time setup (~USD 182). Stop customers leaving before anyone replies. Layla on WhatsApp Business API answers, qualifies, books appointments and takes orders 24/7; instant hot-lead alerts; covers one service line. Replaces a part-time receptionist. Team: Layla.
+- **Ascend (Convert)** — OMR 120/month (~USD 312) + OMR 210 one-time setup (~USD 546). Most businesses start here. Everything in Catalyst, plus a done-for-you lead-capture website, inbound voice AI, automated multi-touch nurture, a live dashboard with lead scoring, a daily owner report, and multi-language coverage across several service lines. Team adds: Hatif, Haris, Hasib.
+- **Apex (Dominate)** — OMR 300/month (~USD 780) + OMR 525 one-time setup (~USD 1,365). Everything in Ascend, plus automatic routing across your team, agents tuned per service line or location, outbound reactivation of dormant lists, deal-closing support, a quarterly growth plan, and priority support with white-glove setup. Team adds: Raqib, Wisal, Saqr, Rashid.
 - **Growth Pack (add-on)** — bolts onto any plan and creates demand rather than handling it: social, copy, SEO, and email. Team: Samira, Adiba, Dalil, Rasil.
 - **30-Day Leak Guarantee** — if the system doesn't book the agreed number of qualified appointments in the first 30 days, you get a full refund.
 
