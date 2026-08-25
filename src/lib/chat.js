@@ -1,5 +1,5 @@
 // ─── Layla web chat → /api/chat ──────────────────────────────────────────────
-// Single door to the Layla chat backend (Vercel function → Groq → Supabase).
+// Single door to the Layla chat backend (Vercel function → OpenAI → Supabase).
 // The widget POSTs { message, sessionId } and gets back
 // { reply, sessionId, handoff, handoff_context }. The backend enforces origin,
 // input validation, and rate limits — see web-chatbot/SETUP.md.
@@ -10,10 +10,10 @@
 
 export const CHAT_ENDPOINT = import.meta.env.VITE_CHAT_ENDPOINT || '/api/chat';
 
-/** Give up on a hung backend. Must stay above the function's own Groq timeout
- *  (12s) plus its DB round trips, so a slow-but-working turn is never killed
+/** Give up on a hung backend. Must stay above the function's own LLM timeout
+ *  (15s) plus its DB round trips, so a slow-but-working turn is never killed
  *  client-side, and below Vercel's 30s function ceiling. */
-export const CHAT_TIMEOUT_MS = 20000;
+export const CHAT_TIMEOUT_MS = 25000;
 
 const SESSION_KEY = 'bznsflow_chat_session';
 const MAX_CHARS = 800; // must match MAX_CHARS in api/_lib/guard.js

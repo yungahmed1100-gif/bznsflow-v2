@@ -1,11 +1,15 @@
-// Groq chat completion + strict parsing of Layla's JSON envelope.
+// LLM chat completion + strict parsing of Layla's JSON envelope.
+//
+// The provider is OpenAI. It was Groq until that service was decommissioned;
+// the two speak the same wire format, so the swap touched only the constants
+// below. Keep it that way — nothing provider-specific belongs past this file.
 
-const ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
-const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+const DEFAULT_MODEL = 'gpt-4.1-mini';
 
 // Under the function's 30s ceiling with room for two DB round trips after it.
-// Observed live latency was ~4.6s median, ~6.2s worst.
-const TIMEOUT_MS = 12000;
+// Groq answered in ~4.6s median; OpenAI is slower, hence the extra headroom.
+const TIMEOUT_MS = 15000;
 
 const TEMPERATURE = 0.6;
 const MAX_TOKENS = 700;
@@ -22,7 +26,7 @@ const MAX_CONTEXT_CHARS = 300;
  * This walks the string tracking depth, and ignores braces inside strings and
  * escapes, so it stops at the real end of the first object.
  *
- * Groq JSON mode should make this unnecessary; it stays because JSON mode is
+ * JSON mode should make this unnecessary; it stays because JSON mode is
  * untested against this persona and silently returning the error bubble on a
  * good reply is a bad failure.
  *
@@ -83,7 +87,7 @@ export function parseReply(raw) {
 }
 
 /**
- * Ask Groq for one reply.
+ * Ask the model for one reply.
  *
  * Throws on transport failure, non-2xx, timeout, or unparseable output. The
  * caller turns any throw into the friendly glitch reply at HTTP 200 — the
@@ -92,8 +96,8 @@ export function parseReply(raw) {
  * @returns {Promise<{ reply: string, handoff: boolean, handoff_context: string }>}
  */
 export async function complete(systemMessage, userMessage) {
-  const key = process.env.GROQ_API_KEY;
-  if (!key) throw new Error('GROQ_API_KEY is not configured');
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error('OPENAI_API_KEY is not configured');
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -107,9 +111,12 @@ export async function complete(systemMessage, userMessage) {
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || DEFAULT_MODEL,
+        model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
         temperature: TEMPERATURE,
         max_tokens: MAX_TOKENS,
+        // JSON mode requires the literal word "JSON" somewhere in the messages.
+        // The persona prompt carries it — see the OUTPUT line in
+        // web-chatbot/system-prompt-web-bznsflow.md. Do not remove it.
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: systemMessage },
@@ -120,23 +127,23 @@ export async function complete(systemMessage, userMessage) {
     });
   } catch (err) {
     if (err?.name === 'AbortError') {
-      throw new Error(`Groq timed out after ${TIMEOUT_MS}ms`);
+      throw new Error(`OpenAI timed out after ${TIMEOUT_MS}ms`);
     }
-    throw new Error(`Groq request failed: ${err?.message || err}`);
+    throw new Error(`OpenAI request failed: ${err?.message || err}`);
   } finally {
     clearTimeout(timer);
   }
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
-    throw new Error(`Groq → HTTP ${res.status}: ${detail.slice(0, 300)}`);
+    throw new Error(`OpenAI → HTTP ${res.status}: ${detail.slice(0, 300)}`);
   }
 
   const data = await res.json();
   const content = data?.choices?.[0]?.message?.content ?? '';
   const parsed = parseReply(content);
   if (!parsed) {
-    throw new Error(`Groq returned unparseable content: ${String(content).slice(0, 200)}`);
+    throw new Error(`OpenAI returned unparseable content: ${String(content).slice(0, 200)}`);
   }
   return parsed;
 }

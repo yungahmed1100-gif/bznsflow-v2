@@ -4,7 +4,7 @@ import * as replies from '../api/_lib/replies.js';
 import { INJECTION_RE, validate, isAllowedOrigin, clientIp, bucketKeys, MAX_CHARS }
   from '../api/_lib/guard.js';
 import { extractJson, parseReply }
-  from '../api/_lib/groq.js';
+  from '../api/_lib/llm.js';
 import { detectLang, pickSections, renderHistory, buildSystemMessage }
   from '../api/_lib/prompt.js';
 

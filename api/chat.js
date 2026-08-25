@@ -18,7 +18,7 @@ import * as replies from './_lib/replies.js';
 import { clientIp, isAllowedOrigin, validate, bucketKeys } from './_lib/guard.js';
 import { checkRate, startTurn, finishTurn } from './_lib/db.js';
 import { detectLang, buildSystemMessage } from './_lib/prompt.js';
-import { complete } from './_lib/groq.js';
+import { complete } from './_lib/llm.js';
 
 const HISTORY_TURNS = 20;
 
@@ -131,7 +131,7 @@ export default async function handler(req, res) {
   try {
     answer = await complete(buildSystemMessage(message, history), message);
   } catch (err) {
-    console.error('[chat] Groq failed:', err.message);
+    console.error('[chat] LLM failed:', err.message);
     // 200 with the friendly text — the widget shows `reply` whatever the status.
     // Deliberately NOT persisted: the old flow saved its own error as an
     // assistant turn, so the next request fed the model its own glitch message

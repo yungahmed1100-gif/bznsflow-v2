@@ -32,7 +32,7 @@ Layla: ...
 
 Sections are matched from [`layla-knowledge-base.md`](layla-knowledge-base.md) and injected in the
 visitor's language only — roughly 1–1.2k tokens versus ~7k for the whole catalog, which is what
-keeps a turn inside the Groq free-tier TPM ceiling.
+keeps the per-turn input cost down (OpenAI bills every one of those tokens, every turn).
 
 This is the **web** persona. The WhatsApp real-estate Layla is a different system with its own
 prompt; changes here do not affect it.

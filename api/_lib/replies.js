@@ -18,11 +18,11 @@ export const DEFLECTION =
 export const RATE_IP =
   'شوي شوي 🙏 حاول بعد دقيقة / A bit fast — try again in a minute.';
 
-/** Global daily ceiling — protects the Groq budget. */
+/** Global daily ceiling — protects the LLM budget. */
 export const RATE_GLOBAL =
   'الخدمة مشغولة حالياً، جرّب لاحقاً 🙏 / Service is busy, please try later.';
 
-/** Groq unreachable, slow, or returning nonsense. */
+/** The model is unreachable, slow, or returning nonsense. */
 export const LLM_ERROR =
   'عذراً، صار خطأ بسيط 🙏 جرّب مرة ثانية / Sorry, a small glitch — please try again.';
 

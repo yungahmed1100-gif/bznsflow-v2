@@ -1,10 +1,10 @@
 # Layla web chat — runbook
 
 Backend for the chat widget on bznsflowai.com: a Vercel serverless function at
-**`/api/chat`**, in this same repo, calling Groq and Supabase directly.
+**`/api/chat`**, in this same repo, calling OpenAI and Supabase directly.
 
 ```
-browser widget → /api/chat (Vercel, sin1) → Groq llama-3.3-70b-versatile
+browser widget → /api/chat (Vercel, sin1) → OpenAI gpt-4.1-mini
                                           → Supabase Postgres (PostgREST)
 ```
 
@@ -29,7 +29,7 @@ wrong origin — fix that instead.
 | `api/_lib/guard.js` | origin, sessionId, length, injection regex, client IP, bucket keys |
 | `api/_lib/db.js` | PostgREST client + the three RPC wrappers |
 | `api/_lib/prompt.js` | KB retrieval, language choice, history rendering, system message |
-| `api/_lib/groq.js` | Groq call, JSON mode, balanced-brace fallback parser |
+| `api/_lib/llm.js` | OpenAI call, JSON mode, balanced-brace fallback parser |
 | `api/_lib/replies.js` | bilingual canned strings |
 | `api/_lib/kb.generated.js` | **generated** — do not edit; see "Editing what Layla knows" |
 | `web-chatbot/layla-knowledge-base.md` | the service catalog (source of truth) |
@@ -83,7 +83,7 @@ Order is deliberate:
 8. detect language from the current message
 9. `web_start_turn` → history (oldest→newest) + conversation id
 10. build system message (persona + top-3 catalog sections + history)
-11. Groq
+11. the LLM
 12. `web_finish_turn`
 13. 200
 
@@ -110,7 +110,7 @@ POST /api/chat
 | Status | Meaning |
 |---|---|
 | 200 | normal reply; `handoff:true` renders the WhatsApp CTA |
-| 200 | injection deflection, or a friendly fallback when Groq failed |
+| 200 | injection deflection, or a friendly fallback when the LLM failed |
 | 400 | bad sessionId, empty message, or over-length |
 | 403 | Origin present and not allowed |
 | 405 | not POST |
@@ -137,19 +137,19 @@ browser bundle.
 
 | Variable | Notes |
 |---|---|
-| `GROQ_API_KEY` | 🔒 console.groq.com |
+| `OPENAI_API_KEY` | 🔒 platform.openai.com |
 | `SUPABASE_URL` | `https://svmrfzahbgmvesclbqke.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | 🔒 bypasses RLS — server-side only, forever |
 | `CHAT_ALLOWED_ORIGINS` | comma-separated; same-origin is always allowed without it |
 | `CHAT_RATE_IP_PER_MIN` | default 20 |
-| `CHAT_RATE_GLOBAL_PER_DAY` | default 1000 — sized to the Groq free tier; raise with the plan |
-| `GROQ_MODEL` | default `llama-3.3-70b-versatile` |
-| `CHAT_SMOKE_TOKEN` | 🔒 send it as `message` to get `pong` without spending a Groq call |
+| `CHAT_RATE_GLOBAL_PER_DAY` | default 1000 — a daily SPEND ceiling; OpenAI bills per token |
+| `OPENAI_MODEL` | default `gpt-4.1-mini` |
+| `CHAT_SMOKE_TOKEN` | 🔒 send it as `message` to get `pong` without spending an LLM call |
 
 **`VITE_CHAT_ENDPOINT` must stay unset.** The client defaults to same-origin
 `/api/chat`. Setting it is the rollback lever only.
 
-Timeouts, outermost in: client 20s → function `maxDuration` 30s → Groq 12s →
+Timeouts, outermost in: client 25s → function `maxDuration` 30s → OpenAI 15s →
 each Supabase call 5s.
 
 ---
@@ -219,17 +219,17 @@ Verify it is scheduled with `npx vercel crons ls`. Cron runs only against
 ```bash
 npm test                      # 69 unit checks, no external services
 npm run test:stack up         # Postgres + PostgREST in Docker (not the live DB)
-npm run test:e2e              # 16 checks against that stack; Groq stubbed
-npm run test:e2e -- --real-groq
+npm run test:e2e              # 16 checks against that stack; LLM stubbed
+npm run test:e2e -- --real-openai
 npm run test:stack down
 ```
 
 The e2e suite pins the behaviours that were previously broken: history reaching
 the model chronologically and excluding the message being answered, `handoff`
-latching, injection deflected with zero Groq calls, invalid payloads still
+latching, injection deflected with zero LLM calls, invalid payloads still
 consuming a rate bucket, and a dead Supabase still producing an answer.
 
-Rate limits can be exercised without spending Groq quota, because metering runs
+Rate limits can be exercised without spending OpenAI credit, because metering runs
 before validation — invalid payloads are the free test rig:
 
 ```bash
@@ -301,7 +301,7 @@ phrasings the regex misses — but do not make it the first.
 The regex is tuned to avoid false positives on legitimate asks. If you widen it,
 re-check that **"show me your websites"** and **"tell me more"** still pass.
 
-**The reply parser is deliberately not a regex.** Groq runs in JSON mode, but the
+**The reply parser is deliberately not a regex.** The model runs in JSON mode, but the
 fallback parser walks braces tracking string and escape state. The old greedy
 `/\{[\s\S]*\}/` matched through to the last brace anywhere in the response, so a
 reply that merely mentioned braces silently degraded into the glitch message.
