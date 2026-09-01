@@ -61,7 +61,21 @@
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '4379647862316554');
+      // First-party id, stable per browser. It is the only advanced-matching
+      // key available on a site that captures no PII outside the playbook form,
+      // and it lifts Event Match Quality on every event including this PageView.
+      // Wrapped because storage access itself throws in some privacy modes.
+      var bfExternalId;
+      try {
+        bfExternalId = localStorage.getItem('bf_uid');
+        if (!bfExternalId) {
+          bfExternalId = (window.crypto && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : Date.now() + '-' + Math.random().toString(36).slice(2);
+          localStorage.setItem('bf_uid', bfExternalId);
+        }
+      } catch (e) { bfExternalId = null; }
+      fbq('init', '4379647862316554', bfExternalId ? { external_id: bfExternalId } : {});
       fbq('track', 'PageView');
     </script>
     <!-- ═══ END META PIXEL ═════════════════════════════════════════════════ -->
