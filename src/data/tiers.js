@@ -1,4 +1,4 @@
-// Packaged plans (no prices) — Catch → Convert → Dominate ladder.
+// Packaged plans — Catch → Convert → Dominate ladder, with published pricing.
 // EN + AR variants; consumed by TiersSection via pages/Home.jsx.
 
 // Which roster agents each tier adds, by `key` in data/agents.js. Tiers never

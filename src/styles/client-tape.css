@@ -1,0 +1,97 @@
+/* ============================================================
+   CLIENT TAPE — continuous logo rail
+   Appended last in the manifest: new classes only, overrides nothing.
+ ============================================================ */
+
+.client-tape {
+  padding: var(--space-12) 0;
+  overflow: hidden;              /* the rail must never widen the page */
+}
+
+.client-tape-label {
+  margin-bottom: var(--space-6);
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* The rail is the clipping window; the tracks slide inside it. */
+.client-tape-rail {
+  display: flex;
+  width: max-content;
+  /* Forced LTR. Under RTL the flex tracks lay out right-to-left, which puts the
+     duplicate on the wrong side of the original — the animation then travels
+     away from it and leaves dead space instead of looping. Layout direction is
+     meaningless for a row of logos, so pin it and the loop is seamless in both
+     locales. */
+  direction: ltr;
+  animation: client-tape-scroll 46s linear infinite;
+}
+
+.client-tape-rail:hover { animation-play-state: paused; }
+
+/* min-width is load-bearing, not cosmetic. The loop translates by exactly one
+   track width (-50% of two tracks). If a track is narrower than the viewport,
+   the far edge runs out of content before the cycle restarts and a gap flashes
+   on every pass — at 1280px with eight logos the track measured 1160px and left
+   a 120px hole. Pinning each track to at least the viewport width makes the
+   loop seamless at any screen size; space-around spreads the logos when their
+   natural width falls short. */
+.client-tape-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  min-width: 100vw;
+  gap: clamp(38px, 6vw, 78px);
+  margin: 0;
+  padding: 0 clamp(19px, 3vw, 39px);
+  list-style: none;
+  flex: none;
+}
+
+.client-tape-item { display: flex; align-items: center; }
+
+/* One box for every logo, contained — so a wide wordmark is bound by width and
+   a square mark by height, instead of wordmarks dominating the rail. --logo-scale
+   then corrects the optical weight per logo (see the component). */
+.client-tape-item img {
+  height: calc(52px * var(--logo-scale, 1));
+  width: auto;
+  max-width: calc(150px * var(--logo-scale, 1));
+  object-fit: contain;
+  /* drop-shadow follows the alpha channel, so it traces the mark itself.
+     box-shadow would draw a rectangle around the image box instead. Three of
+     the eight are pale on cream (Wild Muscat, Reading Jeel, Madrasaty) and
+     need the lift; on the dark marks it is imperceptible, which is the point. */
+  filter: drop-shadow(0 2px 3px rgba(26, 26, 26, 0.43));
+}
+
+/* The two that are genuinely tiles rather than free-floating marks. */
+.client-tape-item img.is-tile {
+  border-radius: var(--radius-md);
+}
+
+/* Two tracks × 100% each, so one full track width is exactly -50%. */
+@keyframes client-tape-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* A permanently moving strip is exactly what this rule exists for. Stopped, it
+   must still show the logos — not an empty rail. */
+@media (prefers-reduced-motion: reduce) {
+  .client-tape-rail { animation: none; flex-wrap: wrap; justify-content: center; width: 100%; }
+  .client-tape-track[aria-hidden="true"] { display: none; }
+  .client-tape-track { flex-wrap: wrap; justify-content: center; row-gap: var(--space-5); min-width: 0; }
+}
+
+@media (max-width: 600px) {
+  .client-tape { padding: var(--space-8) 0; }
+  .client-tape-item img {
+    height: calc(40px * var(--logo-scale, 1));
+    max-width: calc(116px * var(--logo-scale, 1));
+  }
+}

@@ -202,8 +202,3 @@ img, video {
   font-size: 1rem;
 }
 
-.btn-xlarge {
-  padding: 18px 40px;
-  font-size: 1.1rem;
-  border-radius: var(--radius-lg);
-}

@@ -1,0 +1,232 @@
+/* ============================================================
+   PLAYBOOK — exit-intent lead capture
+   Appended last: this sheet introduces new classes only and
+   overrides nothing, so it is cascade-safe at the end of the
+   manifest in src/index.css.
+
+   Direction-agnostic by construction — logical properties and
+   centred flow only, so it needs no [dir="rtl"] overrides.
+   ============================================================ */
+
+.playbook-overlay {
+  position: fixed;
+  inset: 0;
+  /* Real stack on this site: skip-link & scroll-progress 2000, navbar 1000,
+     chat widget 950, whatsapp float 900. The modal blocks the page, so it
+     must clear all of those but stay under the skip link, which has to
+     remain reachable. */
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: rgba(26, 26, 26, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  overflow-y: auto;
+  animation: playbook-fade var(--transition) ease-out;
+}
+
+.playbook-card {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100dvh - var(--space-8));
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-6) var(--space-5);
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  animation: playbook-rise var(--transition) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes playbook-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes playbook-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Motion is decoration — the prompt must still appear without it. */
+@media (prefers-reduced-motion: reduce) {
+  .playbook-overlay,
+  .playbook-card { animation: none; }
+}
+
+.playbook-close {
+  position: absolute;
+  top: var(--space-3);
+  inset-inline-end: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.playbook-close:hover { color: var(--text-primary); border-color: var(--border-hover); }
+
+.playbook-close:focus-visible {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(92, 149, 198, 0.22);
+}
+
+.playbook-title {
+  font-size: clamp(1.3rem, 1rem + 1.1vw, 1.65rem);
+  line-height: 1.28;
+  margin-bottom: var(--space-2);
+}
+
+.playbook-sub {
+  color: var(--text-secondary);
+  max-width: 46ch;
+  margin: 0 auto var(--space-3);
+}
+
+/* --- the three problems --- */
+.playbook-problems {
+  counter-reset: playbook-problem;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+  text-align: start;
+}
+
+.playbook-problems li {
+  position: relative;
+  padding-inline-start: 28px;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Numbered, not bulleted: three distinct failures, and the count is part of
+   what the headline promises. */
+.playbook-problems li::before {
+  counter-increment: playbook-problem;
+  content: counter(playbook-problem);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 3px;
+  width: 19px;
+  height: 19px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 19px;
+  text-align: center;
+  color: var(--accent-blue);
+  background: rgba(92, 149, 198, 0.12);
+  border-radius: 50%;
+}
+
+.playbook-cost {
+  margin-bottom: var(--space-2);
+  padding: 10px var(--space-3);
+  text-align: start;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: rgba(92, 149, 198, 0.08);
+  border-inline-start: 2px solid var(--accent-blue);
+  border-radius: var(--radius-sm);
+}
+
+.playbook-solution {
+  margin-bottom: var(--space-4);
+  text-align: start;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* --- form --- */
+.playbook-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 2px;
+  text-align: start;
+}
+
+.playbook-field { display: flex; flex-direction: column; gap: 4px; }
+
+.playbook-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.playbook-field input {
+  width: 100%;
+  padding: 10px var(--space-4);
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.playbook-field input::placeholder { color: var(--text-muted); }
+.playbook-field input:hover { border-color: var(--border-hover); }
+
+.playbook-field input:focus-visible {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(92, 149, 198, 0.22);
+}
+
+/* The CTA sticks to the bottom of the scrolling card. Copy length varies by
+   language (English runs ~30px longer than Arabic here) and viewport height
+   varies more than that on mobile, so pinning it is the only way to guarantee
+   the one element this surface exists for is always on screen. */
+.playbook-submit {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: var(--space-2);
+  justify-content: center;
+}
+.playbook-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.playbook-privacy {
+  margin-top: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.playbook-error {
+  margin-top: var(--space-4);
+  font-size: 0.9rem;
+  color: var(--red);
+}
+
+.playbook-error a { color: var(--accent-blue); text-decoration: underline; }
+
+/* --- success --- */
+.playbook-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--green);
+}
+
+.playbook-success-title { font-size: 1.5rem; color: var(--text-primary); }
+.playbook-success .btn { margin-top: var(--space-2); }
+
+@media (max-width: 600px) {
+  .playbook-overlay { padding: var(--space-3); }
+  .playbook-card { padding: var(--space-8) var(--space-5); }
+}

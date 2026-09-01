@@ -167,42 +167,8 @@ html {
  ============================================================ */
 
 /* ROI hook strip above the pricing grid */
-.pricing-roi-hook {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 40px;
-  padding: 14px 28px;
-  background: linear-gradient(135deg, rgba(86, 155, 213, 0.08), rgba(225, 107, 113, 0.08));
-  border: 1px solid rgba(86, 155, 213, 0.2);
-  border-radius: 100px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  max-width: 600px;
-  margin-inline: auto;
-  text-align: center;
-  line-height: 1.5;
-}
-
-.pricing-roi-hook svg {
-  color: var(--accent-blue);
-  flex-shrink: 0;
-}
 
 /* Price anchor comparison lines */
-.price-anchor {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--green);
-  margin-top: 2px;
-  letter-spacing: 0.01em;
-}
-
-.price-anchor--contrast {
-  color: var(--accent-blue);
-}
 
 /* ============================================================
    QUALITY ENHANCEMENTS

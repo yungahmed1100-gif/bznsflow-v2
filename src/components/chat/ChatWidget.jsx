@@ -9,7 +9,7 @@ import laylaAvatar from '../../assets/layla-avatar.png';
 // wired to the live n8n /webhook/chat backend. Bilingual + RTL-aware, typing
 // indicator, and a WhatsApp handoff button when the backend flags handoff:true.
 
-export function ChatWidget({ t, lang = 'en', trackEvent = () => {} }) {
+export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange = () => {} }) {
   const isAr = lang === 'ar';
   const [isOpen, setIsOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
@@ -34,6 +34,10 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {} }) {
   }, [hasOpened, t.chat_greeting, trackEvent]);
 
   const closePanel = useCallback(() => setIsOpen(false), []);
+
+  // Report open state upward so other surfaces (the playbook popup) can stand
+  // down rather than stacking a second dialog over this one.
+  useEffect(() => { onOpenChange(isOpen); }, [isOpen, onOpenChange]);
 
   // Auto-scroll to newest message / typing indicator.
   useEffect(() => {

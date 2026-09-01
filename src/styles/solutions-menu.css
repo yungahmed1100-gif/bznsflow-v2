@@ -46,7 +46,6 @@
 
 /* FAQ + CTA secondary action spacing (additive) */
 .faq-cta { margin-top: var(--space-12); display: flex; justify-content: center; }
-.cta-secondary { margin-top: 14px; }
 
 /* ============================================================
    CENTERED LAYOUT PASS (additive) — center section headers,

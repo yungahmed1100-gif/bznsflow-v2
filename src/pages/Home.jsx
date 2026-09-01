@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getStrings } from '../i18n';
 import { initReveals } from '../lib/reveal';
 import { trackEvent } from '../lib/analytics';
+import { useExitIntent } from '../hooks/useExitIntent';
 import { CALENDAR_URL, WHATSAPP_URL, LANGUAGES } from '../lib/constants';
 import { HOME_SEO, buildSchemas } from '../lib/schemas';
 import { TIERS, TIERS_AR } from '../data/tiers';
@@ -12,20 +13,18 @@ import { Seo } from '../components/ui/Seo';
 // (Previously React.lazy behind <Suspense>, which rendered nothing during SSG.)
 import { NavBar }             from '../components/layout/NavBar';
 import { HeroSection }        from '../components/sections/HeroSection';
-import { ProblemSection }     from '../components/sections/ProblemSection';
 import { SolutionsSection }   from '../components/sections/SolutionsSection';
 import { ChatWidget }         from '../components/chat/ChatWidget';
-import { TwoTrackSection }    from '../components/sections/TwoTrackSection';
+import { ClientTape }        from '../components/sections/ClientTape';
 import { AITeamSection }      from '../components/sections/AITeamSection';
 import { HowItWorksSection }  from '../components/sections/HowItWorksSection';
 import { TiersSection }       from '../components/sections/TiersSection';
 import { BenefitsSection }    from '../components/sections/BenefitsSection';
-import { TestimonialsSection } from '../components/sections/TestimonialsSection';
 import { AboutSection }       from '../components/sections/AboutSection';
 import { FAQSection }         from '../components/sections/FAQSection';
-import { CTASection }         from '../components/sections/CTASection';
 import { Footer }             from '../components/layout/Footer';
 import { StickyMobileCTA }    from '../components/ui/StickyMobileCTA';
+import { PlaybookModal }      from '../components/ui/PlaybookModal';
 
 // ─── Home page ───────────────────────────────────────────────────────────────
 // `lang` is the locale of THIS prerendered route ('ar' at /, 'en' at /en).
@@ -38,6 +37,11 @@ export default function Home({ lang: routeLang = 'ar' }) {
   const [isScrolled,    setIsScrolled]    = useState(false);
   const [activeLink,    setActiveLink]    = useState('');
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isChatOpen,    setIsChatOpen]    = useState(false);
+
+  // The popup must never stack on top of another surface that already
+  // owns the screen — two dialogs at once is a trap, not a prompt.
+  const playbook = useExitIntent({ suppressed: isChatOpen || isMenuOpen });
 
   const t              = getStrings(lang);
   const activeTiers    = lang === 'ar' ? TIERS_AR : TIERS;
@@ -114,17 +118,14 @@ export default function Home({ lang: routeLang = 'ar' }) {
           CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL}
           onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent}
         />
-        <ProblemSection t={t} />
+        <ClientTape t={t} />
         <SolutionsSection t={t} trackEvent={trackEvent} />
-        <TwoTrackSection t={t} onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent} />
         <AITeamSection t={t} lang={lang} trackEvent={trackEvent} />
         <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <TiersSection t={t} tiers={activeTiers} lang={lang} trackEvent={trackEvent} />
         <BenefitsSection t={t} />
-        <TestimonialsSection t={t} lang={lang} />
         <AboutSection t={t} lang={lang} CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL} trackEvent={trackEvent} />
         <FAQSection t={t} trackEvent={trackEvent} />
-        <CTASection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
       </main>
 
       <Footer
@@ -139,7 +140,14 @@ export default function Home({ lang: routeLang = 'ar' }) {
         trackEvent={trackEvent}
       />
 
-      <ChatWidget t={t} lang={lang} trackEvent={trackEvent} />
+      <ChatWidget t={t} lang={lang} trackEvent={trackEvent} onOpenChange={setIsChatOpen} />
+
+      <PlaybookModal
+        t={t} lang={lang}
+        open={playbook.armed}
+        onClose={playbook.dismiss}
+        trackEvent={trackEvent}
+      />
     </>
   );
 }

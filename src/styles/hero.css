@@ -10,15 +10,6 @@
   overflow: hidden;
 }
 
-.hero-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-}
-
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -162,7 +153,6 @@
   width: 18px;
   height: 18px;
 }
-
 
 .pipeline-node-label {
   font-weight: 700;
@@ -361,4 +351,53 @@
   width: 1px;
   height: 48px;
   background: linear-gradient(to bottom, var(--text-secondary), transparent);
+}
+
+/* ============================================================
+   HERO — decorative flow-block rails
+   Sits at z-index 2: above the overlay, below .hero-content (3).
+ ============================================================ */
+.hero-flow {
+  position: absolute;
+  /* Anchored to the headline band, not the hero's midpoint. The hero runs well
+     past the fold (1442px against a 656px viewport here), so centring vertically
+     parks the rails entirely below the visible area. */
+  top: 24%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 3vh, 44px);
+  pointer-events: none;
+  /* Decoration must never intercept a click or widen the page; .hero already
+     clips with overflow:hidden, so the rails can sit partly off-canvas. */
+}
+
+/* PHYSICAL left/right, deliberately not inset-inline-*. These two crops are cut
+   from opposite sides of the source artwork and their arrows sweep outward; a
+   logical property flips them under RTL, so the Arabic page showed the left
+   cluster on the right with both arrows aimed inward at the headline — and the
+   two locales disagreed with each other. Art with baked-in direction does not
+   follow text direction. */
+.hero-flow--left  { left:  clamp(-40px, -2vw, 0px); }
+.hero-flow--right { right: clamp(-40px, -2vw, 0px); }
+
+.hero-flow img {
+  display: block;
+  width: clamp(120px, 12vw, 190px);   /* native 307px — stays above 1.5x at the widest */
+  height: auto;
+  opacity: 0.52;
+}
+
+/* Fade down the stack so it reads as depth, and nudge alternate rows so the
+   three copies do not look like the same stamp repeated. */
+/* Physical nudge for the same reason — --x-sign inverts under RTL. */
+.hero-flow img:nth-child(2) { opacity: 0.3; }
+.hero-flow--left  img:nth-child(2) { transform: translateX(18px); }
+.hero-flow--right img:nth-child(2) { transform: translateX(-18px); }
+
+/* No room beside the 1200px content column below this, and on a phone the rails
+   would sit under the headline. */
+@media (max-width: 1180px) {
+  .hero-flow { display: none; }
 }

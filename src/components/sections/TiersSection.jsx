@@ -5,7 +5,7 @@ import { AGENT_BY_KEY, AGENT_BY_KEY_AR } from '../../data/agents';
 import { GROWTH_AGENTS } from '../../data/tiers';
 import { AGENT_AVATARS } from '../../lib/agentAvatars';
 
-// Packaged plans (no prices) — Catch → Convert → Dominate ladder.
+// Packaged plans — Catch → Convert → Dominate ladder, with published pricing.
 // Tier content comes from the `tiers` array (TIERS / TIERS_AR in pages/Home.jsx);
 // section chrome (labels, terms, guarantee) comes from translations `t`.
 // Each tier lists the roster agents it adds — resolved from data/agents.js by

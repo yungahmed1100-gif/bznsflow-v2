@@ -25,9 +25,6 @@
   }
 
   .benefits-grid,
-  .use-cases-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 
   .about-wrapper {
     grid-template-columns: 260px 1fr;
@@ -37,10 +34,6 @@
   .footer-grid {
     grid-template-columns: 1fr 1fr;
     gap: 40px;
-  }
-
-  .problem-grid {
-    grid-template-columns: 1fr auto 1fr;
   }
 }
 
@@ -121,10 +114,6 @@
   }
 
   /* Hero logo — constrain size, disable float animation on mobile */
-  .hero-logo-large {
-    width: 220px;
-    animation: none;
-  }
 
   /* Allow button text to wrap on narrow screens */
   .btn {
@@ -145,22 +134,6 @@
 
   .stat-item {
     padding: 0 20px;
-  }
-
-  /* Problem Grid Mobile */
-  .problem-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .problem-divider {
-    flex-direction: row;
-    padding: 24px 0;
-    padding-top: 24px;
-  }
-
-  .divider-line {
-    width: 60px;
-    height: 1px;
   }
 
   /* Benefits & Use Cases Mobile */
@@ -195,10 +168,6 @@
   }
 
   /* CTA Mobile */
-  .cta-wrapper {
-    padding: 48px 24px;
-  }
-
   /* Footer Mobile */
   .footer-grid {
     grid-template-columns: 1fr;
@@ -254,10 +223,6 @@
     padding: 0 16px;
   }
 
-  .hero-logo-large {
-    width: 160px;
-  }
-
   .hero-headline {
     font-size: 2rem;
   }
@@ -266,22 +231,7 @@
     font-size: 0.95rem;
   }
 
-  .problem-card,
-  .solution-card {
+  .benefit-card {
     padding: 24px;
-  }
-
-  .benefit-card,
-  .use-case-card {
-    padding: 24px;
-  }
-
-  .cta-wrapper {
-    padding: 40px 20px;
-  }
-
-  .btn-xlarge {
-    padding: 16px 28px;
-    font-size: 1rem;
   }
 }

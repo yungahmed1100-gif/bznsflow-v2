@@ -23,7 +23,7 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             <div className="footer-col">
               <h4 className="footer-heading">{t.footer_nav_heading}</h4>
               <ul className="footer-links">
-                <li><a href="#two-track" onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.footer_nav_2}</a></li>
+                <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_nav_2}</a></li>
                 <li><a href="#ai-team" onClick={(e) => onSmoothScroll(e, '#ai-team')}>{t.team_label}</a></li>
                 <li><a href="#tiers" onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.tiers_label}</a></li>
                 <li><a href="#how-it-works" onClick={(e) => onSmoothScroll(e, '#how-it-works')}>{t.footer_nav_3}</a></li>
@@ -34,9 +34,9 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             <div className="footer-col">
               <h4 className="footer-heading">{t.footer_services_heading}</h4>
               <ul className="footer-links">
-                <li><a href="#two-track" onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.footer_svc_1}</a></li>
-                <li><a href="#two-track" onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.footer_svc_2}</a></li>
-                <li><a href="#two-track" onClick={(e) => onSmoothScroll(e, '#two-track')}>{t.footer_svc_3}</a></li>
+                <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_svc_1}</a></li>
+                <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_svc_2}</a></li>
+                <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_svc_3}</a></li>
                 <li><a href="#benefits" onClick={(e) => onSmoothScroll(e, '#benefits')}>{t.footer_svc_4}</a></li>
                 <li><a href="#benefits" onClick={(e) => onSmoothScroll(e, '#benefits')}>{t.footer_svc_5}</a></li>
               </ul>

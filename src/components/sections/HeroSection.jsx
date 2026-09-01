@@ -59,6 +59,23 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
       </div>
       <div className="hero-overlay" aria-hidden="true" />
 
+      {/* Decorative isometric flow blocks flanking the hero, cropped from the
+          brand artwork — the block clusters either side of the logo, so no
+          wordmark or contact strip comes along. Each side gets its own cluster
+          rather than the same image mirrored. Purely atmospheric: aria-hidden,
+          and dropped on narrow screens where there is no room beside the
+          content column. */}
+      {[
+        { side: 'left', src: '/hero/flow-left.png' },
+        { side: 'right', src: '/hero/flow-right.png' },
+      ].map(({ side, src }) => (
+        <div key={side} className={`hero-flow hero-flow--${side}`} aria-hidden="true">
+          {[0, 1].map((i) => (
+            <img key={i} src={src} alt="" width={307} height={340} decoding="async" />
+          ))}
+        </div>
+      ))}
+
       <div className="hero-content">
         <div className="hero-layout">
           <div className="hero-text-block">

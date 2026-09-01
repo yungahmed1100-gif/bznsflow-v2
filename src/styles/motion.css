@@ -55,22 +55,10 @@
 .hero .scroll-indicator { z-index: 3; }
 
 /* ---- Chip hover-pop (track verticals + industry chips) ---- */
-.track-vertical-chip {
-  transition: transform var(--duration-fast) var(--ease-out-expo),
-              border-color var(--duration-fast) var(--ease-out-expo),
-              background var(--duration-fast) var(--ease-out-expo);
-}
-.track-vertical-chip:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-hover);
-  background: var(--bg-card-hover);
-}
 
 /* ---- Accent bar transition for track cards ----
    transform-origin has no logical equivalent; this LTR/RTL pair is an
    intentional survivor of the logical-property migration. */
-.track-card::before { transform-origin: left center; transition: transform var(--duration-slow) var(--ease-out-expo); }
-[dir="rtl"] .track-card::before { transform-origin: right center; }
 
 /* Aurora and grain are static washes — they stay visible under
    reduced motion (nothing animates). */
