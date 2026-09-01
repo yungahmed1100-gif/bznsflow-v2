@@ -192,7 +192,7 @@
   /* WhatsApp Float Mobile */
   .whatsapp-float {
     bottom: 20px;
-    inset-inline-end: 20px;
+    inset-inline-start: 20px;
   }
 
   .whatsapp-icon {

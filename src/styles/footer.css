@@ -124,10 +124,14 @@
 /* ============================================================
    FLOATING WHATSAPP BUTTON
  ============================================================ */
+/* Opposite side from the Layla chat widget, which owns inset-inline-end. These
+   used to share a side, stacked vertically -- that only held while the chat
+   showed its bare 64px launcher. The moment its invite bubble appears it fills
+   the exact band this button sat in, and the chat's higher z-index hid it. */
 .whatsapp-float {
   position: fixed;
-  bottom: 108px; /* stacked above the Layla chat launcher (64px bubble + 32px + gap) */
-  inset-inline-end: 32px;
+  bottom: 32px;
+  inset-inline-start: 32px;
   z-index: 900;
 }
 

@@ -66,8 +66,11 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
           and dropped on narrow screens where there is no room beside the
           content column. */}
       {[
-        { side: 'left', src: '/hero/flow-left.png' },
-        { side: 'right', src: '/hero/flow-right.png' },
+        // Crops are crossed on purpose: the right-hand crop sits on the left
+        // rail and vice versa, so the arrows sweep inward and frame the
+        // headline rather than leading the eye off the page.
+        { side: 'left', src: '/hero/flow-right.png' },
+        { side: 'right', src: '/hero/flow-left.png' },
       ].map(({ side, src }) => (
         <div key={side} className={`hero-flow hero-flow--${side}`} aria-hidden="true">
           {[0, 1].map((i) => (

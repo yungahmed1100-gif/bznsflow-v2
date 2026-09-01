@@ -379,8 +379,9 @@
    cluster on the right with both arrows aimed inward at the headline — and the
    two locales disagreed with each other. Art with baked-in direction does not
    follow text direction. */
-.hero-flow--left  { left:  clamp(-40px, -2vw, 0px); }
-.hero-flow--right { right: clamp(-40px, -2vw, 0px); }
+/* Flush to the page margins — no negative inset, nothing bleeding off-canvas. */
+.hero-flow--left  { left:  0; }
+.hero-flow--right { right: 0; }
 
 .hero-flow img {
   display: block;
@@ -395,6 +396,7 @@
 .hero-flow img:nth-child(2) { opacity: 0.3; }
 .hero-flow--left  img:nth-child(2) { transform: translateX(18px); }
 .hero-flow--right img:nth-child(2) { transform: translateX(-18px); }
+/* Nudges point inward from each margin, so nothing is clipped at the edge. */
 
 /* No room beside the 1200px content column below this, and on a phone the rails
    would sit under the headline. */
