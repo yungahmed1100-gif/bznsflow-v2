@@ -59,22 +59,45 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
       </div>
       <div className="hero-overlay" aria-hidden="true" />
 
-      {/* Decorative isometric flow blocks flanking the hero, cropped from the
-          brand artwork — the block clusters either side of the logo, so no
-          wordmark or contact strip comes along. Each side gets its own cluster
-          rather than the same image mirrored. Purely atmospheric: aria-hidden,
-          and dropped on narrow screens where there is no room beside the
-          content column. */}
+      {/* Decorative isometric flow rails, cropped from the brand artwork either
+          side of the logo so no wordmark or contact strip comes along.
+
+          The two crops carry opposite arrows: flow-right sweeps UP, flow-left
+          sweeps DOWN. So the upper block in both rails is flow-right and the
+          lower is flow-left — arrows up at the top, down at the bottom, on both
+          sides. Each is mirrored on whichever side needs it so every arrow also
+          points inward, toward the headline.
+
+          Purely atmospheric: aria-hidden, and dropped on narrow screens where
+          there is no room beside the content column. */}
       {[
-        // Crops are crossed on purpose: the right-hand crop sits on the left
-        // rail and vice versa, so the arrows sweep inward and frame the
-        // headline rather than leading the eye off the page.
-        { side: 'left', src: '/hero/flow-right.png' },
-        { side: 'right', src: '/hero/flow-left.png' },
-      ].map(({ side, src }) => (
+        {
+          side: 'left',
+          blocks: [
+            { src: '/hero/flow-right.png', mirrored: false },  // up + right (inward)
+            { src: '/hero/flow-left.png', mirrored: true },    // down + right (inward)
+          ],
+        },
+        {
+          side: 'right',
+          blocks: [
+            { src: '/hero/flow-right.png', mirrored: true },   // up + left (inward)
+            { src: '/hero/flow-left.png', mirrored: false },   // down + left (inward)
+          ],
+        },
+      ].map(({ side, blocks }) => (
         <div key={side} className={`hero-flow hero-flow--${side}`} aria-hidden="true">
-          {[0, 1].map((i) => (
-            <img key={i} src={src} alt="" width={307} height={340} decoding="async" />
+          {blocks.map(({ src, mirrored }, i) => (
+            <img
+              key={i}
+              src={src}
+              alt=""
+              className={mirrored ? 'is-mirrored' : undefined}
+              width={307}
+              height={340}
+              decoding="async"
+              loading="eager"
+            />
           ))}
         </div>
       ))}

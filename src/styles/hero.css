@@ -390,17 +390,16 @@
   opacity: 0.52;
 }
 
-/* Fade down the stack so it reads as depth, and nudge alternate rows so the
-   three copies do not look like the same stamp repeated. */
-/* Physical nudge for the same reason — --x-sign inverts under RTL. */
-/* The upper block in each rail is mirrored so its arrow sweeps outward, away
-   from the headline, instead of pointing back into the copy. */
-.hero-flow img:first-child { transform: scaleX(-1); }
+/* Mirrored per-block by HeroSection, not per-rail: which of the two crops needs
+   flipping depends on the side it sits on. Deliberately a class rather than a
+   :nth-child rule or a logical property — the arrows are baked into the
+   artwork, so they must not flip with text direction under RTL. */
+.hero-flow img.is-mirrored { transform: scaleX(-1); }
 
+/* The lower block fades back so the pair reads as depth rather than as the same
+   stamp twice. No horizontal offset between them: both sit flush against the
+   viewport edge as one column, instead of stepping inward and reading as adrift. */
 .hero-flow img:nth-child(2) { opacity: 0.3; }
-.hero-flow--left  img:nth-child(2) { transform: translateX(18px); }
-.hero-flow--right img:nth-child(2) { transform: translateX(-18px); }
-/* Nudges point inward from each margin, so nothing is clipped at the edge. */
 
 /* No room beside the 1200px content column below this, and on a phone the rails
    would sit under the headline. */
