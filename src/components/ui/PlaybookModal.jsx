@@ -10,7 +10,7 @@ import { Icon } from './Icon';
 // appends the row to the CRM sheet and, on `playbook: true`, emails the teaser
 // with the PDF attached. All this component owes it is a well-formed POST.
 
-const PLAYBOOK_PDF = '/bznsflow-growth-playbook-realestate.pdf';
+const PLAYBOOK_PDF = '/bznsflow-sme-operating-playbook.pdf';
 const LEAD_ENDPOINT = import.meta.env.VITE_LEAD_ENDPOINT;
 
 const FOCUSABLE =

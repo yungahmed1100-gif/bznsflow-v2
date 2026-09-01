@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BznsFlow — The SME Operating Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Cairo:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#151515; --cream:#F7EFE1; --muted:#9A958C;
+    --blue:#5B8FC9; --green:#5CA36B; --red:#E8695A; --orange:#F0A03C;
+    --line:rgba(247,239,225,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  @page{size:A4;margin:0}
+  html,body{background:var(--ink)}
+  body{font-family:'Outfit',sans-serif;color:var(--cream);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{width:210mm;height:297mm;padding:18mm 16mm 14mm;position:relative;overflow:hidden;
+        display:flex;flex-direction:column;background:var(--ink);break-after:page}
+  .page:last-child{break-after:auto}
+  .ar{font-family:'Cairo',sans-serif;direction:rtl;text-align:right}
+  .mono{font-family:'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+
+  /* ── header ── */
+  .sec{display:flex;align-items:center;gap:10px;margin-bottom:9mm}
+  .sec .num{background:var(--orange);color:var(--ink);font-weight:600;font-size:8pt;padding:2.5px 7px;border-radius:2px}
+  .sec .lbl{font-size:8pt;color:var(--muted)}
+  h2.ar{font-size:23pt;font-weight:700;line-height:1.45;margin-bottom:2mm}
+  .sub.ar{font-size:11pt;color:var(--muted);font-weight:300;margin-bottom:7mm}
+  h3{font-size:16pt;font-weight:600;margin-bottom:2mm;letter-spacing:-.01em}
+  .lede{font-size:10pt;color:#C9C2B6;font-weight:300;line-height:1.6;margin-bottom:6mm}
+  .rule{height:1px;background:var(--line);margin:0 0 7mm}
+
+  /* ── cover ── */
+  .cover{justify-content:flex-start}
+  .cover .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:34mm}
+  .cover .top .mono{font-size:8pt;color:var(--muted);line-height:1.9}
+  .mark{width:15mm;height:15mm;border-radius:3px;background:linear-gradient(135deg,var(--blue),var(--green));
+        display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13pt;color:var(--ink)}
+  .cover h1.ar{font-size:36pt;font-weight:800;line-height:1.4;margin-bottom:4mm}
+  .cover .tag.ar{font-size:13pt;color:var(--muted);font-weight:300;margin-bottom:12mm}
+  .bars{display:flex;height:3px;margin-bottom:12mm}
+  .bars i{flex:1}
+  .cover h1.en{font-size:27pt;font-weight:700;line-height:1.2;margin-bottom:1mm}
+  .cover .tag.en{font-size:15pt;color:var(--muted);font-weight:300;margin-bottom:8mm}
+  .cover p{font-size:10.5pt;color:#C9C2B6;font-weight:300;line-height:1.7;max-width:118mm}
+  .cover .foot{margin-top:auto;border-top:1px solid var(--line);padding-top:5mm;
+               display:flex;justify-content:space-between;align-items:flex-end}
+
+  /* ── cards ── */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-bottom:6mm}
+  .card{border-left:2.5px solid var(--c,var(--blue));background:rgba(247,239,225,.035);padding:5mm 5.5mm;border-radius:0 3px 3px 0}
+  .card .k{font-size:19pt;font-weight:700;color:var(--c,var(--blue));line-height:1;margin-bottom:2.5mm}
+  .card .t{font-size:9.5pt;font-weight:600;margin-bottom:2mm}
+  .card p{font-size:8.5pt;color:#B5AEA2;font-weight:300;line-height:1.55}
+  .card .a{font-size:9pt;color:#B5AEA2;margin-top:3mm;font-weight:300}
+
+  /* ── steps ── */
+  .step{display:flex;gap:5mm;margin-bottom:5.5mm}
+  .step .n{flex:0 0 8mm;height:8mm;border-radius:50%;border:1.5px solid var(--c,var(--blue));color:var(--c,var(--blue));
+           display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:600}
+  .step .b{flex:1}
+  .step h4{font-size:11pt;font-weight:600;margin-bottom:1.5mm}
+  .step .a{font-size:9.5pt;color:#B5AEA2;font-weight:300;margin-bottom:1.5mm}
+  .step p{font-size:9pt;color:#B5AEA2;font-weight:300;line-height:1.6}
+
+  /* ── pricing ── */
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin-bottom:6mm}
+  .plan{background:rgba(247,239,225,.035);border-radius:3px;padding:5mm 4.5mm;border-top:2.5px solid var(--c)}
+  .plan .nm{font-size:11pt;font-weight:700;color:var(--c);margin-bottom:1mm}
+  .plan .pr{font-size:15pt;font-weight:700;margin-bottom:.5mm}
+  .plan .su{font-size:8pt;color:var(--muted);margin-bottom:3.5mm}
+  .plan ul{list-style:none;font-size:8.5pt;color:#B5AEA2;font-weight:300;line-height:1.75}
+  .plan li::before{content:"·";color:var(--c);margin-right:5px;font-weight:700}
+
+  .note{border-left:2.5px solid var(--c,var(--green));background:rgba(247,239,225,.035);padding:4.5mm 5mm;border-radius:0 3px 3px 0;margin-bottom:5mm}
+  .note p{font-size:9pt;color:#C9C2B6;font-weight:300;line-height:1.6}
+  .note .ar{font-size:10pt;margin-bottom:2mm;color:var(--cream)}
+
+  table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  th{text-align:left;font-size:7.5pt;color:var(--muted);font-weight:500;padding:0 0 2.5mm;border-bottom:1px solid var(--line)}
+  td{padding:2.8mm 0;border-bottom:1px solid rgba(247,239,225,.07);color:#C9C2B6;font-weight:300;vertical-align:top}
+  td.w{color:var(--cream);font-weight:500}
+
+  .cta{background:linear-gradient(135deg,rgba(91,143,201,.16),rgba(92,163,107,.16));
+       border:1px solid var(--line);border-radius:4px;padding:7mm;text-align:center;margin-top:auto}
+  .cta .ar{font-size:15pt;font-weight:700;text-align:center;margin-bottom:2mm}
+  .cta .en{font-size:11pt;font-weight:600;color:var(--green);margin-bottom:3.5mm}
+  .cta .mono{font-size:8pt;color:#C9C2B6;line-height:1.9}
+
+  .pf{margin-top:auto;padding-top:5mm;border-top:1px solid var(--line);
+      display:flex;justify-content:space-between;font-size:7.5pt;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- ══ COVER ══ -->
+<section class="page cover">
+  <div class="top">
+    <div class="mono">SME OPERATING PLAYBOOK · 2026<br>GCC EDITION</div>
+    <div class="mark">B</div>
+  </div>
+  <h1 class="ar">دليل تشغيل الشركات الصغيرة والمتوسطة</h1>
+  <div class="tag ar">لماذا تتعثّر الأعمال الجيدة عند التوسّع — وما الذي يوقف ذلك؟</div>
+  <div class="bars"><i style="background:var(--green)"></i><i style="background:var(--blue)"></i><i style="background:var(--red)"></i><i style="background:var(--orange)"></i></div>
+  <h1 class="en">The SME Operating Playbook</h1>
+  <div class="tag en">Why good businesses stall as they grow</div>
+  <p>Most small businesses in the Gulf do not stall because the work is bad. They stall because
+     the business runs on memory, WhatsApp threads and whoever happens to be on shift. This
+     playbook names the three failures that cause it, and the infrastructure that removes them.</p>
+  <div class="foot">
+    <div><div class="mono" style="font-size:7.5pt;color:var(--muted)">PREPARED BY</div>
+      <div style="font-weight:700;font-size:12pt;letter-spacing:.04em">BZNSFLOW</div>
+      <div class="mono" style="font-size:7.5pt;color:var(--muted)">AI INFRASTRUCTURE FOR GCC SMES</div></div>
+    <div class="mono" style="font-size:7.5pt;color:var(--muted);text-align:right">BZNSFLOWAI.COM<br>+20 103 675 5930</div>
+  </div>
+</section>
+
+<!-- ══ 01 THE THREE FAILURES ══ -->
+<section class="page">
+  <div class="sec"><span class="num">01</span><span class="lbl mono">WHERE GROWTH LEAKS</span></div>
+  <h2 class="ar">ثلاثة أعطال تُوقف نمو الشركات الصغيرة</h2>
+  <div class="sub ar">لا علاقة لأيٍّ منها بجودة ما تقدّمه.</div>
+  <div class="rule"></div>
+  <h3>Three failures, and none of them are your product</h3>
+  <p class="lede">They compound. Each one makes the next harder to see.</p>
+
+  <div class="step" style="--c:var(--red)">
+    <div class="n">01</div>
+    <div class="b"><h4>You are invisible where the decision happens</h4>
+      <div class="a ar">أنت غير موجود في المكان الذي يُتّخذ فيه القرار</div>
+      <p>Buyers compare, ask and decide online — often on WhatsApp and Instagram — long before they
+         contact you. A business with no presence at that moment is not losing to a better
+         competitor. It is losing to a visible one.</p></div>
+  </div>
+  <div class="step" style="--c:var(--orange)">
+    <div class="n">02</div>
+    <div class="b"><h4>Nothing holds the business together</h4>
+      <div class="a ar">لا يوجد نظام واحد يجمع العمل</div>
+      <p>Leads sit in five places: WhatsApp, a spreadsheet, a notebook, two personal phones and
+         someone's memory. No one view exists, so nothing can be measured, and anything not
+         measured cannot be improved.</p></div>
+  </div>
+  <div class="step" style="--c:var(--blue)">
+    <div class="n">03</div>
+    <div class="b"><h4>Output depends on who is working</h4>
+      <div class="a ar">جودة العمل تتغيّر بتغيّر الموظف</div>
+      <p>Response time, tone, follow-up and quality all change with the shift. The owner becomes the
+         quality control, which caps the business at the number of hours they can personally watch.
+         This is the ceiling most SMEs never get past.</p></div>
+  </div>
+
+  <div class="note" style="--c:var(--red)">
+    <div class="ar">العطل الثالث هو السقف الحقيقي — لأنه يجعل صاحب العمل نفسه هو النظام.</div>
+    <p>The third failure is the real ceiling: it makes the owner the system. Hiring does not fix it,
+       because every new hire inherits the same absence of process.</p>
+  </div>
+  <div class="pf"><span class="mono">BZNSFLOWAI.COM · WHERE GROWTH LEAKS</span><span class="mono">2 / 6</span></div>
+</section>
+
+<!-- ══ 02 WHAT IT COSTS ══ -->
+<section class="page">
+  <div class="sec"><span class="num">02</span><span class="lbl mono">WHAT IT COSTS</span></div>
+  <h2 class="ar">ما الذي يكلّفه التأخير فعلياً؟</h2>
+  <div class="sub ar">أرقام من قطاع العقارات — القطاع الذي قِسنا فيه الأثر بدقّة.</div>
+  <div class="rule"></div>
+  <h3>The cost of a slow reply</h3>
+  <p class="lede">The clearest measurement comes from real estate, where every portal inquiry is
+     timestamped. The pattern is not specific to property — only the price tag is.</p>
+
+  <div class="grid">
+    <div class="card" style="--c:var(--red)"><div class="k">10 min</div>
+      <div class="t">The threshold</div>
+      <p>Past roughly ten minutes without a reply, a portal inquiry has usually already moved on.</p>
+      <div class="a ar">بعد عشر دقائق، غالباً ما يكون العميل قد انتقل لغيرك</div></div>
+    <div class="card" style="--c:var(--orange)"><div class="k">80%</div>
+      <div class="t">Conversion drop</div>
+      <p>Conversion falls by about 80% once the response crosses that threshold.</p>
+      <div class="a ar">انخفاض التحويل بنحو 80% عند تجاوز تلك المدة</div></div>
+    <div class="card" style="--c:var(--green)"><div class="k">21×</div>
+      <div class="t">Lift under five minutes</div>
+      <p>Replying inside five minutes is associated with a 21× higher conversion rate.</p>
+      <div class="a ar">الرد خلال أقل من خمس دقائق يرفع التحويل 21 ضعفاً</div></div>
+    <div class="card" style="--c:var(--blue)"><div class="k">OMR 5,000+</div>
+      <div class="t">One missed buyer</div>
+      <p>Commission lost on a single missed high-value buyer in Omani real estate.</p>
+      <div class="a ar">العمولة المفقودة من مشترٍ واحد ذي قيمة عالية</div></div>
+  </div>
+
+  <div class="note" style="--c:var(--muted)">
+    <p><strong style="color:var(--cream)">On these numbers.</strong> These are industry figures for
+       lead-response behaviour, not a measurement of our own clients. We publish the distinction
+       because a playbook that blurs it is not worth reading. Our own measured performance is on
+       page 5, and that one is ours.</p>
+  </div>
+  <div class="pf"><span class="mono">BZNSFLOWAI.COM · WHAT IT COSTS</span><span class="mono">3 / 6</span></div>
+</section>
+
+<!-- ══ 03 THE SYSTEM ══ -->
+<section class="page">
+  <div class="sec"><span class="num">03</span><span class="lbl mono">THE SYSTEM</span></div>
+  <h2 class="ar">البنية التي تُشغّل العمل بدلاً منك</h2>
+  <div class="sub ar">أربع طبقات — كل طبقة تُغلق عطلاً من الأعطال الثلاثة.</div>
+  <div class="rule"></div>
+  <h3>Four layers, built and run for you</h3>
+  <p class="lede">Think of it the way a developer thinks about infrastructure — except you do not
+     need a developer, because we assemble and operate it.</p>
+
+  <div class="step" style="--c:var(--green)">
+    <div class="n">01</div>
+    <div class="b"><h4>The front office — Layla on WhatsApp</h4>
+      <div class="a ar">ليلى — موظفة الاستقبال الذكية على واتساب</div>
+      <p>Answers every inquiry in Arabic or English within seconds, 24/7. Qualifies, books into your
+         calendar, and hands your team a conversation that is ready to act on.
+         <strong style="color:var(--cream)">Closes failure 1 and 3.</strong></p></div>
+  </div>
+  <div class="step" style="--c:var(--blue)">
+    <div class="n">02</div>
+    <div class="b"><h4>The front door — a site built to capture</h4>
+      <div class="a ar">موقع مبني للتحويل، لا للعرض فقط</div>
+      <p>An Arabic-first site that feeds the same brain rather than sitting apart from it. Every
+         inquiry lands in one place. <strong style="color:var(--cream)">Closes failure 1.</strong></p></div>
+  </div>
+  <div class="step" style="--c:var(--orange)">
+    <div class="n">03</div>
+    <div class="b"><h4>The spine — CRM and automated follow-up</h4>
+      <div class="a ar">نظام موحّد مع متابعة تلقائية</div>
+      <p>One pipeline holding every lead and its history. Follow-up fires on schedule instead of on
+         memory, so nothing depends on who remembered.
+         <strong style="color:var(--cream)">Closes failure 2.</strong></p></div>
+  </div>
+  <div class="step" style="--c:var(--red)">
+    <div class="n">04</div>
+    <div class="b"><h4>The instruments — reporting the owner can read</h4>
+      <div class="a ar">لوحة تحكّم تُظهر ما يحدث فعلاً</div>
+      <p>Where leads come from, what converts, who responds and how fast. You stop guessing and
+         start managing with numbers. <strong style="color:var(--cream)">Closes failure 2 and 3.</strong></p></div>
+  </div>
+
+  <div class="note" style="--c:var(--blue)">
+    <div class="ar">الفرق ليس في الأدوات — بل في أن أحداً ما يركّبها ويشغّلها ويتحمّل مسؤوليتها.</div>
+    <p>The tools are not the differentiator; plenty of businesses own tools they never finished
+       configuring. The difference is that this is assembled, operated and owned for you.</p>
+  </div>
+  <div class="pf"><span class="mono">BZNSFLOWAI.COM · THE SYSTEM</span><span class="mono">4 / 6</span></div>
+</section>
+
+<!-- ══ 04 PROOF ══ -->
+<section class="page">
+  <div class="sec"><span class="num">04</span><span class="lbl mono">PROOF</span></div>
+  <h2 class="ar">ما الذي يمكننا إثباته؟</h2>
+  <div class="sub ar">أرقامنا نحن، مقيسة — لا تقديرات.</div>
+  <div class="rule"></div>
+  <h3>Our own measured performance</h3>
+  <p class="lede">Measured across 498 inbound messages and 79 conversations, April–August 2026.</p>
+
+  <div class="grid">
+    <div class="card" style="--c:var(--green)"><div class="k">1 second</div>
+      <div class="t">Median first response</div>
+      <p>The middle case, not the best case. Half of all inquiries are answered faster than this.</p></div>
+    <div class="card" style="--c:var(--blue)"><div class="k">78.6%</div>
+      <div class="t">Answered within 30 seconds</div>
+      <p>371 of 472 answered inquiries received a first reply inside half a minute.</p></div>
+  </div>
+  <div class="grid" style="grid-template-columns:1fr">
+    <div class="card" style="--c:var(--orange)"><div class="k">94.8%</div>
+      <div class="t">Of all inbound answered</div>
+      <p>472 of 498. We publish this rather than a round number because the gap is the honest part —
+         the system is good, and it is not yet perfect.</p></div>
+  </div>
+
+  <h3 style="margin-top:2mm">Work delivered</h3>
+  <table>
+    <tr><th style="width:36%">Project</th><th>What it does</th></tr>
+    <tr><td class="w">Mawa Real Estate</td><td>Real estate leads, ready to call — 66 real units, five buyer fields</td></tr>
+    <tr><td class="w">BizBay</td><td>From chat to qualified lead — buyers and sellers, 24/7</td></tr>
+    <tr><td class="w">Five Gates</td><td>Years of WhatsApp reduced to one clean client file</td></tr>
+    <tr><td class="w">Mekka Hijama</td><td>Three languages, one clear booking path — Arabic, English, Urdu</td></tr>
+    <tr><td class="w">Reading Jeel</td><td>Arabic-first digital bookstore — choose, pay, download</td></tr>
+    <tr><td class="w">Madrasaty</td><td>Learn, practise, test, master — grades 5–12</td></tr>
+    <tr><td class="w">Wild Muscat</td><td>Oman, bottled — Arabic-first luxury fragrance</td></tr>
+    <tr><td class="w">Royal Fish</td><td>Fresh menu, clear directions — English and Dutch</td></tr>
+  </table>
+  <div class="pf"><span class="mono">BZNSFLOWAI.COM · PROOF</span><span class="mono">5 / 6</span></div>
+</section>
+
+<!-- ══ 05 PLANS + NEXT ══ -->
+<section class="page">
+  <div class="sec"><span class="num">05</span><span class="lbl mono">PLANS &amp; NEXT STEP</span></div>
+  <h2 class="ar">ابدأ صغيراً، ثم وسّع</h2>
+  <div class="sub ar">كل باقة تُغلق عطلاً محدداً وتجعل الباقة التالية قراراً منطقياً.</div>
+  <div class="rule"></div>
+  <h3>Three plans, one direction</h3>
+  <p class="lede">Monthly subscription plus a one-time setup fee at 1.75× the monthly. Published
+     prices — you should not have to negotiate to find out what something costs.</p>
+
+  <div class="plans">
+    <div class="plan" style="--c:var(--blue)"><div class="nm">CATALYST</div>
+      <div class="pr">OMR 40<span style="font-size:9pt;color:var(--muted);font-weight:300"> /mo</span></div>
+      <div class="su">+ OMR 70 setup · ≈ $104/mo</div>
+      <ul><li>Layla on WhatsApp, 24/7</li><li>Qualification and booking</li><li>Arabic and English</li><li>One service line</li></ul></div>
+    <div class="plan" style="--c:var(--green)"><div class="nm">ASCEND</div>
+      <div class="pr">OMR 120<span style="font-size:9pt;color:var(--muted);font-weight:300"> /mo</span></div>
+      <div class="su">+ OMR 210 setup · ≈ $312/mo</div>
+      <ul><li>Everything in Catalyst</li><li>Lead-capture website</li><li>Inbound voice</li><li>Nurture sequences</li><li>Live dashboard</li></ul></div>
+    <div class="plan" style="--c:var(--orange)"><div class="nm">APEX</div>
+      <div class="pr">OMR 300<span style="font-size:9pt;color:var(--muted);font-weight:300"> /mo</span></div>
+      <div class="su">+ OMR 525 setup · ≈ $780/mo</div>
+      <ul><li>Everything in Ascend</li><li>Routing across the team</li><li>Agents per location</li><li>Outbound reactivation</li><li>Priority coverage</li></ul></div>
+  </div>
+
+  <h3 style="font-size:13pt">What happens on the audit call</h3>
+  <table style="margin-bottom:5mm">
+    <tr><td class="w" style="width:34%">We map your lead flow</td><td>How inquiries arrive, where they go, and where they go silent. Arabic or English.</td></tr>
+    <tr><td class="w">We put a number on it</td><td>What the gaps cost you monthly — a figure you can check, not a range.</td></tr>
+    <tr><td class="w">We show you Layla live</td><td>Answering a real message as if she were already working for you.</td></tr>
+  </table>
+
+  <div class="cta">
+    <div class="ar">احجز مكالمة تدقيق مجانية</div>
+    <div class="en">Book your free audit call</div>
+    <div class="mono">BZNSFLOWAI.COM · WHATSAPP +20 103 675 5930<br>AHMED@BZNSFLOWAI.COM</div>
+  </div>
+  <div class="pf"><span class="mono">BZNSFLOWAI.COM · PLANS &amp; NEXT STEP</span><span class="mono">6 / 6</span></div>
+</section>
+
+</body></html>
