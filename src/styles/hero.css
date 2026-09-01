@@ -393,6 +393,10 @@
 /* Fade down the stack so it reads as depth, and nudge alternate rows so the
    three copies do not look like the same stamp repeated. */
 /* Physical nudge for the same reason — --x-sign inverts under RTL. */
+/* The upper block in each rail is mirrored so its arrow sweeps outward, away
+   from the headline, instead of pointing back into the copy. */
+.hero-flow img:first-child { transform: scaleX(-1); }
+
 .hero-flow img:nth-child(2) { opacity: 0.3; }
 .hero-flow--left  img:nth-child(2) { transform: translateX(18px); }
 .hero-flow--right img:nth-child(2) { transform: translateX(-18px); }
