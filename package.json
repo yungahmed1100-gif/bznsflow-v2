@@ -6,14 +6,15 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "vercel dev",
-    "prebuild": "node scripts/gen-kb.mjs --check",
-    "build": "vite-react-ssg build && npm run gen:sitemap",
+    "prebuild": "node scripts/gen-kb.mjs --check && npm run gen:sitemap",
+    "build": "vite-react-ssg build",
     "preview": "vite preview",
     "test": "node tests/api-chat.test.mjs",
     "test:e2e": "node tests/e2e-chat.mjs",
     "test:stack": "./scripts/chat-test-stack.sh",
     "gen:kb": "node scripts/gen-kb.mjs",
-    "gen:sitemap": "node scripts/gen-sitemap.mjs"
+    "gen:sitemap": "node scripts/gen-sitemap.mjs",
+    "seo:audit": "node scripts/seo-audit.mjs"
   },
   "dependencies": {
     "@vercel/speed-insights": "^2.0.0",

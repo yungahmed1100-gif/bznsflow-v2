@@ -24,7 +24,7 @@ export function NavBar({
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`} id="navbar">
         <div className="nav-container">
           <a href="#hero" className="nav-brand" onClick={(e) => onSmoothScroll(e, '#hero')}>
-            <img src={logoImg} alt="BznsFlow" className="nav-logo" />
+            <img src={logoImg} alt="BznsFlow" className="nav-logo" width="120" height="120" />
             <div className="brand-text">
               <span className="brand-name">BznsFlow</span>
               <span className="brand-tagline">{t.nav_tagline}</span>

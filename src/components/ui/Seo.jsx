@@ -38,10 +38,11 @@ export function Seo({
       <link rel="canonical" href={canonical} />
       {noindex && <meta name="robots" content="noindex, follow" />}
 
-      {/* Reciprocal hreflang — Arabic is the primary/default language. */}
+      {/* Reciprocal hreflang — English is the primary/default language
+          (worldwide English-first targeting); Arabic is the alternate. */}
       <link rel="alternate" hrefLang="ar" href={arUrl} />
       <link rel="alternate" hrefLang="en" href={enUrl} />
-      <link rel="alternate" hrefLang="x-default" href={arUrl} />
+      <link rel="alternate" hrefLang="x-default" href={enUrl} />
 
       {/* OpenGraph */}
       <meta property="og:url" content={canonical} />

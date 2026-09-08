@@ -1,0 +1,355 @@
+# Keyword clusters by intent
+
+Harvested 2690 unique suggestions from Google autocomplete.
+Excluded 131 wrong-intent queries (jobs, courses, salaries).
+
+
+## comparison — 23 queries
+Target page: `/vs/* and /alternatives/*`
+
+- ai alternative
+- ai receptionist vs human receptionist
+- ai receptionist vs human receptionist in australia
+- ai sound alternatives
+- ai vs human receptionist
+- alternative for whatsapp business
+- alternative to whatsapp business api
+- best alternatives to whatsapp business api
+- front desk associate vs receptionist
+- front desk clerk vs receptionist
+- front desk vs receptionist
+- nikon non ai vs ai vs ais
+- twilio vs whatsapp business api
+- virtual office alternatives
+- virtual office price comparison
+- whatsapp business api alternative
+- whatsapp business api alternatives
+- whatsapp business api vs cloud api
+- whatsapp business api vs twilio
+- whatsapp business api vs whatsapp
+- whatsapp business api vs whatsapp business app
+- whatsapp business vs whatsapp business api
+- whatsapp vs whatsapp business api
+
+## cost — 379 queries
+Target page: `/pricing`
+
+- aeva ai receptionist cost
+- aeva ai receptionist price
+- ai answer phone calls free
+- ai answering machine free
+- ai answering service cheap
+- ai answering service cost
+- ai answering service cost per month
+- ai answering service for business cost
+- ai answering service for small business free
+- ai answering service free
+- ai answering service free trial
+- ai answering service pricing
+- ai appointment booking bot free
+- ai business phone answering service free
+- ai chat for business free
+- ai chatbot cost
+- ai chatbot for business free
+- ai employee review generator free
+- ai for voice over free
+- ai front desk pricing
+- ai make a book free
+- ai phone answering app free
+- ai phone answering assistant free
+- ai phone answering cost
+- ai phone answering free
+- ai phone answering service cost
+- ai phone answering service free
+- ai phone answering service pricing
+- ai phone answering system cost
+- ai phone answering system free
+- ai phone receptionist cost
+- ai phone receptionist free
+- ai receptionist app free
+- ai receptionist builder free
+- ai receptionist cheap
+- ai receptionist cost
+- ai receptionist cost per month
+- ai receptionist for small business cost
+- ai receptionist for small business pricing
+- ai receptionist free
+- ai receptionist free trial
+- ai receptionist price
+- ai receptionist pricing
+- ai secretary cost
+- ai voice acting free
+- ai voice actor free
+- ai voice agent builder free
+- ai voice agent cost
+- ai voice agent cost calculator
+- ai voice agent cost in india
+- ai voice agent cost per minute
+- ai voice agent cost per month
+- ai voice agent development cost
+- ai voice agent for free
+- ai voice agent free
+- ai voice agent free trial
+- ai voice agent price
+- ai voice agent price in india
+- ai voice agent pricing
+- ai voice answering service free
+- …and 319 more
+
+## vertical — 93 queries
+Target page: `/ai-receptionist/<industry>`
+
+- ai answering service dental
+- ai answering service for dental office
+- ai answering service for hvac
+- ai answering service for hvac business
+- ai answering service for hvac companies
+- ai answering service for insurance agents
+- ai answering service for medical office
+- ai answering service for medical practice
+- ai answering service for plumbing company
+- ai answering service for property management
+- ai answering service for real estate agents
+- ai answering service healthcare
+- ai answering service hvac
+- ai answering service medical
+- ai appointment scheduling healthcare
+- ai dental front office
+- ai dental receptionist canada
+- ai doctor receptionist
+- ai front desk dental
+- ai front desk for dental office
+- ai front desk for healthcare
+- ai front desk for medical office
+- ai front desk healthcare
+- ai front desk hotel
+- ai front desk medical
+- ai lead follow up real estate
+- ai legal answering service
+- ai legal receptionist
+- ai medical phone answering service
+- ai medical receptionist canada
+- ai phone answering medical
+- ai phone answering restaurant
+- ai real estate answering service
+- ai receptionist automotive
+- ai receptionist dental
+- ai receptionist dental office
+- ai receptionist dentist
+- ai receptionist for dental office
+- ai receptionist for dentist
+- ai receptionist for medical office
+- ai receptionist hair salon
+- ai receptionist healthcare
+- ai receptionist hotel
+- ai receptionist hvac
+- ai receptionist law firm
+- ai receptionist medical
+- ai receptionist medical office
+- ai receptionist plumber
+- ai receptionist real estate
+- ai receptionist restaurant
+- ai receptionist veterinary
+- ai voice agent for dental clinics
+- ai voice agent for healthcare
+- ai voice agent for real estate
+- ai voice agent healthcare
+- ai voice agent in healthcare
+- ai voice agent in real estate
+- ai voice agent real estate
+- ai voice agent recruitment
+- ai voice agent restaurant
+- …and 33 more
+
+## commercial — 427 queries
+Target page: `service page`
+
+- ai after hours answering service
+- ai answering and scheduling service
+- ai answering machine for business
+- ai answering machine service
+- ai answering service
+- ai answering service android
+- ai answering service app
+- ai answering service australia
+- ai answering service business
+- ai answering service canada
+- ai answering service companies
+- ai answering service demo
+- ai answering service example
+- ai answering service for android
+- ai answering service for attorneys
+- ai answering service for cell phone
+- ai answering service for contractors
+- ai answering service for doctors
+- ai answering service for doctors office
+- ai answering service for funeral homes
+- ai answering service for home services
+- ai answering service for iphone
+- ai answering service for law firms
+- ai answering service for lawyers
+- ai answering service for my business
+- ai answering service for personal use
+- ai answering service for plumbers
+- ai answering service for realtors
+- ai answering service for restaurants
+- ai answering service for small business
+- ai answering service for small business with vietnamese support
+- ai answering service for trades
+- ai answering service for your business
+- ai answering service for your business calls
+- ai answering service google
+- ai answering service google voice
+- ai answering service hipaa compliant
+- ai answering service io
+- ai answering service iphone
+- ai answering service nz
+- ai answering service on iphone
+- ai answering service personal
+- ai answering service phone
+- ai answering service reddit
+- ai answering service reviews
+- ai answering service samsung
+- ai answering service small business
+- ai answering service sydney reviews
+- ai answering service uk
+- ai answering service white label
+- ai appointment booking software
+- ai bot for business
+- ai bot for small business
+- ai call answering service uk
+- ai cell phone answering service
+- ai chat assistant for business
+- ai chat for business
+- ai chat for business ideas
+- ai chat for business plan
+- ai chat for small business
+- …and 367 more
+
+## question — 274 queries
+Target page: `/blog/*`
+
+- are ai receptionists good
+- are ai receptionists in demand
+- are virtual assistant
+- are virtual assistant ai
+- are whatsapp calls encrypted
+- can ai answer phone calls
+- can ai answer phone calls on iphone
+- can ai be a receptionist
+- can ai book appointments
+- can ai do voice over
+- can ai generate voice over
+- can ai make a book
+- can ai make a book cover
+- can ai make a book for me
+- can ai make a book index
+- can ai make a book into a movie
+- can ai make a book trailer
+- can ai replace receptionists
+- can ai voice over
+- can i answer my phone without touching it
+- can i book an appointment with apple
+- can i book appointment
+- can virtual assistant
+- can virtual assistant be a side hustle
+- can virtual office be used for gst registration
+- can you make an iphone auto answer
+- can you set a phone to auto answer
+- do ai receptionist work
+- do ai voice over
+- do i have to book an appointment for apple
+- do i need to book an appointment for biometrics
+- do virtual assistant
+- do virtual assistant pay taxes
+- do voice actors need agents
+- do you have to book appointment for apple store
+- do you need to book appointment for apple store
+- does ai receptionist work
+- does dialpad have an ai receptionist
+- does housecall pro have ai receptionist
+- does iphone have answering machine
+- does ringcentral have ai receptionist
+- does virtual assistant
+- does virtual assistant have tax
+- does virtual assistant mean ai
+- does virtual assistant need a degree
+- does virtual assistant need experience
+- does virtual assistant need laptop
+- does virtual assistant need to pay tax
+- does virtual assistant pay taxes
+- does virtual assistant pay well
+- does virtual assistant work
+- does vonage have an ai receptionist
+- does whatsapp business have api
+- does whatsapp still use erlang
+- does whatsapp use aws
+- does xfinity use ai voice agents
+- does your phone unlock when you answer a call
+- how ai chatbot work
+- how ai is helping
+- how ai voice agents work
+- …and 214 more
+
+## other — 1363 queries
+- 3cx ai receptionist setup
+- a.i. contact
+- add ai voice over canva
+- agent for voice acting
+- agents for voice actors
+- ai agent for appointment booking
+- ai agent for whatsapp automation
+- ai agents for appointment booking
+- ai and ay rules
+- ai answer phone message
+- ai answering machine android
+- ai answering machine app
+- ai answering machine apple
+- ai answering machine detection
+- ai answering machine iphone
+- ai answering machine message
+- ai answering machine reddit
+- ai answering machine voice
+- ai answering my phone
+- ai answering on phone
+- ai answering phone calls
+- ai answering phone calls iphone
+- ai answering the phone
+- ai appointment booking
+- ai appointment booking agent
+- ai appointment booking app
+- ai appointment booking bot
+- ai appointment booking system
+- ai appointment scheduling
+- ai appointment scheduling assistant
+- ai architect interview questions
+- ai assistant for answering phone calls
+- ai assistants ranked
+- ai bot for appointment booking
+- ai bot for my business
+- ai bot for whatsapp business
+- ai call answering uk
+- ai chat for my business
+- ai chat for whatsapp business
+- ai chat gpt business
+- ai chatbot appointment booking
+- ai chatbot benefits
+- ai chatbot business analyst
+- ai chatbot business model
+- ai chatbot business plan
+- ai chatbot example
+- ai chatbot for a business
+- ai chatbot for appointment booking
+- ai chatbot for local business
+- ai chatbot for meta business suite
+- ai chatbot for my business
+- ai chatbot ideas
+- ai chatbot in business
+- ai chatbot setup for businesses
+- ai chatbot setup for small businesses
+- ai chatbot used in business
+- ai education secretary
+- ai email secretary
+- ai employee review
+- ai employee review generator
+- …and 1303 more

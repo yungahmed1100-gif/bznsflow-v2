@@ -3,12 +3,12 @@ import { SITE } from '../routes-manifest';
 // Per-locale homepage SEO copy (en/ar are the prerendered locales).
 export const HOME_SEO = {
   en: {
-    title: 'BznsFlow — Business-in-a-Box Tech Solutions, Done For You',
-    description: 'BznsFlow builds the tech that runs and grows your business — an AI front office, lead-capture websites, CRM, automation, AI agents, and custom apps. Done for you, 24/7, in Arabic & English. Built for businesses worldwide, proven in Oman.',
+    title: 'AI Receptionist & WhatsApp Automation | BznsFlow',
+    description: 'An AI front office that answers every lead in seconds — receptionist, booking and WhatsApp order-taking, 24/7 in English and Arabic. Done for you.',
   },
   ar: {
-    title: 'BznsFlow — حلول تقنية متكاملة لأعمالك، منجزة لك',
-    description: 'BznsFlow يبني التقنية التي تُشغّل أعمالك وتُنمّيها — مكتب استقبال ذكي، مواقع لجذب العملاء، نظام CRM، أتمتة، وكلاء ذكاء اصطناعي، وتطبيقات مخصصة. منجز لك، 24/7، بالعربية والإنجليزية. لأعمال حول العالم، ومُثبَت في عُمان.',
+    title: 'موظف استقبال ذكي وأتمتة واتساب | BznsFlow',
+    description: 'مكتب استقبال ذكي يرد على كل عميل خلال ثوانٍ — استقبال وحجز مواعيد واستقبال طلبات واتساب، 24/7 بالعربية والإنجليزية. منجز لك بالكامل.',
   },
 };
 
@@ -51,11 +51,6 @@ export function buildSchemas(t, lang) {
     description: isAr
       ? 'موظف استقبال آلي وحجز وأتمتة طلبات واتساب بالذكاء الاصطناعي للأعمال حول العالم — رد فوري وتأهيل وحجز واستقبال طلبات بالعربية والإنجليزية.'
       : 'AI receptionist, booking, and WhatsApp order automation for businesses worldwide — instant replies, lead qualification, appointment booking, and order taking in Arabic and English.',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${SITE}#{search_term_string}`,
-      'query-input': 'required name=search_term_string',
-    },
   };
 
   const software = {

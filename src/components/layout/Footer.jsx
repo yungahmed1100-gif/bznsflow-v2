@@ -21,7 +21,7 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             </div>
 
             <div className="footer-col">
-              <h4 className="footer-heading">{t.footer_nav_heading}</h4>
+              <h3 className="footer-heading">{t.footer_nav_heading}</h3>
               <ul className="footer-links">
                 <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_nav_2}</a></li>
                 <li><a href="#ai-team" onClick={(e) => onSmoothScroll(e, '#ai-team')}>{t.team_label}</a></li>
@@ -32,7 +32,7 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             </div>
 
             <div className="footer-col">
-              <h4 className="footer-heading">{t.footer_services_heading}</h4>
+              <h3 className="footer-heading">{t.footer_services_heading}</h3>
               <ul className="footer-links">
                 <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_svc_1}</a></li>
                 <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_svc_2}</a></li>
@@ -43,7 +43,7 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             </div>
 
             <div className="footer-col">
-              <h4 className="footer-heading">{t.footer_contact_heading}</h4>
+              <h3 className="footer-heading">{t.footer_contact_heading}</h3>
               <ul className="footer-contact">
                 <li>
                   <Icon name="location" size={15} />
