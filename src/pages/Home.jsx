@@ -5,6 +5,7 @@ import { initReveals } from '../lib/reveal';
 import { trackEvent } from '../lib/analytics';
 import { useExitIntent } from '../hooks/useExitIntent';
 import { CALENDAR_URL, WHATSAPP_URL, LANGUAGES } from '../lib/constants';
+import { setCookie, COOKIE } from '../lib/cookies';
 import { HOME_SEO, buildSchemas } from '../lib/schemas';
 import { TIERS, TIERS_AR } from '../data/tiers';
 import { Seo } from '../components/ui/Seo';
@@ -78,7 +79,15 @@ export default function Home({ lang: routeLang = 'ar' }) {
   // ── Handlers ───────────────────────────────────────────────────────────────
 
   // Both languages are prerendered routes — switching = navigating.
+  //
+  // The choice is remembered in a strictly-necessary cookie, but deliberately
+  // NOT acted on as a redirect. Googlebot sends no cookies and crawls from the
+  // US, so a cookie-driven redirect on '/' or '/en' would serve the crawler a
+  // different page than it asked for — the classic way a site loses its
+  // hreflang pair from the index. The preference is for the account area to
+  // read once accounts exist; the public routes stay deterministic.
   const setLanguage = (code) => {
+    setCookie(COOKIE.LOCALE, code);
     navigate(code === 'en' ? '/en' : '/');
   };
 
