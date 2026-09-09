@@ -50,26 +50,3 @@ export function initReveals(root = document) {
   return () => io.disconnect();
 }
 
-/**
- * Run `cb` once, the first time `el` enters the viewport.
- * Fires immediately under reduced motion or without IO support.
- * @returns {() => void} cleanup
- */
-export function onEnterOnce(el, cb) {
-  if (!el) return () => {};
-
-  if (prefersReducedMotion() || !('IntersectionObserver' in window)) {
-    cb();
-    return () => {};
-  }
-
-  const io = new IntersectionObserver((entries) => {
-    if (entries.some((e) => e.isIntersecting)) {
-      io.disconnect();
-      cb();
-    }
-  }, VIEWPORT);
-
-  io.observe(el);
-  return () => io.disconnect();
-}

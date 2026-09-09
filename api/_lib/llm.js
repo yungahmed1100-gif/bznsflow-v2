@@ -4,6 +4,8 @@
 // the two speak the same wire format, so the swap touched only the constants
 // below. Keep it that way — nothing provider-specific belongs past this file.
 
+import { fetchWithTimeout, httpError } from './fetch.js';
+
 const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 const DEFAULT_MODEL = 'gpt-4.1-mini';
 
@@ -99,45 +101,28 @@ export async function complete(systemMessage, userMessage) {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error('OPENAI_API_KEY is not configured');
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const res = await fetchWithTimeout(ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
+      temperature: TEMPERATURE,
+      max_tokens: MAX_TOKENS,
+      // JSON mode requires the literal word "JSON" somewhere in the messages.
+      // The persona prompt carries it — see the OUTPUT line in
+      // web-chatbot/system-prompt-web-bznsflow.md. Do not remove it.
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: userMessage },
+      ],
+    }),
+  }, { label: 'OpenAI', timeoutMs: TIMEOUT_MS });
 
-  let res;
-  try {
-    res = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
-        temperature: TEMPERATURE,
-        max_tokens: MAX_TOKENS,
-        // JSON mode requires the literal word "JSON" somewhere in the messages.
-        // The persona prompt carries it — see the OUTPUT line in
-        // web-chatbot/system-prompt-web-bznsflow.md. Do not remove it.
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: systemMessage },
-          { role: 'user', content: userMessage },
-        ],
-      }),
-      signal: controller.signal,
-    });
-  } catch (err) {
-    if (err?.name === 'AbortError') {
-      throw new Error(`OpenAI timed out after ${TIMEOUT_MS}ms`);
-    }
-    throw new Error(`OpenAI request failed: ${err?.message || err}`);
-  } finally {
-    clearTimeout(timer);
-  }
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    throw new Error(`OpenAI → HTTP ${res.status}: ${detail.slice(0, 300)}`);
-  }
+  if (!res.ok) throw await httpError('OpenAI', res);
 
   const data = await res.json();
   const content = data?.choices?.[0]?.message?.content ?? '';

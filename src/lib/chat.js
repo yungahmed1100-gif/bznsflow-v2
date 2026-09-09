@@ -8,7 +8,10 @@
 // failure mode. VITE_CHAT_ENDPOINT still overrides it, which is the rollback
 // lever: point it at any absolute URL and redeploy.
 
-export const CHAT_ENDPOINT = import.meta.env.VITE_CHAT_ENDPOINT || '/api/chat';
+// Optional-chained so this module can be imported outside Vite — `import.meta.env`
+// is undefined in plain Node, and reading a property of it throws at module
+// scope, which made the whole file untestable. Vite still inlines the value.
+export const CHAT_ENDPOINT = import.meta.env?.VITE_CHAT_ENDPOINT || '/api/chat';
 
 /** Give up on a hung backend. Must stay above the function's own LLM timeout
  *  (15s) plus its DB round trips, so a slow-but-working turn is never killed

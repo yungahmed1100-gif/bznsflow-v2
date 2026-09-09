@@ -1,14 +1,18 @@
-// One event funnel, two destinations.
+// One event funnel.
 //
-// Every CTA on the site calls trackEvent(). It fans out to Plausible (as it
-// always has) and to the Meta pixel, so conversion optimisation has something
-// real to bid on. Keep the fan-out HERE — scattering fbq() calls through
-// components is how the two destinations drift out of sync.
+// Every CTA on the site calls trackEvent(), which forwards to the Meta pixel so
+// conversion optimisation has something real to bid on. Keep the mapping HERE —
+// scattering fbq() calls through components is how event names drift.
 //
-// Both destinations are optional at runtime: no-op during SSG (no window) and
-// no-op when a script is blocked or absent.
-
-const PIXEL_ID = '4379647862316554';
+// A Plausible branch used to sit alongside it. No Plausible script is loaded
+// anywhere in this project, so it never fired; it has been removed rather than
+// left looking like a live second destination.
+//
+// The pixel id is NOT duplicated here. It lives in index.html, which is where
+// fbq('init') runs and is the only place that can own it — a copy in this module
+// could only ever disagree.
+//
+// No-ops during SSG (no window) and when the script is blocked or absent.
 
 /** trackEvent name → Meta event. `custom` events go through trackCustom, which
  *  is what Meta requires for anything outside its standard vocabulary. */
@@ -48,22 +52,19 @@ function eventId() {
 
 export const trackEvent = (name, props) => {
   if (typeof window === 'undefined') return;
+  if (typeof window.fbq !== 'function') return;
 
-  if (typeof window.plausible === 'function') {
-    window.plausible(name, props ? { props } : undefined);
-  }
+  const meta = metaEventFor(name, props);
+  if (!meta) return;
 
-  if (typeof window.fbq === 'function') {
-    const meta = metaEventFor(name, props);
-    if (meta) {
-      window.fbq(
-        meta.custom ? 'trackCustom' : 'track',
-        meta.name,
-        props || {},
-        { eventID: eventId() },
-      );
-    }
-  }
+  window.fbq(
+    meta.custom ? 'trackCustom' : 'track',
+    meta.name,
+    props || {},
+    { eventID: eventId() },
+  );
 };
 
-export { PIXEL_ID };
+// Exported for tests: the StickyCTAClick branch is real logic and the mapping is
+// the contract Ads Manager reports against.
+export { metaEventFor, META_EVENTS };

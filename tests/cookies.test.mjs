@@ -101,12 +101,19 @@ t('does not repeat across 100 draws', () =>
   assert.equal(new Set(Array.from({ length: 100 }, randomToken)).size, 100));
 
 console.log('\n── CSRF ──');
-t('issued token is returned and set readable (not HttpOnly)', () => {
+t('issued token is returned to the caller, and the cookie is HttpOnly', () => {
   const res = mockRes();
   const token = issueCsrfToken(res);
   const [c] = res.getHeader('Set-Cookie');
   assert.match(c, new RegExp(`^${CSRF_COOKIE}=${token}`));
-  assert.ok(!c.includes('HttpOnly'), 'double-submit needs a script-readable cookie');
+  // The usual double-submit cookie has to be script-readable. This one does not,
+  // because the token reaches the page through the JSON body of
+  // GET /api/auth-session — issueCsrfToken RETURNS it, which is what the
+  // assertion above pins. HttpOnly then removes it as an XSS prize while the
+  // browser still proves it holds the cookie.
+  assert.ok(c.includes('HttpOnly'), 'the page reads the token from JSON, not the cookie');
+  assert.ok(c.includes('Secure'));
+  assert.ok(c.includes('SameSite=Lax'));
 });
 t('matching cookie and header verify', () => {
   const token = randomToken();

@@ -19,26 +19,12 @@ import { clientIp, isAllowedOrigin, validate, bucketKeys } from './_lib/guard.js
 import { checkRate, startTurn, finishTurn } from './_lib/db.js';
 import { detectLang, buildSystemMessage } from './_lib/prompt.js';
 import { complete } from './_lib/llm.js';
+import { send, readBody, limit } from './_lib/http.js';
 
 const HISTORY_TURNS = 20;
 
-/** Read limits per request rather than at module load. A module-level constant
- *  is frozen at cold start, so it silently ignores an env change until an
- *  instance recycles — and it cannot be exercised by a test. */
-function limits() {
-  return {
-    perIpPerMin: Number(process.env.CHAT_RATE_IP_PER_MIN || 20),
-    globalPerDay: Number(process.env.CHAT_RATE_GLOBAL_PER_DAY || 1000),
-  };
-}
-
-function send(res, status, payload) {
-  res.status(status);
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  // A cached chat reply would be served to a different visitor.
-  res.setHeader('Cache-Control', 'no-store');
-  res.end(JSON.stringify(payload));
-}
+const RATE_IP_PER_MIN = 20;
+const RATE_GLOBAL_PER_DAY = 1000; // the LLM budget ceiling
 
 /** Shape every response identically so the widget never has to branch. */
 function reply(res, status, text, { sessionId = '', handoff = false, context = '' } = {}) {
@@ -48,20 +34,6 @@ function reply(res, status, text, { sessionId = '', handoff = false, context = '
     handoff,
     handoff_context: context,
   });
-}
-
-/** Vercel parses JSON bodies, but tolerate a raw string too. */
-function readBody(req) {
-  const b = req.body;
-  if (!b) return {};
-  if (typeof b === 'string') {
-    try {
-      return JSON.parse(b);
-    } catch {
-      return {};
-    }
-  }
-  return b;
 }
 
 export default async function handler(req, res) {
@@ -79,12 +51,11 @@ export default async function handler(req, res) {
   // free with junk payloads. Counting first means every request costs a bucket
   // slot regardless of how it is eventually answered.
   try {
-    const { perIpPerMin, globalPerDay } = limits();
     const rate = await checkRate(buckets.ip, buckets.global);
-    if (Number(rate?.ip_hits || 0) > perIpPerMin) {
+    if (Number(rate?.ip_hits || 0) > limit('CHAT_RATE_IP_PER_MIN', RATE_IP_PER_MIN)) {
       return reply(res, 429, replies.RATE_IP);
     }
-    if (Number(rate?.global_hits || 0) > globalPerDay) {
+    if (Number(rate?.global_hits || 0) > limit('CHAT_RATE_GLOBAL_PER_DAY', RATE_GLOBAL_PER_DAY)) {
       return reply(res, 429, replies.RATE_GLOBAL);
     }
   } catch (err) {

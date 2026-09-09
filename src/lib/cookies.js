@@ -21,7 +21,6 @@ const DEFAULT_SAME_SITE = 'Lax';
 
 // Lifetimes, in seconds.
 export const ONE_YEAR = 60 * 60 * 24 * 365;
-export const ONE_MONTH = 60 * 60 * 24 * 30;
 
 // The cookies this site sets. Named here so the registry, the call sites and a
 // future consent banner all agree on the strings.
@@ -31,25 +30,6 @@ export const COOKIE = {
 
 const canUseCookies = () => typeof document !== 'undefined';
 
-/**
- * Read one cookie.
- * @param {string} name
- * @returns {string|null} decoded value, or null when absent or unreadable
- */
-export function getCookie(name) {
-  if (!canUseCookies()) return null;
-  try {
-    const prefix = `${encodeURIComponent(name)}=`;
-    const hit = document.cookie
-      .split('; ')
-      .find((part) => part.startsWith(prefix));
-    return hit ? decodeURIComponent(hit.slice(prefix.length)) : null;
-  } catch (_) {
-    // document.cookie throws outright in some privacy modes — the caller gets
-    // "no preference" and renders its default, which is always a valid state.
-    return null;
-  }
-}
 
 /**
  * Write one cookie. `Secure` is set on HTTPS only, so localhost development
@@ -82,17 +62,3 @@ export function setCookie(name, value, options = {}) {
   }
 }
 
-/**
- * Delete one cookie. Must match the path the cookie was written with, or the
- * browser treats it as a different cookie and the original survives.
- * @param {string} name
- * @param {{ path?: string }} [options]
- */
-export function removeCookie(name, options = {}) {
-  if (!canUseCookies()) return;
-  const { path = DEFAULT_PATH } = options;
-  try {
-    document.cookie =
-      `${encodeURIComponent(name)}=; Path=${path}; Max-Age=0; SameSite=${DEFAULT_SAME_SITE}`;
-  } catch (_) { /* storage blocked — nothing to clear */ }
-}

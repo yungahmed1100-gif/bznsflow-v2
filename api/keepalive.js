@@ -13,12 +13,15 @@
 // Scheduled from vercel.json `crons`. Vercel runs cron only against Production
 // deployments and, on Hobby, at most once a day — ample for a 7-day window.
 
+import { fetchWithTimeout, httpError } from './_lib/fetch.js';
+import { send } from './_lib/http.js';
+
 const TIMEOUT_MS = 5000;
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
-    return res.status(405).json({ ok: false, error: 'GET only' });
+    return send(res, 405, { ok: false, reason: 'method' });
   }
 
   // Vercel sends `Authorization: Bearer $CRON_SECRET` when CRON_SECRET is set.
@@ -27,38 +30,33 @@ export default async function handler(req, res) {
   if (secret) {
     const auth = req.headers.authorization || '';
     if (auth !== `Bearer ${secret}`) {
-      return res.status(401).json({ ok: false, error: 'unauthorized' });
+      return send(res, 401, { ok: false, reason: 'unauthorized' });
     }
   }
 
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
-    return res.status(500).json({ ok: false, error: 'supabase env not configured' });
+    return send(res, 500, { ok: false, reason: 'not_configured' });
   }
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
     // A real query, not a health-check ping: the point is to touch the database
     // itself, since that is what "activity" has to mean to count.
-    const r = await fetch(`${url.replace(/\/+$/, '')}/rest/v1/web_conversations?select=id&limit=1`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-      signal: controller.signal,
-    });
+    const r = await fetchWithTimeout(
+      `${url.replace(/\/+$/, '')}/rest/v1/web_conversations?select=id&limit=1`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+      { label: 'Supabase keepalive', timeoutMs: TIMEOUT_MS },
+    );
     if (!r.ok) {
-      const detail = await r.text().catch(() => '');
-      console.error('[keepalive] query failed:', r.status, detail.slice(0, 200));
-      return res.status(502).json({ ok: false, status: r.status });
+      console.error('[keepalive]', (await httpError('Supabase keepalive', r)).message);
+      return send(res, 502, { ok: false, reason: 'query_failed', status: r.status });
     }
     await r.json();
     console.log('[keepalive] ok');
-    return res.status(200).json({ ok: true, at: new Date().toISOString() });
+    return send(res, 200, { ok: true, at: new Date().toISOString() });
   } catch (err) {
     console.error('[keepalive] error:', err?.message || err);
-    return res.status(502).json({ ok: false, error: 'query failed' });
-  } finally {
-    clearTimeout(timer);
+    return send(res, 502, { ok: false, reason: 'query_failed' });
   }
 }
