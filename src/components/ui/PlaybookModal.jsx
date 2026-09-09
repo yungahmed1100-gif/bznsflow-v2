@@ -14,9 +14,11 @@ import { PLAYBOOK_PDF } from '../../lib/constants';
 // and the PDF before replying, a slow script left this button disabled with the
 // page's scroll locked — the "tab freezes" report. See api/lead.js.
 
-// Nothing survives a request this long being worth waiting for, and the modal
-// holds the page's scroll lock while it waits.
-const SUBMIT_TIMEOUT_MS = 15000;
+// Sits just under /api/lead's 30s function ceiling, so a slow-but-working
+// request is never killed client-side and reported as a failure the server did
+// not have. Apps Script is usually 2-3s; this is the cold-container worst case.
+// The close button stays enabled throughout, so the visitor is never trapped.
+const SUBMIT_TIMEOUT_MS = 28000;
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';

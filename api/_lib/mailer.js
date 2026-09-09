@@ -21,7 +21,18 @@
 
 import { fetchWithTimeout, httpError } from './fetch.js';
 
-const TIMEOUT_MS = 10000; // Apps Script is slower than PostgREST; 5s is too tight.
+// Apps Script latency is bimodal: usually 2-3s, but it spikes past 10s when its
+// container is cold. Measured against the live deployment: 1.9s, 2.6s, 3.2s,
+// 9.9s, 10.5s across five consecutive sends. A 10s ceiling turned that last one
+// into a visitor-facing "we couldn't send the email" for a code that may well
+// have gone out — and left them throttled for 60s before they could retry.
+//
+// Two ceilings, because the two calls do different amounts of work. Sending a
+// code is one GmailApp call. Pushing a lead may additionally download the teaser
+// and the PDF before Apps Script replies, which is why the playbook path is
+// slower and gets more room.
+const OTP_TIMEOUT_MS = 20000;
+const LEAD_TIMEOUT_MS = 25000;
 
 function endpoint() {
   const url = process.env.LEAD_ENDPOINT;
@@ -36,13 +47,13 @@ function endpoint() {
  * text/plain to dodge a CORS preflight Apps Script cannot answer; server-side
  * there is no preflight, so the honest content type is fine.
  */
-async function post(payload) {
+async function post(payload, timeoutMs) {
   const res = await fetchWithTimeout(endpoint(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
     redirect: 'follow', // the 302 to googleusercontent carries the JSON body
-  }, { label: 'Apps Script', timeoutMs: TIMEOUT_MS });
+  }, { label: 'Apps Script', timeoutMs });
 
   if (!res.ok) throw await httpError('Apps Script', res);
 
@@ -79,7 +90,7 @@ export function sendOtpEmail({ email, code, lang }) {
     email,
     code,
     language: lang === 'ar' ? 'ar' : 'en',
-  });
+  }, OTP_TIMEOUT_MS);
 }
 
 /**
@@ -114,5 +125,5 @@ export function pushLead({
     marketRegion: country,
     segment: industry,
     ...(playbook ? { playbook: true, teaserUrl, playbookUrl } : {}),
-  });
+  }, LEAD_TIMEOUT_MS);
 }
