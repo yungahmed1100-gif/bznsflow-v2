@@ -3,17 +3,58 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/chat.js": {
-      "maxDuration": 30
-    },
-    "api/keepalive.js": {
-      "maxDuration": 10
-    }
+    "api/chat.js": { "maxDuration": 30 },
+    "api/keepalive.js": { "maxDuration": 10 },
+    "api/auth-code.js": { "maxDuration": 15 },
+    "api/auth-session.js": { "maxDuration": 20 },
+    "api/lead.js": { "maxDuration": 20 }
   },
   "regions": ["sin1"],
-  "crons": [{ "path": "/api/keepalive", "schedule": "0 6 * * *" }],
+  "crons": [
+    { "path": "/api/keepalive", "schedule": "0 6 * * *" }
+  ],
   "redirects": [
     { "source": "/ar", "destination": "/", "permanent": true },
     { "source": "/ar/:path*", "destination": "/:path*", "permanent": true }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains; preload"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+        },
+        {
+          "key": "Content-Security-Policy-Report-Only",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://www.facebook.com https://connect.facebook.net; connect-src 'self' https://connect.facebook.net; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
   ]
 }

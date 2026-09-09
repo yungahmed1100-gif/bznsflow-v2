@@ -6,7 +6,12 @@
 
     <!-- ═══ GLOBAL SEO — per-page title/description/canonical/hreflang via <Seo> ═ -->
     <meta name="author" content="Ahmed Darwish — BznsFlow" />
-    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <!-- robots is NOT set here. It lives in <Seo> so react-helmet-async owns a
+         single tag per page. A copy in this template is outside helmet's
+         management, so it cannot be replaced — it was emitted alongside the
+         per-page one, and /signin shipped both "index, follow" and
+         "noindex, follow". Google resolves that by taking the most restrictive,
+         so it happened to work, but only by relying on crawler tiebreaking. -->
 
     <!-- ═══ OPEN GRAPH defaults — per-page url/title/description/image via <Seo> ═ -->
     <meta property="og:type" content="website" />

@@ -36,7 +36,17 @@ export function Seo({
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonical} />
-      {noindex && <meta name="robots" content="noindex, follow" />}
+      {/* Always emitted, never conditional. Helmet can only dedupe tags it
+          manages, so an "only when noindex" tag left the indexable pages with
+          no robots directive at all once the copy in index.html was removed. */}
+      <meta
+        name="robots"
+        content={
+          noindex
+            ? 'noindex, follow'
+            : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'
+        }
+      />
 
       {/* Reciprocal hreflang — English is the primary/default language
           (worldwide English-first targeting); Arabic is the alternate. */}
