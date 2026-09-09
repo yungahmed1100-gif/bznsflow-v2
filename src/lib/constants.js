@@ -15,6 +15,21 @@ export function mailtoLink(subject, body) {
   return `mailto:${CONTACT_EMAIL}${params.length ? `?${params.join('&')}` : ''}`;
 }
 
+// ── Playbook lead magnet ────────────────────────────────────────────────────
+// The single source of truth for these two paths. PlaybookModal links the PDF
+// for the instant download, and /api/lead passes BOTH absolute URLs to Apps
+// Script so the email attaches the same file the page just offered.
+//
+// This exists because they drifted: d5ec7b6 renamed the PDF here and left
+// apps-script/Code.gs fetching the old name. The fetch 404'd, the try/catch
+// swallowed it, and leads were recorded while silently never being emailed.
+// Renaming the file now breaks the build's own test rather than the mail.
+export const PLAYBOOK_PDF = '/bznsflow-sme-operating-playbook.pdf';
+
+// Extensionless on purpose — Vercel's cleanUrls 308-redirects the .html form,
+// and Apps Script's UrlFetchApp follows that redirect.
+export const PLAYBOOK_TEASER = '/bznsflow-email-teaser';
+
 // Language switcher entries. Arabic is the primary language at '/',
 // English at '/en' — both are prerendered routes.
 export const LANGUAGES = [

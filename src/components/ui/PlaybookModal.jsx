@@ -1,17 +1,22 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Icon } from './Icon';
+import { PLAYBOOK_PDF } from '../../lib/constants';
 
 // The playbook prompt — the site's only email capture, and therefore the only
 // thing that fires the `Lead` event both ad sets bid against. It appears when a
 // visitor is about to leave rather than sitting in the page flow; see
 // hooks/useExitIntent.js for how that moment is detected.
 //
-// The backend already exists: apps-script/Code.gs is a deployed web app that
-// appends the row to the CRM sheet and, on `playbook: true`, emails the teaser
-// with the PDF attached. All this component owes it is a well-formed POST.
+// Submits to /api/lead, which talks to Apps Script server-side. It used to post
+// straight to the /exec URL with `mode: 'no-cors'`, which meant an opaque
+// response the page could not read, no timeout, and a `Lead` event that fired
+// whether or not capture actually worked. Because `doPost` downloads the teaser
+// and the PDF before replying, a slow script left this button disabled with the
+// page's scroll locked — the "tab freezes" report. See api/lead.js.
 
-const PLAYBOOK_PDF = '/bznsflow-sme-operating-playbook.pdf';
-const LEAD_ENDPOINT = import.meta.env.VITE_LEAD_ENDPOINT;
+// Nothing survives a request this long being worth waiting for, and the modal
+// holds the page's scroll lock while it waits.
+const SUBMIT_TIMEOUT_MS = 15000;
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -70,31 +75,16 @@ export function PlaybookModal({ t, lang = 'ar', open, onClose, trackEvent }) {
       if (status === 'sending') return;
       setStatus('sending');
 
-      // no-cors makes every response opaque, so fetch() resolves even for a
-      // wrong URL — an empty endpoint would post to the current page, "succeed",
-      // and fire a Lead for a visitor we never captured. That poisons the ad
-      // optimisation signal far worse than a visible failure does, so refuse.
-      if (!LEAD_ENDPOINT) {
-        console.error(
-          '[playbook] VITE_LEAD_ENDPOINT is not set — the lead was NOT captured. ' +
-            'Deploy apps-script/Code.gs as a web app and put its /exec URL in the env.',
-        );
-        setStatus('error');
-        return;
-      }
-
       try {
-        // Apps Script web apps 302 to a googleusercontent origin that sends no
-        // CORS headers, so the response is unreadable by design. no-cors posts
-        // the body and returns an opaque response — delivery is confirmed by the
-        // sheet row and the email, not by this promise.
-        await fetch(LEAD_ENDPOINT, {
+        const res = await fetch('/api/lead', {
           method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          // Code.gs matches these keys to the sheet's header row by normalized
-          // name, so camelCase here lands in "Source CTA" / "Page URL" etc.
-          // Unmatched columns stay blank, so sending extra keys is safe.
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          // A bounded wait. Apps Script fetches the teaser and the PDF before it
+          // replies, so this is genuinely slow — but an unbounded await leaves
+          // the visitor staring at a disabled button on a page that cannot
+          // scroll, which reads as a crash.
+          signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS),
           body: JSON.stringify({
             playbook: true,
             name: name.trim(),
@@ -104,10 +94,28 @@ export function PlaybookModal({ t, lang = 'ar', open, onClose, trackEvent }) {
             pageUrl: typeof window !== 'undefined' ? window.location.href : '',
           }),
         });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data?.ok) {
+          setStatus('error');
+          return;
+        }
+
         setStatus('sent');
+        // Only now, and only on a response we could actually read. The old
+        // no-cors call fired this on an opaque promise that resolved even when
+        // nothing had been captured, which quietly poisoned the ad optimisation
+        // signal both ad sets bid against.
         trackEvent?.('PlaybookSubmit');
+
+        // The row saved but the email did not. The success screen still hands
+        // over the PDF, so the visitor is fine — this is for us.
+        if (data.emailed === false) {
+          console.error('[playbook] lead captured but the email failed to send');
+        }
       } catch {
-        // Never a dead end: the failure state still hands over the PDF.
+        // Timeout, offline, or a server error. Never a dead end: the failure
+        // state still hands over the PDF.
         setStatus('error');
       }
     },
