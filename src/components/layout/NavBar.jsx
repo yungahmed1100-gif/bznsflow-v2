@@ -4,7 +4,7 @@ import { Icon } from '../ui/Icon';
 
 export function NavBar({
   t, lang, isScrolled, isMenuOpen, activeLink, scrollProgress,
-  LANGUAGES, CALENDAR_URL,
+  LANGUAGES,
   onOpenMenu, onCloseMenu, onSmoothScroll, onSetLanguage,
 }) {
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -87,8 +87,11 @@ export function NavBar({
             </li>
 
             <li>
-              <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn btn-primary nav-cta">
-                {t.nav_cta}
+              {/* Internal route, so no target/rel — and a plain <a> rather than a
+                  <Link>, because every page here is prerendered and the rest of
+                  the cross-page navigation on this site works the same way. */}
+              <a href={lang === 'en' ? '/en/signin' : '/signin'} className="btn btn-primary nav-cta">
+                {t.nav_signin}
               </a>
             </li>
           </ul>

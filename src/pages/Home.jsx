@@ -116,7 +116,7 @@ export default function Home({ lang: routeLang = 'ar' }) {
       <NavBar
         t={t} lang={lang} isScrolled={isScrolled} isMenuOpen={isMenuOpen}
         activeLink={activeLink} scrollProgress={scrollProgress}
-        LANGUAGES={LANGUAGES} CALENDAR_URL={CALENDAR_URL}
+        LANGUAGES={LANGUAGES}
         onOpenMenu={openMenu} onCloseMenu={closeMenu}
         onSmoothScroll={handleSmoothScroll} onSetLanguage={setLanguage}
       />

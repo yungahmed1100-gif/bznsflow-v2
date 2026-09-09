@@ -16,7 +16,6 @@ export const CSRF_HEADER = 'x-csrf-token';
 
 // Lifetimes, in seconds.
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
-export const ONE_YEAR = 60 * 60 * 24 * 365;
 
 // 32 bytes of CSPRNG output — 256 bits, well beyond guessing range, and short
 // enough as hex to sit comfortably inside the 4KB per-cookie limit.
@@ -97,6 +96,23 @@ export function randomToken() {
 }
 
 /**
+ * Constant-time string comparison.
+ *
+ * Lives here rather than in auth.js so the modules that need a secret compare
+ * are not forced to pull in the industry and country lists auth.js imports.
+ *
+ * A plain `===` on secrets leaks their contents through timing. timingSafeEqual
+ * does not, but it throws on unequal lengths, so the length check comes first —
+ * and that check is not itself secret, since both sides here are fixed-width hex.
+ */
+export function safeEqual(a, b) {
+  const bufA = Buffer.from(String(a ?? ''));
+  const bufB = Buffer.from(String(b ?? ''));
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
+/**
  * Queue the session cookie. HttpOnly so no script can read it — this is the
  * cookie that will identify a logged-in account, and it must survive an XSS
  * that manages to run script on the page.
@@ -117,15 +133,22 @@ export function clearSessionCookie(res) {
 /**
  * Queue a CSRF token cookie and return the token.
  *
- * Deliberately NOT HttpOnly: this is the double-submit pattern, so the page's
- * own script has to read the value back and echo it in the CSRF_HEADER. The
- * defence does not rest on the cookie being secret — it rests on the same-origin
- * policy stopping a cross-site page from reading it to build the header.
+ * HttpOnly, which the textbook double-submit pattern usually cannot be. It works
+ * here because the page never reads the cookie: `issueCsrfToken` RETURNS the
+ * token, GET /api/auth-session puts it in the JSON body, and the page echoes
+ * that value back in CSRF_HEADER. So the browser still proves it holds the
+ * cookie, while no script can read it — which removes the token as an XSS prize.
+ *
+ * (This was previously not HttpOnly, justified by "the page's own script has to
+ * read it back". It never did.)
+ *
+ * The defence itself rests on the same-origin policy: a cross-site page can
+ * cause the cookie to be SENT but cannot read it to build the matching header.
  */
 export function issueCsrfToken(res) {
   const token = randomToken();
   appendCookie(res, serializeCookie(CSRF_COOKIE, token, {
-    maxAge: SESSION_MAX_AGE, httpOnly: false, sameSite: 'Lax',
+    maxAge: SESSION_MAX_AGE, httpOnly: true, sameSite: 'Lax',
   }));
   return token;
 }
@@ -133,9 +156,9 @@ export function issueCsrfToken(res) {
 /**
  * Verify the CSRF header against the cookie, in constant time.
  *
- * A plain `===` on secrets leaks their contents through timing; timingSafeEqual
- * does not, and it requires equal-length buffers, so the length check comes
- * first and is itself not secret (both sides are fixed-width hex).
+ * The comparison goes through `safeEqual` above rather than being inlined. Two
+ * copies of a constant-time compare is how one of them eventually becomes a
+ * `===` during a refactor, with only one of the two reviewed for it.
  * @returns {boolean}
  */
 export function verifyCsrf(req) {
@@ -144,9 +167,9 @@ export function verifyCsrf(req) {
   const h = req?.headers || {};
   const fromHeader = h[CSRF_HEADER] ?? h[CSRF_HEADER.toLowerCase()];
 
+  // Both must be present. safeEqual('', '') is true, so an absent pair would
+  // otherwise pass — the one case where constant-time comparison is the wrong
+  // question to be asking.
   if (!fromCookie || !fromHeader) return false;
-  const a = Buffer.from(String(fromCookie));
-  const b = Buffer.from(String(fromHeader));
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  return safeEqual(fromCookie, fromHeader);
 }

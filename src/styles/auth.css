@@ -1,0 +1,429 @@
+/* Sign-in page.
+ *
+ * Imported by src/pages/SignIn.jsx, deliberately NOT added to src/index.css —
+ * that file's header warns its import order is load-bearing, and a page-scoped
+ * sheet has no business in the global cascade. Every value below comes from the
+ * tokens in base.css, so this page inherits any future palette change instead of
+ * drifting into a second one.
+ *
+ * Direction-agnostic by construction: logical properties throughout, so there is
+ * not a single [dir="rtl"] override below. The layout mirrors itself.
+ */
+
+.auth-shell {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-6) var(--container-pad) var(--space-12);
+  background: var(--bg-primary);
+  overflow-x: hidden; /* contains the blur bleed below, never the page */
+}
+
+/* Ambient wash, matching the home page's .aurora treatment. Static — there is
+   nothing to animate, so nothing to freeze under reduced motion. */
+.auth-aurora {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.auth-blob {
+  position: absolute;
+  display: block;
+  width: min(46rem, 90vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+}
+
+.auth-blob--a {
+  inset-block-start: -18rem;
+  inset-inline-start: -14rem;
+  background: radial-gradient(circle, rgba(92, 149, 198, 0.28), transparent 68%);
+}
+
+.auth-blob--b {
+  inset-block-end: -22rem;
+  inset-inline-end: -16rem;
+  background: radial-gradient(circle, rgba(81, 164, 123, 0.24), transparent 68%);
+}
+
+/* ── Local header ───────────────────────────────────────────────────────────
+   A page-local nav rather than the shared NavBar: that component needs eleven
+   props of scroll and menu state owned by Home.jsx, and its section links are
+   hash anchors that only resolve on the home page. */
+
+.auth-nav {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-block-end: var(--space-8);
+}
+
+.auth-brand,
+.auth-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.auth-brand {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.auth-brand img {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+}
+
+.auth-lang {
+  padding: 7px var(--space-3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.auth-lang:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+  padding: var(--card-pad);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* ── Step rail ────────────────────────────────────────────────────────────── */
+
+.auth-steps {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  list-style: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.auth-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* The connector, not a border: a pseudo-element can sit between items without
+   the last-child exception a border-inline-end would need. */
+.auth-steps li:not(:last-child)::after {
+  content: '';
+  inline-size: 14px;
+  block-size: 1px;
+  margin-inline-start: 4px;
+  background: var(--border-hover);
+}
+
+.auth-step-dot {
+  display: grid;
+  place-items: center;
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  transition: background var(--transition), color var(--transition);
+}
+
+.auth-steps li[aria-current='step'] {
+  color: var(--text-primary);
+}
+
+.auth-steps li[aria-current='step'] .auth-step-dot {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: #fff;
+}
+
+.auth-steps li.is-done .auth-step-dot {
+  background: rgba(81, 164, 123, 0.16);
+  color: var(--green);
+}
+
+/* ── Copy ─────────────────────────────────────────────────────────────────── */
+
+.auth-form,
+.auth-done {
+  display: flex;
+  flex-direction: column;
+  text-align: start;
+}
+
+/* .section-label is display:inline-block with a pill border, but a flex child is
+   blockified and `align-items: stretch` then pulls it to the full card width.
+   align-self is what keeps it hugging its text — and `start` is the logical
+   keyword, so it sits on the correct side in both directions. */
+.auth-form .section-label,
+.auth-done .section-label {
+  align-self: start;
+  margin-bottom: 0;
+}
+
+.auth-title {
+  margin: var(--space-2) 0 6px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+/* The heading takes focus on every step change, so it must not draw the default
+   ring when that happens — but a real keyboard user still gets :focus-visible. */
+.auth-title:focus {
+  outline: none;
+}
+
+.auth-sub {
+  margin: 0 0 var(--space-6);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+/* ── Fields ───────────────────────────────────────────────────────────────
+   The input recipe is lifted from .playbook-field in playbook.css so the two
+   forms on this site look like the same product. */
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-block-end: var(--space-4);
+}
+
+.auth-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.auth-field input,
+.auth-field select {
+  inline-size: 100%;
+  padding: 11px var(--space-4);
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.auth-field select {
+  /* Leave room for the native arrow on both sides, since which side it sits on
+     depends on the writing direction. */
+  padding-inline-end: var(--space-8);
+  cursor: pointer;
+}
+
+.auth-field input::placeholder {
+  color: var(--text-muted);
+}
+
+.auth-field input:hover,
+.auth-field select:hover {
+  border-color: var(--border-hover);
+}
+
+.auth-field input:focus-visible,
+.auth-field select:focus-visible {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(92, 149, 198, 0.22);
+}
+
+/* The code is six digits and nothing else: tabular figures stop the field
+   reflowing as it fills, and the tracking makes it read as a code. */
+.auth-code-input {
+  font-size: 1.4rem !important;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-phone {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+/* Derived from the country select, so it is display-only — an editable copy
+   would just let the two disagree. */
+.auth-dial {
+  display: grid;
+  place-items: center;
+  padding-inline: var(--space-3);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+}
+
+.auth-hint {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ── Actions ──────────────────────────────────────────────────────────────── */
+
+.auth-submit {
+  justify-content: center;
+  inline-size: 100%;
+  margin-block-start: var(--space-2);
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.auth-alt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-block-start: var(--space-5);
+}
+
+.auth-link {
+  padding: 0;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.auth-link:hover:not(:disabled) {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+.auth-link:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.auth-privacy {
+  margin: var(--space-4) 0 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.auth-error {
+  margin: 0 0 var(--space-4);
+  padding: 10px var(--space-4);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #842c25;
+  background: rgba(225, 107, 113, 0.12);
+  border: 1px solid rgba(225, 107, 113, 0.3);
+  border-radius: var(--radius-md);
+}
+
+/* ── Success ──────────────────────────────────────────────────────────────── */
+
+.auth-done {
+  align-items: center;
+  text-align: center;
+}
+
+.auth-done-mark {
+  display: grid;
+  place-items: center;
+  inline-size: 52px;
+  block-size: 52px;
+  margin-block-end: var(--space-2);
+  border-radius: 50%;
+  color: var(--green);
+  background: rgba(81, 164, 123, 0.14);
+}
+
+.auth-whoami {
+  margin: calc(var(--space-4) * -1) 0 var(--space-6);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.auth-done .auth-submit + .auth-submit {
+  margin-block-start: var(--space-3);
+}
+
+/* ── Small screens ────────────────────────────────────────────────────────── */
+
+@media (max-width: 520px) {
+  .auth-card {
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .auth-title {
+    font-size: 1.4rem;
+  }
+
+  /* The rail's labels are the first thing to cost more than they earn here;
+     the numbered dots still convey position. */
+  .auth-steps li {
+    font-size: 0;
+    gap: 0;
+  }
+
+  .auth-steps li[aria-current='step'] {
+    font-size: 0.72rem;
+    gap: 6px;
+  }
+}

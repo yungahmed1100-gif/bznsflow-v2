@@ -10,6 +10,8 @@
 // reach the browser: it has no VITE_ prefix, so Vite cannot inline it, and it
 // is only ever read here, server-side.
 
+import { fetchWithTimeout, httpError } from './fetch.js';
+
 const TIMEOUT_MS = 5000;
 
 function config() {
@@ -34,36 +36,19 @@ function config() {
  */
 async function rpc(fn, args) {
   const { url, key } = config();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  let res;
-  try {
-    res = await fetch(`${url}/rest/v1/rpc/${fn}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify(args),
-      signal: controller.signal,
-    });
-  } catch (err) {
-    if (err?.name === 'AbortError') {
-      throw new Error(`Supabase RPC ${fn} timed out after ${TIMEOUT_MS}ms`);
-    }
-    throw new Error(`Supabase RPC ${fn} failed: ${err?.message || err}`);
-  } finally {
-    clearTimeout(timer);
-  }
+  const res = await fetchWithTimeout(`${url}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify(args),
+  }, { label: `Supabase RPC ${fn}`, timeoutMs: TIMEOUT_MS });
 
-  if (!res.ok) {
-    // PostgREST puts the useful detail in the body; include it but keep it
-    // bounded so a large error page cannot flood the logs.
-    const detail = await res.text().catch(() => '');
-    throw new Error(`Supabase RPC ${fn} → HTTP ${res.status}: ${detail.slice(0, 300)}`);
-  }
+  // PostgREST puts the useful detail in the body.
+  if (!res.ok) throw await httpError(`Supabase RPC ${fn}`, res);
   return res.json();
 }
 
@@ -109,4 +94,67 @@ export function finishTurn(conversationId, reply, handoff) {
     p_reply: reply,
     p_handoff: !!handoff,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Accounts, one-time codes and sessions.  Migration: web-chatbot/migrations/
+// 003-accounts.sql.  Same project and same service-role key as the chat tables.
+//
+// Each of these is one transaction on the database side, which is the point:
+// a consumed code with no session, or a session pointing at no account, is not
+// a state this system should be able to reach, and splitting the steps across
+// HTTP calls is exactly how it would.
+// ---------------------------------------------------------------------------
+
+/**
+ * Store a code hash for an address, subject to the per-email throttle.
+ * @returns {Promise<{ ok: boolean, reason?: 'too_soon'|'too_many'|'invalid' }>}
+ */
+export function requestCode(email, codeHash, ttlMinutes) {
+  return rpc('auth_request_code', {
+    p_email: email,
+    p_code_hash: codeHash,
+    p_ttl_minutes: ttlMinutes,
+  });
+}
+
+/**
+ * Verify a code, then find-or-create the account and open a session.
+ * @returns {Promise<{ ok: boolean, reason?: 'no_code'|'locked'|'bad_code'|'invalid',
+ *                     attempts_left?: number, needs_profile?: boolean, account?: object }>}
+ */
+export function verifyCode(email, codeHash, sessionHash, sessionDays) {
+  return rpc('auth_verify_code', {
+    p_email: email,
+    p_code_hash: codeHash,
+    p_session_hash: sessionHash,
+    p_session_days: sessionDays,
+  });
+}
+
+/** Fill in the profile for whichever account the session belongs to. */
+export function completeProfile(sessionHash, profile) {
+  return rpc('auth_complete_profile', {
+    p_session_hash: sessionHash,
+    p_name: profile.name,
+    p_phone: profile.phone,
+    p_country: profile.country,
+    p_industry: profile.industry,
+    p_lang: profile.lang,
+  });
+}
+
+/** Resolve a session to its account, or `{ ok: false }` if expired or unknown. */
+export function getSession(sessionHash) {
+  return rpc('auth_session', { p_session_hash: sessionHash });
+}
+
+/** End one session. Idempotent — deleting an absent row is still success. */
+export function signOut(sessionHash) {
+  return rpc('auth_sign_out', { p_session_hash: sessionHash });
+}
+
+/** Record that the CRM sheet row was written, so a failed push stays findable. */
+export function markSynced(accountId) {
+  return rpc('auth_mark_synced', { p_account_id: accountId });
 }

@@ -21,10 +21,15 @@ this registry lists both. "It's not a cookie" is not an exemption.
 | Name | Type | Lifetime | Purpose |
 |---|---|---|---|
 | `bf_locale` | cookie | 1 year | Remembers the language chosen in the switcher. Written in `src/pages/Home.jsx`. |
-| `bf_session` | cookie, **HttpOnly** | 30 days | Identifies a signed-in account. **Reserved — not yet issued**; helpers in `api/_lib/cookies.js`. |
-| `bf_csrf` | cookie | 30 days | CSRF double-submit token, echoed in `x-csrf-token`. **Reserved — not yet issued.** |
+| `bf_session` | cookie, **HttpOnly** | 30 days | Identifies a signed-in account. Issued by `POST /api/auth-session` on the sign-in page; cleared on sign-out. Holds a random 32-byte token — the database stores only its SHA-256. |
+| `bf_csrf` | cookie, **HttpOnly** | 30 days | CSRF double-submit token, echoed in `x-csrf-token`. Issued by `GET /api/auth-session`, which returns the token in its JSON body — so the page never reads the cookie and it can be HttpOnly, unlike the textbook pattern. |
 | `bznsflow_chat_session` | localStorage | until cleared | Keeps one Layla conversation continuous across page loads (`src/lib/chat.js`). |
 | `bf_playbook_seen` | localStorage | until cleared | Stops the exit-intent playbook modal re-appearing (`src/hooks/useExitIntent.js`). |
+
+Both sign-in cookies are strictly necessary and therefore need no consent: one
+authenticates a session the visitor explicitly asked for, the other exists only
+to protect that session from cross-site forgery. Neither measures, profiles or
+attributes anything, and neither is set until a visitor submits the sign-in form.
 
 `bf_locale` is deliberately **not** used to redirect. Googlebot sends no cookies
 and crawls from the US, so a cookie-driven redirect on `/` or `/en` would serve
