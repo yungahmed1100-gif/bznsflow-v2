@@ -19,7 +19,7 @@ export function NavBar({
   return (
     <>
       <a href="#main-content" className="skip-to-content">{t.skip_to_content || 'Skip to main content'}</a>
-      <div className="scroll-progress" style={{ width: `${scrollProgress}%` }} aria-hidden="true" />
+      <div className="scroll-progress" style={{ '--scroll-progress': scrollProgress / 100 }} aria-hidden="true" />
 
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`} id="navbar">
         <div className="nav-container">

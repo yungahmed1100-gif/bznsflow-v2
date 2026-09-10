@@ -182,13 +182,19 @@ html {
   top: 0;
   inset-inline-start: 0;
   height: 2px;
+  width: 100%;
   background: var(--text-primary);
   z-index: 2000;
-  transition: width 0.08s linear;
+  /* Driven by scaleX rather than width: the browser composites a transform
+     without re-running layout on every scroll frame. */
+  transform: scaleX(var(--scroll-progress, 0));
+  transform-origin: left center;
+  transition: transform 0.08s linear;
   pointer-events: none;
-  border-radius: 0;
-  border-start-end-radius: 2px;
-  border-end-end-radius: 2px;
+}
+
+[dir="rtl"] .scroll-progress {
+  transform-origin: right center;
 }
 
 /* Active nav link */

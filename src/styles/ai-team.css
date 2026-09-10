@@ -131,7 +131,7 @@
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
-  height: 3px;
+  height: 1px;
   background: var(--accent-blue);
 }
 .orbit-card--order .orbit-card-face::before { background: var(--orange); }
@@ -277,7 +277,7 @@
   color: var(--text-primary);
   line-height: 1.6;
   padding-inline-start: 14px;
-  border-inline-start: 3px solid var(--green);
+  border-inline-start: 1px solid var(--text-primary);
   text-align: start;
   align-self: center;
   max-width: 52ch;

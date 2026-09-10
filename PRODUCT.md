@@ -81,7 +81,7 @@ product cannot truthfully copy without rebuilding for it. Oman is the beachhead.
   Ascend, a `<30s` first-reply stat that was formally withdrawn, an unsourced "78% of
   customers buy from the business that responds first", and two client names (Muscat
   Heights, Mazoon Dental) absent from the approved list. These were deliberately left
-  in place on 2026-09-10 and are catalogued in `work/claims-ledger.md`. Design work must
+  in place on 2026-09-10 and are catalogued in `CLAIMS-LEDGER.md`. Design work must
   neither amplify nor quietly remove them.
 
 ## Brand Commitments
