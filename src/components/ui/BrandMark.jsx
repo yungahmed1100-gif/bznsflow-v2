@@ -61,11 +61,6 @@ const MARKS = {
   ),
 };
 
-/** True when a logo exists, so callers can skip a provider they cannot draw. */
-export function hasBrandMark(name) {
-  return Object.prototype.hasOwnProperty.call(MARKS, name);
-}
-
 /**
  * A provider logo at its own fixed colours.
  * Decorative: the button's text already names the provider.

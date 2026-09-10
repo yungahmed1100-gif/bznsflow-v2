@@ -119,7 +119,6 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
   text-align: center;
   cursor: pointer;
   font: inherit;
@@ -349,7 +348,7 @@
   white-space: nowrap;
 }
 
-.team-cta { margin-top: var(--space-10); display: flex; justify-content: center; }
+.team-cta { margin-top: var(--space-10); }
 
 /* ---- Responsive ---- */
 @media (max-width: 768px) {

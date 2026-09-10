@@ -75,7 +75,7 @@
 /* AI-team cards are start-aligned (expandable, content-rich) — see TEAM block */
 
 /* Card BODY copy stays start-aligned for readability (auto-mirrors in RTL) */
-.track-card, .benefit-card, .pricing-card { text-align: start; }
+.benefit-card, .pricing-card { text-align: start; }
 
 /* Header→content rhythm is owned by .section-subtitle margin-bottom
    (--header-gap); grids carry no extra margin-top so every section

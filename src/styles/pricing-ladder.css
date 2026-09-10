@@ -358,7 +358,6 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
 }
 .guarantee-badge {
   flex-shrink: 0;
@@ -427,7 +426,6 @@
   font-weight: 600;
   font-size: 0.9rem;
   text-decoration: none;
-  box-shadow: var(--shadow-card);
   transition: transform var(--transition);
 }
 .skip-to-content:focus,
@@ -467,7 +465,6 @@
     letter-spacing: 0.04em;
   }
 }
-[dir="rtl"] .comparison-scroll::after,
 [dir="rtl"] .pricing-compare-scroll::after { content: '← مرّر للمقارنة'; }
 
 /* Pipeline diagram never overflows a phone viewport */

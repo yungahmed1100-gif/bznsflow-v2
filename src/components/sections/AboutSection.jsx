@@ -2,7 +2,7 @@ import React from 'react';
 import { Icon } from '../ui/Icon';
 import { waLink } from '../../lib/whatsapp';
 
-export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL, trackEvent }) {
+export function AboutSection({ t, CALENDAR_URL, trackEvent }) {
   return (
     <section className="section" id="about">
       <div className="container">

@@ -122,18 +122,14 @@ export default function Home({ lang: routeLang = 'ar' }) {
       />
 
       <main id="main-content">
-        <HeroSection
-          t={t} lang={lang}
-          CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL}
-          onSmoothScroll={handleSmoothScroll} trackEvent={trackEvent}
-        />
+        <HeroSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <ClientTape t={t} />
         <SolutionsSection t={t} trackEvent={trackEvent} />
         <AITeamSection t={t} lang={lang} trackEvent={trackEvent} />
         <HowItWorksSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <TiersSection t={t} tiers={activeTiers} lang={lang} trackEvent={trackEvent} />
         <BenefitsSection t={t} />
-        <AboutSection t={t} lang={lang} CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL} trackEvent={trackEvent} />
+        <AboutSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <FAQSection t={t} trackEvent={trackEvent} />
       </main>
 
@@ -143,11 +139,7 @@ export default function Home({ lang: routeLang = 'ar' }) {
         onSmoothScroll={handleSmoothScroll}
       />
 
-      <StickyMobileCTA
-        t={t}
-        CALENDAR_URL={CALENDAR_URL} WHATSAPP_URL={WHATSAPP_URL}
-        trackEvent={trackEvent}
-      />
+      <StickyMobileCTA t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
 
       <ChatWidget t={t} lang={lang} trackEvent={trackEvent} onOpenChange={setIsChatOpen} />
 

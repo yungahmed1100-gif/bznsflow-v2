@@ -112,32 +112,14 @@
     padding: 120px 20px 80px;
   }
 
-  /* Hero logo — constrain size, disable float animation on mobile */
-
   /* Allow button text to wrap on narrow screens */
   .btn {
     white-space: normal;
     text-align: center;
   }
 
-  .hero-stats {
-    flex-direction: column;
-    gap: 20px;
-    padding: 28px 24px;
-  }
-
-  .stat-divider {
-    width: 80px;
-    height: 1px;
-  }
-
-  .stat-item {
-    padding: 0 20px;
-  }
-
-  /* Benefits & Use Cases Mobile */
+  /* Benefits & pricing mobile */
   .benefits-grid,
-  .use-cases-grid,
   .pricing-grid {
     grid-template-columns: 1fr;
   }

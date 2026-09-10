@@ -38,29 +38,27 @@
   --green:            #51A47B;
   --red:              #E16B71;
   --orange:           #F28C54;
-  --yellow:           #EEB462;
   --whatsapp:         #25D366;
 
   --navbar-height:    72px;
 
   /* ---- SHAPE ----
-     Corners are nearly square. A soft corner under a hard shadow reads as
-     a mistake, so the old 20px/28px steps now resolve to 8px; the names
-     survive only so the 19 sheets that reference them keep working. */
+     Corners are nearly square: a soft corner under a hard shadow reads as
+     a mistake. --radius-lg is still 8px rather than its own step because
+     the sheets that used the old 20px value read better at md, and the
+     name is left in place where the distinction may return. */
   --radius-sm:        4px;
   --radius-md:        8px;
   --radius-lg:        8px;
-  --radius-xl:        8px;
   --radius-pill:      999px;
 
   /* ---- ELEVATION ----
      Flat by default. Only an actionable or transient surface earns a
      shadow, and it is a hard offset in ink with no blur -- the page is
-     lit by one raking light, not by an ambient glow. --shadow-card and
-     --shadow-glow are deliberately none: every content card in the
-     codebase referenced them, and flattening here flattens all of them. */
-  --shadow-card:      none;
-  --shadow-glow:      none;
+     lit by one raking light, not by an ambient glow.
+     Three steps, each wired to a real surface: raised is a resting
+     button, lifted is that button hovered, overlay is a modal or the
+     chat panel. In RTL the offset mirrors through --x-sign. */
   --shadow-raised:    calc(4px * var(--x-sign)) 4px 0 var(--text-primary);
   --shadow-lifted:    calc(6px * var(--x-sign)) 6px 0 var(--text-primary);
   --shadow-overlay:   calc(8px * var(--x-sign)) 8px 0 var(--text-primary);

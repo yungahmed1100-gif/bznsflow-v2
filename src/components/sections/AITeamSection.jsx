@@ -9,7 +9,7 @@ import { useOrbitCarousel, ringOffset } from '../../hooks/useOrbitCarousel';
 // entirely — five on screen reads as depth, twelve reads as clutter.
 const VISIBLE_DEPTH = 2;
 
-export function AITeamSection({ t, lang = 'ar' }) {
+export function AITeamSection({ t, lang = 'ar', trackEvent }) {
   const isAr = lang === 'ar';
   const agents = isAr ? AGENTS_AR : AGENTS;
   const pitch = isAr ? PITCH.ar : PITCH.en;
@@ -137,6 +137,7 @@ export function AITeamSection({ t, lang = 'ar' }) {
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary btn-large"
+            onClick={() => trackEvent?.('WhatsAppClick', { source: 'ai-team' })}
           >
             <Icon name="whatsapp" size={20} />
             <span>{t.team_cta}</span>

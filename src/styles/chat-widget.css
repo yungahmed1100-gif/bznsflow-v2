@@ -26,13 +26,13 @@
   cursor: pointer;
   /* Edge-to-edge avatar: white bg blends the illustration's own white + green ring. */
   background: #fff;
-  box-shadow: 0 6px 24px rgba(92, 149, 198, 0.4), var(--shadow-glow);
+  box-shadow: var(--shadow-raised);
   transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
   order: 2;
   overflow: hidden;
 }
 .chat-widget--rtl .chat-launcher { align-self: flex-start; }
-.chat-launcher:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 12px 34px rgba(92, 149, 198, 0.55), var(--shadow-glow); }
+.chat-launcher:hover { transform: translate(calc(-2px * var(--x-sign)), -2px); box-shadow: var(--shadow-lifted); }
 .chat-launcher:active { transform: translateY(-1px) scale(1.0); }
 .chat-launcher:focus-visible { outline: 3px solid rgba(92, 149, 198, 0.5); outline-offset: 3px; }
 /* When open, the avatar fades out and a gradient backdrop reveals the close × */
@@ -64,12 +64,11 @@
   color: var(--text-primary);
   font-family: inherit; font-size: 0.875rem; font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow-card);
   white-space: nowrap;
   transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
   animation: chatInviteIn 0.5s 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.chat-invite:hover { transform: translateY(-2px); border-color: var(--border-hover); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+.chat-invite:hover { transform: translateY(-2px); border-color: var(--text-primary); }
 .chat-invite-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
 @keyframes chatInviteIn { from { opacity: 0; transform: translateY(10px) scale(0.94); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
@@ -83,8 +82,8 @@
   height: min(560px, calc(100vh - 140px));
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 24px 60px rgba(0,0,0,0.16), 0 4px 16px rgba(0,0,0,0.06);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-overlay);
   display: flex; flex-direction: column;
   overflow: hidden;
   transform-origin: bottom right;
@@ -179,9 +178,9 @@
   border-radius: 999px; font-size: 0.85rem; font-weight: 600;
   text-decoration: none;
   transition: transform var(--transition), box-shadow var(--transition);
-  box-shadow: 0 3px 12px rgba(37,211,102,0.35);
+  box-shadow: var(--shadow-raised);
 }
-.chat-wa-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(37,211,102,0.5); }
+.chat-wa-btn:hover { box-shadow: var(--shadow-lifted); transform: translate(calc(-1px * var(--x-sign)), -1px); }
 
 /* Handoff actions — WhatsApp is the primary route, email the alternative.
    Stacked so the hierarchy is unmistakable in a narrow bubble. */
@@ -244,9 +243,9 @@
   background: var(--text-primary);
   color: var(--bg-primary);
   transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
-  box-shadow: 0 3px 12px rgba(92,149,198,0.4);
+  box-shadow: var(--shadow-raised);
 }
-.chat-send:hover:not(:disabled) { transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 18px rgba(92,149,198,0.55); }
+.chat-send:hover:not(:disabled) { box-shadow: var(--shadow-lifted); transform: translate(calc(-2px * var(--x-sign)), -2px); }
 .chat-send:disabled { opacity: 0.4; cursor: default; }
 .chat-widget--rtl .chat-send .icon,
 .chat-widget--rtl .chat-send svg { transform: scaleX(-1); }

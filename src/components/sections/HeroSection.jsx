@@ -44,7 +44,7 @@ function PipelineDiagram({ t }) {
   );
 }
 
-export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL, WHATSAPP_URL }) {
+export function HeroSection({ t, trackEvent, CALENDAR_URL }) {
   const trustVerticals = [
     t.trackA_v1, t.trackA_v2, t.trackA_v3, t.trackA_v4, t.trackA_v5,
     t.trackB_v1, t.trackB_v2, t.trackB_v3,

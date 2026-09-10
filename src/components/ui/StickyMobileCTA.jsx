@@ -2,7 +2,7 @@ import React from 'react';
 import { Icon } from './Icon';
 import { waLink } from '../../lib/whatsapp';
 
-export function StickyMobileCTA({ t, CALENDAR_URL, WHATSAPP_URL, trackEvent }) {
+export function StickyMobileCTA({ t, CALENDAR_URL, trackEvent }) {
   return (
     <div className="sticky-mobile-cta" role="region" aria-label="Quick contact">
       <a

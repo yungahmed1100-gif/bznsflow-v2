@@ -255,8 +255,6 @@ export const PERSONA = ${j(persona)};
 export const SECTIONS = [
 ${body}
 ];
-
-export const KB_SECTION_COUNT = ${sections.length};
 `;
 }
 

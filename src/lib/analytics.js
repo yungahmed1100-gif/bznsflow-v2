@@ -27,9 +27,9 @@ const META_EVENTS = {
   // Booking a call on the Google calendar.
   HeroCallClick:   { name: 'Schedule' },
   AboutCallClick:  { name: 'Schedule' },
-  FinalCallClick:  { name: 'Schedule' },
-  // Engagement signal, not a conversion — kept custom so it can never be
+  // Engagement signals, not conversions — kept custom so they can never be
   // mistaken for one in Ads Manager.
+  ChatOpen:        { name: 'ChatOpened', custom: true },
   ChatMessageSent: { name: 'ChatEngaged', custom: true },
 };
 
@@ -64,7 +64,3 @@ export const trackEvent = (name, props) => {
     { eventID: eventId() },
   );
 };
-
-// Exported for tests: the StickyCTAClick branch is real logic and the mapping is
-// the contract Ads Manager reports against.
-export { metaEventFor, META_EVENTS };

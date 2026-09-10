@@ -6,8 +6,6 @@
 import en from './en.js';
 import ar from './ar.js';
 
-export const ALL_LANGS = ['ar', 'en'];
-
 const store = { en, ar };
 
 // Returns strings synchronously. Falls back to Arabic (the primary language).

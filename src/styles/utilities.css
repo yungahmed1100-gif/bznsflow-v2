@@ -65,7 +65,6 @@ html {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: var(--shadow-card);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
@@ -165,14 +164,6 @@ html {
 }
 
 /* ============================================================
-   PRICING PSYCHOLOGY ELEMENTS
- ============================================================ */
-
-/* ROI hook strip above the pricing grid */
-
-/* Price anchor comparison lines */
-
-/* ============================================================
    QUALITY ENHANCEMENTS
  ============================================================ */
 
@@ -203,17 +194,3 @@ html {
   background: var(--bg-secondary);
 }
 
-/* Hero feature logo — fills its column to cover the space */
-.hero-logo-feature {
-  display: block;
-  width: 100%;
-  max-width: 360px;
-  height: auto;
-  margin: 0 auto;
-}
-@media (max-width: 1024px) {
-  .hero-logo-feature { max-width: 260px; }   /* hero stacks */
-}
-@media (max-width: 640px) {
-  .hero-logo-feature { max-width: 200px; }
-}
