@@ -169,8 +169,8 @@
 }
 
 .auth-steps li[aria-current='step'] .auth-step-dot {
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  color: #fff;
+  background: var(--text-primary);
+  color: var(--bg-primary);
 }
 
 .auth-steps li.is-done .auth-step-dot {

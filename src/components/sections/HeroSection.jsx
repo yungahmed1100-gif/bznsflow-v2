@@ -52,11 +52,6 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
 
   return (
     <section className="hero grain" id="hero">
-      <div className="aurora" aria-hidden="true">
-        <span className="aurora-blob aurora-blob--a" />
-        <span className="aurora-blob aurora-blob--b" />
-        <span className="aurora-blob aurora-blob--c" />
-      </div>
       <div className="hero-overlay" aria-hidden="true" />
 
       {/* Decorative isometric flow rails, cropped from the brand artwork either
@@ -105,17 +100,17 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
       <div className="hero-content">
         <div className="hero-layout">
           <div className="hero-text-block">
-            <div className="hero-badge">
-              <span className="badge-dot" aria-hidden="true" />
-              <span>{t.hero_badge}</span>
-            </div>
-
             <h1
               className="hero-headline"
               dangerouslySetInnerHTML={{ __html: t.hero_headline }}
             />
 
             <p className="hero-subheadline">{t.hero_sub}</p>
+
+            {/* Was a pill above the headline. It is a sentence of its own, not
+                a label restating the heading, so it keeps its words and moves
+                below the lede where it reads as a caption. */}
+            <p className="hero-caption">{t.hero_badge}</p>
 
             <div className="hero-ctas">
               <a
@@ -141,40 +136,34 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
             </div>
           </div>
 
+          {/* The wordmark used to sit here as well as in the navbar, one
+              viewport apart, and the pair left a column of dead space
+              between them. The pipeline owns this column now. */}
           <div className="hero-visual">
             <div className="hero-image-block">
               <PipelineDiagram t={t} />
             </div>
-
-            <div className="hero-logo-block">
-              <img
-                src="/logo.png"
-                alt="BznsFlow"
-                className="hero-logo-feature"
-                width="500"
-                height="500"
-                fetchpriority="high"
-              />
-            </div>
           </div>
         </div>
 
-        <div className="hero-stats">
-          <div className="stat-item">
-            <span className="stat-number">{'<'}30s</span>
-            <span className="stat-label">{t.stat_1}</span>
+        {/* Reads as a specification line, not a metric display. Two of these
+            three were never measurements -- "always on" and "bilingual" are
+            properties of the service -- so setting all three at display scale
+            dressed a fact up as a statistic. Label leads, value follows. */}
+        <dl className="hero-spec">
+          <div className="hero-spec-row">
+            <dt>{t.stat_1}</dt>
+            <dd className="tabular">{'<'}30s</dd>
           </div>
-          <div className="stat-divider" aria-hidden="true" />
-          <div className="stat-item">
-            <span className="stat-number">24/7</span>
-            <span className="stat-label">{t.stat_2}</span>
+          <div className="hero-spec-row">
+            <dt>{t.stat_2}</dt>
+            <dd className="tabular">24/7</dd>
           </div>
-          <div className="stat-divider" aria-hidden="true" />
-          <div className="stat-item">
-            <span className="stat-number">AR·EN</span>
-            <span className="stat-label">{t.stat_3}</span>
+          <div className="hero-spec-row">
+            <dt>{t.stat_3}</dt>
+            <dd>AR·EN</dd>
           </div>
-        </div>
+        </dl>
 
         <div className="trust-strip">
           <span className="trust-label">{t.trust_label}</span>
@@ -187,9 +176,6 @@ export function HeroSection({ t, lang, onSmoothScroll, trackEvent, CALENDAR_URL,
         </div>
       </div>
 
-      <div className="scroll-indicator" aria-hidden="true">
-        <div className="scroll-line" />
-      </div>
     </section>
   );
 }

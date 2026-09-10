@@ -8,7 +8,6 @@ export function FAQSection({ t, trackEvent }) {
   return (
     <section className="section" id="faq">
       <div className="container">
-        <div className="section-label" data-reveal>{t.faq_label}</div>
         <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.faq_title }} />
 
         <div className="faq-list">

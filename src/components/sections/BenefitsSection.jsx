@@ -11,7 +11,6 @@ export function BenefitsSection({ t }) {
   return (
     <section className="section section--dark" id="benefits">
       <div className="container">
-        <div className="section-label" data-reveal>{t.benefits_label}</div>
         <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.benefits_title }} />
         <p className="section-subtitle" data-reveal dangerouslySetInnerHTML={{ __html: t.benefits_sub }} />
 

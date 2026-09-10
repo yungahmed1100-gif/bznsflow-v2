@@ -20,14 +20,15 @@
   padding-bottom: 48px;
 }
 
+/* The three steps are a genuine sequence, so the number carries information
+   and stays. It is set as a figure in ink rather than as gradient-clipped
+   text -- the old rule leaned on the last violet left in the codebase. */
 .step-number {
-  font-size: 3.5rem;
-  font-weight: 900;
-  letter-spacing: -0.06em;
-  background: linear-gradient(135deg, rgba(79, 142, 247, 0.6), rgba(139, 92, 246, 0.3));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
   line-height: 1;
   padding-top: 4px;
   flex-shrink: 0;
@@ -44,7 +45,7 @@
   top: 60px;
   bottom: -48px;
   width: 1px;
-  background: linear-gradient(to bottom, rgba(79, 142, 247, 0.4), transparent);
+  background: var(--border-hover);
 }
 
 .step-title {
@@ -96,7 +97,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  background: var(--text-primary);
   z-index: 0;
 }
 

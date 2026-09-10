@@ -2,14 +2,14 @@
    UTILITY
  ============================================================ */
 ::selection {
-  background: rgba(79, 142, 247, 0.3);
-  color: #fff;
+  background: var(--text-primary);
+  color: var(--bg-primary);
 }
 
 :focus-visible {
   outline: 2px solid var(--accent-blue);
-  outline-offset: 3px;
-  border-radius: 4px;
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* Smooth scroll for all internal anchors */
@@ -36,7 +36,7 @@ html {
   font-weight: 600;
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background-color var(--transition), border-color var(--transition);
   color: var(--text-primary);
 }
 
@@ -69,7 +69,7 @@ html {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
-  transition: all var(--transition);
+  transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
   z-index: 100;
   min-width: 140px;
 }
@@ -90,9 +90,9 @@ html {
   color: var(--text-secondary);
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background-color var(--transition), color var(--transition);
   text-align: start;
 }
 
@@ -102,7 +102,7 @@ html {
 }
 
 .lang-item.active {
-  background: rgba(79, 142, 247, 0.1);
+  background: var(--bg-secondary);
   color: var(--accent-blue);
   font-weight: 600;
 }
@@ -129,9 +129,11 @@ html {
    Applied when <html> has dir="rtl" and lang="ar"
  ============================================================ */
 
-/* Switch to Cairo font for Arabic — beautiful, premium Arabic type */
+/* Arabic is set in IBM Plex Sans Arabic — an Arabic text face, not a Latin
+   one extended to cover Arabic. Leading is looser than the Latin 1.6. */
 [dir="rtl"] body {
-  font-family: 'Cairo', -apple-system, sans-serif;
+  font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', sans-serif;
+  line-height: 1.8;
 }
 
 /* The layout itself mirrors automatically: <html dir="rtl"> flips flex
@@ -180,7 +182,7 @@ html {
   top: 0;
   inset-inline-start: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+  background: var(--text-primary);
   z-index: 2000;
   transition: width 0.08s linear;
   pointer-events: none;
@@ -192,7 +194,7 @@ html {
 /* Active nav link */
 .nav-link.active {
   color: var(--accent-blue);
-  background: rgba(79, 142, 247, 0.08);
+  background: var(--bg-secondary);
 }
 
 /* Hero feature logo — fills its column to cover the space */

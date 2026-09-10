@@ -1,13 +1,14 @@
 /* ============================================================
    HERO SECTION
  ============================================================ */
+/* The hero no longer fills the viewport and no longer centres itself. A
+   100vh centred column with a blurred wash behind it is the composition
+   that reads as generic regardless of what it says; the statement now sits
+   on the grid and the page starts scrolling immediately. */
 .hero {
   position: relative;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
+  border-bottom: 1px solid var(--border-hover);
 }
 
 .hero-overlay {
@@ -17,18 +18,6 @@
   z-index: 1;
 }
 
-/* Subtle gradient fade at bottom */
-.hero::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  inset-inline: 0;
-  height: 200px;
-  background: linear-gradient(to bottom, transparent, var(--bg-primary));
-  z-index: 2;
-  pointer-events: none;
-}
-
 .hero-content {
   position: relative;
   z-index: 3;
@@ -36,34 +25,40 @@
   max-width: 1200px;
   min-width: 0;
   margin: 0 auto;
-  padding: 140px 24px 100px;
+  padding: 128px 24px 72px;
 }
 
-/* Centered hero: text column on top, pipeline + logo centered below.
-   Pure flex centering — no grid columns, can't go off-centre. */
+/* Two columns on the grid: the statement reads from the start edge, the
+   pipeline sits beside it. Below 1024px it stacks, statement first. */
 .hero-layout {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   align-items: center;
-  text-align: center;
-  gap: 32px;
+  gap: 56px;
   width: 100%;
+  text-align: start;
 }
 
 .hero-text-block {
   width: 100%;
-  max-width: 820px;
-  margin: 0 auto;
+  min-width: 0;
 }
 
-/* The visual row beneath the copy: pipeline + enlarged logo, centered */
 .hero-visual {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 56px;
+  gap: 40px;
   flex-wrap: wrap;
   width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .hero-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
 }
 
 .hero-image-block,
@@ -92,24 +87,21 @@
 }
 
 .pipeline-node {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
   padding: 14px 18px;
   display: flex;
   align-items: center;
   gap: 14px;
-  box-shadow: var(--shadow-card);
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: transform var(--transition), border-color var(--transition);
   position: relative;
   z-index: 1;
 }
 
 .pipeline-node:hover {
   transform: translateX(calc(var(--x-sign) * 4px));
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border-color: var(--text-primary);
 }
 
 /* ── Sequential illumination: the product demonstrating itself. ──
@@ -141,12 +133,12 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  background: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #fff;
+  color: var(--bg-primary);
 }
 
 .pipeline-node-icon svg {
@@ -237,120 +229,105 @@
   .pipeline-node-label { font-size: 0.8rem; }
 }
 
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: 100px;
-  background: rgba(79, 142, 247, 0.1);
-  border: 1px solid rgba(79, 142, 247, 0.25);
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--accent-blue);
-  letter-spacing: 0.04em;
-  margin-bottom: 36px;
-}
-
-.badge-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent-blue);
-}
-
 .hero-headline {
   font-size: clamp(2.6rem, 5vw, 4.4rem);
-  font-weight: 900;
-  line-height: 1.08;
+  font-weight: 800;
+  line-height: 1.05;
   letter-spacing: -0.035em;
   color: var(--text-primary);
-  margin-bottom: 28px;
-  text-shadow: none;
+  margin-bottom: 24px;
+  text-wrap: balance;
+  max-width: 16ch;
 }
 
 .hero-subheadline {
   font-size: clamp(1rem, 2vw, 1.2rem);
   color: var(--text-secondary);
   line-height: 1.8;
-  max-width: 680px;
-  margin: 0 auto 40px;
+  max-width: 58ch;
+  margin: 0 0 20px;
+}
+
+/* The old badge copy, demoted from a pill above the headline to a caption
+   under the lede. */
+.hero-caption {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  max-width: 58ch;
+  margin: 0 0 36px;
+  padding-inline-start: 14px;
+  border-inline-start: 1px solid var(--border-hover);
 }
 
 .hero-ctas {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 0;
 }
 
-.hero-stats {
+/* A ruled specification block. The label leads and the value follows, so a
+   property of the service is not typeset as though it were a measurement. */
+.hero-spec {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
   flex-wrap: wrap;
-  margin-top: 32px;
-  padding: 28px 40px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-card);
+  gap: 0;
+  margin: 48px 0 0;
+  border-top: 1px solid var(--border-hover);
+  border-bottom: 1px solid var(--border-hover);
 }
 
-.stat-item {
+.hero-spec-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 0 40px;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 24px;
+  flex: 1 1 auto;
+  border-inline-end: 1px solid var(--border);
 }
 
-.stat-number {
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.hero-spec-row:last-child {
+  border-inline-end: none;
 }
 
-.stat-label {
-  font-size: 0.8rem;
+.hero-spec dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-secondary);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-align: center;
 }
 
-.stat-divider {
-  width: 1px;
-  height: 40px;
-  background: var(--border);
+[lang="ar"] .hero-spec dt,
+[dir="rtl"] .hero-spec dt {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
-/* Scroll Indicator */
-.scroll-indicator {
-  position: absolute;
-  bottom: 32px;
-  inset-inline: 0;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
+/* These values are Latin and numeric, so they are isolated and forced LTR.
+   Without this the "<" in "<30s" is reordered by the bidi algorithm under
+   dir="rtl" and renders as "30s>", which states the opposite of the claim. */
+.hero-spec dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
-.scroll-line {
-  width: 1px;
-  height: 48px;
-  background: linear-gradient(to bottom, var(--text-secondary), transparent);
+@media (max-width: 640px) {
+  .hero-spec-row {
+    flex: 1 1 100%;
+    border-inline-end: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    justify-content: space-between;
+  }
+  .hero-spec-row:last-child {
+    border-bottom: none;
+  }
 }
 
 /* ============================================================

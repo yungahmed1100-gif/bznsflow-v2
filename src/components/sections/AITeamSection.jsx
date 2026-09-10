@@ -34,7 +34,6 @@ export function AITeamSection({ t, lang = 'ar' }) {
   return (
     <section className="section" id="ai-team" ref={sectionRef}>
       <div className="container">
-        <div className="section-label" data-reveal>{t.team_label}</div>
         <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.team_title }} />
         <p className="section-subtitle" data-reveal>{t.team_sub}</p>
 

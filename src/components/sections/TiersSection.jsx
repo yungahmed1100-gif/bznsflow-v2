@@ -71,7 +71,6 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
   return (
     <section className="section section--dark" id="tiers">
       <div className="container">
-        <div className="section-label" data-reveal>{t.tiers_label}</div>
         <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.tiers_title }}></h2>
         <p className="section-subtitle" data-reveal>{t.tiers_sub}</p>
 

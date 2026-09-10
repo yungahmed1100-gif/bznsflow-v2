@@ -29,18 +29,25 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <!-- ═══ FONTS (non-render-blocking — all weights kept, no visual change) ═ -->
+    <!-- ═══ FONTS ═══════════════════════════════════════════════════════════
+         Poppins for Latin, IBM Plex Sans Arabic for Arabic — the pairing in
+         Brand/Visual-System. IBM Plex Sans Arabic is drawn as an Arabic text
+         face rather than adapted from a Latin one, which is why it replaces
+         Cairo on a site where Arabic is the canonical language.
+
+         Five weights each instead of the previous seven: 300 and 900 were
+         loaded on both families and used by neither. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Load asynchronously so fonts never block first paint, then swap media to all. -->
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Cairo:wght@300;400;500;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </noscript>
     <meta name="facebook-domain-verification" content="gp7mxwceshctr5x1y0hrrmukfa1q0j" />
 

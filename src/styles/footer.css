@@ -42,13 +42,13 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  transition: all var(--transition);
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
 }
 
 .social-link:hover {
   background: var(--whatsapp);
   border-color: var(--whatsapp);
-  color: #fff;
+  color: var(--text-primary);
   transform: translateY(-2px);
 }
 
@@ -166,9 +166,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--text-primary);
   box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4), 0 0 0 0 rgba(37, 211, 102, 0.3);
-  transition: all var(--transition);
+  transition: box-shadow var(--transition), transform var(--transition);
 }
 
 .whatsapp-float a:hover .whatsapp-icon {
@@ -188,10 +188,9 @@
   white-space: nowrap;
   padding: 8px 14px;
   border-radius: var(--radius-sm);
-  backdrop-filter: blur(8px);
   opacity: 0;
   pointer-events: none;
-  transition: all var(--transition);
+  transition: opacity var(--transition), transform var(--transition);
 }
 
 .whatsapp-tooltip::after {

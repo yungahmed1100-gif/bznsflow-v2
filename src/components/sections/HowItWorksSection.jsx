@@ -11,7 +11,6 @@ export function HowItWorksSection({ t, CALENDAR_URL, trackEvent }) {
   return (
     <section className="section" id="how-it-works">
       <div className="container">
-        <div className="section-label" data-reveal>{t.how_label}</div>
         <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.how_title }} />
         <p className="section-subtitle" data-reveal>{t.how_sub}</p>
 

@@ -90,7 +90,10 @@ export function NavBar({
               {/* Internal route, so no target/rel — and a plain <a> rather than a
                   <Link>, because every page here is prerendered and the rest of
                   the cross-page navigation on this site works the same way. */}
-              <a href={lang === 'en' ? '/en/signin' : '/signin'} className="btn btn-primary nav-cta">
+              {/* A text link, not a filled button. Sign-in serves people who
+                  already bought; making it the loudest control on a marketing
+                  page put it above both actions that actually convert. */}
+              <a href={lang === 'en' ? '/en/signin' : '/signin'} className="nav-link nav-cta">
                 {t.nav_signin}
               </a>
             </li>

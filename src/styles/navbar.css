@@ -9,15 +9,16 @@
   height: var(--navbar-height);
   display: flex;
   align-items: center;
-  transition: background var(--transition), box-shadow var(--transition), backdrop-filter var(--transition);
+  transition: background-color var(--transition), border-color var(--transition);
   background: transparent;
 }
 
+/* Opaque paper with a hairline beneath it. The translucent-white-plus-blur
+   version depended on backdrop-filter to stay legible and turned to milk
+   wherever it was unsupported. */
 .navbar.scrolled {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 1px 0 var(--border);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-hover);
 }
 
 .nav-container {
@@ -90,6 +91,10 @@
 
 .nav-cta {
   margin-inline-start: 8px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--border-hover);
+  text-underline-offset: 4px;
 }
 
 /* Hamburger */
@@ -110,7 +115,7 @@
   height: 2px;
   background: var(--text-primary);
   border-radius: 2px;
-  transition: all var(--transition);
+  transition: transform var(--transition), opacity var(--transition);
   transform-origin: center;
 }
 

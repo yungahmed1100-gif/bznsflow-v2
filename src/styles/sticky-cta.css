@@ -1,6 +1,8 @@
 /* ============================================================
    PHASE B — STICKY MOBILE CTA BAR
  ============================================================ */
+/* The two co-primary actions, pinned on mobile. Paper with an ink rule
+   above it -- the near-black bar was the only dark surface on the site. */
 .sticky-mobile-cta {
   display: none;
   position: fixed;
@@ -8,12 +10,9 @@
   bottom: 0;
   z-index: 90;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(26, 26, 26, 0.96);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg-primary);
   gap: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
+  border-top: 2px solid var(--text-primary);
 }
 .sticky-mobile-btn {
   flex: 1;
@@ -22,20 +21,22 @@
   justify-content: center;
   gap: 8px;
   padding: 14px 12px;
-  border-radius: var(--radius-md);
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
   font-weight: 700;
   font-size: 0.92rem;
   text-decoration: none;
-  transition: transform var(--transition);
+  transition: transform var(--transition-press);
 }
-.sticky-mobile-btn:active { transform: scale(0.97); }
+.sticky-mobile-btn:active { transform: translateY(2px); }
+/* WhatsApp green is light: ink clears 7:1 on it where white sits under 2:1. */
 .sticky-mobile-btn--wa {
   background: var(--whatsapp);
-  color: #fff;
+  color: var(--text-primary);
 }
 .sticky-mobile-btn--book {
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  color: #fff;
+  background: var(--text-primary);
+  color: var(--bg-primary);
 }
 @media (max-width: 768px) {
   .sticky-mobile-cta { display: flex; }
@@ -56,7 +57,7 @@
 .faq-item {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   transition: border-color 0.2s;
 }

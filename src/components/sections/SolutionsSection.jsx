@@ -19,7 +19,6 @@ export function SolutionsSection({ t, trackEvent }) {
   return (
     <section className="section" id="solutions">
       <div className="container">
-        <div className="section-label" data-reveal>{t.sol_label}</div>
         <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.sol_title }} />
         <p className="section-subtitle" data-reveal>{t.sol_sub}</p>
 

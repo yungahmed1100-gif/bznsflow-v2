@@ -1,58 +1,76 @@
 /* ============================================================
    BENEFITS SECTION
  ============================================================ */
+/* Four ruled entries, not four identical white cards. Each row states the
+   outcome on the start edge and explains it opposite, so the four titles
+   read as a column the eye can run down. */
 .benefits-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--grid-gap);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--border-hover);
 }
 
 .benefit-card {
-  padding: var(--card-pad);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  transition: border-color var(--transition), background var(--transition), transform var(--transition), box-shadow var(--transition);
+  display: grid;
+  grid-template-columns: 52px minmax(0, 15rem) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+  padding: 28px 8px;
+  border-bottom: 1px solid var(--border);
+  transition: background-color var(--transition);
 }
 
 .benefit-card:hover {
   background: var(--bg-card-hover);
-  border-color: rgba(79, 142, 247, 0.3);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-glow);
 }
 
 .benefit-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-md);
-  background: rgba(79, 142, 247, 0.1);
-  border: 1px solid rgba(79, 142, 247, 0.2);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--border-hover);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-blue);
-  margin-bottom: 20px;
-  transition: background var(--transition), border-color var(--transition);
+  color: var(--text-primary);
+  transition: border-color var(--transition);
 }
 
 .benefit-card:hover .benefit-icon {
-  background: rgba(79, 142, 247, 0.18);
-  border-color: rgba(79, 142, 247, 0.35);
+  border-color: var(--text-primary);
 }
 
 .benefit-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 12px;
+  margin-bottom: 0;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .benefit-desc {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
   line-height: 1.75;
+  max-width: 60ch;
+}
+
+@media (max-width: 768px) {
+  .benefit-card {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 16px;
+    padding: 22px 0;
+  }
+  .benefit-title {
+    grid-column: 2;
+    margin-bottom: 8px;
+  }
+  .benefit-desc {
+    grid-column: 2;
+  }
 }
 
 /* ============================================================
@@ -67,41 +85,52 @@
 
 .pricing-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 40px 32px;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  padding: 36px 28px;
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition);
   height: 100%;
 }
 
 .pricing-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-card);
-  border-color: rgba(79, 142, 247, 0.2);
+  border-color: var(--text-primary);
 }
 
+/* The recommended plan is one of the three surfaces on the page allowed to
+   leave the paper. It is raised by a hard offset rather than ringed in a
+   glow, and the ink border is what carries the shadow's edge. */
 .pricing-card--popular {
-  border-color: var(--accent-blue);
-  box-shadow: var(--shadow-glow);
+  border: 1px solid var(--text-primary);
+  box-shadow: var(--shadow-raised);
 }
 
+/* The one place an accent is allowed to carry a surface: it marks the
+   recommended plan the way a highlighter marks a line, and it is the only
+   orange field on the page. Ink on orange clears AA comfortably. */
 .popular-badge {
   position: absolute;
   top: -12px;
   inset-inline: 0;
   margin-inline: auto;
   width: fit-content;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  color: #fff;
+  background: var(--orange);
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 6px 16px;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
+}
+
+[lang="ar"] .popular-badge,
+[dir="rtl"] .popular-badge {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .pricing-header {

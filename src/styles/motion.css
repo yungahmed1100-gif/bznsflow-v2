@@ -10,30 +10,14 @@
   --duration-slow: 640ms;
 }
 
-/* ---- Aurora: slow drifting brand-colour blobs behind content ---- */
-.aurora {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
-.aurora-blob {
-  position: absolute;
-  width: 46vw;
-  height: 46vw;
-  max-width: 640px;
-  max-height: 640px;
-  border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.5;
-  mix-blend-mode: multiply;
-}
-.aurora-blob--a { top: -8%;  inset-inline-start: -6%;  background: radial-gradient(circle at 50% 50%, rgba(92,149,198,0.55), transparent 70%); }
-.aurora-blob--b { top: 18%;  inset-inline-end: -10%; background: radial-gradient(circle at 50% 50%, rgba(242,140,84,0.42), transparent 70%); }
-.aurora-blob--c { bottom: -14%; inset-inline-start: 28%; background: radial-gradient(circle at 50% 50%, rgba(81,164,123,0.45), transparent 70%); }
+/* The three blurred radial blobs that used to drift behind the hero are
+   gone. A 70px blur wash is atmosphere borrowed from a different kind of
+   product, and on cream it read as a printing error rather than depth.
+   Depth here comes from tone, rule and offset instead. */
 
-/* ---- Grain: faint film texture for depth ---- */
+/* ---- Grain: the tooth of the paper stock ----
+   Kept: it is texture, not blur, and it is what stops a flat cream field
+   from looking like an unstyled background. */
 .grain::after {
   content: "";
   position: absolute;
@@ -46,13 +30,10 @@
   background-size: 160px 160px;
 }
 
-/* Keep hero content above the aurora/grain layers */
-/* Layering only — keep the background/overlay layers ABSOLUTE (out of flow) so
-   they don't become flex items and push the content sideways. */
+/* Layering only — keep the overlay layer ABSOLUTE (out of flow) so it does
+   not become a flex item and push the content sideways. */
 .hero .hero-content { position: relative; z-index: 3; }
-.hero .aurora { z-index: 0; }
 .hero .hero-overlay { z-index: 2; }
-.hero .scroll-indicator { z-index: 3; }
 
 /* ---- Chip hover-pop (track verticals + industry chips) ---- */
 
@@ -60,5 +41,5 @@
    transform-origin has no logical equivalent; this LTR/RTL pair is an
    intentional survivor of the logical-property migration. */
 
-/* Aurora and grain are static washes — they stay visible under
-   reduced motion (nothing animates). */
+/* Grain is a static wash — it stays visible under reduced motion, because
+   nothing about it animates. */

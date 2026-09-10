@@ -33,7 +33,6 @@ export function AboutSection({ t, lang, CALENDAR_URL, WHATSAPP_URL, trackEvent }
           </div>
 
           <div className="about-content" data-reveal>
-            <div className="section-label">{t.about_label}</div>
             <h2 className="section-title about-title" dangerouslySetInnerHTML={{ __html: t.about_title }}></h2>
 
             <div className="about-text">
