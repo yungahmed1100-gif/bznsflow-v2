@@ -4,7 +4,7 @@ import { SITE } from '../routes-manifest';
 export const HOME_SEO = {
   en: {
     title: 'AI Receptionist & WhatsApp Automation | BznsFlow',
-    description: 'An AI front office that answers every lead in seconds — receptionist, booking and WhatsApp order-taking, 24/7 in English and Arabic. Done for you.',
+    description: 'An AI front office that answers every lead in seconds: receptionist, booking and WhatsApp order-taking, 24/7 in English and Arabic. Done for you.',
   },
   ar: {
     title: 'موظف استقبال ذكي وأتمتة واتساب | BznsFlow',
