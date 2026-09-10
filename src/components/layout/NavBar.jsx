@@ -2,9 +2,23 @@ import React, { useState, useRef } from 'react';
 import logoImg from '../../assets/logo_bznsflow.png';
 import { Icon } from '../ui/Icon';
 
+/**
+ * What to call someone in a slot two words wide.
+ *
+ * The first given name, because "Ahmed" is what a person recognises as
+ * themselves and a full name would be truncated to the same thing anyway. An
+ * account that signed in through a provider can reach the page before its
+ * profile is filled in, so the address is the fallback rather than nothing.
+ */
+function shortName(account) {
+  const full = String(account?.name || '').trim();
+  if (full) return full.split(/\s+/)[0];
+  return String(account?.email || '').split('@')[0];
+}
+
 export function NavBar({
   t, lang, isScrolled, isMenuOpen, activeLink, scrollProgress,
-  LANGUAGES,
+  LANGUAGES, account,
   onOpenMenu, onCloseMenu, onSmoothScroll, onSetLanguage,
 }) {
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -15,6 +29,12 @@ export function NavBar({
   // Close the menu (and restore focus) on Escape, or when focus leaves the group.
   const handleLangKeyDown = (e) => { if (e.key === 'Escape') { closeLang(); langToggleRef.current?.focus(); } };
   const handleLangBlur = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) closeLang(); };
+
+  // Same destination either way: /signin shows the account and the sign-out
+  // control once a session exists, so it is the account page already.
+  const accountHref = lang === 'en' ? '/en/signin' : '/signin';
+  const name = account ? shortName(account) : '';
+  const initial = name ? Array.from(name)[0].toLocaleUpperCase(lang) : '';
 
   return (
     <>
@@ -90,12 +110,29 @@ export function NavBar({
               {/* Internal route, so no target/rel — and a plain <a> rather than a
                   <Link>, because every page here is prerendered and the rest of
                   the cross-page navigation on this site works the same way. */}
-              {/* A text link, not a filled button. Sign-in serves people who
-                  already bought; making it the loudest control on a marketing
-                  page put it above both actions that actually convert. */}
-              <a href={lang === 'en' ? '/en/signin' : '/signin'} className="nav-link nav-cta">
-                {t.nav_signin}
-              </a>
+              {name ? (
+                /* Signed in: the person's own name, not an invitation to do
+                   again what they have already done. The accessible name says
+                   what the link is FOR, because "Ahmed" on its own tells a
+                   screen-reader user nothing about where it goes. */
+                <a
+                  href={accountHref}
+                  className="nav-link nav-account"
+                  aria-label={`${t.nav_account}: ${name}`}
+                >
+                  <span className="nav-account-mark" aria-hidden="true">{initial}</span>
+                  {/* bdi, so a Latin name keeps its own direction inside the
+                      Arabic bar rather than being reordered around it. */}
+                  <bdi className="nav-account-name">{name}</bdi>
+                </a>
+              ) : (
+                /* A text link, not a filled button. Sign-in serves people who
+                   already bought; making it the loudest control on a marketing
+                   page put it above both actions that actually convert. */
+                <a href={accountHref} className="nav-link nav-cta">
+                  {t.nav_signin}
+                </a>
+              )}
             </li>
           </ul>
         </div>

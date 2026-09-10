@@ -107,6 +107,28 @@
     margin-inline-start: 0;
   }
 
+  /* The open menu centres its rows, and .nav-link's text-align cannot do that
+     for a flex container — it needs the flex axis said out loud. Scoped to the
+     panel rather than to `.open` so the layout does not jump mid-close. */
+  .nav-links .nav-account {
+    margin-top: 16px;
+    margin-inline-start: 0;
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  /* Has to out-specify `.nav-links.open .nav-link` above, or that rule's muted
+     grey paints the visitor's own name at the weight of a section heading. */
+  .nav-links.open .nav-account {
+    color: var(--text-primary);
+  }
+
+  .nav-account-mark {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9rem;
+  }
+
   /* Hero Mobile */
   .hero-content {
     padding: 120px 20px 80px;

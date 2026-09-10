@@ -158,6 +158,39 @@ export function issueCsrfToken(res) {
 }
 
 /**
+ * Return the token this caller already holds, minting one only when they have
+ * none. The cookie is re-sent either way, so the 30-day window slides forward.
+ *
+ * WHY REUSE RATHER THAN ALWAYS MINT: the navbar now asks GET /api/auth-session
+ * who is signed in on every page load. Minting a fresh token per GET would
+ * overwrite the cookie that a /signin tab opened earlier is still matching its
+ * in-memory token against, and that tab's next POST would fail the CSRF check
+ * for no reason the visitor could understand. Two /signin tabs already had this
+ * problem; the navbar would have made it the common case.
+ *
+ * Reuse does not weaken the check. The defence is that a cross-site page cannot
+ * READ the cookie to build the matching header, and that is just as true of a
+ * token issued ten minutes ago. Planting a chosen value instead would need a
+ * plaintext channel to inject over, which Secure plus the HSTS preload in
+ * vercel.json does not leave.
+ *
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ * @returns {string} the token to echo back in the JSON body
+ */
+export function ensureCsrfToken(req, res) {
+  const existing = parseCookies(req)[CSRF_COOKIE] || '';
+  // Anything not shaped like randomToken's output is treated as absent: a
+  // truncated or hand-set value would never verify anyway.
+  if (!/^[0-9a-f]{64}$/.test(existing)) return issueCsrfToken(res);
+
+  appendCookie(res, serializeCookie(CSRF_COOKIE, existing, {
+    maxAge: SESSION_MAX_AGE, httpOnly: true, sameSite: 'Lax',
+  }));
+  return existing;
+}
+
+/**
  * Stash the in-flight OAuth attempt: provider, state, nonce, PKCE verifier and
  * the language to return to.
  *

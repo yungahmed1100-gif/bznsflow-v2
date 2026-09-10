@@ -5,6 +5,7 @@ export default {
   "nav_how": "How It Works",
   "nav_about": "Why Us",
   "nav_signin": "Sign in",
+  "nav_account": "Your account",
   "skip_to_content": "Skip to main content",
   "lang_label": "Choose language",
   "hero_badge": "Business technology, built and run for you, in Arabic and English.",

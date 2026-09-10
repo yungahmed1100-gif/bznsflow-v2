@@ -4,6 +4,7 @@ import { getStrings } from '../i18n';
 import { initReveals } from '../lib/reveal';
 import { trackEvent } from '../lib/analytics';
 import { useExitIntent } from '../hooks/useExitIntent';
+import { useAccount } from '../hooks/useAccount';
 import { CALENDAR_URL, WHATSAPP_URL, LANGUAGES } from '../lib/constants';
 import { setCookie, COOKIE } from '../lib/cookies';
 import { HOME_SEO, buildSchemas } from '../lib/schemas';
@@ -43,6 +44,10 @@ export default function Home({ lang: routeLang = 'ar' }) {
   // The popup must never stack on top of another surface that already
   // owns the screen — two dialogs at once is a trap, not a prompt.
   const playbook = useExitIntent({ suppressed: isChatOpen || isMenuOpen });
+
+  // Null until the session request answers, which is what the prerendered HTML
+  // shows too — so the navbar hydrates without a mismatch and then fills in.
+  const account = useAccount();
 
   const t              = getStrings(lang);
   const activeTiers    = lang === 'ar' ? TIERS_AR : TIERS;
@@ -116,7 +121,7 @@ export default function Home({ lang: routeLang = 'ar' }) {
       <NavBar
         t={t} lang={lang} isScrolled={isScrolled} isMenuOpen={isMenuOpen}
         activeLink={activeLink} scrollProgress={scrollProgress}
-        LANGUAGES={LANGUAGES}
+        LANGUAGES={LANGUAGES} account={account}
         onOpenMenu={openMenu} onCloseMenu={closeMenu}
         onSmoothScroll={handleSmoothScroll} onSetLanguage={setLanguage}
       />

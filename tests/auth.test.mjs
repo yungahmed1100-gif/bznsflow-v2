@@ -285,6 +285,26 @@ await ta('GET issues a CSRF cookie and reports nobody signed in', async () => {
   assert.ok(csrf.includes('HttpOnly'), 'CSRF cookie should be HttpOnly');
   assert.ok(csrf.includes('Secure'));
 });
+await ta('a second GET keeps the first token instead of minting a new one', async () => {
+  // The navbar asks this endpoint who is signed in on every page load. If each
+  // GET replaced the CSRF cookie, opening any page in a second tab would
+  // invalidate the token a /signin tab is holding, and that tab's next POST
+  // would 403 with nothing on screen to explain it.
+  const first = mockRes();
+  await authSession({ method: 'GET', headers: { host: 'x', origin: 'https://x' } }, first);
+
+  const second = mockRes();
+  await authSession({
+    method: 'GET',
+    headers: { host: 'x', origin: 'https://x', cookie: `${CSRF_COOKIE}=${first.body.csrfToken}` },
+  }, second);
+
+  assert.equal(second.body.csrfToken, first.body.csrfToken, 'the token changed between GETs');
+  const reissued = [].concat(second.getHeader('set-cookie') || [])
+    .find((c) => c.startsWith(`${CSRF_COOKIE}=`));
+  assert.ok(reissued.includes(first.body.csrfToken), 'the cookie was replaced');
+  assert.ok(reissued.includes('HttpOnly'));
+});
 await ta('PATCH without a session cookie is unauthorised, not a crash', async () => {
   const res = mockRes();
   await authSession({ method: 'PATCH', headers: goodHeaders, body: good }, res);

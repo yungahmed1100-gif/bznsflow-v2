@@ -10,11 +10,26 @@ import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 
 const BASE = process.env.BASE || 'http://localhost:5173';
+
+// A signed-in visitor sees a navbar the signed-out passes below never render:
+// the account link, its initial mark, and its own colour. Stubbing the session
+// response is the only way to audit it from a dev server, which has no database
+// behind it — and the shape here is the one api/auth-session.js returns.
+const SESSION = {
+  ok: true,
+  csrfToken: 'a11y',
+  providers: [],
+  needsProfile: false,
+  account: { id: 'a11y', email: 'ahmed@example.com', name: 'Ahmed Al Rawahi' },
+};
+
 const TARGETS = [
   { lang: 'ar', path: '/', width: 1440 },
   { lang: 'ar', path: '/', width: 390 },
   { lang: 'en', path: '/en', width: 1440 },
   { lang: 'en', path: '/en', width: 390 },
+  { lang: 'ar', path: '/', width: 1440, signedIn: true },
+  { lang: 'en', path: '/en', width: 390, signedIn: true },
 ];
 
 const browser = await chromium.launch();
@@ -24,6 +39,11 @@ for (const t of TARGETS) {
   // axe-core requires a page from an explicit context, not browser.newPage().
   const context = await browser.newContext({ viewport: { width: t.width, height: 900 } });
   const page = await context.newPage();
+  if (t.signedIn) {
+    await page.route('**/api/auth-session', (route) => route.fulfill({
+      status: 200, contentType: 'application/json', body: JSON.stringify(SESSION),
+    }));
+  }
   await page.goto(`${BASE}${t.path}`, { waitUntil: 'networkidle' });
 
   // Reveal-gated content is opacity:0 until scrolled into view, and axe skips
@@ -47,7 +67,8 @@ for (const t of TARGETS) {
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
 
-  console.log(`\n${t.lang} @ ${t.width}px — ${violations.length} violation(s)`);
+  const who = t.signedIn ? ' signed in' : '';
+  console.log(`\n${t.lang} @ ${t.width}px${who} — ${violations.length} violation(s)`);
   for (const v of violations) {
     total += v.nodes.length;
     console.log(`  [${v.impact}] ${v.id}: ${v.help} (${v.nodes.length})`);

@@ -97,6 +97,45 @@
   text-underline-offset: 4px;
 }
 
+/* Signed in, the same slot carries the person's name instead of an invitation.
+   Ink rather than the muted grey of a section link, because this one is about
+   them. The initial sits in a ruled square — the bar's own material, not a
+   photo-shaped circle borrowed from a social app. */
+.nav-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: 8px;
+  max-width: 11rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.nav-account-mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: border-color var(--transition);
+}
+
+.nav-account:hover .nav-account-mark {
+  border-color: var(--text-primary);
+}
+
+/* One line, always. A long name loses its tail rather than pushing the bar. */
+.nav-account-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Hamburger */
 .hamburger {
   display: none;

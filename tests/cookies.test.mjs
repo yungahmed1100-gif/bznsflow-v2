@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {
   parseCookies, serializeCookie, appendCookie, randomToken,
-  setSessionCookie, clearSessionCookie, issueCsrfToken, verifyCsrf,
+  setSessionCookie, clearSessionCookie, issueCsrfToken, ensureCsrfToken, verifyCsrf,
   SESSION_COOKIE, CSRF_COOKIE, CSRF_HEADER,
 } from '../api/_lib/cookies.js';
 
@@ -133,6 +133,46 @@ t('a differing-length token fails without throwing', () =>
   assert.equal(verifyCsrf(req(`${CSRF_COOKIE}=abc`, { [CSRF_HEADER]: 'abcd' })), false));
 t('empty strings on both sides still fail', () =>
   assert.equal(verifyCsrf(req(`${CSRF_COOKIE}=`, { [CSRF_HEADER]: '' })), false));
+
+console.log('\n── ensureCsrfToken ──');
+// The navbar asks GET /api/auth-session on every page load. If that minted a
+// new token each time, it would invalidate the one an open /signin tab is
+// holding, and that tab's next POST would 403 for no visible reason.
+t('an existing token is returned unchanged, not replaced', () => {
+  const token = randomToken();
+  const res = mockRes();
+  assert.equal(ensureCsrfToken(req(`${CSRF_COOKIE}=${token}`), res), token);
+  const [c] = res.getHeader('Set-Cookie');
+  assert.match(c, new RegExp(`^${CSRF_COOKIE}=${token}`), 'the cookie value changed');
+});
+t('the reused cookie keeps HttpOnly, Secure and a fresh Max-Age', () => {
+  const token = randomToken();
+  const res = mockRes();
+  ensureCsrfToken(req(`${CSRF_COOKIE}=${token}`), res);
+  const [c] = res.getHeader('Set-Cookie');
+  assert.ok(c.includes('HttpOnly'));
+  assert.ok(c.includes('Secure'));
+  assert.match(c, /Max-Age=2592000/, 'the 30-day window should slide forward');
+});
+t('a request with no cookie gets a fresh token', () => {
+  const res = mockRes();
+  const token = ensureCsrfToken(req(), res);
+  assert.match(token, /^[0-9a-f]{64}$/);
+  assert.match(res.getHeader('Set-Cookie')[0], new RegExp(`^${CSRF_COOKIE}=${token}`));
+});
+t('a malformed cookie is treated as absent rather than reused', () => {
+  for (const bad of ['abc', '', randomToken().slice(0, 63), `${randomToken()}x`, 'Z'.repeat(64)]) {
+    const res = mockRes();
+    const token = ensureCsrfToken(req(`${CSRF_COOKIE}=${bad}`), res);
+    assert.notEqual(token, bad, `reused a token that could never verify: "${bad}"`);
+    assert.match(token, /^[0-9a-f]{64}$/);
+  }
+});
+t('the token it returns verifies against the cookie it set', () => {
+  const res = mockRes();
+  const token = ensureCsrfToken(req(), res);
+  assert.equal(verifyCsrf(req(`${CSRF_COOKIE}=${token}`, { [CSRF_HEADER]: token })), true);
+});
 
 console.log(`\n${fail ? '✗' : '✓'} cookies: ${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

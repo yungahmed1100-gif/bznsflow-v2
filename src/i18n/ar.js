@@ -4,6 +4,7 @@ export default {
   "nav_how": "كيف يعمل",
   "nav_about": "لماذا نحن",
   "nav_signin": "تسجيل الدخول",
+  "nav_account": "حسابك",
   "skip_to_content": "تخطَّ إلى المحتوى الرئيسي",
   "lang_label": "اختر اللغة",
   "hero_badge": "حلول تقنية متكاملة لأعمالك — منجزة لك، بالعربية والإنجليزية.",

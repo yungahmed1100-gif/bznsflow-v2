@@ -16,7 +16,7 @@
 
 import { isAllowedOrigin, clientIp } from './_lib/guard.js';
 import {
-  parseCookies, verifyCsrf, issueCsrfToken, randomToken,
+  parseCookies, verifyCsrf, ensureCsrfToken, randomToken,
   setSessionCookie, clearSessionCookie, SESSION_COOKIE, SESSION_MAX_AGE,
 } from './_lib/cookies.js';
 import {
@@ -73,9 +73,13 @@ export default async function handler(req, res) {
  * The page calls this on mount. It has to, because the site is prerendered by
  * vite-react-ssg: there is no server render that could have set the token
  * cookie, so the first request of the session is what mints it.
+ *
+ * Two callers now: /signin, which needs the token before it can POST, and the
+ * navbar on every page, which needs only `account`. ensureCsrfToken keeps the
+ * second from invalidating the first — see its comment in _lib/cookies.js.
  */
 async function handleGet(req, res) {
-  const csrfToken = issueCsrfToken(res);
+  const csrfToken = ensureCsrfToken(req, res);
   const token = sessionToken(req);
 
   // Which social buttons to render. The page is prerendered by vite-react-ssg,
