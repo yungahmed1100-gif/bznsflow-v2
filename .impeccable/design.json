@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-10T00:00:00.000Z",
+  "title": "Design System: BznsFlow",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#F6EFDF",
+        "tonalRamp": ["#2A2417", "#453C28", "#61553A", "#7E704F", "#9C8D68", "#BCAE8B", "#DBD1B5", "#F6EFDF"]
+      },
+      "paper-ruled": {
+        "role": "neutral",
+        "displayName": "Paper Ruled",
+        "canonical": "#EBE1C9",
+        "tonalRamp": ["#26210F", "#3F3820", "#594F32", "#746846", "#90835C", "#AEA078", "#CCC0A0", "#EBE1C9"]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Laid Sheet",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#2B2B2B", "#454545", "#616161", "#7E7E7E", "#9C9C9C", "#BDBDBD", "#DEDEDE", "#FFFFFF"]
+      },
+      "ink": {
+        "role": "primary",
+        "displayName": "Ink",
+        "canonical": "#1A1A1A",
+        "tonalRamp": ["#000000", "#0D0D0D", "#1A1A1A", "#3D3D3D", "#616161", "#8A8A8A", "#B8B8B8", "#E8E8E8"]
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Ink Secondary",
+        "canonical": "#4B5563",
+        "tonalRamp": ["#0F1319", "#1D242E", "#2C3644", "#3B4859", "#4B5563", "#78828F", "#A6ADB6", "#D4D8DD"]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#565E6B",
+        "tonalRamp": ["#111419", "#1F242B", "#2E343D", "#3D4550", "#565E6B", "#818894", "#ACB1B9", "#D7DADE"]
+      },
+      "annotation-blue": {
+        "role": "secondary",
+        "displayName": "Annotation Blue",
+        "canonical": "#5C95C6",
+        "tonalRamp": ["#0D1A26", "#152A3F", "#1E3D5A", "#2A5580", "#3C74A6", "#5C95C6", "#93BADA", "#CBDDEE"]
+      },
+      "annotation-green": {
+        "role": "secondary",
+        "displayName": "Annotation Green",
+        "canonical": "#51A47B",
+        "tonalRamp": ["#0B1D14", "#123020", "#1B462F", "#265F40", "#387B55", "#51A47B", "#8AC5A6", "#C4E2D2"]
+      },
+      "annotation-orange": {
+        "role": "tertiary",
+        "displayName": "Annotation Orange",
+        "canonical": "#F28C54",
+        "tonalRamp": ["#2B1408", "#452110", "#61301A", "#824326", "#A85B36", "#D0764A", "#F28C54", "#F9C6A6"]
+      },
+      "annotation-coral": {
+        "role": "tertiary",
+        "displayName": "Annotation Coral",
+        "canonical": "#E16B71",
+        "tonalRamp": ["#2A0E10", "#431719", "#5F2226", "#7F2F34", "#A34046", "#C5555C", "#E16B71", "#F0B5B8"]
+      },
+      "annotation-yellow": {
+        "role": "tertiary",
+        "displayName": "Annotation Yellow",
+        "canonical": "#EEB462",
+        "tonalRamp": ["#2B1F09", "#443210", "#5F471A", "#805F26", "#A57C36", "#CB9A4A", "#EEB462", "#F7DCB0"]
+      },
+      "whatsapp": {
+        "role": "secondary",
+        "displayName": "WhatsApp Green",
+        "canonical": "#25D366",
+        "tonalRamp": ["#04240F", "#073A19", "#0A5325", "#0F7033", "#159244", "#1CB756", "#25D366", "#92EBB6"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The hero statement. Once per page." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles, set flush to the grid." },
+      "figure": { "displayName": "Figure", "purpose": "Measured evidence numbers only. Tabular figures mandatory." },
+      "lede": { "displayName": "Lede", "purpose": "The paragraph beneath a headline. Capped at 65ch." },
+      "body": { "displayName": "Body", "purpose": "Running text. Capped at 70ch." },
+      "label": { "displayName": "Label", "purpose": "Eyebrows, chips, buttons, table headers. Uppercase for Latin only." },
+      "arabic": { "displayName": "Arabic", "purpose": "All Arabic text. Looser leading, never letter-spaced." }
+    },
+    "shadows": [
+      { "name": "raised", "value": "4px 4px 0 #1A1A1A", "purpose": "Resting state of an actionable element. Mirrors in RTL via --x-sign." },
+      { "name": "pressed", "value": "0 0 0 #1A1A1A", "purpose": "Active state, paired with translate(4px, 4px) so the element moves into its own shadow." },
+      { "name": "overlay", "value": "8px 8px 0 #1A1A1A", "purpose": "Modals, chat panel, mobile menu — surfaces further off the page." },
+      { "name": "focus", "value": "outline: 2px solid #5C95C6; outline-offset: 2px", "purpose": "Keyboard focus. An outline, never a glow." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for state transitions." },
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Entrance reveals driven by IntersectionObserver." },
+      { "name": "duration-press", "value": "120ms", "purpose": "Button press displacement. No overshoot." },
+      { "name": "duration-fast", "value": "160ms", "purpose": "Hover and focus state changes." },
+      { "name": "duration-normal", "value": "320ms", "purpose": "Panel and overlay entrances." }
+    ],
+    "breakpoints": [
+      { "name": "xs", "value": "480px" },
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The first of the two co-primary actions. Ink fill, hard offset shadow, presses into its own shadow.",
+      "html": "<button class=\"ds-btn-primary\">Book the free audit</button>",
+      "css": ".ds-btn-primary { background: #1A1A1A; color: #F6EFDF; font-family: Poppins, 'Helvetica Neue', Arial, sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 16px 28px; border: none; border-radius: 4px; box-shadow: 4px 4px 0 #1A1A1A; cursor: pointer; transition: box-shadow 120ms cubic-bezier(0.4,0,0.2,1), transform 120ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { box-shadow: 6px 6px 0 #1A1A1A; transform: translate(-2px, -2px); } .ds-btn-primary:active { box-shadow: 0 0 0 #1A1A1A; transform: translate(4px, 4px); } .ds-btn-primary:focus-visible { outline: 2px solid #5C95C6; outline-offset: 2px; }"
+    },
+    {
+      "name": "WhatsApp Button",
+      "kind": "button",
+      "refersTo": "button-whatsapp",
+      "description": "The second co-primary action. Green is light enough that Ink text is the accessible pairing, not white.",
+      "html": "<button class=\"ds-btn-whatsapp\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2Zm5.8 14.16c-.25.69-1.44 1.32-1.99 1.4-.53.08-1.2.11-1.94-.12a17.6 17.6 0 0 1-1.76-.65c-3.1-1.34-5.12-4.46-5.28-4.67-.15-.21-1.26-1.67-1.26-3.19 0-1.52.8-2.27 1.08-2.58.28-.31.61-.39.81-.39.2 0 .41 0 .58.01.19.01.44-.07.69.53.25.6.85 2.08.93 2.23.08.15.13.33.02.54-.1.21-.16.33-.31.51-.15.18-.32.4-.46.54-.15.15-.31.32-.13.63.18.31.79 1.3 1.69 2.11 1.16 1.03 2.14 1.35 2.45 1.5.31.15.49.13.67-.08.18-.21.77-.9.98-1.21.2-.31.41-.26.69-.15.28.1 1.76.83 2.07.98.31.15.51.23.58.36.08.13.08.74-.17 1.43Z\"/></svg>Message us</button>",
+      "css": ".ds-btn-whatsapp { display: inline-flex; align-items: center; gap: 8px; background: #25D366; color: #1A1A1A; font-family: Poppins, 'Helvetica Neue', Arial, sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 16px 28px; border: none; border-radius: 4px; box-shadow: 4px 4px 0 #1A1A1A; cursor: pointer; transition: box-shadow 120ms cubic-bezier(0.4,0,0.2,1), transform 120ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-whatsapp:hover { box-shadow: 6px 6px 0 #1A1A1A; transform: translate(-2px, -2px); } .ds-btn-whatsapp:active { box-shadow: 0 0 0 #1A1A1A; transform: translate(4px, 4px); } .ds-btn-whatsapp:focus-visible { outline: 2px solid #5C95C6; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined, flat. Pairs with a primary so the two read as a choice rather than a hierarchy.",
+      "html": "<button class=\"ds-btn-secondary\">See what we build</button>",
+      "css": ".ds-btn-secondary { background: #F6EFDF; color: #1A1A1A; font-family: Poppins, 'Helvetica Neue', Arial, sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 16px 28px; border: 1px solid #1A1A1A; border-radius: 4px; cursor: pointer; transition: background 160ms cubic-bezier(0.4,0,0.2,1), color 160ms cubic-bezier(0.4,0,0.2,1); } .ds-btn-secondary:hover { background: #1A1A1A; color: #F6EFDF; } .ds-btn-secondary:focus-visible { outline: 2px solid #5C95C6; outline-offset: 2px; }"
+    },
+    {
+      "name": "Figure Block",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "The signature component. A measured number in tabular figures, ruled above and below, with a mandatory attribution naming the business and the window.",
+      "html": "<figure class=\"ds-figure\"><div class=\"ds-figure-value\">242</div><figcaption class=\"ds-figure-label\">inquiries answered</figcaption><div class=\"ds-figure-attr\">mybizbay.com &middot; Twilio logs, 6 Jun – 4 Aug 2026</div></figure>",
+      "css": ".ds-figure { margin: 0; padding: 24px 0; background: #EBE1C9; border-top: 1px solid rgba(0,0,0,0.15); border-bottom: 1px solid rgba(0,0,0,0.15); font-family: Poppins, 'Helvetica Neue', Arial, sans-serif; } .ds-figure-value { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 700; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: #1A1A1A; } .ds-figure-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #4B5563; margin-top: 8px; } .ds-figure-attr { font-size: 0.75rem; color: #4B5563; margin-top: 12px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat, hairline-bounded. Never nested, never shadowed.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">AI front office</h3><p class=\"ds-card-body\">Every WhatsApp inquiry answered in seconds, in your customers' language.</p></div>",
+      "css": ".ds-card { background: #FFFFFF; border: 1px solid rgba(0,0,0,0.08); border-radius: 4px; padding: 32px; font-family: Poppins, 'Helvetica Neue', Arial, sans-serif; } .ds-card-title { margin: 0 0 12px; font-size: 1.1rem; font-weight: 600; color: #1A1A1A; } .ds-card-body { margin: 0; font-size: 1rem; line-height: 1.6; color: #4B5563; }"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Fully rounded so it never reads as a button. Inverts to Ink when selected.",
+      "html": "<span class=\"ds-chip\">Real estate</span><span class=\"ds-chip ds-chip-selected\">Clinics</span>",
+      "css": ".ds-chip { display: inline-block; background: #EBE1C9; color: #4B5563; font-family: Poppins, 'Helvetica Neue', Arial, sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; margin-inline-end: 8px; } .ds-chip-selected { background: #1A1A1A; color: #F6EFDF; }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Hairline border stepping to Annotation Blue on focus. No glow.",
+      "html": "<input class=\"ds-input\" type=\"email\" placeholder=\"you@business.com\" aria-label=\"Email\" />",
+      "css": ".ds-input { background: #FFFFFF; color: #1A1A1A; font-family: Poppins, 'Helvetica Neue', Arial, sans-serif; font-size: 1rem; padding: 14px 16px; border: 1px solid rgba(0,0,0,0.08); border-radius: 4px; width: 100%; transition: border-color 160ms cubic-bezier(0.4,0,0.2,1); } .ds-input::placeholder { color: #565E6B; } .ds-input:focus { border-color: #5C95C6; outline: 2px solid #5C95C6; outline-offset: 2px; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "button-secondary",
+      "description": "Flat Paper bar with a bottom hairline on scroll. Sign-in is a text link, never a filled button.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main\"><a class=\"ds-nav-link ds-nav-active\" href=\"#solutions\">Solutions</a><a class=\"ds-nav-link\" href=\"#how\">How it works</a><a class=\"ds-nav-link\" href=\"/signin\">Sign in</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 28px; align-items: center; background: #F6EFDF; border-bottom: 1px solid rgba(0,0,0,0.08); padding: 20px 24px; font-family: Poppins, 'Helvetica Neue', Arial, sans-serif; } .ds-nav-link { color: #4B5563; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; padding-bottom: 4px; border-bottom: 2px solid transparent; transition: color 160ms cubic-bezier(0.4,0,0.2,1), border-color 160ms cubic-bezier(0.4,0,0.2,1); } .ds-nav-link:hover { color: #1A1A1A; } .ds-nav-active { color: #1A1A1A; border-bottom-color: #1A1A1A; } .ds-nav-link:focus-visible { outline: 2px solid #5C95C6; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ledger",
+    "overview": "This is an account book, not a brochure. The page is cream stock, the type is black ink, and the structure is ruled rather than boxed. A ledger earns trust by showing its arithmetic in the open — which is exactly the position the product takes, in its own words: measure it in arithmetic, not adjectives. Everything in the system serves that: rules and figures carry the page, colour annotates it, and nothing is decorated to look more certain than it is.\n\nThe density is generous but disciplined. Sections are separated by rules and whitespace, not by a stack of floating panels. Numbers are the visual hero: a measured figure like 242 inquiries, one missed is set at display scale with tabular figures, given a rule above and below, and attributed to the named business it came from. That treatment is the system's whole argument — a specific, checkable number outranks any adjective available.\n\nThe pairing is deliberately unglamorous. Poppins is a plain geometric grotesque that gets out of the way of a figure; IBM Plex Sans Arabic is a serious text face with real Arabic construction rather than a Latin face with Arabic bolted on. Arabic is the original here, not the translation.",
+    "keyCharacteristics": [
+      "Cream paper and black ink; colour is annotation, never surface",
+      "Ruled structure — horizontal rules and alignment do the work panels used to do",
+      "Figures set large, tabular, and always attributed",
+      "Hard offset shadows, reserved for what the visitor acts on",
+      "Arabic-first typography with true RTL mirroring",
+      "Flat by default; elevation is a signal, not a texture"
+    ],
+    "rules": [
+      { "name": "The Annotation Rule", "body": "Accent colours mark the page; they never build it. No accent may be a section background, a card fill, or a large area of colour. If an accent occupies more than roughly 5% of a viewport, it has stopped annotating and become decoration.", "section": "colors" },
+      { "name": "The One Blue Rule", "body": "Annotation Blue means \"interactive\" and nothing else. A static element may not be blue for emphasis — use Orange, or use weight.", "section": "colors" },
+      { "name": "The Muted Floor Rule", "body": "Ink Muted on Paper Ruled fails WCAG 2.2 AA and is prohibited. Inside a Paper Ruled band, supporting text steps up to Ink Secondary.", "section": "colors" },
+      { "name": "The Tabular Figure Rule", "body": "Any number presented as evidence uses font-variant-numeric: tabular-nums. A figure that shifts width as it animates or updates is not evidence, it is decoration.", "section": "typography" },
+      { "name": "The Arabic-First Rule", "body": "Every type decision is checked in Arabic before it is accepted in English. Arabic line-height is set to 1.8 against Latin's 1.6. letter-spacing is never applied to an Arabic run.", "section": "typography" },
+      { "name": "The No Gradient Text Rule", "body": "Text is Ink, or it is an accent at full opacity. Gradient-filled type is prohibited — it was the incumbent system's most-repeated tell and it degrades to invisible where background-clip is unsupported.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "A surface earns a shadow only by being actionable or transient. If it cannot be clicked and it is always on screen, it is flat.", "section": "elevation" },
+      { "name": "The No Blur Rule", "body": "Shadow blur radius is 0. Any box-shadow with a blur value, and any filter: blur() used to fake ambient light, is prohibited. This retires --shadow-glow and the three radial aurora blobs.", "section": "elevation" },
+      { "name": "The Displacement Rule", "body": "Pressing moves the element by exactly the shadow offset, so the sum of element position and shadow is constant. Motion is 120ms, no easing overshoot.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do set every evidence number in tabular figures with an attribution naming the business and the measurement window.",
+      "Do separate sections by alternating Paper (#F6EFDF) and Paper Ruled (#EBE1C9) grounds.",
+      "Do keep shadows hard — 4px 4px 0 in Ink, blur 0 — and only on actionable or transient elements.",
+      "Do check every type and layout decision in Arabic RTL before accepting it in English.",
+      "Do use outline for focus, visible against all four grounds.",
+      "Do collapse breakpoints onto the five-step scale (480 / 640 / 768 / 1024 / 1280).",
+      "Do express direction-sensitive transforms through the existing --x-sign token so RTL mirrors automatically."
+    ],
+    "donts": [
+      "Don't use a gradient anywhere — not as a background, not as button fill, and never clipped to text.",
+      "Don't apply blur: no box-shadow blur radius, no filter: blur(), no backdrop-filter. This retires the aurora blobs and every glass surface.",
+      "Don't nest a card inside a card, or a bordered panel inside a bordered card.",
+      "Don't put Ink Muted (#565E6B) on Paper Ruled (#EBE1C9) — it fails AA.",
+      "Don't uppercase or letter-space Arabic text.",
+      "Don't use a radius above 8px on a rectangular surface; 20px and 28px are retired.",
+      "Don't write transition: all — name the properties.",
+      "Don't centre a hero in a 100vh flex container.",
+      "Don't let the sign-in control render as a primary button."
+    ]
+  }
+}
