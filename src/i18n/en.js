@@ -281,4 +281,24 @@ export default {
   "auth_err_send": "We couldn't send the email just now. Please try again.",
   "auth_err_field": "Please check this field.",
   "auth_err_generic": "Something went wrong on our end. Please try again.",
+
+  "footer_privacy": "Privacy Policy",
+
+  // ── Social sign-in (api/auth-oauth.js → api/auth-callback.js) ──
+  // "Continue with X" is the wording Google's and Microsoft's branding rules
+  // both approve; don't reword these two without re-checking those terms.
+  "auth_oauth_google": "Continue with Google",
+  "auth_oauth_microsoft": "Continue with Microsoft",
+  "auth_oauth_linkedin": "Continue with LinkedIn",
+  "auth_oauth_or": "or",
+  // Replaces auth_sub when provider buttons are shown — that copy promises an
+  // emailed code, which reads as a description of the buttons sitting above it.
+  "auth_sub_social": "Use your work account, or we'll email you a six-digit code.",
+  "auth_err_cancelled": "Sign-in was cancelled. You can try again or use your email.",
+  "auth_err_provider": "We couldn't complete that sign-in. Please try again, or use your email instead.",
+  "auth_err_state": "That sign-in link didn't match. Please start again.",
+  "auth_err_expired_oauth": "That sign-in took too long. Please start again.",
+  "auth_err_no_email": "That account didn't share an email address, so we can't sign you in with it. Please use your email instead.",
+  "auth_err_email_unverified": "That provider hasn't verified this email address, so we can't sign you in with it. Please use your email instead.",
+  "auth_err_unavailable": "Sign-in is temporarily unavailable. Please try again shortly.",
 };

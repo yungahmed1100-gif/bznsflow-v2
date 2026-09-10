@@ -61,8 +61,10 @@ function doPost(e) {
       return payload.hasOwnProperty(key) ? payload[key] : '';
     });
 
-    sheet.appendRow(row);
-    forcePhoneToText_(sheet, headers, row);
+    var target = nextDataRow_(sheet, hr);
+    ensureRowExists_(sheet, target);
+    sheet.getRange(target, 1, 1, row.length).setValues([row]);
+    forcePhoneToText_(sheet, headers, row, target);
 
     // Auto-deliver the playbook — never let an email failure break lead capture.
     if (data.playbook === true && data.email) {
@@ -85,22 +87,70 @@ function doPost(e) {
   }
 }
 
+// The row a new lead should be written to.
+//
+// REPLACES sheet.appendRow(), which appends after the last row Sheets believes
+// holds content — and Sheets keeps believing that after "Clear contents",
+// because clearing empties the cells but leaves the rows in the used range.
+// So emptying the CRM the obvious way left appendRow still writing at row 15,
+// with eleven blank rows above it. Deleting the rows instead would have worked,
+// but a sheet that only behaves if it was cleaned up the right way is a trap
+// waiting for the next person.
+//
+// Scans BACKWARDS for the last row holding anything at all, and returns the row
+// after it. Nothing is ever overwritten, and mid-sheet gaps are left alone so a
+// new lead cannot be filed out of chronological order. With every row below the
+// header empty, this returns headerRow + 1 — row 4 on this sheet.
+function nextDataRow_(sheet, headerRow) {
+  var lastRow = sheet.getLastRow();
+  var cols = sheet.getLastColumn();
+  if (lastRow <= headerRow || cols < 1) return headerRow + 1;
+
+  var values = sheet.getRange(headerRow + 1, 1, lastRow - headerRow, cols).getValues();
+  for (var i = values.length - 1; i >= 0; i--) {
+    for (var j = 0; j < values[i].length; j++) {
+      var v = values[i][j];
+      if (v !== '' && v !== null) return headerRow + 2 + i;
+    }
+  }
+  return headerRow + 1;
+}
+
+// Grow the grid if the target row does not physically exist yet.
+//
+// The one thing appendRow did for free that setValues does not. appendRow adds
+// a row when the sheet runs out; getRange(row, ...) simply throws "out of
+// bounds" — and because the Apps Script echo URL swallows every response
+// (see the 405 note in api/_lib/mailer.js), that exception surfaced as a lead
+// silently never arriving, with a 200-looking failure on our side.
+//
+// Deleting the used rows from the CRM is what triggers it: the grid can end at
+// the header row, and the very next lead asks for the row after it.
+function ensureRowExists_(sheet, row) {
+  var max = sheet.getMaxRows();
+  if (row > max) sheet.insertRowsAfter(max, row - max);
+}
+
 // Rewrites the phone cell as TEXT.
 //
-// appendRow lets Sheets parse each value, and "+96899656590" parses as the NUMBER
-// 96899656590 — the leading + is gone, which breaks every wa.me link built from
-// this column. Setting the format to '@' and writing the value again is what
-// makes it stick; setting the format alone does not retroactively restore a
-// value Sheets has already coerced.
+// setValues lets Sheets parse each value, and "+96899656590" parses as the
+// NUMBER 96899656590 — the leading + is gone, which breaks every wa.me link
+// built from this column. Setting the format to '@' and writing the value again
+// is what makes it stick; setting the format alone does not retroactively
+// restore a value Sheets has already coerced.
 //
 // The column is found by normalised header name, not a fixed index, because the
 // header row has already moved once (row 2 -> row 3).
-function forcePhoneToText_(sheet, headers, row) {
+//
+// `targetRow` is passed in rather than read back from getLastRow(): the write
+// no longer necessarily lands on the last row of the sheet, so re-deriving it
+// here would format the wrong cell the moment the two disagree.
+function forcePhoneToText_(sheet, headers, row, targetRow) {
   for (var i = 0; i < headers.length; i++) {
     if (norm_(headers[i]) !== 'phonewhatsapp') continue;
     var value = row[i];
     if (value === '' || value == null) return;
-    sheet.getRange(sheet.getLastRow(), i + 1)
+    sheet.getRange(targetRow, i + 1)
          .setNumberFormat('@')
          .setValue(String(value));
     return;
@@ -226,6 +276,13 @@ function doGet() {
       writesTo: { name: target.getName(), gid: target.getSheetId() },
       detectedHeaderRow: hr, headers: headers,
       lastRow: lastRow, lastRowValues: lastRowValues,
+      // maxRows is the size of the GRID; lastRow is how much of it holds data.
+      // The two are easy to conflate and the difference matters: writing past
+      // maxRows throws, which is invisible from outside because the echo URL
+      // eats every response. nextWriteRow lets a caller confirm where the next
+      // lead will land without having to send one.
+      maxRows: target.getMaxRows(),
+      nextWriteRow: nextDataRow_(target, hr),
       allTabs: tabs,
     });
   } catch (err) {

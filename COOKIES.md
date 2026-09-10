@@ -23,13 +23,16 @@ this registry lists both. "It's not a cookie" is not an exemption.
 | `bf_locale` | cookie | 1 year | Remembers the language chosen in the switcher. Written in `src/pages/Home.jsx`. |
 | `bf_session` | cookie, **HttpOnly** | 30 days | Identifies a signed-in account. Issued by `POST /api/auth-session` on the sign-in page; cleared on sign-out. Holds a random 32-byte token — the database stores only its SHA-256. |
 | `bf_csrf` | cookie, **HttpOnly** | 30 days | CSRF double-submit token, echoed in `x-csrf-token`. Issued by `GET /api/auth-session`, which returns the token in its JSON body — so the page never reads the cookie and it can be HttpOnly, unlike the textbook pattern. |
+| `bf_oauth` | cookie, **HttpOnly** | 10 minutes | Holds one in-flight social sign-in: which provider, the `state`, the `nonce` and the PKCE verifier. Set by `GET /api/auth-oauth` when a provider button is clicked, and deleted by `/api/auth-callback` the moment the visitor returns — single use. Never set unless a provider button is clicked. |
 | `bznsflow_chat_session` | localStorage | until cleared | Keeps one Layla conversation continuous across page loads (`src/lib/chat.js`). |
 | `bf_playbook_seen` | localStorage | until cleared | Stops the exit-intent playbook modal re-appearing (`src/hooks/useExitIntent.js`). |
 
-Both sign-in cookies are strictly necessary and therefore need no consent: one
-authenticates a session the visitor explicitly asked for, the other exists only
-to protect that session from cross-site forgery. Neither measures, profiles or
-attributes anything, and neither is set until a visitor submits the sign-in form.
+All three sign-in cookies are strictly necessary and therefore need no consent:
+one authenticates a session the visitor explicitly asked for, and the other two
+exist only to protect that session — `bf_csrf` from cross-site forgery, and
+`bf_oauth` from having a social sign-in hijacked mid-flight. None measures,
+profiles or attributes anything, and none is set until the visitor acts on the
+sign-in page — `bf_oauth` only when a provider button is actually clicked.
 
 `bf_locale` is deliberately **not** used to redirect. Googlebot sends no cookies
 and crawls from the US, so a cookie-driven redirect on `/` or `/en` would serve

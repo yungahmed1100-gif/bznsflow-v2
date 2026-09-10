@@ -62,8 +62,35 @@ is a business decision, not an oversight.
 
 ## Cookies
 
-All three first-party cookies are `SameSite=Lax`, `Secure`, same-origin only, and
-none is needed cross-site — so Chrome's third-party cookie restrictions do not
-affect sign-in. `bf_session` and `bf_csrf` are set by the server via `Set-Cookie`,
-which also exempts them from Safari ITP's 7-day cap on script-written cookies.
-Full table in `COOKIES.md`.
+All first-party cookies are `SameSite=Lax`, `Secure`, same-origin only, and none
+is needed cross-site — so Chrome's third-party cookie restrictions do not affect
+sign-in. `bf_session`, `bf_csrf` and `bf_oauth` are set by the server via
+`Set-Cookie`, which also exempts them from Safari ITP's 7-day cap on
+script-written cookies. Full table in `COOKIES.md`.
+
+## Social sign-in
+
+`/api/auth-oauth` → provider → `/api/auth-callback`, standard OIDC
+authorization-code flow with PKCE. Setup runbook in `SOCIAL-SIGNIN.md`.
+
+Three things about this flow are deliberate and will look like bugs to a
+reviewer applying the rules the other endpoints follow:
+
+- **The callback does not call `isAllowedOrigin`.** Providers send the browser
+  back from their own origin, and some attach `Origin: https://accounts.google.com`.
+  Running the same-origin check here would reject every real sign-in.
+- **The callback does not call `verifyCsrf`.** `bf_csrf` reaches the page in the
+  JSON body of `GET /api/auth-session`, and there is no page script on a
+  redirect to echo it into a header. The forgery defence is the single-use
+  `state` value, compared against the `bf_oauth` cookie in constant time.
+- **`/api/auth-oauth` has neither check.** It is reached by a link click, which
+  carries no `Origin`, and it only sets a short-lived cookie and redirects.
+
+Both are covered by named tests in `tests/oauth.test.mjs` so a "consistency"
+fix cannot land quietly.
+
+Account linking is keyed on `(provider, subject)`, never on the email alone. An
+email is used to link to an existing account only when the provider proves it is
+verified — the check that closes the nOAuth hijack class, where a personal
+Microsoft account can assert any address it likes. See the note in
+`api/_lib/oidc.js` and the resolution order in migration 004.

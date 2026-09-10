@@ -67,6 +67,12 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
 
           <div className="footer-bottom">
             <p className="footer-copy">{t.footer_copy.replace(/©\s*\d{4}/, `© ${new Date().getFullYear()}`)}</p>
+            {/* A real link, not a hash anchor: unlike everything else in this
+                footer, /privacy is its own prerendered route. Google and
+                LinkedIn both expect a findable privacy policy. */}
+            <p className="footer-legal">
+              <a href={lang === 'en' ? '/en/privacy' : '/privacy'}>{t.footer_privacy}</a>
+            </p>
             <p className="footer-founder">{t.footer_founder}</p>
           </div>
         </div>

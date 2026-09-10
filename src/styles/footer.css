@@ -116,9 +116,25 @@
 }
 
 .footer-copy,
+.footer-legal,
 .footer-founder {
   font-size: 0.82rem;
   color: var(--text-muted);
+}
+
+/* Underlined rather than coloured: this sits in a row of muted grey text, and
+   a lone accent-blue link there reads as an error. The underline is enough to
+   mark it as the one thing in the row that is clickable. */
+.footer-legal a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition);
+}
+
+.footer-legal a:hover,
+.footer-legal a:focus-visible {
+  color: var(--text-primary);
 }
 
 /* ============================================================

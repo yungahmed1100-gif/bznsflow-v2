@@ -12,6 +12,10 @@ export const LOCALES = ['ar', 'en'];
 // lastmod is explicit + deterministic so rebuilds don't churn the sitemap.
 export const PAGES = [
   { path: '/', changefreq: 'weekly', priority: 1.0, lastmod: '2026-07-13' },
+  // Low priority, rarely changes — but indexable and in the sitemap on
+  // purpose: it is linked from Google's and LinkedIn's consent screens, and a
+  // privacy policy that hides from search looks like it has something to hide.
+  { path: '/privacy', changefreq: 'yearly', priority: 0.3, lastmod: '2026-09-10' },
 ];
 
 // Build the absolute URL for a given canonical path + locale.

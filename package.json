@@ -9,7 +9,7 @@
     "prebuild": "node scripts/gen-kb.mjs --check && npm run gen:sitemap",
     "build": "vite-react-ssg build",
     "preview": "vite preview",
-    "test": "node tests/api-chat.test.mjs && node tests/cookies.test.mjs && node tests/auth.test.mjs && node tests/contracts.test.mjs",
+    "test": "node tests/api-chat.test.mjs && node tests/cookies.test.mjs && node tests/auth.test.mjs && node tests/oauth.test.mjs && node tests/contracts.test.mjs",
     "test:e2e": "node tests/e2e-chat.mjs",
     "test:stack": "./scripts/chat-test-stack.sh",
     "gen:kb": "node scripts/gen-kb.mjs",

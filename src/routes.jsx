@@ -9,6 +9,10 @@ import Home from './pages/Home';
 // a round trip to the critical path.
 const SignIn = lazy(() => import('./pages/SignIn'));
 
+// Same reasoning: its own stylesheet plus several thousand words of bilingual
+// content have no business in the chunk a home-page visitor downloads.
+const Privacy = lazy(() => import('./pages/Privacy'));
+
 // `null` rather than a spinner. The prerendered HTML already contains the fully
 // rendered page, so this fallback is only ever visible during a client-side
 // navigation to /signin — where a flash of spinner is worse than nothing.
@@ -30,6 +34,11 @@ export const routes = [
       // does not advertise it — it is <Seo noindex> for the same reason.
       { path: 'signin', element: deferred(<SignIn lang="ar" />) },
       { path: 'en/signin', element: deferred(<SignIn lang="en" />) },
+      // Indexable, unlike /signin — Google and LinkedIn both show this URL to
+      // users on their consent screens, and a noindex privacy policy reads as
+      // evasive. Listed in PAGES so the sitemap carries it.
+      { path: 'privacy', element: deferred(<Privacy lang="ar" />) },
+      { path: 'en/privacy', element: deferred(<Privacy lang="en" />) },
     ],
   },
 ];

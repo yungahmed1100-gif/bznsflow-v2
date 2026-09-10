@@ -24,6 +24,7 @@ import {
   authBuckets, SESSION_DAYS,
 } from './_lib/auth.js';
 import { checkRate, verifyCode, completeProfile, getSession, signOut, markSynced } from './_lib/db.js';
+import { configuredProviders } from './_lib/oidc.js';
 import { pushLead } from './_lib/mailer.js';
 import { send as sendJson, readBody, limit } from './_lib/http.js';
 import { RATE_IP_PER_MIN, RATE_GLOBAL_PER_DAY } from './auth-code.js';
@@ -77,7 +78,13 @@ async function handleGet(req, res) {
   const csrfToken = issueCsrfToken(res);
   const token = sessionToken(req);
 
-  if (!token) return send(res, 200, { ok: true, csrfToken, account: null });
+  // Which social buttons to render. The page is prerendered by vite-react-ssg,
+  // so it cannot know at build time which provider secrets this deployment
+  // actually has — and a button that dead-ends in a 500 because nobody set
+  // MS_CLIENT_SECRET is worse than no button.
+  const providers = configuredProviders();
+
+  if (!token) return send(res, 200, { ok: true, csrfToken, providers, account: null });
 
   let session;
   try {
@@ -86,18 +93,19 @@ async function handleGet(req, res) {
     // Degrade to signed-out rather than failing. The visitor can sign in again;
     // a hard error here would leave the page unable to render at all.
     console.error('[auth-session] getSession failed:', err.message);
-    return send(res, 200, { ok: true, csrfToken, account: null });
+    return send(res, 200, { ok: true, csrfToken, providers, account: null });
   }
 
   if (!session?.ok) {
     // Expired or unknown — clear the stale cookie so the browser stops sending it.
     clearSessionCookie(res);
-    return send(res, 200, { ok: true, csrfToken, account: null });
+    return send(res, 200, { ok: true, csrfToken, providers, account: null });
   }
 
   return send(res, 200, {
     ok: true,
     csrfToken,
+    providers,
     account: session.account,
     needsProfile: !!session.needs_profile,
   });

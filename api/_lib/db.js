@@ -132,6 +132,31 @@ export function verifyCode(email, codeHash, sessionHash, sessionDays) {
   });
 }
 
+/**
+ * Sign in with a social provider: resolve the identity to an account, creating
+ * or linking as needed, and open a session. Migration: 004-oauth-identities.sql.
+ *
+ * The identity is (provider, subject). `email` is only consulted when linking
+ * to an account that already exists, and only when `emailVerified` is true —
+ * the caller checks that too, and the function refuses regardless.
+ *
+ * @returns {Promise<{ ok: boolean, reason?: 'invalid'|'email_unverified',
+ *                     needs_profile?: boolean, account?: object }>}
+ */
+export function oauthLogin({
+  provider, subject, email, emailVerified, name, sessionHash, sessionDays,
+}) {
+  return rpc('auth_oauth_login', {
+    p_provider: provider,
+    p_subject: subject,
+    p_email: email,
+    p_email_verified: emailVerified,
+    p_name: name,
+    p_session_hash: sessionHash,
+    p_session_days: sessionDays,
+  });
+}
+
 /** Fill in the profile for whichever account the session belongs to. */
 export function completeProfile(sessionHash, profile) {
   return rpc('auth_complete_profile', {

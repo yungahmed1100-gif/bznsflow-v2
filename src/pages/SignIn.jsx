@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Seo } from '../components/ui/Seo';
 import { Icon } from '../components/ui/Icon';
+import { BrandMark } from '../components/ui/BrandMark';
 import { getStrings } from '../i18n';
 import { INDUSTRIES } from '../lib/industries';
 import { countryOptions } from '../lib/countries';
@@ -23,6 +24,30 @@ import '../styles/auth.css';
 const RESEND_SECONDS = 60;
 const DEFAULT_COUNTRY = 'AE';
 
+// Buttons, in the order they are offered. Rendered only when the server says
+// the provider is configured, so a missing secret means a missing button rather
+// than a dead one.
+const PROVIDER_ORDER = [
+  { id: 'google', key: 'auth_oauth_google' },
+  { id: 'microsoft', key: 'auth_oauth_microsoft' },
+  { id: 'linkedin', key: 'auth_oauth_linkedin' },
+];
+
+// The ?e= codes api/auth-callback.js redirects back with. Kept separate from
+// messageFor() below: those are JSON reason codes from a fetch, these arrive in
+// the URL after a full page navigation, and the two vocabularies only look
+// alike — `expired` means a stale OAuth attempt here and a stale OTP there.
+const OAUTH_ERRORS = {
+  cancelled: 'auth_err_cancelled',
+  provider: 'auth_err_provider',
+  state: 'auth_err_state',
+  expired: 'auth_err_expired_oauth',
+  no_email: 'auth_err_no_email',
+  email_unverified: 'auth_err_email_unverified',
+  rate: 'auth_err_rate',
+  unavailable: 'auth_err_unavailable',
+};
+
 /** Interpolate {name} placeholders in a translation string. */
 function fill(template, values) {
   return String(template ?? '').replace(/\{(\w+)\}/g, (_, k) => values[k] ?? '');
@@ -43,6 +68,10 @@ export default function SignIn({ lang = 'ar' }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [resendIn, setResendIn] = useState(0);
+  // Which social buttons this deployment can actually offer. Empty until the
+  // mount request answers, so the prerendered HTML shows none — better than
+  // rendering three and hiding two once the JSON lands.
+  const [providers, setProviders] = useState([]);
 
   const csrf = useRef('');
   // Focus the field that just became relevant, so a step change does not leave a
@@ -105,6 +134,11 @@ export default function SignIn({ lang = 'ar' }) {
   const applyAccount = useCallback((data) => {
     setAccount(data.account);
     if (data.needsProfile) {
+      // A social sign-in hands us a name the emailed code never could, so seed
+      // the form with it rather than making someone retype what Google just
+      // told us. Only ever fills a blank — never overwrites something typed.
+      const given = data.account?.name;
+      if (given) setProfile((p) => (p.name ? p : { ...p, name: given }));
       setStep('profile');
       return;
     }
@@ -128,6 +162,7 @@ export default function SignIn({ lang = 'ar' }) {
         const { data } = await session('GET');
         if (cancelled) return;
         csrf.current = data?.csrfToken || '';
+        if (Array.isArray(data?.providers)) setProviders(data.providers);
         if (data?.account) applyAccount(data);
       } catch {
         // Offline or blocked. The form still renders; the first submit reports it.
@@ -135,6 +170,25 @@ export default function SignIn({ lang = 'ar' }) {
     })();
     return () => { cancelled = true; };
   }, [session, applyAccount]);
+
+  // Surface a failed social sign-in. api/auth-callback.js has no page to render
+  // into, so it reports by redirecting back here with ?e=<code>.
+  //
+  // The parameter is stripped afterwards so a refresh does not re-show an error
+  // about an attempt that is long over — and so the address bar of someone who
+  // just cancelled does not keep saying so.
+  useEffect(() => {
+    if (typeof window === 'undefined') return; // prerendered by vite-react-ssg
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('e');
+    if (!code) return;
+
+    setError(t[OAUTH_ERRORS[code]] || t.auth_err_generic);
+    window.history.replaceState({}, '', window.location.pathname);
+    // Runs once on mount: the URL is read and cleared in the same pass, so
+    // re-running on a language change would find nothing anyway.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Resend countdown, mirroring the server's 60-second per-address throttle so
   // the button is disabled rather than pressed into a guaranteed 429.
@@ -270,7 +324,36 @@ export default function SignIn({ lang = 'ar' }) {
             <form className="auth-form" onSubmit={sendCode}>
               <p className="section-label">{t.auth_eyebrow}</p>
               <h1 className="auth-title" tabIndex={-1} ref={stepHeading}>{t.auth_title}</h1>
-              <p className="auth-sub">{t.auth_sub}</p>
+              {/* The default copy promises an emailed code, which is the wrong
+                  sentence to put directly above three provider buttons. */}
+              <p className="auth-sub">
+                {providers.length > 0 ? t.auth_sub_social : t.auth_sub}
+              </p>
+
+              {providers.length > 0 && (
+                <>
+                  <div className="auth-providers">
+                    {PROVIDER_ORDER.filter((p) => providers.includes(p.id)).map((p) => (
+                      /* A real link, not a button with a click handler. An OAuth
+                         redirect cannot happen inside fetch, so this has to be a
+                         full-page navigation — and as an anchor it also works
+                         before React hydrates, and gives middle-click and
+                         open-in-new-tab for free. */
+                      <a
+                        key={p.id}
+                        className="auth-provider"
+                        href={`/api/auth-oauth?provider=${p.id}&lang=${lang}`}
+                        aria-disabled={busy || undefined}
+                        onClick={busy ? (e) => e.preventDefault() : undefined}
+                      >
+                        <BrandMark name={p.id} size={18} />
+                        <span>{t[p.key]}</span>
+                      </a>
+                    ))}
+                  </div>
+                  <p className="auth-or"><span>{t.auth_oauth_or}</span></p>
+                </>
+              )}
 
               <div className="auth-field">
                 <label htmlFor="auth-email">{t.auth_email_label}</label>

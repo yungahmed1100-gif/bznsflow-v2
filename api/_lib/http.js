@@ -30,6 +30,25 @@ export function send(res, status, payload, options = {}) {
 }
 
 /**
+ * Send a 302 to a same-site path.
+ *
+ * The OAuth handlers answer with a redirect rather than JSON: they are reached
+ * by a top-level browser navigation, not by fetch, so there is nobody to read a
+ * response body. `no-store` matters more here than elsewhere — these responses
+ * carry Set-Cookie, and a cached 302 would hand one visitor's session to the
+ * next.
+ *
+ * @param {import('http').ServerResponse} res
+ * @param {string} location a path on this site, never a caller-supplied URL
+ */
+export function redirect(res, location) {
+  res.status(302);
+  res.setHeader('Location', location);
+  res.setHeader('Cache-Control', 'no-store');
+  res.end();
+}
+
+/**
  * Read a JSON body.
  *
  * Vercel parses JSON bodies automatically, but tolerate a raw string too: a

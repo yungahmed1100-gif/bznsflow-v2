@@ -33,7 +33,12 @@ for (const [lang, path, width] of [['ar', '/signin', 390], ['en', '/en/signin', 
     const m = r.request().method();
     if (m === 'GET') {
       return r.fulfill({ status: 200, contentType: 'application/json',
-        body: JSON.stringify({ ok: true, csrfToken: 'a'.repeat(64), account: null }) });
+        body: JSON.stringify({
+          ok: true,
+          csrfToken: 'a'.repeat(64),
+          providers: ['google', 'microsoft', 'linkedin'],
+          account: null,
+        }) });
     }
     if (m === 'POST') {
       return r.fulfill({ status: 200, contentType: 'application/json',
@@ -48,6 +53,41 @@ for (const [lang, path, width] of [['ar', '/signin', 390], ['en', '/en/signin', 
 
   chk('renders the right direction', await page.getAttribute('html', 'dir') === (lang === 'ar' ? 'rtl' : 'ltr'));
   await page.screenshot({ path: `${OUT}/${lang}-1-email.png`, fullPage: true });
+
+  // ── Social sign-in buttons ────────────────────────────────────────────────
+  const providers = page.locator('.auth-provider');
+  chk('renders one button per configured provider', await providers.count() === 3,
+      `got ${await providers.count()}`);
+
+  // Real links, not scripted buttons: an OAuth redirect cannot happen inside
+  // fetch, and an anchor also works before hydration.
+  const hrefs = await providers.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+  chk('each button links to the start endpoint with its provider and language',
+      hrefs.every((h, i) => h === `/api/auth-oauth?provider=${['google', 'microsoft', 'linkedin'][i]}&lang=${lang}`),
+      hrefs.join(' | '));
+
+  // The label has to survive translation; an icon-only button would be
+  // unusable with a screen reader.
+  const labels = await providers.evaluateAll((els) => els.map((e) => e.textContent.trim()));
+  chk('every button has a visible label', labels.every((l) => l.length > 3), labels.join(' | '));
+  chk('brand names stay in Latin script even in Arabic',
+      labels.some((l) => l.includes('Google')), labels.join(' | '));
+
+  // The buttons and the divider must not force the card wider than the screen.
+  const providerOverflow = await page.evaluate(() =>
+    document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  chk('provider buttons do not cause horizontal overflow', !providerOverflow);
+
+  chk('the "or" divider is present', await page.locator('.auth-or').count() === 1);
+  await page.screenshot({ path: `${OUT}/${lang}-1b-providers.png`, fullPage: true });
+
+  // A failed round trip reports through ?e=, and must not leave the code in the
+  // URL for a refresh to re-show.
+  await page.goto(`${BASE}${path}?e=cancelled`, { waitUntil: 'networkidle' });
+  chk('a cancelled sign-in shows a message', await page.locator('.auth-error').count() === 1);
+  chk('the ?e= code is stripped from the address bar',
+      !page.url().includes('e=cancelled'), page.url());
+  await page.goto(`${BASE}${path}`, { waitUntil: 'networkidle' });
 
   // Step 1 -> 2
   await page.fill('#auth-email', 'test@example.com');

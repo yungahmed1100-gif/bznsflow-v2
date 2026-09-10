@@ -20,6 +20,7 @@ import { PLAYBOOK_PDF, PLAYBOOK_TEASER } from '../src/lib/constants.js';
 import { MAX_CHARS } from '../api/_lib/guard.js';
 import { CHAT_MAX_CHARS } from '../src/lib/chat.js';
 import * as replies from '../api/_lib/replies.js';
+import { PROVIDERS } from '../api/_lib/oidc.js';
 import en from '../src/i18n/en.js';
 import ar from '../src/i18n/ar.js';
 
@@ -115,6 +116,72 @@ t('/signin is noindex and absent from the sitemap', () => {
   const manifest = read('src/routes-manifest.js');
   assert.ok(!manifest.includes('signin'), '/signin must stay out of PAGES');
   assert.ok(read('src/pages/SignIn.jsx').includes('noindex'), 'SignIn must render <Seo noindex>');
+});
+
+console.log('\nsocial sign-in wiring');
+t('every provider in the registry has a button label in both languages', () => {
+  for (const id of Object.keys(PROVIDERS)) {
+    const key = `auth_oauth_${id}`;
+    assert.ok(en[key], `en.js is missing ${key}`);
+    assert.ok(ar[key], `ar.js is missing ${key}`);
+  }
+});
+t('every ?e= code the callback can emit has a message', () => {
+  // The handlers redirect with reason codes and the page looks each one up in
+  // OAUTH_ERRORS. Nothing links the two, so a new branch in the API silently
+  // degrades to the generic "something went wrong" — which is exactly the
+  // failure this file was written to catch.
+  const emitted = new Set();
+  for (const file of ['api/auth-oauth.js', 'api/auth-callback.js']) {
+    for (const m of read(file).matchAll(/\bback\('([a-z_]+)'\)|\?e=([a-z_]+)/g)) {
+      emitted.add(m[1] || m[2]);
+    }
+  }
+  assert.ok(emitted.size > 0, 'expected to find some reason codes to check');
+
+  const page = read('src/pages/SignIn.jsx');
+  const mapped = new Set(
+    [...page.matchAll(/^\s{2}([a-z_]+):\s*'(auth_err_[a-z_]+)',/gm)].map((m) => m[1]),
+  );
+
+  for (const code of emitted) {
+    assert.ok(mapped.has(code), `SignIn.jsx OAUTH_ERRORS has no entry for '${code}'`);
+  }
+});
+t('every message OAUTH_ERRORS points at exists in both languages', () => {
+  const page = read('src/pages/SignIn.jsx');
+  for (const [, key] of page.matchAll(/^\s{2}[a-z_]+:\s*'(auth_err_[a-z_]+)',/gm)) {
+    assert.ok(en[key], `en.js is missing ${key}`);
+    assert.ok(ar[key], `ar.js is missing ${key}`);
+  }
+});
+t('every cookie the server can set is disclosed in COOKIES.md', () => {
+  // COOKIES.md states its own rule — "an unlisted cookie is an undisclosed
+  // one". This makes that rule enforceable instead of aspirational.
+  const doc = read('COOKIES.md');
+  for (const [, name] of read('api/_lib/cookies.js')
+    .matchAll(/^export const \w*COOKIE\s*=\s*'([^']+)'/gm)) {
+    assert.ok(doc.includes(`\`${name}\``), `COOKIES.md does not document ${name}`);
+  }
+});
+t('every env var the API reads is listed in .env.example', () => {
+  const example = read('.env.example');
+  const seen = new Set();
+  for (const file of ['api/_lib/oidc.js', 'api/auth-oauth.js', 'api/auth-callback.js']) {
+    for (const [, name] of read(file).matchAll(/process\.env\.([A-Z0-9_]+)/g)) seen.add(name);
+  }
+  // The registry names its env vars as strings rather than property accesses.
+  for (const p of Object.values(PROVIDERS)) { seen.add(p.idEnv); seen.add(p.secretEnv); }
+
+  for (const name of seen) {
+    assert.ok(new RegExp(`^${name}=`, 'm').test(example), `.env.example is missing ${name}`);
+  }
+});
+t('both new functions declare a maxDuration', () => {
+  const vercel = JSON.parse(read('vercel.json'));
+  for (const fn of ['api/auth-oauth.js', 'api/auth-callback.js']) {
+    assert.ok(vercel.functions?.[fn]?.maxDuration, `vercel.json does not configure ${fn}`);
+  }
 });
 
 console.log(`\n${fail ? '✗' : '✓'} contracts: ${pass} passed, ${fail} failed\n`);

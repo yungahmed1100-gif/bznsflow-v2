@@ -13,9 +13,13 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 export const SESSION_COOKIE = 'bf_session';
 export const CSRF_COOKIE = 'bf_csrf';
 export const CSRF_HEADER = 'x-csrf-token';
+export const OAUTH_COOKIE = 'bf_oauth';
 
 // Lifetimes, in seconds.
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+// Long enough to read a consent screen and pick an account, short enough that an
+// abandoned attempt is not still replayable an hour later.
+export const OAUTH_MAX_AGE = 60 * 10; // 10 minutes
 
 // 32 bytes of CSPRNG output — 256 bits, well beyond guessing range, and short
 // enough as hex to sit comfortably inside the 4KB per-cookie limit.
@@ -151,6 +155,49 @@ export function issueCsrfToken(res) {
     maxAge: SESSION_MAX_AGE, httpOnly: true, sameSite: 'Lax',
   }));
   return token;
+}
+
+/**
+ * Stash the in-flight OAuth attempt: provider, state, nonce, PKCE verifier and
+ * the language to return to.
+ *
+ * SameSite=Lax is correct and sufficient here. The provider sends the browser
+ * back with a top-level GET navigation, which Lax allows; the cross-site POST
+ * that Lax would block is a shape none of Google, Microsoft or LinkedIn use.
+ * (Sign in with Apple does, via response_mode=form_post — worth knowing if it is
+ * ever added, because this cookie would silently stop arriving.)
+ *
+ * Deliberately NOT signed or encrypted. HttpOnly already keeps page script out,
+ * and an HMAC would not help against the one attack that matters — an attacker
+ * overwriting this cookie to force a login as themselves — because they could
+ * simply get a validly-signed cookie from this very endpoint. What actually
+ * stops that is Secure plus the HSTS preload in vercel.json, which leaves no
+ * plaintext channel to inject a cookie over.
+ */
+export function setOauthCookie(res, payload) {
+  const value = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  appendCookie(res, serializeCookie(OAUTH_COOKIE, value, {
+    maxAge: OAUTH_MAX_AGE, httpOnly: true, sameSite: 'Lax',
+  }));
+}
+
+/** Read the in-flight OAuth attempt, or null when absent or unreadable. */
+export function readOauthCookie(req) {
+  const raw = parseCookies(req)[OAUTH_COOKIE];
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null; // truncated or tampered — treat exactly like "no attempt"
+  }
+}
+
+/** Clear the OAuth cookie. Single-use: the callback drops it before anything else. */
+export function clearOauthCookie(res) {
+  appendCookie(res, serializeCookie(OAUTH_COOKIE, '', {
+    maxAge: 0, httpOnly: true, sameSite: 'Lax',
+  }));
 }
 
 /**

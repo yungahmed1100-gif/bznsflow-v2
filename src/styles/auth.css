@@ -404,6 +404,87 @@
   margin-block-start: var(--space-3);
 }
 
+/* ── Social sign-in ───────────────────────────────────────────────────────
+   Provider buttons sit ABOVE the email field: social is the fast path, and
+   below the form it reads as an afterthought nobody clicks.
+
+   They are deliberately SECONDARY to the primary "Email me a code" button.
+   Three filled buttons plus a filled CTA is four things competing for the same
+   attention, and the result leads nowhere — so these are outlined, and the one
+   thing that stays solid is the step the page actually wants.
+
+   Direction-agnostic like the rest of this file: the buttons centre their
+   content and the divider is two identical pseudo-elements, so there is
+   nothing that could need mirroring. */
+
+.auth-providers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.auth-provider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: 11px var(--space-4);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition), background var(--transition),
+    transform var(--transition);
+}
+
+.auth-provider:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+.auth-provider:active {
+  transform: translateY(1px);
+}
+
+/* Matches the input focus ring exactly — a link that behaves like a control
+   should be as findable by keyboard as the fields around it. */
+.auth-provider:focus-visible {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(92, 149, 198, 0.22);
+}
+
+.auth-provider[aria-disabled='true'] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* The logo carries fixed brand colours and a fixed size; it must not be
+   squeezed by a long translated label. */
+.auth-provider svg {
+  flex: none;
+}
+
+.auth-or {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block: var(--space-5);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.auth-or::before,
+.auth-or::after {
+  content: '';
+  flex: 1;
+  block-size: 1px;
+  background: var(--border);
+}
+
 /* ── Small screens ────────────────────────────────────────────────────────── */
 
 @media (max-width: 520px) {
