@@ -13,6 +13,11 @@ const SignIn = lazy(() => import('./pages/SignIn'));
 // content have no business in the chunk a home-page visitor downloads.
 const Privacy = lazy(() => import('./pages/Privacy'));
 
+// The playbook landing page. Lazy for the same reason, and harmless for paid
+// traffic: it is prerendered, so an ad click gets the full HTML immediately and
+// the chunk only matters once the visitor types into the form.
+const Playbook = lazy(() => import('./pages/Playbook'));
+
 // `null` rather than a spinner. The prerendered HTML already contains the fully
 // rendered page, so this fallback is only ever visible during a client-side
 // navigation to /signin — where a flash of spinner is worse than nothing.
@@ -39,6 +44,11 @@ export const routes = [
       // evasive. Listed in PAGES so the sitemap carries it.
       { path: 'privacy', element: deferred(<Privacy lang="ar" />) },
       { path: 'en/privacy', element: deferred(<Privacy lang="en" />) },
+      // Also indexable and also in PAGES: this is the destination for paid
+      // traffic, and a campaign landing page missing from the sitemap is a
+      // silent, expensive mistake.
+      { path: 'playbook', element: deferred(<Playbook lang="ar" />) },
+      { path: 'en/playbook', element: deferred(<Playbook lang="en" />) },
     ],
   },
 ];

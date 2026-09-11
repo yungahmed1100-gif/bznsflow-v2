@@ -17,7 +17,10 @@
 /** trackEvent name → Meta event. `custom` events go through trackCustom, which
  *  is what Meta requires for anything outside its standard vocabulary. */
 const META_EVENTS = {
-  // Primary conversion — the playbook form is the only place we capture an email.
+  // Primary conversion — the playbook form is the only place we capture an
+  // email. It now renders in two places, the exit-intent popup and /playbook,
+  // but it is one component firing one event; which surface it came from is
+  // carried by `sourceCta` into the CRM sheet, not by a second event name.
   PlaybookSubmit:  { name: 'Lead' },
   // Handing off to a human. WhatsApp is the main route; email and the chat
   // handoff are the same intent arriving by a different door.

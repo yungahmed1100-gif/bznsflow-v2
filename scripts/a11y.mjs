@@ -30,6 +30,12 @@ const TARGETS = [
   { lang: 'en', path: '/en', width: 390 },
   { lang: 'ar', path: '/', width: 1440, signedIn: true },
   { lang: 'en', path: '/en', width: 390, signedIn: true },
+  // The campaign landing page. It carries the only form on the site that a
+  // stranger from an ad will meet, so its labels and contrast are load-bearing.
+  { lang: 'ar', path: '/playbook', width: 1440 },
+  { lang: 'ar', path: '/playbook', width: 390 },
+  { lang: 'en', path: '/en/playbook', width: 1440 },
+  { lang: 'en', path: '/en/playbook', width: 390 },
 ];
 
 const browser = await chromium.launch();
@@ -68,7 +74,7 @@ for (const t of TARGETS) {
     .analyze();
 
   const who = t.signedIn ? ' signed in' : '';
-  console.log(`\n${t.lang} @ ${t.width}px${who} — ${violations.length} violation(s)`);
+  console.log(`\n${t.path} (${t.lang}) @ ${t.width}px${who} — ${violations.length} violation(s)`);
   for (const v of violations) {
     total += v.nodes.length;
     console.log(`  [${v.impact}] ${v.id}: ${v.help} (${v.nodes.length})`);

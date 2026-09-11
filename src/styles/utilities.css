@@ -188,9 +188,16 @@ html {
   transform-origin: right center;
 }
 
-/* Active nav link */
+/* Active nav link.
+   Ink and an underline, not blue on a ruled fill. The old pairing put
+   --accent-blue (#5C95C6) on --bg-secondary (#EBE1C9), which measures 2.45:1
+   and fails WCAG 2.2 AA at this size — the site's own target. It also broke the
+   One Blue Rule in DESIGN.md twice over: blue means "you can act on this", and
+   every link in the bar is actionable, so blue said nothing about which one you
+   are on. This is what the system's Navigation spec already called for. */
 .nav-link.active {
-  color: var(--accent-blue);
-  background: var(--bg-secondary);
+  color: var(--text-primary);
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--text-primary);
 }
 
