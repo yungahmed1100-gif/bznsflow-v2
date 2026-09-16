@@ -2,6 +2,8 @@
 
 > BznsFlow is a business-in-a-box tech solutions company — done for you. We build the tech that runs and grows your business: an AI front office (receptionist, booking, WhatsApp order-taking, CRM), lead-capture websites, automation and integrations, AI agents, and custom apps. 24/7, in Arabic and English. One promise: stop losing customers to slow replies. Primary contact channel is WhatsApp. Built for businesses worldwide. Proven in Oman.
 
+BznsFlow is a Meta-verified Tech Provider (WhatsApp Business Platform).
+
 ## The AI team (your front office, done for you)
 
 BznsFlow isn't one bot — it's a team of named AI systems:

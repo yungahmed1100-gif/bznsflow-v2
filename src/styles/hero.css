@@ -382,3 +382,43 @@
 @media (max-width: 1180px) {
   .hero-flow { display: none; }
 }
+
+/* ============================================================
+   HERO — Meta Tech Provider verification
+   A caption-weight fact under the CTAs, set like the spec labels
+   below it: label type, secondary ink, Meta's mark in one colour.
+ ============================================================ */
+.meta-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+[lang="ar"] .meta-verified,
+[dir="rtl"] .meta-verified {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.85rem;
+}
+
+.meta-verified-logo {
+  display: block;
+  flex: none;
+  width: auto;
+  color: var(--text-primary);
+}
+
+.meta-verified--hero {
+  margin-block-start: 24px;
+}
+
+.meta-verified--hero .meta-verified-logo {
+  height: 18px;
+}

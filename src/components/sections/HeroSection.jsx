@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '../ui/Icon';
+import { MetaVerified } from '../ui/MetaVerified';
 import { waLink } from '../../lib/whatsapp';
 
 const PIPELINE_ICONS = [
@@ -134,6 +135,8 @@ export function HeroSection({ t, trackEvent, CALENDAR_URL }) {
                 <span>{t.secondary_cta_call}</span>
               </a>
             </div>
+
+            <MetaVerified t={t} variant="hero" />
           </div>
 
           {/* The wordmark used to sit here as well as in the navbar, one

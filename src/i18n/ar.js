@@ -79,6 +79,7 @@ export default {
   "footer_founder": "مبني حول العالم · مُثبَت في عُمان",
   "wa_tooltip": "تحدث معنا عبر واتساب",
   "trust_label": "مكتب استقبال آلي مبني لـ",
+  "meta_verified": "مزوّد تقنية موثّق لدى",
   "sticky_book": "تدقيق مجاني",
   "sticky_chat": "تواصل واتساب",
   "clients_label": "من أعمالنا",

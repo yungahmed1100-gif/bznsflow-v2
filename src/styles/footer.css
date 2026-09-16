@@ -238,3 +238,12 @@ html.reveal-failsafe [data-reveal] {
     transition: none !important;
   }
 }
+
+/* Meta Tech Provider verification, repeated under the brand column. */
+.meta-verified--footer {
+  margin-block-start: 20px;
+}
+
+.meta-verified--footer .meta-verified-logo {
+  height: 16px;
+}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '../ui/Icon';
+import { MetaVerified } from '../ui/MetaVerified';
 
 export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) {
   return (
@@ -18,6 +19,7 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
                   <Icon name="whatsapp" size={18} />
                 </a>
               </div>
+              <MetaVerified t={t} variant="footer" />
             </div>
 
             <div className="footer-col">

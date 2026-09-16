@@ -102,6 +102,7 @@ export default {
   "footer_founder": "Built worldwide · Proven in Oman",
   "wa_tooltip": "Let's talk on WhatsApp",
   "trust_label": "An AI front desk built for",
+  "meta_verified": "Verified Tech Provider",
   "sticky_book": "Free audit",
   "sticky_chat": "WhatsApp Us",
   "clients_label": "Selected work",

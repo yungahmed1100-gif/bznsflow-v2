@@ -11,7 +11,7 @@ export const LOCALES = ['ar', 'en'];
 // Each page lists its canonical (Arabic, unprefixed) path. /en is derived.
 // lastmod is explicit + deterministic so rebuilds don't churn the sitemap.
 export const PAGES = [
-  { path: '/', changefreq: 'weekly', priority: 1.0, lastmod: '2026-07-13' },
+  { path: '/', changefreq: 'weekly', priority: 1.0, lastmod: '2026-09-16' },
   // Low priority, rarely changes — but indexable and in the sitemap on
   // purpose: it is linked from Google's and LinkedIn's consent screens, and a
   // privacy policy that hides from search looks like it has something to hide.

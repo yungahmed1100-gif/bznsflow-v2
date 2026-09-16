@@ -27,7 +27,12 @@ export function buildSchemas(t, lang) {
     description: isAr
       ? 'BznsFlow شركة حلول تقنية متكاملة لأعمالك — منجزة لك. نبني التقنية التي تُشغّل أعمالك وتُنمّيها: مكتب استقبال ذكي، مواقع لجذب العملاء، نظام CRM، أتمتة وتكاملات، وكلاء ذكاء اصطناعي، وتطبيقات مخصصة. 24/7 بالعربية والإنجليزية. لأعمال حول العالم، ومُثبَت في عُمان.'
       : 'BznsFlow is a business-in-a-box tech solutions company — done for you. We build the tech that runs and grows your business: an AI front office, lead-capture websites, a CRM, automation and integrations, AI agents, and custom apps. 24/7 in Arabic and English. For businesses worldwide, proven in Oman.',
-    founder: { '@type': 'Person', name: 'Ahmed Darwish' },
+    founder: {
+      '@type': 'Person',
+      name: 'Ahmed Darwish',
+      jobTitle: 'Founder',
+      sameAs: ['https://www.linkedin.com/in/ahmed-darwish-723822230/'],
+    },
     foundingDate: '2024',
     areaServed: 'Worldwide',
     knowsAbout: isAr
@@ -39,7 +44,20 @@ export function buildSchemas(t, lang) {
       availableLanguage: ['English', 'Arabic'],
       url: 'https://wa.me/201036755930',
     },
-    sameAs: ['https://wa.me/201036755930'],
+    // Profiles that confirm this is the same business. Public URLs only: the
+    // LinkedIn admin path and Instagram's share-tracking query are stripped.
+    sameAs: [
+      'https://www.linkedin.com/company/144967111/',
+      'https://www.instagram.com/bznsflow/',
+      'https://wa.me/201036755930',
+    ],
+    // Business verification granted by Meta, 2026-09-16. Not App Review.
+    hasCredential: {
+      '@type': 'EducationalOccupationalCredential',
+      name: 'Meta Verified Tech Provider',
+      credentialCategory: 'Platform verification',
+      recognizedBy: { '@type': 'Organization', name: 'Meta', url: 'https://www.meta.com' },
+    },
   };
 
   const website = {
