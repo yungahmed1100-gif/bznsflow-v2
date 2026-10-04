@@ -49,3 +49,6 @@ work/
 # React Router generated artifacts
 build/
 .react-router/
+
+# Codex mirror uses the same on-demand Impeccable binary.
+.codex/skills/impeccable/scripts/bin/

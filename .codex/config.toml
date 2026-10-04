@@ -1,2 +1,64 @@
+# Project configuration. Global model, sandbox and approval preferences are inherited.
+# See README.md for tool scope, skills and verification commands.
+
 [mcp_servers.supabase]
-url = "https://mcp.supabase.com/mcp?project_ref=svmrfzahbgmvesclbqke"
+# Historical endpoint: https://mcp.supabase.com/mcp?project_ref=svmrfzahbgmvesclbqke
+# Inherit its global transport; specifying url here conflicts with a global stdio command.
+enabled = false # Historical source; Green no longer writes to Supabase.
+
+[mcp_servers.convex-blue]
+enabled = false # Avoid targeting the other application's backend in this checkout.
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+startup_timeout_sec = 30
+
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@0.0.83", "--headless", "--isolated"]
+startup_timeout_sec = 60
+tool_timeout_sec = 90
+
+[mcp_servers.convex-green]
+command = "/Users/ramsis21/Desktop/bznsflow web/node_modules/.bin/convex"
+args = ["mcp", "start", "--project-dir", "/Users/ramsis21/Desktop/bznsflow web", "--deployment", "rare-fish-465", "--disable-tools", "data,logs,run,runOneoffQuery,envGet,envList,envSet,envRemove"]
+enabled_tools = ["status", "tables", "functionSpec", "insights"]
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+
+# Impeccable roles ported from .claude/agents (model inherited).
+
+[agents.impeccable_asset_producer]
+description = "Produces clean reusable raster assets from approved Impeccable mock references without redesigning the direction."
+config_file = "/Users/ramsis21/Desktop/bznsflow web/.codex/agents/impeccable_asset_producer.toml"
+
+[agents.impeccable_documenter]
+description = "Records DESIGN.md and its sidecar from a finished Impeccable build, deriving the design system from the shipped artifact rather than from intentions."
+config_file = "/Users/ramsis21/Desktop/bznsflow web/.codex/agents/impeccable_documenter.toml"
+
+[agents.impeccable_finish_reviewer]
+description = "Reviews a finished Impeccable build against its direction contract, the approved comp, and the chosen world's quality bar, returning an ordered list of material fixes."
+config_file = "/Users/ramsis21/Desktop/bznsflow web/.codex/agents/impeccable_finish_reviewer.toml"
+
+[agents.impeccable_manual_edit_applier]
+description = "Applies leased Impeccable live manual copy-edit batches to source and returns canonical Apply results."
+config_file = "/Users/ramsis21/Desktop/bznsflow web/.codex/agents/impeccable_manual_edit_applier.toml"
+
+# Native local Codex hooks. Cloud-orchestrated sessions do not run local command hooks.
+[[hooks.PostToolUse]]
+matcher = "apply_patch|Edit|Write"
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = '"/Users/ramsis21/Desktop/bznsflow web/.codex/skills/impeccable/scripts/impeccable" hook'
+timeout = 5
+
+[[hooks.Stop]]
+[[hooks.Stop.hooks]]
+type = "command"
+command = '"/Users/ramsis21/Desktop/bznsflow web/.codex/skills/impeccable/scripts/impeccable" hook'
+timeout = 30

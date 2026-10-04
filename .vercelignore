@@ -9,3 +9,7 @@ dist/
 .react-router/
 node_modules/
 *.log
+
+# Development-only Codex instructions and tooling
+.codex/
+.agents/
