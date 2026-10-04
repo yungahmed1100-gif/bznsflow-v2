@@ -153,6 +153,13 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         reviewMode, websiteImportAvailable: websiteImportEnabled(env), accountSaveAvailable: accountsAvailable, savedToAccount: !!row.accountId,
         account: account ? { email:account.email } : null,
         ownerConnectAvailable: !reviewMode && !!row.accountId && !row.integration && !row.pendingSelection && !!ownerConnection(env,account),
+        ...(isGreenRuntime(env) && String(account?.email || '').trim().toLowerCase() === 'ahmed@bznsflowai.com' ? {
+          ownerConnectionReadiness: {
+            enabled: env.GREEN_WHATSAPP_OWNER_CONNECT_ENABLED === 'true',
+            credentialsValid: !!greenOwnerCredentials(env),
+            dataReady: greenSubscriptionReady(env),
+          },
+        } : {}),
         ...(row.attempt && !row.attempt.claimed && ['prepared','awaiting_meta'].includes(row.status) && row.attempt.expiresAt > now() ? {
           prepared: {attempt:row.attempt.id,state:attemptState(row.attempt.id),path:row.attempt.path,expiresAt:row.attempt.expiresAt,appId:APP,configId:signupConfigId(env),version:'v25.0',esVersion:signupVersion(env,row.attempt.path),...(row.attempt.preselect ? {preselect:row.attempt.preselect} : {})},
         } : {}),

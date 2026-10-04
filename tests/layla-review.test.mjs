@@ -237,6 +237,15 @@ test('owner connection is refused for other accounts, a malformed binding or a m
     assert.equal(exchanges.length,0);assert.equal(h.effects.length,0);
   }
 });
+test('Green owner readiness exposes only booleans to Ahmed and never credentials to other accounts',async()=>{
+  const envExtra={VERCEL_ENV:'production',PUBLIC_SITE_ORIGIN:GREEN_ORIGIN,GREEN_CONVEX_CLOUD_URL:BLUE_CLOUD,CONVEX_SERVICE_SECRET:'a'.repeat(64),GREEN_CONVEX_CUTOVER:'true',GREEN_DATA_MIGRATION_VERIFIED:'true',GREEN_STATE_PATHS_CONVEX:'true',GREEN_WHATSAPP_OWNER_CONNECT_ENABLED:'false',ACCESS_TOKEN:OWNER_TOKEN,WHATSAPP_BUSINESS_ACCOUNT_ID:OWNER.waba,WHATSAPP_BUSINESS_NUMBER_ID:OWNER.phone};
+  const {c}=await ownerClient({envExtra});
+  const state=(await c.call()).body;
+  assert.deepEqual(state.ownerConnectionReadiness,{enabled:false,credentialsValid:true,dataReady:true});
+  assert.equal(JSON.stringify(state).includes(OWNER_TOKEN),false);
+  const other=await ownerClient({envExtra,email:'someone@example.com'});
+  assert.equal((await other.c.call()).body.ownerConnectionReadiness,undefined);
+});
 test('a failed owner token check records a safe diagnostic and makes no provider writes',async()=>{
   const {h,c}=await ownerClient({exchange:async()=>{throw new PilotError('waba_not_granted',403);}});
   const r=await c.call({action:'connect_owner_number'});assert.equal(r.body.reason,'waba_not_granted');
