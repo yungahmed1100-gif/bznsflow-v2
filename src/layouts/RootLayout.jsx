@@ -1,15 +1,15 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-// Shared shell for every route. vite-react-ssg already wraps the tree in
-// HelmetProvider. Scroll reveals are handled by the native IntersectionObserver
+// Shared shell for every route. Scroll reveals use the native IntersectionObserver
 // primitive in src/lib/reveal.js, initialized per-page.
 export function RootLayout() {
+  const privateOwnerPage = /^\/(?:en\/)?(?:owner|layla|reviewer)(?:\/|$)/.test(useLocation().pathname);
   return (
     <>
       <Outlet />
-      <SpeedInsights />
+      {!privateOwnerPage && <SpeedInsights />}
     </>
   );
 }

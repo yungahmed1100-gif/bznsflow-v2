@@ -34,8 +34,8 @@ import { fetchWithTimeout, httpError } from './fetch.js';
 const OTP_TIMEOUT_MS = 20000;
 const LEAD_TIMEOUT_MS = 25000;
 
-function endpoint() {
-  const url = process.env.LEAD_ENDPOINT;
+function endpoint(env = process.env) {
+  const url = env.LEAD_ENDPOINT;
   if (!url) throw new Error('LEAD_ENDPOINT is not configured');
   return url;
 }
@@ -47,13 +47,13 @@ function endpoint() {
  * text/plain to dodge a CORS preflight Apps Script cannot answer; server-side
  * there is no preflight, so the honest content type is fine.
  */
-async function post(payload, timeoutMs) {
-  const res = await fetchWithTimeout(endpoint(), {
+async function post(payload, timeoutMs, { env = process.env, fetcher = fetch } = {}) {
+  const res = await fetchWithTimeout(endpoint(env), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
     redirect: 'follow', // the 302 to googleusercontent carries the JSON body
-  }, { label: 'Apps Script', timeoutMs });
+  }, { label: 'Apps Script', timeoutMs, fetcher });
 
   if (!res.ok) throw await httpError('Apps Script', res);
 
@@ -80,8 +80,8 @@ async function post(payload, timeoutMs) {
  * Email a one-time code. Throws on any failure — the caller must not tell the
  * visitor to check their inbox for a message that was never sent.
  */
-export function sendOtpEmail({ email, code, lang }) {
-  const secret = process.env.OTP_SHARED_SECRET;
+export function sendOtpEmail({ email, code, lang, env = process.env, fetcher = fetch }) {
+  const secret = env.OTP_SHARED_SECRET;
   if (!secret) throw new Error('OTP_SHARED_SECRET is not configured');
 
   return post({
@@ -90,7 +90,7 @@ export function sendOtpEmail({ email, code, lang }) {
     email,
     code,
     language: lang === 'ar' ? 'ar' : 'en',
-  }, OTP_TIMEOUT_MS);
+  }, OTP_TIMEOUT_MS, { env, fetcher });
 }
 
 /**

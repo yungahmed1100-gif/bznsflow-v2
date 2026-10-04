@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Seo } from '../components/ui/Seo';
 import { Icon } from '../components/ui/Icon';
 import { PlaybookForm, PlaybookSuccess } from '../components/ui/PlaybookForm';
 import { getStrings } from '../i18n';
@@ -36,12 +35,7 @@ export default function Playbook({ lang = 'ar' }) {
 
   return (
     <>
-      <Seo
-        lang={lang}
-        path="/playbook"
-        title={`${plain(t.playbook_title)} — BznsFlow`}
-        description={t.playbook_solution}
-      />
+
 
       <main className="pb-page" id="main-content">
         <header className="pb-nav">

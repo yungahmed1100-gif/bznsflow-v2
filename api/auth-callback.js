@@ -14,26 +14,25 @@
 // Order of operations mirrors api/auth-code.js: cheap local checks first, then
 // the rate limit (fail closed), then anything that costs a network round trip.
 
+import { createHmac } from 'node:crypto';
 import { clientIp } from './_lib/guard.js';
 import {
   readOauthCookie, clearOauthCookie, safeEqual, randomToken,
   setSessionCookie, SESSION_MAX_AGE,
 } from './_lib/cookies.js';
 import {
-  providerFor, isConfigured, exchangeCode, verifyIdToken,
+  providerFor, isProviderEnabled, exchangeCode, verifyIdToken,
   resolveIdentity, redirectUriFor, signinPath,
 } from './_lib/oidc.js';
-import { hashToken, authBuckets, SESSION_DAYS } from './_lib/auth.js';
-import { checkRate, oauthLogin } from './_lib/db.js';
-import { send, redirect, limit } from './_lib/http.js';
-import { RATE_IP_PER_MIN, RATE_GLOBAL_PER_DAY } from './auth-code.js';
+import { hashToken } from './_lib/auth.js';
+import { blueAuthStore } from './_lib/blue-auth.js';
+import { convexServiceSecret } from './_lib/green-config.js';
+import { send, redirect } from './_lib/http.js';
 
 // A completed round trip costs the visitor a consent screen, so the per-IP
 // allowance is looser than sending codes — but still bounded, because this is
 // the endpoint that mints sessions. Matches VERIFY_IP_MULTIPLIER in
 // api/auth-session.js, and for the same reason.
-const OAUTH_IP_MULTIPLIER = 4;
-
 export default async function handler(req, res) {
   if (String(req.method || '').toUpperCase() !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -77,16 +76,11 @@ export default async function handler(req, res) {
   if (!safeEqual(state, stash.s || '')) return back('state');
 
   const provider = providerFor(stash.p);
-  if (!provider || !isConfigured(provider)) return back('provider');
+  if (!provider || !isProviderEnabled(provider)) return back('provider');
 
-  const buckets = authBuckets(clientIp(req));
+  const ipHash = createHmac('sha256', convexServiceSecret()).update(`oauth:${clientIp(req)}`).digest('hex');
   try {
-    const rate = await checkRate(buckets.ip, buckets.global);
-    const perIpPerMin = limit('AUTH_RATE_IP_PER_MIN', RATE_IP_PER_MIN) * OAUTH_IP_MULTIPLIER;
-    if (Number(rate?.ip_hits || 0) > perIpPerMin) return back('rate');
-    if (Number(rate?.global_hits || 0) > limit('AUTH_RATE_GLOBAL_PER_DAY', RATE_GLOBAL_PER_DAY)) {
-      return back('rate');
-    }
+    await blueAuthStore()('oauth_rate', { ipHash });
   } catch (err) {
     // Fail closed, as in auth-code.js and auth-session.js. This endpoint issues
     // sessions; running it with no ceiling is not a degraded mode worth having.
@@ -141,23 +135,16 @@ export default async function handler(req, res) {
 
   let result;
   try {
-    result = await oauthLogin({
+    result = await blueAuthStore()('oauth_login', {
       provider: provider.id,
       subject: identity.subject,
       email: identity.email,
       emailVerified: identity.emailVerified,
       name: identity.name,
-      sessionHash: hashToken(token),
-      sessionDays: SESSION_DAYS,
+      tokenHash: hashToken(token),
     });
   } catch (err) {
     console.error('[auth-callback] oauthLogin failed:', err.message);
-    return back('unavailable');
-  }
-
-  if (!result?.ok) {
-    if (result?.reason === 'email_unverified') return back('email_unverified');
-    console.error('[auth-callback] oauthLogin refused: %s', result?.reason || 'unknown');
     return back('unavailable');
   }
 

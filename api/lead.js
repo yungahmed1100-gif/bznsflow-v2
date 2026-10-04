@@ -25,7 +25,7 @@
 import { isAllowedOrigin, clientIp } from './_lib/guard.js';
 import { isValidEmail, normalizeEmail, authBuckets, LIMITS, MIN_PHONE_DIGITS } from './_lib/auth.js';
 import { INDUSTRY_IDS } from '../src/lib/industries.js';
-import { checkRate } from './_lib/db.js';
+import { captureWebsiteLead, checkRate } from './_lib/db.js';
 import { pushLead } from './_lib/mailer.js';
 import { send, readBody } from './_lib/http.js';
 
@@ -93,16 +93,35 @@ export default async function handler(req, res) {
 
   const name = String(body.name ?? '').trim().slice(0, LIMITS.name);
   const wantsPlaybook = body.playbook === true;
+  const email = normalizeEmail(body.email);
+  const phone = cleanPhone(body.phone);
+  const industry = cleanIndustry(body.industry);
+  const lang = body.language === 'ar' ? 'ar' : 'en';
+  const sourceCta = String(body.sourceCta ?? 'Playbook Popup').slice(0, 80);
+  const pageUrl = typeof body.pageUrl === 'string' ? body.pageUrl.slice(0, 500) : '';
 
   try {
+    // The CRM write is first and mandatory. A successful form response now
+    // guarantees that the person appears in the all-source lead list; the
+    // Google Sheet is retained as a secondary operating copy and email sender.
+    await captureWebsiteLead({
+      name,
+      email,
+      phone,
+      industry,
+      sourceCta,
+      lang,
+      sourceUrl: pageUrl,
+    });
+
     const result = await pushLead({
       name,
-      email: normalizeEmail(body.email),
-      phone: cleanPhone(body.phone),
-      industry: cleanIndustry(body.industry),
-      sourceCta: String(body.sourceCta ?? 'Playbook Popup').slice(0, 80),
-      lang: body.language === 'ar' ? 'ar' : 'en',
-      pageUrl: typeof body.pageUrl === 'string' ? body.pageUrl.slice(0, 500) : '',
+      email,
+      phone,
+      industry,
+      sourceCta,
+      lang,
+      pageUrl,
       playbook: wantsPlaybook,
       // Absolute, because Apps Script fetches it from the open internet.
       playbookUrl: wantsPlaybook ? `${SITE}${PLAYBOOK_PDF}` : undefined,
@@ -112,10 +131,14 @@ export default async function handler(req, res) {
     // that went unnoticed for weeks when the PDF 404'd. Surfaced, not swallowed.
     if (wantsPlaybook && result?.emailed === false) {
       console.error('[lead] row saved but playbook email failed:', result.emailError);
-      return send(res, 200, { ok: true, emailed: false });
+      return send(res, 200, { ok: true, emailed: false, crmSynced: true });
     }
 
-    return send(res, 200, { ok: true, emailed: wantsPlaybook ? true : undefined });
+    return send(res, 200, {
+      ok: true,
+      emailed: wantsPlaybook ? true : undefined,
+      crmSynced: true,
+    });
   } catch (err) {
     console.error('[lead] capture failed:', err.message);
     return send(res, 502, { ok: false, reason: 'capture_failed' });

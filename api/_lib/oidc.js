@@ -175,6 +175,10 @@ export function isConfigured(provider) {
   return !!(process.env[provider.idEnv] && process.env[provider.secretEnv]);
 }
 
+export function isProviderEnabled(provider) {
+  return provider?.id !== 'microsoft' && isConfigured(provider);
+}
+
 /**
  * Which providers this deployment can actually offer.
  *
@@ -184,7 +188,7 @@ export function isConfigured(provider) {
  * button that dead-ends in a 500 because the secret was never set.
  */
 export function configuredProviders() {
-  return Object.values(PROVIDERS).filter(isConfigured).map((p) => p.id);
+  return Object.values(PROVIDERS).filter(isProviderEnabled).map((p) => p.id);
 }
 
 function credentials(provider) {
@@ -231,7 +235,7 @@ export function redirectUriFor(req) {
 
   if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) return `http://${host}${CALLBACK_PATH}`;
 
-  const siteUrl = String(process.env.SITE_URL || '').trim().replace(/\/+$/, '');
+  const siteUrl = String(process.env.PUBLIC_SITE_ORIGIN || process.env.SITE_URL || 'https://www.bznsflowai.com').trim().replace(/\/+$/, '');
   let siteHost = '';
   try { siteHost = new URL(siteUrl).host.toLowerCase(); } catch { /* unset or malformed */ }
 

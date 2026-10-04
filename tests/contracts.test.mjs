@@ -89,9 +89,9 @@ t('/playbook is a prerendered route AND is in the sitemap', () => {
   // The page paid traffic lands on. A route that exists but is missing from
   // PAGES gets no sitemap entry and no hreflang pair — invisible in a way that
   // costs money rather than breaking a build.
-  const routes = read('src/routes.jsx');
-  assert.ok(/path: 'playbook'/.test(routes), "src/routes.jsx has no 'playbook' route");
-  assert.ok(/path: 'en\/playbook'/.test(routes), "src/routes.jsx has no 'en/playbook' route");
+  const routes = read('src/routes.ts');
+  assert.ok( /"path": "playbook"/.test(routes), "src/routes.jsx has no 'playbook' route");
+  assert.ok( /"path": "en\/playbook"/.test(routes), "src/routes.jsx has no 'en/playbook' route");
   assert.ok(
     PAGES.some((p) => p.path === '/playbook'),
     '/playbook is missing from PAGES — the campaign landing page would not be in the sitemap',
@@ -142,7 +142,7 @@ console.log('\nroutes and the sitemap');
 t('/signin is noindex and absent from the sitemap', () => {
   const manifest = read('src/routes-manifest.js');
   assert.ok(!manifest.includes('signin'), '/signin must stay out of PAGES');
-  assert.ok(read('src/pages/SignIn.jsx').includes('noindex'), 'SignIn must render <Seo noindex>');
+  assert.match(read('src/lib/route-seo.js'), /path === '\/signin'.*noindex: true/, 'Sign-in route metadata must remain noindex');
 });
 
 console.log('\nsocial sign-in wiring');

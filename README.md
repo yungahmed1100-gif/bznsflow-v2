@@ -14,7 +14,7 @@
 │   ├── lib/              constants, analytics, chat, cookies, countries, industries
 │   ├── styles/           imported in a load-bearing order by src/index.css
 │   ├── i18n/             en.js · ar.js — flat key→string maps
-│   └── routes.jsx        route table, prerendered by vite-react-ssg
+│   └── routes.ts         route modules, statically prerendered by React Router
 ├── api/                  Vercel serverless functions
 │   ├── chat.js           Layla's chat backend  → OpenAI + Supabase
 │   ├── auth-code.js      send a sign-in code   → Apps Script
@@ -97,3 +97,11 @@ went stale and pointed at a dead calendar.
 ## 📄 License
 
 All rights reserved © BznsFlow
+
+## Layla official Meta Cloud API pilot
+
+Owner-only mock pilot: `/owner/layla`. The dedicated BznsFlow number is configured directly in Meta Cloud API; customer Coexistence through Embedded Signup remains a separate post-App-Review phase. Read [engineering pack](docs/layla-meta-engineering.md) before changing it. Setup, tests and release blockers are saved at `Desktop/Layla-Meta-Handoff`. Live sending remains source-locked. Existing login and registration remain the identity authority.
+
+## Release verification
+
+Run `npm run test:release` for unit tests, Convex typechecking, static build, dependency audit, and browser suites. See [Green release evidence](docs/green-release-2026-10-05.md) for production gates, migration boundaries, and rollback.

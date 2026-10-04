@@ -9,7 +9,6 @@ import { CALENDAR_URL, WHATSAPP_URL, LANGUAGES } from '../lib/constants';
 import { setCookie, COOKIE } from '../lib/cookies';
 import { HOME_SEO, buildSchemas } from '../lib/schemas';
 import { TIERS, TIERS_AR } from '../data/tiers';
-import { Seo } from '../components/ui/Seo';
 
 // All sections are STATIC imports — they must be in the prerendered HTML for SEO.
 // (Previously React.lazy behind <Suspense>, which rendered nothing during SSG.)
@@ -110,13 +109,7 @@ export default function Home({ lang: routeLang = 'ar' }) {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
-      <Seo
-        lang={routeLang}
-        path="/"
-        title={seo.title}
-        description={seo.description}
-        jsonLd={jsonLd}
-      />
+
 
       <NavBar
         t={t} lang={lang} isScrolled={isScrolled} isMenuOpen={isMenuOpen}

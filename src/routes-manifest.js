@@ -1,5 +1,5 @@
 // Single source of truth for the site's prerendered routes.
-// Read by: the SSG route table (src/routes.jsx), the sitemap generator
+// Read by: the React Router config (src/routes.ts), the sitemap generator
 // (scripts/gen-sitemap.mjs), and the <Seo> hreflang logic.
 //
 // Arabic is the canonical/primary language (unprefixed). The English mirror is

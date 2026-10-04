@@ -38,6 +38,12 @@ export const INDUSTRIES = [
   { id: 'other',         en: 'Something else',           ar: 'مجال آخر' },
 ];
 
-/** Every valid slug, as a Set — the validator's only real question. */
-export const INDUSTRY_IDS = new Set(INDUSTRIES.map((i) => i.id));
+/** The electronics pack is a Hasib-only specialization under retail. */
+export const ELECTRONICS_INDUSTRY = { id: 'retail-tech', en: 'Electronics and phone store', ar: 'متجر الإلكترونيات والهواتف' };
+export const BUSINESS_INDUSTRIES = Object.freeze([...INDUSTRIES.slice(0, -1), ELECTRONICS_INDUSTRY, INDUSTRIES.at(-1)]);
+export function businessIndustryId(value) {
+  return BUSINESS_INDUSTRIES.find(industry => industry.en === value || industry.ar === value)?.id || null;
+}
 
+/** Every valid slug, as a Set — the validator's only real question. */
+export const INDUSTRY_IDS = new Set(BUSINESS_INDUSTRIES.map((i) => i.id));

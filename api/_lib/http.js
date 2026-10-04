@@ -9,6 +9,8 @@
 // genuinely different, shaping every response to the widget's invariant that a
 // `reply` string is present at every status code.
 
+import { PilotError } from './layla/config.js';
+
 /**
  * Write a JSON response.
  *
@@ -27,6 +29,12 @@ export function send(res, status, payload, options = {}) {
   res.setHeader('Cache-Control', 'no-store');
   if (options.vary) res.setHeader('Vary', options.vary);
   res.end(JSON.stringify(payload));
+}
+
+export function sendPilotError(res, error, { fallback = 'unavailable', vary } = {}) {
+  const decided = error instanceof PilotError;
+  return send(res, decided ? error.status : 503,
+    { ok: false, reason: decided ? error.code : fallback }, vary ? { vary } : {});
 }
 
 /**

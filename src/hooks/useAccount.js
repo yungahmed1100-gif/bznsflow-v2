@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 // Who is signed in, for the pages that only want to say so.
 //
-// Every route on this site is prerendered by vite-react-ssg, so the HTML that
+// Every route on this site is prerendered by React Router, so the HTML that
 // reaches the browser cannot know about the session cookie — bf_session is
 // HttpOnly, which is also why no script can shortcut this by reading it. The
 // only way to answer "who is this" on a static page is to ask, once, after

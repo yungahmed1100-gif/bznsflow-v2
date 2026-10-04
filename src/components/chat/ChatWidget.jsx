@@ -9,14 +9,15 @@ import laylaAvatar from '../../assets/layla-avatar.png';
 // wired to the live n8n /webhook/chat backend. Bilingual + RTL-aware, typing
 // indicator, and a WhatsApp handoff button when the backend flags handoff:true.
 
-export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange = () => {} }) {
+// `respond` replaces the live chat backend (the setup page answers from a fixed scenario list);
+// `suggestions` are one-tap questions shown under the greeting.
+export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange = () => {}, respond = null, suggestions = [] }) {
   const isAr = lang === 'ar';
   const [isOpen, setIsOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]); // { role: 'user'|'layla', text, handoff?, handoffContext? }
   const [isTyping, setIsTyping] = useState(false);
-  const [error, setError] = useState(false);
 
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
@@ -64,18 +65,17 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, closePanel]);
 
-  const send = useCallback(async () => {
-    const text = input.trim();
+  const send = useCallback(async (preset) => {
+    const text = (typeof preset === 'string' ? preset : input).trim();
     if (!text || isTyping) return;
 
-    setError(false);
     setInput('');
     setMessages((prev) => [...prev, { role: 'user', text }]);
     setIsTyping(true);
     trackEvent('ChatMessageSent', { source: 'widget' });
 
     try {
-      const res = await sendChatMessage(text, sessionRef.current);
+      const res = respond ? await respond(text) : await sendChatMessage(text, sessionRef.current);
       setMessages((prev) => [
         ...prev,
         {
@@ -87,12 +87,11 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
       ]);
       if (res.handoff) trackEvent('ChatHandoff', { source: 'widget' });
     } catch (_) {
-      setError(true);
       setMessages((prev) => [...prev, { role: 'layla', text: t.chat_error }]);
     } finally {
       setIsTyping(false);
     }
-  }, [input, isTyping, t.chat_error, trackEvent]);
+  }, [input, isTyping, t.chat_error, trackEvent, respond]);
 
   const onInputKey = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -143,7 +142,7 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
           </button>
         </header>
 
-        <div className="chat-body" ref={scrollRef}>
+        <div className="chat-body" ref={scrollRef} tabIndex={0} aria-label={t.chat_messages_label || t.chat_title}>
           {messages.map((m, i) => (
             <div key={i} className={`chat-msg chat-msg--${m.role}`}>
               {m.role === 'layla' && (
@@ -188,6 +187,15 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
             </div>
           ))}
 
+          {suggestions.length > 0 && messages.length === 1 && !isTyping && (
+            <div className="chat-suggestions" role="group" aria-label={t.chat_suggestions_label || 'Suggested questions'}>
+              {suggestions.map((item) => {
+                const question = typeof item === 'string' ? item : item.question;
+                const label = typeof item === 'string' ? item : item.label;
+                return <button key={question} type="button" className="chat-suggestion" onClick={() => send(question)}>{label}</button>;
+              })}
+            </div>
+          )}
           {isTyping && (
             <div className="chat-msg chat-msg--layla">
               <img src={laylaAvatar} alt="" className="chat-msg-avatar" width="28" height="28" />

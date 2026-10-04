@@ -6,7 +6,7 @@
 // copies of a timeout is four chances to forget the `finally`, which leaks a
 // timer on every success.
 //
-// Timeouts are NOT unified — they legitimately differ (Supabase 5s, Apps Script
+// Timeouts are NOT unified — they legitimately differ (Convex route timeouts, Apps Script
 // 10s, OpenAI 15s) because the services differ. The caller passes one.
 
 /**
@@ -21,12 +21,12 @@
  * @throws {Error} on timeout, abort or network failure — never on a non-2xx,
  *   which the caller inspects itself.
  */
-export async function fetchWithTimeout(url, init, { label, timeoutMs }) {
+export async function fetchWithTimeout(url, init, { label, timeoutMs, fetcher = fetch }) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    return await fetcher(url, { ...init, signal: controller.signal });
   } catch (err) {
     if (err?.name === 'AbortError' || err?.name === 'TimeoutError') {
       throw new Error(`${label} timed out after ${timeoutMs}ms`);

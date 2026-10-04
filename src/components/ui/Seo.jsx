@@ -1,19 +1,6 @@
 import React from 'react';
-import { Head } from 'vite-react-ssg';
 import { SITE, urlFor } from '../../routes-manifest';
 
-// Per-page head: title, description, canonical, reciprocal hreflang (en/ar/
-// x-default), OpenGraph/Twitter, and optional JSON-LD. Rendered into the static
-// HTML at build time via vite-react-ssg's <Head>. Global tags (favicons, fonts,
-// Organization/WebSite JSON-LD) stay in index.html and are copied to every page.
-//
-// Props:
-//   lang     — 'ar' | 'en' (the locale of THIS prerendered page)
-//   path     — the canonical (Arabic, unprefixed) path, e.g. '/' or '/pricing'
-//   title, description — page-specific copy
-//   ogImage  — absolute or root-relative image (defaults to og-image.jpg)
-//   jsonLd   — array of schema.org objects to embed
-//   noindex  — set true to keep a page out of the index
 export function Seo({
   lang = 'en',
   path = '/',
@@ -23,7 +10,6 @@ export function Seo({
   jsonLd = [],
   noindex = false,
 }) {
-  const dir = lang === 'ar' ? 'rtl' : 'ltr';
   const canonical = urlFor(path, lang);
   const enUrl = urlFor(path, 'en');
   const arUrl = urlFor(path, 'ar');
@@ -31,8 +17,7 @@ export function Seo({
   const ogLocaleAlt = lang === 'ar' ? 'en_US' : 'ar_AE';
 
   return (
-    <Head>
-      <html lang={lang} dir={dir} />
+    <>
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonical} />
@@ -73,6 +58,6 @@ export function Seo({
           {JSON.stringify(schema)}
         </script>
       ))}
-    </Head>
+    </>
   );
 }

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Seo } from '../components/ui/Seo';
 import { Icon } from '../components/ui/Icon';
 import { getStrings } from '../i18n';
 import { PRIVACY, PRIVACY_UPDATED_ISO, privacyTables } from '../content/privacy';
@@ -83,12 +82,7 @@ export default function Privacy({ lang = 'ar' }) {
 
   return (
     <>
-      <Seo
-        lang={lang}
-        path="/privacy"
-        title={`${doc.title} — BznsFlow`}
-        description={doc.lead.slice(0, 155)}
-      />
+
 
       <main className="legal-shell" id="main-content">
         <header className="legal-nav">

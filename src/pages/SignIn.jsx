@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Seo } from '../components/ui/Seo';
 import { Icon } from '../components/ui/Icon';
 import { BrandMark } from '../components/ui/BrandMark';
 import { getStrings } from '../i18n';
@@ -275,13 +274,7 @@ export default function SignIn({ lang = 'ar' }) {
 
   return (
     <>
-      <Seo
-        lang={lang}
-        path="/signin"
-        title={t.auth_seo_title}
-        description={t.auth_seo_desc}
-        noindex
-      />
+
 
       <main className="auth-shell" id="main-content">
         <div className="auth-aurora" aria-hidden="true">

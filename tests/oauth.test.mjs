@@ -78,6 +78,7 @@ t('returns null for anything unknown', () => {
 t('reports only the providers whose secrets are set', () => {
   const ids = configuredProviders();
   assert.ok(ids.includes('google'), 'google is configured in this test env');
+  assert.equal(ids.includes('microsoft'), false, 'Microsoft remains disabled pending configuration and callback verification');
   assert.equal(isConfigured(PROVIDERS.google), true);
 });
 t('every provider declares the fields the flow needs', () => {

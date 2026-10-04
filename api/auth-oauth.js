@@ -17,7 +17,7 @@
 // nothing useful to show them anywhere else.
 
 import {
-  providerFor, isConfigured, buildAuthorizeUrl, pkceChallenge,
+  providerFor, isProviderEnabled, buildAuthorizeUrl, pkceChallenge,
   redirectUriFor, signinPath,
 } from './_lib/oidc.js';
 import { randomToken, setOauthCookie } from './_lib/cookies.js';
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
   // Unknown provider, or one whose secrets were never set. The page only
   // renders buttons for configured providers, so reaching this means a
   // hand-typed URL or a half-finished deployment.
-  if (!provider || !isConfigured(provider)) {
+  if (!provider || !isProviderEnabled(provider)) {
     return redirect(res, `${signinPath(lang)}?e=provider`);
   }
 

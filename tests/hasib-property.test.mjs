@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { convexMemory } from './helpers/convex-memory.mjs';
+import { executeProperty } from '../convex/hasib/propertyState.js';
+import { hasibPack } from '../config/hasib-packs.js';
+const value = r => { assert.equal(r.ok, true, r.reason); return r.value; };
+test('a listing is idempotent per request, isolated per business, and verified only on purpose', async () => {
+  const m = convexMemory(), tenant = { accountId: 'accounts_a', pack: hasibPack('real-estate'), row: {} };
+  const run = (operation, args = {}) => executeProperty(m.ctx, tenant, { operation, ...args }, m.now());
+  const requestId = randomUUID();
+  const property = value(await run('property_save', { requestId, workflow: { label: 'Villa', location: 'Muscat', askingPriceMinor: 100000000 } }));
+  assert.equal(value(await run('property_save', { requestId, workflow: {} })).id, property.id);
+  assert.equal(property.verificationAt, undefined, 'saving does not verify');
+  assert.equal(m.table('hasibOrders').length, 0, 'an asking price never becomes a charge');
+  assert.equal((await run('property_verify', { propertyId: property.id, version: 0 })).reason, 'property_conflict');
+  const verified = value(await run('property_verify', { propertyId: property.id, version: property.version, status: 'confirmed' }));
+  assert.deepEqual([verified.verificationAt, verified.authorityStatus], [m.now(), 'confirmed']);
+  assert.equal((await run('enquiry_create', { requestId: randomUUID(), workflow: {} })), null, 'the old enquiry model is retired');
+  assert.equal((await executeProperty(m.ctx, { ...tenant, accountId: 'accounts_b' }, { operation: 'property_save', propertyId: property.id, version: property.version, workflow: { availability: 'available' } }, m.now())).reason, 'property_not_found');
+});

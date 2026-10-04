@@ -1,0 +1,7 @@
+.owner-home { max-width: 1100px; margin: auto; padding: 32px 20px; color: #172333; background: #fff; min-height: 100vh; overflow-wrap: anywhere; }
+.owner-home h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); }
+.owner-home section { padding: 24px 0; border-bottom: 1px solid #cad4df; }
+.owner-home a { color: #174e87; text-decoration: underline; text-underline-offset: 3px; }
+.owner-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.owner-cards a { display: grid; gap: 12px; padding: 20px; border: 1px solid #adc4da; border-radius: 12px; background: #f4f8fc; }
+.owner-cards span { color: #394b60; font-size: .875rem; }

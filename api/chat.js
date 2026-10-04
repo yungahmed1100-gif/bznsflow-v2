@@ -61,7 +61,7 @@ export default async function handler(req, res) {
   } catch (err) {
     // Fail OPEN. The limiter protects a cost ceiling, not correctness or data,
     // and the global ceiling is a far bigger lever than any single IP. Failing
-    // closed here would take the whole chat down on a transient Supabase blip.
+    // closed here would take the whole chat down on a transient storage failure.
     console.error('[chat] rate limit check failed, allowing request:', err.message);
   }
 

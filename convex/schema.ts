@@ -1,0 +1,212 @@
+import { workflowTables } from './hasib/workflowSchema';
+import { automotiveTables } from './hasib/automotiveSchema';
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+// Shared Green production schema: website state, authentication, Catalyst and
+// Ascend tables live in this deployment. Blue testing uses a separate deployment.
+const path = v.union(v.literal('coexistence'), v.literal('new_number'), v.literal('existing_cloud'));
+const qualificationField = v.object({key:v.string(),value:v.string(),source:v.string(),confidence:v.number(),at:v.number()});
+const consent = v.object({status:v.union(v.literal('unknown'),v.literal('granted'),v.literal('revoked')),source:v.optional(v.string()),date:v.optional(v.string()),purpose:v.optional(v.string()),attestedAt:v.optional(v.number()),batchId:v.optional(v.id('blueConsentBatches'))});
+export const instagramCredential = v.object({v:v.number(),iv:v.string(),data:v.string(),tag:v.string()});
+export const instagramIntegration = v.object({id:v.string(),channel:v.literal('instagram'),app:v.string(),igAccount:v.string(),oauthUserId:v.optional(v.string()),username:v.string(),credential:v.optional(instagramCredential)});
+export default defineSchema({
+  ...workflowTables,
+  ...automotiveTables,
+  // ── Hasib: orders, stock and payments (docs/hasib-engineering.md). Money is integer baisa. ──
+  hasibSettings: defineTable({accountId:v.id('accounts'),packId:v.optional(v.string()),currency:v.string(),vatRegistered:v.boolean(),vatRateBps:v.number(),pricesIncludeVat:v.boolean(),vatin:v.optional(v.string()),stockPolicy:v.union(v.literal('warn'),v.literal('block')),unsoldDays:v.optional(v.number()),absenceDays:v.optional(v.number()),listingFreshnessDays:v.optional(v.number()),constructionIncidentHoursDenominator:v.optional(v.number()),updatedAt:v.number()}).index('by_account',['accountId']),
+  // Plan grants: Hasib opens only for Ascend/Apex accounts. Operator-managed, never deletes data.
+  blueEntitlements: defineTable({accountId:v.id('accounts'),plan:v.string(),status:v.string(),grantedAt:v.number(),revokedAt:v.optional(v.number()),note:v.optional(v.string())}).index('by_account',['accountId']),
+  // Explicit product access keyed by verified email. A pending grant can be issued before signup.
+  greenOwnerImports: defineTable({accountId:v.id('accounts'),sourceIntegration:v.optional(v.object({id:v.string(),phone:v.string(),waba:v.string()})),boundIntegrationId:v.optional(v.string()),fingerprint:v.string(),counts:v.object({contacts:v.number(),conversations:v.number(),messages:v.number(),catalog:v.number()}),rows:v.array(v.object({sourceTable:v.string(),sourceId:v.string(),destinationId:v.string()})),importedAt:v.number()}).index('by_owner',['accountId']),
+  blueAccessGrants: defineTable({email:v.string(),packId:v.optional(v.string()),plan:v.union(v.literal('catalyst'),v.literal('ascend')),status:v.union(v.literal('active'),v.literal('revoked')),grantedAt:v.number(),grantedBy:v.string(),revokedAt:v.optional(v.number()),revokedBy:v.optional(v.string()),note:v.optional(v.string())}).index('by_email',['email']).index('by_status',['status']),
+  blueAccessAudit: defineTable({email:v.string(),packId:v.optional(v.string()),action:v.union(v.literal('grant'),v.literal('revoke')),plan:v.optional(v.union(v.literal('catalyst'),v.literal('ascend'))),actorEmail:v.string(),note:v.optional(v.string()),at:v.number()}).index('by_email_at',['email','at']),
+  greenWebsiteLeads: defineTable({email:v.string(),name:v.optional(v.string()),phone:v.optional(v.string()),country:v.optional(v.string()),industry:v.optional(v.string()),lang:v.optional(v.string()),sourceKey:v.string(),sourceUrl:v.optional(v.string()),sourceCta:v.optional(v.string()),verified:v.boolean(),createdAt:v.number(),updatedAt:v.number()}).index('by_email',['email']).index('by_updated',['updatedAt']),
+  greenChatConversations: defineTable({sessionKey:v.string(),lang:v.union(v.literal('ar'),v.literal('en')),handoff:v.boolean(),lastAt:v.number(),createdAt:v.number(),legacySourceId:v.optional(v.string())}).index('by_session_key',['sessionKey']).index('by_legacy_source',['legacySourceId']),
+  greenChatMessages: defineTable({conversationId:v.id('greenChatConversations'),seq:v.number(),role:v.union(v.literal('user'),v.literal('assistant')),content:v.string(),createdAt:v.number(),legacySourceId:v.optional(v.string())}).index('by_conversation_seq',['conversationId','seq']).index('by_legacy_source',['legacySourceId']),
+  greenRateLimits: defineTable({key:v.string(),count:v.number(),expiresAt:v.number()}).index('by_key',['key']).index('by_expiry',['expiresAt']),
+  ascendWorkspaces: defineTable({managerAccountId:v.id('accounts'),employeeLimit:v.number(),createdAt:v.number(),updatedAt:v.number()}).index('by_manager',['managerAccountId']),
+  ascendWorkspaceMembers: defineTable({workspaceId:v.id('ascendWorkspaces'),accountId:v.optional(v.id('accounts')),email:v.string(),status:v.string(),operationalRole:v.optional(v.string()),invitedAt:v.number(),resentAt:v.optional(v.number()),activatedAt:v.optional(v.number()),revokedAt:v.optional(v.number()),updatedAt:v.number()}).index('by_workspace',['workspaceId']).index('by_account',['accountId']).index('by_email',['email']).index('by_email_status',['email','status']),
+  ascendActivity: defineTable({accountId:v.id('accounts'),workspaceId:v.id('ascendWorkspaces'),actorAccountId:v.id('accounts'),actorRole:v.string(),action:v.string(),entityType:v.string(),entityId:v.string(),details:v.optional(v.string()),at:v.number()}).index('by_account_at',['accountId','at']).index('by_entity',['entityType','entityId']),
+  hasibCounters: defineTable({accountId:v.id('accounts'),kind:v.string(),next:v.number()}).index('by_account_kind',['accountId','kind']),
+  hasibItems: defineTable({accountId:v.id('accounts'),requestId:v.optional(v.string()),kind:v.union(v.literal('product'),v.literal('service')),nameAr:v.string(),nameEn:v.string(),category:v.string(),unit:v.string(),catalogEntryKey:v.optional(v.string()),trackStock:v.boolean(),serialized:v.optional(v.boolean()),warrantyMonths:v.optional(v.number()),warrantyBy:v.optional(v.string()),photoId:v.optional(v.id('_storage')),archived:v.boolean(),searchText:v.string(),createdAt:v.number(),updatedAt:v.number()})
+    .index('by_account_archived_updated',['accountId','archived','updatedAt']).index('by_account_request',['accountId','requestId']).index('by_photo',['photoId'])
+    .searchIndex('search_items',{searchField:'searchText',filterFields:['accountId','archived']}),
+  hasibVariants: defineTable({accountId:v.id('accounts'),itemId:v.id('hasibItems'),sku:v.string(),options:v.array(v.object({key:v.string(),value:v.string()})),priceMinor:v.number(),costMinor:v.number(),costKnown:v.optional(v.boolean()),onHand:v.number(),reorderPoint:v.number(),low:v.boolean(),archived:v.boolean(),updatedAt:v.number()})
+    .index('by_item',['itemId']).index('by_account_sku',['accountId','sku']).index('by_account_low',['accountId','low']),
+  // Append-only. onHand on the variant is maintained in the same mutation and reconciled against this ledger.
+  hasibPhotoUploads: defineTable({accountId:v.id('accounts'),storageId:v.id('_storage'),at:v.number()}).index('by_storage',['storageId']),
+  hasibStockMoves: defineTable({accountId:v.id('accounts'),variantId:v.id('hasibVariants'),delta:v.number(),reason:v.string(),refType:v.optional(v.string()),refId:v.optional(v.string()),unitCostMinor:v.optional(v.number()),note:v.optional(v.string()),onHandAfter:v.number(),lotAllocations:v.optional(v.array(v.object({lotId:v.id('hasibStockLots'),qty:v.number()}))),reversesMoveId:v.optional(v.id('hasibStockMoves')),requestId:v.optional(v.string()),at:v.number()})
+    .index('by_ref',['accountId','refId']).index('by_variant_at',['variantId','at']).index('by_account_at',['accountId','at']).index('by_account_request',['accountId','requestId']),
+  hasibRecipes: defineTable({accountId:v.id('accounts'),menuVariantId:v.id('hasibVariants'),ingredients:v.array(v.object({variantId:v.id('hasibVariants'),qty:v.number(),unit:v.string()})),yieldQty:v.number(),costMinor:v.number(),version:v.optional(v.number()),modifiers:v.optional(v.array(v.object({key:v.string(),label:v.string(),priceMinor:v.number(),ingredients:v.array(v.object({variantId:v.id('hasibVariants'),qty:v.number(),unit:v.string()}))}))),updatedAt:v.number()})
+    .index('by_account_updated',['accountId','updatedAt']).index('by_menu_variant',['menuVariantId']),
+  hasibWaste: defineTable({accountId:v.id('accounts'),requestId:v.string(),variantId:v.id('hasibVariants'),qty:v.number(),reason:v.string(),costMinor:v.number(),note:v.optional(v.string()),at:v.number()})
+    .index('by_account_at',['accountId','at']).index('by_account_request',['accountId','requestId']),
+  hasibInventoryCounts: defineTable({accountId:v.id('accounts'),requestId:v.string(),variantId:v.id('hasibVariants'),expectedQty:v.number(),countedQty:v.number(),varianceQty:v.number(),costMinor:v.number(),note:v.optional(v.string()),at:v.number()})
+    .index('by_account_at',['accountId','at']).index('by_account_request',['accountId','requestId']),
+  hasibSupplierInvoices: defineTable({accountId:v.id('accounts'),requestId:v.string(),vendor:v.string(),invoiceNumber:v.optional(v.string()),receivedOn:v.string(),lines:v.array(v.object({variantId:v.id('hasibVariants'),qty:v.number(),unitCostMinor:v.number(),previousCostMinor:v.optional(v.number()),totalMinor:v.number(),useBy:v.optional(v.string())})),totalMinor:v.number(),createdAt:v.number()})
+    .index('by_account_created',['accountId','createdAt']).index('by_account_request',['accountId','requestId']),
+  hasibPrepBatches: defineTable({accountId:v.id('accounts'),requestId:v.string(),outputVariantId:v.id('hasibVariants'),outputQty:v.number(),inputs:v.array(v.object({variantId:v.id('hasibVariants'),qty:v.number()})),costMinor:v.number(),note:v.optional(v.string()),producedOn:v.optional(v.string()),useBy:v.optional(v.string()),at:v.number()})
+    .index('by_account_at',['accountId','at']).index('by_account_request',['accountId','requestId']),
+  hasibStockLots: defineTable({accountId:v.id('accounts'),variantId:v.id('hasibVariants'),sourceType:v.string(),sourceId:v.optional(v.string()),receivedOn:v.optional(v.string()),useBy:v.optional(v.string()),originalQty:v.number(),shortCoveredQty:v.optional(v.number()),remainingQty:v.number(),unitCostMinor:v.number(),createdAt:v.number()})
+    .index('by_account_created',['accountId','createdAt']).index('by_variant_created',['variantId','createdAt']),
+  hasibOrders: defineTable({accountId:v.id('accounts'),number:v.number(),requestId:v.string(),contactId:v.optional(v.id('blueContacts')),conversationId:v.optional(v.id('blueConversations')),customerName:v.optional(v.string()),
+    channel:v.string(),channelCostMinor:v.optional(v.number()),operationalCostMinor:v.optional(v.number()),operationalCostKnown:v.optional(v.boolean()),preparationChecklist:v.optional(v.array(v.object({text:v.string(),done:v.boolean()}))),status:v.string(),lines:v.array(v.object({variantId:v.optional(v.id('hasibVariants')),itemId:v.optional(v.id('hasibItems')),name:v.string(),sku:v.optional(v.string()),qty:v.number(),unitPriceMinor:v.number(),discountMinor:v.number(),vatBps:v.number(),netMinor:v.number(),vatMinor:v.number(),unitCostMinor:v.number(),costKnown:v.optional(v.boolean()),modifierKeys:v.optional(v.array(v.string())),modifierPriceMinor:v.optional(v.number()),recipeSnapshot:v.optional(v.array(v.object({variantId:v.id('hasibVariants'),qty:v.number(),unit:v.string(),unitCostMinor:v.number()}))),tracked:v.boolean(),role:v.optional(v.string()),serialized:v.optional(v.boolean()),serials:v.optional(v.array(v.string())),warrantyMonths:v.optional(v.number()),warrantyBy:v.optional(v.string()),warrantyUntil:v.optional(v.number())})),
+    subtotalMinor:v.number(),discountMinor:v.number(),deliveryMinor:v.number(),vatMinor:v.number(),totalMinor:v.number(),pricesIncludeVat:v.boolean(),paidMinor:v.number(),paymentStatus:v.string(),
+    fulfilment:v.object({type:v.string(),area:v.optional(v.string()),dueAt:v.optional(v.number())}),customFields:v.array(v.object({key:v.string(),value:v.string()})),notes:v.optional(v.string()),stockShort:v.boolean(),
+    history:v.array(v.object({status:v.string(),at:v.number()})),kind:v.optional(v.string()),source:v.optional(v.string()),flags:v.optional(v.array(v.string())),version:v.number(),createdAt:v.number(),updatedAt:v.number()})
+    .index('by_account_created',['accountId','createdAt']).index('by_account_status_created',['accountId','status','createdAt']).index('by_account_request',['accountId','requestId']).index('by_contact_created',['contactId','createdAt']).index('by_conversation_status',['conversationId','status']),
+  hasibExpenses: defineTable({accountId:v.id('accounts'),requestId:v.string(),number:v.number(),category:v.string(),amountMinor:v.number(),vatMinor:v.number(),vendor:v.optional(v.string()),method:v.string(),paidOn:v.string(),paidAt:v.number(),note:v.optional(v.string()),voided:v.boolean(),voidedAt:v.optional(v.number()),createdAt:v.number()})
+    .index('by_account_paid',['accountId','paidAt']).index('by_account_request',['accountId','requestId']),
+  // A customer asked Layla about a product. PII-free: contact id only; removed when the contact is deleted.
+  hasibDemandSignals: defineTable({accountId:v.id('accounts'),contactId:v.id('blueContacts'),conversationId:v.optional(v.id('blueConversations')),itemId:v.optional(v.id('hasibItems')),text:v.string(),key:v.string(),kind:v.string(),outOfStock:v.boolean(),at:v.number()})
+    .index('by_account_at',['accountId','at']).index('by_contact_at',['contactId','at']),
+  // One row per physical unit (IMEI/serial). For a serialized variant, onHand always equals rows in_stock.
+  hasibSerials: defineTable({accountId:v.id('accounts'),variantId:v.id('hasibVariants'),itemId:v.id('hasibItems'),serial:v.string(),status:v.string(),source:v.string(),costMinor:v.number(),
+    orderId:v.optional(v.id('hasibOrders')),contactId:v.optional(v.id('blueContacts')),reservedAt:v.optional(v.number()),soldAt:v.optional(v.number()),warrantyUntil:v.optional(v.number()),warrantyBy:v.optional(v.string()),
+    note:v.optional(v.string()),receivedAt:v.number(),updatedAt:v.number()})
+    .index('by_account_serial',['accountId','serial']).index('by_variant_status',['variantId','status']).index('by_order',['orderId']),
+  hasibTradeIns: defineTable({accountId:v.id('accounts'),requestId:v.string(),number:v.number(),variantId:v.id('hasibVariants'),serial:v.string(),costMinor:v.number(),method:v.string(),
+    contactId:v.optional(v.id('blueContacts')),customerName:v.optional(v.string()),note:v.optional(v.string()),at:v.number()})
+    .index('by_account_at',['accountId','at']).index('by_account_request',['accountId','requestId']).index('by_contact',['contactId']),
+  // Repair tickets carry the workshop status; their money, parts and deposit live on a linked order.
+  hasibRepairs: defineTable({accountId:v.id('accounts'),requestId:v.string(),number:v.number(),orderId:v.id('hasibOrders'),contactId:v.optional(v.id('blueContacts')),conversationId:v.optional(v.id('blueConversations')),
+    customerName:v.optional(v.string()),device:v.string(),serial:v.optional(v.string()),fault:v.string(),accessories:v.optional(v.string()),status:v.string(),approvalStatus:v.optional(v.string()),approvedBy:v.optional(v.string()),approvedAt:v.optional(v.number()),underWarranty:v.boolean(),warrantyBy:v.optional(v.string()),
+    labourMinor:v.number(),parts:v.array(v.object({variantId:v.id('hasibVariants'),qty:v.number(),unitPriceMinor:v.optional(v.number())})),dueAt:v.optional(v.number()),
+    history:v.array(v.object({status:v.string(),at:v.number()})),version:v.number(),createdAt:v.number(),updatedAt:v.number()})
+    .index('by_account_created',['accountId','createdAt']).index('by_account_status_created',['accountId','status','createdAt']).index('by_account_request',['accountId','requestId'])
+    .index('by_account_serial',['accountId','serial']).index('by_contact',['contactId']),
+  // Signed amounts: refunds are negative. Recorded only — BznsFlow never holds funds.
+  hasibPayments: defineTable({accountId:v.id('accounts'),orderId:v.id('hasibOrders'),requestId:v.string(),amountMinor:v.number(),method:v.string(),reference:v.optional(v.string()),at:v.number()})
+    .index('by_order_at',['orderId','at']).index('by_account_request',['accountId','requestId']).index('by_account_at',['accountId','at']),
+  blueInstagramAttempts: defineTable({sessionHash:v.string(),stateHash:v.string(),lang:v.string(),createdAt:v.number(),expiresAt:v.number(),used:v.boolean(),completed:v.boolean()}).index('by_session',['sessionHash']).index('by_expiry',['expiresAt']),
+  blueInstagramConnections: defineTable({accountId:v.id('accounts'),sessionHash:v.string(),igAccount:v.string(),oauthUserId:v.optional(v.string()),integrationId:v.string(),integration:instagramIntegration,status:v.string(),connectedAt:v.optional(v.number()),tokenExpiresAt:v.number(),checkedAt:v.number(),refreshAt:v.number(),updatedAt:v.number(),deletePending:v.optional(v.boolean()),deletionCode:v.optional(v.string())}).index('by_account',['accountId']).index('by_ig_account',['igAccount']).index('by_oauth_user',['oauthUserId']).index('by_integration',['integrationId']).index('by_status_refresh',['status','refreshAt']).index('by_delete',['deletePending']).index('by_deletion_code',['deletionCode']),
+  blueMessagingSettings: defineTable({key:v.string(),enabled:v.boolean(),rolloutMode:v.optional(v.union(v.literal('smoke'),v.literal('live'))),smokeAccountId:v.optional(v.id('accounts')),smokeRecipient:v.optional(v.string()),smokeExpiresAt:v.optional(v.number()),smokeVerifiedAt:v.optional(v.number()),smokeEvidence:v.optional(v.string())}).index('by_key',['key']),
+  blueReviewerAccess: defineTable({tokenHash:v.string(),accountId:v.id('accounts'),expiresAt:v.number()}).index('by_hash',['tokenHash']).index('by_expiry',['expiresAt']),
+  blueMessagingControls: defineTable({integrationId:v.string(),sessionHash:v.string(),accountId:v.id('accounts'),active:v.boolean(),reason:v.string(),activatedAt:v.number(),healthAt:v.number(),profileVersion:v.number()}).index('by_integration',['integrationId']).index('by_active_health',['active','healthAt']),
+  // contactId is optional so existing rows stay valid; they are linked lazily.
+  blueConversations: defineTable({igAccount:v.optional(v.string()),channel:v.optional(v.union(v.literal('whatsapp'),v.literal('instagram'))),key:v.string(),integrationId:v.string(),accountId:v.id('accounts'),number:v.string(),contactId:v.optional(v.id('blueContacts')),version:v.optional(v.number()),lastInbound:v.number(),takeover:v.boolean(),optout:v.boolean(),updatedAt:v.number()}).index('by_key',['key']).index('by_account_updated',['accountId','updatedAt']).index('by_contact',['contactId']).index('by_instagram',['accountId','igAccount']),
+  blueMessages: defineTable({key:v.string(),integrationId:v.string(),accountId:v.id('accounts'),conversationId:v.id('blueConversations'),conversationVersion:v.optional(v.number()),profileVersion:v.optional(v.number()),realEstateOpportunityId:v.optional(v.id('realEstateOpportunities')),realEstateDraftId:v.optional(v.id('realEstateDrafts')),direction:v.string(),text:v.optional(v.string()),topic:v.optional(v.string()),at:v.number(),expiresAt:v.number(),textExpiresAt:v.number(),status:v.string(),manual:v.optional(v.boolean()),handoff:v.optional(v.boolean()),reason:v.optional(v.string()),intent:v.optional(v.string()),attemptAt:v.optional(v.number()),providerId:v.optional(v.string()),errorCode:v.optional(v.number()),media:v.optional(v.object({kind:v.literal('image'),storageId:v.id('_storage')}))}).index('by_key',['key']).index('by_account_at',['accountId','at']).index('by_conversation_at',['conversationId','at']).index('by_integration_status',['integrationId','status']).index('by_status_at',['status','at']).index('by_provider',['providerId']).index('by_intent',['intent']).index('by_expiry',['expiresAt']).index('by_text_expiry',['textExpiresAt']),
+  // One record per customer number per account. Deleted contacts become PII-free
+  // tombstones that keep only the keyed number hash and opt-out state.
+  blueContacts: defineTable({channel:v.optional(v.union(v.literal('whatsapp'),v.literal('instagram'))),igId:v.optional(v.string()),igAccount:v.optional(v.string()),accountId:v.id('accounts'),key:v.string(),state:v.union(v.literal('active'),v.literal('deleted')),waId:v.optional(v.string()),numberHash:v.string(),countryIso:v.optional(v.string()),
+    ownerName:v.optional(v.string()),customerName:v.optional(v.string()),profileName:v.optional(v.string()),source:v.union(v.literal('inbound'),v.literal('manual'),v.literal('import')),
+    sectorId:v.string(),fields:v.array(qualificationField),qualificationStatus:v.string(),qualificationOverride:v.optional(v.string()),asked:v.optional(v.array(v.string())),askCounts:v.optional(v.array(v.object({key:v.string(),count:v.number()}))),lastAskedAt:v.optional(v.number()),
+    consent:consent,optout:v.boolean(),optoutAt:v.optional(v.number()),lastActivityAt:v.number(),lastInboundAt:v.optional(v.number()),searchText:v.optional(v.string()),createdAt:v.number(),updatedAt:v.number(),deletedAt:v.optional(v.number())})
+    .index('by_key',['key']).index('by_account_state_activity',['accountId','state','lastActivityAt']).index('by_account_hash',['accountId','numberHash']).index('by_instagram',['accountId','igAccount'])
+    .searchIndex('search_contacts',{searchField:'searchText',filterFields:['accountId','state']}),
+  blueConsentBatches: defineTable({accountId:v.id('accounts'),source:v.string(),date:v.string(),purpose:v.string(),attestedAt:v.number(),requestId:v.string(),count:v.number()}).index('by_account_request',['accountId','requestId']),
+  blueBusinessSettings: defineTable({accountId:v.id('accounts'),timezone:v.string(),updatedAt:v.number()}).index('by_account',['accountId']),
+  blueTemplates: defineTable({accountId:v.id('accounts'),integrationId:v.string(),templateId:v.string(),name:v.string(),language:v.string(),category:v.string(),status:v.string(),parameterFormat:v.string(),
+    header:v.optional(v.object({format:v.string(),text:v.optional(v.string())})),body:v.string(),footer:v.optional(v.string()),buttons:v.array(v.object({type:v.string(),text:v.string()})),
+    variables:v.array(v.object({key:v.string(),component:v.string(),example:v.optional(v.string())})),sendable:v.boolean(),unsupportedReason:v.optional(v.string()),syncedAt:v.number()})
+    .index('by_account_template',['accountId','templateId']).index('by_account_synced',['accountId','syncedAt']),
+  blueCampaigns: defineTable({accountId:v.id('accounts'),integrationId:v.string(),requestId:v.string(),name:v.string(),origin:v.union(v.literal('broadcast'),v.literal('chat')),
+    template:v.object({templateId:v.string(),name:v.string(),language:v.string(),category:v.string(),parameterFormat:v.string(),body:v.string(),header:v.optional(v.object({format:v.string(),text:v.optional(v.string())})),footer:v.optional(v.string())}),
+    mapping:v.array(v.object({key:v.string(),source:v.string(),value:v.string()})),status:v.string(),reason:v.optional(v.string()),scheduledAt:v.number(),timezone:v.string(),recipientCount:v.number(),
+    allowance:v.optional(v.number()),createdAt:v.number(),updatedAt:v.number(),startingAt:v.optional(v.number()),startedAt:v.optional(v.number()),completedAt:v.optional(v.number()),cancelledAt:v.optional(v.number())})
+    .index('by_account_request',['accountId','requestId']).index('by_account_created',['accountId','createdAt']).index('by_status_scheduled',['status','scheduledAt']).index('by_integration_status',['integrationId','status']),
+  // Frozen per-recipient snapshot. PII is stripped if the contact is deleted.
+  blueCampaignRecipients: defineTable({campaignId:v.id('blueCampaigns'),accountId:v.id('accounts'),integrationId:v.string(),contactId:v.id('blueContacts'),realEstateDraftId:v.optional(v.id('realEstateDrafts')),numberHash:v.string(),waId:v.optional(v.string()),name:v.optional(v.string()),
+    parameters:v.array(v.object({key:v.string(),component:v.string(),text:v.string()})),status:v.string(),attempts:v.number(),nextAttemptAt:v.number(),intent:v.optional(v.string()),attemptAt:v.optional(v.number()),
+    providerId:v.optional(v.string()),reason:v.optional(v.string()),errorCode:v.optional(v.number()),at:v.number(),updatedAt:v.number(),expiresAt:v.number()})
+    .index('by_campaign_status',['campaignId','status']).index('by_status_next',['status','nextAttemptAt']).index('by_integration_status',['integrationId','status'])
+    .index('by_contact_at',['contactId','at']).index('by_intent',['intent']).index('by_provider',['providerId']).index('by_expiry',['expiresAt']),
+  blueMessageRates: defineTable({key:v.string(),count:v.number(),expiresAt:v.number()}).index('by_key',['key']).index('by_expiry',['expiresAt']),
+  blueKnowledgeChunks: defineTable({tenantId:v.string(),revision:v.number(),locale:v.string(),text:v.string(),searchText:v.optional(v.string()),source:v.string(),docType:v.optional(v.string()),effectiveDate:v.optional(v.string()),sectionPath:v.optional(v.string()),approved:v.boolean(),contentHash:v.string(),embedding:v.optional(v.array(v.float64())),updatedAt:v.number()})
+    .index('by_tenant_revision',['tenantId','revision'])
+    .index('by_tenant_locale',['tenantId','locale'])
+    .searchIndex('search_text',{searchField:'text',filterFields:['tenantId','revision','locale','approved']})
+    .vectorIndex('by_embedding',{vectorField:'embedding',dimensions:1536,filterFields:['tenantId','revision','locale','approved']}),
+  blueIntentUtterances: defineTable({tenantId:v.string(),revision:v.number(),intent:v.string(),text:v.string(),embedding:v.optional(v.array(v.float64())),approved:v.boolean(),createdAt:v.number()})
+    .index('by_tenant_revision',['tenantId','revision'])
+    .vectorIndex('by_embedding',{vectorField:'embedding',dimensions:1536,filterFields:['tenantId','revision','intent','approved']}),
+  blueCatalogEntries: defineTable({ownerKey:v.string(),entryKey:v.string(),kind:v.string(),status:v.string(),nameEn:v.string(),nameAr:v.string(),category:v.string(),benefitEn:v.string(),benefitAr:v.string(),descriptionEn:v.string(),descriptionAr:v.string(),availability:v.string(),prices:v.array(v.object({type:v.string(),currency:v.string(),amount:v.optional(v.number()),minimum:v.optional(v.number()),maximum:v.optional(v.number()),unit:v.string(),label:v.string()})),source:v.string(),confidence:v.number(),laylaUseEn:v.string(),laylaUseAr:v.string(),revision:v.number(),sortOrder:v.number(),createdAt:v.number(),updatedAt:v.number()})
+    .index('by_owner_key',['ownerKey','entryKey'])
+    .index('by_owner_status_order',['ownerKey','status','sortOrder']),
+  blueCatalogMeta: defineTable({ownerKey:v.string(),revision:v.number(),publishedAt:v.optional(v.number()),updatedAt:v.number()}).index('by_owner',['ownerKey']),
+  blueAssetClaims: defineTable({phone:v.string(),waba:v.string(),sessionHash:v.string(),createdAt:v.number()}).index('by_phone',['phone']).index('by_waba',['waba']),
+  blueAuthChallenges: defineTable({email:v.string(),codeHash:v.string(),challengeId:v.string(),createdAt:v.number(),expiresAt:v.number(),attempts:v.number(),sent:v.boolean()}).index('by_email',['email']).index('by_expiry',['expiresAt']),
+  blueAuthLimits: defineTable({key:v.string(),count:v.number(),expiresAt:v.number()}).index('by_key',['key']).index('by_expiry',['expiresAt']),
+  blueReviewSessions: defineTable({
+    metrics:v.optional(v.object({draftSavedAt:v.optional(v.number()),firstPreviewAt:v.optional(v.number()),accountVerifiedAt:v.optional(v.number()),metaStartedAt:v.optional(v.number()),assetsVerifiedAt:v.optional(v.number()),connectionReadyAt:v.optional(v.number())})),
+    accountId: v.optional(v.id('accounts')),
+    sessionHash: v.string(), status: v.string(), expiresAt: v.number(), createdAt: v.number(), updatedAt: v.number(), attempts: v.number(),
+    pendingSelection: v.optional(v.object({ waba: v.string(), path, candidates: v.array(v.object({ id: v.string(), sender: v.string() })), credential: v.object({ v: v.number(), iv: v.string(), data: v.string(), tag: v.string() }) })),
+    checkedAt: v.optional(v.number()), diagnostic: v.optional(v.object({ reason: v.string(), stage: v.string(), at: v.number(), providerCode: v.optional(v.number()) })),
+    connectionChecks: v.optional(v.object({ routing: v.boolean(), registered: v.boolean(), path: v.boolean(), nameStatus:v.optional(v.string()), portfolio:v.optional(v.object({ id:v.string(), name:v.string(), verificationStatus:v.string() })) })),
+    journeyStep: v.optional(v.number()), profileVersion: v.optional(v.number()),
+    // legacy: no longer written or read; kept so existing documents stay valid.
+    previewReviewedVersion: v.optional(v.number()),
+    previewIntents: v.optional(v.array(v.string())),
+    lastPreview: v.optional(v.object({ question: v.string(), text: v.string(), sourceFields: v.array(v.string()), needsHuman: v.boolean(), intent: v.string() })),
+    profile: v.optional(v.object({ businessName: v.string(), sector: v.string(), services: v.string(), prices: v.string(), hours: v.string(), location: v.string(), humanContact: v.string(), faqs:v.optional(v.array(v.object({question:v.string(),answer:v.string()}))), reviewed: v.boolean() })),
+    attempt: v.optional(v.object({ id: v.string(), stateHash: v.string(), path, expiresAt: v.number(), claimed: v.boolean(), preselect: v.optional(v.object({ business: v.optional(v.string()), waba: v.optional(v.string()) })) })),
+    integration: v.optional(v.object({ id: v.string(), app: v.string(), waba: v.string(), phone: v.string(), sender: v.string(), path,
+      credential: v.object({ v: v.number(), iv: v.string(), data: v.string(), tag: v.string() }) })),
+    phone: v.optional(v.string()), waba: v.optional(v.string()), operation: v.optional(v.string()), operationAt: v.optional(v.number()), operationEffect: v.optional(v.string()),
+    registrationAttempted: v.optional(v.boolean()), subscriptionAttempted: v.optional(v.boolean()),
+  }).index('by_hash', ['sessionHash']).index('by_expiry', ['expiresAt']).index('by_phone', ['phone']).index('by_waba', ['waba']).index('by_integration', ['integration.id']),
+  accounts: defineTable({
+    legacySourceId: v.optional(v.string()),
+    draftHash: v.optional(v.string()),
+    email: v.string(),
+    name: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    country: v.optional(v.string()),
+    industry: v.optional(v.string()),
+    lang: v.optional(v.union(v.literal('ar'), v.literal('en'))),
+    profileComplete: v.optional(v.boolean()),
+    crmSynced: v.optional(v.boolean()),
+    role: v.union(v.literal("owner"), v.literal("customer")),
+    createdAt: v.number(),
+    migratedFromGreen: v.optional(v.boolean()),
+  }).index("by_email", ["email"]).index("by_legacy_source", ["legacySourceId"]),
+  sessions: defineTable({
+    accountId: v.id("accounts"),
+    tokenHash: v.string(),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  }).index("by_token_hash", ["tokenHash"]).index('by_expiry',['expiresAt']).index('by_account',['accountId']),
+  blueOAuthIdentities: defineTable({provider:v.union(v.literal('google'),v.literal('microsoft'),v.literal('linkedin')),subject:v.string(),accountId:v.id('accounts'),createdAt:v.number(),legacySourceId:v.optional(v.string())}).index('by_provider_subject',['provider','subject']).index('by_account',['accountId']).index('by_legacy_source',['legacySourceId']),
+  businesses: defineTable({
+    accountId: v.id("accounts"),
+    businessName: v.string(),
+    sector: v.string(),
+    services: v.string(),
+    prices: v.optional(v.string()),
+    hours: v.optional(v.string()),
+    location: v.optional(v.string()),
+    humanContact: v.string(),
+    reviewedAt: v.optional(v.number()),
+  }).index("by_account", ["accountId"]),
+  whatsappIntegrations: defineTable({
+    accountId: v.id("accounts"),
+    path: v.union(v.literal("coexistence"), v.literal("new_number")),
+    wabaId: v.string(),
+    phoneNumberId: v.string(),
+    status: v.union(v.literal("pending"), v.literal("ready"), v.literal("paused")),
+    // Store only ciphertext; the encryption key stays in the server environment.
+    encryptedCredential: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_account", ["accountId"]),
+  reviewTests: defineTable({
+    accountId: v.id("accounts"),
+    recipient: v.string(),
+    state: v.union(v.literal("draft"), v.literal("review"), v.literal("stopped"), v.literal("complete")),
+    replies: v.number(),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  }).index("by_account", ["accountId"]).index("by_expiry", ["expiresAt"]),
+  reviewSessions: defineTable({
+    sessionKey: v.string(),
+    path: v.union(v.literal("coexistence"), v.literal("new_number")),
+    status: v.union(v.literal("started"), v.literal("assets_received"), v.literal("ready"), v.literal("expired")),
+    expiresAt: v.number(),
+    wabaId: v.optional(v.string()),
+    phoneNumberId: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_session_key", ["sessionKey"]).index("by_expiry", ["expiresAt"]),
+});

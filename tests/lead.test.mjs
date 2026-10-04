@@ -91,8 +91,8 @@ await t('a garbage phone or sector is never answered with a 400', async () => {
   // when the rate-limit check itself fails, because a lead is revenue; a
   // mistyped digit must not be the one thing that does refuse it.
   //
-  // LEAD_ENDPOINT is unset here, so the call dies at the network with a 502.
-  // That is the assertion: it got past validation to reach the network at all.
+  // Supabase/LEAD_ENDPOINT are unset here, so the call dies at the network with
+  // a 502. That is the assertion: it got past validation to reach I/O at all.
   const res = mockRes();
   await lead({
     method: 'POST',

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Seo } from './Seo';
 import { Icon } from './Icon';
 import { getStrings } from '../../i18n';
 import '../../styles/legal.css';
@@ -72,12 +71,7 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
 
   return (
     <>
-      <Seo
-        lang={lang}
-        path={path}
-        title={`${doc.title} — BznsFlow`}
-        description={doc.lead.slice(0, 155)}
-      />
+
 
       <main className="legal-shell" id="main-content">
         <header className="legal-nav">
