@@ -12,7 +12,7 @@ Failure paths: deny unauthorized access before rendering controls; return 401/40
 
 ## Local verification
 
-- Unit inventory currently 715 passing, including owner access and migration/binding tests.
+- Final unit inventory: 716 passing, including owner access and migration/binding tests.
 - Convex typecheck and official static build pass. Router 7.18.4 and full npm audit: zero vulnerabilities.
 - Owner browser: 44 cases for authorization and six live previews in EN/AR at 320/768/1440, overflow, accessibility and browser errors.
 - Shared browser: auth 34, guided onboarding 28, onboarding review 16, Instagram synthetic 32, dashboard 333 assertions. All six suites pass; Instagram remains disabled in Green.
@@ -42,19 +42,24 @@ Ahmed also confirms Google and LinkedIn callbacks were already verified on Green
 
 The deployment serving Green before this release is `dpl_B42g16et2ZxbiLe7JfDpPq612Dpp` (`bznsflow-main-lo934gfkr-yungahmed1100-7330s-projects.vercel.app`). It must be retained; verify Convex compatibility before any rollback.
 
-## Remaining production gates
+## Production outcome
 
-Completed destination import: website counts match (3 accounts, 2 identities, 15 conversations, 65 messages), identity/message relationships and sequence uniqueness pass. Ahmed-only WhatsApp counts match (2 contacts, 3 conversations, 19 messages, 9 catalog entries), all imported records belong to Ahmed, and contact/conversation/message relationships pass. The identical snapshot repeats safely. No pending outbound messages were imported; sending is disabled. The operator migration gate was closed after import. Blue and Supabase remain intact; final source-delta review is still required at cutover.
+Production is live on `www.bznsflowai.com`: source `10e1f6e`, deployment `dpl_B26goP7MAJcNBY3sRfWge5mV9tcj`, Green Convex `rare-fish-465`. Ahmed explicitly approved phased promotion and instructed “live push to normal.”
 
-The committed source candidate is `6a70d47`. Additive Convex deployment to `rare-fish-465` succeeded. Vercel candidate `dpl_EskTG5RZRCHJp5AEBHx2EnkBXAjW` is ready at `https://bznsflow-main-l5zy58ana-yungahmed1100-7330s-projects.vercel.app`; the production domain has not been promoted. Data readiness flags were enabled only after destination verification.
+Destination counts and relationships match both snapshots. Identical owner import repeats safely; source exports before cutover and after routing are unchanged. Fresh owner authorization verified credentials, asset membership, registration and routing; imported history is bound to the Green connection. No pending outbound work was imported. Normal sending and owner activation are enabled. The migration operator gate is closed.
 
-Live candidate checks: public and owner routes return 200; private routes have noindex; signed-out admin API returns 401; the authorized non-admin test account signs in with its delivered OTP, replay is rejected, admin access is denied, and logout succeeds. Website chat stores both user and assistant messages in Convex. The test lead persists in Convex and Apps Script acknowledges CRM synchronization. Google and LinkedIn are the configured providers; Microsoft is absent. Customer signup reports available.
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` were removed from production settings and the active runtime rebuilt. Supabase source data and private archives remain intact. Rollback must preserve Convex state and exclude Supabase writes; the retained owner-ready candidate `dpl_H5t8aMZTgSqbKWPCDynU24Qroqxf` provides a compatible paused-messaging fallback.
 
-Outstanding:
+Live checks observed: delivered OTP sign-in, replay rejection, non-admin denial, test-account logout, Ahmed authorization, three atomic grant/revoke audit rows, all six preview write denials, and 42 authenticated owner/preview browser scenarios across EN/AR and 320/768/1440. Website user/assistant messages persist in Convex; a test lead persists and Apps Script acknowledges CRM synchronization. The final owner-readiness API change passed the full 716-test unit inventory and production build.
 
-- Fresh owner connection authorization and historical binding in Green. No Blue sealed credentials were copied. The temporary deployment URL receives the intended origin rejection from production-domain-bound dashboard APIs; connecting the owner requires the production origin.
-- Green invitation-mail settings (`RESEND_API_KEY`, `AUTH_FROM`) were copied from Blue's local invitation settings with explicit user authorization. Resend confirms the sender domain is verified; actual invitation delivery remains a separate check. Secret values were never printed or committed.
-- Promotion, final source-delta review, owner connection/binding and runtime Supabase credential removal after verified cutover.
-- Production route/authenticated checks and 30-minute monitoring after promotion.
+Invitation settings were copied only from Blue's invitation-mail file with explicit authorization. Resend confirms the sender domain is verified. Actual invitation delivery was not exercised. Sensitive values were not printed or committed.
 
-No final cutover or promotion is certified by this document. Configuration flags are not evidence of integration success.
+The user's prior WhatsApp smoke and Google/LinkedIn verification are recorded as attestation. No repeated WhatsApp test message was sent. Instagram and Microsoft remain disabled.
+
+## Monitoring and follow-up
+
+Normal-sending monitoring began 2026-10-04 21:58:30 UTC (2026-10-05 01:58:30 GST). Completion remains pending. Local Node probes have intermittent transport timeouts; independent curl probes succeed and inspected Vercel requests show expected 200/401 responses. A logged Node `url.parse` deprecation warning accompanied HTTP 200, not an application failure. Preserve this limitation rather than describing the monitoring as flawless.
+
+Meta reports display-name status `DECLINED`; registration, routing and activation succeeded. Ahmed should resolve the display-name review separately. No new end-to-end delivery evidence is claimed.
+
+Decision: `BF-2026-10-05-GREEN-PRODUCTION-RELEASE`, canonical vault `Decisions/2026-10-05-Release-Green-Owner-Home.md`, mirrored in [Notion](https://app.notion.com/p/3ef415cb8dec81f0b3dfe564c89bdcd8).
