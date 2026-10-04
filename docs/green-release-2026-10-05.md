@@ -58,7 +58,7 @@ The user's prior WhatsApp smoke and Google/LinkedIn verification are recorded as
 
 ## Monitoring and follow-up
 
-Normal-sending monitoring began 2026-10-04 21:58:30 UTC (2026-10-05 01:58:30 GST). Completion remains pending. Local Node probes have intermittent transport timeouts; independent curl probes succeed and inspected Vercel requests show expected 200/401 responses. A logged Node `url.parse` deprecation warning accompanied HTTP 200, not an application failure. Preserve this limitation rather than describing the monitoring as flawless.
+Normal-sending monitoring began 2026-10-04 21:58:30 UTC (2026-10-05 01:58:30 GST). Completed at 22:28:30 UTC: 31 samples, 155 requests, eight transport failures with no HTTP response; the final ten samples passed. The monitoring command correctly exited nonzero for those failures. Local Node probes have intermittent transport timeouts; independent curl probes succeed and inspected Vercel requests show expected 200/401 responses. A logged Node `url.parse` deprecation warning accompanied HTTP 200, not an application failure. Preserve this limitation rather than describing the monitoring as flawless.
 
 Meta reports display-name status `DECLINED`; registration, routing and activation succeeded. Ahmed should resolve the display-name review separately. No new end-to-end delivery evidence is claimed.
 
@@ -71,3 +71,7 @@ Ahmed reported the real dashboard showing a generic retry error. Authenticated r
 A separate erroneous Ascend-only check in the deployed Convex dashboard wrapper also rejected Catalyst chat access. Removed that blanket check while retaining grant, workspace-role and per-operation capability enforcement. Added a regression test against the bundled Convex entry handler covering Catalyst reads, restricted paid operations, revoked grants and a foreign actor; added explicit bilingual missing-access guidance. Targeted dashboard/Catalyst tests and Convex typecheck pass.
 
 Correction deployed: source `fc94f7b`, Vercel `dpl_4GBj7fnVwDYKMBMuRdkjWRo1Gnf2`, promoted to `www.bznsflowai.com`; Green Convex deployed successfully. All 718 unit tests and the production build pass. After promotion, actual conversation lists and individual threads open in both languages at all three widths, with no overflow or browser exceptions. WhatsApp messaging still reports active.
+
+## Account-aware setup buttons
+
+Source `a1c150c`, deployment `dpl_8rYA2odgxGb9MUUbZZjiNg7JZ7cD`, promoted to production. Ahmed sees Setup Catalyst and Setup Ascend; Catalyst grants enable Catalyst setup and Ascend grants enable both. Links open the existing bilingual business setup in the same tab. Ungranted visitors retain contact links. Ten synthetic account/language browser cases passed; four actual signed-out/Ahmed production cases passed with valid JSON-LD and no browser exceptions. The production build passed. Marketing insertion now runs after hydration, and JSON-LD uses escaped raw JSON rather than HTML-escaped script children.
