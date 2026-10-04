@@ -19,7 +19,7 @@ Failure paths: deny unauthorized access before rendering controls; return 401/40
 - Real-estate real-logic browser: 202 assertions, manager/employee, bilingual, three widths, save/reload and permission checks.
 - Catalyst 197, retail 441, electronics/phones 490, and dental 341 real-logic browser assertions pass.
 - WhatsApp setup: 62 synthetic checks pass, including local help, secret-safe support links and mobile chat controls.
-- Consolidated `npm run test:release` includes remaining real-logic sector suites; final result pending.
+- Consolidated `npm run test:release` passes: 715 unit tests, Convex typecheck, static build, zero dependency vulnerabilities, seven shared browser suites, Catalyst and all six live sector suites. Construction/automotive pass all 12 EN/AR × 320/768/1440 scenarios.
 
 Browser corrections preserve assertions: the real-logic server now decodes filesystem URLs and answers its synthetic auth-session route; the shared sector suite expects the actual four real-estate quick actions and verifies their destinations. Automotive is included. All live selector choices are now synthetic and never invoke `settings_update`.
 
@@ -44,10 +44,17 @@ The deployment serving Green before this release is `dpl_B42g16et2ZxbiLe7JfDpPq6
 
 ## Remaining production gates
 
-- Final destination import/count/relationship verification and owner connection authorization in Green.
+Completed destination import: website counts match (3 accounts, 2 identities, 15 conversations, 65 messages), identity/message relationships and sequence uniqueness pass. Ahmed-only WhatsApp counts match (2 contacts, 3 conversations, 19 messages, 9 catalog entries), all imported records belong to Ahmed, and contact/conversation/message relationships pass. The identical snapshot repeats safely. No pending outbound messages were imported; sending is disabled. The operator migration gate was closed after import. Blue and Supabase remain intact; final source-delta review is still required at cutover.
+
+The committed source candidate is `6a70d47`. Additive Convex deployment to `rare-fish-465` succeeded. Vercel candidate `dpl_EskTG5RZRCHJp5AEBHx2EnkBXAjW` is ready at `https://bznsflow-main-l5zy58ana-yungahmed1100-7330s-projects.vercel.app`; the production domain has not been promoted. Data readiness flags were enabled only after destination verification.
+
+Live candidate checks: public and owner routes return 200; private routes have noindex; signed-out admin API returns 401; the authorized non-admin test account signs in with its delivered OTP, replay is rejected, admin access is denied, and logout succeeds. Website chat stores both user and assistant messages in Convex. The test lead persists in Convex and Apps Script acknowledges CRM synchronization. Google and LinkedIn are the configured providers; Microsoft is absent. Customer signup reports available.
+
+Outstanding:
+
+- Fresh owner connection authorization and historical binding in Green. No Blue sealed credentials were copied. The temporary deployment URL receives the intended origin rejection from production-domain-bound dashboard APIs; connecting the owner requires the production origin.
 - Green invitation-mail settings (`RESEND_API_KEY`, `AUTH_FROM`) were copied from Blue's local invitation settings with explicit user authorization. Resend confirms the sender domain is verified; actual invitation delivery remains a separate check. Secret values were never printed or committed.
-- Current website/Apps Script persistence verification.
-- Complete release command, commit reviewed files, additive Convex deploy, candidate deployment, then promotion only when applicable evidence exists.
+- Promotion, final source-delta review, owner connection/binding and runtime Supabase credential removal after verified cutover.
 - Production route/authenticated checks and 30-minute monitoring after promotion.
 
 No final cutover or promotion is certified by this document. Configuration flags are not evidence of integration success.

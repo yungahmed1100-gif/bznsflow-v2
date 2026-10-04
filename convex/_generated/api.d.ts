@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as blueAccess from "../blueAccess.js";
+import type * as blueAccessState from "../blueAccessState.js";
 import type * as blueAudienceState from "../blueAudienceState.js";
 import type * as blueAuth from "../blueAuth.js";
 import type * as blueAuthState from "../blueAuthState.js";
@@ -31,6 +32,9 @@ import type * as blueResetState from "../blueResetState.js";
 import type * as blueTenant from "../blueTenant.js";
 import type * as crons from "../crons.js";
 import type * as greenCore from "../greenCore.js";
+import type * as greenOwnerImport from "../greenOwnerImport.js";
+import type * as greenOwnerImportState from "../greenOwnerImportState.js";
+import type * as greenRollout from "../greenRollout.js";
 import type * as hash from "../hash.js";
 import type * as hasib_automotiveDomain from "../hasib/automotiveDomain.js";
 import type * as hasib_automotiveMetrics from "../hasib/automotiveMetrics.js";
@@ -98,6 +102,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   blueAccess: typeof blueAccess;
+  blueAccessState: typeof blueAccessState;
   blueAudienceState: typeof blueAudienceState;
   blueAuth: typeof blueAuth;
   blueAuthState: typeof blueAuthState;
@@ -119,6 +124,9 @@ declare const fullApi: ApiFromModules<{
   blueTenant: typeof blueTenant;
   crons: typeof crons;
   greenCore: typeof greenCore;
+  greenOwnerImport: typeof greenOwnerImport;
+  greenOwnerImportState: typeof greenOwnerImportState;
+  greenRollout: typeof greenRollout;
   hash: typeof hash;
   "hasib/automotiveDomain": typeof hasib_automotiveDomain;
   "hasib/automotiveMetrics": typeof hasib_automotiveMetrics;
