@@ -54,9 +54,7 @@ export function Seo({
 
       {/* JSON-LD */}
       {jsonLd.map((schema, i) => (
-        <script key={i} type="application/ld+json">
-          {JSON.stringify(schema)}
-        </script>
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }} />
       ))}
     </>
   );

@@ -57,7 +57,7 @@ export function Layout({ children }) {
 
 
     <Seo {...seo} /><Links />
-    {documentScripts.map((script, i) => <script key={i} dangerouslySetInnerHTML={{ __html: script }} />)}
+    {documentScripts.slice(0, 1).map((script, i) => <script key={i} dangerouslySetInnerHTML={{ __html: script }} />)}
     </head><body><div id="root">{children}</div><ScrollRestoration /><Scripts /></body></html>;
 }
 export default RootLayout;

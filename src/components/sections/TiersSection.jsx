@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAccount } from '../../hooks/useAccount';
 import { Icon } from '../ui/Icon';
 import { waLink } from '../../lib/whatsapp';
 import { AGENT_BY_KEY, AGENT_BY_KEY_AR } from '../../data/agents';
@@ -10,8 +11,12 @@ import { AGENT_AVATARS } from '../../lib/agentAvatars';
 // section chrome (labels, terms, guarantee) comes from translations `t`.
 // Each tier lists the roster agents it adds — resolved from data/agents.js by
 // key, so the cards and the "Meet the AI team" section always name the same cast.
-// CTAs go to WhatsApp with the plan name prefilled.
+// Granted products open the shared business setup; other CTAs contact WhatsApp.
 export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
+  const account = useAccount();
+  const owner = String(account?.email || '').trim().toLowerCase() === 'ahmed@bznsflowai.com';
+  const canSetup = key => ['catalyst', 'ascend'].includes(key) && (owner || account?.accessPlan === key || (key === 'catalyst' && account?.accessPlan === 'ascend'));
+  const setupLabel = key => lang === 'ar' ? `إعداد ${key === 'catalyst' ? 'Catalyst' : 'Ascend'}` : `Setup ${key === 'catalyst' ? 'Catalyst' : 'Ascend'}`;
   const planMsg = (name) => (t.wa_msg_plan || 'Hi BznsFlow — I am interested in the {plan} plan.').replace('{plan}', name);
   const Check = () => <Icon name="check" size={15} strokeWidth={2.5} />;
   const roster = lang === 'ar' ? AGENT_BY_KEY_AR : AGENT_BY_KEY;
@@ -145,14 +150,14 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
               <p className="tier-pull">{tier.pull}</p>
 
               <a
-                href={waLink(planMsg(tier.name))}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={canSetup(tier.key) ? `${lang === 'ar' ? '' : '/en'}/layla/setup` : waLink(planMsg(tier.name))}
+                target={canSetup(tier.key) ? undefined : '_blank'}
+                rel={canSetup(tier.key) ? undefined : 'noopener noreferrer'}
                 className={`btn ${tier.popular ? 'btn-primary' : 'btn-ghost'} pricing-btn`}
-                onClick={() => trackEvent?.('WhatsAppClick', { source: 'plan', plan: tier.name })}
+                onClick={() => trackEvent?.(canSetup(tier.key) ? 'SetupClick' : 'WhatsAppClick', { source: 'plan', plan: tier.name })}
               >
-                <Icon name="whatsapp" size={18} />
-                <span>{tier.cta}</span>
+                <Icon name={canSetup(tier.key) ? "arrow-right" : "whatsapp"} size={18} />
+                <span>{canSetup(tier.key) ? setupLabel(tier.key) : tier.cta}</span>
               </a>
 
               {tier.nextStep && (
