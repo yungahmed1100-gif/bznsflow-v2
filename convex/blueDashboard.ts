@@ -39,7 +39,6 @@ export const execute = internalMutation({
     if (tenant.error) return { ok: false, reason: tenant.error };
     const rawPlan = await planFor(ctx, tenant.accountId), capabilities = capabilitiesFor(effectivePlan(rawPlan));
     if (!rawPlan) return { ok: false, reason: 'access_required' };
-    if (rawPlan !== 'ascend') return { ok: false, reason: 'plan_required' };
     const actor = rawPlan ? await actorWorkspace(ctx, tenant.accountId, args.actorAccountId, Date.now()) : { role: 'manager' };
     if (!actor) return { ok: false, reason: 'workspace_access_revoked' };
     const refused = dashboardGate(args.operation, capabilities, actor.role);

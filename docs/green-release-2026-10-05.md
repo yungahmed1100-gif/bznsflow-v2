@@ -63,3 +63,9 @@ Normal-sending monitoring began 2026-10-04 21:58:30 UTC (2026-10-05 01:58:30 GST
 Meta reports display-name status `DECLINED`; registration, routing and activation succeeded. Ahmed should resolve the display-name review separately. No new end-to-end delivery evidence is claimed.
 
 Decision: `BF-2026-10-05-GREEN-PRODUCTION-RELEASE`, canonical vault `Decisions/2026-10-05-Release-Green-Owner-Home.md`, mirrored in [Notion](https://app.notion.com/p/3ef415cb8dec81f0b3dfe564c89bdcd8).
+
+## Chats incident correction
+
+Ahmed reported the real dashboard showing a generic retry error. Authenticated reproduction returned HTTP 409 `access_required`: his migrated account had no product grant. Restored an Ascend grant through the authenticated admin API with an atomic audit entry, without changing his business sector. The real Chats page then passed EN/AR checks at 320/768/1440 with conversations visible and no overflow or page errors.
+
+A separate erroneous Ascend-only check in the deployed Convex dashboard wrapper also rejected Catalyst chat access. Removed that blanket check while retaining grant, workspace-role and per-operation capability enforcement. Added a regression test against the bundled Convex entry handler covering Catalyst reads, restricted paid operations, revoked grants and a foreign actor; added explicit bilingual missing-access guidance. Targeted dashboard/Catalyst tests and Convex typecheck pass.
