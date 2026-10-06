@@ -51,3 +51,22 @@ test('every live sector preview refuses writes and returns only synthetic dashbo
   for(const action of ['contact_update','campaign_create','set_timezone']) assert.throws(()=>dashboardPreviewResponse(pack,action),e=>e.code==='preview_read_only');
  }
 });
+test('a grant made before signup applies at first sign-in by code or OAuth, and revoking removes it', async () => {
+ const { executeBlueAuth } = await import('../convex/blueAuthState.js');
+ const m=convexMemory();const now=m.now();const actor=await m.db.insert('accounts',{email:'ahmed@bznsflowai.com'});
+ await m.db.insert('sessions',{accountId:actor,tokenHash:token,expiresAt:now+1000});
+ for (const [email,plan] of [['new.catalyst@example.com','catalyst'],['new.ascend@example.com','ascend']]) {
+  assert.equal((await executeAccess(m.ctx,{sessionHash:token,email:email.toUpperCase(),operation:'grant',plan},now)).ok,true);
+ }
+ // Emailed code: the API normalizes the address before Convex sees it.
+ const h=c=>c.repeat(64);
+ await m.db.insert('blueAuthChallenges',{email:'new.catalyst@example.com',codeHash:h('c'),challengeId:'x',createdAt:now,expiresAt:now+600000,attempts:0,sent:true});
+ const signedUp=await executeBlueAuth(m.ctx,{operation:'verify_code',email:'new.catalyst@example.com',ipHash:h('1'),codeHash:h('c'),tokenHash:h('d')},now);
+ assert.equal(signedUp.ok,true);assert.equal(signedUp.value.accessPlan,'catalyst');assert.equal(signedUp.value.profileComplete,false);
+ // OAuth with a differently cased verified address reaches the same grant.
+ const oauth=await executeBlueAuth(m.ctx,{operation:'oauth_login',provider:'google',subject:'g-1',email:' New.Ascend@Example.com ',emailVerified:true,name:'New',tokenHash:h('e')},now);
+ assert.equal(oauth.ok,true);assert.equal(oauth.value.accessPlan,'ascend');
+ await executeAccess(m.ctx,{sessionHash:token,email:'new.ascend@example.com',operation:'revoke'},now);
+ const after=await executeBlueAuth(m.ctx,{operation:'session',tokenHash:h('e')},now);
+ assert.equal(after.value.email,'new.ascend@example.com');assert.equal(after.value.accessPlan,null);
+});

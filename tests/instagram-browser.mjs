@@ -47,7 +47,9 @@ try {
     const violations=(await new AxeBuilder({page}).include('.ld').analyze()).violations.filter(v=>['critical','serious'].includes(v.impact));
     assert.deepEqual(violations.map(v=>v.id),[]);checks++;
     await page.screenshot({path:`work/instagram-browser/${lang}-${width}-channels.png`,fullPage:true});
-    await page.locator('a[href="?tab=chats"]').click();
+    // Phones reach sections through the Menu dialog; desktop shows the sidebar.
+    if(width<768) await page.locator('.ld-nav-trigger').click();
+    await page.locator('a[href="?tab=chats"]:visible').click();
     await page.getByRole('button').filter({hasText:'Instagram Customer'}).click();
     assert.equal(await page.getByRole('button',{name:lang==='en'?'Send a template':'إرسال قالب',exact:true}).count(),0);checks++;
     assert.equal(await page.locator('.ld-composer textarea').count(),0);checks++;

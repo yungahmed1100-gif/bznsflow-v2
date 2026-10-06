@@ -26,6 +26,12 @@ for (const [lang, url, open, next, skipLabel] of [
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  // /layla/setup renders ProductSetup; mock the API so the embedded onboarding mounts.
+  await page.route('**/api/product-setup*', route => route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ ok: false, reason: 'sign_in_required' }) }));
+  await page.route('**/api/layla-meta*', async route => {
+    const body = route.request().postDataJSON() || {};
+    return route.fulfill({ json: { ok: true, available: true, csrfToken: 'c', journeyStep: 0, profileVersion: 1, profile: { businessName: '', sector: '', services: '', humanContact: '', reviewed: false, faqs: [] }, integration: null } });
+  });
   await page.goto(url, { waitUntil: 'networkidle' });
 
   // 1. The lane is present and starts collapsed behind one button.
@@ -35,9 +41,10 @@ for (const [lang, url, open, next, skipLabel] of [
 
   // 2. Onboarding asks only for the core facts (name, type, summary, team
   // contact, one confirmation). Prices, hours, FAQs and the catalog live in
-  // Dashboard → Business, so the first step stays short.
+  // Dashboard → Business, so the first step stays short. Handoffs now go to the
+  // dashboard inbox queue, so a new profile has no team-contact control.
   const controls = await page.locator('form input, form textarea, form select').count();
-  assert.ok(controls >= 6 && controls <= 9, `${lang}: expected only the core fields, saw ${controls} controls`);
+  assert.ok(controls >= 5 && controls <= 9, `${lang}: expected only the core fields, saw ${controls} controls`);
   checks++;
 
   // Required identity fields stay in the primary path. They must not be hidden
@@ -94,6 +101,7 @@ for (const [lang, url, open, next, skipLabel] of [
 
   // 9. Coming back from Instagram with a failure explains it in the page's language.
   const back = await browser.newPage();
+  await back.route('**/api/product-setup*', route => route.fulfill({ status: 401, json: { ok: false, reason: 'sign_in_required' } }));
   await back.goto(`${url}?instagram=connection_failed&reason=asset_in_use`, { waitUntil: 'networkidle' });
   const alert = back.getByRole('alert').filter({ hasText: lang === 'ar' ? 'حساب إنستغرام هذا مرتبط' : 'This Instagram account is already connected' });
   await alert.waitFor({ timeout: 10000 });

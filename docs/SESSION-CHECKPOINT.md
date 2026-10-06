@@ -7,8 +7,8 @@
 | 0 Baseline | ✅ | `7ed638b` (wip checkpoint) | `npm test` pass. Browser: real-estate 202, catalyst 197, retail 441, electronics 490, dental 341, owner 44, review-onboarding 16, setup 12. **Known failures:** `layla-dashboard-browser` (stale `/layla/setup` URLs, step 4); construction money expects 9 metrics but there are now 11, because retention and receivables were added intentionally (stale test, step 4); automotive 6/6 |
 | 1 API → 12 functions | ✅ | `6fe2ed9` | npm test exit 0, 26 targeted tests, tsc ok, 12 functions |
 | 2 Convex | ✅ | `(latest)` | npm test pass, tsc ok, 136 targeted tests |
-| 3 Setup blockers | ☐ | — | — |
-| 4 Stale fixture | ☐ | — | — |
+| 3 Setup blockers | ✅ | `(this commit)` | 744 unit (incl. grant-before-signup by code/OAuth + revoke), Convex tsc, build, audit 0 (source-map-js bump; mammoth argparse ^2 override, CLI-only). Browser: auth 34, owner 44, onboarding 28, review 16, WhatsApp 62, Instagram 32, dashboard 334, setup 12, Catalyst 197, retail 441, electronics 490, dental 341, real-estate 202, construction/automotive 12/12. Fixed: setup page unhandled rejection; signed-out sign-in link with `?next` resume |
+| 4 Stale fixture | ✅ | `(this commit)` | Dashboard/onboarding/WhatsApp/Instagram fixtures follow `/catalyst/setup`, inbox handoffs and phone Menu dialog; construction money expects 11 metrics incl. retention + certified receivables |
 | 5 Should-fix | ☐ | — | — |
 | 6 E2E suite + `test:release` | ☐ | — | — |
 | 7 Verification doc + commits | ☐ | — | — |

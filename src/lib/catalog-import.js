@@ -32,7 +32,12 @@ export async function readCatalogFile(file, options = {}) {
     if (!text) throw new Error('catalog_file_empty');
     return {text,entries:extractCatalogRows(text,file.name),partial:raw.length > MAX_TEXT};
   }
+
   const { extractInformation } = await import('./information-import.js');
   const parsed = await extractInformation(file, options);
-  return { ...parsed, entries: extractCatalogRows(parsed.text, file.name) };
+  const text = normalize(parsed.text);
+  const isDocx = file.name.toLowerCase().endsWith('.docx');
+  const partial = isDocx ? (parsed.truncated || parsed.text.length >= 100000 || parsed.references?.length > 500) : parsed.partial;
+  return { ...parsed, text, partial, entries: extractCatalogRows(text, file.name) };
+
 }

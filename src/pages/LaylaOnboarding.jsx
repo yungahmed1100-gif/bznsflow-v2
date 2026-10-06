@@ -23,7 +23,7 @@ const STEP_ORDER = [0, 4, 1, 3];
 const EMPTY_PRESELECT = { business: '', waba: '' };
 const REFRESH_INTERVAL_MS = 5000, REFRESH_ROUNDS = 12;
 
-export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embedded = false, onStageChange }) {
+export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embedded = false, onStageChange, onAccountChange }) {
   const ar = lang === 'ar';
   const tr = (en, arabic) => ar ? arabic : en;
   const [available, setAvailable] = useState(false);
@@ -238,7 +238,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   const needsAccount = !reviewMode && !data?.savedToAccount;
   const errorNote = error ? <p ref={errorRef} tabIndex={-1} className="layla-error" role="alert">{error}</p> : null;
   const saveProps = { lang, tr, data, busy, act, authRequest,
-    onSignedIn: async () => { applyState(await request()); applyState(await request({ action: 'claim_draft' })); setSaveOpen(false); },
+    onSignedIn: async () => { applyState(await request()); applyState(await request({ action: 'claim_draft' })); setSaveOpen(false); onAccountChange?.(); },
     onClaim: () => run({ action: 'claim_draft' }) };
   const Container = embedded ? 'section' : 'main';
   return <Container className={`layla-customer ${embedded ? 'setup-embedded' : ''}`} dir={ar ? 'rtl' : 'ltr'} lang={lang}>

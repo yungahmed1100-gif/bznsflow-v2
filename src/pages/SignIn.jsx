@@ -52,6 +52,21 @@ function fill(template, values) {
   return String(template ?? '').replace(/\{(\w+)\}/g, (_, k) => values[k] ?? '');
 }
 
+// Only these destinations may be resumed after sign-in, so ?next= cannot be
+// used as an open redirect. Kept in sessionStorage so it survives OAuth.
+const NEXT_PATH = /^\/(en\/)?(catalyst\/setup|ascend\/setup|layla\/dashboard)$/;
+function rememberNext(path) {
+  if (!path || !NEXT_PATH.test(path)) return;
+  try { sessionStorage.setItem('bf_next', path); } catch { /* storage blocked */ }
+}
+function resumeNext() {
+  let path = null;
+  try { path = sessionStorage.getItem('bf_next'); sessionStorage.removeItem('bf_next'); } catch { return false; }
+  if (!path || !NEXT_PATH.test(path)) return false;
+  window.location.replace(path);
+  return true;
+}
+
 export default function SignIn({ lang = 'ar' }) {
   const t = getStrings(lang);
   const ar = lang === 'ar';
@@ -141,6 +156,7 @@ export default function SignIn({ lang = 'ar' }) {
       setStep('profile');
       return;
     }
+    if (resumeNext()) return;
     setReturning(true);
     setStep('done');
   }, []);
@@ -179,6 +195,7 @@ export default function SignIn({ lang = 'ar' }) {
   useEffect(() => {
     if (typeof window === 'undefined') return; // prerendered by vite-react-ssg
     const params = new URLSearchParams(window.location.search);
+    rememberNext(params.get('next'));
     const code = params.get('e');
     if (!code) return;
 
@@ -249,6 +266,7 @@ export default function SignIn({ lang = 'ar' }) {
       });
       if (status === 200 && data?.ok) {
         setAccount(data.account);
+        if (resumeNext()) return;
         setReturning(false);
         setStep('done');
       } else {

@@ -33,6 +33,7 @@ try {
         if (body.action === 'begin') return route.fulfill({ json: { ...state, attempt: `a-${calls.length}`, state: 'f'.repeat(64), path: body.path, expiresAt: Date.now() + 600000, appId: '1388038082832745', configId: '998877665544', version: 'v25.0', esVersion: 'v4' } });
         return route.fulfill({ json: state });
       }
+      if (u.pathname.startsWith('/api/product-setup')) return route.fulfill({ status: 401, json: { ok: false, reason: 'sign_in_required' } });
       if (u.pathname.startsWith('/api/')) { apiCalls.push(u.pathname); return route.fulfill({ status: 404, json: { ok: false } }); }
       return route.continue();
     });
@@ -123,6 +124,7 @@ try {
         if (body.action === 'claim_draft') state.savedToAccount = true;
         return route.fulfill({ json: state });
       }
+      if (u.pathname.startsWith('/api/product-setup')) return route.fulfill({ status: 401, json: { ok: false, reason: 'sign_in_required' } });
       if (u.pathname.startsWith('/api/')) return route.fulfill({ status: 404, json: { ok: false } });
       return route.continue();
     });

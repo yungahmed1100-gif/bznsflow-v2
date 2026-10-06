@@ -103,6 +103,7 @@ async function openPage(browser, { width, lang = 'en', path, handler, extra, aut
       resolveAuthSession();
       return;
     }
+    if (url.pathname === '/api/product-setup' || url.pathname === '/api/knowledge') return route.fulfill({ status: 401, json: { reason: 'sign_in_required' } });
     if (url.pathname.startsWith('/api/')) return route.fulfill({ status: 404, json: { ok: false } });
     return route.continue();
   });
@@ -116,9 +117,15 @@ const browser = await chromium.launch();
 let count = 0;
 try {
   // Direct visits: unsigned owners go through sign-in, accounts without a number go to setup.
-  for (const [reason, expected] of [['sign_in_required', /\/en\/layla\/setup\?next=dashboard$/], ['setup_required', /\/en\/layla\/setup$/]]) {
+  for (const [reason, expected] of [['sign_in_required', /\/en\/catalyst\/setup\?next=dashboard$/], ['setup_required', /\/en\/catalyst\/setup$/]]) {
     const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard', handler: api(fixture(), { overviewStatus: reason === 'sign_in_required' ? 401 : 409, overviewReason: reason }) });
     await page.waitForURL(expected); count++;
+    if (reason === 'sign_in_required') {
+      // A returning owner can sign in straight back to the dashboard.
+      const signIn = page.locator('.setup-signin a');
+      await signIn.waitFor();
+      assert.equal(await signIn.getAttribute('href'), `/en/signin?next=${encodeURIComponent('/en/layla/dashboard')}`); count++;
+    }
     await context.close();
   }
 

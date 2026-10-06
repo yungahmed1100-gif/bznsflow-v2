@@ -141,7 +141,10 @@ try {
             await page.getByText('Muscat Ready Mix',{exact:false}).first().waitFor();
             await owner.noOverflow('Construction Procurement');
             await owner.open('insights'); await page.getByRole('heading',{name:lang === 'en'?'Money & insights':'الأموال والمؤشرات'}).waitFor();
-            assert.equal(await page.locator('.hb-visual-metric').count(),9); await owner.noOverflow('Construction Money');
+            // Nine earned-value/quality metrics plus retention held and certified receivables.
+            assert.equal(await page.locator('.hb-visual-metric').count(),11);
+            for(const label of lang === 'en'?['Retention held','Certified receivables']:['الاحتجاز المحتفظ به','المستحقات المعتمدة']) await page.locator('.hb-visual-metric').filter({hasText:label}).first().waitFor();
+            await owner.noOverflow('Construction Money');
             await owner.open('settings'); const denominator=page.getByLabel(lang === 'en'?'Safety frequency denominator (worker hours)':'مقام معدل السلامة (ساعات العمل)'); await denominator.waitFor(); await denominator.fill('100000');
             const [settingsResponse]=await Promise.all([page.waitForResponse(r=>r.url().includes('/api/layla-meta')&&r.request().postDataJSON()?.action==='settings_update'),page.getByRole('button',{name:lang === 'en'?'Save safety denominator':'حفظ مقام السلامة'}).click()]);
             assert.ok((await settingsResponse.json()).ok); const savedOverview=await fetch(`http://127.0.0.1:${API_PORT}/api/layla-meta?surface=hasib`).then(r=>r.json()); assert.equal(savedOverview.settings.constructionIncidentHoursDenominator,100000); await owner.noOverflow('Construction Settings');
