@@ -44,7 +44,7 @@ async function open(base, width, lang, path) {
   // An expected refusal is asserted by the journey; anything else is a problem.
   const expect = reason => problems.splice(0, problems.length, ...problems.filter(p => !p.startsWith('409') || !reason));
   await page.goto(`${base}${lang === 'ar' ? '' : '/en'}${path}`);
-  await page.locator('.ld-nav a').first().waitFor();
+  await page.locator('.ld-nav a').first().waitFor({ state: 'attached' });
   return { page, context, problems, expect };
 }
 const api = (page, base, action, body = {}) => page.evaluate(async ([url, payload]) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })).json(),

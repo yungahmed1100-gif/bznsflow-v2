@@ -42,7 +42,7 @@ async function open(base, width, lang, path) {
   // A refusal the journey provokes on purpose is asserted there; drop it from the problem list.
   const expected = () => problems.splice(0, problems.length, ...problems.filter(p => !p.startsWith('409')));
   await page.goto(`${base}${lang === 'ar' ? '' : '/en'}${path}`);
-  await page.locator('.ld-nav a').first().waitFor();
+  await page.locator('.ld-nav a').first().waitFor({ state: 'attached' });
   return { page, context, problems, expected };
 }
 const call = (page, base, surface, action, body = {}) => page.evaluate(async ([url, payload]) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })).json(),

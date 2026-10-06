@@ -4,7 +4,7 @@ import { EmptyState, HorizontalBars, MetricCards, PageHeader } from '../Dashboar
 import { label, LOST_REASONS } from './labels.js';
 
 /** Commission and conversion, for the manager. */
-export function MoneyView({ ar, h, data, busy, act }) {
+export function MoneyView({ ar, h, data, busy, act, onGo }) {
   const tr = (en, arabic) => (ar ? arabic : en);
   const i = data.insights || {};
   const commissions = data.commissions?.items || [];
@@ -12,18 +12,18 @@ export function MoneyView({ ar, h, data, busy, act }) {
   return <>
     <PageHeader title={tr('Money and results', 'المال والنتائج')} description={tr('Agency commission and how deals convert. Asking prices are never counted as income.', 'عمولة الوكالة ونسب تحويل الصفقات. لا تُحتسب الأسعار المطلوبة كدخل.')} icon="bar-chart" />
     <MetricCards label={tr('Commission and conversion', 'العمولة والتحويل')} items={[
-      { id: 'due', value: <Money h={h} minor={i.commissions?.dueMinor || 0} />, label: tr('Commission due', 'العمولة المستحقة'), icon: 'receipt', tone: i.commissions?.dueMinor ? 'yellow' : 'green' },
-      { id: 'paid', value: <Money h={h} minor={i.commissions?.paidMinor || 0} />, label: tr('Commission paid', 'العمولة المدفوعة'), icon: 'check', tone: 'green' },
-      { id: 'response', value: i.averageFirstResponseMinutes ?? '—', label: tr('Average first reply (minutes)', 'متوسط الرد الأول (دقائق)'), icon: 'clock' },
-      { id: 'qualified', value: `${i.qualificationRate || 0}%`, label: tr('Enquiries qualified', 'الاستفسارات المؤهلة'), icon: 'target' },
-      { id: 'viewing', value: `${i.viewingToOfferRate || 0}%`, label: tr('Viewings that led to an offer', 'معاينات أدت إلى عرض'), icon: 'calendar' },
-      { id: 'close', value: `${i.offerToCloseRate || 0}%`, label: tr('Offers that closed', 'عروض أُغلقت'), icon: 'trending-up' },
+      { id: 'due', value: <Money h={h} minor={i.commissions?.dueMinor} />, label: tr('Commission due', 'العمولة المستحقة'), icon: 'receipt', tone: i.commissions?.dueMinor ? 'yellow' : 'green', onClick: () => document.getElementById('commission-records')?.scrollIntoView({ block: 'start' }) },
+      { id: 'paid', value: <Money h={h} minor={i.commissions?.paidMinor} />, label: tr('Commission paid', 'العمولة المدفوعة'), icon: 'check', tone: 'green', onClick: () => document.getElementById('commission-records')?.scrollIntoView({ block: 'start' }) },
+      { id: 'response', value: i.averageFirstResponseMinutes ?? tr('Unavailable', 'بيانات غير متاحة'), label: tr('Average first reply (minutes)', 'متوسط الرد الأول (دقائق)'), icon: 'clock', onClick: () => onGo('orders') },
+      { id: 'qualified', value: i.qualificationRate == null ? tr('Unavailable', 'بيانات غير متاحة') : `${i.qualificationRate}%`, label: tr('Enquiries qualified', 'الاستفسارات المؤهلة'), icon: 'target', onClick: () => onGo('orders', { stage: 'qualified' }) },
+      { id: 'viewing', value: i.viewingToOfferRate == null ? tr('Unavailable', 'بيانات غير متاحة') : `${i.viewingToOfferRate}%`, label: tr('Viewings that led to an offer', 'معاينات أدت إلى عرض'), icon: 'calendar', onClick: () => onGo('orders', { stage: 'offer' }) },
+      { id: 'close', value: i.offerToCloseRate == null ? tr('Unavailable', 'بيانات غير متاحة') : `${i.offerToCloseRate}%`, label: tr('Offers that closed', 'عروض أُغلقت'), icon: 'trending-up', onClick: () => onGo('orders', { stage: 'won' }) },
     ]} />
     {(i.sourceConversion?.length || i.lostReasons?.length) ? <div className="hb-real-grid">
       <HorizontalBars title={tr('Won deals by source', 'الصفقات الرابحة حسب المصدر')} rows={(i.sourceConversion || []).map(row => ({ id: row.source, label: row.source, value: row.rate, detail: row }))} format={(value, row) => `${row.detail.won}/${row.detail.opportunities} · ${value}%`} />
       <HorizontalBars title={tr('Why deals were lost', 'أسباب خسارة الصفقات')} rows={(i.lostReasons || []).map(row => ({ id: row.label, label: lost(row.label), value: row.count }))} />
     </div> : <EmptyState icon="bar-chart" title={tr('No results yet', 'لا توجد نتائج بعد')} description={tr('Charts use your recorded deals, offers and closes only.', 'تستخدم الرسوم صفقاتك وعروضك وإغلاقاتك المسجلة فقط.')} />}
-    <h2>{tr('Commission records', 'سجلات العمولة')}</h2>
+    <h2 id="commission-records">{tr('Commission records', 'سجلات العمولة')}</h2>
     {commissions.length ? <ul className="hb-re-list">{commissions.map(row => <li key={row.id} className="hb-panel">
       <b><Money h={h} minor={row.amountMinor} /></b> · {row.contactName || tr('Customer', 'عميل')} <span className="ld-chip">{label('commission', row.status, ar)}</span>
       {row.status === 'due' && <button type="button" className="ld-button" disabled={busy} onClick={() => act('commission_record', { commissionId: row.id, status: 'paid' }, null, tr('Record this commission as paid?', 'تسجيل هذه العمولة كمدفوعة؟'))}>{tr('Mark paid', 'تسجيل كمدفوعة')}</button>}

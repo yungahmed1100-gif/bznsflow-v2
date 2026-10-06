@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Money } from '../Badges';
 import { EmptyState, PageHeader } from '../DashboardVisuals';
 import { label, OPEN_STAGES } from './labels.js';
@@ -7,16 +7,15 @@ import { DealDetail } from './DealDetail.jsx';
 const FILTERS = ['open', 'won', 'lost'];
 
 /** The agency's deals (an agent's own and unassigned ones), and the approvals waiting on the manager. */
-export function DealsView({ ar, h, s, timezone, manager, busy, data, act, openForm, onGo, selectedId, onSelect }) {
+export function DealsView({ ar, h, s, timezone, manager, busy, data, act, openForm, onGo, selectedId, onSelect, filter = 'open', onFilter }) {
   const tr = (en, arabic) => (ar ? arabic : en);
-  const [filter, setFilter] = useState('open');
   const deals = data.opportunities?.items || [];
   const selected = deals.find(d => d.id === selectedId);
   const forDeal = (list, id) => (list?.items || []).filter(x => x.opportunityId === id);
   if (selected) return <DealDetail deal={selected} ar={ar} h={h} s={s} timezone={timezone} manager={manager} busy={busy}
     viewings={forDeal(data.viewings, selected.id)} offers={forDeal(data.offers, selected.id)} drafts={forDeal(data.drafts, selected.id)}
     act={act} openForm={openForm} onGo={onGo} onClose={() => onSelect(null)} />;
-  const shown = deals.filter(d => filter === 'open' ? OPEN_STAGES.includes(d.stage) : d.stage === filter);
+  const shown = deals.filter(d => filter === 'open' ? OPEN_STAGES.includes(d.stage) : filter === 'unassigned' ? !d.assignedAccountId && OPEN_STAGES.includes(d.stage) : d.stage === filter);
   const waiting = manager ? [...(data.offers?.items || []).filter(o => o.status === 'draft'), ...(data.drafts?.items || []).filter(d => d.status === 'draft')] : [];
   return <>
     <PageHeader title={tr('Deals', 'الصفقات')} description={manager ? tr('Every customer the agency is working with, from first enquiry to close.', 'كل العملاء الذين تعمل معهم الوكالة، من أول استفسار حتى الإغلاق.') : tr('Your deals and unassigned ones.', 'صفقاتك والصفقات غير المُسندة.')} icon="users"
@@ -28,7 +27,7 @@ export function DealsView({ ar, h, s, timezone, manager, busy, data, act, openFo
       </li>)}</ul>
     </section>}
     <div className="ld-segmented" role="radiogroup" aria-label={tr('Show deals', 'عرض الصفقات')}>
-      {FILTERS.map(f => <label key={f}><input type="radio" name="re-deal-filter" checked={filter === f} onChange={() => setFilter(f)} /><span>{f === 'open' ? tr('Open', 'مفتوحة') : label('stage', f, ar)}</span></label>)}
+      {[...FILTERS, ...(!FILTERS.includes(filter) ? [filter] : [])].map(f => <label key={f}><input type="radio" name="re-deal-filter" checked={filter === f} onChange={() => onFilter?.(f)} /><span>{f === 'open' ? tr('Open', 'مفتوحة') : f === 'unassigned' ? tr('Unassigned', 'غير مُسندة') : label('stage', f, ar)}</span></label>)}
     </div>
     {shown.length ? <ul className="hb-re-deals">{shown.map(d => <li key={d.id} className="hb-panel">
       <div className="hb-status-line"><b>{d.contactName || tr('Customer', 'عميل')}</b><span className="ld-chip">{label('stage', d.stage, ar)}</span></div>

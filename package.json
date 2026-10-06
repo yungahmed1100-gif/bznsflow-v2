@@ -27,7 +27,8 @@
     "green:import": "node ops/migration/import-green-supabase.mjs",
     "typecheck:convex": "tsc -p convex/tsconfig.json --noEmit",
     "test:release": "node scripts/verify-release.mjs",
-    "test:browser": "node scripts/run-browser-tests.mjs"
+    "test:browser": "node scripts/run-browser-tests.mjs",
+    "preview:product": "node scripts/product-preview.mjs"
   },
   "dependencies": {
     "@vercel/functions": "3.9.7",

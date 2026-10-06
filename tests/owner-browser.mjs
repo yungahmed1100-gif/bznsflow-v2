@@ -55,7 +55,8 @@ try {
       for (const tab of ['orders', 'stock', 'money', 'team', 'settings']) {
         const link = page.locator(`.ld-nav a[href*="tab=${tab}"]`);
         if (!(await link.count())) continue;
-        await link.click(); await page.waitForTimeout(100);
+        if (width <= 768) await page.locator('.ld-nav-trigger').click();
+        await page.locator(`.ld-nav a[href*="tab=${tab}"]:visible`).click(); await page.waitForTimeout(100);
         await page.locator('.ld-main .ld-state[role="status"]').waitFor({ state: 'hidden' });
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${pack} ${lang} ${width} ${tab} overflow`);
       }

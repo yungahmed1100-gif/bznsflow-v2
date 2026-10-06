@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
 import { photoProblem, uploadProductPhoto } from '../../lib/hasib/photo.js';
@@ -29,7 +30,10 @@ export function RealEstateDashboard({ mode, s, h, overview, timezone = 'Asia/Mus
   const ar = s.ar, tr = (en, arabic) => (ar ? arabic : en);
   const manager = overview.workspaceRole === 'manager';
   const [form, setForm] = useState(null), [values, setValues] = useState({}), [photos, setPhotos] = useState([]);
-  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [confirm, setConfirm] = useState(null), [selectedId, setSelectedId] = useState(null);
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [confirm, setConfirm] = useState(null);
+  const [params, setParams] = useSearchParams();
+  const selectedId = params.get('deal');
+  const setSelectedId = value => { const next = new URLSearchParams(params); if (value) next.set('deal', value); else next.delete('deal'); setParams(next); };
   const busyRef = useRef(false);
   const state = usePolling(() => load(mode, manager), [mode, manager], { interval: 30000 });
   const data = state.data || {};
@@ -39,7 +43,7 @@ export function RealEstateDashboard({ mode, s, h, overview, timezone = 'Asia/Mus
   const closeForm = () => { clearPhotos(); setForm(null); setValues({}); };
   useEffect(() => {
     const type = ACTIONS_BY_MODE[mode]?.[initialAction];
-    setSelectedId(null); setConfirm(null); setError('');
+    setConfirm(null); setError('');
     if (type) openForm(type); else closeForm();
   }, [mode, initialAction]);
 
@@ -91,8 +95,8 @@ export function RealEstateDashboard({ mode, s, h, overview, timezone = 'Asia/Mus
     {mode === 'today' && <TodayView {...shared} onGo={onGo} onResolve={task => act('real_estate_task_resolve', { taskId: task.id, reason: 'done' })} />}
     {mode === 'properties' && <PropertiesView {...shared} onAdd={() => openForm('property', { transactionType: 'sale', availability: 'available', authorityStatus: 'pending' })} onEdit={editProperty}
       onVerify={row => act('property_verify', { propertyId: row.id, version: row.version }, null, tr(`Confirm you checked “${row.label}” today: still available, price and authority correct?`, `تأكيد أنك تحققت اليوم من «${row.label}»: ما زال متاحاً والسعر والصلاحية صحيحة؟`))} />}
-    {mode === 'deals' && <DealsView {...shared} manager={manager} act={act} openForm={openForm} onGo={onGo} selectedId={selectedId} onSelect={setSelectedId} />}
-    {mode === 'money' && <MoneyView {...shared} act={act} />}
+    {mode === 'deals' && <DealsView {...shared} manager={manager} act={act} openForm={openForm} onGo={onGo} selectedId={selectedId} onSelect={setSelectedId} filter={params.get('stage') || 'open'} onFilter={value => { const next = new URLSearchParams(params); next.set('stage', value); next.delete('deal'); setParams(next); }} />}
+    {mode === 'money' && <MoneyView {...shared} act={act} onGo={onGo} />}
     {mode === 'team' && <TeamView {...shared} act={act} openForm={openForm} />}
   </div>;
 }

@@ -4,7 +4,7 @@
 import { publicInstagram } from './blueInstagramState.js';
 import { resolveTenant, ownsIntegration, owned, encodeCursor, decodeCursor, afterCursor } from './blueTenant.js';
 import { DAY, catalogForFields, deleteContact, linkConversation, ownerContactPatch, publicContact, sectorFor } from './blueContacts.js';
-import { messagingReady } from './blueMessagingState.js';
+import { messagingReady, executeMessaging } from './blueMessagingState.js';
 import { packDescription } from '../config/layla-qualification.js';
 import { renderTemplate } from '../config/layla-templates.js';
 import { planFor } from './hasib/plans.js';
@@ -43,10 +43,14 @@ async function lastMessage(ctx, conversationId, now) {
   const [m] = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', conversationId)).order('desc').take(1);
   return m ? { direction: m.direction, text: m.textExpiresAt > now ? String(m.text || '').slice(0, 140) : null, status: m.status, at: m.at } : null;
 }
+function handoffFor(person) {
+  return { state: person.handoffState || (person.takeover ? 'open' : 'none'), reason: person.handoffReason || (person.takeover ? 'human_attention' : ''), openedAt: person.handoffOpenedAt || null,
+    resolvedAt: person.handoffResolvedAt || null, version: person.version || 0 };
+}
 async function conversationItem(ctx, person, tenant, now) {
   const contact = await linkConversation(ctx, person, { sectorId: sectorFor(tenant.row), now, secret: tenant.secret });
   return { id: person._id, channel:person.channel || 'whatsapp', contact: publicContact(contact, person), lastMessage: await lastMessage(ctx, person._id, now),
-    updatedAt: person.updatedAt, takeover: person.takeover, optout: person.optout || contact.optout, windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0 };
+    updatedAt: person.updatedAt, takeover: person.takeover, handoff: handoffFor(person), optout: person.optout || contact.optout, windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0 };
 }
 
 /** Link a bounded number of pre-dashboard conversations for this account. */
@@ -118,6 +122,46 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
     return ok({ timezone: a.timezone });
   }
 
+  if (['resolve_handoff', 'takeover_handoff', 'return_handoff'].includes(a.operation)) {
+    const person = await owned(ctx, a.conversationId, accountId, 'blueConversations');
+    if (!person || !ownsIntegration(tenant, person.integrationId)) return fail('conversation_not_found');
+    const target = { resolve_handoff: 'resolved', takeover_handoff: 'handling', return_handoff: 'returned' }[a.operation];
+    if (person.handoffState === target && person.takeover === (target !== 'returned') && a.expectedVersion === (person.version || 0) - 1) return ok({ handoff: handoffFor(person) });
+    if (!Number.isSafeInteger(a.expectedVersion) || a.expectedVersion !== (person.version || 0)) return fail('handoff_changed');
+    if (a.operation !== 'resolve_handoff') {
+      const result = await executeMessaging(ctx, { ...a, operation: target === 'returned' ? 'resume_conversation' : 'takeover' }, now);
+      if (!result.ok) return result;
+      const updated = await ctx.db.get(person._id);
+      await ctx.db.insert('blueHandoffAudit', { accountId, conversationId: person._id, actorAccountId: String(actor.actorAccountId || accountId), action: target === 'returned' ? 'return' : 'takeover', at: now, version: updated.version || 0 });
+      return ok({ handoff: handoffFor(updated) });
+    }
+    if (!person.takeover) return fail('takeover_required');
+    // Fence stale concurrent actions through the existing takeover transition. It cancels
+    // automated work and preserves pending owner replies without scheduling any replay.
+    const fenced = await executeMessaging(ctx, { ...a, operation: 'takeover' }, now);
+    if (!fenced.ok) return fenced;
+    const patch = { handoffState: 'resolved', handoffResolvedAt: now, handoffResolvedBy: String(actor.actorAccountId || accountId), updatedAt: now, version: (person.version || 0) + 1 };
+    await ctx.db.patch(person._id, patch);
+    await ctx.db.insert('blueHandoffAudit', { accountId, conversationId: person._id, actorAccountId: patch.handoffResolvedBy, action: 'resolve', at: now, version: patch.version });
+    return ok({ handoff: handoffFor({ ...person, ...patch }) });
+  }
+  if (a.operation === 'handoffs') {
+    const cursor = decodeCursor(a.cursor), limit = clampLimit(a.limit, PAGE);
+    const query = ctx.db.query('blueConversations').withIndex('by_account_updated', q => cursor ? q.eq('accountId', accountId).lte('updatedAt', cursor.at) : q.eq('accountId', accountId));
+    const rows = afterCursor(await query.order('desc').take(125), cursor, 'updatedAt').slice(0, 100);
+    const items = [];
+    let scanned = null;
+    for (const person of rows) {
+      scanned = person;
+      if (!person.takeover || ['resolved', 'returned'].includes(person.handoffState) || !ownsIntegration(tenant, person.integrationId) || (a.channel && (person.channel || 'whatsapp') !== a.channel)) continue;
+      const item = await conversationItem(ctx, person, tenant, now);
+      const [last] = await ctx.db.query('blueMessages').withIndex('by_conversation_direction_at', q => q.eq('conversationId', person._id).eq('direction', 'in')).order('desc').take(1);
+      item.lastCustomerMessage = last ? publicMessage(last, now) : null;
+      items.push(item);
+      if (items.length >= limit) break;
+    }
+    return ok({ items, cursor: scanned && (items.length === limit || rows.length === 100) ? encodeCursor(scanned.updatedAt, scanned._id) : null });
+  }
   if (a.operation === 'conversations') {
     const limit = clampLimit(a.limit, PAGE);
     if (typeof a.search === 'string' && a.search.trim()) {
@@ -143,7 +187,7 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
     const contact = await linkConversation(ctx, person, { sectorId, now, secret: tenant.secret });
     const before = Number.isSafeInteger(a.before) && a.before > 0 ? a.before : null;
     const page = await threadMessages(ctx, person, contact, before, THREAD_PAGE, now);
-    return ok({ conversation: { id: person._id, channel:person.channel || 'whatsapp', takeover: person.takeover, optout: person.optout || contact.optout, windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0 },
+    return ok({ conversation: { id: person._id, channel:person.channel || 'whatsapp', takeover: person.takeover, handoff: handoffFor(person), optout: person.optout || contact.optout, windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0 },
       contact: publicContact(contact, person), qualification: packDescription(contact.sectorId || sectorId), ...page });
   }
 

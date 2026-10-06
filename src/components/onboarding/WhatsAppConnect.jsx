@@ -11,7 +11,7 @@ const PATHS = ['coexistence', 'existing_cloud', 'new_number'];
 export function whatsappRequirements({ data, available, reviewMode }) {
   return [
     ['account', reviewMode || !!data?.savedToAccount],
-    ['contact', !!data?.profile?.humanContact],
+    ['contact', !!(data?.profile?.humanContact || data?.profile?.handoffMode === 'inbox')],
     ['meta', !!available],
   ];
 }

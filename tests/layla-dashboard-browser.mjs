@@ -54,6 +54,10 @@ function api(state, { overviewStatus = 200, overviewReason, founderPreview = fal
       return ok({ available: true, active: true, reason: '', limits: { usedToday: 7 } });
     }
     switch (body?.action) {
+      case 'takeover_handoff': state.takeover[body.conversationId] = true; return ok({});
+      case 'return_handoff': state.takeover[body.conversationId] = false; return ok({});
+      case 'resolve_handoff': return ok({});
+      case 'handoffs': return ok({ items: [], cursor: null });
       case 'conversations': return ok({ items: state.contacts.filter(c => !body.search || c.name.includes(body.search) || c.number.includes(body.search)).map(item), cursor: null });
       case 'thread': { const c = state.contacts.find(x => x.conversationId === body.conversationId);
         return ok({ contact: c, conversation: { id: c.conversationId, takeover: !!state.takeover[c.conversationId], optout: c.optout, windowOpenUntil: c.windowOpenUntil }, messages: state.messages[c.conversationId], before: null }); }
@@ -194,16 +198,16 @@ try {
     const state = fixture();
     const { page, context } = await openPage(browser, { width, path: '/layla/dashboard', handler: api(state) });
     await page.getByRole('heading', { name: 'Chats', exact: true }).waitFor();
-    assert.equal(await page.getByRole('navigation', { name: 'Dashboard sections' }).getByRole('link').allTextContents().then(t => t.join('|')), 'Chats|Customers|Settings'); count++;
-    assert.equal(await page.getByRole('link', { name: 'Chats' }).getAttribute('aria-current'), 'page'); count++;
+    assert.equal(await page.locator('.ld-desktop-nav a').allTextContents().then(t => t.join('|')), 'Chats|Customers|Settings'); count++;
+    assert.equal(await page.locator('.ld-desktop-nav a[href*="tab=chats"]').getAttribute('aria-current'), 'page'); count++;
     await page.getByRole('button', { name: /Aisha Al Balushi/ }).click();
     await page.getByRole('heading', { name: 'Aisha Al Balushi' }).waitFor();
     const listVisible = await page.locator('.ld-list').isVisible();
     assert.equal(listVisible, width > 768, `list beside thread at ${width}`); count++;
     assert.match(await page.locator('.ld-messages').textContent(), /Text removed after 30 days/); count++;
-    await page.getByRole('switch', { name: 'Leave this chat for me' }).check();
-    await page.waitForFunction(() => document.querySelector('[role=switch]')?.checked);
-    assert.ok(state.calls.some(c => c.action === 'takeover')); count++;
+    await page.getByRole('button', { name: 'Take over', exact: true }).click();
+    await page.getByRole('button', { name: 'Return to Layla', exact: true }).waitFor();
+    assert.ok(state.calls.some(c => c.action === 'takeover_handoff')); count++;
     assert.equal(await noOverflow(page), true, `no horizontal overflow at ${width}`); count++;
     assert.deepEqual(await axe(page), [], `axe at ${width}`); count++;
     await page.screenshot({ path: `${OUT}/chats-en-${width}.png` });

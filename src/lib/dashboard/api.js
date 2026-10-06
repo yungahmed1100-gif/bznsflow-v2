@@ -28,7 +28,7 @@ export const messaging = async (action, body = {}) => {
 };
 export const messagingState = () => call('messaging');
 export const dashboardPath = lang => `${lang === 'ar' ? '' : '/en'}/layla/dashboard`;
-export const setupPath = (lang, next) => `${lang === 'ar' ? '' : '/en'}/layla/setup${next ? `?next=${next}` : ''}`;
+export const setupPath = (lang, next) => `${lang === 'ar' ? '' : '/en'}/catalyst/setup${next ? `?next=${next}` : ''}`;
 /** Hasib (orders, stock, payments) shares this client's session and CSRF token. */
 let hasibPreviewIndustry = '';
 export const setHasibPreviewIndustry = value => { hasibPreviewIndustry = typeof value === 'string' ? value : ''; };

@@ -19,11 +19,11 @@ import { setupHelpReply, SUGGESTED, SUGGESTION_LABELS } from '../lib/onboarding/
 
 // Three steps, one primary action each. Ids are the saved journeyStep values
 // (a legacy saved 2 opens the channels step).
-const STEP_ORDER = [0, 1, 3];
+const STEP_ORDER = [0, 4, 1, 3];
 const EMPTY_PRESELECT = { business: '', waba: '' };
 const REFRESH_INTERVAL_MS = 5000, REFRESH_ROUNDS = 12;
 
-export default function LaylaOnboarding({ lang = 'ar', reviewMode = false }) {
+export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embedded = false, onStageChange }) {
   const ar = lang === 'ar';
   const tr = (en, arabic) => ar ? arabic : en;
   const [available, setAvailable] = useState(false);
@@ -62,7 +62,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false }) {
       const result=await fetch('/api/auth-session',{method:'DELETE',credentials:'same-origin',signal:AbortSignal.timeout(10000),headers:{'x-csrf-token':session.csrfToken}}).then(r=>r.json());
       if(!result.ok)throw Error(result.reason);
       setData(null);setReply(null);setPrepared(null);
-      window.location.replace(`${ar? '':'/en'}/layla/setup`);
+      window.location.replace(`${ar? '':'/en'}/catalyst/setup`);
     });
   }
   const pending = useRef(null), actionBusy = useRef(false);
@@ -108,6 +108,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false }) {
       if (r.account && r.savedToAccount && ['connected', 'paused'].includes(r.integration?.status)) { window.location.replace(dashboardPath(lang)); return; }
       if (!r.account) setSaveOpen(true);
     }
+    onStageChange?.(r.journeyStep === 4 ? 1 : r.journeyStep === 1 ? 2 : r.journeyStep === 3 ? 3 : 0);
     setData(r); setAvailable(r.available === true); setCsrf(r.csrfToken || '');
     setReply(r.lastPreview?.text || null);
     setPath(r.integration?.path || r.prepared?.path || 'coexistence');
@@ -122,7 +123,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false }) {
     if(reviewMode && window.location.hash.startsWith('#access=')) {
       let access=window.location.hash.slice(8);
       window.history.replaceState(null,'',window.location.pathname);
-      authRequest('session',{reviewAccess:access}).then(()=>window.location.replace(`${ar?'':'/en'}/layla/setup`)).catch(()=>{if(active){setError(explain('review_access_invalid'));setChecking(false);}}).finally(()=>{access=undefined;});
+      authRequest('session',{reviewAccess:access}).then(()=>window.location.replace(`${ar?'':'/en'}/catalyst/setup`)).catch(()=>{if(active){setError(explain('review_access_invalid'));setChecking(false);}}).finally(()=>{access=undefined;});
       return()=>{active=false;};
     }
     request().then(r => { if (active) applyState(r); }).catch(() => {
@@ -231,7 +232,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false }) {
   }
   const goTo = journeyStep => run({ action: 'save_progress', journeyStep });
 
-  const steps = { 0: tr('Your business', 'نشاطك التجاري'), 1: tr('Connect your channels', 'ربط قنواتك'), 3: tr('Go live', 'التشغيل') };
+  const steps = { 0: tr('Your business', 'نشاطك التجاري'), 4: tr('Replies and human handoffs', 'الردود والتحويل للفريق'), 1: tr('Connect your channels', 'ربط قنواتك'), 3: tr('Go live', 'التشغيل') };
   // journeyStep ids are not in the order the customer walks them.
   const currentPosition = Math.max(0, STEP_ORDER.indexOf(step));
   const needsAccount = !reviewMode && !data?.savedToAccount;
@@ -239,12 +240,13 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false }) {
   const saveProps = { lang, tr, data, busy, act, authRequest,
     onSignedIn: async () => { applyState(await request()); applyState(await request({ action: 'claim_draft' })); setSaveOpen(false); },
     onClaim: () => run({ action: 'claim_draft' }) };
-  return <main className="layla-customer" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
-    <header className="layla-customer-nav"><a href={ar ? '/' : '/en'} aria-label="BznsFlow"><img src={logoImg} alt="" width="40" height="40" />BznsFlow</a><nav aria-label={tr('Page navigation','التنقل في الصفحة')}><a className="layla-back-home" href={ar ? '/' : '/en'}>{tr('Back to main website','العودة إلى الموقع الرئيسي')}</a><a href={`${ar ? '/en' : ''}/layla/${reviewMode ? 'review' : 'setup'}`} lang={ar ? 'en' : 'ar'}>{ar ? 'English' : 'العربية'}</a></nav></header>
+  const Container = embedded ? 'section' : 'main';
+  return <Container className={`layla-customer ${embedded ? 'setup-embedded' : ''}`} dir={ar ? 'rtl' : 'ltr'} lang={lang}>
+    <header className="layla-customer-nav"><a href={ar ? '/' : '/en'} aria-label="BznsFlow"><img src={logoImg} alt="" width="40" height="40" />BznsFlow</a><nav aria-label={tr('Page navigation','التنقل في الصفحة')}><a className="layla-back-home" href={ar ? '/' : '/en'}>{tr('Back to main website','العودة إلى الموقع الرئيسي')}</a><a href={`${ar ? '/en' : ''}/${reviewMode ? 'layla/review' : 'catalyst/setup'}`} lang={ar ? 'en' : 'ar'}>{ar ? 'English' : 'العربية'}</a></nav></header>
     <div className="layla-customer-layout">
       <aside className="layla-intro">
         <h1>{tr('Meet your new front desk.', 'تعرّف على موظفة استقبالك الجديدة.')}</h1>
-        <p>{tr('Tell Layla about your business, connect Instagram, WhatsApp or both, and go live. Three steps, a few minutes.', 'عرّف ليلى على نشاطك، واربط إنستغرام أو واتساب أو كليهما، ثم ابدأ التشغيل. ثلاث خطوات في دقائق.')}</p>
+        <p>{tr('Tell Layla about your business, connect Instagram, WhatsApp or both, and go live. Four focused steps.', 'عرّف ليلى على نشاطك، واربط إنستغرام أو واتساب أو كليهما، ثم ابدأ التشغيل. أربع خطوات واضحة.')}</p>
         <img src="/images/layla-onboarding-transparent.png" width="768" height="1376" alt={tr('Layla, wearing a teal jacket and a headset', 'ليلى ترتدي سترة بلون أزرق مخضر وسماعة رأس')} fetchpriority="high" />
         <p className="layla-intro-note">{tr('Your business. Your channels. You stay in control.', 'نشاطك. قنواتك. والقرار دائماً لك.')}</p>
       </aside>
@@ -264,11 +266,18 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false }) {
         {data?.profile && <p className={data.savedToAccount ? 'layla-saved' : 'layla-saved layla-saved--preview'}>{data.savedToAccount ? tr('Saved to your account', 'محفوظ في حسابك') : tr('Preview saved in this browser for 24 hours.', 'المعاينة محفوظة في هذا المتصفح لمدة ٢٤ ساعة.')}</p>}
         {saveOpen && step !== 1 && needsAccount && <SaveAccountPanel {...saveProps} />}
         {step !== 0 && step !== 1 && errorNote}
-        {step === 0 && <BusinessDetailsForm key={data?.profileVersion ?? 'new'} lang={lang} mode="onboarding" initial={{ profile: data?.profile, businessName: data?.profile?.businessName }} busy={busy || checking} onSubmit={saveBusiness}
+        {step === 0 && <BusinessDetailsForm key={data?.profileVersion ?? 'new'} lang={lang} mode="onboarding" inboxOnly={embedded} initial={{ profile: data?.profile, businessName: data?.profile?.businessName }} busy={busy || checking} onSubmit={saveBusiness}
           submitLabel={checking ? tr('Checking secure setup…','جارٍ التحقق من الإعداد الآمن…') : tr('Save and continue','احفظ وتابع')}>
           {errorNote}
           {!checking && !available && <p className="layla-notice layla-notice--progress" role="status">{tr('Your business facts are saved securely for 24 hours without a BznsFlow login. Meta connection is waiting for verified Blue test setup.', 'تُحفظ معلومات نشاطك بأمان لمدة ٢٤ ساعة دون تسجيل دخول إلى BznsFlow. ينتظر ربط Meta التحقق من إعداد الاختبار في Blue.')}</p>}
         </BusinessDetailsForm>}
+        {step === 4 && <section aria-label={tr('Reply behavior', 'سلوك الردود')}>
+          <p>{tr('Layla answers using approved business facts. Unknown answers and requests needing a person belong in your inbox.', 'تجيب ليلى باستخدام معلومات النشاط المعتمدة. تظهر الأسئلة غير المعروفة والطلبات التي تحتاج شخصاً في صندوق الوارد.')}</p>
+          <ul><li>{tr('Take over stops automatic replies.', 'استلام المحادثة يوقف الردود الآلية.')}</li><li>{tr('Resolve closes the attention item; it does not restart Layla.', 'حل الطلب يغلق عنصر المتابعة دون إعادة تشغيل ليلى.')}</li><li>{tr('Return to Layla allows future eligible replies. Cancelled replies are never replayed.', 'الإعادة إلى ليلى تسمح بالردود المستقبلية المؤهلة. لا تُعاد الردود الملغاة.')}</li></ul>
+          <p>{tr('Team handoffs stay inside the platform.', 'تبقى تحويلات الفريق داخل المنصة.')}</p>
+          <button className="layla-secondary" disabled={busy} onClick={() => goTo(0)}>{tr('Back', 'رجوع')}</button>
+          <button className="layla-primary" disabled={busy} onClick={() => goTo(1)}>{tr('Continue to messaging connection', 'متابعة إلى ربط المراسلة')}</button>
+        </section>}
         {step === 1 && <section className="layla-channel-stage">
           <p>{tr('Choose Instagram, WhatsApp, or both. Each connection has its own reply controls.', 'اختر إنستغرام أو واتساب أو كليهما. لكل اتصال أدوات مستقلة للتحكم بالردود.')}</p>
           {needsAccount && !data?.account && <SaveAccountPanel {...saveProps} />}
@@ -288,5 +297,5 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false }) {
       </div>
     </div>
     <ChatWidget t={setupChatText} lang={lang} respond={answerSetupQuestion} suggestions={setupSuggestions} />
-  </main>;
+  </Container>;
 }

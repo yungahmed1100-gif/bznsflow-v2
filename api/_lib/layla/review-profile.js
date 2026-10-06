@@ -14,6 +14,8 @@ export function validateReviewProfile(input) {
   const faqs = input.faqs || [];
   if (!Array.isArray(faqs) || faqs.length > 12 || faqs.some(f=>!f || typeof f.question !== 'string' || !f.question.trim() || f.question.length>200 || typeof f.answer !== 'string' || !f.answer.trim() || f.answer.length>700)) throw new PilotError('invalid_profile');
   profile.faqs = faqs.map(f=>({question:f.question.trim(),answer:f.answer.trim()}));
+  if (input.handoffMode !== undefined && input.handoffMode !== 'inbox') throw new PilotError('invalid_profile');
+  if (input.handoffMode === 'inbox') profile.handoffMode = 'inbox';
   return profile;
 }
 export function previewAnswer(question, profile, catalog = []) {
@@ -29,6 +31,6 @@ export function previewAnswer(question, profile, catalog = []) {
   let text = result.text;
   if (['greeting', 'identity'].includes(result.intent)) text = ar ? `أنا ليلى، المساعدة الافتراضية لدى ${profile.businessName}. كيف أساعدك؟` : `I’m Layla, the virtual assistant for ${profile.businessName}. How can I help?`;
   if (result.intent === 'optout') text = ar ? 'هذه معاينة فقط. لن نرسل أي رسائل واتساب.' : 'This is a preview. No WhatsApp messages will be sent.';
-  if (needsHuman && !profile.humanContact) text += ar ? ' أضف جهة اتصال للفريق قبل تفعيل الردود.' : 'Add your team’s contact details before activating replies.';
+  if (needsHuman && !profile.humanContact && profile.handoffMode !== 'inbox') text += ar ? ' أضف جهة اتصال للفريق قبل تفعيل الردود.' : 'Add your team’s contact details before activating replies.';
   return { question, text, sourceFields, needsHuman, intent: result.intent };
 }

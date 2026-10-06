@@ -91,3 +91,6 @@ export const messagingStore = convexStore({ route: 'blue-messaging', fallback: '
 export const instagramStore = convexStore({ route: 'blue-instagram', fallback: 'instagram_unavailable', status: signInAware });
 export const accessStore = convexStore({ route: 'blue-access', fallback: 'access_unavailable', reasons: ['sign_in_required', 'admin_required', 'invalid_email', 'invalid_plan', 'invalid_pack'] });
 export const coreStore = convexStore({ route: 'green-core', fallback: 'core_unavailable', reasons: ['invalid_email', 'invalid_bucket', 'invalid_turn', 'conversation_not_found'] });
+export const productSetupStore = convexStore({ route: 'product-setup', fallback: 'setup_unavailable', status: signInAware });
+
+export const knowledgeStore = convexStore({ route: 'knowledge-sources', fallback: 'knowledge_unavailable', status: signInAware });

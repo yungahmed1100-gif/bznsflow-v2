@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as productSetup from "../productSetup.js";
+import type * as knowledgeSources from "../knowledgeSources.js";
 import type * as auth from "../auth.js";
 import type * as blueAccess from "../blueAccess.js";
 import type * as blueAccessState from "../blueAccessState.js";
@@ -100,6 +102,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  productSetup: typeof productSetup;
+  knowledgeSources: typeof knowledgeSources;
   auth: typeof auth;
   blueAccess: typeof blueAccess;
   blueAccessState: typeof blueAccessState;

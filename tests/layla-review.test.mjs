@@ -309,12 +309,12 @@ test('preview-first accepts missing contact, persists answer and step, and does 
   const h = harness(), c = await client(h.handler);
   assert.equal((await c.call({action:'preview',text:'What services do you offer?'})).statusCode,409);
   const saved = await c.call({action:'profile',businessName:profile.businessName,profile:{...profile,humanContact:''}});
-  assert.equal(saved.body.journeyStep,1,'saved facts go straight to connecting a channel'); assert.equal(saved.body.capabilities.preview,true); assert.equal(saved.body.capabilities.connect,false);
+  assert.equal(saved.body.journeyStep,4,'saved facts proceed to reply and handoff review'); assert.equal(saved.body.capabilities.preview,true); assert.equal(saved.body.capabilities.connect,false);
   assert.equal((await c.call({action:'begin',path:'new_number'})).statusCode,409);
   const preview = await c.call({action:'preview',text:'What services do you offer?'});
   assert.equal(preview.body.preview,'Portraits'); assert.deepEqual(preview.body.sourceFields,['services']);
   assert.equal((await c.call()).body.lastPreview.text,'Portraits');
-  assert.equal((await c.call()).body.journeyStep,1,'trying a question never moves the owner back a step');
+  assert.equal((await c.call()).body.journeyStep,4,'trying a question never moves the owner back a step');
   assert.equal((await c.call({action:'review_preview',profileVersion:preview.body.profileVersion})).statusCode,400,'there is no approval action any more');
   assert.equal((await c.call({action:'save_progress',journeyStep:2})).statusCode,409,'the old separate preview step is gone');
   assert.equal((await c.call({action:'save_progress',journeyStep:3})).body.journeyStep,3);

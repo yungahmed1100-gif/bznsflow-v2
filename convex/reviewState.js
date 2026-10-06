@@ -26,22 +26,16 @@ export async function executeReview(ctx, a, now = Date.now()) {
   const patch = async value => { await ctx.db.patch(row._id, { ...value, updatedAt: now }); row = await ctx.db.get(row._id); };
   if (a.operation === 'profile') {
     if (row.operation || (row.attempt && !row.attempt.claimed && row.attempt.expiresAt > now && ['prepared','awaiting_meta'].includes(row.status))) return fail('operation_conflict');
-    await patch({ profile: a.profile, metrics:{...row.metrics,draftSavedAt:row.metrics?.draftSavedAt || now}, profileVersion: (row.profileVersion || (row.profile ? 1 : 0)) + 1, lastPreview: undefined, previewIntents: [], journeyStep: [undefined, 0, 2].includes(row.journeyStep) ? 1 : row.journeyStep, status: row.integration || row.pendingSelection || row.attempt ? row.status : 'business_saved' });
-    // A pre-unification Hasib choice is only a migration hint. Once Business
-    // Setup is saved, its single industry becomes authoritative.
-    if (row.accountId) {
-      const hasibSettings = await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', row.accountId)).unique();
-      if (hasibSettings?.packId) await ctx.db.patch(hasibSettings._id, { packId: undefined, updatedAt: now });
-    }
+    await patch({ profile: a.profile, metrics:{...row.metrics,draftSavedAt:row.metrics?.draftSavedAt || now}, profileVersion: (row.profileVersion || (row.profile ? 1 : 0)) + 1, lastPreview: undefined, previewIntents: [], journeyStep: [undefined, 0, 2].includes(row.journeyStep) ? 4 : row.journeyStep, status: row.integration || row.pendingSelection || row.attempt ? row.status : 'business_saved' });
   } else if (a.operation === 'preview_result') {
     if (!row.profile?.reviewed || a.profileVersion !== (row.profileVersion || 1)) return fail('profile_changed');
     if (!a.preview || typeof a.preview.question !== 'string' || a.preview.question.length > 1000 || typeof a.preview.text !== 'string' || a.preview.text.length > 1200) return fail('invalid_state');
     await patch({ lastPreview: a.preview, metrics:{...row.metrics,firstPreviewAt:row.metrics?.firstPreviewAt || now}, previewIntents: [...new Set([...(row.previewIntents || []), a.preview.intent])].slice(0, 12) });
   } else if (a.operation === 'save_progress') {
-    if (![0,1,3].includes(a.journeyStep) || (a.journeyStep !== 0 && !row.profile?.reviewed)) return fail('operation_conflict');
+    if (![0,1,3,4].includes(a.journeyStep) || (a.journeyStep !== 0 && !row.profile?.reviewed)) return fail('operation_conflict');
     await patch({ journeyStep: a.journeyStep });
   } else if (a.operation === 'begin') {
-    if (!row.profile?.reviewed || !row.profile.humanContact || row.integration || (row.pendingSelection && row.attempt?.expiresAt > now) || row.status === 'reconciliation_required' || (row.status === 'verifying' && row.attempt?.expiresAt > now)) return fail('operation_conflict');
+    if (!row.profile?.reviewed || (!row.profile.humanContact && row.profile.handoffMode !== 'inbox') || row.integration || (row.pendingSelection && row.attempt?.expiresAt > now) || row.status === 'reconciliation_required' || (row.status === 'verifying' && row.attempt?.expiresAt > now)) return fail('operation_conflict');
     if (row.attempts >= 10) return fail('attempt_limit');
     if (row.attempt && row.attempt.expiresAt > now && !['cancelled','failed','expired'].includes(row.status)) return fail('operation_conflict');
     // A new attempt starts clean: the previous attempt's diagnostic no longer describes it.

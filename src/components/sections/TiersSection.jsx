@@ -150,7 +150,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
               <p className="tier-pull">{tier.pull}</p>
 
               <a
-                href={canSetup(tier.key) ? `${lang === 'ar' ? '' : '/en'}/layla/setup` : waLink(planMsg(tier.name))}
+                href={canSetup(tier.key) ? `${lang === 'ar' ? '' : '/en'}/${tier.key}/setup` : waLink(planMsg(tier.name))}
                 target={canSetup(tier.key) ? undefined : '_blank'}
                 rel={canSetup(tier.key) ? undefined : 'noopener noreferrer'}
                 className={`btn ${tier.popular ? 'btn-primary' : 'btn-ghost'} pricing-btn`}

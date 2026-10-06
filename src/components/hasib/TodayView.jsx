@@ -37,11 +37,11 @@ function SetupChecklist({ h, steps, onGo }) {
 }
 
 /** A number with its plain-words meaning underneath, so nothing needs guessing. */
-function Figure({ label, help, children }) {
+function Figure({ label, help, children, onClick }) {
   return (
     <div className="hb-figure">
       <dt>{label}</dt>
-      <dd className="hb-figure-value">{children}</dd>
+      <dd className="hb-figure-value">{onClick ? <button type="button" className="hb-figure-link" onClick={onClick}>{children}<span className="ld-visually-hidden"> — {label}</span></button> : children}</dd>
       <dd className="hb-figure-help">{help}</dd>
     </div>
   );
@@ -55,9 +55,7 @@ function Figure({ label, help, children }) {
 function ClinicToday({ h, t, connected, onGo, staff }) {
   const n = t.needsYou, word = v => (v ? (h.ar ? v.ar : v.en) : '');
   const steps = [
-    { id: 'whatsapp', done: connected, go: ['settings', { view: 'channels' }] },
     { id: 'industry', done: true, go: null },
-    { id: 'laylaSector', done: t.setup.laylaSector, go: ['settings', { view: 'business' }] },
     { id: 'treatments', done: t.setup.treatments, go: ['stock', { view: 'services' }] },
     { id: 'supplies', done: t.setup.supplies, go: ['stock', { view: 'products' }] },
   ];
@@ -95,20 +93,20 @@ function ClinicToday({ h, t, connected, onGo, staff }) {
         <section className="hb-today-card" aria-labelledby="hb-layla-title">
           <h2 id="hb-layla-title">{h.t('receptionToday')}</h2>
           <dl className="hb-figures">
-            <Figure label={h.t('laylaReplies')} help={h.t('help_laylaReplies')}><span className="ld-num">{t.layla.replies}</span></Figure>
-            <Figure label={h.t('appointmentRequests')} help={h.t('help_appointmentRequests')}><span className="ld-num">{t.layla.appointmentRequests}</span></Figure>
-            <Figure label={h.t('serviceQuestions')} help={h.t('help_serviceQuestions')}><span className="ld-num">{t.layla.serviceQuestions}</span></Figure>
-            <Figure label={h.t('priceQuestions')} help={h.t('help_priceQuestions')}><span className="ld-num">{t.layla.priceQuestions}</span></Figure>
-            <Figure label={h.t('handoffs')} help={h.t('help_handoffs')}><span className="ld-num">{t.layla.handoffs}</span></Figure>
+            <Figure onClick={() => onGo('chats')} label={h.t('laylaReplies')} help={h.t('help_laylaReplies')}><span className="ld-num">{t.layla.replies}</span></Figure>
+            <Figure onClick={() => onGo('chats')} label={h.t('appointmentRequests')} help={h.t('help_appointmentRequests')}><span className="ld-num">{t.layla.appointmentRequests}</span></Figure>
+            <Figure onClick={() => onGo('chats')} label={h.t('serviceQuestions')} help={h.t('help_serviceQuestions')}><span className="ld-num">{t.layla.serviceQuestions}</span></Figure>
+            <Figure onClick={() => onGo('chats')} label={h.t('priceQuestions')} help={h.t('help_priceQuestions')}><span className="ld-num">{t.layla.priceQuestions}</span></Figure>
+            <Figure onClick={() => onGo('chats', { queue: 'attention' })} label={h.t('handoffs')} help={h.t('help_handoffs')}><span className="ld-num">{t.layla.handoffs}</span></Figure>
           </dl>
         </section>
         {/* The front desk never receives cash totals (convex/hasib/staffPolicy.js). */}
         {t.money && <section className="hb-today-card" aria-labelledby="hb-money-title">
           <h2 id="hb-money-title">{h.t('moneyTitle')}</h2>
           <dl className="hb-figures">
-            <Figure label={h.t('revenueToday')} help={`${h.t('help_revenueToday')} ${h.t('visitsToday', { count: t.money.visitsToday })}.`}><Money h={h} minor={t.money.revenueTodayMinor} /></Figure>
-            <Figure label={h.t('moneyToday')} help={h.t('help_moneyToday')}><Money h={h} minor={t.money.todayMinor} /></Figure>
-            <Figure label={h.t('owedToYou')} help={h.t('help_owedToYou')}><Money h={h} minor={t.money.owedMinor} /></Figure>
+            <Figure onClick={() => onGo('orders')} label={h.t('revenueToday')} help={`${h.t('help_revenueToday')} ${h.t('visitsToday', { count: t.money.visitsToday })}.`}><Money h={h} minor={t.money.revenueTodayMinor} /></Figure>
+            <Figure onClick={() => onGo('orders')} label={h.t('moneyToday')} help={h.t('help_moneyToday')}><Money h={h} minor={t.money.todayMinor} /></Figure>
+            <Figure onClick={() => onGo('orders')} label={h.t('owedToYou')} help={h.t('help_owedToYou')}><Money h={h} minor={t.money.owedMinor} /></Figure>
           </dl>
         </section>}
       </div>
@@ -128,7 +126,6 @@ export function TodayView({ s, h, hasibOverview, connected, onGo }) {
   const t = today.data;
   const flagText = flags => flags.map(f => h.t(`flag_${f}`)).join(' · ');
   const steps = [
-    { id: 'whatsapp', done: connected, go: ['settings', { view: 'channels' }] },
     { id: 'industry', done: !setupRequired, go: null },
     { id: 'products', done: !!t?.setup?.products, go: ['stock'] },
     { id: 'photos', done: !!t?.setup?.photos, go: ['stock'] },

@@ -1,5 +1,9 @@
 import type { RouteConfig } from "@react-router/dev/routes";
 export default [
+  {"file": "route-modules/catalyst-setup.jsx", "path": "catalyst/setup"},
+  {"file": "route-modules/en-catalyst-setup.jsx", "path": "en/catalyst/setup"},
+  {"file": "route-modules/ascend-setup.jsx", "path": "ascend/setup"},
+  {"file": "route-modules/en-ascend-setup.jsx", "path": "en/ascend/setup"},
   {
     "file": "route-modules/home.jsx",
     "index": true

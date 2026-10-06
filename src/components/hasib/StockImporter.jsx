@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { hasib } from '../../lib/dashboard/api';
 import { download } from '../../lib/dashboard/exports';
 import { Dialog } from '../dashboard/Dialog';
@@ -74,6 +74,8 @@ function Preview({ h, preview, photos }) {
  * → photos from the file, or pictures named after a SKU or product.
  */
 export function StockImporter({ s, h, pack, onClose, onImported }) {
+  const parserController = useRef(null);
+  useEffect(() => () => parserController.current?.abort(), []);
   const serials = pack.modules?.serials === 'available';
   const [step, setStep] = useState('pick'), [error, setError] = useState(''), [slowFile, setSlowFile] = useState(false);
   const [file, setFile] = useState(null), [mapping, setMapping] = useState(null);
@@ -93,7 +95,8 @@ export function StockImporter({ s, h, pack, onClose, onImported }) {
     if (!chosen) return;
     setError(''); setStep('reading'); setSlowFile(chosen.type.startsWith('image/'));
     try {
-      const read = await readStockFile(chosen);
+      parserController.current = new AbortController();
+      const read = await readStockFile(chosen, {signal:parserController.current.signal});
       const rows = findHeaderRow(read.rows, pack.variantOptions) || read.rows;
       const offset = read.rows.length - rows.length;
       // Sheet row index → preview line (line 2 is the first row under the headers).
@@ -101,7 +104,7 @@ export function StockImporter({ s, h, pack, onClose, onImported }) {
       setFile({ name: chosen.name, kind: read.kind, rows, images });
       setMapping(guessStockMapping(rows[0], pack.variantOptions));
       setStep('review');
-    } catch (err) { setError(h.reason(err.reason) || h.reason('import_file_type')); setStep('pick'); }
+    } catch (err) { if (err.name !== 'AbortError') setError(h.reason(err.reason) || h.reason('import_file_type')); setStep('pick'); }
   };
 
   const attachPhotos = async (pairs, total) => {
@@ -170,6 +173,7 @@ export function StockImporter({ s, h, pack, onClose, onImported }) {
             </div>
           </>
         )}
+        {step === 'reading' && <button type="button" className="ld-button ld-quiet" onClick={() => parserController.current?.abort()}>{s.ar ? 'إلغاء الاستخراج' : 'Cancel extraction'}</button>}
         {step === 'reading' && <p role="status" className="ld-state">{h.t('readingFile')}{slowFile && <span className="ld-help"> {h.t('readingPhotoSlow')}</span>}</p>}
         {step === 'review' && preview && (
           <>

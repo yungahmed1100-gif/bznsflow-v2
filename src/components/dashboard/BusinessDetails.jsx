@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { callApi } from '../../lib/api-client.js';
 import { explain as explainReason } from '../../lib/onboarding/explanations.js';
 import { BusinessDetailsForm } from '../business/BusinessDetailsForm.jsx';
+import { AddInformation } from '../business/AddInformation.jsx';
 import { CatalogManager } from '../business/CatalogManager.jsx';
 import '../../styles/layla-onboarding.css';
 
@@ -53,7 +54,8 @@ export function BusinessDetails({ s, section = 'all', initialIndustryId, onSaved
         {section === 'services' ? null : setup.profile
           ? <BusinessDetailsForm key={`${setup.profileVersion}:${initialIndustryId || ''}`} lang={lang} mode="dashboard" initial={{ profile: setup.profile, businessName: setup.profile.businessName }} initialIndustryId={initialIndustryId}
               busy={busy} onSubmit={save} submitLabel={busy ? s.t('loading') : tr('Save changes', 'حفظ التغييرات')} />
-          : <p>{tr('Finish setup first.', 'أكمل الإعداد أولاً.')} <a href={`${ar ? '' : '/en'}/layla/setup`}>{tr('Open setup', 'افتح الإعداد')}</a></p>}
+          : <p>{tr('Finish setup first.', 'أكمل الإعداد أولاً.')} <a href={`${ar ? '' : '/en'}/catalyst/setup`}>{tr('Open setup', 'افتح الإعداد')}</a></p>}
+        {setup.profile && section !== 'services' && <AddInformation lang={lang} request={request} />}
         {setup.profile && section !== 'details' && <section {...(section === 'all' ? { 'aria-labelledby': 'business-catalog-heading' } : { 'aria-label': tr('Services', 'الخدمات') })}>
           {section === 'all' && <h2 id="business-catalog-heading">{tr('Services, prices and imports', 'الخدمات والأسعار والاستيراد')}</h2>}
           <CatalogManager lang={lang} request={request} act={act} busy={busy} onError={setError} explain={explain}

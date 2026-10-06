@@ -149,4 +149,23 @@ http.route({path:'/green-migrate',method:'POST',handler:httpAction(async(ctx,req
     return new Response(JSON.stringify({ok:false,reason:'migration_failed'}),{status:503,headers});
   }
 })});
+http.route({path:'/product-setup',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text(); if(raw.length>5000) return new Response(null,{status:413});
+    const result=await ctx.runMutation(internal.productSetup.execute,JSON.parse(raw));
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'setup_unavailable'}),{status:503,headers}); }
+})});
+http.route({ path: '/knowledge-sources', method: 'POST', handler: httpAction(async (ctx, request) => {
+  if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+  const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  try {
+    const raw = await request.text();
+    if (raw.length > 450000) return new Response(null, { status: 413 });
+    const result = await ctx.runMutation((internal as any).knowledgeSources.execute, JSON.parse(raw));
+    return new Response(JSON.stringify(result), { headers });
+  } catch { return new Response(JSON.stringify({ ok: false, reason: 'knowledge_unavailable' }), { status: 503, headers }); }
+}) });
 export default http;

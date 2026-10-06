@@ -24,7 +24,7 @@ const open = async (width, lang, path) => {
   page.on('pageerror', e => problems.push(`pageerror ${e.message}`));
   page.on('response', r => { if (r.url().includes('/api/') && r.status() >= 400 && !DEMO_ONLY.test(r.url())) problems.push(`${r.status()} ${r.url()}`); });
   await page.goto(`${BASE}${lang === 'ar' ? '' : '/en'}${path}`);
-  await page.locator('.ld-nav a').first().waitFor();
+  await page.locator('.ld-nav a').first().waitFor({ state: 'attached' });
   return { page, context, problems };
 };
 const current = page => page.locator('.ld-nav a[aria-current="page"]').innerText();
@@ -67,11 +67,10 @@ try {
   for (const lang of ['en', 'ar']) {
     const { page, context, problems } = await open(lang === 'en' ? 1440 : 320, lang, '/layla/dashboard?tab=chats');
     await page.getByText('Salma Al Harthy').first().click();
-    const leave = page.getByRole('switch');
-    await leave.waitFor();
-    await leave.check();
-    await page.waitForFunction(() => document.querySelector('[role="switch"]')?.checked === true);
-    assert.equal(await leave.isChecked(), true, `${lang}: chat taken over`); count++;
+    await page.getByRole('button', { name: lang === 'ar' ? 'استلام المحادثة' : 'Take over', exact: true }).click();
+    const resume = page.getByRole('button', { name: lang === 'ar' ? 'إعادة إلى ليلى' : 'Return to Layla', exact: true });
+    await resume.waitFor();
+    assert.equal(await resume.isVisible(), true, `${lang}: chat taken over`); count++;
     const text = `Owner reply ${lang}`;
     await page.locator('#ld-reply').fill(text);
     const send = page.locator('.ld-composer button[type="submit"]');
@@ -81,8 +80,8 @@ try {
     assert.equal(await page.locator('#ld-reply').inputValue(), '', `${lang}: composer cleared`); count++;
     const box = await send.boundingBox(), vh = page.viewportSize().height;
     assert.ok(box && box.y + box.height <= vh, `${lang}: send button is on screen and not covered`); count++;
-    await leave.uncheck();
-    await page.waitForFunction(() => document.querySelector('[role="switch"]')?.checked === false);
+    await resume.click();
+    await page.getByRole('button', { name: lang === 'ar' ? 'استلام المحادثة' : 'Take over', exact: true }).waitFor();
     assert.deepEqual(problems, [], `${lang}: no errors`); count++;
     await page.screenshot({ path: `${OUT}/thread-${lang}.png`, fullPage: false });
     await context.close();

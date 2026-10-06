@@ -26,7 +26,7 @@ import { ExpensesView } from '../components/hasib/ExpensesView';
 import { TodayView } from '../components/hasib/TodayView';
 import { TeamView } from '../components/hasib/TeamView';
 import { SectionTabs } from '../components/dashboard/SectionTabs';
-import { dashboardMap, resolveTab } from '../lib/dashboard/navigation';
+import { dashboardMap, dashboardSearch, resolveTab } from '../lib/dashboard/navigation';
 import { ServiceView } from '../components/hasib/ServiceView';
 import { AccountsSettings } from '../components/hasib/AccountsSettings';
 import { browserTimezone } from '../lib/dashboard/format';
@@ -37,6 +37,7 @@ import { ConstructionDashboard } from '../components/hasib/ConstructionDashboard
 import { AutomotiveDashboard } from '../components/hasib/AutomotiveDashboard';
 import '../styles/layla-dashboard.css';
 import '../styles/hasib.css';
+import '../styles/product.css';
 
 export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const [params, setParams] = useSearchParams();
@@ -74,7 +75,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   }, [overview.data?.connected, overview.data?.timezone, overview.data?.workspaceRole]);
 
   const go = (next, extra = {}) => {
-    const search = new URLSearchParams({ tab: next, ...extra });
+    const search = dashboardSearch(params, next, extra);
     setParams(search, { replace: false });
   };
   const refreshHasib = useCallback(() => hasibState.refresh({ quiet: true }), [hasibState.refresh]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -99,7 +100,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
         <a className="ld-lang" href={`${s.ar ? '/en' : ''}${previewPack ? '/owner/preview/' + previewPack : '/layla/dashboard'}${params.toString() ? `?${params}` : ''}`} lang={s.ar ? 'en' : 'ar'}>{s.t('language')}</a>
       </header>
       <HasibProvider lang={lang} overview={hasibOverview} business={data?.business?.name || ''} timezone={data?.timezone} onChanged={refreshHasib}>
-      <DashboardNav packId={hasibOverview?.pack?.id} s={s} h={h} sections={map.sections} tab={tab} onSelect={go} badges={{ orders: hasibOverview?.counts?.laylaWaiting || 0 }} />
+      <DashboardNav packId={hasibOverview?.pack?.id} s={s} h={h} sections={map.sections} tab={tab} onSelect={go} search={params} business={data?.business?.name} preview={hasibOverview?.readOnly} badges={{ orders: hasibOverview?.counts?.laylaWaiting || 0 }} />
       <main id="ld-main" className={`ld-main ${hasibOverview?.readOnly ? 'hb-preview-mode' : ''}`} tabIndex={-1} data-tab={tab}>
         {!ready || (overview.loading && !data) ? <p className="ld-state" role="status">{s.t('loading')}</p>
           : unavailable ? <div className="ld-state"><p>{s.t('dashboardUnavailable')}</p><a className="ld-button" href={setupPath(lang)}>{s.t('setup')}</a></div>
@@ -131,7 +132,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                     {!hasibOverview?.readOnly && hasibOverview?.pack && <IndustrySetup selection={false} heading={false} s={s} h={h} livePacks={hasibOverview.livePacks} industries={hasibOverview.industries} current={hasibOverview.pack.id} settings={hasibOverview.settings} onChosen={refreshHasib} />}</>
                 : tab === 'team' ? <TeamView s={s} h={h} />
                 : tab === 'settings' ? <ChannelConnections s={s} data={data} onChange={() => overview.refresh({ quiet: true })} />
-                : <ChatsView s={s} overview={data} selected={params.get('chat')} onSelect={id => go('chats', id ? { chat: id } : {})} />}
+                : <ChatsView s={s} overview={data} selected={params.get('chat')} queue={params.get('queue') === 'attention'} onQueue={value => go('chats', { ...(value ? { queue: 'attention' } : {}), ...(params.get('chat') ? { chat: params.get('chat') } : {}) })} onSelect={id => go('chats', { ...(id ? { chat: id } : {}), ...(params.get('queue') === 'attention' ? { queue: 'attention' } : {}) })} />}
             </>
           ) : <p className="ld-state" role="status">{s.t('loading')}</p>}
       </main>

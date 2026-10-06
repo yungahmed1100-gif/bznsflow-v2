@@ -16,6 +16,8 @@ try {
     await page.route('**/*',async route=>{
       const u=new URL(route.request().url());
       if(u.origin!==BASE) return route.abort();
+      if(u.pathname==='/api/product-setup') return route.fulfill({json:{ok:true,csrfToken:'a'.repeat(64),progress:{product:'catalyst',step:2,completed:false,version:1},settings:null}});
+      if(u.pathname==='/api/knowledge') return route.fulfill({json:{ok:true,csrfToken:'a'.repeat(64),sources:[],drafts:[]}});
       if(u.pathname==='/api/layla-meta') {
         const body=route.request().postDataJSON() || {},surface=u.searchParams.get('surface');calls.push({surface,...body});
         let result=state;

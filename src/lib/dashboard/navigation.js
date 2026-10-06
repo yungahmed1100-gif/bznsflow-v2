@@ -17,6 +17,15 @@ const ALIASES = {
 const TEAM_PACKS = ['retail', 'retail-tech', 'dental', 'real-estate', 'clinic', 'construction', 'automotive'];
 export const SECTION_ORDER = ['today', 'chats', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings'];
 
+/** Preserve caller-owned URL parameters while clearing record state when changing sections. */
+export function dashboardSearch(current, tab, extra = {}) {
+  const params = new URLSearchParams(current);
+  for (const key of ['tab', 'view', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'stage', 'filter']) params.delete(key);
+  params.set('tab', tab);
+  for (const [key, value] of Object.entries(extra)) params.set(key, value);
+  return params;
+}
+
 /**
  * @param {{ modules: string[], setupRequired: boolean, pack?: { id: string } } | null} hasib the Hasib overview, or null when Hasib is off
  * @param {Record<string, boolean>} [capabilities]

@@ -68,7 +68,7 @@ async function applyPackChoice(ctx, accountId, pack, now) {
   if (pack.serviceItems) await syncServiceItems(ctx, accountId, now);
 }
 
-async function updateSettings(ctx, accountId, a, now) {
+export async function updateSettings(ctx, accountId, a, now) {
   const current = await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
   const next = { ...(await settingsFor(ctx, accountId)) };
   if (a.vat !== undefined) {

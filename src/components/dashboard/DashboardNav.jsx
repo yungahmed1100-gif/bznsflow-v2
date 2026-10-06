@@ -1,5 +1,7 @@
-import React from 'react';
-import { hasibPack } from '../../../config/hasib-packs';
+import React, { useState } from 'react';
+import { hasibPack, livePackSummaries } from '../../../config/hasib-packs';
+import { Dialog } from './Dialog';
+import { dashboardSearch } from '../../lib/dashboard/navigation';
 
 // One icon per section, in the order the owner meets them.
 const ICONS = {
@@ -15,23 +17,29 @@ const ICONS = {
 };
 const HASIB_LABELS = new Set(['orders', 'stock', 'service']);
 
-/** Fixed start-side rail on desktop; a scrollable top bar on phones. */
-export function DashboardNav({ s, h, sections, tab, onSelect, badges = {}, packId }) {
+/** Labelled desktop sidebar, with the same destinations in a native mobile dialog. */
+export function DashboardNav({ s, h, sections, tab, onSelect, badges = {}, packId, business, preview, search = '' }) {
+  const [open, setOpen] = useState(false);
   const pack = hasibPack(packId);
+  const sector = livePackSummaries().find(item => item.id === packId);
   const label = id => id === 'team' ? (s.ar ? 'الفريق' : 'Team') : packId && ['orders', 'stock'].includes(id) ? pack.ownerUi[id === 'orders' ? 'work' : 'stock'][s.ar ? 'ar' : 'en'] : (HASIB_LABELS.has(id) ? h.t(id) : s.t(id));
-  return (
-    <nav className={`ld-nav ${sections.length > 4 ? 'has-hasib' : ''}`} aria-label={s.t('nav')}>
-      <ul>
+  const links = <ul>
         {sections.map(id => (
           <li key={id}>
-            <a href={`?tab=${id}`} aria-current={tab === id ? 'page' : undefined} onClick={e => { e.preventDefault(); onSelect(id); }}>
+            <a href={`?${dashboardSearch(search, id)}`} aria-current={tab === id ? 'page' : undefined} onClick={e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); onSelect(id); setOpen(false); }}>
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d={ICONS[id]} fill="currentColor" /></svg>
               <span>{label(id)}</span>
               {badges[id] > 0 && <span className="ld-nav-badge" aria-label={h.t('laylaWaitingTile')}>{badges[id]}</span>}
             </a>
           </li>
         ))}
-      </ul>
+      </ul>;
+  return (
+    <nav className={`ld-nav ${sections.length > 4 ? 'has-hasib' : ''}`} aria-label={s.t('nav')}>
+      <div className="ld-workspace"><small>{preview ? (s.ar ? 'معاينة القطاع' : 'Sector preview') : (s.ar ? 'مساحة العمل' : 'Workspace')}</small><strong>{sector ? (s.ar ? sector.ar : sector.en) : 'Catalyst'}</strong>{business && <span>{business}</span>}</div>
+      <button type="button" className="ld-nav-trigger ld-button" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen(true)}><span aria-hidden="true">☰</span><span>{tab ? label(tab) : s.t('nav')}</span><span className="ld-nav-trigger-label">{s.ar ? 'التنقل' : 'Menu'}</span></button>
+      <div className="ld-desktop-nav">{links}</div>
+      {open && <Dialog s={s} title={s.t('nav')} onClose={() => setOpen(false)}><div className="ld-drawer-nav" dir={s.ar ? 'rtl' : 'ltr'}>{links}</div></Dialog>}
     </nav>
   );
 }

@@ -89,5 +89,5 @@ export async function importWebsite(input,{resolve = lookup,get = retrieve} = {}
   }
   const text=texts.join(' ').replace(/\s+/g,' ').trim().slice(0,100000);
   if(text.length>=100000)partial=true;
-  return {url:root.url.href,text,partial,pages,extracted:extractCatalogFacts(text,root.url.href)};
+  return {url:root.url.href,text,partial,pages,sections:pages.map((label,index)=>({label,text:texts[index]})),extracted:extractCatalogFacts(text,root.url.href)};
 }

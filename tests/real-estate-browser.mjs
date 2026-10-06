@@ -39,7 +39,7 @@ async function open(base, width, lang, path) {
   page.on('pageerror', e => problems.push(`pageerror ${e.message}`));
   page.on('response', r => { if (r.url().includes('/api/') && r.status() >= 400 && !DEMO_ONLY.test(r.url())) problems.push(`${r.status()} ${r.url()} ${r.request().postData()?.slice(0, 80)}`); });
   await page.goto(`${base}${lang === 'ar' ? '' : '/en'}${path}`);
-  await page.locator('.ld-nav a').first().waitFor();
+  await page.locator('.ld-nav a').first().waitFor({ state: 'attached' });
   return { page, context, problems };
 }
 const api = (page, base, action, body = {}) => page.evaluate(async ([url, payload]) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })).json(),

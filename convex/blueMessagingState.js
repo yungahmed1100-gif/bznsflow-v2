@@ -6,6 +6,7 @@ import { applyInbound, applyOptout, linkConversation, recordQuestions, sectorFor
 import { recordDemand } from './hasib/demandState.js';
 import { commerceTurn } from './hasib/laylaOrders.js';
 import { realEstateTurn } from './hasib/realEstateTurn.js';
+import { approvedKnowledge } from './knowledgeSourceState.js';
 // Router intents whose generic answer is replaced by a live stock line when a product is named.
 const GENERIC_INTENTS=new Set(['prices','services','unknown']);
 // What an inbound message asked about, kept on the message (never its text) so Today can count it.
@@ -21,7 +22,7 @@ const MAX_REPLY_LENGTH = 1000;
  * as they are saved, with no separate preview approval.
  */
 export function messagingReady(row, now) {
-  return !!(row?.accountId && row.expiresAt>now && ['connected','paused'].includes(row.status) && row.profile?.reviewed && row.profile.humanContact);
+  return !!(row?.accountId && row.expiresAt>now && ['connected','paused'].includes(row.status) && row.profile?.reviewed && (row.profile.humanContact || row.profile.handoffMode === 'inbox'));
 }
 export async function executeMessaging(ctx, a, now = Date.now()) {
   const ok = value => ({ok:true,value}), fail = reason => ({ok:false,reason});
@@ -87,11 +88,11 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     const row=connection && await find('blueReviewSessions','by_hash','sessionHash',connection.sessionHash);
     const bound=instagramRow(row,connection,now);
     // Server-only answer: the sealed credential lets the webhook look up the sender's @username.
-    return ok(bound && row.expiresAt>now ? {integrationId:connection.integrationId,channel:'instagram',app:connection.integration.app,igAccount:connection.igAccount,sessionHash:connection.sessionHash,integration:connection.integration,profile:row.profile,profileVersion:row.profileVersion || 1,catalog:await approvedCatalog(row.accountId,100)}:null);
+    return ok(bound && row.expiresAt>now ? {integrationId:connection.integrationId,channel:'instagram',app:connection.integration.app,igAccount:connection.igAccount,sessionHash:connection.sessionHash,integration:connection.integration,profile:row.profile,profileVersion:row.profileVersion || 1,catalog:await approvedCatalog(row.accountId,100),knowledge:await approvedKnowledge(ctx,row.accountId)}:null);
   }
   if(a.operation==='binding') {
     const row=await ctx.db.query('blueReviewSessions').withIndex('by_phone',q=>q.eq('phone',a.phone)).unique();
-    return ok(row?.accountId && row.expiresAt>now && row.integration?.waba===a.waba ? {integrationId:row.integration.id,app:row.integration.app,waba:row.integration.waba,phone:row.integration.phone,sender:row.integration.sender,profile:row.profile,profileVersion:row.profileVersion || 1,catalog:await approvedCatalog(row.accountId,100)}:null);
+    return ok(row?.accountId && row.expiresAt>now && row.integration?.waba===a.waba ? {integrationId:row.integration.id,app:row.integration.app,waba:row.integration.waba,phone:row.integration.phone,sender:row.integration.sender,profile:row.profile,profileVersion:row.profileVersion || 1,catalog:await approvedCatalog(row.accountId,100),knowledge:await approvedKnowledge(ctx,row.accountId)}:null);
   }
   if(a.operation==='health_context') {
     const control=await controls(a.integrationId),row=await rowForControl(control);
@@ -147,9 +148,9 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       if(a.operation==='resume_conversation') {
         if(person.optout) return fail('contact_opted_out');
         await stopQueued(row.integration.id,person._id,'human_takeover');
-        await ctx.db.patch(person._id,{takeover:false,updatedAt:now,version:(person.version || 0)+1});
+        await ctx.db.patch(person._id,{takeover:false,handoffState:'returned',updatedAt:now,version:(person.version || 0)+1});
         await restampOwnerReplies(row.integration.id,person._id,(person.version || 0)+1);
-      } else if(a.operation==='takeover') {await stopQueued(row.integration.id,person._id,'human_takeover');await ctx.db.patch(person._id,{takeover:true,updatedAt:now,version:(person.version || 0)+1});await restampOwnerReplies(row.integration.id,person._id,(person.version || 0)+1);}
+      } else if(a.operation==='takeover') {await stopQueued(row.integration.id,person._id,'human_takeover');await ctx.db.patch(person._id,{takeover:true,handoffState:'handling',handoffReason:person.handoffReason || 'team_takeover',handoffOpenedAt:person.handoffOpenedAt || now,updatedAt:now,version:(person.version || 0)+1});await restampOwnerReplies(row.integration.id,person._id,(person.version || 0)+1);}
       else {
         // The owner's own reply never depends on Layla (paused, taken over or never activated);
         // it needs a ready connection, a customer who has not opted out and the 24h window.
@@ -163,7 +164,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         if(!await message(key)) {
           await stopQueued(row.integration.id,person._id,'human_takeover');
           const version=(person.version || 0)+1;
-          await ctx.db.patch(person._id,{takeover:true,updatedAt:now,version});
+          await ctx.db.patch(person._id,{takeover:true,handoffState:'handling',handoffReason:person.handoffReason || 'team_takeover',handoffOpenedAt:person.handoffOpenedAt || now,updatedAt:now,version});
           await restampOwnerReplies(row.integration.id,person._id,version);
           await queue(row,{...person,version},a.text.trim(),key,true);
         }
@@ -258,7 +259,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       }
       if(e.intent==='optout' || e.handoff) await stopQueued(a.integrationId,person._id,e.intent==='optout'?'contact_opted_out':'human_takeover');
       const version=(person.version || 0)+(e.intent==='optout' || e.handoff?1:0);
-      await ctx.db.patch(person._id,{version,lastInbound:Math.max(person.lastInbound,e.at),updatedAt:now,...(e.intent==='optout'?{optout:true}:{}),...(e.handoff?{takeover:true}:{})});
+      await ctx.db.patch(person._id,{version,lastInbound:Math.max(person.lastInbound,e.at),updatedAt:now,...(e.intent==='optout'?{optout:true}:{}),...(e.handoff?{takeover:true,handoffState:'open',handoffReason:e.medicalContentWithheld?'clinical_boundary':e.intent==='human'?'customer_requested':'needs_review',handoffOpenedAt:now,handoffResolvedAt:undefined,handoffResolvedBy:undefined}:{})});
       // Asking for a person hands the chat to the owner; the owner's waiting reply is that person.
       if(e.handoff && e.intent!=='optout') await restampOwnerReplies(a.integrationId,person._id,version);
       if(e.intent==='optout') {await applyOptout(ctx,contact,now);continue;}
@@ -271,7 +272,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         const existing=await ctx.db.query('clinicTasks').withIndex('by_entity',q=>q.eq('entityType','conversation').eq('entityId',String(person._id))).take(20);
         if(!existing.some(task=>task.status==='open'&&task.kind==='medical_handoff')) await ctx.db.insert('clinicTasks',{accountId:row.accountId,kind:'medical_handoff',entityType:'conversation',entityId:String(person._id),status:'open',reason:'medical_content_withheld',createdAt:now,updatedAt:now});
         if(enabled&&control.active&&ready(row)&&!person.optout&&!contact.optout&&now-e.at<DAY&&e.reply) await queue(row,{...person,version},e.reply,`reply:${a.integrationId}:${e.id}`,false,true);
-        await ctx.db.patch(person._id,{takeover:true,updatedAt:now,version});
+        await ctx.db.patch(person._id,{takeover:true,handoffState:'open',handoffReason:'clinical_boundary',handoffOpenedAt:now,updatedAt:now,version});
         continue;
       }
       // Hasib's lost-demand report: a product question becomes a PII-free signal (no-op while Hasib is off).
@@ -292,7 +293,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       const reply=[...lead,commerce?.ack,applied.plan.text].filter(Boolean).join('\n\n').slice(0,MAX_REPLY_LENGTH);
       await queue(row,{...person,version},reply,`reply:${a.integrationId}:${e.id}`,false,!!e.handoff || !!realEstate?.handoff,undefined,realEstate);
       if(realEstate?.opportunityId) await ctx.db.patch(realEstate.opportunityId,{replyQueuedAt:now,updatedAt:now});
-      if(realEstate?.handoff) await ctx.db.patch(person._id,{takeover:true,updatedAt:now,version});
+      if(realEstate?.handoff) await ctx.db.patch(person._id,{takeover:true,handoffState:'open',handoffReason:'opportunity_review',handoffOpenedAt:now,updatedAt:now,version});
       // The product photo follows the answer, once per product per chat each day.
       if(commerce?.photo) {
         const recent=await ctx.db.query('blueMessages').withIndex('by_conversation_at',q=>q.eq('conversationId',person._id).gte('at',now-DAY)).take(200);

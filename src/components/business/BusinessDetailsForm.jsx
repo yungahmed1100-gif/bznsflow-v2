@@ -33,7 +33,7 @@ function parseContact(raw = '') {
  * Saving there is the owner confirming the facts, and Layla answers with them
  * straight away.
  */
-export function BusinessDetailsForm({ lang, initial = {}, initialIndustryId, mode = 'onboarding', busy = false, submitLabel, onSubmit, children }) {
+export function BusinessDetailsForm({ lang, initial = {}, initialIndustryId, mode = 'onboarding', inboxOnly = mode === 'dashboard', busy = false, submitLabel, onSubmit, children }) {
   const ar = lang === 'ar';
   const tr = (en, arabic) => ar ? arabic : en;
   const dashboard = mode === 'dashboard';
@@ -62,7 +62,7 @@ export function BusinessDetailsForm({ lang, initial = {}, initialIndustryId, mod
   }
   // In the dashboard an edit never un-confirms the facts: saving is the review.
   const edit = patch => setProfile(current => ({ ...current, ...patch, reviewed: dashboard || patch.reviewed === true }));
-  return <form onSubmit={e => { e.preventDefault(); onSubmit({ profile: { ...profile, humanContact: contactText(), reviewed: dashboard || profile.reviewed }, businessName }); }}>
+  return <form onSubmit={e => { e.preventDefault(); onSubmit({ profile: { ...profile, ...(inboxOnly ? { handoffMode: 'inbox', humanContact: initial.profile?.humanContact || '' } : { humanContact: contactText() }), reviewed: dashboard || profile.reviewed }, businessName }); }}>
           <fieldset className="layla-chapter">
           <Chapter ar={ar} n={1} title={tr('About your business', 'عن نشاطك')} required />
           <label>{tr('Business name', 'اسم النشاط')}<input required maxLength={100} autoComplete="organization" value={businessName} onChange={e => { setName(e.target.value); edit({}); }} /></label>
@@ -93,6 +93,8 @@ export function BusinessDetailsForm({ lang, initial = {}, initialIndustryId, mod
           <fieldset className="layla-chapter">
           <Chapter ar={ar} n={3} title={tr('Who takes over when Layla can’t answer', 'من يتولى الرد عندما لا تعرف ليلى الإجابة')} required
             lede={tr('When a customer needs a real person, Layla passes the chat to your team here.', 'عندما يحتاج العميل إلى موظف، تحوّل ليلى المحادثة إلى فريقك هنا.')} />
+          {inboxOnly ? <p className="layla-field-help">{tr('Your team handles these conversations in the Human attention queue. Taking over pauses Layla. No staff email or WhatsApp notification is sent.', 'يتابع فريقك هذه المحادثات في قائمة «تحتاج إلى متابعة». استلام المحادثة يوقف ليلى. لا تُرسل إشعارات للفريق بالبريد أو واتساب.')}</p> : <>
+          {/* Legacy direct-contact setup retains saved values. */}
           {/* Never in a disclosure: humanContact is REQUIRED by
               reviewProfile() in api/_lib/layla/domain.js. While it sat in a
               closed <details>, a customer could fill every visible field and be
@@ -105,6 +107,7 @@ export function BusinessDetailsForm({ lang, initial = {}, initialIndustryId, mod
             {contactMode === 'whatsapp' ? <div className="layla-phone-fields"><select aria-label={tr('Country code', 'رمز الدولة')} value={countryCode} onChange={e => { setCountryCode(e.target.value); edit({}); }}>{DIAL_CODES.map(([code, label]) => <option key={code} value={code}>+{code} · {label}</option>)}</select><input aria-label={tr('WhatsApp number', 'رقم واتساب')} inputMode="tel" autoComplete="tel-national" pattern="[0-9 ]{7,15}" maxLength={15} value={contactValue} placeholder={tr('WhatsApp number', 'رقم واتساب')} onChange={e => { setContactValue(e.target.value.replace(/[^0-9 ]/g, '').slice(0, 15)); edit({}); }} /></div> : <input aria-label={tr('Team email address', 'البريد الإلكتروني للفريق')} type="email" autoComplete="email" maxLength={120} value={contactValue} placeholder="team@example.com" onChange={e => { setContactValue(e.target.value); edit({}); }} />}
             <small className="layla-field-help">{contactMode === 'whatsapp' ? tr('This number must already be active on WhatsApp so your team can receive the handoff.', 'يجب أن يكون الرقم مفعّلاً على واتساب حتى يستلم فريقك التحويل.') : tr('Layla will direct customers to this team email when a human is needed.', 'ستوجّه ليلى العملاء إلى بريد الفريق عند الحاجة إلى موظف.')}</small>
           </label>
+          </>}
           </fieldset>
           {dashboard && <fieldset className="layla-chapter" onKeyDown={e => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault(); }}>
           <Chapter ar={ar} n={4} title={tr('Details and questions', 'تفاصيل وأسئلة')}

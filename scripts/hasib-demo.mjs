@@ -187,7 +187,7 @@ const asActor = args => (actorAccountId ? { ...args, actorAccountId } : args);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.webp': 'image/webp', '.xml': 'application/xml', '.txt': 'text/plain' };
 const json = (res, status, body) => { res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
 const readJson = req => new Promise(resolve => { let b = ''; req.on('data', c => { b += c; if (b.length > 70000) req.destroy(); }); req.on('end', () => { try { resolve(b ? JSON.parse(b) : {}); } catch { resolve({}); } }); });
-const DASHBOARD_OPS = new Set(['overview', 'set_timezone', 'conversations', 'thread', 'contacts', 'contact_update', 'contact_delete', 'export_chat', 'export_contacts', 'export_account']);
+const DASHBOARD_OPS = new Set(['overview', 'set_timezone', 'conversations', 'handoffs', 'takeover_handoff', 'resolve_handoff', 'return_handoff', 'thread', 'contacts', 'contact_update', 'contact_delete', 'export_chat', 'export_contacts', 'export_account']);
 
 async function api(req, res, url) {
   const surface = url.searchParams.get('surface');

@@ -22,13 +22,6 @@ export function TodayView({ ar, data, busy, onGo, onResolve }) {
       { id: 'viewing', label: tr('Schedule a viewing', 'جدولة معاينة'), icon: 'calendar', onClick: () => onGo?.('orders', { action: 'viewing' }) },
       { id: 'offer', label: tr('Draft an offer', 'مسودة عرض'), icon: 'receipt', onClick: () => onGo?.('orders', { action: 'offer' }) },
     ]} />
-    <MetricCards label={tr('Today at a glance', 'اليوم في لمحة')} items={COUNTS.map(([key, en, arabic, icon]) => {
-      const value = summary.counts?.[key] ?? 0;
-      return { id: key, value, label: ar ? arabic : en, icon, tone: value ? (WARN.has(key) ? 'coral' : 'blue') : 'green' };
-    })} />
-    <section aria-labelledby="re-pipeline"><h2 id="re-pipeline">{tr('Deal pipeline', 'مسار الصفقات')}</h2>
-      <div className="hb-pipeline">{[...OPEN_STAGES, 'won', 'lost'].map(stage => <article key={stage}><strong>{summary.pipeline?.[stage] ?? 0}</strong><span>{label('stage', stage, ar)}</span></article>)}</div>
-    </section>
     <section aria-labelledby="re-tasks"><h2 id="re-tasks">{tr('Needs you', 'يحتاجك')}</h2>
       {tasks.length ? <ul className="hb-re-tasks">{tasks.map(task => <li className="hb-panel" key={task.id}>
         <div><b>{label('task', task.kind, ar)}</b><p>{task.reason}</p></div>
@@ -39,5 +32,14 @@ export function TodayView({ ar, data, busy, onGo, onResolve }) {
       </li>)}</ul>
         : <EmptyState icon="check" title={tr('Nothing needs you right now', 'لا شيء يحتاجك الآن')} description={tr('Late replies, listings to verify and unanswered offers appear here.', 'ستظهر هنا الردود المتأخرة والإعلانات التي تحتاج تحققاً والعروض غير المجاب عليها.')} />}
     </section>
+    <MetricCards label={tr('Today at a glance', 'اليوم في لمحة')} items={COUNTS.map(([key, en, arabic, icon]) => {
+      const value = summary.counts?.[key];
+      const go = key === 'staleListings' ? ['stock'] : key === 'unassigned' ? ['orders', { stage: 'unassigned' }] : key === 'todayViewings' ? ['orders', { stage: 'viewing' }] : ['orders'];
+      return { id: key, value: value ?? tr('Unavailable', 'بيانات غير متاحة'), label: ar ? arabic : en, icon, tone: value ? (WARN.has(key) ? 'coral' : 'blue') : 'green', onClick: () => onGo?.(...go) };
+    })} />
+    <section aria-labelledby="re-pipeline"><h2 id="re-pipeline">{tr('Deal pipeline', 'مسار الصفقات')}</h2>
+      <div className="hb-pipeline">{[...OPEN_STAGES, 'won', 'lost'].map(stage => <button className="hb-pipeline-stage" type="button" key={stage} onClick={() => onGo?.('orders', { stage })}><strong>{summary.pipeline?.[stage] ?? tr('Unavailable', 'بيانات غير متاحة')}</strong><span>{label('stage', stage, ar)}</span></button>)}</div>
+    </section>
+
   </>;
 }

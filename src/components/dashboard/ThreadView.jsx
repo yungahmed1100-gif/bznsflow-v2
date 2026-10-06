@@ -11,6 +11,7 @@ import { StatusTicks, QualificationChip } from './Badges';
 import { CampaignWizard } from './CampaignWizard';
 import { Dialog } from './Dialog';
 import { dashboardPermissions } from '../../lib/dashboard/permissions';
+import { handoffReason, handoffState } from '../../lib/dashboard/handoff';
 
 const newRequestId = () => crypto.randomUUID();
 
@@ -18,7 +19,6 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
   const thread = usePolling(() => dashboard('thread', { conversationId }), [conversationId]);
   const [draft, setDraft] = useState({ text: '', id: newRequestId() });
   const [busy, setBusy] = useState(''), [error, setError] = useState(''), [templateOpen, setTemplateOpen] = useState(false);
-  const [optimisticTakeover, setOptimisticTakeover] = useState(null);
   const [earlier, setEarlier] = useState({ messages: [], before: undefined });
   const scroller = useRef(null), stick = useRef(true);
   const data = thread.data;
@@ -49,14 +49,9 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
     catch (e) { setError(s.reason(e.reason)); }
     finally { setBusy(''); }
   };
-  const takeover = optimisticTakeover ?? conversation.takeover;
-  // Optimistic: the switch moves at once and rolls back with an error if the server refuses.
-  const toggleLeave = async () => {
-    const next = !takeover;
-    setOptimisticTakeover(next);
-    await act('leave', () => messaging(next ? 'takeover' : 'resume_conversation', { conversationId,channel:conversation.channel }));
-    setOptimisticTakeover(null);
-  };
+  const takeover = conversation.takeover;
+  const handoff = conversation.handoff || { state: takeover ? 'open' : 'none', version: 0 };
+  const handleHandoff = action => act(action, () => dashboard(action, { conversationId, expectedVersion: handoff.version }));
   const send = e => {
     e.preventDefault();
     const text = draft.text.trim();
@@ -76,10 +71,6 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
           <p><bdi dir="ltr" className="ld-num">{contact.channel==='instagram'?'Instagram':formatPhone(contact.number)}</bdi> <QualificationChip s={s} status={contact.status} />{contact.optout && <span className="ld-chip is-coral">{s.t('optedOut')}</span>}</p>
         </div>
         <div className="ld-thread-actions">
-          <label className="ld-switch">
-            <input type="checkbox" role="switch" checked={takeover} disabled={busy === 'leave' || contact.optout} onChange={toggleLeave} aria-describedby="ld-leave-help" />
-            <span className="ld-switch-track" aria-hidden="true" /><span>{s.t('leaveChat')}</span>
-          </label>
           {canExport && <details className="ld-menu">
             <summary className="ld-button ld-quiet">{s.t('export')}</summary>
             <div className="ld-menu-list">
@@ -88,7 +79,16 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
             </div>
           </details>}
         </div>
-        <p id="ld-leave-help" className="ld-help">{s.t('leaveChatHelp')}</p>
+        <section className="ld-handoff" aria-label={s.ar ? 'متابعة الفريق' : 'Team handling'}>
+          <strong role="status">{handoffState(handoff.state, s.ar)}</strong>
+          {takeover && <p>{handoffReason(handoff.reason, s.ar)}</p>}
+          <div className="ld-actions">
+            {handoff.state !== 'handling' && handoff.state !== 'resolved' && <button className="ld-button" type="button" disabled={!!busy} onClick={() => handleHandoff('takeover_handoff')}>{s.ar ? 'استلام المحادثة' : 'Take over'}</button>}
+            {takeover && handoff.state !== 'resolved' && <button className="ld-button" type="button" disabled={!!busy} onClick={() => handleHandoff('resolve_handoff')}>{s.ar ? 'تم الحل' : 'Resolve'}</button>}
+            {takeover && <button className="ld-button" type="button" disabled={!!busy || contact.optout} onClick={() => handleHandoff('return_handoff')}>{s.ar ? 'إعادة إلى ليلى' : 'Return to Layla'}</button>}
+          </div>
+          <p>{takeover ? (s.ar ? 'إنهاء المتابعة يُبقي ليلى متوقفة. الإعادة إلى ليلى تسمح بالرد على الرسائل الجديدة المؤهلة فقط.' : 'Resolving keeps Layla paused. Return to Layla allows replies to future eligible messages only.') : (s.ar ? 'استلام المحادثة يوقف ردود ليلى الآلية.' : 'Taking over stops Layla’s automated replies.')}</p>
+        </section>
         <CapturedDetails s={s} contact={contact} qualification={data.qualification} conversationId={conversationId} channel={conversation.channel} />
         <ChatOrders s={s} conversationId={conversationId} />
       </header>

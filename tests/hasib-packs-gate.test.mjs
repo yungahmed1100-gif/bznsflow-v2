@@ -135,7 +135,7 @@ test('the industry list shows finished packs first and the rest as coming soon',
   assert.deepEqual((await pending('overview')).value.industries, list, 'the setup screen gets the same list');
 });
 
-test('the legacy Hasib choice preselects Setup once, then a profile save becomes authoritative', async () => {
+test('Catalyst profile saves preserve the independent Ascend sector choice', async () => {
   const { h, t, hasib } = await setup('Cleaning & facilities');
   assert.equal((await hasib('settings_update', { packId: 'retail-tech' })).ok, true);
   let overview = (await hasib('overview')).value;
@@ -144,7 +144,7 @@ test('the legacy Hasib choice preselects Setup once, then a profile save becomes
   const saved = await executeReview(h.m.ctx, { operation: 'profile', sessionHash: t.sessionHash, profile: profileFor('Cleaning & facilities') }, h.m.now());
   assert.equal(saved.ok, true);
   overview = (await hasib('overview')).value;
-  assert.equal(overview.selectedIndustryId, 'cleaning');
-  assert.equal(overview.legacyIndustryId, null);
-  assert.equal(overview.setupRequired, true);
+  assert.equal(overview.selectedIndustryId, 'retail-tech');
+  assert.equal(overview.legacyIndustryId, 'retail-tech');
+  assert.equal(overview.setupRequired, false);
 });

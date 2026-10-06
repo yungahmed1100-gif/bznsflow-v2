@@ -118,6 +118,8 @@ components:
 
 # Design System: BznsFlow
 
+Authenticated product surfaces use the same visual identity with a separate operating hierarchy and compact type scale. See [Authenticated product design](docs/product-design.md); the marketing composition below remains the public-site reference.
+
 ## Overview
 
 **Creative North Star: "The Ledger"**

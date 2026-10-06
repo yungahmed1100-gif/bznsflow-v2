@@ -22,60 +22,17 @@ export function extractCatalogRows(text, source = 'catalog') {
   }).slice(0, 1000);
 }
 
-async function ocr(source) {
-  const { createWorker } = await import('tesseract.js');
-  const worker = await createWorker(['eng', 'ara']);
-  try { return (await worker.recognize(source)).data.text; } finally { await worker.terminate(); }
-}
-
-async function pdfText(buffer) {
-  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-  const pdf = await pdfjs.getDocument({ data: new Uint8Array(buffer), disableWorker: true }).promise;
-  const output = [];
-  for (let pageNumber = 1; pageNumber <= Math.min(pdf.numPages, 200); pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-    output.push(content.items.map(item => item.str || '').join(' '));
-  }
-  return output.join('\n');
-}
-
-async function docxText(buffer) {
-  const mammoth = await import('mammoth/mammoth.browser');
-  return (await mammoth.extractRawText({ arrayBuffer: buffer })).value;
-}
-
-async function sheetText(buffer) {
-  const module = await import('exceljs');
-  const ExcelJS = module.default || module;
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(buffer);
-  const output = [];
-  workbook.eachSheet(sheet => {
-    sheet.eachRow(row => {
-      output.push(row.values.slice(1).map(value => {
-        if (typeof value === 'object' && value?.text) return value.text;
-        if (typeof value === 'object' && value?.result != null) return String(value.result);
-        return String(value ?? '');
-      }).join('\t'));
-    });
-  });
-  return output.join('\n');
-}
-
-export async function readCatalogFile(file) {
+/** Existing catalog approval flow shares the cancellable extraction worker. */
+export async function readCatalogFile(file, options = {}) {
   if (!file || file.size > MAX_FILE) throw new Error('catalog_file_too_large');
-  const type = file.type || '';
-  const name = String(file.name || '').toLowerCase();
-  const buffer = await file.arrayBuffer();
-  let text;
-  if (type.startsWith('image/') || /\.(png|jpe?g|webp)$/.test(name)) text = await ocr(file);
-  else if (type === 'application/pdf' || name.endsWith('.pdf')) text = await pdfText(buffer);
-  else if (name.endsWith('.docx')) text = await docxText(buffer);
-  else if (name.endsWith('.xlsx')) text = await sheetText(buffer);
-  else if (/\.(csv|txt)$/.test(name) || type.startsWith('text/')) text = new TextDecoder().decode(buffer);
-  else throw new Error('catalog_file_type');
-  text = normalize(text);
-  if (!text) throw new Error('catalog_file_empty');
-  return { text, entries: extractCatalogRows(text, file.name), partial: text.length >= MAX_TEXT };
+  // Plain text remains usable in non-browser tooling; expensive parsers stay worker-only.
+  if (typeof Worker === 'undefined' && /\.(txt|csv)$/i.test(file.name || '')) {
+    const raw = new TextDecoder().decode(await file.arrayBuffer());
+    const text = normalize(raw);
+    if (!text) throw new Error('catalog_file_empty');
+    return {text,entries:extractCatalogRows(text,file.name),partial:raw.length > MAX_TEXT};
+  }
+  const { extractInformation } = await import('./information-import.js');
+  const parsed = await extractInformation(file, options);
+  return { ...parsed, entries: extractCatalogRows(parsed.text, file.name) };
 }

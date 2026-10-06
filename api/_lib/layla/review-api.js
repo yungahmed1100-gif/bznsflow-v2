@@ -64,7 +64,7 @@ function publicState(row, available, accountReady = true) {
     profile: row.profile || null, messagingStateUrl: '/api/layla-meta?surface=messaging',
     journeyStep: row.journeyStep ?? (row.profile ? 2 : 0), profileVersion: row.profileVersion || 1,
     lastPreview: row.lastPreview || null, previewIntents: row.previewIntents || [],
-    capabilities: { preview: !!row.profile?.reviewed, connect: accountReady && available && !!row.profile?.humanContact && !row.integration && !row.pendingSelection, manageMessaging: accountReady && !!row.accountId && !!row.integration },
+    capabilities: { preview: !!row.profile?.reviewed, connect: accountReady && available && !!(row.profile?.humanContact || row.profile?.handoffMode === 'inbox') && !row.integration && !row.pendingSelection, manageMessaging: accountReady && !!row.accountId && !!row.integration },
     nextAction: row.status === 'registration_required' ? 'register_number' : row.integration && !['connected','paused'].includes(row.status) ? 'refresh' : row.profile ? 'preview' : 'profile',
     selection: row.pendingSelection ? { candidates: row.pendingSelection.candidates, expiresAt: row.attempt?.expiresAt } : null,
     connectionChecks: row.connectionChecks || null, checkedAt: row.checkedAt || null, diagnostic: row.diagnostic || null,

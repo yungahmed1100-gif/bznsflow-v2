@@ -19,7 +19,8 @@ export function reviewProfile(input) {
     profile[key] = input[key].trim();
   }
   if (profile.humanContact.length > 120) throw new PilotError('human_contact_too_long');
-  if (input.reviewed !== true || !profile.sector || !profile.services || !profile.humanContact) throw new PilotError('review_sector_services_contact');
+  if (input.handoffMode === 'inbox') profile.handoffMode = 'inbox';
+  if (input.reviewed !== true || !profile.sector || !profile.services || (!profile.humanContact && profile.handoffMode !== 'inbox')) throw new PilotError('review_sector_services_contact');
   profile.reviewed = true;
   return profile;
 }
@@ -41,10 +42,10 @@ export { classifyWithGuard };
 
 export function answer(text, profile, introduced = false) {
   const ar = /[\u0600-\u06ff]/.test(text), intent = classify(text, profile);
-  const contact = profile.humanContact ? (ar ? ` للتواصل مع الفريق: ${profile.humanContact}` : ` You can contact our team: ${profile.humanContact}`) : '';
+  const contact = profile.handoffMode === 'inbox' ? '' : profile.humanContact ? (ar ? ` للتواصل مع الفريق: ${profile.humanContact}` : ` You can contact our team: ${profile.humanContact}`) : '';
   let reply;
   if (intent === 'optout') return { intent, text: null };
-  if (intent === 'human') reply = ar ? 'أفهمك. يمكنك التواصل مع الفريق مباشرة.' : 'You can speak with our team directly.';
+  if (intent === 'human') reply = profile.handoffMode === 'inbox' ? (ar ? 'سأترك هذه المحادثة لفريقنا للمتابعة هنا.' : 'I’ll leave this conversation for our team to follow up here.') : (ar ? 'أفهمك. يمكنك التواصل مع الفريق مباشرة.' : 'You can speak with our team directly.');
   else if (intent === 'disabled') reply = ar ? 'أستطيع الإجابة عن أسئلة النشاط فقط حالياً، ولا أستطيع إجراء حجوزات أو مواعيد.' : 'I can answer business questions at present. I cannot make bookings or appointments.';
   else if (intent === 'identity' || intent === 'greeting') reply = ar ? 'أنا ليلى، المساعدة الافتراضية لدى BznsFlow. كيف أساعدك في أسئلتك عن خدماتنا؟' : 'I’m Layla, BznsFlow’s virtual assistant. What would you like to know about our services?';
   else if (['services', 'prices', 'hours', 'location'].includes(intent) && profile[intent]) reply = profile[intent];

@@ -1,3 +1,4 @@
+import { matchPublishedKnowledge } from '../../../src/lib/knowledge-match.js';
 import { randomUUID } from 'node:crypto';
 import { SUBSCRIPTION_PROOF_MS, checkInstagramToken, instagramConfig, instagramSendResult, instagramUsername, postInstagramMessage, refreshInstagram, subscribeInstagram } from './instagram.js';
 import { convexConfigured, instagramStore, messagingStore, reviewStore } from '../convex.js';
@@ -29,13 +30,15 @@ export function whatsappPayload(job) {
 }
 export const instagramMessage=job=>job.imageUrl ? {attachment:{type:'image',payload:{url:job.imageUrl}}} : {text:job.text};
 
-export function liveAnswer(text,profile,catalog=[]) {
+export function liveAnswer(text,profile,catalog=[],knowledge=[]) {
   const safety=clinicIngressDecision(text,profile);
   if(safety.withheld) return {intent:'medical_content_withheld',reply:clinicSafetyMessage(safety.language),handoff:true,medicalContentWithheld:true};
   const intent=classify(text);
   if(intent==='optout') return {intent,reply:null,handoff:false};
   if(intent==='human') return {intent,reply:answer(text,profile,true).text,handoff:true};
   const result=previewAnswer(text,profile,catalog);
+  const published=result.needsHuman ? matchPublishedKnowledge(text,knowledge) : null;
+  if(published) return {intent:result.intent,reply:published.text,handoff:false};
   return {intent:result.intent,reply:result.text,handoff:result.needsHuman};
 }
 const STOP_BUTTON=/^(stop promotions?|stop|unsubscribe|opt out|إيقاف العروض|ايقاف العروض|إيقاف|ايقاف|إلغاء الاشتراك|الغاء الاشتراك)$/i;
@@ -77,7 +80,7 @@ export async function ingestInstagramEnvelope(envelope,{store=messagingStore(),n
     const names=await instagramUsernames(binding,[...new Set(parsed.filter(e=>e.kind==='message').map(e=>e.from))],{env,fetcher});
     const events=parsed.map(e=>{
       const named=e.kind==='message' && names.get(e.from)?{...e,profileName:names.get(e.from)}:e;
-      return named.kind==='message' && !named.handoff ? {...named,...liveAnswer(named.text,binding.profile,binding.catalog || [])}:named;
+      return named.kind==='message' && !named.handoff ? {...named,...liveAnswer(named.text,binding.profile,binding.catalog || [],binding.knowledge || [])}:named;
     });
     total+=events.length;if(total>100) throw new PilotError('too_many_events',413);
     if(events.length) await store('ingest',{integrationId:binding.integrationId,profileVersion:binding.profileVersion,events});
@@ -107,7 +110,7 @@ export async function ingestBlueEnvelope(envelope,{store=messagingStore(),now=Da
     const names=new Map(group.changes.flatMap(change=>[...profileNames(change.value)]));
     const errors=new Map(group.changes.flatMap(change=>(change.value?.statuses || []).map(s=>[`${s?.id}:${s?.status}`,Number(s?.errors?.[0]?.code)]).filter(([,code])=>Number.isSafeInteger(code))));
     const events=parseEvents(raw,binding,now()).map(e=>{
-      if(e.kind==='message') return {...e,...liveAnswer(e.text,binding.profile,binding.catalog || []),...(names.get(e.from)?{profileName:names.get(e.from)}:{})};
+      if(e.kind==='message') return {...e,...liveAnswer(e.text,binding.profile,binding.catalog || [],binding.knowledge || []),...(names.get(e.from)?{profileName:names.get(e.from)}:{})};
       if(e.kind==='receipt' && errors.has(`${e.id}:${e.status}`)) return {...e,errorCode:errors.get(`${e.id}:${e.status}`)};
       return e;
     });

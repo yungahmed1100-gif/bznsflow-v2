@@ -4,6 +4,15 @@ import { livePackSummaries, isLivePack } from '../../config/hasib-packs';
 import LaylaDashboard from './LaylaDashboard';
 import '../styles/owner.css';
 
+const WORK = {
+  retail: ['Sales, fulfilment and stock', 'المبيعات والتسليم والمخزون'],
+  'retail-tech': ['Devices, repairs and warranty', 'الأجهزة والإصلاحات والضمان'],
+  dental: ['Patient inquiries and visits', 'استفسارات المرضى والزيارات'],
+  'real-estate': ['Opportunities, viewings and deals', 'الفرص والمعاينات والصفقات'],
+  construction: ['Projects, procurement and receivables', 'المشاريع والمشتريات والمستحقات'],
+  automotive: ['Approvals, workshop and collection', 'الموافقات والورشة والاستلام'],
+};
+
 export function OwnerGate({ lang = 'en', children }) {
   const [state, setState] = useState('loading');
   const ar = lang === 'ar';
@@ -40,11 +49,13 @@ export default function OwnerHome({ lang = 'ar' }) {
   const ar = lang === 'ar', prefix = ar ? '' : '/en';
   return <OwnerGate lang={lang}><main className="owner-home" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
 
-    <nav><Link to={prefix || '/'}>BznsFlow</Link> · <Link to={`${ar ? '/en' : ''}/owner`}>{ar ? 'English' : 'العربية'}</Link></nav>
-    <h1>{ar ? 'لوحة الإدارة' : 'Admin dashboard'}</h1>
-    <section><h2>{ar ? 'صلاحيات المنتجات' : 'Product access'}</h2><p>{ar ? 'منح وإلغاء صلاحيات Catalyst وAscend.' : 'Grant and revoke Catalyst and Ascend access.'}</p><Link to={`${prefix}/owner/access`}>{ar ? 'إدارة الوصول' : 'Manage product access'}</Link></section>
-    <section><h2>{ar ? 'معاينات القطاعات المباشرة' : 'Live sector previews'}</h2><p>{ar ? 'لوحات تجريبية للقراءة فقط. لا تتغير بيانات نشاطك أو قطاعه.' : 'Read-only sample dashboards. Your business records and sector stay unchanged.'}</p><div className="owner-cards">{livePackSummaries().map(pack => <Link key={pack.id} to={`${prefix}/owner/preview/${pack.id}`}><strong>{ar ? pack.ar : pack.en}</strong><span>{ar ? 'بيانات تجريبية · للقراءة فقط' : 'Sample data · Read only'}</span></Link>)}</div></section>
-    <section><h2>{ar ? 'نشاطي / حالة الإعداد' : 'My business / setup status'}</h2><SetupStatus lang={lang} /><p><Link to={`${prefix}/layla/dashboard`}>{ar ? 'نشاطي — بيانات حقيقية' : 'My business — real data'}</Link></p><Link to={`${prefix}/layla/setup`}>{ar ? 'إعداد النشاط' : 'Business setup'}</Link></section>
+    <nav aria-label={ar ? 'روابط الإدارة' : 'Administration links'}><Link className="owner-brand" to={prefix || '/'}>BznsFlow</Link><Link to={`${ar ? '/en' : ''}/owner`}>{ar ? 'English' : 'العربية'}</Link></nav>
+    <header className="owner-heading"><p>{ar ? 'مساحة أحمد' : 'Ahmed’s workspace'}</p><h1>{ar ? 'لوحة الإدارة' : 'Admin dashboard'}</h1><p>{ar ? 'إدارة الوصول، مراجعة القطاعات، ومتابعة نشاطك.' : 'Manage access, review the sectors, and open your business.'}</p></header>
+    <div className="owner-workspaces">
+      <section><div className="owner-section-heading"><h2>{ar ? 'نشاطي' : 'My business'}</h2><span className="owner-label">{ar ? 'بيانات حقيقية' : 'Real workspace'}</span></div><SetupStatus lang={lang} /><Link className="owner-primary" to={`${prefix}/layla/dashboard`}>{ar ? 'فتح نشاطي' : 'Open my business'} <span aria-hidden="true">{ar ? '←' : '→'}</span></Link><div className="owner-setup-links"><Link to={`${prefix}/catalyst/setup`}>{ar ? 'إعداد Catalyst وليلى' : 'Set up Catalyst & Layla'}</Link><Link to={`${prefix}/ascend/setup`}>{ar ? 'إعداد عمليات Ascend' : 'Set up Ascend operations'}</Link></div></section>
+      <section><h2>{ar ? 'صلاحيات المنتجات' : 'Product access'}</h2><p>{ar ? 'منح وإلغاء صلاحيات Catalyst وAscend.' : 'Grant and revoke Catalyst and Ascend access.'}</p><Link className="owner-secondary" to={`${prefix}/owner/access`}>{ar ? 'إدارة الوصول' : 'Manage product access'}</Link></section>
+    </div>
+    <section className="owner-previews"><div className="owner-section-heading"><h2>{ar ? 'معاينات القطاعات الستة' : 'Six live sector previews'}</h2><span className="owner-label">{ar ? 'بيانات تجريبية · للقراءة فقط' : 'Sample data · Read only'}</span></div><p>{ar ? 'افتح مساحة تجريبية مستقلة لمراجعة سير العمل في كل قطاع.' : 'Open a separate sample workspace to review each sector’s workflows.'}</p><div className="owner-cards">{livePackSummaries().map((pack, i) => <Link key={pack.id} to={`${prefix}/owner/preview/${pack.id}`}><span className="owner-sector-number" aria-hidden="true">0{i + 1}</span><span><strong>{ar ? pack.ar : pack.en}</strong><span>{WORK[pack.id]?.[ar ? 1 : 0]}</span></span><span className="owner-sector-arrow" aria-hidden="true">{ar ? '←' : '→'}</span></Link>)}</div></section>
   </main></OwnerGate>;
 }
 

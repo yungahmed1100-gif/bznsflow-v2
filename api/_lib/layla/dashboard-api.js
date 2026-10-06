@@ -21,7 +21,7 @@ const sameSite = (req, env, write = false) => {
   catch { return false; }
 };
 const GRAPH = { app: '1388038082832745', version: 'v25.0' };
-const READ_ACTIONS = new Set(['conversations', 'thread', 'contacts', 'templates', 'campaigns', 'campaign_detail', 'export_chat', 'export_contacts', 'export_account']);
+const READ_ACTIONS = new Set(['conversations', 'handoffs', 'thread', 'contacts', 'templates', 'campaigns', 'campaign_detail', 'export_chat', 'export_contacts', 'export_account']);
 const BROADCAST_ACTIONS = new Set(['sync_templates', 'campaign_preview', 'campaign_create', 'campaign_cancel']);
 const LIMITS = { import_contacts: 60000, campaign_preview: 40000, campaign_create: 40000 };
 const DEFAULT_BODY_LIMIT = 6000;
@@ -86,6 +86,10 @@ export function createDashboardApi({ env = process.env, fetcher = fetch, now = D
           conversationId: id(body.conversationId), campaignId: id(body.campaignId), before: Number.isSafeInteger(body.before) ? body.before : undefined,
           limit: Number.isSafeInteger(body.limit) ? body.limit : undefined };
         return reply(await store(action, Object.fromEntries(Object.entries(args).filter(([, v]) => v !== undefined))));
+      }
+      if (['resolve_handoff', 'takeover_handoff', 'return_handoff'].includes(action)) {
+        if (!id(body.conversationId) || !Number.isSafeInteger(body.expectedVersion) || body.expectedVersion < 0) throw new PilotError('invalid_action');
+        return reply(await store(action, { sessionHash, actorAccountId: account.id, conversationId: body.conversationId, expectedVersion: body.expectedVersion }));
       }
       if (action === 'set_timezone') {
         if (!validTimezone(body.timezone)) throw new PilotError('invalid_timezone');
