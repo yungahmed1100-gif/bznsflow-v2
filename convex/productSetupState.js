@@ -1,7 +1,19 @@
 import { planFor } from './hasib/plans.js';
 import { updateSettings } from './hasib/hasibState.js';
-import { isLivePack } from '../config/hasib-packs.js';
+import { isLivePack, hasibPack } from '../config/hasib-packs.js';
+import { sectorFor } from './blueContacts.js';
+import { businessIndustryId } from '../src/lib/industries.js';
 
+// Explicit pack wins; otherwise the live pack implied by the business profile's sector.
+async function effectivePack(ctx, account, settings) {
+  if (settings?.packId) return settings.packId;
+  if (!account.draftHash) return null;
+  const row = await ctx.db.query('blueReviewSessions').withIndex('by_hash', q => q.eq('sessionHash', account.draftHash)).unique();
+  const sector = row?.profile?.sector;
+  if (!sector) return null;
+  const id = hasibPack(businessIndustryId(sector) || sectorFor(row)).id;
+  return isLivePack(id) ? id : null;
+}
 /** Account sessions, not caller-supplied workspace IDs, own setup progress. */
 export async function executeProductSetup(ctx, a, now = Date.now()) {
   const fail = reason => ({ ok: false, reason });
@@ -16,14 +28,15 @@ export async function executeProductSetup(ctx, a, now = Date.now()) {
   const plan = await planFor(ctx, account._id);
   if (!admin && (!plan || (a.product === 'ascend' && plan !== 'ascend'))) return fail('access_required');
   if (!['catalyst', 'ascend'].includes(a.product)) return fail('invalid_product');
+  const view = async (progress, settings) => { const fresh = await ctx.db.get(account._id); return { progress, settings, admin, plan: admin ? 'ascend' : plan, workspaceReady: !!fresh.draftHash, effectivePackId: (await effectivePack(ctx, fresh, settings)) || null }; };
   let progress = await ctx.db.query('productSetupProgress').withIndex('by_account_product', q => q.eq('accountId', account._id).eq('product', a.product)).unique();
   const settings = await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', account._id)).unique();
   if (a.operation !== 'get') {
     if (!Number.isInteger(a.step) || a.step < 0 || a.step > 3 || !Number.isInteger(a.version) || a.version < 0) return fail('invalid_progress');
-    const requestSignature = JSON.stringify([a.step, a.completed === true, a.packId ?? null, a.stockPolicy ?? null, a.vat ? [a.vat.registered, a.vat.rateBps, a.vat.pricesIncludeVat, a.vat.vatin || ''] : null]);
+    const requestSignature = JSON.stringify([a.step, a.completed ?? null, a.packId ?? null, a.stockPolicy ?? null, a.vat ? [a.vat.registered, a.vat.rateBps, a.vat.pricesIncludeVat, a.vat.vatin || ''] : null]);
     // Exact repeat is safe; stale tabs cannot replace newer progress or settings.
     if ((progress?.version || 0) !== a.version) {
-      if (a.requestId && progress?.requestId === a.requestId && progress?.requestSignature === requestSignature) return { ok: true, value: { progress, settings: settings || null } };
+      if (a.requestId && progress?.requestId === a.requestId && progress?.requestSignature === requestSignature) return { ok: true, value: await view(progress, settings || null) };
       return fail('setup_conflict');
     }
     if (!/^[a-zA-Z0-9_-]{8,80}$/.test(a.requestId || '')) return fail('invalid_request');
@@ -38,7 +51,7 @@ export async function executeProductSetup(ctx, a, now = Date.now()) {
     }
     if (a.product === 'ascend') {
       if (a.packId !== undefined && !isLivePack(a.packId)) return fail('pack_not_live');
-      if (a.completed && !isLivePack(a.packId || settings?.packId)) return fail('sector_required');
+      if (a.completed && !isLivePack(a.packId || await effectivePack(ctx, account, settings))) return fail('sector_required');
       if (a.packId !== undefined || a.vat !== undefined || a.stockPolicy !== undefined) {
         const result = await updateSettings(ctx, account._id, a, now);
         if (!result.ok) return result;
@@ -49,10 +62,10 @@ export async function executeProductSetup(ctx, a, now = Date.now()) {
         await ctx.db.patch(account._id, { draftHash: a.draftHash });
       }
     }
-    const next = { accountId: account._id, product: a.product, step: a.step, completed: a.completed === true, version: (progress?.version || 0) + 1, requestId: a.requestId, requestSignature, updatedAt: now };
+    const next = { accountId: account._id, product: a.product, step: a.step, completed: a.completed ?? progress?.completed === true, version: (progress?.version || 0) + 1, requestId: a.requestId, requestSignature, updatedAt: now };
     if (progress) await ctx.db.replace(progress._id, next); else await ctx.db.insert('productSetupProgress', next);
     await ctx.db.insert('productSetupAudit', { accountId: account._id, product: a.product, version: next.version, action: next.completed ? 'completed' : 'saved', at: now });
     progress = next;
   }
-  return { ok: true, value: { progress: progress || { product: a.product, step: 0, completed: false, version: 0 }, settings: await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', account._id)).unique(), admin } };
+  return { ok: true, value: await view(progress || { product: a.product, step: 0, completed: false, version: 0 }, await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', account._id)).unique()) };
 }

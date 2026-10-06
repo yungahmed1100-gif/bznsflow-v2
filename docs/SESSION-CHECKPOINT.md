@@ -1,5 +1,19 @@
 # Resume checkpoint — 2026-09-12 (active repair)
 
+## Product setup release — progress
+
+| Step | Status | Commit | Gate evidence |
+|---|---|---|---|
+| 0 Baseline | ✅ | `7ed638b` (wip checkpoint) | `npm test` pass. Browser: real-estate 202, catalyst 197, retail 441, electronics 490, dental 341, owner 44, review-onboarding 16, setup 12. **Known failures:** `layla-dashboard-browser` (stale `/layla/setup` URLs, step 4); construction money expects 9 metrics but there are now 11, because retention and receivables were added intentionally (stale test, step 4); automotive 6/6 |
+| 1 API → 12 functions | ✅ | `6fe2ed9` | npm test exit 0, 26 targeted tests, tsc ok, 12 functions |
+| 2 Convex | ✅ | `(latest)` | npm test pass, tsc ok, 136 targeted tests |
+| 3 Setup blockers | ☐ | — | — |
+| 4 Stale fixture | ☐ | — | — |
+| 5 Should-fix | ☐ | — | — |
+| 6 E2E suite + `test:release` | ☐ | — | — |
+| 7 Verification doc + commits | ☐ | — | — |
+| 8 Production release | ☐ | — | — |
+
 ## WhatsApp onboarding help — 2026-10-03
 
 Integrated the bilingual setup helper into the owner flow: Business App choice

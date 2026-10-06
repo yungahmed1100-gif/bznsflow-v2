@@ -302,7 +302,7 @@ async function approveDraft(ctx, tenant, actor, a, now) {
     const pending = await ctx.db.query('blueMessages').withIndex('by_integration_status', q => q.eq('integrationId', conversation.integrationId).eq('status', 'queued')).take(100);
     for (const job of pending) if (job.conversationId === conversation._id) await ctx.db.patch(job._id, { status: 'blocked', reason: 'manager_approved_follow_up' });
     const version = (conversation.version || 0) + 1;
-    await ctx.db.patch(conversation._id, { takeover: true, version, updatedAt: now });
+    await ctx.db.patch(conversation._id, { takeover: true, handoffState: 'handling', handoffReason: conversation.handoffReason || 'opportunity_review', handoffOpenedAt: conversation.handoffOpenedAt || now, version, updatedAt: now });
     const messageId = await ctx.db.insert('blueMessages', { key: `real-estate-draft:${row._id}`, integrationId: conversation.integrationId, accountId: tenant.accountId,
       conversationId: conversation._id, conversationVersion: version, profileVersion: tenant.row.profileVersion || 1, realEstateOpportunityId: row.opportunityId,
       realEstateDraftId: row._id, direction: 'out', text: row.text, at: now, expiresAt: now + 30 * DAY, textExpiresAt: now + 30 * DAY,

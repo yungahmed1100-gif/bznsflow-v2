@@ -24,6 +24,15 @@ const MAX_REPLY_LENGTH = 1000;
 export function messagingReady(row, now) {
   return !!(row?.accountId && row.expiresAt>now && ['connected','paused'].includes(row.status) && row.profile?.reviewed && (row.profile.humanContact || row.profile.handoffMode === 'inbox'));
 }
+// Stops from the owner's own dashboard actions are about Layla, not the owner's replies. A reply
+// typed on the owner's phone ('native_reply'), an opt-out, an unsend or a disconnect still stops everything queued.
+const OWNER_SAFE_STOPS=new Set(['human_takeover','owner_paused']);
+export async function stopQueuedJobs(ctx,integrationId,personId,reason) {
+  const jobs=await ctx.db.query('blueMessages').withIndex('by_integration_status',q=>q.eq('integrationId',integrationId).eq('status','queued')).take(100);
+  for(const job of jobs) if((!personId || job.conversationId===personId) && !(job.manual && OWNER_SAFE_STOPS.has(reason))) await ctx.db.patch(job._id,{status:'blocked',reason});
+}
+// A reply typed in the WhatsApp app is a human handling the chat, so it shows in the handoff queue.
+const nativeHandling=(person,e,now)=>({handoffState:'handling',handoffReason:person.handoffReason || e.handoffReason || 'native_reply',handoffOpenedAt:person.handoffOpenedAt || now});
 export async function executeMessaging(ctx, a, now = Date.now()) {
   const ok = value => ({ok:true,value}), fail = reason => ({ok:false,reason});
   const find = (table,index,field,value) => ctx.db.query(table).withIndex(index,q=>q.eq(field,value)).unique();
@@ -36,11 +45,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
   // Stops from the owner's own dashboard actions: they are about Layla, not about the owner's
   // replies. A reply typed on the owner's phone ('native_reply'), an opt-out, an unsend or a
   // disconnect still stops everything queued.
-  const OWNER_SAFE_STOPS=new Set(['human_takeover','owner_paused']);
-  async function stopQueued(integrationId,personId,reason) {
-    const jobs=await ctx.db.query('blueMessages').withIndex('by_integration_status',q=>q.eq('integrationId',integrationId).eq('status','queued')).take(100);
-    for(const job of jobs) if((!personId || job.conversationId===personId) && !(job.manual && OWNER_SAFE_STOPS.has(reason))) await ctx.db.patch(job._id,{status:'blocked',reason});
-  }
+  const stopQueued=(integrationId,personId,reason)=>stopQueuedJobs(ctx,integrationId,personId,reason);
   // The owner's own dashboard actions bump the conversation version to fence Layla's replies;
   // they re-stamp the owner's waiting replies so those still pass the version check. A reply
   // from the owner's phone bumps the version without this, so it still fences them.
@@ -242,7 +247,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         await ctx.db.patch(contact._id,{profileName:contact.profileName,updatedAt:now});
       }
       if(['optout','takeover'].includes(e.kind)) {
-        await ctx.db.patch(person._id,{[e.kind==='optout'?'optout':'takeover']:true,updatedAt:now,version:(person.version || 0)+1});
+        await ctx.db.patch(person._id,{[e.kind==='optout'?'optout':'takeover']:true,updatedAt:now,version:(person.version || 0)+1,...(e.kind==='takeover'?nativeHandling(person,e,now):{})});
         await stopQueued(a.integrationId,person._id,e.kind==='optout'?'contact_opted_out':'native_reply');
         if(e.kind==='optout') await applyOptout(ctx,contact,now);
         continue;
@@ -252,7 +257,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       if(await message(msgKey)) continue;
       await ctx.db.insert('blueMessages',{key:msgKey,integrationId:a.integrationId,accountId:row.accountId,conversationId:person._id,direction:e.kind==='echo'?'human':'in',...(e.medicalContentWithheld?{reason:'medical_content_withheld'}:{text:e.text}),...(e.kind==='message'&&MESSAGE_TOPICS.has(e.intent)?{topic:e.intent}:{}),at:e.at,expiresAt:now+MESSAGE_RETENTION_MS,textExpiresAt:e.medicalContentWithheld?Number.MAX_SAFE_INTEGER:now+textKeep,status:'received'});
       if(e.kind==='echo') {
-        await ctx.db.patch(person._id,{takeover:true,updatedAt:now,version:(person.version || 0)+1});
+        await ctx.db.patch(person._id,{takeover:true,...nativeHandling(person,e,now),updatedAt:now,version:(person.version || 0)+1});
         await stopQueued(a.integrationId,person._id,'native_reply');
         await ctx.db.patch(contact._id,{lastActivityAt:Math.max(contact.lastActivityAt || 0,e.at || now),updatedAt:now});
         continue;

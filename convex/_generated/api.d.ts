@@ -93,6 +93,7 @@ import type * as http from "../http.js";
 import type * as layla from "../layla.js";
 import type * as migrate from "../migrate.js";
 import type * as review from "../review.js";
+import type * as reviewMaintenance from "../reviewMaintenance.js";
 import type * as reviewState from "../reviewState.js";
 
 import type {
@@ -187,6 +188,7 @@ declare const fullApi: ApiFromModules<{
   layla: typeof layla;
   migrate: typeof migrate;
   review: typeof review;
+  reviewMaintenance: typeof reviewMaintenance;
   reviewState: typeof reviewState;
 }>;
 

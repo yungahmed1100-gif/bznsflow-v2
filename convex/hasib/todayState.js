@@ -32,7 +32,7 @@ async function lowStock(ctx, accountId) {
 
 async function handedChats(ctx, accountId, now) {
   const rows = await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId).gte('updatedAt', now - DAY)).take(SCAN);
-  return rows.filter(c => c.takeover && !c.optout && now - c.lastInbound < DAY).length;
+  return rows.filter(c => c.takeover && !c.optout && !['resolved', 'returned'].includes(c.handoffState)).length;
 }
 
 async function laylaToday(ctx, accountId, from) {

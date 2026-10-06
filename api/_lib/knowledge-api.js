@@ -6,7 +6,7 @@ import { isSameSite } from './guard.js';
 import { readBody, send, sendPilotError } from './http.js';
 import { PilotError } from './layla/config.js';
 
-const OPERATIONS = ['list', 'open', 'open_draft', 'save', 'publish', 'cancel', 'archive'];
+const OPERATIONS = ['list', 'open', 'open_draft', 'answers', 'save', 'publish', 'cancel', 'archive'];
 const FIELDS = ['requestId', 'sourceKey', 'title', 'kind', 'text', 'references', 'partial', 'version', 'expectedRevision', 'confirmed', 'acceptPartial'];
 
 export function createKnowledgeApi({ env = process.env, fetcher = fetch, store = knowledgeStore({ env, fetcher }) } = {}) {

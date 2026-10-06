@@ -4,7 +4,7 @@
 import { publicInstagram } from './blueInstagramState.js';
 import { resolveTenant, ownsIntegration, owned, encodeCursor, decodeCursor, afterCursor } from './blueTenant.js';
 import { DAY, catalogForFields, deleteContact, linkConversation, ownerContactPatch, publicContact, sectorFor } from './blueContacts.js';
-import { messagingReady, executeMessaging } from './blueMessagingState.js';
+import { messagingReady, executeMessaging, stopQueuedJobs } from './blueMessagingState.js';
 import { packDescription } from '../config/layla-qualification.js';
 import { renderTemplate } from '../config/layla-templates.js';
 import { planFor } from './hasib/plans.js';
@@ -106,7 +106,9 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
   if (a.operation === 'overview') {
     const settings = await ctx.db.query('blueBusinessSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
     const unlinked = (await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).order('desc').take(500)).some(r => !r.contactId);
-    return ok({ business: { name: row.profile?.businessName || '', sector: row.profile?.sector || '', sectorId },
+    const open = await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).order('desc').take(125);
+    const handoffsOpen = open.filter(p => p.takeover && !['resolved', 'returned'].includes(p.handoffState) && ownsIntegration(tenant, p.integrationId)).length;
+    return ok({ handoffsOpen, business: { name: row.profile?.businessName || '', sector: row.profile?.sector || '', sectorId },
       connected: tenant.connected, integration: tenant.integration ? { sender: tenant.integration.sender, path: tenant.integration.path, status: row.status,
         checks: row.connectionChecks || null, checkedAt: row.checkedAt || null } : null,
       instagram:publicInstagram(tenant.instagramConnection), instagramMessaging:tenant.instagram ? await messagingState(ctx,{...tenant,row:tenant.instagram,integration:tenant.instagram.integration},now) : null,
@@ -130,18 +132,19 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
     if (!Number.isSafeInteger(a.expectedVersion) || a.expectedVersion !== (person.version || 0)) return fail('handoff_changed');
     if (a.operation !== 'resolve_handoff') {
       const result = await executeMessaging(ctx, { ...a, operation: target === 'returned' ? 'resume_conversation' : 'takeover' }, now);
-      if (!result.ok) return result;
+      if (!result.ok) return result.reason === 'sign_in_required' ? fail('connection_not_ready') : result;
       const updated = await ctx.db.get(person._id);
       await ctx.db.insert('blueHandoffAudit', { accountId, conversationId: person._id, actorAccountId: String(actor.actorAccountId || accountId), action: target === 'returned' ? 'return' : 'takeover', at: now, version: updated.version || 0 });
       return ok({ handoff: handoffFor(updated) });
     }
     if (!person.takeover) return fail('takeover_required');
-    // Fence stale concurrent actions through the existing takeover transition. It cancels
-    // automated work and preserves pending owner replies without scheduling any replay.
-    const fenced = await executeMessaging(ctx, { ...a, operation: 'takeover' }, now);
-    if (!fenced.ok) return fenced;
+    // Resolving needs no live channel: the version bump fences stale actions, queued automatic
+    // jobs are blocked and owner replies are kept.
     const patch = { handoffState: 'resolved', handoffResolvedAt: now, handoffResolvedBy: String(actor.actorAccountId || accountId), updatedAt: now, version: (person.version || 0) + 1 };
     await ctx.db.patch(person._id, patch);
+    await stopQueuedJobs(ctx, person.integrationId, person._id, 'human_takeover');
+    // Owner replies stay valid under the new version; only automatic work is fenced.
+    for (const job of await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', person._id).gte('at', now - DAY)).take(500)) if (job.manual && ['queued', 'attempting'].includes(job.status)) await ctx.db.patch(job._id, { conversationVersion: patch.version });
     await ctx.db.insert('blueHandoffAudit', { accountId, conversationId: person._id, actorAccountId: patch.handoffResolvedBy, action: 'resolve', at: now, version: patch.version });
     return ok({ handoff: handoffFor({ ...person, ...patch }) });
   }

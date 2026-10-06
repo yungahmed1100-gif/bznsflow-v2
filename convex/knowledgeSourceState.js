@@ -13,6 +13,7 @@ export async function approvedKnowledge(ctx, accountId) {
   }
   return result;
 }
+const draftSummary = d => ({ requestId: d.requestId, sourceKey: d.sourceKey, title: d.title, kind: d.kind, partial: !!d.partial, version: d.version, baseRevision: d.baseRevision, updatedAt: d.updatedAt, referenceCount: (d.references || []).length, textLength: (d.text || '').length });
 // Session validity and grants are checked here, inside the actual mutation entry.
 export async function executeKnowledge(ctx, a, now = Date.now()) {
   const session = await ctx.db.query('sessions').withIndex('by_token_hash', q => q.eq('tokenHash', a.tokenHash)).unique();
@@ -33,7 +34,13 @@ export async function executeKnowledge(ctx, a, now = Date.now()) {
   const sources = await ctx.db.query('knowledgeSources').withIndex('by_account', q => q.eq('accountId', accountId)).take(101);
   if (a.operation === 'list') {
     const drafts = await ctx.db.query('knowledgeImportDrafts').withIndex('by_account_status', q => q.eq('accountId', accountId).eq('status', 'draft')).take(11);
-    return ok({ sources, drafts });
+    return ok({ sources: sources.map(({ approvedAnswers, ...row }) => ({ ...row, answerCount: (approvedAnswers || []).length })), drafts: drafts.map(draftSummary) });
+  }
+  if (a.operation === 'answers') return ok({ answers: await approvedKnowledge(ctx, accountId) });
+  if (a.operation === 'open_draft') {
+    if (!key(a.requestId)) return fail('invalid_import');
+    const found = await ctx.db.query('knowledgeImportDrafts').withIndex('by_account_request', q => q.eq('accountId', accountId).eq('requestId', a.requestId)).unique();
+    return found && found.status === 'draft' ? ok({ draft: found }) : fail('draft_not_found');
   }
   if (['open','archive'].includes(a.operation)) {
     const source = sources.find(row => row.sourceKey === a.sourceKey);
