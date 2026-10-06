@@ -8,6 +8,7 @@ import { blueAccount, blueAuthStore, blueAccountsAvailable } from '../blue-auth.
 import { appUrl } from '../green-config.js';
 import { ensureCsrfToken, verifyCsrf } from '../cookies.js';
 import { readBody, send, sendPilotError } from '../http.js';
+import { isSameSite } from '../guard.js';
 import { PilotError } from '../layla/config.js';
 import { dashboardAvailable } from '../layla/dashboard-api.js';
 import { hasibArgs } from './validate.js';
@@ -15,10 +16,6 @@ import { isHasibFounder } from './founder.js';
 import { hasibPreviewResponse } from './preview.js';
 
 const siteOrigin = env => env.PUBLIC_SITE_ORIGIN || 'https://www.bznsflowai.com';
-const sameSite = (req, env, write = false) => {
-  try { const origin = new URL(siteOrigin(env)); return req.headers?.host === origin.host && (!write || req.headers?.origin === origin.origin); }
-  catch { return false; }
-};
 const LIMITS = { items_import: 60000, item_save: 40000, order_create: 40000, stock_move: 16000, repair_update: 12000 };
 const DEFAULT_BODY_LIMIT = 6000;
 
@@ -38,7 +35,7 @@ export async function sendTeamInvitation({ member, env, fetcher = fetch }) {
 export function createHasibApi({ env = process.env, fetcher = fetch, accounts = blueAuthStore({ env, fetcher }), store = hasibStore({ env, fetcher }) } = {}) {
   return async (req, res) => {
     try {
-      if (!sameSite(req, env, req.method !== 'GET')) throw new PilotError('origin', 403);
+      if (!isSameSite(req, env, { write: req.method !== 'GET' })) throw new PilotError('origin', 403);
       if (!['GET', 'POST'].includes(req.method)) throw new PilotError('method', 405);
       if (!hasibAvailable(env)) throw new PilotError('hasib_unavailable', 503);
       const account = await blueAccount(req, accounts);

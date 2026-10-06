@@ -4,6 +4,8 @@ import { createInstagramApi } from './_lib/layla/instagram.js';
 import { createMessagingApi } from './_lib/layla/blue-messaging.js';
 import { createDashboardApi } from './_lib/layla/dashboard-api.js';
 import { createHasibApi } from './_lib/hasib/hasib-api.js';
+import { createProductSetupApi } from './_lib/product-setup-api.js';
+import { createKnowledgeApi } from './_lib/knowledge-api.js';
 import { createReviewHandler, reviewAvailable } from './_lib/layla/review-api.js';
 
 export function requestSurface(req) {
@@ -16,7 +18,10 @@ export function requestSurface(req) {
 
 // All active surfaces use authenticated Convex clients. Retired pilot routes
 // return 410 instead of falling back to another database.
-export function createHandler({ env = process.env, fetcher = fetch } = {}) {
+const INSTAGRAM_SURFACES = ['instagram', 'instagram-callback', 'instagram-deauthorize', 'instagram-delete', 'instagram-deletion-status'];
+export const SURFACES = ['dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', ...INSTAGRAM_SURFACES, 'customer-status', 'activation', 'test']; // activation and test are retired (410) but still rewritten
+
+export function createHandler({ env = process.env, fetcher = fetch, surfaces = {} } = {}) {
   const customer = createReviewHandler({ env, fetcher, reviewMode: false });
   const review = createReviewHandler({ env, fetcher, reviewMode: true });
   const handlers = {
@@ -25,7 +30,10 @@ export function createHandler({ env = process.env, fetcher = fetch } = {}) {
     messaging: createMessagingApi({ env, fetcher }),
     customer,
     'customer-review': review,
+    'product-setup': createProductSetupApi({ env, fetcher }),
+    knowledge: createKnowledgeApi({ env, fetcher }),
   };
+  Object.assign(handlers, surfaces);
   return async (req, res) => {
     try {
       if ((isGreenRuntime(env) || env.GREEN_CONVEX_CUTOVER === 'true') && !greenDataReady(env)) {
@@ -33,7 +41,7 @@ export function createHandler({ env = process.env, fetcher = fetch } = {}) {
       }
       const surface = requestSurface(req);
       if (Object.hasOwn(handlers, surface)) return await handlers[surface](req, res);
-      if (['instagram','instagram-callback','instagram-deauthorize','instagram-delete','instagram-deletion-status'].includes(surface)) {
+      if (INSTAGRAM_SURFACES.includes(surface)) {
         return await createInstagramApi({ env, fetcher })(req, res, surface);
       }
       if (surface === 'customer-status') {

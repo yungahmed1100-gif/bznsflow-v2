@@ -4,6 +4,7 @@
 import { convexConfigured, reviewStore } from '../convex.js';
 import { blueAccount, blueAuthStore } from '../blue-auth.js';
 import { ensureCsrfToken, verifyCsrf } from '../cookies.js';
+import { isSameSite } from '../guard.js';
 import { readBody, send, sendPilotError } from '../http.js';
 import { PilotError } from './config.js';
 import { broadcastMessagingEnabled } from '../green-config.js';
@@ -16,10 +17,6 @@ import { dashboardPreviewResponse } from '../hasib/preview.js';
 import { isHasibFounder } from '../hasib/founder.js';
 
 const SITE_ORIGIN = env => env.PUBLIC_SITE_ORIGIN || 'https://www.bznsflowai.com';
-const sameSite = (req, env, write = false) => {
-  try { const origin = new URL(SITE_ORIGIN(env)); return req.headers?.host === origin.host && (!write || req.headers?.origin === origin.origin); }
-  catch { return false; }
-};
 const GRAPH = { app: '1388038082832745', version: 'v25.0' };
 const READ_ACTIONS = new Set(['conversations', 'handoffs', 'thread', 'contacts', 'templates', 'campaigns', 'campaign_detail', 'export_chat', 'export_contacts', 'export_account']);
 const BROADCAST_ACTIONS = new Set(['sync_templates', 'campaign_preview', 'campaign_create', 'campaign_cancel']);
@@ -52,7 +49,7 @@ export function createDashboardApi({ env = process.env, fetcher = fetch, now = D
   }
   return async (req, res) => {
     try {
-      if (!sameSite(req, env, req.method !== 'GET')) throw new PilotError('origin', 403);
+      if (!isSameSite(req, env, { write: req.method !== 'GET' })) throw new PilotError('origin', 403);
       if (!['GET', 'POST'].includes(req.method)) throw new PilotError('method', 405);
       if (!dashboardAvailable(env)) throw new PilotError('dashboard_unavailable', 503);
       const account = await blueAccount(req, accounts);

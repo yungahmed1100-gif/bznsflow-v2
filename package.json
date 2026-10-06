@@ -16,7 +16,7 @@
     "gen:sitemap": "node scripts/gen-sitemap.mjs",
     "seo:audit": "node scripts/seo-audit.mjs",
     "test:auth-browser": "node tests/auth-browser.mjs",
-    "test:layla": "node --test tests/layla-meta.test.mjs tests/layla-meta-db.test.mjs tests/layla-setup.test.mjs tests/layla-open.test.mjs tests/layla-customer.test.mjs tests/layla-scheduler.test.mjs",
+    "test:layla": "node --test tests/layla-meta.test.mjs tests/layla-meta-db.test.mjs tests/layla-setup.test.mjs tests/layla-open.test.mjs tests/layla-customer.test.mjs tests/layla-scheduler.test.mjs tests/product-api.test.mjs tests/product-setup.test.mjs tests/knowledge-import.test.mjs tests/product-handoffs.test.mjs",
     "test:layla-browser": "node tests/layla-meta-browser.mjs",
     "test:access": "node --test tests/blue-auth.test.mjs tests/hasib-plans.test.mjs tests/blue-dashboard.test.mjs",
     "convex:dev": "convex dev",

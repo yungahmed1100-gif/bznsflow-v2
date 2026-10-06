@@ -12,10 +12,11 @@
 // check that would have caught it on the first `npm test`.
 
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
+import { SURFACES } from '../api/layla-meta.js';
 import { PLAYBOOK_PDF } from '../src/lib/constants.js';
 import { PAGES } from '../src/routes-manifest.js';
 import { MAX_CHARS } from '../api/_lib/guard.js';
@@ -208,6 +209,18 @@ t('both new functions declare a maxDuration', () => {
   const vercel = JSON.parse(read('vercel.json'));
   for (const fn of ['api/auth-oauth.js', 'api/auth-callback.js']) {
     assert.ok(vercel.functions?.[fn]?.maxDuration, `vercel.json does not configure ${fn}`);
+  }
+});
+
+console.log('\nvercel functions');
+t('api/ stays within the Hobby limit of 12 functions', () => {
+  const n = readdirSync(join(root, 'api')).filter(f => f.endsWith('.js')).length;
+  assert.ok(n <= 12, `api/ has ${n} functions`);
+});
+t('every rewrite surface is registered in api/layla-meta.js', () => {
+  for (const { destination } of JSON.parse(read('vercel.json')).rewrites || []) {
+    const surface = new URL(destination, 'https://x.invalid').searchParams.get('surface');
+    if (surface) assert.ok(SURFACES.includes(surface), `${destination} targets unknown surface ${surface}`);
   }
 });
 

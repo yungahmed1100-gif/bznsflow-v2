@@ -78,6 +78,8 @@ const AUTH_REASONS = ['too_soon', 'too_many', 'code_invalid', 'email_unverified'
 
 // A dashboard call that fails for want of a session is a 401, not a conflict:
 // the client retries it by signing in, not by changing the request.
+// Setup and knowledge rejections: auth 401, entitlement 403, bad input 400, state conflict 409.
+const setupStatus = r => r === 'sign_in_required' ? 401 : ['access_required', 'manager_required'].includes(r) ? 403 : /^invalid_|_required$|_not_live$/.test(r) ? 400 : 409;
 const signInAware = (reason) => reason === 'sign_in_required' ? 401 : 409;
 
 export const reviewStore = convexStore({ route: 'blue-review', fallback: 'review_backend_unavailable', reasons: REVIEW_REASONS });
@@ -91,6 +93,6 @@ export const messagingStore = convexStore({ route: 'blue-messaging', fallback: '
 export const instagramStore = convexStore({ route: 'blue-instagram', fallback: 'instagram_unavailable', status: signInAware });
 export const accessStore = convexStore({ route: 'blue-access', fallback: 'access_unavailable', reasons: ['sign_in_required', 'admin_required', 'invalid_email', 'invalid_plan', 'invalid_pack'] });
 export const coreStore = convexStore({ route: 'green-core', fallback: 'core_unavailable', reasons: ['invalid_email', 'invalid_bucket', 'invalid_turn', 'conversation_not_found'] });
-export const productSetupStore = convexStore({ route: 'product-setup', fallback: 'setup_unavailable', status: signInAware });
+export const productSetupStore = convexStore({ route: 'product-setup', fallback: 'setup_unavailable', status: setupStatus });
 
-export const knowledgeStore = convexStore({ route: 'knowledge-sources', fallback: 'knowledge_unavailable', status: signInAware });
+export const knowledgeStore = convexStore({ route: 'knowledge-sources', fallback: 'knowledge_unavailable', status: setupStatus });

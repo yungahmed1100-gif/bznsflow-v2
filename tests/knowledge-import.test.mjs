@@ -118,13 +118,13 @@ test('a lost save response replays the same draft without a version increment',a
 });
 
 test('knowledge HTTP boundary checks origin, CSRF and derives identity only from the cookie',async()=>{
- const {createKnowledgeApi}=await import('../api/knowledge.js');
+ const {createKnowledgeApi}=await import('../api/_lib/knowledge-api.js');
  const {hashAccountToken}=await import('../api/_lib/blue-auth.js');
  let forwarded;
  const api=createKnowledgeApi({env:{PUBLIC_SITE_ORIGIN:'https://app.example.com'},store:async(operation,args)=>{forwarded={operation,...args};return {sources:[],drafts:[]};}});
  const invoke=async(req)=>{const headers={};const res={status(code){this.code=code;},setHeader(key,value){headers[key]=value;},getHeader(key){return headers[key];},end(value){this.body=JSON.parse(value);}};await api(req,res);return res;};
- const base={method:'POST',headers:{host:'app.example.com',origin:'https://app.example.com',cookie:'bf_session=real-session; bf_csrf=token','x-csrf-token':'token'},body:{operation:'save',tokenHash:'forged',accountId:'foreign',references:[{label:'Page 2',text:'A fact',question:'A question?',answer:'An answer'}],baseRevision:999,approvedAnswers:[{question:'forged',answer:'forged'}]}};
+ const base={method:'POST',headers:{host:'app.example.com',origin:'https://app.example.com',cookie:`bf_session=${'c'.repeat(64)}; bf_csrf=token`,'x-csrf-token':'token'},body:{operation:'save',tokenHash:'forged',accountId:'foreign',references:[{label:'Page 2',text:'A fact',question:'A question?',answer:'An answer'}],baseRevision:999,approvedAnswers:[{question:'forged',answer:'forged'}]}};
  assert.equal((await invoke({...base,headers:{...base.headers,origin:'https://evil.example'}})).code,403);
  assert.equal((await invoke({...base,headers:{...base.headers,'x-csrf-token':'wrong'}})).code,403);
- assert.equal((await invoke(base)).code,200);assert.equal(forwarded.tokenHash,hashAccountToken('real-session'));assert.equal(forwarded.accountId,undefined);assert.equal(forwarded.references[0].answer,'An answer');assert.equal(forwarded.baseRevision,undefined);assert.equal(forwarded.approvedAnswers,undefined);
+ assert.equal((await invoke(base)).code,200);assert.equal(forwarded.tokenHash,hashAccountToken('c'.repeat(64)));assert.equal(forwarded.accountId,undefined);assert.equal(forwarded.references[0].answer,'An answer');assert.equal(forwarded.baseRevision,undefined);assert.equal(forwarded.approvedAnswers,undefined);
 });

@@ -51,6 +51,14 @@
     {
       "source": "/api/layla-meta-test",
       "destination": "/api/layla-meta?surface=test"
+    },
+    {
+      "source": "/api/product-setup",
+      "destination": "/api/layla-meta?surface=product-setup"
+    },
+    {
+      "source": "/api/knowledge",
+      "destination": "/api/layla-meta?surface=knowledge"
     }
   ],
   "redirects": [

@@ -126,3 +126,14 @@ export function bucketKeys(ip, now = new Date()) {
     global: `global:${now.toISOString().slice(0, 10)}`,
   };
 }
+
+/**
+ * Exact-origin policy for authenticated surfaces: the Host must be the pinned
+ * site host and, for writes, the Origin must be the pinned site origin.
+ */
+export function isSameSite(req, env = process.env, { write = false } = {}) {
+  try {
+    const origin = new URL(env.PUBLIC_SITE_ORIGIN || 'https://www.bznsflowai.com');
+    return req.headers?.host === origin.host && (!write || req.headers?.origin === origin.origin);
+  } catch { return false; }
+}
