@@ -99,3 +99,13 @@ The following still remain:
 The tracker is in `docs/SESSION-CHECKPOINT.md`.
 
 Legacy handoff rows marked `takeover` show as "Waiting for team" and can inflate the badge. Resolve clears them.
+
+## Post-release health (Vercel connector, ~15:50 UTC)
+
+- Runtime error clusters since 10:00 UTC show only the existing `url.parse()` deprecation warning (first seen 2026-09-11). There are no 5xx responses.
+- Real sign-in, setup and access-admin requests returned 200.
+- Green Convex `blueMessaging:dispatch` runs every 5–6 minutes. Every run succeeds, and the matching worker requests return 200.
+- **Existing noise, not caused by this release:** about one request per minute to `/api/layla-meta-worker` returns 401 `worker_auth`.
+  - The source is the Supabase-era Cloudflare scheduler `ops/layla-minute-worker.js`. It still sends the old `LAYLA_META_WORKER_SECRET`, while Green accepts only `GREEN_MESSAGING_WORKER_SECRET`.
+  - Convex crons now drive the queue, so this third scheduler is redundant. `docs/backend-migration-state.md` lists it under "three schedulers for one queue".
+  - Recommendation: Ahmed disables the Cloudflare cron trigger. Do not give it the Green secret.
