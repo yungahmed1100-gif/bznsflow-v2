@@ -12,7 +12,7 @@
 | 5 Should-fix | ☐ | — | — |
 | 6 E2E suite + `test:release` | ☐ | — | — |
 | 7 Verification doc + commits | ☐ | — | — |
-| 8 Production release | ☐ | — | — |
+| 8 Production release | ✅ (early, at Ahmed's request) | `c5ac782` | `dpl_8jUHs2uBrWxTmE4uxfPGd8rhgEHt` on www; Convex rare-fish-465 10:04Z; unauth smoke pass; see green-release-2026-10-06.md. Steps 5–7 still open |
 
 ## WhatsApp onboarding help — 2026-10-03
 
