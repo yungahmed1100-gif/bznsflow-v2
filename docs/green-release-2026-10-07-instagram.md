@@ -135,4 +135,24 @@ Use the Instagram app whose ID production holds as `MAIN_INSTAGRAM_APP_ID`.
 
 ## Production evidence
 
-Pending: written after promotion.
+| Item | Value |
+|---|---|
+| Source | `8f56d51` (clean archive, 12 functions) |
+| Vercel | `dpl_BJi4kXG5SGZHSHpg6eUdP2GKcJ37`, promoted 2026-10-07 by Ahmed (`ship-instagram.sh`) |
+| Convex | `rare-fish-465` deployed; the dry run reported only an empty Node-actions version change; no index deletions |
+| Env (production) | `GREEN_INSTAGRAM_VERIFY_TOKEN`, `GREEN_INSTAGRAM_APPROVED=true` and `GREEN_INSTAGRAM_ENABLED=true` set as secrets |
+| Rollback | promote `dpl_27LnDpq8mkPtfYekcmhbLV7a83Zu`; keep Convex |
+
+**Unauthenticated smoke checks after promotion:**
+- `GET ?surface=instagram`: `sign_in_required`. Before the release it answered `available:false`, so Instagram is now open to signed-in owners.
+- Webhook GET with the Instagram verify token: returns the challenge (200).
+- Unsigned Instagram POST: 403.
+- Pages: `/`, `/catalyst/setup`, `/signin` and `/en/catalyst/setup` all returned 200 in under 0.8 s, three rounds.
+- One 20-second timeout on `/` during the checks did not repeat in three later rounds. Ahmed's Meta dashboard was not loading at the same moment, which points to a local network blip.
+
+**Still pending:**
+- the Meta Instagram webhook subscription;
+- an OAuth redirect check in the dashboard;
+- a real Instagram DM answered (the live test script above).
+
+`ship-instagram.sh` stopped at its first quick check (a `grep` that expected `"available"` under `set -e`); the script is fixed.
