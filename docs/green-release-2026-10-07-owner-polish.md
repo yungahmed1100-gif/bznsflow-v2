@@ -97,3 +97,30 @@ Ahmed asked for a senior design pass on the owner surfaces once Instagram opened
 - **Runtime logs** for the 10 minutes after promotion show no 5xx. `layla-meta-worker` returns 200, so the Convex crons are draining. Its 401s come from the stale Cloudflare scheduler, which is known.
 
 **Not yet seen on production:** a real owner connecting a channel and Layla switching on by herself, and a live team-contact reply. Both wait on Ahmed's live test. Broadcasting stays off until `GREEN_BROADCAST_ENABLED` and the Convex `broadcast` setting are enabled.
+
+## Hardening release (same day)
+
+Ahmed asked to refactor the release and scenario-test it for bugs and inconsistencies. The fixes are in commit `f808c0b`. For the two marked "proven", restoring the old code makes the new scenario tests fail.
+
+**Bugs fixed**
+1. **Proven:** opening setup no longer rewrites saved progress before it loads. It used to write `[0,1]` on every visit.
+2. **Proven:** a refresh asked for during a running poll now waits for a fresh load, so a toggled switch cannot snap back to stale state. The logic lives in `createRefresher` in `src/hooks/usePolling.js`.
+3. Instagram failures are worded for Instagram, from one channel-aware reason table in `strings.js`.
+4. A team contact over 120 characters is refused at publish (`bzns_contact_too_long`). It used to be dropped without a word.
+5. Phones always show a connection problem. Only the all-clear is hidden.
+6. Messaging switched off platform-wide is no longer reported as a channel fault.
+
+**Consistency**
+- The master switch is disabled, with the reason, when messaging is off everywhere.
+- The health link navigates inside the app.
+- On phones, a switch reason gets its own row.
+- Dead strings and CSS are removed.
+- The review docs describe the switch model.
+
+| Item | Value |
+|---|---|
+| Verification | Full `npm run test:release`: 999/999 unit tests, audit with 0 vulnerabilities, all 10 browser suites (new `layla-switch-browser`: 8 scenarios, 152 checks), and every sector suite |
+| Vercel | `dpl_BAQgkpS7Wzy5tmbZA2YWAnhspDUv`, promoted 2026-10-07 at Ahmed's request ("commit and push to production") |
+| Convex | `rare-fish-465` deployed after a clean dry run: schema validation complete, no index deletions |
+| Smoke | All pages returned 200 over three rounds. Unauthenticated messaging (including `auto`) returns 401, and an unsigned webhook returns 403. No 5xx in the logs after promotion. |
+| Rollback | `npx vercel promote dpl_5CFo3RpTexmDGgduu2fLqWAPSbkK --yes`, keeping Convex |
