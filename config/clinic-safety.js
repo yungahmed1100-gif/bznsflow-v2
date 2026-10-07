@@ -1,4 +1,5 @@
-const CLINICAL = /(?:pain|hurt|bleed|swollen|fever|diagnos|prescri|medicine|dose|allerg|treat(?:ment)?|symptom|lab\s*result|x[- ]?ray|ألم|وجع|نزيف|تورم|حمى|تشخيص|وصفة|دواء|جرعة|حساسية|علاج|أعراض|تحاليل|أشعة)/iu;
+// `pain` needs a word start and must not be `paint`: "Spain" and "paint" are not symptoms.
+const CLINICAL = /(?:\bpain(?!t)|hurt|bleed|swollen|fever|diagnos|prescri|medicine|dose|allerg|treat(?:ment)?|symptom|lab\s*result|x[- ]?ray|ألم|وجع|نزيف|تورم|حمى|تشخيص|وصفة|دواء|جرعة|حساسية|علاج|أعراض|تحاليل|أشعة)/iu;
 const CLINIC_SECTOR = /(?:medical\s+clinic|dental|clinic|عياد|أسنان)/iu;
 
 export const isClinicSector = profile => CLINIC_SECTOR.test(String(profile?.sector || profile || ''));

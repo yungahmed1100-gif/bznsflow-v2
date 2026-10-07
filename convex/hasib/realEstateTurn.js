@@ -1,3 +1,4 @@
+import { phrase } from '../../config/layla-tones.js';
 import { isLivePack } from '../../config/hasib-packs.js';
 import { hasibEnabled } from './gate.js';
 import { HASIB_PLANS, planFor } from './plans.js';
@@ -42,7 +43,7 @@ export async function realEstateTurn(ctx, { row, person, contact, text, now, sec
   if (!matches?.ok || !matches.value.items.length) {
     const existing = await ctx.db.query('realEstateTasks').withIndex('by_entity', q => q.eq('entityType', 'opportunity').eq('entityId', String(saved.value.id))).take(20);
     if (!existing.some(task => task.status === 'open' && task.kind === 'no_verified_match')) await ctx.db.insert('realEstateTasks', { accountId: row.accountId, kind: 'no_verified_match', entityType: 'opportunity', entityId: String(saved.value.id), status: 'open', reason: 'No available, recently verified listing matches every saved requirement', createdAt: now, updatedAt: now });
-    return { opportunityId: saved.value.id, handoff: true, facts: arabic(text) ? 'سيتحقق الفريق من العقارات المناسبة ويعود إليك بالمعلومات المؤكدة.' : 'The team will check suitable properties and return with confirmed details.' };
+    return { opportunityId: saved.value.id, handoff: true, facts: phrase(row.profile?.tone, 'propertyNoMatch', arabic(text) ? 'ar' : 'en') };
   }
   const lines = [];
   for (const match of matches.value.items.slice(0, 3)) {

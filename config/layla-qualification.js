@@ -4,6 +4,7 @@
 // calls a model: fields come from closed vocabularies, approved catalog names
 // and bounded patterns. Medical, legal and finance packs only collect
 // operational booking details and never keep contextual free text.
+import { phrase } from './layla-tones.js';
 import { INDUSTRIES } from '../src/lib/industries.js';
 
 export const QUALIFICATION_VERSION = 'qualification-v1';
@@ -56,9 +57,9 @@ const req = (field, required = true) => ({ ...field, required });
 
 export const QUALIFICATION_PACKS = {
   'real-estate': sector('project', [
-    req(F.need([opt('buy', 'Buy', 'شراء', ['purchase', 'buying', 'اشتري', 'أشتري', 'تمليك']), opt('rent', 'Rent', 'إيجار', ['rental', 'lease', 'renting', 'استئجار', 'أستأجر', 'ايجار']), opt('sell', 'Sell', 'بيع', ['selling', 'أبيع', 'ابيع']), opt('invest', 'Invest', 'استثمار', ['investment', 'investing'])],
+    req(F.need([opt('buy', 'Buy', 'شراء', ['purchase', 'buying', 'for sale', 'اشتري', 'أشتري', 'تمليك']), opt('rent', 'Rent', 'إيجار', ['rental', 'lease', 'renting', 'for rent', 'استئجار', 'أستأجر', 'ايجار']), opt('sell', 'Sell', 'بيع', ['selling', 'أبيع', 'ابيع']), opt('invest', 'Invest', 'استثمار', ['investment', 'investing'])],
       { en: 'whether you want to buy, rent, sell or invest', ar: 'هل تريد الشراء أو الإيجار أو البيع أو الاستثمار' })),
-    req(F.choice('property_type', 'Property type', 'نوع العقار', [opt('apartment', 'Apartment', 'شقة', ['flat', 'شقه']), opt('villa', 'Villa', 'فيلا', ['house', 'بيت', 'منزل']), opt('land', 'Land', 'أرض', ['plot', 'ارض']), opt('office', 'Office', 'مكتب'), opt('shop', 'Shop', 'محل', ['retail unit', 'showroom', 'معرض'])],
+    req(F.choice('property_type', 'Property type', 'نوع العقار', [opt('apartment', 'Apartment', 'شقة', ['flat', 'شقه', 'شقق']), opt('villa', 'Villa', 'فيلا', ['house', 'بيت', 'منزل', 'فلل']), opt('land', 'Land', 'أرض', ['plot', 'ارض', 'اراضي']), opt('office', 'Office', 'مكتب', ['مكاتب']), opt('shop', 'Shop', 'محل', ['retail unit', 'showroom', 'معرض', 'محلات'])],
       { en: 'the property type', ar: 'نوع العقار' })),
     req(F.area()), req(F.budget()), F.count('bedrooms', 'Bedrooms', 'غرف النوم', { en: 'how many bedrooms you need', ar: 'عدد غرف النوم المطلوبة' }),
     req(F.choice('finance_readiness', 'Finance readiness', 'جاهزية التمويل', [opt('cash', 'Cash ready', 'نقداً', ['cash buyer', 'نقد', 'كاش']), opt('approved', 'Finance approved', 'التمويل موافق عليه', ['mortgage approved', 'pre approved', 'موافقة بنكية']), opt('in_progress', 'Finance in progress', 'التمويل قيد الإجراء', ['applying', 'بانتظار البنك']), opt('unknown', 'Not decided', 'لم يقرر', ['not sure', 'ما قررت'])], { en: 'whether finance is ready, in progress, or cash', ar: 'هل التمويل جاهز أو قيد الإجراء أو نقداً' })),
@@ -195,6 +196,8 @@ const PLACES = [
   ['Ghubra', 'الغبرة', ['ghubrah']], ['Azaiba', 'العذيبة', ['azaibah']], ['Mawaleh', 'الموالح'], ['Khoudh', 'الخوض', ['al khoud']], ['Ruwi', 'روي'], ['Amerat', 'العامرات'],
   ['Barka', 'بركاء'], ['Sohar', 'صحار'], ['Salalah', 'صلالة'], ['Nizwa', 'نزوى'], ['Sur', 'صور'], ['Ibri', 'عبري'], ['Rustaq', 'الرستاق'], ['Duqm', 'الدقم'],
   ['Madinat Sultan Qaboos', 'مدينة السلطان قابوس', ['msq']], ['Al Hail', 'الحيل'], ['Dubai', 'دبي'], ['Abu Dhabi', 'أبوظبي'], ['Sharjah', 'الشارقة'], ['Riyadh', 'الرياض'],
+  ['Al Mouj', 'الموج', ['mouj', 'the wave']], ['Muscat Bay', 'خليج مسقط'], ['Al Ansab', 'الأنصب', ['ansab']], ['Wattayah', 'الوطية', ['wattaya']],
+  ['Darsait', 'دارسيت'], ['Al Hamriya', 'الحمرية', ['hamriya']], ['Bausher Heights', 'مرتفعات بوشر'], ['Al Amerat Heights', 'مرتفعات العامرات'],
   ['Jeddah', 'جدة'], ['Doha', 'الدوحة'], ['Kuwait City', 'مدينة الكويت'], ['Manama', 'المنامة'], ['Cairo', 'القاهرة'],
 ];
 const WEEKDAYS_EN = 'monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun';
@@ -239,9 +242,12 @@ function extractNumber(t, contextual, itemName = '') {
   const item = normalizeText(itemName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const beforeItem = item && t.match(new RegExp(`(?:^|\\s)(\\d{1,4})\\s+(?:[^\\s]+\\s+)?${item}`));
   if (beforeItem) return { value: String(Number(beforeItem[1])), confidence: 0.8 };
-  const unit = /(?:^|\s)(\d{1,4})\s*(?:x\s*)?(pcs|pieces?|units?|kg|kilos?|people|persons?|guests?|servings?|boxes?|trays?|cups?|items?|bags?|rooms?|حبه|حبات|قطعه|قطع|كيلو|شخص|اشخاص|ضيف|ضيوف|نفر|انفار|علبه|علب|صحن|وحده|وحدات|غرفه|غرف)(?=\s|$|[.,!؟?])/;
+  const unit = /(?:^|\s)(\d{1,4})\s*(?:x\s*)?(pcs|pieces?|units?|kg|kilos?|people|persons?|guests?|servings?|boxes?|trays?|cups?|items?|bags?|rooms?|bedrooms?|beds?|br|bhk|حبه|حبات|قطعه|قطع|كيلو|شخص|اشخاص|ضيف|ضيوف|نفر|انفار|علبه|علب|صحن|وحده|وحدات|غرفه|غرف)(?=\s|$|[.,!؟?])/;
   const m = t.match(unit) || t.match(/(?:^|\s)x\s?(\d{1,4})\b|\b(\d{1,4})\s?x(?=\s|$)/);
   if (m) return { value: String(Number(m[1] || m[2])), confidence: 0.85 };
+  // "I want to order 1", "ابي 2": a small number straight after a buying verb.
+  const verb = t.match(/(?:^|\s)(?:order|want|need|take|buy|get|ابي|ابغى|ابغي|اريد|بطلب|ابا)\s+(?:to order\s+|عدد\s+)?(\d{1,3})(?=\s|$|[.,!؟?])/);
+  if (verb) return { value: String(Number(verb[1])), confidence: 0.75 };
   const word = Object.keys(NUMBER_WORDS).find(w => containsTerm(t, w) && /(people|guests|pieces|units|persons|اشخاص|ضيوف|حبات|قطع|وحدات)/.test(t));
   if (word) return { value: String(NUMBER_WORDS[word]), confidence: 0.75 };
   if (contextual) {
@@ -259,7 +265,9 @@ function extractArea(t, original) {
   const exclude = new RegExp(`^(?:${WEEKDAYS_EN}|${MONTHS_EN}|the|a|an|my|your|stock|person|total|advance|cash|english|arabic)$`, 'i');
   const en = original.match(/\b(?:in|at|near|around|located in|based in)\s+([A-Z][A-Za-z'-]{2,20}(?:\s+[A-Z][A-Za-z'-]{2,20}){0,2})/);
   if (en && !exclude.test(en[1].split(/\s+/)[0])) return { value: clip(en[1], 40), confidence: 0.7 };
-  const ar = normalizeText(original).match(/(?:منطقه|حي|ولايه|بالقرب من|قريب من|ساكن في|اسكن في|موقعي في|موقعنا في)\s+([؀-ۿ]{2,20}(?:\s+[؀-ۿ]{2,20})?)/);
+  const ar = normalizeText(original).match(/(?:منطقه|حي|ولايه|بالقرب من|قريب من|ساكن في|اسكن في|موقعي في|موقعنا في)\s+([؀-ۿ]{2,20}(?:\s+[؀-ۿ]{2,20})?)/)
+    // "ابي فيلا للايجار في الموج": a place named last, after في.
+    || normalizeText(original).match(/(?:^|\s)في\s+(ال[؀-ۿ]{2,18}(?:\s+ال[؀-ۿ]{2,18})?)$/);
   if (ar) return { value: clip(ar[1], 40), confidence: 0.7 };
   return null;
 }
@@ -332,14 +340,18 @@ export function validateFieldValue(sectorId, key, value, catalog = []) {
  * @param {{ text: string, sectorId: string, catalog?: Array, asked?: string[], existing?: Array, intent?: string }} input
  * @returns {{ updates: Array<{key:string,value:string,confidence:number,source:string}>, customerName: string|null }}
  */
+const NO_FIELDS_INTENTS = new Set(['location', 'hours', 'identity']);
 const FILLER = /^(yes|yeah|yep|no|nope|ok|okay|sure|thanks?|thank you|hi|hello|hey|please|maybe|later|not sure|i don'?t know|still interested|interested|good|great|fine|cool|نعم|اي|ايوه|لا|اوكي|اوك|تمام|طيب|شكرا|شكرا لك|مرحبا|السلام عليكم|ممكن|مهتم|ان شاء الله|انشاءالله|ما ادري|مو متاكد|لاحقا|بعدين)[.!,،\s]*$/i;
 export function extractQualification({ text, sectorId, catalog = [], asked = [], askedRecently = true, existing = [], intent = '' }) {
   const original = String(text || '').slice(0, 1000);
-  const t = normalizeText(original);
+  // "شقق للبيع" (flats for sale) is someone buying, not selling.
+  const t = normalizeText(original).replace(/(^|\s)للبيع(?=[\s؟?!.,،]|$)/g, '$1شراء');
   const pack = qualificationPack(sectorId);
   const have = new Map(existing.map(f => [f.key, f]));
   const updates = [];
   if (!t || intent === 'optout') return { updates, customerName: null };
+  // "Where is your office?" asks about the business; it says nothing about what the customer wants.
+  if (NO_FIELDS_INTENTS.has(intent)) return { updates, customerName: extractCustomerName(original) };
   const catalogHit = extractCatalog(t, catalog);
   for (const field of pack.fields) {
     let hit = null;
@@ -357,7 +369,8 @@ export function extractQualification({ text, sectorId, catalog = [], asked = [],
   const words = original.trim().split(/\s+/).length;
   const missingAsked = asked.filter(key => !have.get(key)?.value && !updates.some(u => u.key === key));
   const field = missingAsked.length === 1 && pack.fields.find(f => f.key === missingAsked[0]);
-  if (field && askedRecently && !pack.sensitive && ['text', 'area'].includes(field.kind) && words <= 8 && original.length <= 80 && !/[?؟]\s*$/.test(original)
+  // Only when nothing else was understood: "ابي فيلا في الموج" is not an area called "ابي فيلا في الموج".
+  if (field && !updates.length && askedRecently && !pack.sensitive && ['text', 'area'].includes(field.kind) && words <= 8 && original.length <= 80 && !/[?؟]\s*$/.test(original)
     && !FILLER.test(normalizeText(original)) && !['human', 'optout', 'prices', 'hours', 'location', 'identity', 'greeting'].includes(intent)) {
     updates.push({ key: field.key, value: clip(original, 80), confidence: 0.6, source: 'contextual' });
   }
@@ -407,26 +420,54 @@ function joinList(parts, ar) {
   if (ar) return `${parts.slice(0, -1).join('، ')} و${parts.at(-1)}`;
   return parts.length === 2 ? `${parts[0]} and ${parts[1]}` : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
 }
-export function questionText(fields, lang) {
+export function questionText(fields, lang, tone) {
   if (!fields.length) return '';
   const ar = lang === 'ar';
-  const list = joinList(fields.map(f => f.ask[ar ? 'ar' : 'en']), ar);
-  return ar ? `حتى نساعدك بشكل أفضل، ممكن تخبرنا ${list}؟` : `To help you further, could you share ${list}?`;
+  return phrase(tone, 'askMore', ar ? 'ar' : 'en', { list: joinList(fields.map(f => f.ask[ar ? 'ar' : 'en']), ar) });
+}
+
+// Name first, then interest: the fewest messages to a lead the team can act on.
+export const NAME_FIELD = Object.freeze({ key: 'customer_name', ask: { en: 'your name', ar: 'اسمك' } });
+// Any of these words means the reply is small talk, not a name ("Hello there", "السلام عليكم").
+// Any of these words means the reply is small talk or a question, not a name ("Hello there", "bye", "كم سعرها").
+const NAME_GREETINGS = /^(hi|hello|hey|there|salam|salaam|thanks|thank|you|ok|okay|yes|no|yeah|yep|nope|please|morning|evening|good|bye|goodbye|sure|great|cool|perfect|done|noted|welcome|alright|again|later|what|where|when|how|why|which|who|price|much|مرحبا|مرحباً|السلام|سلام|عليكم|هلا|اهلا|أهلا|شكرا|شكراً|نعم|لا|تمام|اوكي|صباح|مساء|الخير|مع|السلامة|طيب|زين|مشكور|مشكورة|يعطيك|العافية|كم|وين|متى|هل|ايش|شو|ليش|كيف|عندكم|ابي|ابغى|أبي|أبغى|اريد|أريد|ممكن|سعر|سعرها|سعره|بكم|اوك|خلاص|باي)$/i;
+/** True for a question rather than a statement: a question mark, or a question word up front. */
+export function isQuestion(text) {
+  // A greeting up front ("helo do u have…") does not make a question a statement.
+  const t = String(text || '').trim().toLowerCase().replace(/^(?:hi+|hel+o+|hey+|salam|مرحبا|السلام عليكم|هلا)[\s,،!.]+/, '');
+  return /[?؟]/.test(t) || /^(u|what|where|when|how|which|who|why|whats|do|does|did|is|are|can|could|will|would|should|any|هل|كم|وين|متى|كيف|ايش|إيش|شو|ليش|لماذا|ماذا|أين|اين|عندكم|فيه|في عندكم|بكم)(?=[\s,،.!?؟]|$)/.test(t);
+}
+/** A short bare reply to "your name?" ("Sara", "سارة الهنائي") is the customer's name. */
+export function extractBareName(original) {
+  if (isQuestion(original)) return null;
+  const t = String(original || '').trim().replace(/[.!]+$/, '');
+  if (!t || t.split(/\s+/).some(word => NAME_GREETINGS.test(word) || NOT_NAMES.has(word.toLowerCase()))) return null;
+  if (/^[A-Za-z][A-Za-z'-]{1,20}(?:\s+[A-Za-z][A-Za-z'-]{1,20}){0,2}$/.test(t) && !NOT_NAMES.has(t.split(/\s+/)[0].toLowerCase())) return clip(t, 40);
+  if (/^[؀-ۿ]{2,20}(?:\s+[؀-ۿ]{2,20}){0,2}$/.test(t)) return clip(t, 40);
+  return null;
 }
 
 /**
  * Decide whether Layla should append qualification questions to this reply.
  * @returns {{ text: string, keys: string[] }}
  */
-export function planQuestions({ sectorId, fields, askCounts = [], asked = [], lastAskedAt = 0, answeredNow = false, intent, handoff, now = Date.now(), lang }) {
+export function planQuestions({ sectorId, fields, askCounts = [], asked = [], lastAskedAt = 0, answeredNow = false, intent, handoff, now = Date.now(), lang, tone, knownName = true }) {
   if (handoff && intent !== 'disabled') return { text: '', keys: [] };
-  if (!['services', 'prices', 'hours', 'location', 'faq', 'disabled', 'catalog'].includes(intent)) return { text: '', keys: [] };
+  if (!['services', 'prices', 'hours', 'location', 'faq', 'disabled', 'catalog', 'greeting', 'identity'].includes(intent)) return { text: '', keys: [] };
   // Do not repeat an unanswered question too soon; once it is answered, move on.
   const have = new Set(fields.filter(f => f.value).map(f => f.key));
-  const stillOpen = asked.some(key => !have.has(key));
-  if (lastAskedAt && stillOpen && !answeredNow && now - lastAskedAt < ASK_COOLDOWN_MS) return { text: '', keys: [] };
-  const questions = nextQuestions(sectorId, fields, askCounts);
-  return { text: questionText(questions, lang), keys: questions.map(q => q.key) };
+  if (knownName) have.add(NAME_FIELD.key);
+  // An unanswered name never holds back the next question; it is simply asked once more later.
+  const stillOpen = asked.some(key => key !== NAME_FIELD.key && !have.has(key));
+  if (intent !== 'disabled' && lastAskedAt && stillOpen && !answeredNow && now - lastAskedAt < ASK_COOLDOWN_MS) return { text: '', keys: [] };
+  const counts = new Map(askCounts.map(c => [c.key, c.count]));
+  const wantName = !knownName && (counts.get(NAME_FIELD.key) || 0) < MAX_ASKS_PER_FIELD;
+  // With the name, ask for just one more thing (the interest) so the question stays short.
+  const questions = [...(wantName ? [NAME_FIELD] : []), ...nextQuestions(sectorId, fields, askCounts)].slice(0, wantName ? 2 : MAX_QUESTIONS);
+  // The very same question again within the cooldown reads as a broken record; wait instead.
+  // A booking request is the moment for the date and time, even if they were just asked.
+  if (intent !== 'disabled' && lastAskedAt && now - lastAskedAt < ASK_COOLDOWN_MS && questions.length && questions.every(q => asked.includes(q.key))) return { text: '', keys: [] };
+  return { text: questionText(questions, lang, tone), keys: questions.map(q => q.key) };
 }
 
 /** Public, bilingual description of a pack for the dashboard. */

@@ -2,15 +2,16 @@
 // Every helper takes an explicit accountId; nothing here trusts a client id.
 import { numberHash } from './hash.js';
 import { anonymizeContactOrders } from './hasib/contactLink.js';
-import { extractQualification, isSensitiveSector, mergeFields, planQuestions, qualificationStatus, sectorIdFor, validateFieldValue } from '../config/layla-qualification.js';
+import { langOf } from '../config/layla-tones.js';
+import { NAME_FIELD, extractBareName, isQuestion, extractQualification, isSensitiveSector, mergeFields, planQuestions, qualificationStatus, sectorIdFor, validateFieldValue } from '../config/layla-qualification.js';
 
 export const DAY = 86400000;
 export const TEXT_RETENTION_MS = 30 * DAY;
 export const MESSAGE_RETENTION_MS = 30 * DAY;
-// Dental chats can carry what a patient says about their health. Their text is kept only
+// Dental and clinic chats can carry what a patient says about their health. Their text is kept only
 // for WhatsApp's 24-hour reply window; the captured booking fields stay.
 export const CLINICAL_TEXT_RETENTION_MS = DAY;
-const CLINICAL_TEXT = new Set(['dental']);
+const CLINICAL_TEXT = new Set(['dental', 'clinic']);
 /** How long a message's text is kept, from Layla's sector or the Hasib industry the owner chose. */
 export const textRetentionFor = (sectorId, packId) => CLINICAL_TEXT.has(sectorId) || CLINICAL_TEXT.has(packId) ? CLINICAL_TEXT_RETENTION_MS : TEXT_RETENTION_MS;
 /**
@@ -122,7 +123,7 @@ export async function applyOptout(ctx, contact, now) {
  * Apply one inbound message to the contact: activity, customer name and sector
  * fields. Returns the question plan Layla may append to its reply.
  */
-export async function applyInbound(ctx, contact, { text, intent, handoff, at, now, sectorId, catalog }) {
+export async function applyInbound(ctx, contact, { text, intent, handoff, at, now, sectorId, catalog, tone }) {
   // A short reply only answers Layla's question if that question is recent.
   const askedRecently = !!contact.lastAskedAt && now - contact.lastAskedAt < DAY;
   const extracted = extractQualification({ text, sectorId, catalog, asked: contact.asked || [], askedRecently, existing: contact.fields, intent });
@@ -130,14 +131,23 @@ export async function applyInbound(ctx, contact, { text, intent, handoff, at, no
   const answeredNow = merged.changed;
   const patch = { lastActivityAt: Math.max(contact.lastActivityAt || 0, at), lastInboundAt: Math.max(contact.lastInboundAt || 0, at), sectorId, updatedAt: now };
   if (merged.changed) { patch.fields = merged.fields; patch.qualificationStatus = qualificationStatus(sectorId, merged.fields); }
-  if (extracted.customerName && extracted.customerName !== contact.customerName) patch.customerName = extracted.customerName;
-  const lang = /[؀-ۿ]/.test(text || '') ? 'ar' : 'en';
+  // Layla asked for the name moments ago: a short bare reply ("Sara") is the answer.
+  // Only when the reply filled no other field: "Al Mawaleh" answers the area question, not the name.
+  const bareName = intent === 'unknown' && !extracted.customerName && !extracted.updates.length && askedRecently && (contact.asked || []).includes(NAME_FIELD.key) && !contact.customerName ? extractBareName(text) : null;
+  const customerName = extracted.customerName || bareName;
+  if (customerName && customerName !== contact.customerName) patch.customerName = customerName;
+  const lang = langOf(text);
+  // A reply that only gives details is not a question for the team: an answer to Layla's
+  // question ("Al Mawaleh"), or a stated interest ("looking for a villa to rent in Al Mouj").
+  const filled = answeredNow || !!bareName, statement = !isQuestion(text);
+  const answeredOnly = filled && ((intent === 'unknown' && (askedRecently || statement)) || (intent === 'services' && statement));
   const plan = contact.optout ? { text: '', keys: [] } : planQuestions({ sectorId, fields: merged.fields, askCounts: contact.askCounts || [], asked: contact.asked || [],
-    lastAskedAt: contact.lastAskedAt || 0, answeredNow, intent, handoff, now, lang });
+    lastAskedAt: contact.lastAskedAt || 0, answeredNow: answeredNow || !!bareName, intent: answeredOnly ? 'faq' : intent, handoff: answeredOnly ? false : handoff, now, lang, tone,
+    knownName: !!(customerName || contact.customerName || contact.ownerName || contact.profileName) });
   const next = { ...contact, ...patch };
   next.searchText = searchTextFor(next);
   await ctx.db.patch(contact._id, { ...patch, searchText: next.searchText });
-  return { contact: next, plan, updates: extracted.updates };
+  return { contact: next, plan, updates: extracted.updates, answeredOnly };
 }
 
 /** Record that questions were actually queued in a reply. */

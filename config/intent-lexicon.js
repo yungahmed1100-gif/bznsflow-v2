@@ -79,7 +79,8 @@ export const INTENT_TERMS = {
   human: {
     ar: ['موظف', 'بشري', 'شكوي', 'شخص حقيقي', 'احد يرد', 'اتكلم مع', 'اتحدث مع', 'وصلني',
       'حولني', 'مسئول', 'مسؤول', 'خدمه العملاء'],
-    en: ['human', 'person', 'agent', 'complaint', 'representative', 'speak to someone',
+    // Bare 'person'/'agent' sent "price per person" and "travel agents" to a human.
+    en: ['human', 'a person', 'an agent', 'live agent', 'agent please', 'complaint', 'representative', 'speak to someone',
       'talk to someone', 'real person', 'customer service', 'manager', 'supervisor'],
   },
 

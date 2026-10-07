@@ -23,7 +23,7 @@ export const LANGS = ['ar', 'en', 'mixed', 'arabizi'];
 
 /** Every value classify() can return. Anything else is a labelling mistake. */
 export const CLASSIFY_INTENTS = ['greeting', 'identity', 'human', 'optout', 'disabled',
-  'unknown', 'prices', 'hours', 'location', 'services'];
+  'unknown', 'prices', 'hours', 'location', 'services', 'negotiation', 'abuse', 'ack', 'thanks'];
 
 /**
  * Intents that must be covered per sector, in both ar and en. Kept to the four

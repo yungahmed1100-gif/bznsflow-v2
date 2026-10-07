@@ -3,6 +3,7 @@
 // demand, (3) files or updates the chat's order and (4) confirms it herself when
 // everything is in stock and unambiguous. Anything else waits for the owner with
 // a reason. Deterministic: names, sizes, prices and stock come from Hasib rows.
+import { phrase } from '../../config/layla-tones.js';
 import { extractQualification } from '../../config/layla-qualification.js';
 import { isLivePack } from '../../config/hasib-packs.js';
 import { hasibEnabled } from './gate.js';
@@ -13,6 +14,10 @@ import { formatMinor, normalizeDigits } from './money.js';
 import { createOrder, updatePendingOrder, changeStatus } from './ordersState.js';
 import { recordDemand } from './demandState.js';
 
+// Arabic words are matched whole (with ال/ب prefixes and ها/ه suffixes): "توصلون" contains لون but is not about colour.
+const arWord = words => `(?<![\u0600-\u06ff])(?:ال|بال|ب)?(?:${words})(?:ها|ه|هم)?(?![\u0600-\u06ff])`;
+const PRICE_OR_OPTION = new RegExp(`\\b(how much|price|size|colou?r|available)\\b|${arWord('كم|سعر|مقاس|لون|متوفر')}`, 'i');
+const FOLLOW_UP = new RegExp(`\\b(size|colou?r|qty|quantity|how much|price|order|deliver\\w*|pick ?up|\\d{1,3})\\b|${arWord('مقاس|لون|كم|سعر|اطلب|أطلب|توصيل|استلام')}|[0-9٠-٩]`, 'i');
 /** "I want the black abaya" is an order for one; a bare question is not. */
 const BUYING = /\b(want|need|order|buy|take|reserve|book|get me)\b|أبغى|ابغى|ابغا|أبغا|أبي|ابي|أريد|اريد|ودي|اطلب|أطلب|احجز|أحجز|بشتري|باخذ|بآخذ/i;
 const MAX_QTY = 99, DAY = 86400000;
@@ -22,29 +27,25 @@ const money = (minor, ar) => `${formatMinor(minor)} ${ar ? 'ر.ع.' : 'OMR'}`;
 const nameOf = (item, ar) => (ar ? item.nameAr || item.nameEn : item.nameEn || item.nameAr);
 const optionLabel = v => v.options.map(o => o.value).join(' / ');
 
-export function acknowledgement(number, text) {
-  return isArabic(text)
-    ? `تم استلام طلبك رقم ${number} — سيؤكد الفريق التوفّر والمجموع قريباً.`
-    : `Order #${number} received — the team will confirm availability and the total shortly.`;
+export function acknowledgement(number, text, tone) {
+  return phrase(tone, 'orderReceived', isArabic(text) ? 'ar' : 'en', { number });
 }
-function confirmation(order, text) {
+function confirmation(order, text, tone) {
   const ar = isArabic(text);
   const items = order.lines.map(l => `${l.qty} × ${l.label}`).join(ar ? '، ' : ', ');
-  return ar
-    ? `تم تأكيد طلبك رقم ${order.number} — ${items}، ${money(order.totalMinor, true)}. سنراسلك بخصوص التوصيل أو الاستلام.`
-    : `Order #${order.number} confirmed — ${items}, ${money(order.totalMinor, false)}. We’ll message you about delivery or pickup.`;
+  return phrase(tone, 'orderConfirmed', ar ? 'ar' : 'en', { number: order.number, items, total: money(order.totalMinor, ar) });
 }
 
-/** What Layla says about a product, read from live stock. */
-export function stockLine(item, variants, text) {
-  const ar = isArabic(text), name = nameOf(item, ar);
+/** What Layla says about a product, read from live stock. Names, options and prices are facts; only the joining words follow the tone. */
+export function stockLine(item, variants, text, tone) {
+  const ar = isArabic(text), lang = ar ? 'ar' : 'en', name = nameOf(item, ar);
   const inStock = item.trackStock ? variants.filter(v => v.onHand > 0) : variants;
-  if (!inStock.length) return ar ? `${name} — نفدت الكمية حالياً، وسنبلغك فور وصول كمية جديدة.` : `${name} is out of stock right now — we’ll let you know when it’s back.`;
+  if (!inStock.length) return phrase(tone, 'outOfStock', lang, { name });
   const prices = inStock.map(v => v.priceMinor), min = Math.min(...prices), max = Math.max(...prices);
   const price = min === max ? money(min, ar) : `${ar ? 'من' : 'from'} ${money(min, ar)}`;
   const labels = [...new Set(inStock.map(optionLabel).filter(Boolean))].slice(0, 8);
-  if (!labels.length) return ar ? `${name} — في المخزون · ${price}` : `${name} — in stock · ${price}`;
-  return ar ? `${name} — المتوفر: ${labels.join('، ')} · ${price}` : `${name} — available in ${labels.join(', ')} · ${price}`;
+  if (!labels.length) return phrase(tone, 'inStock', lang, { name, price });
+  return phrase(tone, 'available', lang, { name, price, options: labels.join(ar ? '، ' : ', ') });
 }
 
 /** The variant whose option values (size 56, Black, 128GB) are named in the message. */
@@ -116,11 +117,14 @@ export async function commerceTurn(ctx, { row, person, contact, text, intent, no
   // Read the message as a retail order whatever Layla's own sector is; her questions are untouched.
   const { updates } = extractQualification({ text, sectorId: 'retail', catalog: products.map(p => ({ nameEn: p.nameEn, nameAr: p.nameAr, prices: [] })), asked: [], askedRecently: false, existing: [], intent });
   const field = key => updates.find(u => u.key === key)?.value;
-  const item = field('item') && await matchItem(ctx, accountId, field('item'));
+  // "size 52, I want 1" or "كم سعرها؟": no product named, so it is the one this chat was about today.
+  const remembered = !field('item') && FOLLOW_UP.test(text) ? contact?.fields?.find(f => f.key === 'item' && now - (f.at || 0) < DAY)?.value : null;
+  const named = field('item') || remembered;
+  const item = named && await matchItem(ctx, accountId, named);
   if (!item) return null;
   const variants = (await ctx.db.query('hasibVariants').withIndex('by_item', q => q.eq('itemId', item._id)).take(50)).filter(v => !v.archived);
   if (!variants.length) return null;
-  const facts = stockLine(item, variants, text);
+  const facts = stockLine(item, variants, text, row.profile?.tone);
   // The product photo goes with the answer; ingest sends it once per chat.
   const photo = item.photoId ? { storageId: item.photoId, caption: nameOf(item, isArabic(text)) } : null;
   if (contact) await recordDemand(ctx, { accountId, contact, conversationId: person._id, updates: [{ key: 'item', value: item.nameEn || item.nameAr }], intent: 'catalog_item', at: now });
@@ -128,7 +132,8 @@ export async function commerceTurn(ctx, { row, person, contact, text, intent, no
   if (item.kind !== 'product') return { photo, facts, ack: null };
   const said = parseInt(normalizeDigits(field('quantity') || ''), 10);
   const qty = Number.isSafeInteger(said) && said > 0 ? Math.min(said, MAX_QTY) : BUYING.test(text) ? 1 : 0;
-  if (!qty) return { photo, facts, ack: null };
+  // A follow-up about delivery repeats nothing; one about price or size gets the stock line again.
+  if (!qty) return remembered && !PRICE_OR_OPTION.test(text) ? null : { photo, facts, ack: null };
   const { variant, confirmed } = pickVariant(variants, text);
   const type = ['delivery', 'pickup'].includes(field('fulfilment')) ? field('fulfilment') : undefined, area = field('area');
   const chatOrders = (await ctx.db.query('hasibOrders').withIndex('by_conversation_status', q => q.eq('conversationId', person._id)).take(50))
@@ -169,7 +174,7 @@ export async function commerceTurn(ctx, { row, person, contact, text, intent, no
     fresh = true;
   }
   const result = await confirmOrFlag(ctx, tenant, orderId, now);
-  if (result.confirmed) return { photo, facts: null, ack: confirmation(await labelled(ctx, result.order, text), text) };
+  if (result.confirmed) return { photo, facts: null, ack: confirmation(await labelled(ctx, result.order, text), text, row.profile?.tone) };
   const order = await ctx.db.get(orderId);
-  return { photo, facts, ack: fresh ? acknowledgement(order.number, text) : null };
+  return { photo, facts, ack: fresh ? acknowledgement(order.number, text, row.profile?.tone) : null };
 }

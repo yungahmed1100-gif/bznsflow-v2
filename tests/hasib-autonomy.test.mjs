@@ -58,7 +58,9 @@ test('in Arabic, with the Arabic name; after a greeting the stock line is append
   await abaya(hasib);
   await h.inbound(a, { from: '96891111111', text: 'السلام عليكم، عندكم عباية سوداء؟', intent: 'greeting', reply: 'وعليكم السلام، أهلاً بك!' });
   const [reply] = layla(h, a);
-  assert.match(reply, /^وعليكم السلام، أهلاً بك!/);
+  // The first reply's welcome replaces the generic greeting, so the chat never says hello twice.
+  assert.match(reply, /^أهلاً، معك ليلى من .+\./);
+  assert.ok(!reply.includes('وعليكم السلام، أهلاً بك!'));
   // Gender-neutral Arabic: "المتوفر" reads correctly for any product name (عباية، آيفون).
   assert.match(reply, /عباية سوداء — المتوفر: 52، 56 · 25\.000 ر\.ع\./);
 });

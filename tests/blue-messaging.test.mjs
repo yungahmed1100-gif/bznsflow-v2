@@ -110,11 +110,15 @@ test('ambiguous sends pause the business and prevent blind reactivation',async()
   assert.equal((await m.call('state',{sessionHash:m.sessionHash})).value.active,false);
   assert.equal((await m.call('activate',{sessionHash:m.sessionHash})).reason,'send_outcome_unknown');
 });
-test('expired window and per-minute rate caps block outbound attempts',async()=>{
+test('an expired window blocks, and a burst over the per-minute pace waits for the next minute instead of being dropped',async()=>{
   const m=await setup();await m.inbound();m.advance(86400001);
   assert.equal((await m.call('claim',{jobId:m.outgoing()[0]._id,intent:'old'})).value,null);
-  for(let n=0;n<11;n++){await m.inbound(`new${n}`);const jobId=m.outgoing().at(-1)._id;const claimed=await m.call('claim',{jobId,intent:`intent${n}`});if(claimed.value)await m.call('result',{jobId,intent:`intent${n}`,status:'submitted',providerId:`wamid.${n}`});}
-  assert.equal(m.outgoing().at(-1).reason,'rate_limit');
+  // Separate customers, so the per-integration minute cap is what stops the eleventh send (one chat has its own safety net).
+  for(let n=0;n<11;n++){await m.inbound(`new${n}`,{from:`9689111${String(2000+n)}`});const jobId=m.outgoing().at(-1)._id;const claimed=await m.call('claim',{jobId,intent:`intent${n}`});if(claimed.value)await m.call('result',{jobId,intent:`intent${n}`,status:'submitted',providerId:`wamid.${n}`});}
+  const held=m.outgoing().at(-1);
+  assert.deepEqual([held.status,held.reason],['queued',undefined],'held in the queue, not dropped');
+  m.advance(61000);
+  assert.ok((await m.call('claim',{jobId:held._id,intent:'intent-next'})).value,'sent in the next minute');
 });
 test('webhook routing ignores unknown bindings without creating jobs',async()=>{
   const ops=[];
@@ -148,7 +152,8 @@ test('real webhook envelope persists incoming facts and mirrors business-app ech
   const envelope={entry:[{id:m.integration.waba,changes:[{field:'messages',value}]}]};
   await ingestBlueEnvelope(envelope,{store,now:m.now});
   // Layla answers first, then asks the sector's first group of missing fields.
-  assert.match(m.outgoing()[0].text,/^Portraits\n\nTo help you further, could you share .+\?$/);
+  // The first reply welcomes with the business and Layla, answers, then asks for the name and the interest.
+  assert.match(m.outgoing()[0].text,/^Hello, I’m Layla from Studio\. Portraits\n\nTo help you further, could you share your name and .+\?$/);
   envelope.entry[0].changes=[{field:'smb_message_echoes',value:{messaging_product:'whatsapp',metadata:value.metadata,message_echoes:[{id:'wamid.echo',from:m.integration.sender,to:'96891111111',type:'text',text:{body:'I will help you'}}]}}];
   await ingestBlueEnvelope(envelope,{store,now:m.now});
   assert.equal(m.outgoing()[0].status,'blocked');

@@ -1,3 +1,5 @@
+import { phrase, langOf } from '../../../config/layla-tones.js';
+import { safeReply } from './reply-guard.js';
 import { PilotError, binding } from './config.js';
 import { classifyWithGuard } from './guards.js';
 import { route } from './route.js';
@@ -41,18 +43,22 @@ export const classify = (text, profile = null) => route(text, profile).intent;
 export { classifyWithGuard };
 
 export function answer(text, profile, introduced = false) {
-  const ar = /[\u0600-\u06ff]/.test(text), intent = classify(text, profile);
-  const contact = profile.handoffMode === 'inbox' ? '' : profile.humanContact ? (ar ? ` للتواصل مع الفريق: ${profile.humanContact}` : ` You can contact our team: ${profile.humanContact}`) : '';
+  const lang = langOf(text), ar = lang === 'ar', intent = classify(text, profile), tone = profile.tone;
+  const say = (key, vars) => phrase(tone, key, lang, { business: profile.businessName || 'BznsFlow', ...vars });
+  const contact = profile.handoffMode === 'inbox' || !profile.humanContact ? '' : say('contactSuffix', { contact: profile.humanContact });
   let reply;
   if (intent === 'optout') return { intent, text: null };
-  if (intent === 'human') reply = profile.handoffMode === 'inbox' ? (ar ? 'سأترك هذه المحادثة لفريقنا للمتابعة هنا.' : 'I’ll leave this conversation for our team to follow up here.') : (ar ? 'أفهمك. يمكنك التواصل مع الفريق مباشرة.' : 'You can speak with our team directly.');
-  else if (intent === 'disabled') reply = ar ? 'أستطيع الإجابة عن أسئلة النشاط فقط حالياً، ولا أستطيع إجراء حجوزات أو مواعيد.' : 'I can answer business questions at present. I cannot make bookings or appointments.';
+  if (intent === 'human') reply = say(profile.handoffMode === 'inbox' ? 'handoffInbox' : 'handoffContact');
+  else if (intent === 'negotiation' || intent === 'abuse') reply = say(intent);
+  else if (intent === 'disabled') reply = say('disabled');
+  else if (intent === 'thanks') reply = say('youreWelcome');
+  else if (intent === 'ack') reply = say('howHelp');
   else if (intent === 'identity' || intent === 'greeting') reply = ar ? 'أنا ليلى، المساعدة الافتراضية لدى BznsFlow. كيف أساعدك في أسئلتك عن خدماتنا؟' : 'I’m Layla, BznsFlow’s virtual assistant. What would you like to know about our services?';
   else if (['services', 'prices', 'hours', 'location'].includes(intent) && profile[intent]) reply = profile[intent];
-  else reply = ar ? 'لا تتوفر لدي معلومة مؤكدة عن ذلك. هل يمكنك توضيح سؤالك؟' : 'I don’t have confirmed information about that. Could you clarify your question?';
-  if (['human', 'disabled', 'unknown'].includes(intent) || (['prices','hours','location'].includes(intent) && !profile[intent])) reply += contact;
+  else reply = say('unknown');
+  if (['human', 'disabled', 'unknown', 'negotiation'].includes(intent) || (['prices','hours','location'].includes(intent) && !profile[intent])) reply += contact;
   if (!introduced && !['identity', 'greeting'].includes(intent)) reply = (ar ? 'أنا ليلى، المساعدة الافتراضية لدى BznsFlow. ' : 'I’m Layla, BznsFlow’s virtual assistant. ') + reply;
-  return { intent, text: reply.slice(0, 700) };
+  return { intent, text: safeReply(reply, 700) };
 }
 export function guard(s, c, job, now) {
   assertBinding(s, c);
