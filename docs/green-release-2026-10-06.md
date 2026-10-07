@@ -109,3 +109,69 @@ Legacy handoff rows marked `takeover` show as "Waiting for team" and can inflate
   - The source is the Supabase-era Cloudflare scheduler `ops/layla-minute-worker.js`. It still sends the old `LAYLA_META_WORKER_SECRET`, while Green accepts only `GREEN_MESSAGING_WORKER_SECRET`.
   - Convex crons now drive the queue, so this third scheduler is redundant. `docs/backend-migration-state.md` lists it under "three schedulers for one queue".
   - Recommendation: Ahmed disables the Cloudflare cron trigger. Do not give it the Green secret.
+
+## Second release, 2026-10-07: bzns.md, Layla tones, guardrails (`0184dba`)
+
+Ahmed asked for this release ("push to production after stress and smoke testing"). He ran `work/release/ship.sh` himself after the agent's own deploy command was refused by the permission check.
+
+### Release identity
+
+| Item | Value |
+|---|---|
+| Source | `0184dba` on `master` (with `d37c848`), built from a clean `git archive`; 12 API functions |
+| Vercel | `dpl_27LnDpq8mkPtfYekcmhbLV7a83Zu`, promoted to www.bznsflowai.com 2026-10-07 05:44 UTC |
+| Rollback target | `dpl_8jUHs2uBrWxTmE4uxfPGd8rhgEHt` |
+| Convex | `rare-fish-465`, deployed before promotion |
+
+All Convex changes are additive optional fields:
+- `profile.tone`;
+- `blueReviewSessions.bznsDraft`/`bznsPublished`;
+- the ingest event `handoffReason`.
+
+The new module `laylaReply` contains no functions.
+
+**Rollback:** promote the target above and keep Convex. The old build works against the new backend.
+
+### What shipped
+
+- One `bzns.md` business document with sector templates, an editor and server-side publish.
+- Three Layla styles: Professional & sharp, Helpful & sweet, Informative & nice.
+- A welcome naming the business and Layla that asks for the name and interest first.
+- Answers quoted word for word from the owner's FAQ (including reworded questions) and sector sections.
+- Small talk ("thanks", "ok", emoji) never handed to the team.
+- Guardrails, each with its own reason: negotiation, abuse, legal/finance advice, media and long text, the per-chat loop and flood guard.
+- Bursts paced rather than dropped.
+
+### Verification before release
+
+- **Unit tests:** 873/873.
+- **Quality rubric:** checked on every reply across 24 conversation types in three tones.
+- **Stress:** 300 customers × 4 messages, webhook replays, a double worker hand-off, a republish mid-burst, a bot ping-pong.
+- **Convex typecheck, build and audit:** clean.
+- **Browser suites:** all passed, including editor 136, dashboard 338, Catalyst 197, retail 441, electronics 490, dental 341, real estate 202, and construction/automotive 12/12.
+
+### Production observations (2026-10-07, unauthenticated)
+
+- **Pages:** EN and AR home, sign-in, setup (Catalyst and Ascend), the Layla dashboard, privacy, data deletion and owner access all return 200. The apex returns 308.
+- **API checks:**
+
+  | Request | Result |
+  |---|---|
+  | product setup, bogus product | 400 |
+  | product setup, no cookie | 401 |
+  | foreign Origin | 403 |
+  | customer `bzns_publish`, no session | 401 |
+  | knowledge, no session | 401 |
+  | dashboard, no session | 401 |
+  | webhook GET, wrong token | 403 |
+  | webhook POST, unsigned | 403 |
+  | signed-out customer GET | an empty synthetic draft, no data |
+
+- **Concurrency:** 25 parallel home-page requests all returned 200; 25 parallel unsigned webhook POSTs all returned 403; no 5xx.
+- **Vercel runtime errors since promotion:** only the known `url.parse()` deprecation warning.
+- **Convex:** `blueMessaging:maintain`, `blueCampaign:maintain` and `blueHasib:sweepPhotos` run every minute without errors.
+
+### Not yet observed
+
+- An authenticated owner publishing a `bzns.md` in production.
+- A real inbound WhatsApp message answered by this build.

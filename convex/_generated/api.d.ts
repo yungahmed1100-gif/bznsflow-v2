@@ -8,8 +8,6 @@
  * @module
  */
 
-import type * as productSetup from "../productSetup.js";
-import type * as knowledgeSources from "../knowledgeSources.js";
 import type * as auth from "../auth.js";
 import type * as blueAccess from "../blueAccess.js";
 import type * as blueAccessState from "../blueAccessState.js";
@@ -90,8 +88,13 @@ import type * as hasib_units from "../hasib/units.js";
 import type * as hasib_workflowSchema from "../hasib/workflowSchema.js";
 import type * as hasib_workspaceState from "../hasib/workspaceState.js";
 import type * as http from "../http.js";
+import type * as knowledgeSourceState from "../knowledgeSourceState.js";
+import type * as knowledgeSources from "../knowledgeSources.js";
 import type * as layla from "../layla.js";
+import type * as laylaReply from "../laylaReply.js";
 import type * as migrate from "../migrate.js";
+import type * as productSetup from "../productSetup.js";
+import type * as productSetupState from "../productSetupState.js";
 import type * as review from "../review.js";
 import type * as reviewMaintenance from "../reviewMaintenance.js";
 import type * as reviewState from "../reviewState.js";
@@ -103,8 +106,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  productSetup: typeof productSetup;
-  knowledgeSources: typeof knowledgeSources;
   auth: typeof auth;
   blueAccess: typeof blueAccess;
   blueAccessState: typeof blueAccessState;
@@ -185,8 +186,13 @@ declare const fullApi: ApiFromModules<{
   "hasib/workflowSchema": typeof hasib_workflowSchema;
   "hasib/workspaceState": typeof hasib_workspaceState;
   http: typeof http;
+  knowledgeSourceState: typeof knowledgeSourceState;
+  knowledgeSources: typeof knowledgeSources;
   layla: typeof layla;
+  laylaReply: typeof laylaReply;
   migrate: typeof migrate;
+  productSetup: typeof productSetup;
+  productSetupState: typeof productSetupState;
   review: typeof review;
   reviewMaintenance: typeof reviewMaintenance;
   reviewState: typeof reviewState;
