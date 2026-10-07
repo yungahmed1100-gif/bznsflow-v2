@@ -1,6 +1,6 @@
 # Owner experience polish, 2026-10-07
 
-**Status:** local only. Nothing in this record is deployed yet.
+**Status:** live on 2026-10-07 as `dpl_5CFo3RpTexmDGgduu2fLqWAPSbkK` (source `c79e98b`). See Production evidence at the end.
 
 Ahmed asked for a senior design pass on the owner surfaces once Instagram opened: simpler, sharper and more convenient. He likes the Layla on/off control. While the work was under way he made three product decisions:
 - Catalyst includes broadcasts.
@@ -77,3 +77,23 @@ Ahmed asked for a senior design pass on the owner surfaces once Instagram opened
 - **Team contact applies after the owner adds the section and republishes.** Existing published documents have no `teamContact` until then.
 - **Live-path check (harness):** "I want to talk to a real person" and "ابي اكلم موظف" get the same reply on WhatsApp and Instagram: "I’ll leave this conversation for our team to follow up here. You can contact our team: WhatsApp +968 9123 4567 (Huda, rentals)". The handoff reason is `customer_requested`.
 - **Convex changes are additive:** the optional `auto` argument and the optional `profile.teamContact` in `blueReviewSessions` (`convex/schema.ts`, `convex/review.ts`). Rollback stays compatible.
+
+## Production evidence
+
+| Item | Value |
+|---|---|
+| Source | `c79e98b`, clean `git archive` build, 12 functions |
+| Verification | Full `npm run test:release` passed on the final code: 993/993 unit tests, Convex typecheck, build, audit with 0 vulnerabilities, all 9 browser suites, Catalyst 199, retail 441, retail-tech 490, dental 341, real estate 202, construction and automotive 12/12 |
+| Vercel | `dpl_5CFo3RpTexmDGgduu2fLqWAPSbkK`, promoted 2026-10-07 by Claude at Ahmed's request ("verify then push for production") |
+| Convex | `rare-fish-465` deployed after a dry run: schema validation complete, no index deletions, only the empty Node-actions version line |
+| Rollback | `npx vercel promote dpl_BJi4kXG5SGZHSHpg6eUdP2GKcJ37 --yes`, keeping Convex. Do not roll Convex back once any profile stores `teamContact`: the old schema would refuse those rows. |
+
+**Smoke checks after promotion**
+- Pages `/`, `/en`, `/catalyst/setup`, `/en/catalyst/setup`, `/layla/setup`, `/layla/dashboard`, `/en/layla/dashboard` and `/signin` returned 200 in under 0.3 s, over three rounds.
+- One round had four 20-second client timeouts. They never reached Vercel, nothing logged a 5xx, and they did not repeat.
+- An unauthenticated messaging GET returns 401, and so does a POST with `auto:true` and no session.
+- `?surface=instagram` returns `sign_in_required`.
+- An unsigned webhook POST returns 403.
+- **Runtime logs** for the 10 minutes after promotion show no 5xx. `layla-meta-worker` returns 200, so the Convex crons are draining. Its 401s come from the stale Cloudflare scheduler, which is known.
+
+**Not yet seen on production:** a real owner connecting a channel and Layla switching on by herself, and a live team-contact reply. Both wait on Ahmed's live test. Broadcasting stays off until `GREEN_BROADCAST_ENABLED` and the Convex `broadcast` setting are enabled.
