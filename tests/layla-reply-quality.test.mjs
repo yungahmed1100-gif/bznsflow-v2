@@ -5,10 +5,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { fixtureBusiness, realEstateDoc, retailDoc, dentalDoc } from './helpers/layla-conversation.mjs';
+import { business, fixtureBusiness, realEstateDoc, retailDoc, dentalDoc } from './helpers/layla-conversation.mjs';
+import { byteLength } from '../api/_lib/layla/reply-guard.js';
 import { phrase } from '../config/layla-tones.js';
 
-const TONES = ['informative', 'sharp', 'sweet'];
+const TONES = ['informative', 'sharp', 'sweet'], CHANNELS = ['whatsapp', 'instagram'];
 const BUSINESS = { realestate: 'Qurum Coast Properties', retail: 'Nour Abayas', dental: 'Bright Smile Dental' };
 const DOC = { realestate: realEstateDoc, retail: retailDoc, dental: dentalDoc };
 const AR = /[؀-ۿ]/, EMOJI = /\p{Extended_Pictographic}/gu;
@@ -116,9 +117,10 @@ const pick = (fields = [], keys) => Object.fromEntries((fields || []).filter(f =
 const label = m => (typeof m === 'string' ? m : `[${m.type}]`);
 
 /** The rubric every single reply must pass. */
-function checkReply({ reply, message, tone, sector, firstReply, nameKnown }) {
-  const where = `${tone}/${sector} "${label(message)}" → ${JSON.stringify(reply)}`;
+function checkReply({ reply, message, tone, sector, firstReply, nameKnown, channel }) {
+  const where = `${channel}/${tone}/${sector} "${label(message)}" → ${JSON.stringify(reply)}`;
   assert.ok(reply.length <= 1000, `too long: ${where}`);
+  if (channel === 'instagram') assert.ok(byteLength(reply) <= 1000, `over Instagram's 1000 bytes: ${where}`);
   assert.doesNotMatch(reply, /undefined|null|NaN|\{[a-zA-Z]+\}|\[[^\]]+\]/, `placeholder leaked: ${where}`);
   const emoji = reply.match(EMOJI) || [];
   assert.ok(emoji.length <= (tone === 'sweet' ? 1 : 0), `emoji rule: ${where}`);
@@ -134,13 +136,13 @@ function checkReply({ reply, message, tone, sector, firstReply, nameKnown }) {
 
 const transcript = [];
 let sender = 0;
-for (const tone of TONES) for (const [name, [sector, turns, check]] of Object.entries(SCENARIOS)) {
-  test(`${tone}: ${name}`, async () => {
-    const b = await fixtureBusiness(sector, tone);
+for (const channel of CHANNELS) for (const tone of TONES) for (const [name, [sector, turns, check]] of Object.entries(SCENARIOS)) {
+  test(`${channel}/${tone}: ${name}`, async () => {
+    const b = await fixtureBusiness(sector, tone, channel);
     const from = `96899${String(++sender).padStart(6, '0')}`;
     const sent = [], contactAfter = [];
     let askedName = 0;
-    transcript.push(`\n## ${tone} · ${name}`);
+    transcript.push(`\n## ${channel} · ${tone} · ${name}`);
     for (const message of turns) {
       b.h.m.advance(61000);
       // Snapshots: the memory store hands back live rows.
@@ -151,7 +153,8 @@ for (const tone of TONES) for (const [name, [sector, turns, check]] of Object.en
       if (before?.takeover || before?.optout || optedOut) assert.equal(reply, '', `nothing automated after a hand-off or opt-out: "${label(message)}"`);
       // Abuse gets the calm notice alone and clinic safety copy is fixed; every other first reply welcomes.
       const welcomes = !before && !['abuse', 'clinical_boundary'].includes(b.conversation(from)?.handoffReason);
-      if (reply) checkReply({ reply, message, tone, sector, firstReply: welcomes, nameKnown });
+      if (reply) checkReply({ reply, message, tone, sector, firstReply: welcomes, nameKnown, channel });
+      if (channel === 'instagram') for (const s of b.sent.filter(x => x.to === from)) assert.ok(s.bytes <= 1000, 'what reached Instagram fits its byte limit');
       askedName += /your name|اسمك/.test(reply) ? 1 : 0;
       sent.push(reply);
       contactAfter.push({ ...b.contact(from) });
@@ -162,6 +165,39 @@ for (const tone of TONES) for (const [name, [sector, turns, check]] of Object.en
     check({ t: i => sent[i], s, tone });
   });
 }
+
+// The same customer gets the same Layla on both channels, word for word.
+for (const [name, [sector, turns]] of Object.entries(SCENARIOS)) {
+  test(`parity: ${name}`, async () => {
+    const run = async channel => {
+      const b = await fixtureBusiness(sector, 'informative', channel), from = '96899555001', out = [];
+      for (const message of turns) { b.h.m.advance(61000); out.push((await b.say(from, message)).join('\n\n')); }
+      return { out, reason: b.conversation(from)?.handoffReason || null, fields: pick(b.contact(from)?.fields, (b.contact(from)?.fields || []).map(f => f.key)) };
+    };
+    const [wa, ig] = [await run('whatsapp'), await run('instagram')];
+    assert.deepEqual(ig, wa);
+  });
+}
+
+test('Instagram ice breakers are answered; story mentions get the one acknowledgement', async () => {
+  const b = await fixtureBusiness('realestate', 'informative', 'instagram');
+  const [answer] = await b.say('96899555002', { postback: 'What services do you offer?' });
+  assert.ok(answer.includes('Villa and apartment rentals'), answer);
+  const [mention] = await b.say('96899555003', { type: 'story_mention' });
+  assert.ok(mention.endsWith(phrase('informative', 'media', 'en')), mention);
+  assert.equal(b.conversation('96899555003').handoffReason, 'unsupported_media');
+});
+
+test('a long Arabic answer is cut at a sentence to fit Instagram’s 1000 bytes, and arrives', async () => {
+  const long = 'نستقبل طلبات المعاينة طوال أيام الأسبوع ونؤكد الموعد خلال يوم عمل واحد. '.repeat(14);
+  const markdown = realEstateDoc('informative').replace('## How viewings work\nSend the property reference and two times that suit you. An agent always attends.', `## المعاينات\n${long}`);
+  const b = await business({ markdown, channel: 'instagram' });
+  const [reply] = await b.say('96899555004', 'كيف تتم المعاينة؟');
+  assert.ok(byteLength(reply) <= 1000, `${byteLength(reply)} bytes`);
+  assert.match(reply, /نستقبل طلبات المعاينة/);
+  assert.match(reply, /[.؟!]$/, 'ends on a full sentence');
+  assert.equal(b.h.m.table('blueMessages').filter(m => m.direction === 'out' && m.status === 'submitted').length, 1);
+});
 
 test.after(() => {
   if (!process.env.LAYLA_TRANSCRIPTS) return;

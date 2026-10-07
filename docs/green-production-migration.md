@@ -8,7 +8,7 @@ data cutover until the final source snapshot and destination verification pass.
 ## Intended outcome and boundaries
 
 - Catalyst serves Layla; WhatsApp can be enabled only after an owner-controlled
-  live smoke test. Instagram remains closed until Meta approval.
+  live smoke test. Instagram was approved by Meta on 2026-10-07 and opens with the Instagram release (see `docs/green-release-2026-10-07-instagram.md`).
 - Ascend exposes Hasib only to accounts with active email grants. The server
   owner identity remains `ahmed@bznsflowai.com`; all grant/revoke actions must
   retain their audit records.

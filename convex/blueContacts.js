@@ -143,7 +143,8 @@ export async function applyInbound(ctx, contact, { text, intent, handoff, at, no
   const answeredOnly = filled && ((intent === 'unknown' && (askedRecently || statement)) || (intent === 'services' && statement));
   const plan = contact.optout ? { text: '', keys: [] } : planQuestions({ sectorId, fields: merged.fields, askCounts: contact.askCounts || [], asked: contact.asked || [],
     lastAskedAt: contact.lastAskedAt || 0, answeredNow: answeredNow || !!bareName, intent: answeredOnly ? 'faq' : intent, handoff: answeredOnly ? false : handoff, now, lang, tone,
-    knownName: !!(customerName || contact.customerName || contact.ownerName || contact.profileName) });
+    // An Instagram @handle is not a name, so Layla still asks for it.
+    knownName: !!(customerName || contact.customerName || contact.ownerName || (contact.profileName && !String(contact.profileName).startsWith('@'))) });
   const next = { ...contact, ...patch };
   next.searchText = searchTextFor(next);
   await ctx.db.patch(contact._id, { ...patch, searchText: next.searchText });

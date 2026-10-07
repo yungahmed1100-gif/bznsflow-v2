@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
-import {executeMessaging} from '../convex/blueMessagingState.js';
+import {executeMessaging, RATE_LIMITS } from '../convex/blueMessagingState.js';
 import {liveAnswer,ingestBlueEnvelope,createBlueWorker,createMessagingApi} from '../api/_lib/layla/blue-messaging.js';
 import {sealToken,credentialContext} from '../api/_lib/layla/customer-meta.js';
 import {GREEN_CLOUD as BLUE_CLOUD} from './helpers/green-env.mjs';
@@ -113,8 +113,8 @@ test('ambiguous sends pause the business and prevent blind reactivation',async()
 test('an expired window blocks, and a burst over the per-minute pace waits for the next minute instead of being dropped',async()=>{
   const m=await setup();await m.inbound();m.advance(86400001);
   assert.equal((await m.call('claim',{jobId:m.outgoing()[0]._id,intent:'old'})).value,null);
-  // Separate customers, so the per-integration minute cap is what stops the eleventh send (one chat has its own safety net).
-  for(let n=0;n<11;n++){await m.inbound(`new${n}`,{from:`9689111${String(2000+n)}`});const jobId=m.outgoing().at(-1)._id;const claimed=await m.call('claim',{jobId,intent:`intent${n}`});if(claimed.value)await m.call('result',{jobId,intent:`intent${n}`,status:'submitted',providerId:`wamid.${n}`});}
+  // Separate customers, so the per-integration minute pace is what holds the next send (one chat has its own safety net).
+  for(let n=0;n<=RATE_LIMITS.perMinute;n++){await m.inbound(`new${n}`,{from:`9689111${String(2000+n)}`});const jobId=m.outgoing().at(-1)._id;const claimed=await m.call('claim',{jobId,intent:`intent${n}`});if(claimed.value)await m.call('result',{jobId,intent:`intent${n}`,status:'submitted',providerId:`wamid.${n}`});}
   const held=m.outgoing().at(-1);
   assert.deepEqual([held.status,held.reason],['queued',undefined],'held in the queue, not dropped');
   m.advance(61000);

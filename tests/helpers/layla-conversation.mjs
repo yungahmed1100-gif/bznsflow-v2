@@ -1,18 +1,23 @@
-// One published business behind the real WhatsApp path: envelope → ingestBlueEnvelope →
-// liveAnswer → Convex ingest (memory) → worker → a fake Meta sender. Tests read exactly
-// what each customer would receive.
+// One published business behind the real webhook path, on WhatsApp or Instagram:
+// envelope → ingestBlueEnvelope / ingestInstagramEnvelope → liveAnswer → Convex ingest
+// (memory) → worker → a fake Meta sender. Tests read exactly what each customer receives.
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { blueHarness, seedTenant } from './blue-tenant.mjs';
 import { SECRET } from './convex-memory.mjs';
 import { executeReview } from '../../convex/reviewState.js';
 import { executeHasib } from '../../convex/hasib/hasibState.js';
+import { executeInstagram } from '../../convex/blueInstagramState.js';
 import { grantPlan } from '../../convex/hasib/plans.js';
-import { ingestBlueEnvelope, createBlueWorker } from '../../api/_lib/layla/blue-messaging.js';
+import { ingestBlueEnvelope, ingestInstagramEnvelope, createBlueWorker } from '../../api/_lib/layla/blue-messaging.js';
 import { sealToken, credentialContext } from '../../api/_lib/layla/customer-meta.js';
 import { GREEN_CLOUD } from './green-env.mjs';
 
-export const env = { CONVEX_CLOUD_URL: GREEN_CLOUD, BLUE_REVIEW_SERVICE_SECRET: 'a'.repeat(64), LAYLA_CREDENTIAL_ENCRYPTION_KEY: 'b'.repeat(64), BLUE_MESSAGING_WORKER_SECRET: 'c'.repeat(64), BLUE_LIVE_MESSAGING_ENABLED: 'true' };
+export const IG_APP = '1674756910890232', IG_ACCOUNT = '17841400000000077';
+// Green runtime, both channels open, as in production.
+export const env = { CONVEX_CLOUD_URL: GREEN_CLOUD, GREEN_CONVEX_CLOUD_URL: GREEN_CLOUD, CONVEX_SERVICE_SECRET: 'a'.repeat(64), LAYLA_CREDENTIAL_ENCRYPTION_KEY: 'b'.repeat(64),
+  GREEN_MESSAGING_WORKER_SECRET: 'c'.repeat(64), GREEN_WHATSAPP_ENABLED: 'true', GREEN_INSTAGRAM_APPROVED: 'true', GREEN_INSTAGRAM_ENABLED: 'true',
+  MAIN_INSTAGRAM_APP_ID: IG_APP, MAIN_INSTAGRAM_APP_SECRET: 'instagram-secret', LAYLA_META_APP_ID: '1388038082832745' };
 
 /** A filled bzns.md: the same shape an owner publishes from the editor. */
 export const bzns = ({ tone = 'informative', sector = 'real-estate', name = 'Qurum Coast Properties' } = {}) => `---
@@ -35,8 +40,9 @@ A: Yes, viewings are always free.
 `;
 
 /**
- * @param {{ tone?: string, sector?: string, name?: string, sectorLabel?: string, markdown?: string, ascend?: string, seed?: (hasib: Function) => Promise<void> }} options
+ * @param {{ tone?: string, sector?: string, name?: string, sectorLabel?: string, markdown?: string, ascend?: string, seed?: (hasib: Function) => Promise<void>, channel?: 'whatsapp'|'instagram' }} options
  *   `ascend` grants the Ascend plan with that Hasib pack; `seed` then adds stock rows.
+ *   `channel: 'instagram'` connects an Instagram account and talks to Layla through it.
  */
 export async function business(options = {}) {
   const h = blueHarness(); await h.enable();
@@ -47,7 +53,9 @@ export async function business(options = {}) {
   await h.m.db.patch(tenant.rowId, { integration });
   const published = await executeReview(h.m.ctx, { operation: 'bzns_publish', sessionHash: tenant.sessionHash, markdown: options.markdown || bzns(options), version: 0 }, h.m.now());
   assert.equal(published.ok, true, JSON.stringify(published));
-  assert.equal((await h.messaging('activate', { sessionHash: tenant.sessionHash })).ok, true);
+  const instagram = options.channel === 'instagram';
+  if (instagram) await connectInstagram(h, tenant);
+  assert.equal((await h.messaging('activate', { sessionHash: tenant.sessionHash, ...(instagram ? { channel: 'instagram' } : {}) })).ok, true);
   const hasib = (operation, args = {}) => executeHasib(h.m.ctx, { operation, sessionHash: tenant.sessionHash, hashSecret: SECRET, ...args }, h.m.now());
   if (options.ascend) {
     await h.m.db.insert('blueMessagingSettings', { key: 'hasib', enabled: true });
@@ -56,28 +64,36 @@ export async function business(options = {}) {
   }
   const store = async (operation, args) => { const r = await h.messaging(operation, args); assert.ok(r.ok, `${operation}: ${r.reason}`); return r.value; };
   const sent = [];
-  const fetcher = async (url, init) => {
+  const reply = json => ({ ok: true, status: 200, json: async () => json, text: async () => JSON.stringify(json) });
+  const fetcher = async (url, init = {}) => {
+    const u = new URL(url);
+    // Instagram Graph reads: our own account, and a customer's @username (never a real name).
+    if (u.hostname === 'graph.instagram.com' && (init.method || 'GET') === 'GET') return reply(u.pathname.endsWith('/me') ? { user_id: IG_ACCOUNT } : { username: 'customer.ig' });
     const body = JSON.parse(init.body);
+    if (u.hostname === 'graph.instagram.com') {
+      sent.push({ to: body.recipient.id, text: body.message?.text ?? '', image: !!body.message?.attachment, bytes: Buffer.byteLength(body.message?.text ?? '') });
+      return reply({ recipient_id: body.recipient.id, message_id: `mid.out.${sent.length}` });
+    }
     sent.push({ to: body.to, text: body.text?.body ?? body.image?.caption ?? '', image: !!body.image });
-    const json = { messages: [{ id: `wamid.out.${sent.length}` }] };
-    return { ok: true, status: 200, json: async () => json, text: async () => JSON.stringify(json) };
+    return reply({ messages: [{ id: `wamid.out.${sent.length}` }] });
   };
   const worker = createBlueWorker({ env, store, fetcher, inspect: async () => ({ connected: true }) });
   const runJob = async jobId => {
     const res = { headers: {}, setHeader() {}, status(n) { this.code = n; }, end() {} };
-    await worker({ method: 'POST', headers: { authorization: `Bearer ${env.BLUE_MESSAGING_WORKER_SECRET}` }, body: { jobId } }, res);
+    await worker({ method: 'POST', headers: { authorization: `Bearer ${env.GREEN_MESSAGING_WORKER_SECRET}` }, body: { jobId } }, res);
     return res.code;
   };
   const queued = () => h.m.table('blueMessages').filter(m => m.direction === 'out' && m.status === 'queued');
   const flush = async () => { for (const job of queued()) await runJob(job._id); };
-  /** A WhatsApp webhook envelope for one inbound message. */
+  /** A webhook envelope for one inbound message on this business's channel. */
   const envelope = (from, message, { name, id = `wamid.${randomUUID()}` } = {}) => {
+    if (instagram) return instagramEnvelope(from, message, id.replace('wamid', 'mid'), h.m.now());
     const msg = typeof message === 'string' ? { type: 'text', text: { body: message } } : message;
     const value = { messaging_product: 'whatsapp', metadata: { phone_number_id: integration.phone }, ...(name ? { contacts: [{ wa_id: from, profile: { name } }] } : {}),
       messages: [{ id, from, timestamp: String(Math.floor(h.m.now() / 1000)), ...msg }] };
     return { entry: [{ id: integration.waba, changes: [{ field: 'messages', value }] }] };
   };
-  const ingest = body => ingestBlueEnvelope(body, { store, now: h.m.now });
+  const ingest = body => (instagram ? ingestInstagramEnvelope(body, { store, now: h.m.now, app: IG_APP, env, fetcher }) : ingestBlueEnvelope(body, { store, now: h.m.now }));
   /** One customer message through the real webhook path; returns what that customer received. */
   const say = async (from, message, { name } = {}) => {
     h.m.advance(1000);
@@ -87,13 +103,35 @@ export async function business(options = {}) {
     return sent.slice(before).filter(s => s.to === from && !s.image).map(s => s.text);
   };
   const conversation = from => h.m.table('blueConversations').find(c => c.number === from || c.key?.endsWith(from));
-  const contact = from => h.m.table('blueContacts').find(c => c.waId === from);
+  const contact = from => { const c = conversation(from); return c && h.m.table('blueContacts').find(x => x._id === c.contactId); };
   const republish = async markdown => {
     const current = await h.m.db.get(tenant.rowId);
     const r = await executeReview(h.m.ctx, { operation: 'bzns_publish', sessionHash: tenant.sessionHash, markdown, version: current.bznsDraft?.version || 0 }, h.m.now());
     assert.equal(r.ok, true, JSON.stringify(r));
   };
-  return { h, tenant, integration, hasib, say, envelope, ingest, flush, runJob, queued, conversation, contact, sent, republish };
+  return { h, tenant, integration, hasib, say, envelope, ingest, flush, runJob, queued, conversation, contact, sent, republish, channel: instagram ? 'instagram' : 'whatsapp' };
+}
+
+/** Connect an Instagram professional account to the tenant, with a real sealed token. */
+async function connectInstagram(h, tenant) {
+  const ig = (operation, args = {}) => executeInstagram(h.m.ctx, { operation, sessionHash: tenant.sessionHash, ...args }, h.m.now());
+  const integration = { id: randomUUID(), channel: 'instagram', app: IG_APP, igAccount: IG_ACCOUNT, username: 'business.ig' };
+  integration.credential = sealToken('synthetic-instagram-token', credentialContext(tenant.sessionHash, integration), env);
+  const stateHash = 'e'.repeat(64);
+  await ig('begin', { stateHash, lang: 'en' });
+  await ig('consume', { stateHash });
+  const connected = await ig('connect', { stateHash, integration, tokenExpiresAt: h.m.now() + 60 * 86400000 });
+  assert.equal(connected.ok, true, JSON.stringify(connected));
+}
+
+/** An Instagram webhook envelope: text, a tapped ice breaker ({ postback }) or an attachment ({ type }). */
+function instagramEnvelope(from, message, mid, now) {
+  const item = { sender: { id: from }, recipient: { id: IG_ACCOUNT }, timestamp: now };
+  if (typeof message === 'string') item.message = { mid, text: message };
+  else if (message.postback) item.postback = { mid, title: message.postback, payload: 'ICE_BREAKER' };
+  else if (message.type === 'text') item.message = { mid, text: message.text.body };
+  else item.message = { mid, attachments: [{ type: message.type === 'audio' ? 'audio' : message.type, payload: {} }] };
+  return { object: 'instagram', entry: [{ id: IG_ACCOUNT, time: now, messaging: [item] }] };
 }
 
 // Fuller documents for the quality and stress suites: sector sections Layla quotes
@@ -168,7 +206,7 @@ export async function seedBoutique(hasib) {
   await hasib('item_save', { requestId: randomUUID(), item: { kind: 'product', nameAr: 'شيلة حرير', nameEn: 'Silk shayla', category: 'Shaylas', unit: 'piece', trackStock: true },
     variants: [{ sku: 'SH-1', options: [], priceMinor: 8500, costMinor: 3000, reorderPoint: 1, openingStock: 0 }] });
 }
-/** A business of one of the three fixture sectors in the given tone. */
-export const fixtureBusiness = (sector, tone) => sector === 'retail' ? business({ markdown: retailDoc(tone), sectorLabel: 'Retail', ascend: 'retail', seed: seedBoutique })
-  : sector === 'dental' ? business({ markdown: dentalDoc(tone), sectorLabel: 'Dental clinics' })
-    : business({ markdown: realEstateDoc(tone) });
+/** A business of one of the three fixture sectors in the given tone, on WhatsApp or Instagram. */
+export const fixtureBusiness = (sector, tone, channel = 'whatsapp') => sector === 'retail' ? business({ markdown: retailDoc(tone), sectorLabel: 'Retail', ascend: 'retail', seed: seedBoutique, channel })
+  : sector === 'dental' ? business({ markdown: dentalDoc(tone), sectorLabel: 'Dental clinics', channel })
+    : business({ markdown: realEstateDoc(tone), channel });

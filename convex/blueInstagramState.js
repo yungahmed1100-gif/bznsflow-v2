@@ -12,7 +12,8 @@ export const instagramConnection = (ctx, accountId) => lookup(ctx,'blueInstagram
 
 export function instagramRow(row, connection, now) {
   if (!row || !connection || connection.status !== 'connected' || connection.tokenExpiresAt <= now || !connection.integration.credential) return null;
-  return {...row, integration:connection.integration, status:'connected', checkedAt:connection.checkedAt,
+  // Activation needs a fresh proof: either the daily subscription check or a token check moments ago.
+  return {...row, integration:connection.integration, status:'connected', checkedAt:Math.max(connection.checkedAt || 0, connection.tokenCheckedAt || 0),
     connectionChecks:{routing:true,registered:true,path:true}};
 }
 export async function rowForIntegration(ctx, row, integrationId, now) {
@@ -114,7 +115,8 @@ export async function executeInstagram(ctx, a, now = Date.now()) {
   if (a.operation === 'checked') {
     if (connection.integrationId!==a.integrationId) return fail('connection_changed');
     if (!a.connected) await stop(ctx,connection,now,'reconnect_required');
-    else if (connection.status==='connected') await ctx.db.patch(connection._id,{checkedAt:now});
+    // checkedAt is the subscription proof (re-subscribed daily); tokenCheckedAt is a token-only check.
+    else if (connection.status==='connected') await ctx.db.patch(connection._id,a.tokenOnly?{tokenCheckedAt:now}:{checkedAt:now});
     return ok(null);
   }
   if (a.operation === 'disconnect') {

@@ -5,6 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fixtureBusiness, realEstateDoc } from './helpers/layla-conversation.mjs';
 import { phrase } from '../config/layla-tones.js';
+import { RATE_LIMITS } from '../convex/blueMessagingState.js';
 
 const MINUTE = 60000;
 const LINES = ['Hi', 'Sara', 'looking for a villa to rent in Al Mouj', 'are viewings free?', 'what documents do I need to rent?', 'thanks', 'any discount?', 'السلام عليكم', 'ابي شقة للايجار في القرم', 'متى تفتحون؟'];
@@ -16,7 +17,7 @@ async function drain(b, minutes) {
   for (let i = 0; i < minutes && b.queued().length; i++) { b.h.m.advance(MINUTE + 1000); await b.flush(); }
 }
 
-test('300 customers × 4 messages: one reply per message at most, paced, never sent twice, caps hold', async () => {
+test('300 customers × 4 messages: one reply per message at most, paced, never sent twice, caps hold, queue drains', async () => {
   const b = await fixtureBusiness('realestate', 'informative');
   const senders = Array.from({ length: 300 }, (_, i) => `9689${String(1000000 + i)}`);
   const timings = [];
@@ -27,7 +28,7 @@ test('300 customers × 4 messages: one reply per message at most, paced, never s
     timings.push(performance.now() - started);
     await b.flush();
   }
-  await drain(b, 30);
+  await drain(b, 90);
   const inbound = b.h.m.table('blueMessages').filter(m => m.direction === 'in');
   assert.equal(inbound.length, 1200, 'every message stored once');
   const jobs = outbound(b).filter(m => !m.manual);
@@ -37,10 +38,10 @@ test('300 customers × 4 messages: one reply per message at most, paced, never s
   // The fake Meta records each send; a job id is never sent twice.
   const providerIds = jobs.map(j => j.providerId).filter(Boolean);
   assert.equal(new Set(providerIds).size, providerIds.length, 'no job delivered twice');
-  assert.ok(b.sent.length <= 100, `daily cap per number holds: ${b.sent.length}`);
+  assert.ok(b.sent.length <= RATE_LIMITS.perDay, `daily cap per number holds: ${b.sent.length}`);
   const perMinute = new Map();
   for (const j of jobs.filter(j => j.attemptAt)) perMinute.set(Math.floor(j.attemptAt / MINUTE), (perMinute.get(Math.floor(j.attemptAt / MINUTE)) || 0) + 1);
-  assert.ok(Math.max(...perMinute.values()) <= 10, 'never more than 10 sends a minute');
+  assert.ok(Math.max(...perMinute.values()) <= RATE_LIMITS.perMinute, `never more than ${RATE_LIMITS.perMinute} sends a minute`);
   // Anything Layla could not send is visible to the team, never silently lost.
   for (const job of jobs.filter(j => j.status === 'blocked' && j.reason === 'rate_limit')) {
     assert.equal(b.h.m.table('blueConversations').find(c => c._id === job.conversationId).handoffState, 'open');

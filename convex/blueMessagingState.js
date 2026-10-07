@@ -8,9 +8,15 @@ import { commerceTurn } from './hasib/laylaOrders.js';
 import { realEstateTurn } from './hasib/realEstateTurn.js';
 import { approvedKnowledge, publishedSections } from './knowledgeSourceState.js';
 import { phrase, langOf } from '../config/layla-tones.js';
-import { GENERIC_INTENTS, composeReply, continuationReply, conversationHistory, runawayChat } from './laylaReply.js';
+import { byteLength } from '../api/_lib/layla/reply-guard.js';
+import { GENERIC_INTENTS, INSTAGRAM_MAX_BYTES, composeReply, continuationReply, conversationHistory, runawayChat } from './laylaReply.js';
 // "ok", 👍 and "thanks": answered briefly or not at all, never handed to the team.
 const SMALL_TALK=new Set(['ack','thanks']);
+// Abuse and cost guards, far below Meta's own limits (WhatsApp ~80 msg/s per number, Instagram
+// ~100 calls/s per account). The minute pace only delays a burst; the daily caps hand chats to the team.
+export const RATE_LIMITS=Object.freeze({perMinute:30,perDay:1000,globalPerDay:10000});
+// Send failures that concern one recipient, not the connection.
+const RECIPIENT_FAILURES=new Set(['outside_window','recipient_unavailable','invalid_recipient','window_expired','rate_limited']);
 // What an inbound message asked about, kept on the message (never its text) so Today can count it.
 // `disabled` is Layla's answer to a booking request: the patient asked for an appointment.
 export const MESSAGE_TOPICS=new Set(['services','prices','hours','location','disabled','human']);
@@ -66,6 +72,10 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     if((receiptRank[e.status] || 0)<=(receiptRank[target.status] || 0)) return;
     await ctx.db.patch(target._id,{status:e.status,providerId:e.id,updatedAt:now,...(e.status==='failed'&&Number.isSafeInteger(e.errorCode)?{errorCode:e.errorCode,reason:'provider_delivery_failed'}:{})});
     if(target.realEstateDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.realEstateDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
+  }
+  async function rowForInstagram(integrationId) {
+    const connection=await find('blueInstagramConnections','by_integration','integrationId',integrationId);
+    return connection ? instagramRow(await find('blueReviewSessions','by_hash','sessionHash',connection.sessionHash),connection,now) : null;
   }
   async function rowForControl(control) {
     if (!control) return null;
@@ -165,7 +175,8 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         if(!ready(row)) return fail('connection_not_ready');
         if(person.optout) return fail('contact_opted_out');
         if(now-person.lastInbound>=DAY) return fail('window_closed');
-        if(typeof a.text!=='string' || !a.text.trim() || a.text.length>1000 || !/^[a-f0-9-]{36}$/.test(a.requestId || '')) return fail('invalid_text');
+        // Instagram counts bytes, so a long Arabic reply is refused here rather than by Meta after sending starts.
+        if(typeof a.text!=='string' || !a.text.trim() || a.text.length>1000 || (row.integration.channel==='instagram' && byteLength(a.text)>INSTAGRAM_MAX_BYTES) || !/^[a-f0-9-]{36}$/.test(a.requestId || '')) return fail('invalid_text');
         const key=`manual:${row.integration.id}:${a.requestId}`;
         if(!await message(key)) {
           await stopQueued(row.integration.id,person._id,'human_takeover');
@@ -185,7 +196,9 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
   }
   if(a.operation==='ingest') {
     const control=await controls(a.integrationId);
-    const row=await rowForControl(control) || await find('blueReviewSessions','by_integration','integration.id',a.integrationId);
+    // Before activation there is no control: WhatsApp resolves through the setup row, Instagram
+    // through its connection. Either way the messages are kept; nothing is answered until activation.
+    const row=await rowForControl(control) || await find('blueReviewSessions','by_integration','integration.id',a.integrationId) || await rowForInstagram(a.integrationId);
     if(!row?.accountId || row.expiresAt<=now || row.integration?.id!==a.integrationId) return fail('integration_not_ready');
     if(a.profileVersion!==undefined && a.profileVersion!==(row.profileVersion || 1)) return fail('profile_changed');
     // Takeover and opt-out events are applied before any message in this batch.
@@ -323,7 +336,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       }
       const known=applied.contact.customerName || applied.contact.ownerName || applied.contact.profileName;
       const {text:reply,asked}=composeReply({firstReply:history.firstReply,intent:e.intent,handoffReason:e.handoffReason,reply:e.reply,liveFacts:realEstate?.facts || commerce?.facts,
-        ack:commerce?.ack,questions:applied.plan.text,tone,lang,business:row.profile?.businessName,knownName:known});
+        ack:commerce?.ack,questions:applied.plan.text,tone,lang,business:row.profile?.businessName,knownName:known,channel:row.integration.channel});
       await queue(row,{...person,version},reply,`reply:${a.integrationId}:${e.id}`,false,!!e.handoff || !!realEstate?.handoff,undefined,realEstate);
       if(realEstate?.opportunityId) await ctx.db.patch(realEstate.opportunityId,{replyQueuedAt:now,updatedAt:now});
       if(realEstate?.handoff) await ctx.db.patch(person._id,{takeover:true,handoffState:'open',handoffReason:'opportunity_review',handoffOpenedAt:now,updatedAt:now,version});
@@ -347,7 +360,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     if((!job.manual && job.profileVersion!==(row?.profileVersion || 1)) || job.conversationVersion!==(person?.version || 0)) {await ctx.db.patch(job._id,{status:'blocked',reason:'conversation_or_profile_changed'});return ok(null);}
     const reason=!enabled?'global_paused':!rolloutAllows(global,job.accountId,person?.number,now)?'rollout_restricted':!ready(row)?'activation_not_ready':!control?.active && !job.manual?'owner_paused':person?.optout?'contact_opted_out':person?.takeover && !job.manual && !job.handoff?'human_takeover':!person || now-person.lastInbound>=DAY || now-job.at>=DAY?'window_expired':null;
     if(reason) {await ctx.db.patch(job._id,{status:'blocked',reason});return ok(null);}
-    for(const [key,max,expiresAt] of [[`minute:${job.integrationId}:${Math.floor(now/60000)}`,10,now+120000],[`day:${job.integrationId}:${Math.floor(now/DAY)}`,100,now+2*DAY],[`global:${Math.floor(now/DAY)}`,500,now+2*DAY]]) {
+    for(const [key,max,expiresAt] of [[`minute:${job.integrationId}:${Math.floor(now/60000)}`,RATE_LIMITS.perMinute,now+120000],[`day:${job.integrationId}:${Math.floor(now/DAY)}`,RATE_LIMITS.perDay,now+2*DAY],[`global:${Math.floor(now/DAY)}`,RATE_LIMITS.globalPerDay,now+2*DAY]]) {
       const r=await find('blueMessageRates','by_key','key',key);
       if(r?.count>=max) {
         // A burst over the per-minute pace waits in the queue; the minute recovery cron sends it next.
@@ -381,7 +394,12 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       }
     }
     if(job.realEstateDraftId) await ctx.db.patch(job.realEstateDraftId,{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
-    if(a.status==='ambiguous' || a.status==='failed' || ['connection_not_ready','connection_check_failed'].includes(a.reason)) {
+    // One customer's problem (window closed, account gone, Meta throttling) is that chat's, never
+    // the whole business's: the team sees the chat, and Layla keeps answering everyone else.
+    if(a.status==='failed' && RECIPIENT_FAILURES.has(a.reason)) {
+      const person=await ctx.db.get(job.conversationId);
+      if(!job.manual && person && person.handoffState!=='open') await ctx.db.patch(person._id,{handoffState:'open',handoffReason:'send_failed',handoffOpenedAt:now,updatedAt:now});
+    } else if(a.status==='ambiguous' || a.status==='failed' || ['connection_not_ready','connection_check_failed'].includes(a.reason)) {
       const control=await controls(job.integrationId);
       if(control) await ctx.db.patch(control._id,{active:false,reason:a.status==='ambiguous'?'send_outcome_unknown':'provider_failed'});
     }

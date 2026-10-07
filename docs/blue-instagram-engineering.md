@@ -1,6 +1,14 @@
 # Independent Instagram and WhatsApp connections
 
-2026-09-23. Blue-only local implementation; no release or live-message evidence is implied.
+2026-09-23: Blue-only implementation. **2026-10-07: opened on Green after Meta approval.** These Green changes were made on 10-07:
+
+- The Green webhook routes on `object`. A WhatsApp payload must carry the parent app secret. An Instagram payload may carry the Instagram app secret (`MAIN_`/`GREEN_INSTAGRAM_APP_SECRET`) or the parent secret. Meta verifies with `GREEN_WHATSAPP_VERIFY_TOKEN` or `GREEN_INSTAGRAM_VERIFY_TOKEN`.
+- Ingress is kept while Instagram sending is paused (`suppressAutomation`).
+- The tester allowlist (`BLUE_INSTAGRAM_TEST_SENDERS`) applies off Green only.
+- Activation accepts a fresh token check (`tokenCheckedAt`) while the daily subscription proof (`checkedAt`) stands.
+- DMs that arrive before activation are stored.
+- Instagram replies match WhatsApp: the same answers, the same media/long-text acknowledgement and reasons, and ice breakers answered.
+- Replies are cut to fit Instagram's 1000-byte limit. Recipient-level send failures flag that chat instead of pausing the business.
 
 ## Outcome and interfaces
 
@@ -14,9 +22,9 @@ A signed-in business can use Instagram DMs, WhatsApp, or both. Approved facts/ca
 
 OAuth requires signed-in Blue account cookies, exact origin/host and CSRF for initiation. The callback consumes a hashed random state bound to that account's saved draft. Tokens are encrypted with integration/channel/account-specific authenticated context; public UI shapes exclude credentials. Server-side asset ownership prevents another tenant claiming a bound professional account. A business may reconnect the same account; switching identities is deliberately blocked until an explicit migration preserves historical deletion routing.
 
-Connections start paused. Per-channel flags and existing durable messaging gates apply. Instagram additionally requires an explicit test-recipient allowlist. Activation verifies grants indirectly through usable token/identity/subscription, approved facts and fresh health. The worker rechecks durable state immediately before sending. This narrows but cannot eliminate the race where a provider request is already in flight when pause/disconnect occurs.
+Connections start paused. Per-channel flags and existing durable messaging gates apply. On Blue only, Instagram additionally requires an explicit test-recipient allowlist. Activation verifies grants indirectly through usable token/identity/subscription, approved facts and fresh health. The worker rechecks durable state immediately before sending. This narrows but cannot eliminate the race where a provider request is already in flight when pause/disconnect occurs.
 
-Standard replies only within 24 hours of inbound contact. Queue maximum 100 per integration, sends 10/minute and 100/day per integration, global 500/day. Duplicate inbound events are deduplicated. Our echoed sends do not cause takeover; external human echoes do. Unsend events clear stored text and block a delayed original from generating a reply. Unsupported media requests human handling. Provider acceptance is recorded as submitted, never fabricated delivery; ambiguous responses are not automatically resent.
+Standard replies only within 24 hours of inbound contact. Queue maximum 100 per integration. Pacing: 30 sends a minute per integration, where a burst waits and is never dropped. Caps: 1000 a day per integration and 10000 a day globally (`RATE_LIMITS`). Duplicate inbound events are deduplicated. Our echoed sends do not cause takeover; external human echoes do. Unsend events clear stored text and block a delayed original from generating a reply. Unsupported media and over-long text get one acknowledgement in the business's style (`unsupported_media`/`too_long`), then human handling. Provider acceptance is recorded as submitted, never fabricated delivery; ambiguous responses are not automatically resent.
 
 Long-lived tokens refresh after a day via the authenticated worker, with one-hour retry scheduling and updatedAt fencing. Expired or revoked credentials require reconnection and stop sends. Deauthorization/deletion callbacks verify signed requests with the Instagram OAuth secret and reject callbacks issued before the current authorization. Revocation clears credentials and stops queued work. Deletion keeps a stable pending receipt across retries and removes Instagram messages/conversations then contacts in bounded batches. Receipt status changes to complete after cleanup. Unknown random receipt codes report complete because no matching pending data exists; they reveal no account information. Minimal connection identity is retained for replay/ownership control. Reconnection is blocked during cleanup.
 

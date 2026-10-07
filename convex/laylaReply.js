@@ -4,6 +4,8 @@ import { phrase, customerSlot, hasEmoji, stripEmoji } from '../config/layla-tone
 import { safeReply } from '../api/_lib/layla/reply-guard.js';
 
 export const MAX_REPLY_LENGTH = 1000;
+// Instagram's Send API limit is 1000 bytes of UTF-8, not characters.
+export const INSTAGRAM_MAX_BYTES = 1000;
 const HOUR = 3600000, DAY = 86400000;
 // Loop and flood guard: never a limit on a normal back-and-forth.
 export const CONVERSATION_REPLY_CAP = 10;
@@ -12,7 +14,8 @@ const LOOP_WINDOW_MS = 2 * 60000, LOOP_REPEATS = 3;
 export const GENERIC_INTENTS = new Set(['prices', 'services', 'unknown']);
 const GREETING_INTENTS = new Set(['greeting', 'identity']);
 
-const firstName = name => String(name || '').trim().split(/\s+/)[0] || '';
+// An Instagram @handle is not a name: Layla asks instead of greeting "@sara.k".
+const firstName = name => { const first = String(name || '').trim().split(/\s+/)[0] || ''; return first.startsWith('@') ? '' : first; };
 export const normalizeLoop = text => String(text || '').toLowerCase().replace(/[\p{P}\p{S}\s]+/gu, ' ').trim();
 
 /**
@@ -51,7 +54,7 @@ export function continuationReply({ tone, lang, newName }) {
  * generic price, services or unknown answer and follow anything else (hours, location).
  * @returns {{ text: string, asked: boolean }}
  */
-export function composeReply({ firstReply, intent, handoffReason, reply, liveFacts, ack, questions, tone, lang, business, knownName }) {
+export function composeReply({ firstReply, intent, handoffReason, reply, liveFacts, ack, questions, tone, lang, business, knownName, channel }) {
   const answer = liveFacts ? (GENERIC_INTENTS.has(intent) ? [liveFacts] : [reply, liveFacts]) : [reply];
   // An abusive opener gets the calm notice alone, never a cheerful welcome.
   const welcome = firstReply && handoffReason !== 'abuse'
@@ -66,7 +69,7 @@ export function composeReply({ firstReply, intent, handoffReason, reply, liveFac
   // Order lines and questions are Layla's own words too, so they give way to an earlier emoji.
   const quiet = text => (hasEmoji(parts.join(' ')) ? stripEmoji(text) : text);
   const orderLine = quiet(ack), ask = quiet(questions);
-  const text = safeReply([...parts, orderLine, ask].filter(Boolean).join('\n\n'), MAX_REPLY_LENGTH);
+  const text = safeReply([...parts, orderLine, ask].filter(Boolean).join('\n\n'), MAX_REPLY_LENGTH, channel === 'instagram' ? { maxBytes: INSTAGRAM_MAX_BYTES } : {});
   // Questions count as asked only when they reached the customer whole, not cut by the length cap.
   return { text, asked: !!ask && text.endsWith(ask) };
 }

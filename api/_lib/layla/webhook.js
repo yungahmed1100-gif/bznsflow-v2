@@ -115,8 +115,16 @@ function instagramEvents(body, c, now) {
       if (!item || typeof item !== 'object') throw new PilotError('invalid_change');
       const senderId = item.sender?.id, recipientId = item.recipient?.id;
       if (!isSender(senderId, INSTAGRAM) || !isSender(recipientId, INSTAGRAM)) throw new PilotError('wrong_sender', 403);
-      // Reads, postbacks and reactions carry no message body. They are authentic
-      // and create no reply work, exactly like an unknown WhatsApp change field.
+      // A tapped ice breaker or button arrives as a postback; its title is what the customer said.
+      const postback = item.postback;
+      if (!item.message && postback && typeof postback.title === 'string' && postback.title.trim() && id(postback.mid)) {
+        if (senderId === account) continue;
+        if (recipientId !== account) throw new PilotError('wrong_sender',403);
+        events.push({ kind: 'message', id: postback.mid, from: senderId, at: timestamp(item.timestamp), text: postback.title.trim().slice(0, 1000) });
+        continue;
+      }
+      // Reads and reactions carry no message body. They are authentic and create no
+      // reply work, exactly like an unknown WhatsApp change field or a 👍.
       const message = item.message;
       if (!message || typeof message !== 'object') continue;
       if (!id(message.mid)) throw new PilotError('invalid_message');
@@ -133,8 +141,12 @@ function instagramEvents(body, c, now) {
       if (recipientId !== account) throw new PilotError('wrong_sender',403);
       // An unsent message must never be answered after the fact.
       if (message.is_deleted === true) { events.push({kind:'deleted',id:message.mid,from:senderId}); continue; }
+      // Photos, voice notes, shares, story mentions and over-long text: Layla can't read them, so
+      // the wrapper acknowledges once in the business's style (as on WhatsApp) and the team takes over.
       if (typeof message.text !== 'string' || !message.text.trim() || message.text.length > 1000) {
-        events.push({kind:'message',id:message.mid,from:senderId,at:timestamp(item.timestamp),text:'[Message needs human attention]',handoff:true,reply:null,intent:'human'});
+        const tooLong = typeof message.text === 'string' && message.text.length > 1000;
+        events.push({kind:'message',id:message.mid,from:senderId,at:timestamp(item.timestamp),text:'[Message needs human attention]',handoff:true,reply:null,intent:'human',
+          nonText:tooLong?'too_long':'media',...(tooLong?{sample:message.text.slice(0,200)}:{})});
         continue;
       }
       events.push({ kind: 'message', id: message.mid, from: senderId, at: timestamp(item.timestamp), text: message.text });

@@ -20,7 +20,7 @@ import { adviceDecision } from '../../../config/sector-safety.js';
 import { phrase, langOf } from '../../../config/layla-tones.js';
 import { safeReply } from './reply-guard.js';
 import { answerFromDocument, matchFaq } from './document-answer.js';
-import { publicOrigin, whatsappMessagingEnabled, instagramMessagingEnabled, broadcastMessagingEnabled, messagingWorkerSecret } from '../green-config.js';
+import { isGreenRuntime, publicOrigin, whatsappMessagingEnabled, instagramMessagingEnabled, broadcastMessagingEnabled, messagingWorkerSecret } from '../green-config.js';
 
 // messagingStore is built in ../convex.js with the other five route clients, and
 // instagramSendResult lives with the rest of the Instagram Graph code; both are
@@ -35,6 +35,11 @@ export function whatsappPayload(job) {
 }
 export const instagramMessage=job=>job.imageUrl ? {attachment:{type:'image',payload:{url:job.imageUrl}}} : {text:job.text};
 
+/** One acknowledgement in the business's style for what Layla can't read (a photo, a voice note, a very long message). Same on both channels. */
+export function nonTextAcknowledgement(profile,kind,sample='') {
+  const tooLong=kind==='too_long', lang=langOf(`${profile?.services||''} ${String(sample).slice(0,200)}`);
+  return {handoffReason:tooLong?'too_long':'unsupported_media',reply:phrase(profile?.tone,tooLong?'tooLong':'media',lang)};
+}
 // Guards run first and each hand-off names its reason, so the attention queue shows why.
 const GUARDED_REASONS={negotiation:'negotiation',abuse:'abuse'};
 export function liveAnswer(text,profile,catalog=[],knowledge=[],sections=[]) {
@@ -91,7 +96,7 @@ async function instagramUsernames(binding,senders,{env,fetcher}) {
   const found=await Promise.all(senders.slice(0,10).map(async id=>[id,await instagramUsername(c,id,token,fetcher)]));
   return new Map(found.filter(([,name])=>name));
 }
-export async function ingestInstagramEnvelope(envelope,{store=messagingStore(),now=Date.now,app,env=process.env,fetcher=fetch}={}) {
+export async function ingestInstagramEnvelope(envelope,{store=messagingStore(),now=Date.now,app,env=process.env,fetcher=fetch,suppressAutomation=false}={}) {
   if(envelope.object!=='instagram' || !Array.isArray(envelope.entry) || envelope.entry.length>100) throw new PilotError('invalid_envelope');
   let total=0;
   for(const entry of envelope.entry) {
@@ -100,12 +105,13 @@ export async function ingestInstagramEnvelope(envelope,{store=messagingStore(),n
     if(!binding || binding.app!==app) {console.warn('webhook_unbound',JSON.stringify({channel:'instagram',igAccount:entry.id}));continue;}
     const parsed=parseEvents(Buffer.from(JSON.stringify({object:'instagram',entry:[entry]})),binding,now());
     const names=await instagramUsernames(binding,[...new Set(parsed.filter(e=>e.kind==='message').map(e=>e.from))],{env,fetcher});
-    const events=parsed.map(e=>{
+    const events=parsed.map(({nonText,sample,...e})=>{
       const named=e.kind==='message' && names.get(e.from)?{...e,profileName:names.get(e.from)}:e;
+      if(nonText) return {...named,...nonTextAcknowledgement(binding.profile,nonText,sample)};
       return named.kind==='message' && !named.handoff ? {...named,...liveAnswer(named.text,binding.profile,binding.catalog || [],binding.knowledge || [],binding.sections || [])}:named;
     });
     total+=events.length;if(total>100) throw new PilotError('too_many_events',413);
-    if(events.length) await store('ingest',{integrationId:binding.integrationId,profileVersion:binding.profileVersion,events});
+    if(events.length) await store('ingest',{integrationId:binding.integrationId,profileVersion:binding.profileVersion,events,suppressAutomation});
   }
 }
 // This function receives only an envelope whose raw signature was verified.
@@ -152,10 +158,8 @@ export async function ingestBlueEnvelope(envelope,{store=messagingStore(),now=Da
         }
         // Media, voice notes and over-long text get one acknowledgement in the business's style, then the team.
         const tooLong=m.type==='text' && typeof m.text?.body==='string';
-        const reason=title ? 'customer_requested' : tooLong ? 'too_long' : 'unsupported_media';
-        const lang=langOf(`${binding.profile?.services||''} ${tooLong?m.text.body.slice(0,200):''}`);
-        events.push({kind:'message',id:m.id,from:m.from,at:Number(m.timestamp)*1000,text:title || '[Message needs human attention]',intent:'human',handoff:true,handoffReason:reason,
-          ...(title ? {} : {reply:phrase(binding.profile?.tone,tooLong?'tooLong':'media',lang)}),...profile});
+        events.push({kind:'message',id:m.id,from:m.from,at:Number(m.timestamp)*1000,text:title || '[Message needs human attention]',intent:'human',handoff:true,
+          ...(title ? {handoffReason:'customer_requested'} : nonTextAcknowledgement(binding.profile,tooLong?'too_long':'media',tooLong?m.text.body:'')),...profile});
       }
     }
     total+=events.length;if(total>100) throw new PilotError('too_many_events',413);
@@ -264,8 +268,9 @@ export function createBlueWorker({env=process.env,fetcher=fetch,store=messagingS
       const token=openToken(job.integration.credential,credentialContext(job.sessionHash,job.integration),env);
       const isInstagram=job.integration.channel==='instagram';
       if (!(isInstagram?instagramMessagingEnabled(env):whatsappMessagingEnabled(env))) throw new PilotError('messaging_unavailable',503);
+      // Blue's synthetic testing replies only to listed testers; Green customers are all real.
       const allowed=String(env.BLUE_INSTAGRAM_TEST_SENDERS || '').split(',').map(s=>s.trim());
-      if (isInstagram && !allowed.includes('*') && !allowed.includes(job.number)) {
+      if (isInstagram && !isGreenRuntime(env) && !allowed.includes('*') && !allowed.includes(job.number)) {
         await store('result',{jobId:job.jobId,intent:job.intent,status:'blocked',reason:'test_recipient_not_allowed'});
         return send(res,200,{ok:true,processed:false});
       }
@@ -322,7 +327,8 @@ async function verifyInstagram({sessionHash,env,fetcher,instagram,now=Date.now()
   catch(e) {if(e?.code==='instagram_reconnect_required') return reconnect();throw e;}
   if(!identity.connected) return reconnect();
   const proven=Number.isFinite(connection.checkedAt);
-  if(proven && now-connection.checkedAt<SUBSCRIPTION_PROOF_MS) return;
+  // The subscription was proven today: the token check just made is the fresh proof activation needs.
+  if(proven && now-connection.checkedAt<SUBSCRIPTION_PROOF_MS) {await instagram('checked',{sessionHash,integrationId:connection.integrationId,connected:true,tokenOnly:true});return;}
   try {
     const subscribed=await subscribeInstagram(c,connection.integration.igAccount,token,fetcher);
     if(subscribed?.success!==true) throw new PilotError('instagram_subscription_failed',502);

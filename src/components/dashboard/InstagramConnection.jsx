@@ -39,14 +39,14 @@ export function InstagramConnection({lang='en',onChange=()=>{},showInbox=false})
         const result=await callApi(endpoint,{body:{action,lang,...extra,...(action==='disconnect'?{confirm:true}:{})},csrf:state.data?.csrfToken});
         if(result.url) {window.location.assign(result.url);return;}
         setNotice(result.revoked===false
-          ?t('Instagram disconnected in BznsFlow. To finish, remove bznsflowai in Instagram → Settings → Apps and websites.','تم فصل إنستغرام في BznsFlow. لإكمال الفصل، أزل bznsflowai من إنستغرام ← الإعدادات ← التطبيقات والمواقع.')
+          ?t('Instagram disconnected in BznsFlow. To finish, remove the BznsFlow app in Instagram → Settings → Apps and websites.','تم فصل إنستغرام في BznsFlow. لإكمال الفصل، أزل تطبيق BznsFlow من إنستغرام ← الإعدادات ← التطبيقات والمواقع.')
           :t('Instagram disconnected.','تم فصل إنستغرام.'));
         setConfirm(false);
       }
       await state.refresh({quiet:true});onChange();
     } catch(e) {
       const reasons={
-        activation_not_ready:t('Save your business answers with a team contact first (Dashboard → Business).','احفظ إجابات نشاطك مع جهة اتصال للفريق أولاً (اللوحة ← نشاطك).'),
+        activation_not_ready:t('Publish your business details first, then check the connection and activate again.','انشر تفاصيل نشاطك أولاً، ثم افحص الاتصال وفعّل الردود مجدداً.'),
         instagram_reconnect_required:t('Instagram needs reconnecting. Click Reconnect Instagram.','يحتاج إنستغرام إلى إعادة الربط. اضغط «إعادة ربط إنستغرام».'),
         connection_not_ready:t('Meta is not delivering this account’s messages to BznsFlow yet. In Instagram turn on Allow access to messages, then click Reconnect Instagram.','لا توصل Meta رسائل هذا الحساب إلى BznsFlow بعد. فعّل «السماح بالوصول إلى الرسائل» في إنستغرام ثم اضغط «إعادة ربط إنستغرام».'),
         send_outcome_unknown:t('A reply needs checking before replies can restart. Open the inbox to review it.','هناك رد يحتاج إلى مراجعة قبل استئناف الردود. افتح المحادثات لمراجعته.'),

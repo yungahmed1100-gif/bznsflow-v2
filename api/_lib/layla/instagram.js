@@ -22,11 +22,16 @@ const digest=s=>createHash('sha256').update(s).digest('hex');
 export const INSTAGRAM_CALLBACK_REASONS=['asset_in_use','different_account','connection_busy','instagram_permissions_missing','invalid_oauth_state','sign_in_required','instagram_unavailable','instagram_subscription_failed','instagram_provider_failed','instagram_provider_unavailable','instagram_rate_limited'];
 const asset=s=>typeof s==='string' && /^\d{1,30}$/.test(s);
 
+// Production keeps the approved Instagram app under MAIN_INSTAGRAM_*; GREEN_INSTAGRAM_* overrides it.
+// requireEnabled=false serves what must work even while replies are closed: webhook
+// ingress and Meta's deauthorize and data-deletion callbacks.
 export function instagramConfig(env=process.env, requireEnabled=true) {
-  if (!convexConfigured(env) || env.GREEN_INSTAGRAM_APPROVED !== 'true' || env.GREEN_INSTAGRAM_ENABLED !== 'true' || !asset(env.GREEN_INSTAGRAM_APP_ID) || !env.GREEN_INSTAGRAM_APP_SECRET) throw new PilotError('instagram_unavailable',503);
+  const app=env.GREEN_INSTAGRAM_APP_ID || env.MAIN_INSTAGRAM_APP_ID, secret=env.GREEN_INSTAGRAM_APP_SECRET || env.MAIN_INSTAGRAM_APP_SECRET;
+  const enabled=env.GREEN_INSTAGRAM_APPROVED === 'true' && env.GREEN_INSTAGRAM_ENABLED === 'true';
+  if (!convexConfigured(env) || (requireEnabled && !enabled) || !asset(app) || !secret) throw new PilotError('instagram_unavailable',503);
   const version=env.GREEN_INSTAGRAM_GRAPH_VERSION || 'v25.0';
   if (!/^v\d{1,3}\.0$/.test(version)) throw new PilotError('instagram_unavailable',503);
-  return {app:env.GREEN_INSTAGRAM_APP_ID,secret:env.GREEN_INSTAGRAM_APP_SECRET,parent:env.LAYLA_META_APP_ID || '',version,origin:publicOrigin(env),callback:appUrl('/api/layla-meta',env)};
+  return {app,secret,parent:env.LAYLA_META_APP_ID || '',version,origin:publicOrigin(env),callback:appUrl('/api/layla-meta',env)};
 }
 
 // Every Graph answer resolves to a value or one of four errors:

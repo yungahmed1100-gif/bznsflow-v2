@@ -6,6 +6,8 @@ Ahmed explicitly authorized deployment and requested a detailed plain-English
 PDF. Backend deployment succeeded on isolated `quaint-nightingale-675`; Vercel
 release `dpl_5cUFHzN7jkx2iG7rPC6wjBNjYJ84` is READY on
 `https://bznsflow-blue.vercel.app`. The live signed-in onboarding was checked.
+
+> **2026-10-07: Instagram is approved and production is Green (`www.bznsflowai.com`).** The table under "Meta dashboard values" now lists the Green URLs; the Blue URLs below are historical.
 Green was not deployed. No real messages were sent.
 
 Instagram Login app `bznsflowai-IG`, ID `1674756910890232`, was verified in Meta.
@@ -97,13 +99,13 @@ This implementation uses **Instagram API with Instagram Login**. A linked Facebo
 
 | Setting | Value |
 | --- | --- |
-| OAuth redirect URI | `https://bznsflow-blue.vercel.app/api/layla-meta` (no query string; see Verified live workflow) |
-| Instagram webhook callback | `https://bznsflow-blue.vercel.app/api/layla-meta-webhook?channel=instagram` |
-| Deauthorize callback | `https://bznsflow-blue.vercel.app/api/layla-meta?surface=instagram-deauthorize` |
-| Instagram data deletion callback | `https://bznsflow-blue.vercel.app/api/layla-meta?surface=instagram-delete` |
-| Privacy policy | `https://bznsflow-blue.vercel.app/en/privacy` |
-| Terms | `https://bznsflow-blue.vercel.app/en/terms` |
-| Data deletion instructions | `https://bznsflow-blue.vercel.app/en/data-deletion` |
+| OAuth redirect URI | `https://www.bznsflowai.com/api/layla-meta` (no query string; see Verified live workflow) |
+| Instagram webhook callback | `https://www.bznsflowai.com/api/layla-meta-webhook`, field `messages`, verify token = `GREEN_INSTAGRAM_VERIFY_TOKEN` |
+| Deauthorize callback | `https://www.bznsflowai.com/api/layla-meta?surface=instagram-deauthorize` |
+| Instagram data deletion callback | `https://www.bznsflowai.com/api/layla-meta?surface=instagram-delete` |
+| Privacy policy | `https://www.bznsflowai.com/en/privacy` |
+| Terms | `https://www.bznsflowai.com/en/terms` |
+| Data deletion instructions | `https://www.bznsflowai.com/en/data-deletion` |
 
 The webhook subscribes to `messages`. After login, the backend also subscribes the connected professional account through its `subscribed_apps` endpoint. Both dashboard webhook setup and account subscription must work.
 

@@ -240,3 +240,40 @@ test('removing the app in Instagram without a deletion request stops it and allo
   h.m.advance(11000);
   assert.equal((await ig('begin',{stateHash:'6'.repeat(64)})).ok,true);
 });
+
+test('activation works any time after connecting: a token check is the fresh proof while the daily subscription proof stands', async () => {
+  const {h,tenant,ig,integration}=await fixture();
+  for (const wait of [2*60000, 23*3600000]) {
+    h.m.advance(wait);
+    assert.equal((await h.messaging('activate',{sessionHash:tenant.sessionHash,channel:'instagram'})).reason,'activation_not_ready','a stale proof alone is not enough');
+    assert.equal((await ig('checked',{integrationId:integration.id,connected:true,tokenOnly:true})).ok,true);
+    assert.equal((await h.messaging('activate',{sessionHash:tenant.sessionHash,channel:'instagram'})).ok,true,`activates ${wait/60000} minutes after connecting`);
+  }
+  const connection=h.m.table('blueInstagramConnections')[0];
+  assert.ok(connection.tokenCheckedAt>connection.checkedAt,'the subscription proof keeps its own clock');
+});
+
+test('Instagram DMs that arrive before activation are kept for the inbox and not answered', async () => {
+  const {h,integration}=await fixture();
+  const r=await h.messaging('ingest',{integrationId:integration.id,events:[{kind:'message',id:'mid.early',from:'17890000000000009',at:h.m.now(),text:'hello?',reply:'Hi',intent:'greeting'}]});
+  assert.equal(r.ok,true);
+  assert.equal(h.m.table('blueMessages').filter(m=>m.direction==='in').length,1);
+  assert.equal(h.m.table('blueMessages').filter(m=>m.direction==='out').length,0);
+});
+
+test('one customer the send fails for never pauses Layla for everyone else; a connection failure does', async () => {
+  const {h,tenant,integration}=await fixture();
+  await h.messaging('activate',{sessionHash:tenant.sessionHash,channel:'instagram'});
+  const send=async (from,reason)=>{
+    await h.messaging('ingest',{integrationId:integration.id,events:[{kind:'message',id:`mid.${from}`,from,at:h.m.now(),text:'hi',reply:'Hi',intent:'greeting'}]});
+    const job=h.m.table('blueMessages').filter(m=>m.direction==='out').at(-1);
+    await h.messaging('claim',{jobId:job._id,intent:`i.${from}`});
+    await h.messaging('result',{jobId:job._id,intent:`i.${from}`,status:'failed',reason});
+    return h.m.table('blueConversations').find(c=>c.number===from);
+  };
+  const lost=await send('17890000000000011','outside_window');
+  assert.equal((await h.messaging('state',{sessionHash:tenant.sessionHash,channel:'instagram'})).value.active,true);
+  assert.deepEqual([lost.handoffState,lost.handoffReason],['open','send_failed']);
+  await send('17890000000000012','messages_access_off');
+  assert.equal((await h.messaging('state',{sessionHash:tenant.sessionHash,channel:'instagram'})).value.active,false);
+});

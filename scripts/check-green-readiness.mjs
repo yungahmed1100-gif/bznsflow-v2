@@ -25,7 +25,10 @@ check('email OTP delivery configured', has('LEAD_ENDPOINT') && has('OTP_SHARED_S
 check('Google sign-in configured', has('GOOGLE_CLIENT_ID') && has('GOOGLE_CLIENT_SECRET'), 'Google OIDC client pair required');
 check('LinkedIn sign-in configured', has('LINKEDIN_CLIENT_ID') && has('LINKEDIN_CLIENT_SECRET'), 'LinkedIn OIDC client pair required');
 check('Microsoft sign-in disabled', !has('MS_CLIENT_ID') && !has('MS_CLIENT_SECRET'), 'Remove Microsoft credentials until separately tested');
-check('Instagram remains closed', env.GREEN_INSTAGRAM_APPROVED !== 'true' && env.GREEN_INSTAGRAM_ENABLED !== 'true', 'Do not enable before app approval');
+// Meta approved Instagram (2026-10-07). Open needs the app pair and its own webhook verify token; closed is also fine.
+const instagramOpen = env.GREEN_INSTAGRAM_APPROVED === 'true' && env.GREEN_INSTAGRAM_ENABLED === 'true';
+check('Instagram configured when open', !instagramOpen || ((has('GREEN_INSTAGRAM_APP_ID') || has('MAIN_INSTAGRAM_APP_ID')) && (has('GREEN_INSTAGRAM_APP_SECRET') || has('MAIN_INSTAGRAM_APP_SECRET')) && has('GREEN_INSTAGRAM_VERIFY_TOKEN')),
+  'Instagram app ID and secret (MAIN_ or GREEN_INSTAGRAM_*) and GREEN_INSTAGRAM_VERIFY_TOKEN are required once both Instagram flags are on');
 check('reviewed data migration gate', env.GREEN_DATA_MIGRATION_VERIFIED === 'true', 'Freeze source writes and verify Ahmed-only source/destination counts before cutover');
 check('all production state paths use Convex', env.GREEN_STATE_PATHS_CONVEX === 'true', 'Auth, website, Layla, customer, dashboard and background routes must be migrated');
 check('Green worker credential', validSecret('GREEN_MESSAGING_WORKER_SECRET'), 'Dedicated 64-hex Convex-to-Vercel worker secret required');
