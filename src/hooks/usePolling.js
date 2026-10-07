@@ -3,6 +3,34 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export const POLL_INTERVAL_MS = 5000;
 
 /**
+ * The refresh behind usePolling, kept free of React so it can be tested directly.
+ * One load runs at a time per generation. A refresh asked for while a load is running
+ * (say, right after the owner flips a switch) must not be satisfied by that load, which
+ * may have left before the change: the running load is followed by one more.
+ */
+export function createRefresher({ load, current, generation, onLoading, onData, onError }) {
+  let inFlight = null, running = null, again = false;
+  return ({ quiet = false } = {}) => {
+    const gen = generation();
+    if (inFlight === gen) { again = true; return running; }
+    inFlight = gen;
+    if (!quiet) onLoading();
+    running = (async () => {
+      try {
+        do {
+          again = false;
+          const data = await load();
+          if (current(gen)) onData(data);
+        } while (again && current(gen));
+      } catch (error) {
+        if (current(gen)) onError(error);
+      } finally { if (inFlight === gen) inFlight = null; }
+    })();
+    return running;
+  };
+}
+
+/**
  * A live resource. Today it polls every five seconds while the tab is visible;
  * components depend only on { data, error, loading, refresh }, so a Convex
  * subscription can replace the polling without changing them.
@@ -11,20 +39,18 @@ export function usePolling(load, deps = [], { interval = POLL_INTERVAL_MS, enabl
   const [state, setState] = useState({ data: null, error: null, loading: enabled });
   // Each change of `deps` starts a new generation. A response from an older generation
   // (a filter the owner has already changed) is dropped instead of shown under the new one.
-  const inFlight = useRef(null), generation = useRef(0), active = useRef(true), loader = useRef(load);
+  const generation = useRef(0), active = useRef(true), loader = useRef(load);
   loader.current = load;
-  const refresh = useCallback(async ({ quiet = false } = {}) => {
-    const gen = generation.current;
-    if (inFlight.current === gen) return;
-    inFlight.current = gen;
-    if (!quiet) setState(s => ({ ...s, loading: true }));
-    try {
-      const data = await loader.current();
-      if (active.current && gen === generation.current) setState({ data, error: null, loading: false });
-    } catch (error) {
-      if (active.current && gen === generation.current) setState(s => ({ ...s, error, loading: false }));
-    } finally { if (inFlight.current === gen) inFlight.current = null; }
-  }, []);
+  const refresher = useRef(null);
+  if (!refresher.current) refresher.current = createRefresher({
+    load: () => loader.current(),
+    current: gen => active.current && gen === generation.current,
+    generation: () => generation.current,
+    onLoading: () => setState(s => ({ ...s, loading: true })),
+    onData: data => setState({ data, error: null, loading: false }),
+    onError: error => setState(s => ({ ...s, error, loading: false })),
+  });
+  const refresh = useCallback(options => refresher.current(options), []);
   useEffect(() => {
     active.current = true;
     generation.current += 1;

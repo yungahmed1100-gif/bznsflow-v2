@@ -1,10 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { DashboardError, messaging, messagingState } from '../../lib/dashboard/api';
-import { channelBody, channelName } from '../../lib/dashboard/channels';
+import { OWNER_REASONS, channelBody, channelName } from '../../lib/dashboard/channels';
 import { LaylaSwitch } from './LaylaSwitch';
-
-const OWNER_REASONS = ['', 'owner_paused', 'not_activated'];
 
 /**
  * Layla's switch for one channel. The dashboard passes the state it already
@@ -39,8 +37,8 @@ export function ChannelSwitch({ s, channel = 'whatsapp', state: given, autoOn = 
   }
   const name = channelName(channel, s.ar);
   const reason = state?.active ? '' : state?.reason || '';
-  return <LaylaSwitch s={s} on={!!state?.active} disabled={!state || state.available === false}
+  return <LaylaSwitch s={s} channel={channel} on={!!state?.active} disabled={!state || state.available === false}
     label={state?.active ? s.t('activeOn', { channel: name }) : s.t('pausedOn', { channel: name })}
-    problem={state?.available === false ? s.reason('messaging_unavailable') : OWNER_REASONS.includes(reason) ? '' : s.reason(reason)}
+    problem={state?.available === false ? s.reason('messaging_unavailable', channel) : OWNER_REASONS.includes(reason) ? '' : s.reason(reason, channel)}
     onToggle={toggle} />;
 }

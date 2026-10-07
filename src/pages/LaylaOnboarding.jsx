@@ -60,7 +60,8 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     if (whatsappSeen.current === false && whatsappLive) setWhatsappJustConnected(true);
     whatsappSeen.current = whatsappLive;
   }, [data, whatsappLive]);
-  useEffect(() => { onStageChange?.(step === 0 ? 0 : live ? 2 : 1); }, [step, live]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Reported only once the saved setup has loaded, so the first render never overwrites stored progress.
+  useEffect(() => { if (data) onStageChange?.(step === 0 ? 0 : live ? 2 : 1); }, [!!data, step, live]); // eslint-disable-line react-hooks/exhaustive-deps
   const authCsrf = useRef('');
   async function authRequest(action, body) {
     if (!authCsrf.current) {

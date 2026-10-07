@@ -139,8 +139,8 @@ Deploy the new Convex schema/functions to isolated `quaint-nightingale-675` firs
 5. Click **Check connection**. Verify it succeeds.
 6. From the customer test account, send a DM after the live rehearsal is authorized. Confirm it appears under **Chats → Instagram** while replies remain paused.
 7. Put that customer's Instagram-scoped ID in `BLUE_INSTAGRAM_TEST_SENDERS`, enable `BLUE_INSTAGRAM_SEND_ENABLED`, and deploy that configuration with authorization.
-8. Click **Activate replies**. Send a fresh question covered by your approved facts. Confirm the reply arrives in the real customer's Instagram app and matches the inbox.
-9. Click **Pause replies**, send another message, and confirm no automatic reply. Check human takeover and a manual reply during the open window.
+8. Check the Instagram **Layla switch** is on (it switches on by itself after connecting). Send a fresh question covered by your approved facts. Confirm the reply arrives in the real customer's Instagram app and matches the inbox.
+9. Turn the Instagram **Layla switch** off, send another message, and confirm no automatic reply. Check human takeover and a manual reply during the open window.
 10. Confirm WhatsApp still works independently. Either channel alone must also open the dashboard.
 
 Do not use mock screenshots as Meta evidence. Instagram replies are limited to the open 24-hour customer messaging window. This release has no Instagram campaigns, comments, publishing, attachments processing, or Human Agent extension. Unsupported media goes to a human. Each BznsFlow business supports one Instagram account; reconnect the same account. Switching the linked Instagram identity requires a separate account-migration workflow.
@@ -160,11 +160,11 @@ Use the English interface, readable account names, slow clicks, and captions exp
 **Video B — `instagram_business_manage_messages`:**
 
 1. Show the complete login/consent flow again and the same connected identity.
-2. Show the approved business answers, then activate Instagram replies.
+2. Show the approved business answers, then the Instagram Layla switch turning on.
 3. Show the customer account sending a real DM to `@bznsflow`.
 4. Show that DM in BznsFlow's Instagram inbox and the reply in the customer's Instagram app.
 5. Turn on human takeover and demonstrate a manual reply.
-6. Pause replies and explain the control. Show the disconnect option; only execute it at the end if ready to reconnect afterward.
+6. Turn the Layla switch off and explain the control. Show the disconnect option; only execute it at the end if ready to reconnect afterward.
 
 Meta asks for an end-to-end screencast for each requested permission and reproducible tester access. Follow the current action items shown in your submission. [Meta App Review instructions](https://developers.facebook.com/documentation/instagram-platform/app-review).
 

@@ -4,7 +4,10 @@
 const WHATSAPP_LIVE = ['connected', 'paused'];
 const INSTAGRAM_GONE = ['disconnected', 'revoked'];
 // Reasons the owner chose (or has not chosen yet). Anything else means a fix is needed.
-const OWNER_REASONS = ['', 'owner_paused', 'not_activated'];
+export const OWNER_REASONS = Object.freeze(['', 'owner_paused', 'not_activated']);
+// Messaging switched off for the whole platform is not a fault in the owner's channel:
+// the switch says so, and the connection still reads healthy.
+const NOT_A_FAULT = [...OWNER_REASONS, 'messaging_unavailable'];
 
 export const CHANNEL_NAMES = { whatsapp: ['WhatsApp', 'واتساب'], instagram: ['Instagram', 'إنستغرام'] };
 export const channelName = (id, ar) => CHANNEL_NAMES[id][ar ? 1 : 0];
@@ -34,7 +37,7 @@ function channel(id, identity, status, connected, healthy, messaging) {
   const active = connected && !!messaging?.active;
   const reason = active ? '' : (messaging?.reason || 'not_activated');
   return { id, identity: identity || '', status: status || '', connected, active, available: messaging?.available !== false,
-    healthy: healthy && OWNER_REASONS.includes(reason), reason };
+    healthy: healthy && NOT_A_FAULT.includes(reason), reason };
 }
 
 /** 'none' (nothing connected) | 'on' (every connected channel replies) | 'off' | 'mixed'. */

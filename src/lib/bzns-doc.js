@@ -119,6 +119,9 @@ export function validateBzns(markdown) {
     if (HTML.test(all)) errors.push({ code: 'bzns_html', section: s.key, heading: s.heading });
     if (hasMoney(all)) errors.push({ code: 'bzns_money', section: s.key, heading: s.heading });
   }
+  // Layla hands the team contact to a customer in one reply, so it must fit one short line.
+  const contact = parsed.sections.find(s => s.key === 'contact' && s.body);
+  if (contact && !PLACEHOLDER.test(contact.body) && plain(contact.body).join(' · ').length > CONTACT_MAX) errors.push({ code: 'bzns_contact_too_long', section: 'contact', heading: contact.heading });
   // A section counts as written only once its template hints are replaced.
   const checklist = RECOMMENDED_SECTIONS.map(key => ({ key, present: parsed.sections.some(s => s.key === key && s.body && !PLACEHOLDER.test(s.body)) }));
   return { ok: errors.length === 0, errors, checklist, parsed };

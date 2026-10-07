@@ -157,3 +157,14 @@ test('a Team contact section becomes the contact Layla gives a customer who asks
   assert.equal(answer('I want to talk to a person', { ...none, businessName: 'Qurum Coast' }, true).text, 'I’ll leave this conversation for our team to follow up here.');
   assert.doesNotMatch(answer('what is the price of a 3 bedroom villa', { ...withContact, businessName: 'Qurum Coast' }, true).text, /9123/);
 });
+
+test('a team contact longer than one short line is refused, never silently dropped', () => {
+  const doc = contact => `---\nname: Qurum Coast\nsector: real-estate\n---\n# Qurum Coast\n## What we offer\n- Rentals\n## Team contact\n${contact}\n`;
+  const exactly = 'WhatsApp +968 9123 4567 '.padEnd(120, 'x');
+  const fits = validateBzns(doc(exactly));
+  assert.equal(fits.ok, true);
+  assert.equal(deriveProfile(fits.parsed).profile.teamContact, exactly);
+  const tooLong = validateBzns(doc(`${exactly}y`));
+  assert.equal(tooLong.ok, false);
+  assert.deepEqual(tooLong.errors.map(e => [e.code, e.section]), [['bzns_contact_too_long', 'contact']]);
+});

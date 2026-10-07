@@ -103,6 +103,4 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .ld-button, .ld-nav a { transition: background-color 120ms ease, border-color 120ms ease; }
-  .ld-toast { animation: product-notice 140ms ease-out; }
-  @keyframes product-notice { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 }

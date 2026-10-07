@@ -26,6 +26,7 @@ const MESSAGES = {
   bzns_placeholder: ['Replace every [bracket] in {section} with your real details, or delete the line.', 'استبدل كل [قوسين] في {section} بمعلوماتك الحقيقية أو احذف السطر.'],
   bzns_html: ['Remove HTML tags from {section}. Plain text and markdown only.', 'احذف وسوم HTML من {section}. نص عادي وتنسيق markdown فقط.'],
   bzns_money: ['Remove prices or fees from {section}. Layla reads prices from Services & Prices or your Hasib stock.', 'احذف الأسعار أو الرسوم من {section}. تقرأ ليلى الأسعار من الخدمات والأسعار أو من مخزون حاسب.'],
+  bzns_contact_too_long: ['Keep {section} to one short line (120 characters at most), for example a phone number and a name.', 'اجعل {section} سطراً قصيراً واحداً (١٢٠ حرفاً كحد أقصى)، مثل رقم هاتف واسم.'],
   bzns_conflict: ['This document changed in another tab. Reload the page to get the latest version before saving.', 'تغيّر هذا المستند في نافذة أخرى. أعد تحميل الصفحة للحصول على آخر نسخة قبل الحفظ.'],
   bzns_invalid: ['Fix the items listed below, then publish again.', 'صحّح البنود المذكورة أدناه ثم انشر مرة أخرى.'],
   operation_conflict: ['A WhatsApp connection step is still finishing. Try publishing again in a minute.', 'ما زالت خطوة ربط واتساب قيد الإنهاء. حاول النشر بعد دقيقة.'],

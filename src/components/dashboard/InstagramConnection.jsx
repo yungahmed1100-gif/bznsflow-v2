@@ -52,23 +52,8 @@ export function InstagramConnection({lang='en',onChange=()=>{},replyState=null,a
       }
       await state.refresh({quiet:true});onChange();
     } catch(e) {
-      const reasons={
-        activation_not_ready:t('Save your business details, then check the connection and try again.','احفظ تفاصيل نشاطك، ثم افحص الاتصال وحاول مجدداً.'),
-        instagram_reconnect_required:t('Instagram needs reconnecting. Click Reconnect Instagram.','يحتاج إنستغرام إلى إعادة الربط. اضغط «إعادة ربط إنستغرام».'),
-        connection_not_ready:t('Meta is not delivering this account’s messages to BznsFlow yet. In Instagram turn on Allow access to messages, then click Reconnect Instagram.','لا توصل Meta رسائل هذا الحساب إلى BznsFlow بعد. فعّل «السماح بالوصول إلى الرسائل» في إنستغرام ثم اضغط «إعادة ربط إنستغرام».'),
-        send_outcome_unknown:t('A reply needs checking before replies can restart. Open the inbox to review it.','هناك رد يحتاج إلى مراجعة قبل استئناف الردود. افتح المحادثات لمراجعته.'),
-        sign_in_required:t('Your session ended. Sign in again.','انتهت جلستك. سجّل الدخول مجدداً.'),
-        connection_busy:t('BznsFlow is still removing this Instagram account’s data. It takes a few seconds; try again shortly.','ما زال BznsFlow يحذف بيانات حساب إنستغرام هذا. يستغرق ذلك بضع ثوانٍ؛ حاول مجدداً بعد قليل.'),
-        too_soon:t('Please wait a few seconds before trying again.','انتظر بضع ثوانٍ قبل المحاولة مجدداً.'),
-        instagram_permissions_missing:t('Grant both requested Instagram permissions and reconnect.','امنح إذني إنستغرام المطلوبين وأعد الربط.'),
-        messaging_unavailable:t('Instagram replies are not enabled yet.','ردود إنستغرام غير مفعّلة بعد.'),
-        asset_in_use:t('This Instagram account is connected to another BznsFlow account.','حساب إنستغرام مرتبط بحساب آخر في BznsFlow.'),
-        instagram_rate_limited:t('Meta is limiting how often BznsFlow can check Instagram. Nothing is broken; try again in a few minutes.','تحدّ Meta من عدد مرات فحص إنستغرام من BznsFlow. لا يوجد عطل؛ حاول مجدداً بعد بضع دقائق.'),
-        instagram_provider_unavailable:t('Instagram did not respond. Nothing changed; try again in a minute.','لم يستجب إنستغرام. لم يتغير شيء؛ حاول مجدداً بعد دقيقة.'),
-        instagram_provider_failed:t('Instagram did not respond. Nothing changed; try again in a minute.','لم يستجب إنستغرام. لم يتغير شيء؛ حاول مجدداً بعد دقيقة.'),
-      };
       setFailed(true);
-      setNotice(reasons[e.reason] || t('Could not complete this step. Check your connection and try again.','تعذّر إكمال الخطوة. تحقق من الاتصال وحاول مجدداً.'));
+      setNotice(s.reason(e.reason,'instagram'));
       // A failed check may have changed the connection (e.g. now needs reconnecting).
       state.refresh({quiet:true});
     } finally {setBusy('');}

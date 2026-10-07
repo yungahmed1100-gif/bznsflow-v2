@@ -61,3 +61,26 @@ test('channels still connecting are not switched', async () => {
   await setAll(true, channels, async (action, body) => { calls.push(body); return { active: true }; });
   assert.deepEqual(calls, [{ channel: 'instagram' }]);
 });
+
+test('messaging switched off everywhere leaves channels unavailable, which the header turns into a disabled switch', () => {
+  const off = { available: false, active: false, reason: 'messaging_unavailable' };
+  const channels = channelsFrom({ ...whatsapp('connected', off), ...instagram('connected', off) });
+  assert.equal(channels.every(c => c.connected && !c.available), true);
+  assert.equal(masterState(channels), 'off');
+  assert.equal(needsAttention(channels), null, 'a platform switch is not a fault in the owner’s channel');
+});
+
+test('reply failures are worded for the channel that refused, in both languages', async () => {
+  const { createStrings } = await import('../src/lib/dashboard/strings.js');
+  for (const lang of ['en', 'ar']) {
+    const s = createStrings(lang);
+    // The same code means different fixes: Instagram's "Allow access to messages", not a WhatsApp check.
+    assert.notEqual(s.reason('connection_not_ready', 'instagram'), s.reason('connection_not_ready'));
+    assert.match(s.reason('connection_not_ready', 'instagram'), lang === 'en' ? /Instagram/ : /إنستغرام/);
+    for (const code of ['instagram_rate_limited', 'instagram_provider_unavailable', 'instagram_permissions_missing', 'asset_in_use', 'too_soon']) {
+      assert.notEqual(s.reason(code, 'instagram'), s.reason('no_such_code'), `${lang}: ${code} has its own words`);
+    }
+    // Codes Instagram has no wording for fall back to the shared table.
+    assert.equal(s.reason('csrf', 'instagram'), s.reason('csrf'));
+  }
+});

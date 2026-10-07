@@ -4,16 +4,16 @@ const en = {
   title: 'Layla dashboard', loadEarlier: 'Load earlier messages', nav: 'Dashboard sections', today: 'Today', money: 'Money', customers: 'Customers', settings: 'Settings', sectionViews: 'Views in this section',
   view_products: 'Products', view_services: 'Services', view_insights: 'Summary', view_expenses: 'Expenses', view_contacts: 'Customer list', view_broadcast: 'Message many', view_channels: 'Channels', view_business: 'Business details',
   broadcast: 'Broadcast', chats: 'Chats', contacts: 'Contacts', business: 'Business',
-  active: 'Layla is replying', paused: 'Layla is paused', pause: 'Turn Layla off', activate: 'Turn Layla on', checkConnection: 'Check connection',
+  active: 'Layla is replying', paused: 'Layla is paused', checkConnection: 'Check connection',
   activeOn: 'Layla is replying on {channel}', pausedOn: 'Layla is paused on {channel}', mixedDetail: 'On for {on} · paused on {off}', connectChannel: 'Connect a channel',
   channelAttention: '{channel} needs attention', liveTitle: 'Layla is live', liveBody: 'Customers who message you now get an answer straight away. Anything Layla can’t answer waits in your inbox.',
-  openInbox: 'Open your inbox', handoffNote: 'Anything Layla can’t answer goes to your inbox, and you can take over any chat at any time.', connectionDetails: 'Connection details',
-  connectionOk: 'Connection healthy', connectionAttention: 'Connection needs attention', checkedAt: 'Checked {time}', repliesToday: '{used} of {limit} replies today',
+  openInbox: 'Open your inbox', handoffNote: 'Anything Layla can’t answer goes to your inbox, and you can take over any chat at any time.', 
+  connectionOk: 'Connection healthy', connectionAttention: 'Connection needs attention', checkedAt: 'Checked {time}', 
   signOut: 'Sign out', setup: 'Business setup', language: 'العربية', loading: 'Loading…', retry: 'Try again', loadMore: 'Load more', close: 'Close', back: 'Back', cancel: 'Cancel',
   save: 'Save', saved: 'Saved', delete: 'Delete', export: 'Export', exportCsv: 'CSV', exportPdf: 'PDF (print)', exportAll: 'Export all (ZIP)', exporting: 'Preparing export…',
   searchChats: 'Search name or number', noChats: 'No conversations yet. When a customer messages your WhatsApp number, the chat appears here.', noResults: 'Nothing matches that search.',
   selectChat: 'Choose a conversation to read it.', you: 'You', layla: 'Layla', yourTeamApp: 'You · WhatsApp app', customer: 'Customer', template: 'Template',
-  textExpired: 'Text removed after 30 days', leaveChat: 'Leave this chat for me', leaveChatHelp: 'Layla stops replying here and queued replies are cancelled. Turning it off only affects new messages.',
+  textExpired: 'Text removed after 30 days', 
   handling: 'You’re handling', optedOut: 'Opted out', composer: 'Reply to {name}', send: 'Send', sending: 'Sending…', replyPauses: 'Sending a reply also leaves this chat to you.',
   windowClosed: 'The 24-hour reply window closed {time}. WhatsApp only allows an approved template now.', windowClosedWait: 'The 24-hour reply window closed {time}. You can reply as soon as this customer writes again.', sendTemplate: 'Send a template', windowOpen: 'Reply window open until {time}',
   optedOutComposer: 'This customer opted out. You can’t message them from BznsFlow.',
@@ -47,7 +47,7 @@ const en = {
   downloadSample: 'Download a sample file', chooseFile: 'Choose file', mapColumns: 'Match your columns', column_phone: 'Phone column', column_name: 'Name column', column_country: 'Country column',
   noColumn: 'Not in file', defaultCountry: 'Country for numbers without a code', importPreview: '{valid} ready · {duplicates} duplicates merged · {invalid} need fixing', importRowIssue: 'Row {line}: {reason}',
   invalid_phone: 'not a valid number', missing_phone: 'no number', missing_country: 'needs a country', importNow: 'Import {count} contacts', imported: '{created} added, {updated} updated.',
-  truncated: 'Only the first 1,000 rows are imported.', consentOptional: 'Also record marketing consent for these contacts', activeDialog: 'Layla is active', activeDialogBody: 'Opening your dashboard…', openDashboard: 'Open dashboard',
+  truncated: 'Only the first 1,000 rows are imported.', consentOptional: 'Also record marketing consent for these contacts', 
   dashboardUnavailable: 'The dashboard isn’t switched on yet. Your setup and Layla’s replies are unaffected.',
   view_accounts: 'Accounts and VAT', capturedNone: 'Layla hasn’t captured any details from this chat yet.', openRecord: 'Open contact',
   textCleared: 'Text cleared after 24 hours', textClearedHelp: 'For patients’ privacy, message text is erased after 24 hours. What Layla captured stays.',
@@ -56,16 +56,16 @@ const ar = {
   title: 'لوحة ليلى', loadEarlier: 'عرض الرسائل الأقدم', nav: 'أقسام اللوحة', today: 'اليوم', money: 'المال', customers: 'العملاء', settings: 'الإعدادات', sectionViews: 'أقسام هذه الصفحة',
   view_products: 'المنتجات', view_services: 'الخدمات', view_insights: 'الملخص', view_expenses: 'المصروفات', view_contacts: 'قائمة العملاء', view_broadcast: 'رسالة جماعية', view_channels: 'القنوات', view_business: 'بيانات النشاط',
   broadcast: 'الرسائل الجماعية', chats: 'المحادثات', contacts: 'جهات الاتصال', business: 'نشاطك',
-  active: 'ليلى ترد الآن', paused: 'ليلى متوقفة', pause: 'أوقف ليلى', activate: 'شغّل ليلى', checkConnection: 'فحص الاتصال',
+  active: 'ليلى ترد الآن', paused: 'ليلى متوقفة', checkConnection: 'فحص الاتصال',
   activeOn: 'ليلى ترد الآن على {channel}', pausedOn: 'ليلى متوقفة على {channel}', mixedDetail: 'تعمل على {on} · متوقفة على {off}', connectChannel: 'اربط قناة',
   channelAttention: '{channel} يحتاج مراجعة', liveTitle: 'ليلى تعمل الآن', liveBody: 'كل عميل يراسلك الآن يحصل على رد فوري. وما لا تعرف ليلى إجابته ينتظرك في المحادثات.',
-  openInbox: 'افتح المحادثات', handoffNote: 'ما لا تعرف ليلى إجابته يصل إلى محادثاتك، ويمكنك استلام أي محادثة في أي وقت.', connectionDetails: 'تفاصيل الاتصال',
-  connectionOk: 'الاتصال سليم', connectionAttention: 'الاتصال يحتاج مراجعة', checkedAt: 'آخر فحص {time}', repliesToday: '{used} من {limit} رد اليوم',
+  openInbox: 'افتح المحادثات', handoffNote: 'ما لا تعرف ليلى إجابته يصل إلى محادثاتك، ويمكنك استلام أي محادثة في أي وقت.', 
+  connectionOk: 'الاتصال سليم', connectionAttention: 'الاتصال يحتاج مراجعة', checkedAt: 'آخر فحص {time}', 
   signOut: 'تسجيل الخروج', setup: 'إعداد النشاط', language: 'English', loading: 'جارٍ التحميل…', retry: 'حاول مجدداً', loadMore: 'عرض المزيد', close: 'إغلاق', back: 'رجوع', cancel: 'إلغاء',
   save: 'حفظ', saved: 'تم الحفظ', delete: 'حذف', export: 'تصدير', exportCsv: 'CSV', exportPdf: 'PDF (طباعة)', exportAll: 'تصدير الكل (ZIP)', exporting: 'جارٍ تجهيز الملف…',
   searchChats: 'ابحث بالاسم أو الرقم', noChats: 'لا توجد محادثات بعد. عندما يراسل عميل رقم واتساب نشاطك ستظهر المحادثة هنا.', noResults: 'لا توجد نتائج مطابقة.',
   selectChat: 'اختر محادثة لقراءتها.', you: 'أنت', layla: 'ليلى', yourTeamApp: 'أنت · تطبيق واتساب', customer: 'العميل', template: 'قالب',
-  textExpired: 'حُذف النص بعد ٣٠ يوماً', leaveChat: 'اترك هذه المحادثة لي', leaveChatHelp: 'تتوقف ليلى عن الرد هنا وتُلغى الردود المنتظرة. إيقاف الخيار يؤثر على الرسائل الجديدة فقط.',
+  textExpired: 'حُذف النص بعد ٣٠ يوماً', 
   handling: 'تتولاها أنت', optedOut: 'ألغى الاشتراك', composer: 'رد على {name}', send: 'إرسال', sending: 'جارٍ الإرسال…', replyPauses: 'إرسال رد يجعلك تتولى هذه المحادثة.',
   windowClosed: 'انتهت نافذة الرد (٢٤ ساعة) {time}. يسمح واتساب الآن بقالب معتمد فقط.', windowClosedWait: 'انتهت نافذة الرد (٢٤ ساعة) {time}. يمكنك الرد فور أن يراسلك هذا العميل مجدداً.', sendTemplate: 'إرسال قالب', windowOpen: 'نافذة الرد مفتوحة حتى {time}',
   optedOutComposer: 'ألغى هذا العميل الاشتراك. لا يمكنك مراسلته من BznsFlow.',
@@ -99,7 +99,7 @@ const ar = {
   downloadSample: 'تنزيل ملف نموذجي', chooseFile: 'اختر ملفاً', mapColumns: 'طابق الأعمدة', column_phone: 'عمود الهاتف', column_name: 'عمود الاسم', column_country: 'عمود الدولة',
   noColumn: 'غير موجود في الملف', defaultCountry: 'الدولة للأرقام بدون رمز', importPreview: '{valid} جاهز · {duplicates} مكرر دُمج · {invalid} تحتاج تصحيحاً', importRowIssue: 'الصف {line}: {reason}',
   invalid_phone: 'رقم غير صالح', missing_phone: 'بلا رقم', missing_country: 'يحتاج دولة', importNow: 'استيراد {count} جهة اتصال', imported: 'أُضيف {created}، وحُدّث {updated}.',
-  truncated: 'يُستورد أول ١٠٠٠ صف فقط.', consentOptional: 'سجّل أيضاً موافقة التسويق لهذه الجهات', activeDialog: 'تم تفعيل ليلى', activeDialogBody: 'جارٍ فتح لوحتك…', openDashboard: 'فتح اللوحة',
+  truncated: 'يُستورد أول ١٠٠٠ صف فقط.', consentOptional: 'سجّل أيضاً موافقة التسويق لهذه الجهات', 
   dashboardUnavailable: 'اللوحة غير مفعّلة بعد. إعدادك وردود ليلى لا تتأثر.',
   view_accounts: 'الحسابات والضريبة', capturedNone: 'لم تسجّل ليلى أي تفاصيل من هذه المحادثة بعد.', openRecord: 'افتح جهة الاتصال',
   textCleared: 'حُذف النص بعد 24 ساعة', textClearedHelp: 'حفاظاً على خصوصية المرضى، يُحذف نص الرسائل بعد 24 ساعة. ما سجّلته ليلى يبقى.',
@@ -154,11 +154,47 @@ const reasons = {
     instagram_reconnect_required: 'يجب إعادة ربط إنستغرام. افتح الإعدادات ← القنوات واربطه مجدداً.', instagram_subscription_failed: 'لم يؤكد إنستغرام صلاحية الرسائل. اسمح بالوصول إلى الرسائل في تطبيق إنستغرام ثم حاول مجدداً.' },
 };
 
+// Instagram's own wording for the same codes: what to do in Instagram, not in WhatsApp.
+const instagramReasons = {
+  en: {
+    activation_not_ready: 'Save your business details, then check the connection and try again.',
+    instagram_reconnect_required: 'Instagram needs reconnecting. Click Reconnect Instagram.',
+    connection_not_ready: 'Meta is not delivering this account’s messages to BznsFlow yet. In Instagram turn on Allow access to messages, then click Reconnect Instagram.',
+    send_outcome_unknown: 'A reply needs checking before replies can restart. Open the inbox to review it.',
+    sign_in_required: 'Your session ended. Sign in again.',
+    connection_busy: 'BznsFlow is still removing this Instagram account’s data. It takes a few seconds; try again shortly.',
+    too_soon: 'Please wait a few seconds before trying again.',
+    instagram_permissions_missing: 'Grant both requested Instagram permissions and reconnect.',
+    messaging_unavailable: 'Instagram replies are not enabled yet.',
+    asset_in_use: 'This Instagram account is connected to another BznsFlow account.',
+    instagram_rate_limited: 'Meta is limiting how often BznsFlow can check Instagram. Nothing is broken; try again in a few minutes.',
+    instagram_provider_unavailable: 'Instagram did not respond. Nothing changed; try again in a minute.',
+    instagram_provider_failed: 'Instagram did not respond. Nothing changed; try again in a minute.',
+  },
+  ar: {
+    activation_not_ready: 'احفظ تفاصيل نشاطك، ثم افحص الاتصال وحاول مجدداً.',
+    instagram_reconnect_required: 'يحتاج إنستغرام إلى إعادة الربط. اضغط «إعادة ربط إنستغرام».',
+    connection_not_ready: 'لا توصل Meta رسائل هذا الحساب إلى BznsFlow بعد. فعّل «السماح بالوصول إلى الرسائل» في إنستغرام ثم اضغط «إعادة ربط إنستغرام».',
+    send_outcome_unknown: 'هناك رد يحتاج إلى مراجعة قبل استئناف الردود. افتح المحادثات لمراجعته.',
+    sign_in_required: 'انتهت جلستك. سجّل الدخول مجدداً.',
+    connection_busy: 'ما زال BznsFlow يحذف بيانات حساب إنستغرام هذا. يستغرق ذلك بضع ثوانٍ؛ حاول مجدداً بعد قليل.',
+    too_soon: 'انتظر بضع ثوانٍ قبل المحاولة مجدداً.',
+    instagram_permissions_missing: 'امنح إذني إنستغرام المطلوبين وأعد الربط.',
+    messaging_unavailable: 'ردود إنستغرام غير مفعّلة بعد.',
+    asset_in_use: 'حساب إنستغرام مرتبط بحساب آخر في BznsFlow.',
+    instagram_rate_limited: 'تحدّ Meta من عدد مرات فحص إنستغرام من BznsFlow. لا يوجد عطل؛ حاول مجدداً بعد بضع دقائق.',
+    instagram_provider_unavailable: 'لم يستجب إنستغرام. لم يتغير شيء؛ حاول مجدداً بعد دقيقة.',
+    instagram_provider_failed: 'لم يستجب إنستغرام. لم يتغير شيء؛ حاول مجدداً بعد دقيقة.',
+  },
+};
+
 /** @param {string} lang @param {string} [packId] the Hasib industry, whose own words replace the defaults */
 export function createStrings(lang, packId) {
   const words = PACK_WORDS[packId], table = { ...(lang === 'ar' ? ar : en), ...(words ? words[lang === 'ar' ? 'ar' : 'en'] : {}) };
   const t = (key, vars = {}) => String(table[key] ?? en[key] ?? key).replace(/\{(\w+)\}/g, (m, name) => (vars[name] ?? m));
-  const reason = code => (lang === 'ar' ? reasons.ar : reasons.en)[code] || (lang === 'ar' ? 'تعذّر إكمال الخطوة. حاول مجدداً.' : 'That didn’t work. Please try again.');
+  // `channel` picks Instagram's wording where it differs; every other code uses the shared table.
+  const reason = (code, channel) => (channel === 'instagram' ? instagramReasons[lang === 'ar' ? 'ar' : 'en'][code] : undefined)
+    || (lang === 'ar' ? reasons.ar : reasons.en)[code] || (lang === 'ar' ? 'تعذّر إكمال الخطوة. حاول مجدداً.' : 'That didn’t work. Please try again.');
   return { t, reason, lang, ar: lang === 'ar', packId: packId || null };
 }
 /** "Submitted" names the channel Meta accepted the message on. */

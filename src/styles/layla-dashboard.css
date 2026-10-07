@@ -46,10 +46,6 @@
 .ld-layla small { color: var(--ink-2); font-weight: 400; }
 .ld-dot { width: 9px; height: 9px; border-radius: 999px; background: var(--yellow); box-shadow: 0 0 0 2px var(--ink) inset; }
 .ld-health.is-ok .ld-dot { background: var(--green-mark); }
-.ld-layla.is-on::before { content: ''; }
-.ld-header-actions { display: flex; gap: 8px; margin-inline-start: auto; }
-.ld-toast { position: fixed; inset-inline-end: 20px; bottom: calc(var(--banner) + 16px); background: var(--card); border: 1px solid var(--ink); padding: 10px 14px; box-shadow: calc(4px * var(--x-sign, 1)) 4px 0 var(--ink); z-index: 30; max-width: min(360px, calc(100vw - 40px)); }
-.ld-toast.is-error { border-color: var(--coral); color: var(--coral); }
 
 /* Navigation rail (start side) */
 .ld-nav { grid-row: 2; min-height: 0; overflow-y: auto; border-inline-end: 1px solid var(--rule-strong); background: var(--paper); }
@@ -254,7 +250,8 @@
 /* Tablet */
 @media (max-width: 1024px) {
   .ld-header { gap: 12px; }
-  .ld-health { display: none; }
+  /* Small screens drop the all-clear to save room, but a problem always shows. */
+  .ld-health.is-ok { display: none; }
   .ld-chats { grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); }
   .ld-campaign { grid-template-columns: minmax(0, 1fr); }
   .ld-split { grid-template-columns: minmax(0, 1fr); }
@@ -266,8 +263,10 @@
   .ld-brand span { display: none; }
   .ld-header { flex-wrap: wrap; order: 3; flex-basis: 100%; }
   .ld-layla small, .ld-identity bdi { display: none; }
-  .ld-header-actions { margin-inline-start: 0; flex: 1; justify-content: flex-end; }
-  .ld-header-actions .ld-quiet { display: none; }
+  /* Phones: the name keeps its row; a switch reason gets a full line below instead of squeezing it. */
+  .ld-identity { flex: 1 1 auto; }
+  .ld-header .ld-layla-switch { flex: 1 1 100%; order: 2; }
+  .ld-header .ld-switch-note { max-inline-size: none; }
   .ld-nav { grid-row: 2; overflow: visible; border-inline-end: 0; border-bottom: 1px solid var(--rule-strong); z-index: 4; }
   .ld-nav ul { flex-direction: row; padding: 6px; }
   .ld-nav li { flex: 1; min-width: 0; }

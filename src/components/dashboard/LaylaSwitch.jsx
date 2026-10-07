@@ -5,7 +5,7 @@ import React, { useId, useState } from 'react';
  * back and the reason appears beneath it. Used for the whole business (header)
  * and for each channel.
  */
-export function LaylaSwitch({ s, on, label, detail, disabled = false, problem = '', onToggle }) {
+export function LaylaSwitch({ s, on, label, detail, channel, disabled = false, problem = '', onToggle }) {
   const [pending, setPending] = useState(null), [error, setError] = useState('');
   const id = useId();
   const shown = pending ?? !!on;
@@ -13,7 +13,8 @@ export function LaylaSwitch({ s, on, label, detail, disabled = false, problem = 
     const next = event.target.checked;
     setPending(next); setError('');
     try { await onToggle(next); }
-    catch (e) { setError(s.reason(e?.reason)); }
+    // A refusal is worded for the channel that refused (the master switch names it on the error).
+    catch (e) { setError(s.reason(e?.reason, e?.channel || channel)); }
     finally { setPending(null); }
   }
   const note = error || problem;

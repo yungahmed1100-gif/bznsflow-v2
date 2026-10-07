@@ -95,7 +95,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
       <a className="ld-skip" href="#ld-main">{s.ar ? 'تخطَّ إلى المحتوى' : 'Skip to content'}</a>
       <header className="ld-top">
         <a className="ld-brand" href={setupPath(lang)} aria-label="BznsFlow"><img src={logoImg} alt="" width="32" height="32" /><span>BznsFlow</span></a>
-        {data && !previewIndustry && <DashboardHeader s={s} data={data} onChange={() => overview.refresh({ quiet: true })} />}
+        {data && !previewIndustry && <DashboardHeader s={s} data={data} onChange={() => overview.refresh({ quiet: true })} onOpenChannels={() => go('settings', { view: 'channels' })} />}
         {account?.email?.trim().toLowerCase() === 'ahmed@bznsflowai.com' && <a className="ld-button ld-owner-access" href={s.ar ? '/owner' : '/en/owner'}>{s.ar ? 'لوحة الإدارة' : 'Admin dashboard'}</a>}
         <a className="ld-lang" href={`${s.ar ? '/en' : ''}${previewPack ? '/owner/preview/' + previewPack : '/layla/dashboard'}${params.toString() ? `?${params}` : ''}`} lang={s.ar ? 'en' : 'ar'}>{s.t('language')}</a>
       </header>

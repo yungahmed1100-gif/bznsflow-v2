@@ -34,7 +34,7 @@ Already fine: WhatsApp messaging and management approved (advanced), compliance 
 1. ☐ Reviewer `#access=` link in a clean browser → lands on setup, signed in.
 2. ☐ Your business (3 chapters) → tick "I checked these business facts" → **Save and continue** → save to account. That tick is the only review; there is no preview approval.
 3. ☐ Connect your channels → Prepare secure connection → Facebook popup → WABA + number → checklist all ✓.
-4. ☐ **Activate replies first.** Inbound messages before activation are dropped by design.
+4. ☐ **Check that Layla is on.** Since 2026-10-07 she switches on by herself when a channel connects; the Instagram card shows "Layla is replying on Instagram". Messages that arrive while she is off are stored, not answered.
 5. ☐ From another phone: "What are your prices?" → message in the dashboard → Layla's reply delivered (receipt).
 6. ☐ Take over → manual reply → resume.
 7. ☐ Pause → new message → no auto-reply.
@@ -103,7 +103,7 @@ Read-only checks on 2026-09-23:
 7. Enter accurate facts you are willing to approve. Suggested service summary, **only if accurate**: “We help businesses answer customer questions on Instagram and WhatsApp using information approved by the business owner.” Use your real team email; leave unknown hours/prices blank. Do not import a whole website during the recording.
 8. Click **Save and continue** after ticking "I checked these business facts" (the one review). The optional **Test Layla with a question** on the Go live step is a private preview; label it as such, not a live Instagram message. Later edits go in **Dashboard → Business** and apply from the next message.
 9. Save/sign in, connect Instagram, verify the username and check connection. Confirm the customer test DM appears while replies are paused.
-10. Allowlist that test customer's Instagram-scoped ID, separately authorize the real test, enable Instagram sending, and activate replies. Rehearse a fresh inbound DM and verify the reply in the customer's real Instagram app.
+10. Allowlist that test customer's Instagram-scoped ID, separately authorize the real test, enable Instagram sending, and check the Instagram switch is on. Rehearse a fresh inbound DM and verify the reply in the customer's real Instagram app.
 11. Check manual takeover and pause. Check the reviewer sender is also allowed for their later test. Keep credentials/passwords out of recordings and public documents.
 
 Finish all eleven before recording. If a step fails, fix it before capturing the final take.
@@ -138,12 +138,12 @@ Suggested filename: `instagram-business-manage-messages.mp4`.
 | Order | What you do | Caption/narration |
 | --- | --- | --- |
 | 1 | Show sign-in, **Connect/Reconnect Instagram**, real consent, and connected `@bznsflow`. | “The owner grants access to receive and answer their Instagram messages.” |
-| 2 | Show approved facts, connection check, and **Activate replies**. | “The owner decides when automatic replies start.” |
+| 2 | Show approved facts, the connection check, and the Instagram **Layla switch** turning on. | “Layla starts when the owner connects, and the owner decides whether she keeps replying.” |
 | 3 | In @yungramsis21's Instagram, send “What services do you offer?” to `@bznsflow`. | “The customer starts the conversation.” |
 | 4 | Open Blue's inbox, filter Instagram, and open that customer's conversation. | “The customer's message appears in the business's inbox.” |
 | 5 | Show the reply in Blue and then in the customer's real Instagram app. | “The customer receives an answer based on the owner's approved facts.” |
 | 6 | Turn on **Leave this chat for me**. Send a new customer DM, then manually answer it in Blue. Show receipt in Instagram. | “The owner takes over this conversation and replies personally.” |
-| 7 | Open Channels and click **Pause replies**. | “The owner can pause automatic Instagram replies at any time.” |
+| 7 | Open Channels and turn the Instagram **Layla switch** off. | “The owner can stop automatic Instagram replies at any time.” |
 
 Wait for actual receipt; a queued or submitted badge alone is insufficient evidence of delivery. Manual replies must be within the open customer messaging window. Avoid recording unrelated ads, publishing, comments, or WhatsApp campaign screens.
 

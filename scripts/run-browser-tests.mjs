@@ -15,6 +15,7 @@ const SUITES = [
   'tests/review-onboarding-browser.mjs',
   'tests/whatsapp-connect-browser.mjs',
   'tests/instagram-browser.mjs',
+  'tests/layla-switch-browser.mjs',
   'tests/layla-dashboard-browser.mjs',
   'tests/product-setup-browser.mjs',
   'tests/bzns-editor-browser.mjs',
