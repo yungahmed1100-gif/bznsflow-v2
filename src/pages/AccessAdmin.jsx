@@ -12,6 +12,7 @@ export default function AccessAdmin() {
   const [plan, setPlan] = useState('catalyst');
   const [note, setNote] = useState('');
   const [grants, setGrants] = useState([]);
+  const [revoked, setRevoked] = useState([]);
   const [status, setStatus] = useState('Loading access list…');
   const [busy, setBusy] = useState(false);
 
@@ -25,6 +26,7 @@ export default function AccessAdmin() {
     if (!response.ok) { setStatus(data.reason === 'admin_required' ? 'This account cannot manage access.' : 'Could not load access grants.'); return; }
     setAuthorized(true);
     setGrants(data.grants || []);
+    setRevoked((data.revoked || []).filter(row => !(data.grants || []).some(g => g.email === row.email)));
     setStatus('Access list is up to date.');
   }, []);
 
@@ -43,6 +45,8 @@ export default function AccessAdmin() {
       if (!response.ok || !data.ok) throw new Error(data.reason || 'access_unavailable');
       setEmail(''); setNote('');
       await load();
+      // A grant only works once someone signs in with exactly this address; say so while it is fresh.
+      if (method === 'POST' && data.hasAccount === false) setStatus(`Granted to ${data.email}, but no account uses this address yet. Access starts when someone signs up with exactly this email. Check the spelling.`);
     } catch (error) {
       setStatus(error.message === 'admin_required' ? 'This account cannot manage access.' : 'Access update failed. Try again.');
     } finally { setBusy(false); }
@@ -61,10 +65,27 @@ export default function AccessAdmin() {
       <button disabled={busy || !csrf} type="submit" style={buttonStyle}>Grant access</button>
     </form>
     <h2>Active grants</h2>
-    {grants.length ? <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}><thead><tr><th style={cellStyle}>Email</th><th style={cellStyle}>Access</th><th style={cellStyle}>Granted</th><th style={cellStyle}>Note</th><th style={cellStyle}>Action</th></tr></thead><tbody>{grants.map(grant => <tr key={grant.email}><td style={cellStyle}>{grant.email}</td><td style={cellStyle}>{labels[grant.plan] || grant.plan}</td><td style={cellStyle}>{new Date(grant.grantedAt).toLocaleDateString()}</td><td style={cellStyle}>{grant.note}</td><td style={cellStyle}><button disabled={busy} type="button" onClick={() => changeAccess('DELETE', { email: grant.email })}>Revoke</button></td></tr>)}</tbody></table></div> : <p>No active access grants.</p>}</>}
+    {grants.length ? <GrantTable rows={grants} action="Revoke" busy={busy} onAction={grant => changeAccess('DELETE', { email: grant.email })} /> : <p>No active access grants.</p>}
+    {revoked.length > 0 && <><h2>Revoked</h2>
+      <GrantTable rows={revoked} action="Grant again" busy={busy} onAction={grant => changeAccess('POST', { email: grant.email, plan: grant.plan, ...(grant.packId ? { packId: grant.packId } : {}) })} /></>}</>}
     <p role="status" aria-live="polite">{status}</p>
     {!authorized && <Link to="/signin">Sign in</Link>}
   </main>;
+}
+
+// "Signed up" matters: a grant does nothing until someone signs in with exactly that address.
+function GrantTable({ rows, action, busy, onAction }) {
+  return <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+    <thead><tr>{['Email', 'Access', 'Signed up', 'Date', 'Note', 'Action'].map(h => <th key={h} style={cellStyle}>{h}</th>)}</tr></thead>
+    <tbody>{rows.map(grant => <tr key={grant.email}>
+      <td style={cellStyle}>{grant.email}</td>
+      <td style={cellStyle}>{labels[grant.plan] || grant.plan}</td>
+      <td style={{ ...cellStyle, ...(grant.hasAccount ? {} : { color: '#9c2e35', fontWeight: 600 }) }}>{grant.hasAccount ? 'Yes' : 'No account with this email yet'}</td>
+      <td style={cellStyle}>{new Date(grant.status === 'revoked' && grant.revokedAt ? grant.revokedAt : grant.grantedAt).toLocaleDateString()}</td>
+      <td style={cellStyle}>{grant.note}</td>
+      <td style={cellStyle}><button disabled={busy} type="button" onClick={() => onAction(grant)}>{action}</button></td>
+    </tr>)}</tbody>
+  </table></div>;
 }
 
 const inputStyle = { display: 'block', boxSizing: 'border-box', width: '100%', marginTop: 6, padding: '12px 14px', border: '1px solid #a5a8b2', borderRadius: 8, font: 'inherit' };

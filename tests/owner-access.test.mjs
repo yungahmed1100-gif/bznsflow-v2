@@ -70,3 +70,19 @@ test('a grant made before signup applies at first sign-in by code or OAuth, and 
  const after=await executeBlueAuth(m.ctx,{operation:'session',tokenHash:h('e')},now);
  assert.equal(after.value.email,'new.ascend@example.com');assert.equal(after.value.accessPlan,null);
 });
+test('the access list shows whether each address has signed up, and keeps revoked addresses visible', async () => {
+  // 2026-10-07: access was revoked for the address that signs in and re-granted to a near-identical
+  // address with no account. Both facts were invisible: revoked rows vanished and no row said "no account".
+  const m = convexMemory(); const now = m.now();
+  const actor = await m.db.insert('accounts', { email: 'ahmed@bznsflowai.com' });
+  await m.db.insert('sessions', { accountId: actor, tokenHash: token, expiresAt: now + 1000 });
+  await m.db.insert('accounts', { email: 'owner@example.com' });
+  const act = args => executeAccess(m.ctx, { sessionHash: token, ...args }, now);
+  assert.equal((await act({ operation: 'grant', email: 'owner@example.com', plan: 'catalyst' })).value.hasAccount, true);
+  assert.equal((await act({ operation: 'revoke', email: 'owner@example.com' })).ok, true);
+  const typo = await act({ operation: 'grant', email: 'owner1100@example.com', plan: 'ascend' });
+  assert.equal(typo.value.hasAccount, false, 'granting an address nobody signs in with is flagged at once');
+  const { grants, revoked } = (await act({ operation: 'list' })).value;
+  assert.deepEqual(grants.map(g => [g.email, g.hasAccount]), [['owner1100@example.com', false]]);
+  assert.deepEqual(revoked.map(g => [g.email, g.hasAccount, g.plan]), [['owner@example.com', true, 'catalyst']]);
+});

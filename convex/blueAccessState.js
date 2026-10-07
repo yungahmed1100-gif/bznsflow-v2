@@ -12,8 +12,14 @@ export async function executeAccess(ctx, args, now = Date.now()) {
     if (!actor || normalize(actor.email) !== ADMIN_EMAIL) return { ok: false, reason: 'admin_required' };
 
     if (args.operation === 'list') {
-      const rows = await ctx.db.query('blueAccessGrants').withIndex('by_status', q => q.eq('status', 'active')).take(200);
-      return { ok: true, value: { grants: rows.map(({ email, plan, status, grantedAt, grantedBy, note, packId }) => ({ email, plan, status, grantedAt, grantedBy, packId, note: note || '' })) } };
+      // A grant only works once someone signs up with exactly that address, so each row says
+      // whether an account exists. Revoked grants stay listed, so a revoked address never just vanishes.
+      const signedUp = async email => !!await ctx.db.query('accounts').withIndex('by_email', q => q.eq('email', email)).unique();
+      const view = async ({ email, plan, status, grantedAt, grantedBy, note, packId, revokedAt }) =>
+        ({ email, plan, status, grantedAt, grantedBy, packId, revokedAt, note: note || '', hasAccount: await signedUp(email) });
+      const active = await ctx.db.query('blueAccessGrants').withIndex('by_status', q => q.eq('status', 'active')).take(200);
+      const revoked = await ctx.db.query('blueAccessGrants').withIndex('by_status', q => q.eq('status', 'revoked')).take(200);
+      return { ok: true, value: { grants: await Promise.all(active.map(view)), revoked: await Promise.all(revoked.map(view)) } };
     }
 
     const email = normalize(args.email || '');
@@ -41,7 +47,7 @@ export async function executeAccess(ctx, args, now = Date.now()) {
         else await ctx.db.insert('hasibSettings', { accountId: account._id, ...DEFAULT_SETTINGS, packId: args.packId, updatedAt: now });
       }
       await ctx.db.insert('blueAccessAudit', { ...sector, email, action: 'grant', plan: args.plan, actorEmail: ADMIN_EMAIL, ...(note ? { note } : {}), at: now });
-      return { ok: true, value: { email, plan: args.plan, status: 'active' } };
+      return { ok: true, value: { email, plan: args.plan, status: 'active', hasAccount: !!account } };
     }
 
     if (current?.status === 'active') await ctx.db.patch(current._id, { status: 'revoked', revokedAt: now, revokedBy: ADMIN_EMAIL });

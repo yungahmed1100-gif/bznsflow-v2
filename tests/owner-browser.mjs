@@ -17,7 +17,12 @@ async function open(path, width, access = 200) {
     if (url.origin !== new URL(base).origin) return route.abort();
     if (!url.pathname.startsWith('/api/')) return route.continue();
     const reply = (data, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ ok: status === 200, csrfToken: 'a'.repeat(64), ...data }) });
-    if (url.pathname === '/api/access-admin') return reply(access === 200 ? { grants: [] } : { reason: access === 401 ? 'sign_in_required' : 'admin_required' }, access);
+    if (url.pathname === '/api/access-admin') {
+      if (req.method() === 'POST') { writes.push(req.postDataJSON()); return reply({ email: req.postDataJSON().email, plan: req.postDataJSON().plan, status: 'active', hasAccount: false }); }
+      // The 2026-10-07 mix-up: the signed-in address revoked, a near-identical one with no account granted.
+      return reply(access === 200 ? { grants: [{ email: 'owner1100@example.com', plan: 'ascend', status: 'active', grantedAt: 1, packId: 'real-estate', note: '', hasAccount: false }],
+        revoked: [{ email: 'owner@example.com', plan: 'catalyst', status: 'revoked', grantedAt: 1, revokedAt: 2, note: '', hasAccount: true }] } : { reason: access === 401 ? 'sign_in_required' : 'admin_required' }, access);
+    }
     if (url.pathname === '/api/auth-session') return reply({ account: access === 401 ? null : { email: access === 200 ? ' AHMED@BZNSFLOWAI.COM ' : 'other@example.com' } });
     const body = req.postDataJSON(), surface = url.searchParams.get('surface');
     const pack = body?.previewIndustry || url.searchParams.get('previewIndustry');
@@ -36,6 +41,18 @@ try {
     assert.equal(await page.locator('form').count(), 0);
     assert.equal(await page.locator('a[href*="/owner/preview/"]').count(), 0);
     await context.close(); checked++;
+  }
+  // Access page: an address nobody signs in with is flagged, and a revoked address stays one press away.
+  for (const width of [320, 1280]) {
+    const { page, context, errors, writes } = await open('/owner/access', width);
+    await page.getByText('No account with this email yet').waitFor();
+    await page.getByRole('heading', { name: 'Revoked' }).waitFor();
+    await page.getByRole('button', { name: 'Grant again' }).click();
+    await page.getByText(/no account uses this address yet/).waitFor();
+    assert.deepEqual(writes.at(-1), { email: 'owner@example.com', plan: 'catalyst' });
+    const issues = (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact));
+    assert.deepEqual(issues.map(v => v.id), [], `access page ${width} accessibility`);
+    assert.deepEqual(errors, []); await context.close(); checked++;
   }
   for (const lang of ['en', 'ar']) {
     const prefix = lang === 'en' ? '/en' : '';
