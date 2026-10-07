@@ -160,7 +160,7 @@ test('connect subscribes with the fields in the query, and finishes when Meta co
   const r=response();
   await createInstagramApi({env,store,fetcher,accounts:async()=>({id:'a',draftHash:'d'.repeat(64)})})({method:'GET',url:`/api/layla-meta?code=one-use&state=${state}`,headers:{host:'www.bznsflowai.com',cookie:`bf_session=${'f'.repeat(64)}`}},r,'instagram-callback');
   const subscribe=calls.find(x=>x.method==='POST' && x.url.includes('/subscribed_apps'));
-  assert.equal(new URL(subscribe.url).searchParams.get('subscribed_fields'),'messages','Meta documents the fields as a query parameter');
+  assert.equal(new URL(subscribe.url).searchParams.get('subscribed_fields'),'messages,messaging_postbacks','Meta documents the fields as a query parameter; postbacks carry ice breakers');
   assert.equal(new URL(r.headers.Location).searchParams.get('instagram'),'connected');
   assert.equal(ops.find(o=>o.op==='checked').args.connected,true);
 });

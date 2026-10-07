@@ -110,8 +110,9 @@ export async function inspectInstagram({c,integration,token,fetcher=fetch}) {
   if (!connected) console.warn('instagram_subscription_check',JSON.stringify({expected:ours,found:apps.slice(0,5).map(a=>({id:String(a.id ?? a.app_id ?? ''),fields:fields(a)}))}));
   return {connected,reason:connected?null:'subscription'};
 }
-// Meta documents subscribed_fields as a query parameter on this POST.
-export const subscribeInstagram=(c,igAccount,token,fetcher)=>instagramGraph(c,`${igAccount}/subscribed_apps?subscribed_fields=messages`,token,fetcher,undefined,'POST');
+// Meta documents subscribed_fields as a query parameter on this POST. Postbacks carry
+// tapped ice breakers and buttons, which Layla answers like typed text.
+export const subscribeInstagram=(c,igAccount,token,fetcher)=>instagramGraph(c,`${igAccount}/subscribed_apps?subscribed_fields=messages,messaging_postbacks`,token,fetcher,undefined,'POST');
 
 // The Send API call itself. It returns Meta's raw answer and lets a network
 // failure throw: after a send has started, only the caller can decide the
