@@ -192,6 +192,13 @@ export function createMessagingApi({env=process.env,fetcher=fetch,store=messagin
         if(body.conversationId) channel=(await store('context',{sessionHash,conversationId:body.conversationId})).channel || 'whatsapp';
         args={sessionHash,...(body.confirm===true?{confirm:true}:{}),...(channel==='instagram'?{channel}:{}),...(body.conversationId?{conversationId:body.conversationId}:{}),...(body.text?{text:body.text}:{}),...(body.requestId?{requestId:body.requestId}:{})};
         if(['activate','manual_reply'].includes(operation) && !(channel==='instagram'?instagramMessagingEnabled(env):whatsappMessagingEnabled(env))) throw new PilotError('messaging_unavailable',503);
+        // Layla switches on by herself once, right after a channel connects. Any earlier choice
+        // (on, or paused by the owner) is answered from state without asking Meta again.
+        if(operation==='activate' && body.auto===true) {
+          const current=await store('state',{sessionHash,...(channel==='instagram'?{channel}:{})});
+          if(current.reason!=='not_activated') return send(res,200,{ok:true,...current,skipped:true,csrfToken:ensureCsrfToken(req,res)},{vary:'Cookie'});
+          args.auto=true;
+        }
         if(channel==='instagram' && (operation==='activate' || body.action==='check_connection')) await verifyInstagram({sessionHash,env,fetcher,instagram});
         if(channel!=='instagram' && (operation==='activate' || body.action==='check_connection')) {
           const row=await reviews('get',{sessionHash});

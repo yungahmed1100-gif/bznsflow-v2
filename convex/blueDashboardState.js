@@ -4,7 +4,7 @@
 import { publicInstagram } from './blueInstagramState.js';
 import { resolveTenant, ownsIntegration, owned, encodeCursor, decodeCursor, afterCursor } from './blueTenant.js';
 import { DAY, catalogForFields, deleteContact, linkConversation, ownerContactPatch, publicContact, sectorFor } from './blueContacts.js';
-import { messagingReady, executeMessaging, stopQueuedJobs } from './blueMessagingState.js';
+import { messagingReady, executeMessaging, stopQueuedJobs, RATE_LIMITS } from './blueMessagingState.js';
 import { packDescription } from '../config/layla-qualification.js';
 import { renderTemplate } from '../config/layla-templates.js';
 import { planFor } from './hasib/plans.js';
@@ -36,7 +36,7 @@ async function messagingState(ctx, tenant, now) {
   const rate = tenant.integration && await ctx.db.query('blueMessageRates').withIndex('by_key', q => q.eq('key', `day:${tenant.integration.id}:${Math.floor(now / DAY)}`)).unique();
   return { available: enabled, active, broadcastAvailable: broadcast?.enabled === true,
     reason: !enabled ? 'messaging_unavailable' : active ? '' : control?.reason || (control?.active ? 'activation_not_ready' : 'not_activated'),
-    limits: { perMinute: 10, perDay: 100, usedToday: rate?.count || 0 } };
+    limits: { perMinute: RATE_LIMITS.perMinute, perDay: RATE_LIMITS.perDay, usedToday: rate?.count || 0 } };
 }
 
 async function lastMessage(ctx, conversationId, now) {

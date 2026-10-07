@@ -260,8 +260,8 @@ export function explain(reason, lang = "en") {
 // `reason` is allowlisted server-side (INSTAGRAM_CALLBACK_REASONS).
 const INSTAGRAM_RETURN = {
   connected: {
-    en: "Instagram connected. Review your answers, then activate replies below.",
-    ar: "تم ربط إنستغرام. راجع إجاباتك ثم فعّل الردود أدناه.",
+    en: "Instagram connected. Layla is switching on for your Instagram messages.",
+    ar: "تم ربط إنستغرام. ليلى تبدأ الرد على رسائل إنستغرام.",
   },
   cancelled: {
     en: "Instagram connection was cancelled. You can connect again below whenever you are ready.",

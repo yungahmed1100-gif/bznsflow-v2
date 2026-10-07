@@ -22,13 +22,13 @@ async function catalyst() {
   return { h, a };
 }
 
-test('a Layla-only account is Catalyst: chats, customers and handoff, no operations or bulk tools', async () => {
+test('a Layla-only account is Catalyst: chats, customers, handoff, broadcasts and contact imports, no operations or exports', async () => {
   const { h, a } = await catalyst();
   const o = (await h.dashboard('overview', { sessionHash: a.sessionHash })).value;
   assert.equal(o.plan, 'catalyst');
   assert.equal(o.workspaceRole, 'manager');
-  for (const key of ['chats', 'customers', 'customerDelete', 'humanHandoff', 'businessDetails', 'channelsSetup']) assert.equal(o.capabilities[key], true, key);
-  for (const key of ['operations', 'money', 'insights', 'approvals', 'exports', 'imports', 'broadcasts', 'team']) assert.notEqual(o.capabilities[key], true, key);
+  for (const key of ['chats', 'customers', 'customerDelete', 'humanHandoff', 'businessDetails', 'channelsSetup', 'broadcasts', 'imports']) assert.equal(o.capabilities[key], true, key);
+  for (const key of ['operations', 'money', 'insights', 'approvals', 'exports', 'team']) assert.notEqual(o.capabilities[key], true, key);
   const hasib = await executeHasib(h.m.ctx, { operation: 'overview', sessionHash: a.sessionHash, hashSecret: SECRET }, h.m.now());
   assert.equal(hasib.reason, 'plan_required');
 });
@@ -56,7 +56,7 @@ test('the Catalyst owner journey: a customer writes, the owner reads, takes over
   assert.deepEqual((await h.dashboard('contacts', { sessionHash: a.sessionHash })).value.items, []);
 });
 
-test('the server refuses Catalyst exports, imports and broadcasts with plan_required', async () => {
+test('the server refuses Catalyst exports with plan_required, and allows imports and broadcasts to the manager only', async () => {
   const { h, a } = await catalyst();
   await h.inbound(a, { from: '96891111111', text: 'Hello' });
   const [chat] = (await h.dashboard('conversations', { sessionHash: a.sessionHash })).value.items;
@@ -65,7 +65,8 @@ test('the server refuses Catalyst exports, imports and broadcasts with plan_requ
   }
   const caps = capabilitiesFor('catalyst');
   for (const operation of ['import_contacts', 'templates', 'campaign_preview', 'campaign_create', 'campaign_cancel']) {
-    assert.equal(dashboardGate(operation, caps, 'manager'), 'plan_required', operation);
+    assert.equal(dashboardGate(operation, caps, 'manager'), null, operation);
+    assert.equal(dashboardGate(operation, capabilitiesFor('catalyst', 'employee'), 'employee'), 'manager_required', operation);
   }
   assert.equal(dashboardGate('conversations', caps, 'manager'), null);
   const ascend = capabilitiesFor('ascend');
@@ -73,13 +74,13 @@ test('the server refuses Catalyst exports, imports and broadcasts with plan_requ
   assert.equal(dashboardGate('import_contacts', capabilitiesFor('ascend', 'employee'), 'employee'), 'manager_required');
 });
 
-test('the Catalyst dashboard shows only Chats, Customers and Settings, and hides every gated control', () => {
+test('the Catalyst dashboard shows Chats, Customers (with broadcasts) and Settings, and hides exports', () => {
   const caps = capabilitiesFor('catalyst');
   const map = dashboardMap(null, caps);
   assert.deepEqual(map.sections, ['chats', 'customers', 'settings']);
-  assert.deepEqual(map.views.customers, ['contacts']);
+  assert.deepEqual(map.views.customers, ['contacts', 'broadcast']);
   const p = dashboardPermissions({ capabilities: caps, workspaceRole: 'manager' });
-  assert.deepEqual(p, { canExport: false, canImport: false, canBroadcast: false, canDeleteCustomer: true });
+  assert.deepEqual(p, { canExport: false, canImport: true, canBroadcast: true, canDeleteCustomer: true });
   const ascend = dashboardPermissions({ capabilities: capabilitiesFor('ascend'), workspaceRole: 'manager' });
   assert.deepEqual(ascend, { canExport: true, canImport: true, canBroadcast: true, canDeleteCustomer: true });
   const employee = dashboardPermissions({ capabilities: capabilitiesFor('ascend', 'employee'), workspaceRole: 'employee' });

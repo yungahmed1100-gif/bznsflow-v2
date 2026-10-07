@@ -38,7 +38,7 @@ try {
       return route.continue();
     });
     await page.goto(`${BASE}/${ar ? '' : 'en/'}layla/setup`);
-    await page.getByRole('heading', { name: t('Connect your channels', 'ربط قنواتك'), exact: true }).waitFor();
+    await page.getByRole('heading', { name: t('Connect a channel', 'اربط قناة'), exact: true }).waitFor();
     assert.equal(calls.includes('begin'), false, 'no Meta attempt before the customer asks for WhatsApp'); checks++;
     const card = page.getByRole('region', { name: 'WhatsApp', exact: true });
     await card.getByRole('button', { name: t('Connect WhatsApp', 'ربط واتساب'), exact: true }).click();

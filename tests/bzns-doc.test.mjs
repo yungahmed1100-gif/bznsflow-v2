@@ -140,3 +140,20 @@ test('the tone line picks Layla\'s style; missing or unknown falls back to Infor
   assert.match(setMeta('## What we offer\n- x', 'tone', 'sweet'), /^---\ntone: sweet\n---\n\n## What we offer/);
   assert.doesNotThrow(() => validateReviewProfile(deriveProfile(parseBzns(sharp)).profile));
 });
+
+test('a Team contact section becomes the contact Layla gives a customer who asks for a person', async () => {
+  const { answer } = await import('../api/_lib/layla/domain.js');
+  const doc = (contact) => `---\nname: Qurum Coast\nsector: real-estate\ntone: informative\n---\n# Qurum Coast\n## About us\nFamily agency.\n## What we offer\n- Rentals\n${contact}`;
+  const withContact = deriveProfile(validateBzns(doc('## Team contact\nWhatsApp +968 9123 4567 (Huda)\n')).parsed).profile;
+  assert.equal(withContact.teamContact, 'WhatsApp +968 9123 4567 (Huda)', 'a phone number is not mistaken for a price');
+  assert.equal(withContact.humanContact, '', 'kept apart from any legacy contact');
+  assert.equal(withContact.handoffMode, 'inbox', 'the chat still waits in the owner’s inbox');
+  assert.match(answer('I want to talk to a person', { ...withContact, businessName: 'Qurum Coast' }, true).text, /WhatsApp \+968 9123 4567 \(Huda\)$/);
+  const arabic = deriveProfile(validateBzns(doc('## جهة اتصال الفريق\nواتساب 96891234567\n')).parsed).profile;
+  assert.equal(arabic.teamContact, 'واتساب 96891234567');
+  // Without the section Layla only promises a reply in the chat, and other answers never carry a contact.
+  const none = deriveProfile(validateBzns(doc('')).parsed).profile;
+  assert.equal(none.teamContact, undefined);
+  assert.equal(answer('I want to talk to a person', { ...none, businessName: 'Qurum Coast' }, true).text, 'I’ll leave this conversation for our team to follow up here.');
+  assert.doesNotMatch(answer('what is the price of a 3 bedroom villa', { ...withContact, businessName: 'Qurum Coast' }, true).text, /9123/);
+});

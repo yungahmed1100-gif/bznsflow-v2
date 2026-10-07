@@ -49,7 +49,7 @@ try {
     }
   }
 
-  // 2. Gated controls are not shown to a Catalyst owner.
+  // 2. Exports stay gated for a Catalyst owner; adding contacts and broadcasting are included.
   {
     const { page, context } = await open(1440, 'en', '/layla/dashboard?tab=chats');
     await page.getByText('Salma Al Harthy').first().waitFor();
@@ -59,7 +59,10 @@ try {
     assert.equal(await page.getByText(/^Export$/).count(), 0, 'no export in a chat'); count++;
     await page.goto(`${BASE}/en/layla/dashboard?tab=customers`);
     await page.getByRole('heading', { name: 'Contacts' }).waitFor();
-    assert.equal(await page.getByRole('button', { name: /import|export|download/i }).count(), 0, 'no import or export on Customers'); count++;
+    assert.equal(await page.getByRole('button', { name: /export|download/i }).count(), 0, 'no export on Customers'); count++;
+    // Catalyst adds contacts (upload a number list or type them in) and messages many at once.
+    assert.equal(await page.getByRole('button', { name: 'Add or import' }).count(), 1, 'contacts can be added'); count++;
+    assert.equal(await page.getByRole('link', { name: 'Message many' }).count(), 1, 'broadcasts are part of Catalyst'); count++;
     await context.close();
   }
 

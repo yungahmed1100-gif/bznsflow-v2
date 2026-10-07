@@ -31,7 +31,6 @@ export function AfterConnect({ tr }) {
     <h4 id="layla-after-heading">{tr('Connected ✓ What’s next', 'تم الربط ✓ ما التالي')}</h4>
     <ol>
       <li>{tr('Meta shows whether this account needs a payment method and any WhatsApp charges. Check its billing settings for current details.', 'تعرض Meta ما إذا كان هذا الحساب يحتاج إلى وسيلة دفع وأي رسوم على واتساب. راجع إعدادات الفوترة للتفاصيل الحالية.')} <a href="https://business.facebook.com/billing_hub/payment_settings" target="_blank" rel="noopener noreferrer">{tr('Open billing settings', 'فتح إعدادات الفوترة')}</a></li>
-      <li>{tr('Turn Layla’s replies on in the next step.', 'فعّل ردود ليلى في الخطوة التالية.')}</li>
       <li>{tr('Test it: send “hi” to your shop from another phone and watch Layla answer.', 'جرّبها: أرسل «مرحبا» إلى متجرك من هاتف آخر وشاهد ليلى ترد.')}</li>
     </ol>
     <p className="layla-help">{tr('Keep using WhatsApp Business on your phone as usual.', 'استمر في استخدام واتساب للأعمال على هاتفك كالمعتاد.')}</p>

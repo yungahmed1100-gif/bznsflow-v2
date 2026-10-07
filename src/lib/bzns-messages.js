@@ -6,6 +6,7 @@ const SECTION_LABELS = {
   hours: ['Hours', 'ساعات العمل'],
   location: ['Location', 'الموقع'],
   handoff: ['When to hand over to the team', 'متى تحوّل ليلى للفريق'],
+  contact: ['Team contact for customers who ask for a person', 'جهة اتصال الفريق لمن يطلب التحدث مع شخص'],
   faq: ['FAQ', 'الأسئلة الشائعة'],
   areas: ['Areas we cover', 'المناطق التي نغطيها'],
   meta: ['the name and sector lines at the top', 'سطري الاسم والقطاع في الأعلى'],

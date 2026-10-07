@@ -98,7 +98,8 @@ try {
     assert.equal(await publish.isDisabled(), true, 'publishing needs the owner to confirm'); checks++;
     await editor.getByLabel(t('I checked these business details', 'راجعت معلومات النشاط هذه')).check();
     await publish.click();
-    await page.getByRole('heading', { name: t('Replies and human handoffs', 'الردود والتحويل للفريق') }).waitFor(); checks++;
+    // Publishing goes straight to connecting a channel; there is no reading-only step in between.
+    await page.getByRole('heading', { name: t('Connect a channel', 'اربط قناة') }).waitFor(); checks++;
     const sent = writes.find(w => w.action === 'bzns_publish');
     assert.equal(sent.version, 1); assert.equal(sent.markdown, setMeta(valid[lang], 'tone', 'sweet')); checks++;
     assert.equal(deriveProfile(validateBzns(sent.markdown).parsed).profile.tone, 'sweet'); checks++;

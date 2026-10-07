@@ -45,10 +45,14 @@ export { classifyWithGuard };
 export function answer(text, profile, introduced = false) {
   const lang = langOf(text), ar = lang === 'ar', intent = classify(text, profile), tone = profile.tone;
   const say = (key, vars) => phrase(tone, key, lang, { business: profile.businessName || 'BznsFlow', ...vars });
-  const contact = profile.handoffMode === 'inbox' || !profile.humanContact ? '' : say('contactSuffix', { contact: profile.humanContact });
+  // Inbox mode offers only the bzns.md team contact, and only to a customer who asks for a person.
+  // A legacy humanContact kept from an older setup is never advertised there.
+  const shared = profile.handoffMode === 'inbox' ? profile.teamContact : profile.humanContact;
+  const teamContact = shared ? say('contactSuffix', { contact: shared }) : '';
+  const contact = profile.handoffMode === 'inbox' ? '' : teamContact;
   let reply;
   if (intent === 'optout') return { intent, text: null };
-  if (intent === 'human') reply = say(profile.handoffMode === 'inbox' ? 'handoffInbox' : 'handoffContact');
+  if (intent === 'human') reply = profile.handoffMode === 'inbox' ? say('handoffInbox') + teamContact : say('handoffContact');
   else if (intent === 'negotiation' || intent === 'abuse') reply = say(intent);
   else if (intent === 'disabled') reply = say('disabled');
   else if (intent === 'thanks') reply = say('youreWelcome');

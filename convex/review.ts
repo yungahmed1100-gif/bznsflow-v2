@@ -1,7 +1,7 @@
 import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import { detachIntegration, executeReview, resetAttempts } from './reviewState.js';
-export const profile = v.object({ businessName: v.string(), sector: v.string(), services: v.string(), prices: v.string(), hours: v.string(), location: v.string(), humanContact: v.string(), handoffMode:v.optional(v.literal('inbox')),tone:v.optional(v.union(v.literal('sharp'),v.literal('sweet'),v.literal('informative'))), faqs:v.optional(v.array(v.object({question:v.string(),answer:v.string()}))), reviewed: v.boolean() });
+export const profile = v.object({ businessName: v.string(), sector: v.string(), services: v.string(), prices: v.string(), hours: v.string(), location: v.string(), humanContact: v.string(), handoffMode:v.optional(v.literal('inbox')),teamContact:v.optional(v.string()),tone:v.optional(v.union(v.literal('sharp'),v.literal('sweet'),v.literal('informative'))), faqs:v.optional(v.array(v.object({question:v.string(),answer:v.string()}))), reviewed: v.boolean() });
 export const path = v.union(v.literal('coexistence'), v.literal('new_number'), v.literal('existing_cloud'));
 export const integration = v.object({ id: v.string(), app: v.string(), waba: v.string(), phone: v.string(), sender: v.string(), path, credential: v.object({ v: v.number(), iv: v.string(), data: v.string(), tag: v.string() }) });
 export const execute = internalMutation({ args: {

@@ -1,7 +1,9 @@
 // One server-owned package matrix. The browser may hide controls for usability,
 // but every protected operation is checked against this matrix in Convex.
 export const PLAN_CAPABILITIES = Object.freeze({
-  catalyst: Object.freeze({ chats: true, customers: true, customerDelete: true, humanHandoff: true, businessDetails: true, channelsSetup: true }),
+  // Catalyst broadcasts, and adds recipients by uploading a number list or typing numbers in (Ahmed, 2026-10-07).
+  // Exports stay with Ascend and Apex.
+  catalyst: Object.freeze({ chats: true, customers: true, customerDelete: true, humanHandoff: true, businessDetails: true, channelsSetup: true, broadcasts: true, imports: true }),
   ascend: Object.freeze({ chats: true, customers: true, customerDelete: true, humanHandoff: true, businessDetails: true, channelsSetup: true,
     realEstate: true, automotive: true, operations: true, money: true, insights: true, approvals: true, exports: true, imports: true, broadcasts: true, team: true, settings: true }),
   apex: Object.freeze({ chats: true, customers: true, customerDelete: true, humanHandoff: true, businessDetails: true, channelsSetup: true,

@@ -147,7 +147,9 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       await ctx.db.patch(row._id,{integration:undefined,phone:undefined,waba:undefined,connectionChecks:undefined,checkedAt:undefined,status:'draft',attempt:undefined,operation:undefined,operationAt:undefined,operationEffect:undefined,pendingSelection:undefined,diagnostic:undefined,subscriptionAttempted:undefined,registrationAttempted:undefined});
       return ok({disconnected:true});
     }
-    if(a.operation==='activate') {
+    // An automatic switch-on (right after connecting) never overrides a choice the owner already made.
+    if(a.operation==='activate' && a.auto===true && control && (control.active || control.reason!=='not_activated')) {}
+    else if(a.operation==='activate') {
       if(!enabled) return fail('messaging_unavailable');
       const uncertain=await ctx.db.query('blueMessages').withIndex('by_integration_status',q=>q.eq('integrationId',row.integration.id).eq('status','ambiguous')).take(1);
       if(uncertain.length) return fail('send_outcome_unknown');
@@ -192,7 +194,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     const msgs=await ctx.db.query('blueMessages').withIndex('by_account_at',q=>q.eq('accountId',row.accountId)).order('desc').take(100);
     const rate=await find('blueMessageRates','by_key','key',`day:${row.integration.id}:${Math.floor(now/DAY)}`);
     const active=enabled && control?.active===true && ready(row);
-    return ok({available:enabled,active,reason:!enabled?'messaging_unavailable':active?'':control?.reason || (control?.active?'activation_not_ready':'not_activated'),limits:{perMinute:10,perDay:100,usedToday:rate?.count || 0},conversations:people.map(p=>({id:p._id,number:p.number,takeover:p.takeover,optout:p.optout,lastInbound:p.lastInbound})),messages:msgs.reverse().map(m=>({id:m._id,conversationId:m.conversationId,direction:m.direction,text:m.textExpiresAt>now?m.text:undefined,status:m.status,reason:m.reason,at:m.at}))});
+    return ok({available:enabled,active,reason:!enabled?'messaging_unavailable':active?'':control?.reason || (control?.active?'activation_not_ready':'not_activated'),limits:{perMinute:RATE_LIMITS.perMinute,perDay:RATE_LIMITS.perDay,usedToday:rate?.count || 0},conversations:people.map(p=>({id:p._id,number:p.number,takeover:p.takeover,optout:p.optout,lastInbound:p.lastInbound})),messages:msgs.reverse().map(m=>({id:m._id,conversationId:m.conversationId,direction:m.direction,text:m.textExpiresAt>now?m.text:undefined,status:m.status,reason:m.reason,at:m.at}))});
   }
   if(a.operation==='ingest') {
     const control=await controls(a.integrationId);

@@ -15,7 +15,9 @@ test('Convex dashboard entry admits Catalyst chats but keeps paid operations and
   const a = await seedTenant(h.m, { plan: 'catalyst' });
   const call = operation => execute._handler(h.m.ctx, { operation, sessionHash: a.sessionHash, actorAccountId: a.accountId });
   for (const operation of ['overview', 'conversations', 'contacts']) assert.equal((await call(operation)).ok, true, operation);
-  for (const operation of ['export_account', 'import_contacts', 'campaigns']) assert.equal((await call(operation)).reason, 'plan_required', operation);
+  assert.equal((await call('export_account')).reason, 'plan_required');
+  // Catalyst broadcasts and imports contacts (an empty import is refused for its content, not the plan).
+  for (const operation of ['import_contacts', 'campaigns']) assert.notEqual((await call(operation)).reason, 'plan_required', operation);
   const outsider = await seedTenant(h.m, { name: 'b', plan: 'ascend' });
   assert.equal((await execute._handler(h.m.ctx, { operation: 'overview', sessionHash: a.sessionHash, actorAccountId: outsider.accountId })).reason, 'workspace_access_revoked');
   const grant = h.m.table('blueAccessGrants')[0];

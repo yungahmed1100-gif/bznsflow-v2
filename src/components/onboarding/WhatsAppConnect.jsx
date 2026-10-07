@@ -16,13 +16,20 @@ export function whatsappRequirements({ data, available, reviewMode }) {
   ];
 }
 
+// Meta's display-name review status in words an owner understands.
+function nameStatus(tr, status) {
+  if (['APPROVED', 'AVAILABLE_WITHOUT_REVIEW'].includes(status)) return tr('approved', 'معتمد');
+  if (['PENDING_REVIEW', 'NONE', 'UNKNOWN'].includes(status)) return tr('under review by Meta', 'قيد المراجعة لدى Meta');
+  return tr('not approved — check it in WhatsApp Manager', 'غير معتمد — راجعه في مدير واتساب');
+}
+
 function PathChoice({ tr, path, value, onChange, children }) {
   return <label className="layla-choice"><input type="radio" name="number-path" checked={path === value} onChange={() => onChange(value)} /><span>{children}</span></label>;
 }
 
 // WhatsApp card on the channels step: number type, Meta's signup window, the
 // verification checklist and the new-number registration PIN.
-export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim, data, busy, available, reviewMode, prepared, preparing, path, onPathChange, preselect, onPreselectChange, onPrepare, onConnect, onCancelAttempt, run, act, request, applyState }) {
+export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim, liveSwitch = null, data, busy, available, reviewMode, prepared, preparing, path, onPathChange, preselect, onPreselectChange, onPrepare, onConnect, onCancelAttempt, run, act, request, applyState }) {
   const [pin, setPin] = useState('');
   const [businessApp, setBusinessApp] = useState(false);
   const [appReady, setAppReady] = useState(false);
@@ -35,6 +42,8 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
     meta: tr('WhatsApp connection available', 'ربط واتساب متاح'),
   };
   const integration = data?.integration;
+  const live = ['connected', 'paused'].includes(integration?.status);
+  const checksOk = !!(data?.connectionChecks?.path && data.connectionChecks.registered && data.connectionChecks.routing);
   const ownPrepared = prepared && prepared.path === path;
   const register = event => {
     event.preventDefault();
@@ -55,16 +64,18 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
       {!integration && errorNote}
       <button className="layla-secondary" disabled={busy} onClick={() => run({ action: 'cancel_selection' })}>{tr('Cancel this selection', 'إلغاء الاختيار')}</button>
     </section>}
-    {data?.connectionChecks && <ul className="layla-checklist">{[['path', tr('Number type verified', 'التحقق من نوع الرقم')], ['registered', tr('Number registered', 'تسجيل الرقم')], ['routing', tr('Blue connection verified', 'التحقق من ربط Blue')]].map(([key, label]) => <li key={key} data-ok={data.connectionChecks[key] ? '' : undefined}>{label}<span className="ld-visually-hidden">{data.connectionChecks[key] ? tr(': done', ': تم') : tr(': waiting', ': قيد الانتظار')}</span></li>)}</ul>}
-    {data?.connectionChecks?.nameStatus && <p className="layla-help">{tr('Meta display-name status:', 'حالة اسم العرض لدى Meta:')} {data.connectionChecks.nameStatus}</p>}
+    {data?.connectionChecks && <details className="layla-connection-details" open={!live || !checksOk}><summary>{tr('Connection details', 'تفاصيل الاتصال')}</summary>
+      <ul className="layla-checklist">{[['path', tr('Number type verified', 'التحقق من نوع الرقم')], ['registered', tr('Number registered', 'تسجيل الرقم')], ['routing', tr('Messages reach BznsFlow', 'الرسائل تصل إلى BznsFlow')]].map(([key, label]) => <li key={key} data-ok={data.connectionChecks[key] ? '' : undefined}>{label}<span className="ld-visually-hidden">{data.connectionChecks[key] ? tr(': done', ': تم') : tr(': waiting', ': قيد الانتظار')}</span></li>)}</ul>
+      {data.connectionChecks.nameStatus && <p className="layla-help">{tr('Business name on WhatsApp:', 'اسم النشاط على واتساب:')} {nameStatus(tr, data.connectionChecks.nameStatus)}</p>}
+      {integration && <button className="layla-secondary" disabled={busy} onClick={() => run({ action: 'refresh' })}>{tr('Check my connection', 'التحقق من الاتصال')}</button>}
+    </details>}
     {data?.diagnostic && <p className="layla-notice layla-notice--problem">{explain(data.diagnostic.reason)}<br />{tr('Support reference:', 'مرجع الدعم:')} {data.diagnostic.stage}-{data.diagnostic.at}{data.diagnostic.providerCode ? ` · Meta ${data.diagnostic.providerCode}` : ''}</p>}
     {integration?.sender?.startsWith('1555') && <p className="layla-help">{tr('This resembles a Meta-provided 555 number. Check the selected number and display-name approval in WhatsApp Manager before using it for customers.', 'يبدو أن هذا رقم 555 مقدّم من Meta. تحقّق من الرقم وموافقة اسم العرض في مدير واتساب قبل استخدامه للعملاء.')}</p>}
-    {integration && <p role="status">{['connected', 'paused'].includes(integration.status)
-      ? tr('This number is connected. Turn on replies in the next step.', 'هذا الرقم مرتبط. فعّل الردود في الخطوة التالية.')
-      : tr('This number is saved. Complete the registration step if shown, or check your connection to continue.', 'هذا الرقم محفوظ. أكمل خطوة التسجيل إن ظهرت، أو تحقّق من الاتصال للمتابعة.')}</p>}
-    {integration && ['connected', 'paused'].includes(integration.status) && <AfterConnect tr={tr} />}
+    {live && liveSwitch}
+    {integration && !live && <p role="status">{tr('This number is saved. Complete the registration step if shown, or check your connection to continue.', 'هذا الرقم محفوظ. أكمل خطوة التسجيل إن ظهرت، أو تحقّق من الاتصال للمتابعة.')}</p>}
+    {live && <AfterConnect tr={tr} />}
     {integration && errorNote}
-    {integration && <button className="layla-secondary" disabled={busy} onClick={() => run({ action: 'refresh' })}>{tr('Check my connection', 'التحقق من الاتصال')}</button>}
+    {integration && !data?.connectionChecks && <button className="layla-secondary" disabled={busy} onClick={() => run({ action: 'refresh' })}>{tr('Check my connection', 'التحقق من الاتصال')}</button>}
     {data?.ownerConnectAvailable && !prepared && <section className="layla-answer" aria-labelledby="layla-owner-number">
       <h3 id="layla-owner-number">{tr('BznsFlow’s own number', 'رقم BznsFlow الخاص')}</h3>
       <p>{tr('This number was added directly in Meta, so Meta’s signup window cannot list it. Connect it with BznsFlow’s approved server credential instead.', 'أُضيف هذا الرقم مباشرة في Meta، لذلك لا تعرضه نافذة التسجيل. اربطه باستخدام بيانات الاعتماد المعتمدة لدى BznsFlow.')}</p>

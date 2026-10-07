@@ -298,7 +298,7 @@ try {
     await second.context.close();
   }
 
-  // Activation success dialog on setup, then automatic navigation to the dashboard.
+  // Setup with a connected number: the WhatsApp switch turns Layla on and the page says she is live.
   {
     const setup = { ok: true, csrfToken: 'a'.repeat(64), review: false, available: true, status: 'connected', profile: { businessName: 'Blue Studio Properties', sector: 'Real estate', services: 'Villas', prices: '', hours: '', location: '', humanContact: 'team@example.com', faqs: [], reviewed: true },
       journeyStep: 3, profileVersion: 1, capabilities: {}, integration: { id: 'i1', sender: '96890000000', path: 'new_number', status: 'connected' }, account: { email: 'owner@example.test' }, savedToAccount: true, accountSaveAvailable: true };
@@ -309,10 +309,13 @@ try {
       if (surface === 'messaging') { if (request.method() === 'POST') active = true; return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), available: true, active, reason: active ? '' : 'not_activated', limits: { usedToday: 0 } } }; }
       return null;
     } });
-    await page.getByRole('button', { name: 'Activate Layla' }).click();
-    await page.getByRole('alertdialog', { name: 'Layla is active' }).waitFor(); count++;
-    await page.screenshot({ path: `${OUT}/activation-dialog-1280.png` });
-    await page.waitForURL(/\/en\/layla\/dashboard$/, { timeout: 5000 }); count++;
+    const toggle = page.locator('.layla-channel-card--whatsapp').getByRole('switch');
+    assert.equal(await toggle.isChecked(), false, 'already connected before this visit, so nothing switched on by itself'); count++;
+    await toggle.click();
+    await page.getByRole('heading', { name: 'Layla is live' }).waitFor(); count++;
+    assert.equal(await page.getByRole('link', { name: 'Open your inbox' }).getAttribute('href'), '/en/layla/dashboard'); count++;
+    assert.equal(await page.getByRole('button', { name: /Activate/ }).count(), 0, 'no separate Activate buttons remain'); count++;
+    await page.screenshot({ path: `${OUT}/setup-live-1280.png` });
     await context.close();
   }
   // Dashboard → Business: an existing customer converts saved details into bzns.md, edits and publishes.

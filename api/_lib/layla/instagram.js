@@ -245,7 +245,7 @@ export function createInstagramApi({env=process.env,fetcher=fetch,store=instagra
         // so the card can offer to finish it (Instagram sometimes strands people on its feed).
         const {connection=null,pendingSignIn=false}=await store('state',{sessionHash}) || {};
         const state=connection?.status==='connected'?await messagingStore({env,fetcher})('state',{sessionHash,channel:'instagram'}):null;
-        return send(res,200,{ok:true,connection,pendingSignIn,active:env.GREEN_INSTAGRAM_APPROVED==='true' && env.GREEN_INSTAGRAM_ENABLED==='true' && !!state?.active,sendingEnabled:env.GREEN_INSTAGRAM_APPROVED==='true' && env.GREEN_INSTAGRAM_ENABLED==='true',csrfToken:ensureCsrfToken(req,res)},{vary:'Cookie'});
+        return send(res,200,{ok:true,connection,pendingSignIn,active:env.GREEN_INSTAGRAM_APPROVED==='true' && env.GREEN_INSTAGRAM_ENABLED==='true' && !!state?.active,reason:state?.reason || null,sendingEnabled:env.GREEN_INSTAGRAM_APPROVED==='true' && env.GREEN_INSTAGRAM_ENABLED==='true',csrfToken:ensureCsrfToken(req,res)},{vary:'Cookie'});
       }
       if(req.method!=='POST') throw new PilotError('method',405);
       if(req.headers.origin!==origin || !verifyCsrf(req)) throw new PilotError('csrf',403);

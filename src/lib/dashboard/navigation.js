@@ -50,7 +50,8 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
     money: construction || automotive ? [] : VIEWS.money.filter(on),
     customers: clinic || dental ? ['contacts'] : capabilities.broadcasts ? VIEWS.customers : ['contacts'],
     // Accounts and VAT belong to Hasib's money, so they appear once an industry is set.
-    settings: construction ? [] : on('orders') ? VIEWS.settings : VIEWS.settings.filter(v => v !== 'accounts'),
+    // Automotive opens Settings on its workshop page (the business view); Channels stays one tab away.
+    settings: construction ? [] : automotive ? ['business', 'channels', 'accounts'] : on('orders') ? VIEWS.settings : VIEWS.settings.filter(v => v !== 'accounts'),
   };
   const has = {
     today: !!hasib, chats: !clinic, orders: on('orders'), stock: on('stock'), service: on('repairs'),

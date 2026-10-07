@@ -38,11 +38,17 @@ try {
     });
     await page.goto(`${BASE}/${lang==='en'?'en/':''}layla/dashboard?tab=channels`);
     await page.getByRole('heading',{name:lang==='en'?'Your channels':'قنواتك'}).waitFor();checks++;
-    await page.getByRole('button',{name:lang==='en'?'Activate replies':'تفعيل الردود',exact:true}).click();
-    await page.getByText(lang==='en'?'Instagram replies are active.':'ردود إنستغرام مفعّلة.',{exact:true}).waitFor();
+    // One switch per channel card: on, then off again, each confirmed by the server's answer.
+    const igSwitch=page.locator('section[aria-label="Instagram"]').getByRole('switch');
+    assert.equal(await igSwitch.isChecked(),false);checks++;
+    await igSwitch.click();
+    await page.locator('section[aria-label="Instagram"]').getByText(lang==='en'?'Layla is replying on Instagram':'ليلى ترد الآن على إنستغرام',{exact:true}).waitFor();
     assert(calls.some(c=>c.action==='activate' && c.channel==='instagram'));checks++;
-    await page.getByRole('button',{name:lang==='en'?'Pause replies':'إيقاف الردود',exact:true}).click();
-    await page.getByText(lang==='en'?'Instagram replies are paused.':'ردود إنستغرام متوقفة.',{exact:true}).waitFor();checks++;
+    // The header's master switch agrees with the card.
+    assert.equal(await page.locator('.ld-header').getByRole('switch').isChecked(),true);checks++;
+    await igSwitch.click();
+    await page.locator('section[aria-label="Instagram"]').getByText(lang==='en'?'Layla is paused on Instagram':'ليلى متوقفة على إنستغرام',{exact:true}).waitFor();
+    assert(calls.some(c=>c.action==='pause' && c.channel==='instagram'));checks++;
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));checks++;
     const violations=(await new AxeBuilder({page}).include('.ld').analyze()).violations.filter(v=>['critical','serious'].includes(v.impact));
     assert.deepEqual(violations.map(v=>v.id),[]);checks++;

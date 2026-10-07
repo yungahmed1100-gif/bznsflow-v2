@@ -162,10 +162,17 @@ test('a granted customer sets up, connects Instagram, activates, and Layla answe
   const back = await owner.get(`/api/layla-meta?code=instagram-code&state=${state}`);
   assert.equal(back.status, 303);
   assert.match(back.location, /instagram=connected/, back.location);
-  // Activation a few minutes later (the old 60-second trap).
+  // Back on the setup page, Layla switches on by herself (a few minutes later: the old 60-second trap).
   w.m.advance(5 * 60000);
-  const activate = await owner.post('/api/layla-meta?surface=messaging', { action: 'activate', channel: 'instagram' });
+  const activate = await owner.post('/api/layla-meta?surface=messaging', { action: 'activate', channel: 'instagram', auto: true });
   assert.equal(activate.status, 200, JSON.stringify(activate.body));
+  assert.equal(activate.body.active, true, JSON.stringify(activate.body));
+  // The owner can turn her off, and a later automatic switch-on (a page reload) keeps that choice.
+  assert.equal((await owner.post('/api/layla-meta?surface=messaging', { action: 'pause', channel: 'instagram' })).body.active, false);
+  const reload = await owner.post('/api/layla-meta?surface=messaging', { action: 'activate', channel: 'instagram', auto: true });
+  assert.equal(reload.body.active, false, JSON.stringify(reload.body));
+  assert.equal(reload.body.reason, 'owner_paused');
+  assert.equal((await owner.post('/api/layla-meta?surface=messaging', { action: 'activate', channel: 'instagram' })).body.active, true);
   // A customer DMs; Meta delivers it signed with the Instagram app secret.
   const dm = text => ({ object: 'instagram', entry: [{ id: IG_ACCOUNT, time: w.m.now(), messaging: [{ sender: { id: '1999000000000001' }, recipient: { id: IG_ACCOUNT }, timestamp: w.m.now(), message: { mid: `mid.${w.m.now()}`, text } }] }] });
   assert.equal(await signedWebhook(w, dm("Hi I'm Sara, looking for a villa to rent in Al Mouj"), 'instagram-secret'), 200);

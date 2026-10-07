@@ -221,3 +221,50 @@ test('smoke rollout permits only the owner recipient and fences a previously cla
   await m.db.patch(settings._id,{rolloutMode:undefined});
   await m.inbound('missing-rollout');assert.equal(m.outgoing().length,1);
 });
+
+test('Layla switches on by herself after connecting, but never overrides an owner who paused her',async()=>{
+  const m=memory();await m.db.insert('blueMessagingSettings',{key:'global',enabled:true,rolloutMode:'live',smokeVerifiedAt:1,smokeEvidence:'synthetic-test'});
+  const integration={id:randomUUID(),app:'1388038082832745',waba:'1234',phone:'5678',sender:'96890000000',path:'new_number'};
+  const sessionHash='d'.repeat(64);
+  await m.db.insert('blueReviewSessions',{accountId:'accountA',sessionHash,expiresAt:1e15,status:'connected',profile,profileVersion:1,checkedAt:m.now(),connectionChecks:{routing:true,registered:true,path:true},integration,phone:integration.phone});
+  assert.equal((await m.call('state',{sessionHash})).value.reason,'not_activated','a new connection was never switched on');
+  assert.equal((await m.call('activate',{sessionHash,auto:true})).value.active,true,'the first automatic switch-on turns Layla on');
+  await m.call('pause',{sessionHash});
+  await m.db.patch([...m.rows.values()].find(r=>r.table==='blueReviewSessions')._id,{checkedAt:m.now()});
+  const again=await m.call('activate',{sessionHash,auto:true});
+  assert.equal(again.ok,true);
+  assert.equal(again.value.active,false,'a later automatic switch-on keeps the owner’s pause');
+  assert.equal(again.value.reason,'owner_paused');
+  assert.equal((await m.call('activate',{sessionHash})).value.active,true,'the owner can still turn Layla back on');
+});
+
+test('the owner sees the real sending limits',async()=>{
+  const m=await setup();
+  const {limits}=(await m.call('state',{sessionHash:m.sessionHash})).value;
+  assert.equal(limits.perDay,RATE_LIMITS.perDay);
+  assert.equal(limits.perMinute,RATE_LIMITS.perMinute);
+});
+
+test('the automatic switch-on answers from state without asking Meta when the owner already chose',async()=>{
+  const calls=[];
+  const api=createMessagingApi({env,accounts:async()=>({id:'accountA',draftHash:'d'.repeat(64)}),reviews:async()=>assert.fail('no connection check'),inspect:()=>assert.fail('Meta is not asked'),
+    store:async(op,args)=>{calls.push([op,args]);return {available:true,active:false,reason:'owner_paused'};}});
+  const csrf='e'.repeat(64),r=response();
+  await api({method:'POST',headers:{host:'www.bznsflowai.com',origin:'https://www.bznsflowai.com',cookie:`bf_session=${'f'.repeat(64)}; bf_csrf=${csrf}`,'x-csrf-token':csrf},body:{action:'activate',auto:true}},r);
+  assert.equal(r.statusCode,200);
+  assert.equal(r.body.active,false);
+  assert.equal(r.body.skipped,true);
+  assert.deepEqual(calls.map(([op])=>op),['state'],'only the state is read');
+});
+
+test('a never-activated channel is switched on with the auto flag passed to Convex',async()=>{
+  const m=await setup();await m.db.patch(m.rowId,{checkedAt:Date.now()});
+  const calls=[];
+  const api=createMessagingApi({env,accounts:async()=>({id:'accountA',draftHash:m.sessionHash}),reviews:async()=>m.db.get(m.rowId),inspect:()=>assert.fail('fresh proof should be reused'),
+    store:async(op,args)=>{calls.push([op,args]);return op==='state'?{active:false,reason:'not_activated'}:{active:true,reason:''};}});
+  const csrf='e'.repeat(64),r=response();
+  await api({method:'POST',headers:{host:'www.bznsflowai.com',origin:'https://www.bznsflowai.com',cookie:`bf_session=${'f'.repeat(64)}; bf_csrf=${csrf}`,'x-csrf-token':csrf},body:{action:'activate',auto:true}},r);
+  assert.equal(r.body.active,true);
+  assert.deepEqual(calls.map(([op])=>op),['state','activate']);
+  assert.equal(calls[1][1].auto,true);
+});

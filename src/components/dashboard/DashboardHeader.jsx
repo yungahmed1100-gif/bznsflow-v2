@@ -1,45 +1,44 @@
-import { setupPath } from '../../lib/dashboard/api';
-import React, { useState } from 'react';
-import { messaging } from '../../lib/dashboard/api';
+import React from 'react';
+import { messaging, setupPath, DashboardError } from '../../lib/dashboard/api';
+import { channelName, channelsFrom, masterState, needsAttention, setAll } from '../../lib/dashboard/channels';
 import { formatPhone } from '../../lib/dashboard/phone';
 import { formatDateTime } from '../../lib/dashboard/format';
+import { LaylaSwitch } from './LaylaSwitch';
 
-/** Global Pause/Activate and connection health, always visible. */
+/** Layla's master switch and one health signal for every connected channel, always visible. */
 export function DashboardHeader({ s, data, onChange }) {
-  const [busy, setBusy] = useState(''), [notice, setNotice] = useState(null);
-  const checks = data.integration?.checks;
-  const healthy = !!(checks?.routing && checks?.registered && checks?.path && ['connected', 'paused'].includes(data.integration?.status));
-  const run = async (action) => {
-    setBusy(action); setNotice(null);
-    try { await messaging(action); setNotice({ ok: true, text: action==='disconnect'?(s.ar?'تم فصل واتساب':'WhatsApp disconnected'):action === 'check_connection' ? s.t('connectionOk') : s.t(action === 'pause' ? 'paused' : 'active') }); }
-    catch (e) { setNotice({ ok: false, text: s.reason(e.reason) }); }
-    finally { setBusy(''); onChange(); }
-  };
-  const active = data.messaging?.active;
+  const channels = channelsFrom(data);
+  const state = masterState(channels);
+  const attention = needsAttention(channels);
+  const connected = channels.filter(c => c.connected);
+  const names = list => list.map(c => channelName(c.id, s.ar)).join(' · ');
+  const replying = connected.filter(c => c.active), resting = connected.filter(c => !c.active);
+  const detail = state === 'mixed' ? s.t('mixedDetail', { on: names(replying), off: names(resting) }) : names(connected);
+  const whatsapp = channels.find(c => c.id === 'whatsapp');
+  const checkedAt = data.integration?.checkedAt;
+  async function toggle(on) {
+    const failed = await setAll(on, channels, messaging);
+    await onChange();
+    if (failed.length) throw new DashboardError(failed[0].reason);
+  }
   return (
     <div className="ld-header">
       <div className="ld-identity">
         <strong>{data.business.name}</strong>
-        {data.integration && <bdi dir="ltr">{formatPhone(data.integration.sender)}</bdi>}
+        {whatsapp && <bdi dir="ltr">{formatPhone(whatsapp.identity)}</bdi>}
       </div>
-      {data.integration && <>
-      <p className={`ld-health ${healthy ? 'is-ok' : 'is-warn'}`} title={data.integration?.checkedAt ? s.t('checkedAt', { time: formatDateTime(data.integration.checkedAt, s.lang, data.timezone) }) : undefined}>
-        <span aria-hidden="true" className="ld-dot" />{healthy ? s.t('connectionOk') : s.t('connectionAttention')}
-      </p>
-      <p className={`ld-layla ${active ? 'is-on' : ''}`} role="status">
-        {active ? s.t('active') : s.t('paused')}
-        <small className="ld-num">{s.t('repliesToday', { used: data.messaging?.limits?.usedToday || 0, limit: data.messaging?.limits?.perDay || 100 })}</small>
-      </p>
-      {data.workspaceRole !== 'employee' && <div className="ld-header-actions">
-        <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => run('check_connection')}>{busy === 'check_connection' ? s.t('loading') : s.t('checkConnection')}</button>
-        {active
-          ? <button type="button" className="ld-button" disabled={!!busy} onClick={() => run('pause')}>{s.t('pause')}</button>
-          : <button type="button" className="ld-button ld-primary" disabled={!!busy || !data.messaging?.available} onClick={() => run('activate')}>{s.t('activate')}</button>}
-      </div>}
-      </>}
-      {!data.integration && <a className="ld-button" href={setupPath(s.lang)}>{s.ar?'ربط واتساب':'Connect WhatsApp'}</a>}
-
-      {notice && <p className={`ld-toast ${notice.ok ? '' : 'is-error'}`} role={notice.ok ? 'status' : 'alert'}>{notice.text}</p>}
+      {state === 'none' && !channels.length
+        ? <a className="ld-button" href={setupPath(s.lang)}>{s.t('connectChannel')}</a>
+        : <>
+          {data.workspaceRole === 'employee' || state === 'none'
+            ? <p className={`ld-layla ${state === 'on' || state === 'mixed' ? 'is-on' : ''}`} role="status">{state === 'on' || state === 'mixed' ? s.t('active') : s.t('paused')}<small>{detail}</small></p>
+            : <LaylaSwitch s={s} on={state === 'on' || state === 'mixed'} detail={detail} onToggle={toggle} />}
+          {React.createElement(data.workspaceRole === 'employee' ? 'p' : 'a', {
+            className: `ld-health ${attention ? 'is-warn' : 'is-ok'}`,
+            ...(data.workspaceRole === 'employee' ? {} : { href: '?tab=settings&view=channels' }),
+            title: checkedAt ? s.t('checkedAt', { time: formatDateTime(checkedAt, s.lang, data.timezone) }) : undefined,
+          }, <span aria-hidden="true" className="ld-dot" />, attention ? s.t('channelAttention', { channel: channelName(attention.id, s.ar) }) : s.t('connectionOk'))}
+        </>}
     </div>
   );
 }

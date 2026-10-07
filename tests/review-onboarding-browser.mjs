@@ -44,7 +44,7 @@ try {
     });
     await page.goto(`${BASE}/${ar?'':'en/'}layla/setup`);
     // Saved, confirmed facts open straight on the channels step: no preview approval.
-    await page.getByRole('heading',{name:t('Connect your channels','ربط قنواتك'),exact:true}).waitFor();checks++;
+    await page.getByRole('heading',{name:t('Connect a channel','اربط قناة'),exact:true}).waitFor();checks++;
     assert.equal(await page.getByRole('button',{name:t('The answer looks right','الإجابة مناسبة')}).count(),0,'no approval step');checks++;
     const ig=page.getByRole('region',{name:'Instagram',exact:true});
     await ig.getByRole('button',{name:t('Connect Instagram','ربط إنستغرام'),exact:true}).click();
@@ -52,11 +52,14 @@ try {
     await ig.getByText('@bznsflow',{exact:true}).waitFor();checks++;
     await ig.getByRole('button',{name:t('Check connection','تحقق من الاتصال'),exact:true}).click();
     await ig.getByText(t('Instagram connection is healthy.','اتصال إنستغرام سليم.'),{exact:true}).waitFor();checks++;
-    await ig.getByRole('button',{name:t('Activate replies','تفعيل الردود'),exact:true}).click();
-    await ig.getByText(t('Instagram replies are active.','ردود إنستغرام مفعّلة.'),{exact:true}).waitFor();checks++;
+    // Just connected: Layla switches on by herself, and the owner sees she is live.
+    await ig.getByText(t('Layla is replying on Instagram','ليلى ترد الآن على إنستغرام'),{exact:true}).waitFor();checks++;
+    assert.equal(await ig.getByRole('switch').isChecked(),true);checks++;
+    assert(calls.some(c=>c.action==='activate' && c.channel==='instagram' && c.auto===true),'automatic switch-on');checks++;
+    await page.getByRole('heading',{name:t('Layla is live','ليلى تعمل الآن')}).waitFor();checks++;
     assert.equal(calls.some(c=>c.action==='begin' || c.action==='finish'),false,'No WhatsApp authorization required');checks++;
     await page.screenshot({path:`work/review-onboarding/${lang}-connected.png`,fullPage:true});
-    await ig.getByRole('link',{name:t('Open inbox','فتح المحادثات')}).click();
+    await page.getByRole('link',{name:t('Open your inbox','افتح المحادثات')}).click();
     await page.getByRole('heading',{name:t('Chats','المحادثات'),exact:true}).waitFor();checks++;
     assert.deepEqual(errors,[]);checks++;
     await context.close();

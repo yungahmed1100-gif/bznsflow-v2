@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { callApi } from '../../lib/api-client';
-import { messaging, dashboardPath } from '../../lib/dashboard/api';
+import { messaging } from '../../lib/dashboard/api';
+import { createStrings } from '../../lib/dashboard/strings';
 import { BrandMark } from '../ui/BrandMark';
+import { ChannelSwitch } from './ChannelSwitch';
 
 const endpoint='/api/layla-meta?surface=instagram';
 const load=()=>callApi(endpoint);
@@ -14,10 +16,15 @@ const STATUS={
   disconnecting:['Disconnecting…','جارٍ الفصل…'],
   deleting:['Removing Instagram data…','جارٍ حذف بيانات إنستغرام…'],
 };
-export function InstagramConnection({lang='en',onChange=()=>{},showInbox=false}) {
-  const ar=lang==='ar', t=(en,arabic)=>ar?arabic:en;
+/**
+ * The Instagram card. `replyState` is the dashboard's copy of Layla's Instagram state, so the card
+ * and the header switch agree; the setup page leaves it out and the card reads its own.
+ * `autoOn` switches Layla on once when the owner has just connected.
+ */
+export function InstagramConnection({lang='en',onChange=()=>{},replyState=null,autoOn=false,onActive,inSetup=false}) {
+  const ar=lang==='ar', t=(en,arabic)=>ar?arabic:en, s=createStrings(lang);
   const state=usePolling(load,[],{interval:30000});
-  const [busy,setBusy]=useState(''),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState(false);
+  const [busy,setBusy]=useState(''),[notice,setNotice]=useState(''),[failed,setFailed]=useState(false),[confirm,setConfirm]=useState(false);
   if (state.data?.available === false) return null;
   const connection=state.data?.connection;
   const connected=connection?.status==='connected';
@@ -30,11 +37,11 @@ export function InstagramConnection({lang='en',onChange=()=>{},showInbox=false})
   const live=['connected','reconnect_required'].includes(connection?.status);
   const removing=['deleting','disconnecting'].includes(connection?.status);
   async function run(action,extra={}) {
-    setBusy(action);setNotice('');
+    setBusy(action);setNotice('');setFailed(false);
     try {
-      if(['activate','pause','check_connection'].includes(action)) {
+      if(action==='check_connection') {
         await messaging(action,{channel:'instagram'});
-        setNotice(action==='activate'?t('Instagram replies are active.','ردود إنستغرام مفعّلة.'):action==='pause'?t('Instagram replies are paused.','ردود إنستغرام متوقفة.'):t('Instagram connection is healthy.','اتصال إنستغرام سليم.'));
+        setNotice(t('Instagram connection is healthy.','اتصال إنستغرام سليم.'));
       } else {
         const result=await callApi(endpoint,{body:{action,lang,...extra,...(action==='disconnect'?{confirm:true}:{})},csrf:state.data?.csrfToken});
         if(result.url) {window.location.assign(result.url);return;}
@@ -46,7 +53,7 @@ export function InstagramConnection({lang='en',onChange=()=>{},showInbox=false})
       await state.refresh({quiet:true});onChange();
     } catch(e) {
       const reasons={
-        activation_not_ready:t('Publish your business details first, then check the connection and activate again.','انشر تفاصيل نشاطك أولاً، ثم افحص الاتصال وفعّل الردود مجدداً.'),
+        activation_not_ready:t('Save your business details, then check the connection and try again.','احفظ تفاصيل نشاطك، ثم افحص الاتصال وحاول مجدداً.'),
         instagram_reconnect_required:t('Instagram needs reconnecting. Click Reconnect Instagram.','يحتاج إنستغرام إلى إعادة الربط. اضغط «إعادة ربط إنستغرام».'),
         connection_not_ready:t('Meta is not delivering this account’s messages to BznsFlow yet. In Instagram turn on Allow access to messages, then click Reconnect Instagram.','لا توصل Meta رسائل هذا الحساب إلى BznsFlow بعد. فعّل «السماح بالوصول إلى الرسائل» في إنستغرام ثم اضغط «إعادة ربط إنستغرام».'),
         send_outcome_unknown:t('A reply needs checking before replies can restart. Open the inbox to review it.','هناك رد يحتاج إلى مراجعة قبل استئناف الردود. افتح المحادثات لمراجعته.'),
@@ -60,30 +67,30 @@ export function InstagramConnection({lang='en',onChange=()=>{},showInbox=false})
         instagram_provider_unavailable:t('Instagram did not respond. Nothing changed; try again in a minute.','لم يستجب إنستغرام. لم يتغير شيء؛ حاول مجدداً بعد دقيقة.'),
         instagram_provider_failed:t('Instagram did not respond. Nothing changed; try again in a minute.','لم يستجب إنستغرام. لم يتغير شيء؛ حاول مجدداً بعد دقيقة.'),
       };
+      setFailed(true);
       setNotice(reasons[e.reason] || t('Could not complete this step. Check your connection and try again.','تعذّر إكمال الخطوة. تحقق من الاتصال وحاول مجدداً.'));
       // A failed check may have changed the connection (e.g. now needs reconnecting).
       state.refresh({quiet:true});
     } finally {setBusy('');}
   }
-  return <section className="ld-channel-card layla-channel-card layla-channel-card--instagram" aria-label="Instagram">
+  // On the setup page the card matches the WhatsApp setup card; in the dashboard it matches the other channel cards.
+  return <section className={`ld-channel-card${inSetup?' layla-channel-card layla-channel-card--instagram':''}`} aria-label="Instagram">
     <h3><BrandMark name="instagram" size={26} className="layla-channel-logo" />Instagram</h3>
-    {connection && <p><bdi>@{connection.username}</bdi> · {t(...status)}</p>}
-    {connected && <p role="status">{state.data?.active?t('Replies active','الردود مفعّلة'):t('Replies paused','الردود متوقفة')}</p>}
-    <p>{t('Answer customer DMs using your approved business information.','أجب عن رسائل العملاء الخاصة باستخدام معلومات نشاطك المعتمدة.')}</p>
+    {connection && <p className="ld-channel-identity"><bdi dir="ltr">@{connection.username}</bdi> · {t(...status)}</p>}
+    {connected
+      ? <ChannelSwitch s={s} channel="instagram" autoOn={autoOn} onActive={onActive} onChanged={async()=>{await state.refresh({quiet:true});await onChange();}}
+          state={replyState || (state.data ? {available:!!state.data.sendingEnabled,active:!!state.data.active,reason:state.data.reason || (state.data.active?'':'not_activated')} : null)} />
+      : <p>{t('Answer customer DMs using your approved business information.','أجب عن رسائل العملاء الخاصة باستخدام معلومات نشاطك المعتمدة.')}</p>}
     {state.error && <p role="status">{t('Instagram connections are currently unavailable.','ربط إنستغرام غير متاح حالياً.')}</p>}
     {stranded && <div className="layla-channel-retry" role="status">
       <p>{t('Instagram opened its home page instead of asking you to allow BznsFlow? You are signed in to Instagram now, so select Finish connecting and it will ask straight away.','فتح إنستغرام صفحته الرئيسية بدلاً من طلب السماح لـ BznsFlow؟ أنت مسجّل الدخول في إنستغرام الآن، فاضغط «إكمال الربط» وسيطلب الإذن مباشرة.')}</p>
       <button className="ld-button ld-primary" disabled={!!busy} onClick={()=>run('connect',{retry:true})}>{t('Finish connecting','إكمال الربط')}</button>
     </div>}
     <div className="ld-actions">
-      <button className="ld-button" disabled={!!busy || !state.data || removing} onClick={()=>run('connect')}>{live?t('Reconnect Instagram','إعادة ربط إنستغرام'):t('Connect Instagram','ربط إنستغرام')}</button>
-      {connected && <>
-        <button className="ld-button" disabled={!!busy} onClick={()=>run('check_connection')}>{t('Check connection','تحقق من الاتصال')}</button>
-        <button className="ld-button ld-primary" disabled={!!busy || !state.data?.sendingEnabled} onClick={()=>run('activate')}>{t('Activate replies','تفعيل الردود')}</button>
-        <button className="ld-button" disabled={!!busy} onClick={()=>run('pause')}>{t('Pause replies','إيقاف الردود')}</button>
-        {showInbox && <a className="ld-button" href={dashboardPath(lang)}>{t('Open inbox','فتح المحادثات')}</a>}
-      </>}
-      {live && <button className="ld-button ld-danger" disabled={!!busy} onClick={()=>setConfirm(true)}>{t('Disconnect','فصل الاتصال')}</button>}
+      {/* Connected and healthy needs no connect button; a broken or removed connection gets one primary action. */}
+      {!connected && <button className="ld-button ld-primary" disabled={!!busy || !state.data || removing} onClick={()=>run('connect')}>{live?t('Reconnect Instagram','إعادة ربط إنستغرام'):t('Connect Instagram','ربط إنستغرام')}</button>}
+      {connected && <button className="ld-button ld-quiet" disabled={!!busy} onClick={()=>run('check_connection')}>{t('Check connection','تحقق من الاتصال')}</button>}
+      {live && <button className="ld-button ld-quiet ld-danger" disabled={!!busy} onClick={()=>setConfirm(true)}>{t('Disconnect','فصل الاتصال')}</button>}
     </div>
     {confirm && <div role="alertdialog" aria-label={t('Disconnect Instagram','فصل إنستغرام')}>
       <p>{t('Stop Instagram replies and remove BznsFlow’s access? WhatsApp stays connected.','هل تريد إيقاف ردود إنستغرام وإزالة وصول BznsFlow؟ سيبقى واتساب مرتبطاً.')}</p>
@@ -91,6 +98,6 @@ export function InstagramConnection({lang='en',onChange=()=>{},showInbox=false})
       <button className="ld-button" disabled={!!busy} onClick={()=>setConfirm(false)}>{t('Cancel','إلغاء')}</button>
     </div>}
     {busy && <p role="status">{t('Working…','جارٍ التنفيذ…')}</p>}
-    {notice && <p role="alert">{notice}</p>}
+    {notice && <p role={failed?'alert':'status'}>{notice}</p>}
   </section>;
 }

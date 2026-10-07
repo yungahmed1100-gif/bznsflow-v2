@@ -12,6 +12,7 @@ const COMMON = {
     location: ['Location', '[Building, street, area and city. Add your Google Maps link.]'],
     hours: ['Hours', '[For example: Sunday to Thursday 8:30 to 17:30, Saturday 9:00 to 13:00, closed Friday.]'],
     handoff: ['When Layla should hand over to the team', '[Complaints, negotiations, legal or medical questions, and anything not written in this document.]'],
+    contact: ['Team contact', '[The phone, WhatsApp number or email Layla gives a customer who asks for a person. Delete this section if they should only wait for your reply in the chat.]'],
     faq: ['FAQ', '**Q:** [A question customers often ask]\nA: [Your approved answer]\n\n**Q:** [Another common question]\nA: [Your approved answer]'],
   },
   ar: {
@@ -21,6 +22,7 @@ const COMMON = {
     location: ['الموقع', '[المبنى والشارع والمنطقة والمدينة. أضف رابط خرائط Google.]'],
     hours: ['ساعات العمل', '[مثال: من الأحد إلى الخميس من 8:30 إلى 17:30، والسبت من 9:00 إلى 13:00، والجمعة إجازة.]'],
     handoff: ['متى تحوّل ليلى المحادثة للفريق', '[الشكاوى والتفاوض والأسئلة القانونية أو الطبية وأي شيء غير مكتوب في هذا المستند.]'],
+    contact: ['جهة اتصال الفريق', '[الهاتف أو رقم واتساب أو البريد الذي تعطيه ليلى لعميل يطلب التحدث مع شخص. احذف هذا القسم إذا كان يكفي أن ينتظر ردكم في المحادثة.]'],
     faq: ['الأسئلة الشائعة', '**س:** [سؤال يسأله العملاء كثيراً]\nج: [إجابتك المعتمدة]\n\n**س:** [سؤال شائع آخر]\nج: [إجابتك المعتمدة]'],
   },
 };
@@ -147,6 +149,7 @@ export function bznsTemplate(sector, lang = 'en') {
     section(c.location),
     section(c.hours),
     section(c.handoff),
+    section(c.contact),
     section(c.faq),
   ].join('\n\n') + '\n';
 }

@@ -76,7 +76,7 @@
 .layla-chip--recommended::before{content:"";width:7px;height:7px;border-radius:var(--radius-pill);background:var(--orange)}
 
 /* ---- Fields ---- */
-.layla-workspace label:not(.layla-check):not(.layla-choice){display:block;font-weight:600;margin:20px 0 0}
+.layla-workspace label:not(.layla-check):not(.layla-choice):not(.ld-switch){display:block;font-weight:600;margin:20px 0 0}
 .layla-workspace :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select){display:block;width:100%;border:1px solid var(--layla-field-edge);border-radius:var(--layla-radius);padding:13px 15px;background:var(--layla-surface);color:var(--layla-ink);font:inherit;font-weight:400;margin-top:8px;caret-color:var(--layla-blue-ink);transition:border-color var(--transition-press)}
 .layla-workspace :is(input,textarea,select):hover:not(:disabled){border-color:var(--layla-ink)}
 .layla-workspace :is(input,textarea,select):focus-visible{border-color:var(--layla-blue-ink)}
@@ -301,3 +301,13 @@
 .bzns-editor .bzns-tone .bzns-tone-option{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;font-weight:400}
 .bzns-editor .bzns-tone .bzns-tone-option>span{display:block}
 .bzns-editor .bzns-tone .bzns-tone-name{font-weight:700}
+
+/* Live: the setup's finish line. One statement, one action. */
+.layla-live{background:var(--layla-surface);border:1px solid var(--layla-rule-strong);border-inline-start:4px solid var(--green);border-radius:var(--layla-radius);padding:20px 24px;margin:0 0 20px}
+.layla-live h3{margin:0 0 4px;font-size:20px}
+.layla-live p{margin:0 0 16px;max-width:60ch;color:var(--layla-ink-2)}
+.layla-live .layla-primary{margin:0}
+/* Connection checks stay one tap away, and open by themselves when something fails. */
+.layla-connection-details{margin:12px 0}
+.layla-connection-details summary{cursor:pointer;font-size:14px;font-weight:600;min-height:44px;display:flex;align-items:center}
+.layla-channel-card .ld-layla-switch{margin:4px 0 8px}

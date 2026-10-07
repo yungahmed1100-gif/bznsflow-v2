@@ -10,6 +10,8 @@ export const BZNS_MAX_CHARS = 10000;
 const MAX_SECTIONS = 40;
 const PROFILE_FIELD_MAX = 350;
 const FAQ_PROFILE_MAX = 12;
+// Layla gives this to a customer who asks for a person, so it stays one short line.
+const CONTACT_MAX = 120;
 
 export const normalizeText = text => String(text || '').normalize('NFKC').toLowerCase()
   .replace(/[ً-ٰٟ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
@@ -22,13 +24,14 @@ const ALIASES = {
   areas: ['areas we cover', 'areas', 'service area', 'delivery areas', 'المناطق', 'مناطق التغطية', 'مناطق التوصيل'],
   hours: ['hours', 'working hours', 'opening hours', 'business hours', 'ساعات العمل', 'أوقات العمل', 'مواعيد العمل', 'ساعات الدوام'],
   location: ['location', 'address', 'where to find us', 'branches', 'الموقع', 'العنوان', 'الفروع', 'موقعنا'],
+  contact: ['team contact', 'contact the team', 'speak to a person', 'contact us', 'contact', 'جهة اتصال الفريق', 'التواصل مع الفريق', 'تواصل مع الفريق', 'تواصل معنا', 'للتواصل', 'اتصل بنا'],
   handoff: ['when layla should hand over', 'hand over', 'handoff', 'human handoff', 'متى تحوّل ليلى', 'تحويل المحادثة', 'التحويل للفريق'],
   faq: ['faq', 'faqs', 'frequently asked questions', 'common questions', 'الأسئلة الشائعة', 'أسئلة متكررة'],
 };
 const ALIAS_LIST = Object.entries(ALIASES).flatMap(([key, names]) => names.map(name => [key, normalizeText(name)]))
   .sort((a, b) => b[1].length - a[1].length);
 // Layla answers 24/7, so business hours are optional facts, not a recommended section.
-export const RECOMMENDED_SECTIONS = Object.freeze(['about', 'offer', 'location', 'handoff', 'faq']);
+export const RECOMMENDED_SECTIONS = Object.freeze(['about', 'offer', 'location', 'handoff', 'contact', 'faq']);
 
 const sectionKey = heading => {
   const h = normalizeText(heading);
@@ -131,6 +134,10 @@ function summary(body) {
   const cut = joined.slice(0, PROFILE_FIELD_MAX - 1);
   return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), PROFILE_FIELD_MAX - 40))}…`;
 }
+function contactLine(body) {
+  const line = plain(body).join(' · ');
+  return line.length <= CONTACT_MAX ? line : '';
+}
 const firstBody = (parsed, key) => parsed.sections.find(s => s.key === key && s.body)?.body || '';
 
 /** The short profile the existing rule-based replies, readiness checks and validators expect. */
@@ -147,6 +154,9 @@ export function deriveProfile(parsed, { reviewed = true } = {}) {
       location: summary(firstBody(parsed, 'location')),
       humanContact: '',
       handoffMode: 'inbox',
+      // Given only to a customer who asks for a person; the chat still waits in the owner's inbox.
+      // A separate field, so a legacy humanContact kept from older setups is never advertised.
+      ...(contactLine(firstBody(parsed, 'contact')) ? { teamContact: contactLine(firstBody(parsed, 'contact')) } : {}),
       tone: toneOf(parsed.meta.tone),
       faqs: parsed.faqs.slice(0, FAQ_PROFILE_MAX).map(f => ({ question: f.question.slice(0, 200), answer: f.answer.slice(0, 700) })),
       reviewed,
@@ -178,6 +188,7 @@ const HEADINGS = {
   offer: { en: 'What we offer', ar: 'خدماتنا' },
   hours: { en: 'Hours', ar: 'ساعات العمل' },
   location: { en: 'Location', ar: 'الموقع' },
+  contact: { en: 'Team contact', ar: 'جهة اتصال الفريق' },
   faq: { en: 'FAQ', ar: 'الأسئلة الشائعة' },
 };
 const FIELD_SECTION = { services: 'offer', hours: 'hours', location: 'location' };
@@ -236,7 +247,7 @@ export function profileToBzns({ businessName = '', profile = {}, answers = [], l
     seen.add(key); return true;
   });
   const sections = [
-    ['offer', profile.services], ['hours', profile.hours], ['location', profile.location],
+    ['offer', profile.services], ['hours', profile.hours], ['location', profile.location], ['contact', profile.teamContact || (profile.handoffMode === 'inbox' ? '' : profile.humanContact)],
   ].filter(([, text]) => String(text || '').trim()).map(([key, text]) => `## ${HEADINGS[key][ar ? 'ar' : 'en']}\n${String(text).trim()}`);
   if (faqs.length) sections.push(`## ${HEADINGS.faq[ar ? 'ar' : 'en']}\n${faqLines(faqs, ar)}`);
   return [`---\nname: ${businessName}\nsector: ${industry?.id || profile.sector || ''}\n---`, `# ${businessName}`, ...sections].join('\n\n') + '\n';

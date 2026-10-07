@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { InstagramConnection } from '../components/dashboard/InstagramConnection';
-// InstagramConnection and ActivationPanel render dashboard (ld-*) controls.
+// InstagramConnection and ChannelSwitch render dashboard (ld-*) controls.
 import '../styles/layla-dashboard.css';
-import { ActivationPanel } from '../components/dashboard/ActivationPanel';
+import { ChannelSwitch } from '../components/dashboard/ChannelSwitch';
+import { createStrings } from '../lib/dashboard/strings';
 import { dashboardPath } from '../lib/dashboard/api';
 import logoImg from '../assets/logo_bznsflow.png';
 import '../styles/layla-onboarding.css';
@@ -12,20 +13,21 @@ import { callApi } from '../lib/api-client.js';
 import { BznsEditor } from '../components/business/BznsEditor.jsx';
 import { SaveAccountPanel } from '../components/onboarding/SaveAccountPanel.jsx';
 import { WhatsAppConnect } from '../components/onboarding/WhatsAppConnect.jsx';
-import { GoLiveStep } from '../components/onboarding/GoLiveStep.jsx';
+import { TestLayla } from '../components/onboarding/TestLayla.jsx';
 import { ChatWidget } from '../components/chat/ChatWidget.jsx';
 import { explain as explainReason, instagramReturnMessage } from '../lib/onboarding/explanations.js';
 import { setupHelpReply, SUGGESTED, SUGGESTION_LABELS } from '../lib/onboarding/setupHelp.js';
 
-// Three steps, one primary action each. Ids are the saved journeyStep values
-// (a legacy saved 2 opens the channels step).
-const STEP_ORDER = [0, 4, 1, 3];
+// Three steps, one primary action each: your business, connect a channel, live.
+// Ids are the saved journeyStep values; older saved steps (2, 3, 4) open the channels step.
+const WHATSAPP_LIVE = ['connected', 'paused'];
 const EMPTY_PRESELECT = { business: '', waba: '' };
 const REFRESH_INTERVAL_MS = 5000, REFRESH_ROUNDS = 12;
 
 export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embedded = false, onStageChange, onAccountChange }) {
   const ar = lang === 'ar';
   const tr = (en, arabic) => ar ? arabic : en;
+  const s = createStrings(lang);
   const [available, setAvailable] = useState(false);
   const [checking, setChecking] = useState(true);
   const heading = useRef(null);
@@ -46,6 +48,19 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     const text = instagramReturnMessage(status, query.get('reason'), lang);
     setInstagramReturn(text ? { ok: status === 'connected', text } : null);
   }, [lang]);
+  // Layla is live once any connected channel replies; each channel's switch reports in.
+  const [liveBy, setLiveBy] = useState({});
+  const live = Object.values(liveBy).some(Boolean);
+  const reportLive = useCallback(id => on => setLiveBy(v => (v[id] === on ? v : { ...v, [id]: on })), []);
+  // A WhatsApp number that finishes connecting while this page is open switches Layla on by itself.
+  const whatsappLive = WHATSAPP_LIVE.includes(data?.integration?.status);
+  const whatsappSeen = useRef(null), [whatsappJustConnected, setWhatsappJustConnected] = useState(false);
+  useEffect(() => {
+    if (!data) return;
+    if (whatsappSeen.current === false && whatsappLive) setWhatsappJustConnected(true);
+    whatsappSeen.current = whatsappLive;
+  }, [data, whatsappLive]);
+  useEffect(() => { onStageChange?.(step === 0 ? 0 : live ? 2 : 1); }, [step, live]); // eslint-disable-line react-hooks/exhaustive-deps
   const authCsrf = useRef('');
   async function authRequest(action, body) {
     if (!authCsrf.current) {
@@ -108,11 +123,10 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
       if (r.account && r.savedToAccount && ['connected', 'paused'].includes(r.integration?.status)) { window.location.replace(dashboardPath(lang)); return; }
       if (!r.account) setSaveOpen(true);
     }
-    onStageChange?.(r.journeyStep === 4 ? 1 : r.journeyStep === 1 ? 2 : r.journeyStep === 3 ? 3 : 0);
     setData(r); setAvailable(r.available === true); setCsrf(r.csrfToken || '');
     setReply(r.lastPreview?.text || null);
     setPath(r.integration?.path || r.prepared?.path || 'coexistence');
-    setStep(r.journeyStep === 2 || r.journeyStep === undefined || r.journeyStep === null ? (r.profile ? 1 : 0) : r.journeyStep);
+    setStep(r.journeyStep === 2 || r.journeyStep === undefined || r.journeyStep === null ? (r.profile ? 1 : 0) : r.journeyStep === 0 ? 0 : 1);
     if (r.prepared) {
       setWhatsappOpen(true);
       prepareFacebook(r.prepared).then(() => setPrepared(r.prepared)).catch(() => setError(explain('meta_sdk_unavailable')));
@@ -228,9 +242,9 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   }
   const goTo = journeyStep => run({ action: 'save_progress', journeyStep });
 
-  const steps = { 0: tr('Your business', 'نشاطك التجاري'), 4: tr('Replies and human handoffs', 'الردود والتحويل للفريق'), 1: tr('Connect your channels', 'ربط قنواتك'), 3: tr('Go live', 'التشغيل') };
-  // journeyStep ids are not in the order the customer walks them.
-  const currentPosition = Math.max(0, STEP_ORDER.indexOf(step));
+  const steps = { 0: tr('Your business', 'نشاطك التجاري'), 1: tr('Connect a channel', 'اربط قناة') };
+  const walk = [steps[0], steps[1], tr('Layla is live', 'ليلى تعمل')];
+  const currentPosition = step === 0 ? 0 : live ? 2 : 1;
   const needsAccount = !reviewMode && !data?.savedToAccount;
   const errorNote = error ? <p ref={errorRef} tabIndex={-1} className="layla-error" role="alert">{error}</p> : null;
   const saveProps = { lang, tr, data, busy, act, authRequest,
@@ -242,20 +256,20 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     <div className="layla-customer-layout">
       <aside className="layla-intro">
         <h1>{tr('Meet your new front desk.', 'تعرّف على موظفة استقبالك الجديدة.')}</h1>
-        <p>{tr('Tell Layla about your business, connect Instagram, WhatsApp or both, and go live. Four focused steps.', 'عرّف ليلى على نشاطك، واربط إنستغرام أو واتساب أو كليهما، ثم ابدأ التشغيل. أربع خطوات واضحة.')}</p>
+        <p>{tr('Tell Layla about your business, connect Instagram, WhatsApp or both, and she is live. Three short steps.', 'عرّف ليلى على نشاطك، واربط إنستغرام أو واتساب أو كليهما، وتبدأ ليلى العمل. ثلاث خطوات قصيرة.')}</p>
         <img src="/images/layla-onboarding-transparent.png" width="768" height="1376" alt={tr('Layla, wearing a teal jacket and a headset', 'ليلى ترتدي سترة بلون أزرق مخضر وسماعة رأس')} fetchpriority="high" />
         <p className="layla-intro-note">{tr('Your business. Your channels. You stay in control.', 'نشاطك. قنواتك. والقرار دائماً لك.')}</p>
       </aside>
       <div className="layla-workspace">
-        <ol className="layla-customer-steps" aria-label={tr('Setup progress','مراحل الإعداد')}>{STEP_ORDER.map((i, position) => {
-          const state = position < currentPosition ? 'done' : position === currentPosition ? 'current' : 'upcoming';
-          return <li key={steps[i]} data-state={state} aria-current={state === 'current' ? 'step' : undefined}>
+        <ol className="layla-customer-steps" aria-label={tr('Setup progress','مراحل الإعداد')}>{walk.map((name, position) => {
+          const state = position < currentPosition || (live && position === 2) ? 'done' : position === currentPosition ? 'current' : 'upcoming';
+          return <li key={name} data-state={state} aria-current={state === 'current' ? 'step' : undefined}>
             <span className="layla-step-mark" aria-hidden="true">{state === 'done' ? '✓' : position + 1}</span>
-            <span className="layla-step-name">{steps[i]}</span>
+            <span className="layla-step-name">{name}</span>
             {state === 'done' && <span className="ld-visually-hidden">{tr(' — done',' — مكتملة')}</span>}
           </li>;
         })}</ol>
-        <p className="layla-step-count" aria-hidden="true">{tr(`Step ${currentPosition + 1} of ${STEP_ORDER.length}`, `الخطوة ${(currentPosition + 1).toLocaleString('ar-EG')} من ${STEP_ORDER.length.toLocaleString('ar-EG')}`)} · {steps[step]}</p>
+        <p className="layla-step-count" aria-hidden="true">{tr(`Step ${currentPosition + 1} of ${walk.length}`, `الخطوة ${(currentPosition + 1).toLocaleString('ar-EG')} من ${walk.length.toLocaleString('ar-EG')}`)} · {walk[currentPosition]}</p>
         <h2 ref={heading} tabIndex={-1}>{steps[step]}</h2>
         {instagramReturn && <p className={instagramReturn.ok ? 'layla-saved' : 'layla-notice layla-notice--problem'} role={instagramReturn.ok ? 'status' : 'alert'}>{instagramReturn.text}</p>}
         {data?.account && <p>{tr('Signed in as','تم الدخول باسم')} {data.account.email} <button className="layla-secondary" disabled={busy} onClick={signOut}>{tr('Sign out / Use another account','تسجيل الخروج / استخدام حساب آخر')}</button></p>}
@@ -266,28 +280,26 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
           <BznsEditor lang={lang} data={data} request={request} onState={applyState} disabled={checking} />
           {errorNote}
         </>}
-        {step === 4 && <section aria-label={tr('Reply behavior', 'سلوك الردود')}>
-          <p>{tr('Layla answers using approved business facts. Unknown answers and requests needing a person belong in your inbox.', 'تجيب ليلى باستخدام معلومات النشاط المعتمدة. تظهر الأسئلة غير المعروفة والطلبات التي تحتاج شخصاً في صندوق الوارد.')}</p>
-          <ul><li>{tr('Take over stops automatic replies.', 'استلام المحادثة يوقف الردود الآلية.')}</li><li>{tr('Resolve closes the attention item; it does not restart Layla.', 'حل الطلب يغلق عنصر المتابعة دون إعادة تشغيل ليلى.')}</li><li>{tr('Return to Layla allows future eligible replies. Cancelled replies are never replayed.', 'الإعادة إلى ليلى تسمح بالردود المستقبلية المؤهلة. لا تُعاد الردود الملغاة.')}</li></ul>
-          <p>{tr('Team handoffs stay inside the platform.', 'تبقى تحويلات الفريق داخل المنصة.')}</p>
-          <button className="layla-secondary" disabled={busy} onClick={() => goTo(0)}>{tr('Back', 'رجوع')}</button>
-          <button className="layla-primary" disabled={busy} onClick={() => goTo(1)}>{tr('Continue to messaging connection', 'متابعة إلى ربط المراسلة')}</button>
-        </section>}
         {step === 1 && <section className="layla-channel-stage">
-          <p>{tr('Choose Instagram, WhatsApp, or both. Each connection has its own reply controls.', 'اختر إنستغرام أو واتساب أو كليهما. لكل اتصال أدوات مستقلة للتحكم بالردود.')}</p>
+          {live && <section className="layla-live" role="status" aria-labelledby="layla-live-heading">
+            <h3 id="layla-live-heading">{s.t('liveTitle')}</h3>
+            <p>{s.t('liveBody')}</p>
+            <a className="layla-primary" href={dashboardPath(lang)}>{s.t('openInbox')}</a>
+          </section>}
+          {!live && <p>{tr('Connect Instagram, WhatsApp or both. Layla starts replying as soon as a channel is connected, and you can turn her off at any time.', 'اربط إنستغرام أو واتساب أو كليهما. تبدأ ليلى الرد فور ربط القناة، ويمكنك إيقافها في أي وقت.')}</p>}
           {needsAccount && !data?.account && <SaveAccountPanel {...saveProps} />}
           {needsAccount && !data?.account && errorNote}
-          {!needsAccount && !reviewMode && <InstagramConnection lang={lang} showInbox />}
+          {!needsAccount && !reviewMode && <InstagramConnection lang={lang} inSetup autoOn={!!instagramReturn?.ok} onActive={reportLive('instagram')} />}
           <WhatsAppConnect tr={tr} explain={explain} open={whatsappOpen} onOpen={() => setWhatsappOpen(true)} data={data} busy={busy} available={available} reviewMode={reviewMode}
             prepared={prepared} preparing={preparing} path={path} onPathChange={changePath} preselect={preselect} onPreselectChange={changePreselect}
             onPrepare={() => prepare()} onConnect={connect} onCancelAttempt={reason => pending.current?.cancel(reason)}
             run={run} act={act} request={request} applyState={applyState}
+            liveSwitch={!reviewMode && data?.savedToAccount ? <ChannelSwitch s={s} channel="whatsapp" autoOn={whatsappJustConnected} onActive={reportLive('whatsapp')} /> : null}
             errorNote={needsAccount && !data?.account ? null : errorNote} onClaim={() => run({ action: 'claim_draft' })} />
+          <p className="layla-help">{s.t('handoffNote')}</p>
+          <TestLayla lang={lang} tr={tr} data={data} busy={busy} reviewMode={reviewMode} act={act} request={request} applyState={applyState} run={run} reply={reply} />
           <button className="layla-secondary" disabled={busy} onClick={() => leaveChannels(0)}>{tr('Back to business details','العودة إلى معلومات النشاط')}</button>
-          <button className="layla-primary" disabled={busy} onClick={() => leaveChannels(3)}>{tr('Continue to go live', 'متابعة إلى التشغيل')}</button>
         </section>}
-        {step === 3 && <GoLiveStep lang={lang} tr={tr} data={data} busy={busy} reviewMode={reviewMode} act={act} request={request} applyState={applyState} run={run} reply={reply} onBack={() => goTo(1)} />}
-        {!reviewMode && data?.savedToAccount && data?.integration && <ActivationPanel key={`${data.account?.email}:${data.integration.id}`} lang={lang} setup={data}/>}
         <footer className="layla-customer-footer"><a href={ar ? '/privacy' : '/en/privacy'}>{tr('Privacy','الخصوصية')}</a><a href="mailto:ahmed@bznsflowai.com">{tr('Need a hand?','تحتاج مساعدة؟')}</a></footer>
       </div>
     </div>

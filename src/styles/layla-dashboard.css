@@ -300,7 +300,7 @@
 }
 @media print { .ld-nav, .ld-top, .ld-composer { display: none; } }
 
-.ld-channel-card { border: 1px solid var(--line, #ddd); border-radius: 12px; padding: 16px; margin-block: 12px; max-width: 100%; }
+.ld-channel-card { margin-block: 12px; max-width: 100%; }
 .ld-channel-card h3 { margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
 .ld-channel-card .ld-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -322,3 +322,35 @@
 .ld-captured-none { margin: 0; font-size: .88rem; color: var(--ink-muted); }
 .ld-captured .ld-button { margin-inline-start: auto; min-block-size: 44px; }
 @media (max-width: 640px) { .ld-captured .ld-button { margin-inline-start: 0; } }
+
+/* Layla's switch — the one control for "is Layla replying". It also renders on the
+   setup page, so it carries its own tokens and mirror sign like .ld-button does. */
+.ld-layla-switch {
+  --paper: #f6efdf; --ink: #1a1a1a; --ink-2: #4b5563; --blue: #2f6ea3; --green-mark: #51a47b; --coral: #9c2e35; --x-sign: 1;
+  display: grid; gap: 4px; min-inline-size: 0;
+}
+[dir=rtl] .ld-layla-switch { --x-sign: -1; }
+.ld-layla-switch .ld-switch { min-block-size: 44px; gap: 12px; color: var(--ink); }
+.ld-switch-text { display: grid; line-height: 1.3; min-inline-size: 0; }
+.ld-switch-text strong { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.ld-switch-text small { color: var(--ink-2); font-size: 12px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Green marks "replying" the way the health dot marks "healthy": an annotation, never a fill. */
+.ld-layla-switch.is-on .ld-switch-text strong::before { content: ''; inline-size: 8px; block-size: 8px; border-radius: 999px; background: var(--green-mark); box-shadow: 0 0 0 2px var(--ink) inset; flex: none; }
+.ld-switch-note { margin: 0; font-size: 12px; color: var(--ink-2); max-inline-size: 46ch; }
+.ld-switch-note[role=alert] { color: var(--coral); }
+.ld-layla-switch input:disabled ~ .ld-switch-text { opacity: .6; }
+.ld-layla-switch input[aria-busy=true] + .ld-switch-track::after { transition-duration: 0ms; }
+@media (prefers-reduced-motion: reduce) { .ld-switch-track, .ld-switch-track::after { transition: none; } }
+
+/* Header: the health signal is a link to Settings → Channels. */
+a.ld-health { color: inherit; text-decoration: none; }
+a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
+.ld-health.is-warn { color: var(--ink); }
+
+/* Channel cards: identity line, switch, quiet actions. Same layout for every channel. */
+.ld-channels > p { color: var(--ink-2); max-inline-size: 65ch; }
+.ld-channel-card { border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--card); padding: 20px; display: grid; gap: 12px; }
+.ld-channel-card h3 { margin: 0; }
+.ld-channel-card > p { margin: 0; }
+.ld-channel-identity { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--ink-2); font-size: 13px; }
+.ld-channel-identity .ld-health { font-weight: 400; }
