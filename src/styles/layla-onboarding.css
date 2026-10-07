@@ -253,3 +253,51 @@
    fields as onboarding, without the full-page height, gutter and background. */
 .layla-customer.layla-embedded{min-height:0;padding:0;background:transparent}
 .layla-embedded .layla-workspace{max-width:760px}
+/* bzns.md editor */
+.bzns-editor{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+.bzns-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+.bzns-head h3,.bzns-start h3{margin:0}
+.bzns-rules{margin:0;padding-inline-start:20px;color:var(--layla-muted);display:grid;gap:4px}
+.bzns-tabs,.bzns-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.bzns-field{display:grid;gap:6px;font-weight:600}
+.bzns-field textarea{font:inherit;font-weight:400;line-height:1.7;min-height:420px;width:100%;max-width:100%;box-sizing:border-box;padding:14px;border:1px solid var(--layla-field-edge);border-radius:var(--layla-radius);background:var(--layla-surface);color:var(--layla-ink);resize:vertical;tab-size:2}
+.bzns-count{justify-self:end;font-size:12px;font-weight:400;color:var(--layla-muted);font-variant-numeric:tabular-nums}
+.bzns-count--over{color:var(--layla-red-ink);font-weight:600}
+.bzns-side{display:grid;gap:10px;padding:14px;border:1px solid var(--layla-rule);border-radius:var(--layla-radius);background:var(--layla-surface-soft)}
+.bzns-side h4{margin:0;font-size:14px}
+.bzns-checklist{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px}
+.bzns-checklist li{color:var(--layla-muted)}
+.bzns-checklist li[data-done="true"]{color:var(--layla-green-ink);font-weight:600}
+.bzns-guided summary{cursor:pointer;font-weight:600}
+.bzns-confirm{display:flex;align-items:center;gap:8px;font-weight:600}
+.bzns-start{display:grid;gap:12px}
+.bzns-start label{display:grid;gap:6px;font-weight:600;max-width:420px}
+.bzns-start select{font:inherit;padding:10px;border:1px solid var(--layla-field-edge);border-radius:var(--layla-radius);background:var(--layla-surface);color:var(--layla-ink)}
+.bzns-preview{padding:18px;border:1px solid var(--layla-rule);border-radius:var(--layla-radius);background:var(--layla-surface);overflow-wrap:anywhere}
+.bzns-preview h3{margin:0 0 4px}
+.bzns-preview-sector{margin:0 0 12px;color:var(--layla-muted);font-size:13px}
+.bzns-preview h4{margin:18px 0 6px;font-size:15px;border-block-end:1px solid var(--layla-rule);padding-block-end:4px}
+.bzns-preview p,.bzns-preview ul{margin:6px 0}
+@media (min-width:1024px){.bzns-editor{grid-template-columns:minmax(0,1fr) 300px}.bzns-editor>.bzns-head,.bzns-editor>.bzns-rules,.bzns-editor>.bzns-tabs,.bzns-editor>.layla-notice,.bzns-editor>.layla-error,.bzns-editor>.bzns-actions{grid-column:1/-1}.bzns-side{align-self:start}}
+.bzns-tabs{gap:0;border:1px solid var(--layla-ink);border-radius:var(--layla-radius);width:max-content;max-width:100%;overflow:hidden}
+/* Scoped under .bzns-editor so the setup page's generic button rule cannot repaint the tabs. */
+.bzns-editor .bzns-tabs .bzns-tab{font:inherit;font-weight:600;cursor:pointer;border:0;border-radius:0;margin:0;width:auto;flex:0 0 auto;background:var(--layla-surface);color:var(--layla-ink);padding:8px 18px;min-height:40px;box-shadow:none}
+.bzns-editor .bzns-tabs .bzns-tab+.bzns-tab{border-inline-start:1px solid var(--layla-ink)}
+.bzns-editor .bzns-tabs .bzns-tab[aria-selected="true"]{background:var(--layla-ink);color:var(--layla-surface)}
+.bzns-editor .bzns-tabs .bzns-tab:focus-visible{outline:3px solid #346d83;outline-offset:-3px}
+.bzns-tone{border:0;margin:0;padding:0;min-width:0}
+.bzns-tone legend{font-weight:600;padding:0;margin-block-end:8px}
+.bzns-tone-options{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:768px){.bzns-tone-options{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.bzns-tone-option{position:relative;display:grid;gap:4px;align-content:start;padding:12px 14px;border:1px solid var(--layla-rule-strong);border-radius:var(--layla-radius);background:var(--layla-surface);cursor:pointer}
+.bzns-tone-option input{position:absolute;inset-block-start:14px;inset-inline-end:14px;margin:0;accent-color:var(--layla-ink)}
+.bzns-tone-option[data-selected="true"]{border-color:var(--layla-ink);box-shadow:inset 0 0 0 1px var(--layla-ink)}
+.bzns-tone-option:focus-within{outline:3px solid #346d83;outline-offset:2px}
+.bzns-tone-name{font-weight:700;padding-inline-end:24px}
+.bzns-tone-desc{font-size:13px;color:var(--layla-muted)}
+.bzns-tone-sample{font-size:13px;margin-block-start:4px;padding:8px 10px;border-radius:var(--layla-radius);background:var(--layla-surface-soft);color:var(--layla-ink)}
+@media (min-width:1024px){.bzns-editor>.bzns-tone{grid-column:1/-1}}
+/* Scoped so generic form-label rules on the setup pages cannot flatten the cards. */
+.bzns-editor .bzns-tone .bzns-tone-option{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;font-weight:400}
+.bzns-editor .bzns-tone .bzns-tone-option>span{display:block}
+.bzns-editor .bzns-tone .bzns-tone-name{font-weight:700}

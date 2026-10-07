@@ -21,11 +21,12 @@ try {
     });
     await page.goto(`${base}${lang === 'en' ? '/en' : ''}/${product}/setup`);
     await page.getByRole('heading', { name: lang === 'en' ? 'Set up your workspace' : 'إعداد مساحة عملك' }).waitFor();
-    await page.waitForTimeout(250);
+    // Wait for the lazily loaded step content, not a fixed delay: axe must scan the settled page.
+    await page.locator(product === 'catalyst' ? '.bzns-start, .bzns-editor' : '.setup-content form, .setup-content h2').first().waitFor();
     assert.equal(await page.locator('meta[name="robots"]').getAttribute('content').then(x => x.includes('noindex')), true);
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${product}/${lang}/${width} overflow`);
     const audit = await new AxeBuilder({ page }).analyze();
-    assert.deepEqual(audit.violations.filter(v => ['serious', 'critical'].includes(v.impact)).map(v => v.id), []);
+    assert.deepEqual(audit.violations.filter(v => ['serious', 'critical'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`), [], `${product}/${lang}/${width} accessibility`);
     assert.deepEqual(errors, []);
     await page.keyboard.press('Tab'); assert(await page.evaluate(() => document.activeElement !== document.body));
     if (product === 'ascend') {

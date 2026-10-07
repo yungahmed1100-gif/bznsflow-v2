@@ -99,3 +99,10 @@ test('a transport failure never leaks its shape to the caller', async () => {
   await assert.rejects(() => catalogStore({ env, fetcher })('op'),
     (e) => e.code === 'catalog_unavailable' && e.status === 503);
 });
+
+test('bzns.md outcomes reach the editor instead of collapsing to an outage', async () => {
+  for (const reason of ['bzns_conflict', 'bzns_invalid', 'bzns_too_long']) {
+    const error = await rejected(reviewStore, { ok: false, reason });
+    assert.equal(error?.code, reason, `${reason} must be forwarded`);
+  }
+});

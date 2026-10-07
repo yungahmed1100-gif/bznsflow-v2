@@ -9,7 +9,7 @@ import '../styles/layla-onboarding.css';
 import { createSignupAttempt, signupOptions } from '../lib/layla-signup.js';
 import { prepareFacebook } from '../lib/meta-sdk.js';
 import { callApi } from '../lib/api-client.js';
-import { BusinessDetailsForm } from '../components/business/BusinessDetailsForm.jsx';
+import { BznsEditor } from '../components/business/BznsEditor.jsx';
 import { SaveAccountPanel } from '../components/onboarding/SaveAccountPanel.jsx';
 import { WhatsAppConnect } from '../components/onboarding/WhatsAppConnect.jsx';
 import { GoLiveStep } from '../components/onboarding/GoLiveStep.jsx';
@@ -132,10 +132,6 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     return () => { active = false; pending.current?.dispose(); pending.current = null; };
   }, []);
   useEffect(() => { heading.current?.focus(); }, [step]);
-  async function saveBusiness({ profile, businessName }) {
-    // The channels step that follows asks for sign-in inline when it is needed.
-    await act(async () => applyState(await request({ action: 'profile', profile, businessName })));
-  }
 
   // Meta's window --------------------------------------------------------------
   async function prepare(forPath = path, forPreselect = preselect) {
@@ -266,11 +262,10 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
         {data?.profile && <p className={data.savedToAccount ? 'layla-saved' : 'layla-saved layla-saved--preview'}>{data.savedToAccount ? tr('Saved to your account', 'محفوظ في حسابك') : tr('Preview saved in this browser for 24 hours.', 'المعاينة محفوظة في هذا المتصفح لمدة ٢٤ ساعة.')}</p>}
         {saveOpen && step !== 1 && needsAccount && <SaveAccountPanel {...saveProps} />}
         {step !== 0 && step !== 1 && errorNote}
-        {step === 0 && <BusinessDetailsForm key={data?.profileVersion ?? 'new'} lang={lang} mode="onboarding" inboxOnly={embedded} initial={{ profile: data?.profile, businessName: data?.profile?.businessName }} busy={busy || checking} onSubmit={saveBusiness}
-          submitLabel={checking ? tr('Checking secure setup…','جارٍ التحقق من الإعداد الآمن…') : tr('Save and continue','احفظ وتابع')}>
+        {step === 0 && <>
+          <BznsEditor lang={lang} data={data} request={request} onState={applyState} disabled={checking} />
           {errorNote}
-          {!checking && !available && <p className="layla-notice layla-notice--progress" role="status">{tr('Your business facts are saved securely for 24 hours without a BznsFlow login. Meta connection is waiting for verified Blue test setup.', 'تُحفظ معلومات نشاطك بأمان لمدة ٢٤ ساعة دون تسجيل دخول إلى BznsFlow. ينتظر ربط Meta التحقق من إعداد الاختبار في Blue.')}</p>}
-        </BusinessDetailsForm>}
+        </>}
         {step === 4 && <section aria-label={tr('Reply behavior', 'سلوك الردود')}>
           <p>{tr('Layla answers using approved business facts. Unknown answers and requests needing a person belong in your inbox.', 'تجيب ليلى باستخدام معلومات النشاط المعتمدة. تظهر الأسئلة غير المعروفة والطلبات التي تحتاج شخصاً في صندوق الوارد.')}</p>
           <ul><li>{tr('Take over stops automatic replies.', 'استلام المحادثة يوقف الردود الآلية.')}</li><li>{tr('Resolve closes the attention item; it does not restart Layla.', 'حل الطلب يغلق عنصر المتابعة دون إعادة تشغيل ليلى.')}</li><li>{tr('Return to Layla allows future eligible replies. Cancelled replies are never replayed.', 'الإعادة إلى ليلى تسمح بالردود المستقبلية المؤهلة. لا تُعاد الردود الملغاة.')}</li></ul>

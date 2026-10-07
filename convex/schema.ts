@@ -143,11 +143,14 @@ export default defineSchema({
     checkedAt: v.optional(v.number()), diagnostic: v.optional(v.object({ reason: v.string(), stage: v.string(), at: v.number(), providerCode: v.optional(v.number()) })),
     connectionChecks: v.optional(v.object({ routing: v.boolean(), registered: v.boolean(), path: v.boolean(), nameStatus:v.optional(v.string()), portfolio:v.optional(v.object({ id:v.string(), name:v.string(), verificationStatus:v.string() })) })),
     journeyStep: v.optional(v.number()), profileVersion: v.optional(v.number()),
+    // bzns.md: the owner's working draft and the version Layla currently answers from.
+    bznsDraft: v.optional(v.object({ markdown: v.string(), version: v.number(), savedAt: v.number() })),
+    bznsPublished: v.optional(v.object({ markdown: v.string(), revision: v.number(), publishedAt: v.number() })),
     // legacy: no longer written or read; kept so existing documents stay valid.
     previewReviewedVersion: v.optional(v.number()),
     previewIntents: v.optional(v.array(v.string())),
     lastPreview: v.optional(v.object({ question: v.string(), text: v.string(), sourceFields: v.array(v.string()), needsHuman: v.boolean(), intent: v.string() })),
-    profile: v.optional(v.object({ businessName: v.string(), sector: v.string(), services: v.string(), prices: v.string(), hours: v.string(), location: v.string(), humanContact: v.string(), handoffMode:v.optional(v.literal('inbox')), faqs:v.optional(v.array(v.object({question:v.string(),answer:v.string()}))), reviewed: v.boolean() })),
+    profile: v.optional(v.object({ businessName: v.string(), sector: v.string(), services: v.string(), prices: v.string(), hours: v.string(), location: v.string(), humanContact: v.string(), handoffMode:v.optional(v.literal('inbox')),tone:v.optional(v.union(v.literal('sharp'),v.literal('sweet'),v.literal('informative'))), faqs:v.optional(v.array(v.object({question:v.string(),answer:v.string()}))), reviewed: v.boolean() })),
     attempt: v.optional(v.object({ id: v.string(), stateHash: v.string(), path, expiresAt: v.number(), claimed: v.boolean(), preselect: v.optional(v.object({ business: v.optional(v.string()), waba: v.optional(v.string()) })) })),
     integration: v.optional(v.object({ id: v.string(), app: v.string(), waba: v.string(), phone: v.string(), sender: v.string(), path,
       credential: v.object({ v: v.number(), iv: v.string(), data: v.string(), tag: v.string() }) })),

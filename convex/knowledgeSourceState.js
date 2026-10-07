@@ -13,6 +13,12 @@ export async function approvedKnowledge(ctx, accountId) {
   }
   return result;
 }
+/** The published bzns.md sections Layla may quote, as { key, heading, body }. Read by the published revision, so other knowledge never crowds them out. */
+export async function publishedSections(ctx, accountId, revision) {
+  if (!accountId || !revision) return [];
+  const chunks = await ctx.db.query('blueKnowledgeChunks').withIndex('by_tenant_revision', q => q.eq('tenantId', String(accountId)).eq('revision', revision)).take(100);
+  return chunks.filter(c => c.source === 'bzns' && c.approved).map(c => ({ key: c.docType || 'other', heading: c.sectionPath || '', body: c.text.slice(c.text.indexOf('\n\n') + 2) }));
+}
 const draftSummary = d => ({ requestId: d.requestId, sourceKey: d.sourceKey, title: d.title, kind: d.kind, partial: !!d.partial, version: d.version, baseRevision: d.baseRevision, updatedAt: d.updatedAt, referenceCount: (d.references || []).length, textLength: (d.text || '').length });
 // Session validity and grants are checked here, inside the actual mutation entry.
 export async function executeKnowledge(ctx, a, now = Date.now()) {

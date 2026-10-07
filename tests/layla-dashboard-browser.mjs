@@ -315,32 +315,34 @@ try {
     await page.waitForURL(/\/en\/layla\/dashboard$/, { timeout: 5000 }); count++;
     await context.close();
   }
-  // Dashboard → Business: edit the facts Layla answers from. Saving is the review.
+  // Dashboard → Business: an existing customer converts saved details into bzns.md, edits and publishes.
   for (const [lang, width] of [['en', 1280], ['ar', 375]]) {
-    const saves = [];
-    const setup = { ok: true, csrfToken: 'a'.repeat(64), available: true, status: 'connected', savedToAccount: true, profileVersion: 3,
+    const writes = [];
+    const bzns = { markdown: null, version: 0, publishedRevision: 0, publishedAt: null, unpublishedChanges: false };
+    let setup = { ok: true, csrfToken: 'a'.repeat(64), available: true, status: 'connected', savedToAccount: true, profileVersion: 3, bzns,
       profile: { businessName: 'Blue Studio', sector: 'Photography', services: 'Portraits', prices: '', hours: '', location: '', humanContact: 'team@example.test', faqs: [], reviewed: true } };
     const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=business', handler: api(fixture()), extra: (surface, request) => {
       if (surface !== 'customer') return null;
       const body = request.method() === 'POST' ? request.postDataJSON() : {};
-      if (body.action === 'profile') { saves.push(body); return { status: 200, json: { ...setup, profileVersion: 4, profile: { ...body.profile, businessName: body.businessName } } }; }
+      if (body.action === 'bzns_publish') { writes.push(body); setup = { ...setup, profileVersion: 4, bzns: { markdown: body.markdown, version: body.version + 1, publishedRevision: 1, publishedAt: now, unpublishedChanges: false } }; }
       if (body.action === 'catalog_list') return { status: 200, json: { ...setup, catalog: { entries: [], cursor: null } } };
+      if (body.operation || body.action === 'list') return { status: 200, json: { ...setup, sources: [], drafts: [] } };
       return { status: 200, json: setup };
     } });
     const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
     await page.getByRole('heading', { name: t('Your business', 'نشاطك التجاري'), exact: true }).waitFor(); count++;
-    await page.getByText(t('Questions your customers ask (optional)', 'أسئلة يطرحها عملاؤك (اختياري)')).click();
-    const faq = page.getByLabel(t('Customer question', 'سؤال العميل'), { exact: true });
-    await faq.fill(t('Do you have parking?', 'هل لديكم موقف سيارات؟'));
-    await faq.press('Enter');
-    await page.waitForTimeout(300);
-    assert.deepEqual(saves, [], `${lang}: Enter in an optional field must not save`); count++;
-    await page.getByLabel(t('Short service summary', 'ملخص الخدمات')).fill(t('Portraits and weddings', 'صور شخصية وحفلات زفاف'));
-    assert.equal(await page.locator('label.layla-check').count(), 0, `${lang}: no second confirmation in the dashboard`); count++;
-    await page.getByRole('button', { name: t('Save changes', 'حفظ التغييرات') }).click();
-    await page.getByText(t('Saved. Layla now answers with these details.', 'تم الحفظ. تجيب ليلى الآن بهذه المعلومات.')).waitFor(); count++;
-    assert.equal(saves.length, 1); assert.equal(saves[0].profile.reviewed, true, 'saving is the review');
-    assert.equal(saves[0].profile.services, t('Portraits and weddings', 'صور شخصية وحفلات زفاف')); count += 2;
+    await page.getByRole('heading', { name: t('Add information', 'إضافة معلومات') }).waitFor(); count++; // older accounts keep their Q&A until bzns.md is published
+    await page.getByRole('button', { name: t('Start from my saved details', 'ابدأ من معلوماتي المحفوظة') }).click();
+    const doc = page.locator('.bzns-field textarea');
+    assert.match(await doc.inputValue(), /name: Blue Studio[\s\S]*Portraits/, `${lang}: saved details become the starting document`); count++;
+    await doc.fill((await doc.inputValue()).replace('Portraits', t('Portraits and weddings', 'صور شخصية وحفلات زفاف')));
+    const publish = page.getByRole('button', { name: t('Publish and continue', 'انشر وتابع') });
+    assert.equal(await publish.isDisabled(), true, `${lang}: publishing needs the owner's confirmation`); count++;
+    await page.getByLabel(t('I checked these business details', 'راجعت معلومات النشاط هذه')).check();
+    await publish.click();
+    await page.getByText(t('Published. Layla now answers from this version.', 'تم النشر. تجيب ليلى الآن من هذه النسخة.')).waitFor(); count++;
+    assert.equal(await page.getByRole('heading', { name: t('Add information', 'إضافة معلومات') }).count(), 0, `${lang}: the legacy Q&A panel retires once bzns.md is published`); count++;
+    assert.equal(writes.length, 1); assert.match(writes[0].markdown, new RegExp(t('Portraits and weddings', 'صور شخصية وحفلات زفاف'))); count += 2;
     assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`); count++;
     await context.close();
   }

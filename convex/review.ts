@@ -1,15 +1,16 @@
 import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import { detachIntegration, executeReview, resetAttempts } from './reviewState.js';
-export const profile = v.object({ businessName: v.string(), sector: v.string(), services: v.string(), prices: v.string(), hours: v.string(), location: v.string(), humanContact: v.string(), handoffMode:v.optional(v.literal('inbox')), faqs:v.optional(v.array(v.object({question:v.string(),answer:v.string()}))), reviewed: v.boolean() });
+export const profile = v.object({ businessName: v.string(), sector: v.string(), services: v.string(), prices: v.string(), hours: v.string(), location: v.string(), humanContact: v.string(), handoffMode:v.optional(v.literal('inbox')),tone:v.optional(v.union(v.literal('sharp'),v.literal('sweet'),v.literal('informative'))), faqs:v.optional(v.array(v.object({question:v.string(),answer:v.string()}))), reviewed: v.boolean() });
 export const path = v.union(v.literal('coexistence'), v.literal('new_number'), v.literal('existing_cloud'));
 export const integration = v.object({ id: v.string(), app: v.string(), waba: v.string(), phone: v.string(), sender: v.string(), path, credential: v.object({ v: v.number(), iv: v.string(), data: v.string(), tag: v.string() }) });
 export const execute = internalMutation({ args: {
-  operation: v.union(...['create','get','profile','begin','await','claim','cancel','credential','claim_operation','result','pause','save_progress','preview_result','pending_selection','cancel_selection'].map(s => v.literal(s))),
+  operation: v.union(...['create','get','profile','begin','await','claim','cancel','credential','claim_operation','result','pause','save_progress','preview_result','pending_selection','cancel_selection','bzns_save','bzns_publish'].map(s => v.literal(s))),
   selection: v.optional(v.object({ waba: v.string(), path, candidates: v.array(v.object({ id: v.string(), sender: v.string() })), credential: v.object({ v: v.number(), iv: v.string(), data: v.string(), tag: v.string() }) })),
   diagnostic: v.optional(v.object({ reason: v.string(), stage: v.string(), at: v.number(), providerCode: v.optional(v.number()) })),
   connectionChecks: v.optional(v.object({ routing: v.boolean(), registered: v.boolean(), path: v.boolean(), nameStatus:v.optional(v.string()), portfolio:v.optional(v.object({ id:v.string(), name:v.string(), verificationStatus:v.string() })) })),
   journeyStep: v.optional(v.number()), profileVersion: v.optional(v.number()),
+  markdown: v.optional(v.string()), version: v.optional(v.number()),
   preview: v.optional(v.object({ question: v.string(), text: v.string(), sourceFields: v.array(v.string()), needsHuman: v.boolean(), intent: v.string() })),
   sessionHash: v.string(), profile: v.optional(profile), attempt: v.optional(v.string()), stateHash: v.optional(v.string()), path: v.optional(path),
   preselect: v.optional(v.object({ business: v.optional(v.string()), waba: v.optional(v.string()) })),

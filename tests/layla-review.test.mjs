@@ -381,3 +381,20 @@ test('signup completion is accepted from Meta subdomains but never from look-ali
   for (const origin of ['https://www.facebook.com','https://business.facebook.com','https://web.facebook.com']) assert.equal(await finish(origin),1,origin);
   for (const origin of ['https://evilfacebook.com','http://business.facebook.com','https://facebook.com.evil.io','https://business.facebook.com:8443','null']) assert.equal(await finish(origin),0,origin);
 });
+test('bzns.md drafts save with versions, publish returns section errors, and a published document drives answers',async()=>{
+  const h=harness(),c=await client(h.handler);
+  const md=`---\nname: Qurum Coast Properties\nsector: real-estate\n---\n## What we offer\n- Rentals and sales\n## Hours\nSunday to Thursday 8:30 to 17:30\n## Location\nAl Qurum, Muscat\n`;
+  assert.deepEqual(c.initial.body.bzns,{markdown:null,version:0,publishedRevision:0,publishedAt:null,unpublishedChanges:false});
+  const saved=await c.call({action:'bzns_save',markdown:'## draft',version:0});
+  assert.equal(saved.statusCode,200);assert.equal(saved.body.bzns.markdown,'## draft');assert.equal(saved.body.bzns.version,1);assert.equal(saved.body.profile,null);
+  assert.equal((await c.call({action:'bzns_save',markdown:'## stale',version:0})).body.reason,'bzns_conflict');
+  const blocked=await c.call({action:'bzns_publish',markdown:md.replace('Al Qurum','[address]').replace('Rentals','Rentals from 400 OMR'),version:1});
+  assert.equal(blocked.statusCode,400);assert.equal(blocked.body.reason,'bzns_invalid');
+  assert.deepEqual(blocked.body.errors.map(e=>`${e.code}:${e.section}`).sort(),['bzns_money:offer','bzns_placeholder:location']);
+  const published=await c.call({action:'bzns_publish',markdown:md,version:1});
+  assert.equal(published.statusCode,200);assert.equal(published.body.profile.businessName,'Qurum Coast Properties');
+  assert.deepEqual({revision:published.body.bzns.publishedRevision,changes:published.body.bzns.unpublishedChanges},{revision:1,changes:false});
+  assert.equal(published.body.journeyStep,4);
+  assert.match((await c.call({action:'preview',text:'What are your opening hours?'})).body.preview,/Sunday to Thursday/);
+  assert.equal((await c.call({action:'bzns_save',markdown:'x'.repeat(10001),version:2})).statusCode,413);
+});

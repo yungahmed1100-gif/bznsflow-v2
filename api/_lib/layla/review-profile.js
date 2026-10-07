@@ -1,5 +1,6 @@
 import { PilotError } from './config.js';
 import { answer } from './domain.js';
+import { phrase, TONE_IDS } from '../../../config/layla-tones.js';
 
 const fields = ['sector', 'services', 'prices', 'hours', 'location', 'humanContact'];
 export function validateReviewProfile(input) {
@@ -16,6 +17,8 @@ export function validateReviewProfile(input) {
   profile.faqs = faqs.map(f=>({question:f.question.trim(),answer:f.answer.trim()}));
   if (input.handoffMode !== undefined && input.handoffMode !== 'inbox') throw new PilotError('invalid_profile');
   if (input.handoffMode === 'inbox') profile.handoffMode = 'inbox';
+  if (input.tone !== undefined && !TONE_IDS.includes(input.tone)) throw new PilotError('invalid_profile');
+  if (input.tone) profile.tone = input.tone;
   return profile;
 }
 export function previewAnswer(question, profile, catalog = []) {
@@ -27,9 +30,9 @@ export function previewAnswer(question, profile, catalog = []) {
   if(item){const price=item.prices?.[0],name=(ar?item.nameAr:item.nameEn)||item.nameEn||item.nameAr;const benefit=(ar?item.benefitAr:item.benefitEn)||item.descriptionEn||item.descriptionAr;const priceText=price?.label||'';const text=[name,benefit,priceText].filter(Boolean).join(' — ');return {question,text:text.slice(0,700),sourceFields:['catalog'],needsHuman:!price&&/سعر|تكلفة|بكم|price|cost|how much/i.test(question),intent:price?'prices':'services'};}
   const result = answer(question, profile, true);
   const sourceFields = ['services', 'prices', 'hours', 'location'].includes(result.intent) && profile[result.intent] ? [result.intent] : [];
-  const needsHuman = ['human', 'unknown', 'disabled'].includes(result.intent) || (['services','prices','hours','location'].includes(result.intent) && !sourceFields.length);
+  const needsHuman = ['human', 'unknown', 'disabled', 'negotiation', 'abuse'].includes(result.intent) || (['services','prices','hours','location'].includes(result.intent) && !sourceFields.length);
   let text = result.text;
-  if (['greeting', 'identity'].includes(result.intent)) text = ar ? `أنا ليلى، المساعدة الافتراضية لدى ${profile.businessName}. كيف أساعدك؟` : `I’m Layla, the virtual assistant for ${profile.businessName}. How can I help?`;
+  if (['greeting', 'identity'].includes(result.intent)) text = phrase(profile.tone, 'greeting', ar ? 'ar' : 'en', { business: profile.businessName });
   if (result.intent === 'optout') text = ar ? 'هذه معاينة فقط. لن نرسل أي رسائل واتساب.' : 'This is a preview. No WhatsApp messages will be sent.';
   if (needsHuman && !profile.humanContact && profile.handoffMode !== 'inbox') text += ar ? ' أضف جهة اتصال للفريق قبل تفعيل الردود.' : 'Add your team’s contact details before activating replies.';
   return { question, text, sourceFields, needsHuman, intent: result.intent };

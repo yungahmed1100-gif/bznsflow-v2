@@ -71,7 +71,8 @@ function convexStore({ route, fallback, timeout = 8000, reasons = REASON_CODE, s
 // Reasons the review flow is allowed to show a customer. Anything outside the
 // list is a backend detail and collapses to `review_backend_unavailable`.
 const REVIEW_REASONS = ['invalid_profile', 'profile_changed', 'refresh_throttled', 'session_expired',
-  'attempt_used', 'attempt_expired', 'invalid_state', 'operation_conflict', 'asset_in_use', 'attempt_limit'];
+  'attempt_used', 'attempt_expired', 'invalid_state', 'operation_conflict', 'asset_in_use', 'attempt_limit',
+  'bzns_conflict', 'bzns_invalid', 'bzns_too_long'];
 
 const AUTH_REASONS = ['too_soon', 'too_many', 'code_invalid', 'email_unverified', 'session_expired', 'draft_not_claimable',
   'draft_expired', 'draft_already_claimed', 'draft_operation_in_progress', 'draft_selection_pending', 'draft_attempt_active', 'draft_details_unconfirmed'];

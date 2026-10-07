@@ -17,6 +17,7 @@ const SUITES = [
   'tests/instagram-browser.mjs',
   'tests/layla-dashboard-browser.mjs',
   'tests/product-setup-browser.mjs',
+  'tests/bzns-editor-browser.mjs',
 ];
 
 const server = spawn(process.execPath, ['scripts/preview.mjs', '--port', String(PORT)], { stdio: 'ignore' });

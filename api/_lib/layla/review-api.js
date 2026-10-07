@@ -8,6 +8,7 @@ import { readBody, send, sendPilotError } from '../http.js';
 import { PilotError } from './config.js';
 import { importWebsite } from './website-import.js';
 import { validateReviewProfile, previewAnswer } from './review-profile.js';
+import { BZNS_MAX_CHARS, validateBzns } from '../../../src/lib/bzns-doc.js';
 import { credentialContext, exchangeAndVerify, metaRequest, openToken, sealToken } from './customer-meta.js';
 import { verifySignupConfiguration } from './eligibility.js';
 
@@ -68,7 +69,15 @@ function publicState(row, available, accountReady = true) {
     nextAction: row.status === 'registration_required' ? 'register_number' : row.integration && !['connected','paused'].includes(row.status) ? 'refresh' : row.profile ? 'preview' : 'profile',
     selection: row.pendingSelection ? { candidates: row.pendingSelection.candidates, expiresAt: row.attempt?.expiresAt } : null,
     connectionChecks: row.connectionChecks || null, checkedAt: row.checkedAt || null, diagnostic: row.diagnostic || null,
-    integration: row.integration ? { id: row.integration.id, sender: row.integration.sender, path: row.integration.path, status: row.status } : null };
+    integration: row.integration ? { id: row.integration.id, sender: row.integration.sender, path: row.integration.path, status: row.status } : null,
+    bzns: bznsState(row) };
+}
+// The owner's working bzns.md and whether Layla is answering from the latest version of it.
+function bznsState(row) {
+  const draft = row.bznsDraft, published = row.bznsPublished;
+  return { markdown: draft?.markdown ?? published?.markdown ?? null, version: draft?.version || 0,
+    publishedRevision: published?.revision || 0, publishedAt: published?.publishedAt || null,
+    unpublishedChanges: !!draft && draft.markdown !== published?.markdown };
 }
 function allowedAssets(env, waba, phone) {
   if (!assetId(waba) || !assetId(phone)) throw new PilotError('invalid_signup_result');
@@ -242,6 +251,15 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         const businessName = body.businessName?.trim();
         if (typeof businessName !== 'string' || !businessName || businessName.length > 100 || /[\x00-\x1f]/.test(businessName)) throw new PilotError('invalid_profile');
         await write('profile', { profile: { ...validateReviewProfile(body.profile), businessName } });
+      } else if (body.action === 'bzns_save' || body.action === 'bzns_publish') {
+        if (typeof body.markdown !== 'string' || !Number.isSafeInteger(body.version) || body.version < 0) throw new PilotError('invalid_state');
+        if (body.markdown.length > BZNS_MAX_CHARS) throw new PilotError('bzns_too_long',413);
+        if (body.action === 'bzns_publish') {
+          // Section-level errors go back to the editor; Convex validates again before writing.
+          const checked = validateBzns(body.markdown);
+          if (!checked.ok) return send(res,400,{ok:false,reason:'bzns_invalid',errors:checked.errors.map(({code,section,heading})=>({code,section,...(heading ? {heading} : {})}))},{vary:'Cookie'});
+        }
+        await write(body.action, { markdown: body.markdown, version: body.version });
       } else if (body.action === 'preview') {
         if (!row.profile?.reviewed) throw new PilotError('profile_unreviewed',409);
         if (typeof body.text !== 'string' || !body.text.trim() || body.text.length > 1000) throw new PilotError('invalid_text');

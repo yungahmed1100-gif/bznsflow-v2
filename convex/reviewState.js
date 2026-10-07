@@ -1,4 +1,5 @@
 // Every transition executes in one Convex mutation; provider calls happen outside it.
+import { BZNS_MAX_CHARS, bznsChunks, deriveProfile, validateBzns } from '../src/lib/bzns-doc.js';
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const id = value => typeof value === 'string' && /^[a-f0-9-]{32,64}$/.test(value);
 const paths = ['coexistence', 'new_number', 'existing_cloud'];
@@ -17,6 +18,10 @@ export async function executeReview(ctx, a, now = Date.now()) {
   if (a.operation === 'credential' && (!id(a.attempt) || !a.integration || !/^\d{1,30}$/.test(a.integration.phone) || !/^\d{1,30}$/.test(a.integration.waba) || !id(a.integration.id) || a.integration.app !== '1388038082832745' || !paths.includes(a.integration.path) || a.integration.credential?.data?.length > 12000)) return fail('invalid_state');
   if (a.operation === 'claim_operation' && (!id(a.operationId) || !['register','subscribe','refresh'].includes(a.effect))) return fail('invalid_state');
   if (a.operation === 'result' && (!['connected','registration_required','reconciliation_required','failed'].includes(a.status) || (a.operationId ? !id(a.operationId) : !id(a.attempt)))) return fail('invalid_state');
+  if (['bzns_save','bzns_publish'].includes(a.operation)) {
+    if (typeof a.markdown !== 'string' || !Number.isSafeInteger(a.version) || a.version < 0) return fail('invalid_state');
+    if (a.markdown.length > BZNS_MAX_CHARS) return fail('bzns_too_long');
+  }
   let row = await ctx.db.query('blueReviewSessions').withIndex('by_hash', q => q.eq('sessionHash', a.sessionHash)).unique();
   if (a.operation === 'create' && !row) {
     const key = await ctx.db.insert('blueReviewSessions', { sessionHash: a.sessionHash, status: 'empty', expiresAt: now + 86400000, createdAt: now, updatedAt: now, attempts: 0 });
@@ -27,6 +32,27 @@ export async function executeReview(ctx, a, now = Date.now()) {
   if (a.operation === 'profile') {
     if (row.operation || (row.attempt && !row.attempt.claimed && row.attempt.expiresAt > now && ['prepared','awaiting_meta'].includes(row.status))) return fail('operation_conflict');
     await patch({ profile: a.profile, metrics:{...row.metrics,draftSavedAt:row.metrics?.draftSavedAt || now}, profileVersion: (row.profileVersion || (row.profile ? 1 : 0)) + 1, lastPreview: undefined, previewIntents: [], journeyStep: [undefined, 0, 2].includes(row.journeyStep) ? 4 : row.journeyStep, status: row.integration || row.pendingSelection || row.attempt ? row.status : 'business_saved' });
+  } else if (a.operation === 'bzns_save') {
+    if ((row.bznsDraft?.version || 0) !== a.version) return fail('bzns_conflict');
+    await patch({ bznsDraft: { markdown: a.markdown, version: a.version + 1, savedAt: now } });
+  } else if (a.operation === 'bzns_publish') {
+    if (row.operation || (row.attempt && !row.attempt.claimed && row.attempt.expiresAt > now && ['prepared','awaiting_meta'].includes(row.status))) return fail('operation_conflict');
+    if ((row.bznsDraft?.version || 0) !== a.version) return fail('bzns_conflict');
+    // The server re-validates: the derived profile never comes from the browser.
+    const checked = validateBzns(a.markdown);
+    if (!checked.ok) return fail('bzns_invalid');
+    const { businessName, profile } = deriveProfile(checked.parsed);
+    const previousRevision = row.bznsPublished?.revision || 0, revision = previousRevision + 1;
+    await patch({ profile: { ...profile, businessName }, bznsDraft: { markdown: a.markdown, version: a.version + 1, savedAt: now }, bznsPublished: { markdown: a.markdown, revision, publishedAt: now },
+      metrics:{...row.metrics,draftSavedAt:row.metrics?.draftSavedAt || now}, profileVersion: (row.profileVersion || (row.profile ? 1 : 0)) + 1, lastPreview: undefined, previewIntents: [],
+      journeyStep: [undefined, 0, 2].includes(row.journeyStep) ? 4 : row.journeyStep, status: row.integration || row.pendingSelection || row.attempt ? row.status : 'business_saved' });
+    if (row.accountId) {
+      const tenantId = String(row.accountId);
+      // Only the previous published revision's sections are replaced: a bounded read, whatever else the tenant has stored.
+      const previous = previousRevision ? await ctx.db.query('blueKnowledgeChunks').withIndex('by_tenant_revision', q => q.eq('tenantId', tenantId).eq('revision', previousRevision)).take(200) : [];
+      for (const chunk of previous) if (chunk.source === 'bzns') await ctx.db.delete(chunk._id);
+      for (const chunk of bznsChunks(checked.parsed, { tenantId, revision, now })) await ctx.db.insert('blueKnowledgeChunks', chunk);
+    }
   } else if (a.operation === 'preview_result') {
     if (!row.profile?.reviewed || a.profileVersion !== (row.profileVersion || 1)) return fail('profile_changed');
     if (!a.preview || typeof a.preview.question !== 'string' || a.preview.question.length > 1000 || typeof a.preview.text !== 'string' || a.preview.text.length > 1200) return fail('invalid_state');

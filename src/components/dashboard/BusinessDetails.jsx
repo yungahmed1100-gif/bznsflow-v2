@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { callApi } from '../../lib/api-client.js';
 import { explain as explainReason } from '../../lib/onboarding/explanations.js';
-import { BusinessDetailsForm } from '../business/BusinessDetailsForm.jsx';
+import { BznsEditor } from '../business/BznsEditor.jsx';
 import { AddInformation } from '../business/AddInformation.jsx';
 import { CatalogManager } from '../business/CatalogManager.jsx';
 import '../../styles/layla-onboarding.css';
@@ -15,11 +15,11 @@ const endpoint = '/api/layla-meta?surface=customer';
  * replies stay on. `section`: 'all', 'details' (Settings when Stock exists), or
  * 'services' (Stock → Services).
  */
-export function BusinessDetails({ s, section = 'all', initialIndustryId, onSaved }) {
+export function BusinessDetails({ s, section = 'all', onSaved }) {
   const { lang, ar } = s;
   const tr = (en, arabic) => ar ? arabic : en;
   const explain = reason => explainReason(reason, lang);
-  const [setup, setSetup] = useState(null), [error, setError] = useState(''), [busy, setBusy] = useState(false), [saved, setSaved] = useState(false);
+  const [setup, setSetup] = useState(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const running = useRef(false);
   const csrf = setup?.csrfToken || '';
   const request = useCallback(body => callApi(endpoint, { body, csrf, timeout: 60000 }), [csrf]);
@@ -33,10 +33,6 @@ export function BusinessDetails({ s, section = 'all', initialIndustryId, onSaved
     callApi(endpoint).then(r => { if (live) setSetup(r); }).catch(e => { if (live) setError(explainReason(e.message || 'restore_failed', lang)); });
     return () => { live = false; };
   }, [lang]);
-  const save = ({ profile, businessName }) => act(async () => {
-    const r = await request({ action: 'profile', profile, businessName });
-    setSetup(r); setSaved(true); onSaved?.();
-  });
 
   if (!setup) return <p className="ld-state" role={error ? 'alert' : 'status'}>{error || s.t('loading')}</p>;
   return (
@@ -50,12 +46,9 @@ export function BusinessDetails({ s, section = 'all', initialIndustryId, onSaved
           <p className="layla-stage-intro">{tr('What Layla tells your customers. Change anything here and she answers with it from the next message.', 'ما تخبر به ليلى عملاءك. غيّر أي شيء هنا وستجيب به من الرسالة التالية.')}</p>
         </>}
         {error && <p className="layla-error" role="alert">{error}</p>}
-        {saved && !error && <p className="layla-saved" role="status">{tr('Saved. Layla now answers with these details.', 'تم الحفظ. تجيب ليلى الآن بهذه المعلومات.')}</p>}
-        {section === 'services' ? null : setup.profile
-          ? <BusinessDetailsForm key={`${setup.profileVersion}:${initialIndustryId || ''}`} lang={lang} mode="dashboard" initial={{ profile: setup.profile, businessName: setup.profile.businessName }} initialIndustryId={initialIndustryId}
-              busy={busy} onSubmit={save} submitLabel={busy ? s.t('loading') : tr('Save changes', 'حفظ التغييرات')} />
-          : <p>{tr('Finish setup first.', 'أكمل الإعداد أولاً.')} <a href={`${ar ? '' : '/en'}/catalyst/setup`}>{tr('Open setup', 'افتح الإعداد')}</a></p>}
-        {setup.profile && section !== 'services' && <AddInformation lang={lang} request={request} />}
+        {section !== 'services' && <BznsEditor lang={lang} data={setup} request={request} onState={next => { setSetup(next); onSaved?.(); }} disabled={busy} />}
+        {/* Older accounts keep their published Q&A until bzns.md replaces it. */}
+        {setup.profile && section !== 'services' && !setup.bzns?.publishedRevision && <AddInformation lang={lang} request={request} />}
         {setup.profile && section !== 'details' && <section {...(section === 'all' ? { 'aria-labelledby': 'business-catalog-heading' } : { 'aria-label': tr('Services', 'الخدمات') })}>
           {section === 'all' && <h2 id="business-catalog-heading">{tr('Services, prices and imports', 'الخدمات والأسعار والاستيراد')}</h2>}
           <CatalogManager lang={lang} request={request} act={act} busy={busy} onError={setError} explain={explain}
