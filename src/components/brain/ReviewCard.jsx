@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BRAIN_SECTIONS } from '../../lib/bzns-doc.js';
 import { BznsWord } from './BznsWord.jsx';
+import { Icon } from '../ui/Icon.jsx';
 
 const FIRST = 3;
 const SECTIONS = Object.keys(BRAIN_SECTIONS).filter(k => k !== 'contact');
@@ -53,7 +54,7 @@ export function ReviewCard({ b, lang, brain, request, take, act, busy, onAccepte
   const shown = all ? proposals : proposals.slice(0, FIRST);
   return (
     <details className="brain-card brain-review" open={open || undefined}>
-      <summary><span className="brain-card-title">{b.t('reviewTitle')}</span>{!!brain?.total && <span className="ld-chip is-yellow">{b.t('reviewCount', { count: brain.total })}</span>}</summary>
+      <summary><Icon name="inbox" size={18} className="brain-card-icon" /><span className="brain-card-title">{b.t('reviewTitle')}</span>{!!brain?.total && <span className="ld-chip is-yellow">{b.t('reviewCount', { count: brain.total })}</span>}</summary>
       {note && <p role="status" className="brain-note">{note}</p>}
       {!proposals.length ? <p className="ld-help">{b.t('reviewNone')}</p> : <ul className="brain-proposals">{shown.map(p => <Proposal key={p.id} b={b} p={p} lang={lang} busy={busy} decide={decide} />)}</ul>}
       {proposals.length > FIRST && <button type="button" className="ld-button ld-quiet" onClick={() => setAll(v => !v)}>{all ? b.t('showLess') : b.t('showAll')}</button>}

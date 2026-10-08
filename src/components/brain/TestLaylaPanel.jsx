@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Icon } from '../ui/Icon.jsx';
 
 /**
  * Test Layla in a side panel: the live decision logic (context, question planning, the AI turn and
@@ -37,11 +38,13 @@ export function TestLaylaPanel({ b, request, take, onClose, hasDraft, onTested }
           <h2 id="brain-test-title">{b.t('testTitle')}</h2>
           <button type="button" className="ld-icon-button" onClick={onClose} aria-label={b.t('close')}><span aria-hidden="true">×</span></button>
         </header>
-        <div className="brain-variant" role="radiogroup" aria-label={b.t('testTitle')}>
-          {['draft', 'published'].map(v => <button key={v} type="button" role="radio" aria-checked={variant === v} className={`brain-variant-option ${variant === v ? 'is-on' : ''}`} onClick={() => reset(v)}>{b.t(v === 'draft' ? 'testDraft' : 'testPublished')}</button>)}
+        <div className="brain-sheet-bar">
+          <div className="brain-variant" role="radiogroup" aria-label={b.t('testTitle')}>
+            {['draft', 'published'].map(v => <button key={v} type="button" role="radio" aria-checked={variant === v} className={`brain-variant-option ${variant === v ? 'is-on' : ''}`} onClick={() => reset(v)}>{b.t(v === 'draft' ? 'testDraft' : 'testPublished')}</button>)}
+          </div>
+          {!!turns.length && <button type="button" className="ld-button ld-quiet brain-reset" onClick={() => reset()}><Icon name="undo" size={14} />{b.t('reset')}</button>}
         </div>
-        <p className={`brain-variant-label ${variant === 'draft' ? 'is-draft' : ''}`} role="status">{b.t(variant === 'draft' ? 'testingDraft' : 'testingPublished')}</p>
-        <p className="ld-help">{b.t('testNote')}</p>
+        <p className={`brain-variant-label ${variant === 'draft' ? 'is-draft' : ''}`} role="status">{b.t(variant === 'draft' ? 'testingDraft' : 'testingPublished')}<span className="brain-variant-note"> · {b.t('testNote')}</span></p>
         <ol className="brain-test-log" aria-live="polite">
           {turns.map((t, i) => <li key={i}>
             <p className="brain-bubble is-customer" dir="auto">{t.question}</p>
@@ -59,7 +62,6 @@ export function TestLaylaPanel({ b, request, take, onClose, hasDraft, onTested }
           <label className="brain-grow"><span className="ld-visually-hidden">{b.t('testPlaceholder')}</span><input ref={input} dir="auto" maxLength={500} placeholder={b.t('testPlaceholder')} value={text} onChange={e => setText(e.target.value)} disabled={busy} /></label>
           <button type="submit" className="ld-button ld-primary" disabled={busy || !text.trim()}>{b.t('send')}</button>
         </form>
-        {!!turns.length && <button type="button" className="ld-button ld-quiet" onClick={() => reset()}>{b.t('reset')}</button>}
       </div>
     </dialog>
   );

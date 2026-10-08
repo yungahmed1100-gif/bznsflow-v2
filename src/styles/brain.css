@@ -1,21 +1,27 @@
 /* Catalyst BznsBrain (Settings › BznsBrain and setup). Ledger system: paper ground, ink rules,
-   annotation colours for meaning only. Logical properties throughout, so Arabic mirrors itself. */
+   annotation colours for meaning only, hard shadows only on what you act on. Logical properties
+   throughout, so Arabic mirrors itself. */
 .brain, .brain-sheet {
   /* The Ledger tokens, so BznsBrain looks the same inside the dashboard and on the setup page. */
   --paper: #f6efdf; --paper-ruled: #ebe1c9; --card: #fff; --ink: #1a1a1a; --ink-2: #4b5563; --ink-muted: #565e6b;
   --rule: rgba(0, 0, 0, .08); --rule-strong: rgba(0, 0, 0, .15); --blue: #2f6ea3; --green: #22603f; --green-mark: #51a47b;
   --orange: #f28c54; --coral: #9c2e35; --coral-mark: #e16b71; --yellow: #eeb462; --radius: 4px;
+  --fs-xs: 12px; --fs-sm: 13px; --fs-md: 15px; --fs-lg: 16px; --ease: 120ms ease-out;
 }
-.brain { --brain-gap: 16px; display: grid; gap: var(--brain-gap); max-width: 1040px; color: var(--ink); }
-.brain-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; padding-block-end: 12px; border-block-end: 2px solid var(--ink); }
-.brain-head > div:first-child { flex: 1 1 320px; min-width: 0; }
-.brain-title { font-size: clamp(24px, 3.2vw, 32px); line-height: 1.1; margin: 0 0 6px; letter-spacing: -.01em; }
+.brain { --x-sign: 1; --brain-gap: 16px; display: grid; gap: var(--brain-gap); max-width: 1040px; color: var(--ink); }
+.brain[dir=rtl] { --x-sign: -1; }
+.brain :is(button, a, summary, input, select, textarea):focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* Header: status at the start, the two actions at the end, one ink rule under it. */
+.brain-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding-block-end: 12px; border-block-end: 2px solid var(--ink); }
+.brain-status { font-size: var(--fs-sm); padding: 4px 12px; }
 .brain-head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.brain-note { margin: 0; padding: 8px 12px; border-inline-start: 3px solid var(--green-mark); background: var(--card); font-size: 14px; }
-.brain-problems { margin: 0; padding: 10px 14px; border-inline-start: 3px solid var(--coral-mark); background: var(--card); font-size: 14px; }
-.brain-problems p, .brain-problems ul { margin: 0; }
-.brain-problems ul { padding-inline-start: 18px; margin-block-start: 4px; }
-.brain-warning { margin: 0; padding: 8px 12px; border-inline-start: 3px solid var(--yellow); background: var(--paper-ruled); font-size: 13px; }
+.brain-head-actions .ld-button, .brain-add-item, .brain-empty .ld-button, .brain-add .ld-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.brain-note { margin: 0; padding: 8px 12px; border-inline-start: 3px solid var(--green-mark); background: var(--card); font-size: var(--fs-sm); }
+.brain-problems { margin: 0; padding: 10px 14px; border-inline-start: 3px solid var(--coral-mark); background: var(--card); font-size: var(--fs-sm); color: var(--ink-2); }
+.brain-problems p { margin: 0; font-weight: 700; color: var(--ink); }
+.brain-problems ul { margin: 4px 0 0; padding-inline-start: 18px; }
+.brain-warning { margin: 0; padding: 8px 12px; border-inline-start: 3px solid var(--yellow); background: var(--paper-ruled); font-size: var(--fs-sm); }
 
 /* The wordmark: "bzns" in the logo colours. A brand name, exempt from text contrast; weight carries it. */
 .bzns-word { font-weight: 800; letter-spacing: .01em; white-space: nowrap; unicode-bidi: isolate; }
@@ -25,74 +31,110 @@
 .bzns-word-coral { color: var(--coral-mark); }
 .bzns-word-md { color: var(--ink); }
 
+/* Finish setup: a ruled strip on the paper, not a box. Seven ticks, then only what is missing. */
+.brain-progress { display: grid; gap: 10px; padding-block: 4px 12px; border-block-end: 1px solid var(--rule-strong); }
+.brain-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.brain-progress-title { margin: 0; font-size: var(--fs-md); font-weight: 700; }
+.brain-progress-count { font-size: var(--fs-sm); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.brain-progress-bar { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.brain-progress-bar li { block-size: 4px; background: var(--paper-ruled); border-radius: 1px; }
+.brain-progress-bar li[data-done=true] { background: var(--green-mark); }
+.brain-progress-next { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.brain-next { font: inherit; font-size: var(--fs-sm); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--card); color: var(--ink); cursor: pointer; transition: border-color var(--ease), transform var(--ease); }
+.brain-next:hover { border-color: var(--ink); }
+.brain-next:hover svg { transform: translateX(calc(2px * var(--x-sign))); }
+.brain-next svg { transition: transform var(--ease); }
+.brain-flip { transform: scaleX(var(--x-sign)); }
+.brain-next:hover .brain-flip { transform: translateX(calc(2px * var(--x-sign))) scaleX(var(--x-sign)); }
+
 /* Cards: compact, one line until opened (progressive disclosure). */
 .brain-card { background: var(--card); border: 1px solid var(--rule-strong); border-radius: var(--radius); padding: 0 16px; }
-.brain-card > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-height: 52px; cursor: pointer; list-style: none; }
+.brain-card > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; min-height: 52px; cursor: pointer; list-style: none; }
 .brain-card > summary::-webkit-details-marker { display: none; }
-.brain-card > summary::after { content: '+'; margin-inline-start: auto; font-weight: 700; font-size: 18px; color: var(--ink-2); }
-.brain-card[open] > summary::after { content: '–'; }
-.brain-card > summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.brain-card > summary::after { content: ''; display: block; flex: none; inline-size: 8px; block-size: 8px; margin-inline-start: auto; border-inline-end: 2px solid var(--ink-2); border-block-end: 2px solid var(--ink-2); transform: rotate(45deg); transition: transform var(--ease); }
+.brain-card[open] > summary::after { transform: rotate(-135deg); }
+.brain-card > summary:hover .brain-card-title { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .brain-card[open] { padding-block-end: 16px; }
 .brain-card[open] > summary { border-block-end: 1px solid var(--rule); margin-block-end: 12px; }
-.brain-card-title { font-weight: 700; font-size: 15px; }
-.brain-card label, .brain-catalog label, .brain-bzns label, .brain-item-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; }
+.brain-card-icon { color: var(--ink-2); flex: none; }
+.brain-card-title { font-weight: 700; font-size: var(--fs-md); }
+.brain-card-value { font-size: var(--fs-sm); color: var(--ink-2); }
+.brain-card label, .brain-catalog label, .brain-bzns label, .brain-item-form label { display: grid; gap: 4px; font-size: var(--fs-sm); font-weight: 600; }
 .brain-card fieldset { border: 0; padding: 0; margin: 12px 0; display: grid; gap: 6px; }
-.brain-card legend { font-size: 13px; font-weight: 700; margin-block-end: 6px; }
-.brain input:not([type=checkbox]):not([type=radio]), .brain select, .brain textarea { font: inherit; font-size: 15px; min-height: 40px; padding: 8px 10px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--card); color: var(--ink); width: 100%; box-sizing: border-box; }
-.brain textarea { line-height: 1.5; resize: vertical; }
-.brain input:focus-visible, .brain select:focus-visible, .brain textarea:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; border-color: var(--blue); }
-.brain-check { display: flex !important; align-items: center; gap: 8px; font-weight: 500 !important; font-size: 14px !important; min-height: 32px; }
+.brain-card legend { font-size: var(--fs-sm); font-weight: 700; margin-block-end: 6px; padding: 0; }
+.brain input:not([type=checkbox]):not([type=radio]), .brain select, .brain textarea, .brain-sheet input { font: inherit; font-size: var(--fs-md); min-height: 40px; padding: 8px 10px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--card); color: var(--ink); width: 100%; box-sizing: border-box; transition: border-color var(--ease); }
+.brain input:not([type=checkbox]):not([type=radio]):hover, .brain select:hover, .brain textarea:hover { border-color: var(--ink-2); }
+.brain textarea { line-height: 1.6; resize: vertical; }
+.brain[lang=ar] textarea { line-height: 1.8; }
+.brain input:focus-visible, .brain select:focus-visible, .brain textarea:focus-visible, .brain-sheet input:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; border-color: var(--blue); }
+.brain input[type=checkbox], .brain input[type=radio] { accent-color: var(--ink); inline-size: 16px; block-size: 16px; margin: 0; }
+.brain-check { display: flex !important; align-items: center; gap: 8px; font-weight: 500 !important; font-size: 14px !important; min-height: 36px; }
 .brain-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block-start: 12px; }
 .brain-grow { flex: 1 1 220px; min-width: 0; }
 
-/* Setup steps */
-.brain-step-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; counter-reset: step; }
-.brain-step-list li { display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 14px; }
-.brain-step-list li[data-done=true] { color: var(--ink-2); }
-.brain-step-list li[data-done=true] > span:first-child { color: var(--green); font-weight: 700; }
-.brain-step-go { margin-inline-start: auto; min-height: 32px !important; padding: 4px 12px !important; }
-
-/* Two data-entry tabs */
+/* Two data-entry tabs, each carrying its count. */
 .brain-tabs { display: grid; gap: 0; }
 .brain-tablist { display: flex; gap: 4px; border-block-end: 1px solid var(--rule-strong); }
-.brain-tab { font: inherit; font-size: 16px; font-weight: 700; min-height: 48px; padding: 8px 18px; background: transparent; border: 0; border-block-end: 3px solid transparent; margin-block-end: -1px; color: var(--ink-2); cursor: pointer; }
-.brain-tab[aria-selected=true] { color: var(--ink); border-block-end-color: var(--ink); }
-.brain-tab:hover { background: var(--paper-ruled); }
-.brain-tab:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
-.brain-panel { background: var(--card); border: 1px solid var(--rule-strong); border-block-start: 0; padding: 16px; border-end-start-radius: var(--radius); border-end-end-radius: var(--radius); }
-.brain-panel:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
-.brain-panel > div > .ld-help:first-child { margin-block-start: 0; }
-.brain-empty { padding: 20px; text-align: center; background: var(--paper); border: 1px dashed var(--rule-strong); border-radius: var(--radius); display: grid; gap: 12px; justify-items: center; }
-.brain-empty p { margin: 0; max-width: 52ch; }
+.brain-tab { font: inherit; font-size: var(--fs-lg); font-weight: 700; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 16px; background: transparent; border: 0; border-block-end: 3px solid transparent; margin-block-end: -1px; color: var(--ink-2); cursor: pointer; border-start-start-radius: var(--radius); border-start-end-radius: var(--radius); transition: background-color var(--ease), color var(--ease); }
+.brain-tab[aria-selected=true] { color: var(--ink); border-block-end-color: var(--ink); background: var(--card); }
+.brain-tab:hover:not([aria-selected=true]) { background: var(--paper-ruled); color: var(--ink); }
+.brain-tab:focus-visible { outline-offset: -2px; }
+.brain-tab-count { font-size: var(--fs-xs); font-weight: 700; font-variant-numeric: tabular-nums; min-inline-size: 22px; padding: 1px 7px; border-radius: 999px; background: var(--paper-ruled); color: var(--ink); text-align: center; letter-spacing: 0; }
+.brain-tab[aria-selected=true] .brain-tab-count { background: var(--ink); color: var(--paper); }
+.brain-panel { background: var(--card); border: 1px solid var(--rule-strong); border-block-start: 0; padding: 20px; border-end-start-radius: var(--radius); border-end-end-radius: var(--radius); }
+.brain-panel:focus-visible { outline-offset: -2px; }
+.brain-empty { padding: 24px; background: var(--paper); border: 1px dashed var(--rule-strong); border-radius: var(--radius); display: grid; gap: 12px; justify-items: start; color: var(--ink-2); }
+.brain-empty p { margin: 0; max-width: 52ch; font-weight: 600; color: var(--ink); }
 
-/* bzns.md */
-.brain-bzns-grid { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 16px; align-items: start; }
-.brain-bzns-field textarea { font-size: 14px; min-height: 360px; }
-.brain-count { font-size: 12px; color: var(--ink-2); justify-self: end; font-weight: 500; }
-.brain-count.is-over { color: var(--coral); font-weight: 700; }
-.brain-checklist { background: var(--paper); border-radius: var(--radius); padding: 12px; }
-.brain-checklist h4 { margin: 0 0 8px; font-size: 13px; }
-.brain-checklist ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+/* bzns.md: the text, a slim section meter beside it, and one footer row. */
+.brain-bzns { display: grid; gap: 12px; }
+.brain-bzns-grid { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 20px; align-items: start; }
+.brain-bzns-field textarea { font-size: 14px; min-height: 420px; padding: 12px 14px; background: var(--card); }
+.brain-checklist { position: sticky; top: 12px; display: grid; gap: 10px; padding-block-start: 2px; }
+.brain-checklist-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.brain-checklist-head h4 { margin: 0; font-size: var(--fs-sm); }
+.brain-checklist-head span { font-size: var(--fs-sm); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.brain-meter { block-size: 4px; background: var(--paper-ruled); border-radius: 1px; overflow: hidden; }
+.brain-meter span { display: block; block-size: 100%; background: var(--green-mark); transition: inline-size 200ms ease-out; }
+.brain-checklist ul { list-style: none; margin: 0; padding: 0; display: grid; font-size: var(--fs-sm); }
+.brain-checklist li { display: flex; gap: 8px; padding-block: 7px; border-block-end: 1px solid var(--rule); color: var(--ink-2); }
+.brain-checklist li:last-child { border-block-end: 0; }
+.brain-checklist li[data-done=true] { color: var(--ink); }
+.brain-checklist li > span:first-child { inline-size: 14px; flex: none; text-align: center; }
 .brain-checklist li[data-done=true] > span:first-child { color: var(--green); font-weight: 700; }
+.brain-bzns-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-block-start: 12px; border-block-start: 1px solid var(--rule); }
+.brain-count { font-size: var(--fs-xs); color: var(--ink-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.brain-count.is-over { color: var(--coral); font-weight: 700; }
 
-/* Catalog */
-.brain-catalog-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-block-end: 12px; }
-.brain-item-form { display: grid; gap: 12px; padding: 14px; background: var(--paper); border-radius: var(--radius); margin-block-end: 16px; }
+/* Catalog: a ledger. Name and its meta, the price set as a figure at the end, then the actions. */
+.brain-catalog-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; justify-content: flex-end; margin-block-end: 8px; }
+.brain-item-form { display: grid; gap: 12px; padding: 16px; background: var(--paper); border: 1px solid var(--rule-strong); border-radius: var(--radius); margin-block-end: 16px; }
 .brain-kind { border: 0; padding: 0; margin: 0; display: flex; gap: 16px; flex-wrap: wrap; }
-.brain-kind legend { font-size: 13px; font-weight: 700; margin-block-end: 4px; }
+.brain-kind legend { font-size: var(--fs-sm); font-weight: 700; margin-block-end: 4px; padding: 0; }
 .brain-kind label { display: flex !important; align-items: center; gap: 6px; font-weight: 500 !important; min-height: 32px; }
 .brain-two, .brain-price { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-.brain-items { list-style: none; margin: 0; padding: 0; display: grid; }
-.brain-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 0; border-block-end: 1px solid var(--rule); }
-.brain-item:last-child { border-block-end: 0; }
-.brain-item-main { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
-.brain-item-price { margin: 0; font-size: 14px; color: var(--ink-2); grid-column: 1; }
-.brain-item-actions { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: end; }
-.brain-item-actions .ld-button { min-height: 36px; padding: 4px 10px; font-size: 13px; }
+.brain-price-preview { margin: 0; }
+.brain-price-preview .ld-chip { font-size: var(--fs-sm); padding: 4px 12px; font-variant-numeric: tabular-nums; }
+.brain-items { list-style: none; margin: 0; padding: 0; display: grid; border-block-start: 1px solid var(--rule-strong); }
+.brain-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 4px 20px; padding: 12px 8px; border-block-end: 1px solid var(--rule); transition: background-color var(--ease); }
+.brain-item:hover, .brain-item:focus-within { background: var(--paper); }
+.brain-item-main { display: grid; gap: 2px; min-width: 0; }
+.brain-item-name { font-size: var(--fs-md); overflow-wrap: anywhere; }
+.brain-item-meta { font-size: var(--fs-xs); color: var(--ink-2); font-weight: 500; }
+.brain-item-state { font-weight: 700; }
+.brain-item[data-state=published] .brain-item-state { color: var(--green); }
+.brain-item[data-state=changed] .brain-item-state, .brain-item[data-state=draft] .brain-item-state { color: var(--ink); box-shadow: inset 0 -2px 0 var(--yellow); }
+.brain-item-price { margin: 0; font-size: var(--fs-md); font-weight: 700; font-variant-numeric: tabular-nums; text-align: end; white-space: nowrap; }
+.brain-item-actions { display: flex; gap: 4px; align-items: center; justify-content: end; }
+.brain .brain-icon { display: inline-grid; place-items: center; inline-size: 36px; block-size: 36px; color: var(--ink-2); border-color: transparent; transition: color var(--ease), border-color var(--ease), background-color var(--ease); }
+.brain .brain-icon:hover:not(:disabled) { color: var(--ink); border-color: var(--rule-strong); background: var(--card); }
+.brain .brain-icon.is-danger:hover:not(:disabled) { color: var(--coral); border-color: var(--coral-mark); }
+.brain-icon:disabled { opacity: .45; cursor: not-allowed; }
 
 /* Add information */
 .brain-add-row { display: flex; flex-wrap: wrap; align-items: end; gap: 8px 12px; margin-block-end: 12px; }
 .brain-add-col { display: grid; gap: 8px; }
+.brain-add-col > div { display: flex; justify-content: flex-end; }
 
 /* Review */
 .brain-review > summary .ld-chip { margin-inline-start: 4px; }
@@ -101,63 +143,82 @@
 .brain-proposal[data-kind=customer_gap] { border-inline-start: 3px solid var(--coral-mark); }
 .brain-proposal[data-kind=catalog_entry] { border-inline-start: 3px solid var(--orange); }
 .brain-proposal[data-kind=bzns_section], .brain-proposal[data-kind=qa_migration] { border-inline-start: 3px solid var(--green-mark); }
-.brain-proposal-kind { margin: 0; font-size: 12px; font-weight: 700; text-transform: none; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.brain-proposal-question { margin: 0; font-size: 15px; font-weight: 600; }
+.brain-proposal-kind { margin: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.brain-proposal-question { margin: 0; font-size: var(--fs-md); font-weight: 600; }
 .brain-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .brain-compare > div { min-width: 0; }
 .brain-compare p { margin: 2px 0 0; font-size: 14px; white-space: pre-line; overflow-wrap: anywhere; }
 .brain-compare > div:last-child p { font-weight: 600; }
 .brain-compare-label { display: block; font-size: 11px; font-weight: 700; color: var(--ink-muted); letter-spacing: .04em; text-transform: uppercase; }
 .brain[lang=ar] .brain-compare-label { letter-spacing: 0; text-transform: none; }
-.brain-evidence { margin: 0; padding: 8px 12px; background: var(--paper); border-inline-start: 2px solid var(--ink-2); font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+.brain-evidence { margin: 0; padding: 8px 12px; background: var(--paper); border-inline-start: 2px solid var(--ink-2); font-size: var(--fs-sm); color: var(--ink-2); overflow-wrap: anywhere; }
 .brain-proposal-edit { display: grid; gap: 8px; }
 .brain-proposal .brain-actions { margin-block-start: 0; }
 
-/* Behaviour */
-.brain-tones { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-.brain-tone { display: grid !important; grid-template-columns: auto 1fr; gap: 2px 8px !important; align-items: start; padding: 10px; border: 1px solid var(--rule-strong); border-radius: var(--radius); cursor: pointer; }
-.brain-tone[data-selected=true] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
-.brain-tone input { grid-row: span 2; margin-block-start: 3px; }
-.brain-tone-name { font-weight: 700; font-size: 14px; }
-.brain-tone .ld-help { font-weight: 400; }
+/* Behaviour: tone as one segmented control, the details in two columns. */
+.brain-tones { display: flex; flex-wrap: wrap; border: 1px solid var(--ink); border-radius: var(--radius); overflow: hidden; inline-size: fit-content; max-inline-size: 100%; }
+.brain-tone { position: relative; display: flex !important; align-items: center; min-height: 40px; padding: 6px 16px; cursor: pointer; background: var(--card); border-inline-start: 1px solid var(--rule-strong); transition: background-color var(--ease), color var(--ease); }
+.brain-tone:first-of-type { border-inline-start: 0; }
+.brain-tone:hover { background: var(--paper); }
+.brain-tone input { position: absolute; opacity: 0; inset: 0; inline-size: 100% !important; block-size: 100% !important; cursor: pointer; }
+.brain-tone[data-selected=true] { background: var(--ink); color: var(--paper); }
+.brain-tone:has(input:focus-visible) { outline: 2px solid var(--blue); outline-offset: -3px; }
+.brain-tone-name { font-weight: 600; font-size: 14px; }
+.brain-asks { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); column-gap: 16px !important; gap: 0 16px !important; }
+.brain-asks legend { grid-column: 1 / -1; }
 
-/* Test Layla: a side sheet at the inline end; full screen on a phone. */
+/* Test Layla: a side sheet at the inline end; full screen on a phone. Composer stays at the bottom. */
 .ld-dialog.brain-sheet { margin: 0; margin-inline-start: auto; inset-block: 0; inset-inline-end: 0; inset-inline-start: auto; height: 100dvh; max-height: 100dvh; width: min(460px, 100vw); max-width: 100vw; border: 0; border-inline-start: 2px solid var(--ink); border-radius: 0; padding: 0; background: var(--paper); overflow-y: auto; }
 .ld-dialog.brain-sheet::backdrop { background: rgba(26, 26, 26, .35); }
-.brain-sheet-body { display: grid; gap: 12px; padding: 16px; align-content: start; min-height: 100%; box-sizing: border-box; }
-.brain-variant { display: inline-flex; border: 1px solid var(--ink); border-radius: var(--radius); overflow: hidden; justify-self: start; }
-.brain-variant-option { font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 6px 16px; border: 0; background: var(--card); color: var(--ink); cursor: pointer; }
+.brain-sheet-body { display: flex; flex-direction: column; gap: 12px; padding: 16px; min-height: 100%; box-sizing: border-box; }
+.brain-sheet-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.brain-reset { display: inline-flex; align-items: center; gap: 6px; min-height: 36px !important; padding: 4px 12px !important; font-size: var(--fs-sm) !important; }
+.brain-variant { display: inline-flex; border: 1px solid var(--ink); border-radius: var(--radius); overflow: hidden; }
+.brain-variant-option { font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 6px 16px; border: 0; background: var(--card); color: var(--ink); cursor: pointer; transition: background-color var(--ease); }
+.brain-variant-option:hover:not(.is-on) { background: var(--paper-ruled); }
 .brain-variant-option.is-on { background: var(--ink); color: var(--paper); }
 .brain-variant-option:focus-visible { outline: 2px solid var(--blue); outline-offset: -3px; }
-.brain-variant-label { margin: 0; font-size: 13px; font-weight: 700; padding: 6px 10px; border-inline-start: 3px solid var(--green-mark); background: var(--card); }
+.brain-variant-label { margin: 0; font-size: var(--fs-sm); font-weight: 700; padding: 6px 10px; border-inline-start: 3px solid var(--green-mark); background: var(--card); }
 .brain-variant-label.is-draft { border-inline-start-color: var(--yellow); }
-.brain-test-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.brain-variant-note { font-weight: 500; color: var(--ink-2); }
+.brain-test-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; align-content: start; flex: 1; }
 .brain-test-log > li { display: grid; gap: 6px; }
-.brain-bubble { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 14px; max-width: 88%; white-space: pre-line; overflow-wrap: anywhere; }
+.brain-bubble { margin: 0; padding: 10px 12px; border-radius: 8px; font-size: 14px; max-width: 88%; white-space: pre-line; overflow-wrap: anywhere; }
 .brain-bubble.is-customer { justify-self: end; background: var(--ink); color: var(--paper); border-end-end-radius: 2px; }
 .brain-bubble.is-layla { justify-self: start; background: var(--card); border: 1px solid var(--rule-strong); border-end-start-radius: 2px; }
-.brain-test-meta { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 12px; }
+.brain-test-meta { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: var(--fs-xs); padding-inline-start: 4px; }
 .brain-test-meta dt { font-weight: 700; color: var(--ink-2); }
 .brain-test-meta dd { margin: 0; display: flex; flex-wrap: wrap; gap: 4px; color: var(--ink-2); }
-.brain-test-form { display: flex; gap: 8px; align-items: end; position: sticky; bottom: 0; padding-block: 8px; background: var(--paper); }
+.brain-test-form { display: flex; gap: 8px; align-items: end; position: sticky; bottom: 0; margin-block-start: auto; padding-block: 12px 4px; background: var(--paper); border-block-start: 1px solid var(--rule-strong); }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .brain-bzns-grid { grid-template-columns: 1fr; }
+  .brain-checklist { position: static; order: -1; }
+  .brain-bzns-field textarea { min-height: 320px; }
   .brain-compare { grid-template-columns: 1fr; }
-  .brain-item { grid-template-columns: 1fr; }
-  .brain-item-actions { grid-column: 1; grid-row: auto; justify-content: start; }
+  .brain-panel { padding: 16px; }
+}
+@media (max-width: 640px) {
   .brain-head-actions { width: 100%; }
-  .brain-head-actions .ld-button { flex: 1 1 auto; }
-  .brain-tab { flex: 1; padding-inline: 8px; }
+  .brain-head-actions .ld-button { flex: 1 1 0; }
+  .brain-tab { flex: 1; justify-content: center; padding-inline: 8px; }
+  .brain-item { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'main main' 'price actions'; gap: 6px 12px; padding-inline: 4px; }
+  .brain-item-main { grid-area: main; }
+  .brain-item-price { grid-area: price; text-align: start; white-space: normal; }
+  .brain-item-actions { grid-area: actions; }
+  .brain-tones { inline-size: 100%; }
+  .brain-tone { flex: 1 1 0; justify-content: center; text-align: center; padding-inline: 8px; }
+  .brain-catalog-tools { justify-content: stretch; }
+  .brain-add-item { flex: 1 1 auto; }
 }
 @media (max-width: 480px) { .ld-dialog.brain-sheet { width: 100vw; border-inline-start: 0; } }
-@media (prefers-reduced-motion: reduce) { .brain * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .brain *, .brain *::after, .brain-sheet * { transition: none !important; } }
 
 /* Setup: the same parts, one step at a time. */
 .brain-setup { max-width: 860px; }
-.brain-setup-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+.brain-setup-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--fs-sm); color: var(--ink-2); }
 .brain-setup-steps li { display: flex; align-items: center; gap: 6px; }
-.brain-setup-steps li > span { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--rule-strong); font-size: 12px; font-weight: 700; }
+.brain-setup-steps li > span { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--rule-strong); font-size: var(--fs-xs); font-weight: 700; }
 .brain-setup-steps li[data-state=current] { color: var(--ink); font-weight: 700; }
 .brain-setup-steps li[data-state=current] > span { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .brain-setup-steps li[data-state=done] > span { color: var(--green); border-color: var(--green-mark); }
@@ -165,6 +226,6 @@
 .brain-setup-head h3:focus { outline: none; }
 .brain-setup-head p { margin: 0; }
 .brain-setup-industry { display: grid; gap: 12px; max-width: 420px; }
-.brain-setup-industry label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; }
+.brain-setup-industry label { display: grid; gap: 4px; font-size: var(--fs-sm); font-weight: 600; }
 .brain-setup-nav, .brain-setup-publish { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; }
 .brain-setup-publish { justify-content: flex-start; }

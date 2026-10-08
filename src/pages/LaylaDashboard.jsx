@@ -49,7 +49,8 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const overview = usePolling(loadOverview, [], { interval: 30000, enabled: ready });
   // Hasib is optional: when it is off (or unavailable) its tabs simply do not appear.
   // Catalyst has no operations capability; asking Hasib would only earn a plan_required refusal every minute.
-  const hasibAllowed = !!overview.data?.capabilities?.operations || !!overview.data?.founderPreview;
+  // The founder's own Catalyst account stays Catalyst; industry previews live at /owner/preview/<pack>.
+  const hasibAllowed = !!overview.data?.capabilities?.operations;
   const hasibState = usePolling(loadHasib, [], { interval: 60000, enabled: ready && hasibAllowed });
   const hasibOverview = hasibState.data?.modules ? hasibState.data : null;
   // An industry names things its own way (a clinic's Orders are Visits); section ids stay the same.

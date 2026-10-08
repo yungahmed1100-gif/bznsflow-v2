@@ -123,7 +123,7 @@ try {
     await page.getByRole('heading', { name: t('Configure Layla', 'اضبط ليلى') }).waitFor();
     await page.locator('.brain-tone').nth(1).click();
     await page.getByRole('button', { name: t('Save behaviour', 'احفظ الإعدادات') }).click();
-    await page.getByText(t('Saved. Layla follows', 'تم الحفظ. تتبع ليلى')).waitFor();
+    await page.locator('.brain-behaviour .brain-note').getByText(t('Saved.', 'تم الحفظ.')).waitFor();
     assert.equal(s.behaviour?.tone !== undefined, true); count++;
     await page.getByRole('button', { name: t('Continue', 'متابعة') }).click();
     await page.getByRole('heading', { name: t('Test and publish', 'جرّب وانشر') }).waitFor();
@@ -172,7 +172,7 @@ try {
     await sheet.getByRole('button', { name: t('Send', 'أرسل') }).click();
     await sheet.locator('.brain-bubble.is-layla').waitFor();
     assert.match(await sheet.locator('.brain-test-meta').innerText(), /Cleaning/, 'sources and captured details are shown'); count++;
-    assert.match(await sheet.innerText(), ar ? /لا يُرسل شيء/ : /nothing is sent/, 'the panel says nothing is sent'); count++;
+    assert.match(await sheet.innerText(), ar ? /لا يُرسل شيء/ : /Nothing is sent/, 'the panel says nothing is sent'); count++;
     const box = await sheet.boundingBox();
     assert.ok(width <= 480 ? box.width >= width - 2 : (ar ? box.x <= 2 : box.x + box.width >= width - 2), `${lang} ${width}: the panel sits at the inline end (or fills a phone)`); count++;
     assert.deepEqual(await axe(page, '.brain-sheet'), [], `${lang} ${width} test panel axe`); count++;

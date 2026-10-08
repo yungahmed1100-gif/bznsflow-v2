@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { chunkText } from '../../../config/brain-extract.js';
+import { Icon } from '../ui/Icon.jsx';
 
 /**
  * One place to add information: a file, a web page or pasted text. The text is split into parts;
@@ -41,11 +42,9 @@ export function AddSource({ b, request, take, act, busy, websiteAvailable, onDon
   const working = busy === 'source';
   return (
     <details className="brain-card brain-add" open={open || undefined}>
-      <summary><span className="brain-card-title">{b.t('addTitle')}</span></summary>
-      <p className="ld-help">{b.t('addIntro')}</p>
+      <summary><Icon name="upload" size={18} className="brain-card-icon" /><span className="brain-card-title">{b.t('addTitle')}</span></summary>
       <div className="brain-add-row">
-        <button type="button" className="ld-button" disabled={!!busy} onClick={() => fileRef.current?.click()}>{b.t('addFile')}</button>
-        <span className="ld-help">{b.t('fileTypes')}</span>
+        <button type="button" className="ld-button" disabled={!!busy} onClick={() => fileRef.current?.click()}><Icon name="upload" size={16} />{b.t('addFile')}</button>
         <input ref={fileRef} type="file" hidden accept=".pdf,.docx,.txt,.md,.csv,.xlsx,.png,.jpg,.jpeg,.webp" aria-label={b.t('addFile')}
           onChange={e => { const file = e.target.files?.[0]; e.target.value = ''; if (file) fromFile(file); }} />
       </div>

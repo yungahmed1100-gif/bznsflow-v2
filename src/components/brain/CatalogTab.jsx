@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { priceLabel } from '../../../config/brain-extract.js';
+import { Icon } from '../ui/Icon.jsx';
 
 const PRICE_TYPES = ['fixed', 'from', 'range', 'quote', 'free', 'recurring', 'none'];
 const CURRENCIES = ['OMR', 'AED', 'SAR', 'USD'];
@@ -37,11 +38,10 @@ export function CatalogTab({ b, catalog, request, take, act, busy, loadCatalog }
   const run = (action, entryKey) => act(`catalog:${entryKey}`, async () => { take(await request({ action, entryKey })); await loadCatalog(); });
   return (
     <div className="brain-catalog">
-      <p className="ld-help">{b.t('catalogIntro')}</p>
-      <div className="brain-catalog-tools">
+      {(entries.length > 0 || form) && <div className="brain-catalog-tools">
         {entries.length > 12 && <label className="brain-grow"><span className="ld-visually-hidden">{b.t('search')}</span><input type="search" placeholder={b.t('search')} value={query} onChange={e => setQuery(e.target.value)} /></label>}
-        {!form && <button type="button" className="ld-button ld-primary" disabled={!!busy} onClick={() => setForm({ ...BLANK })}>{b.t('addItem')}</button>}
-      </div>
+        {!form && <button type="button" className="ld-button ld-primary brain-add-item" disabled={!!busy} onClick={() => setForm({ ...BLANK })}><Icon name="plus" size={16} />{b.t('addItem')}</button>}
+      </div>}
       {form && <form className="brain-item-form" onSubmit={e => { e.preventDefault(); save(); }} aria-label={form.entryKey ? b.t('editItem') : b.t('addItem')}>
         <fieldset className="brain-kind"><legend>{b.t('kind')}</legend>
           {['service', 'product'].map(k => <label key={k}><input type="radio" name="brain-kind" checked={form.kind === k} onChange={() => set({ kind: k })} />{b.t(`kind_${k}`)}</label>)}
@@ -58,27 +58,32 @@ export function CatalogTab({ b, catalog, request, take, act, busy, loadCatalog }
             <label>{b.t('maximum')}<input type="number" min="0" step="0.001" inputMode="decimal" value={form.maximum} onChange={e => set({ maximum: e.target.value })} /></label></>}
           {['fixed', 'from', 'range', 'recurring'].includes(form.priceType) && <label>{b.t('currency')}<select value={form.currency} onChange={e => set({ currency: e.target.value })}>{CURRENCIES.map(c => <option key={c}>{c}</option>)}</select></label>}
         </div>
-        {form.priceType !== 'none' && priceReady(form) && <p className="ld-help" dir="auto">{b.t('priceType')}: <strong>{priceLabel(toEntry(form, 0).prices[0] || { type: form.priceType }) || '—'}</strong></p>}
+        {form.priceType !== 'none' && priceReady(form) && <p className="brain-price-preview" dir="auto"><span className="ld-chip is-ink">{priceLabel(toEntry(form, 0).prices[0] || { type: form.priceType }) || '—'}</span></p>}
         <div className="brain-actions">
           <button type="submit" className="ld-button ld-primary" disabled={!!busy || !(form.nameEn.trim() || form.nameAr.trim()) || !priceReady(form)}>{busy === 'catalog' ? b.t('saving') : b.t('saveItem')}</button>
           <button type="button" className="ld-button ld-quiet" onClick={() => setForm(null)}>{b.t('cancel')}</button>
         </div>
       </form>}
-      {!entries.length && !form && <p className="brain-empty">{b.t('catalogEmpty')}</p>}
+      {!entries.length && !form && <div className="brain-empty">
+        <Icon name="inbox" size={22} />
+        <p>{b.t('catalogEmpty')}</p>
+        <button type="button" className="ld-button ld-primary" disabled={!!busy} onClick={() => setForm({ ...BLANK })}><Icon name="plus" size={16} />{b.t('addItem')}</button>
+      </div>}
       {!!shown.length && <ul className="brain-items">
         {shown.map(e => {
           const view = e.pending ? { ...e, ...e.pending } : e, stock = e.source === 'hasib_stock';
-          return <li key={e.entryKey} className="brain-item">
+          const name = (b.ar ? view.nameAr : view.nameEn) || view.nameEn || view.nameAr;
+          const state = stock ? 'stock' : e.state || 'draft';
+          return <li key={e.entryKey} className="brain-item" data-state={state}>
             <div className="brain-item-main">
-              <strong dir="auto">{(b.ar ? view.nameAr : view.nameEn) || view.nameEn || view.nameAr}</strong>
-              <span className="ld-chip is-muted">{b.t(`kind_${view.kind === 'product' ? 'product' : 'service'}`)}</span>
-              <span className={`ld-chip ${e.state === 'published' ? 'is-green' : e.state === 'changed' ? 'is-yellow' : 'is-muted'}`}>{stock ? b.t('fromStock') : b.t(`state_${e.state || 'draft'}`)}</span>
+              <strong className="brain-item-name" dir="auto">{name}</strong>
+              <span className="brain-item-meta">{b.t(`kind_${view.kind === 'product' ? 'product' : 'service'}`)}<span aria-hidden="true"> · </span><span className="brain-item-state">{stock ? b.t('fromStock') : b.t(`state_${state}`)}</span></span>
             </div>
-            <p className="brain-item-price" dir="auto">{(view.prices || []).map(p => p.label).join(' · ') || '—'}{e.state === 'changed' && <span className="ld-help"> · {b.t('stagedNote')}</span>}</p>
+            <p className="brain-item-price" dir="auto">{(view.prices || []).map(p => p.label).join(' · ') || '—'}</p>
             {!stock && <div className="brain-item-actions">
-              <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => setForm(toForm(e))}>{b.t('editItem')}</button>
-              {e.state === 'changed' && <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => run('catalog_discard', e.entryKey)}>{b.t('discard')}</button>}
-              <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => run('catalog_archive', e.entryKey)}>{b.t('archive')}</button>
+              <button type="button" className="ld-icon-button brain-icon" disabled={!!busy} onClick={() => setForm(toForm(e))} aria-label={`${b.t('editItem')}: ${name}`} title={b.t('editItem')}><Icon name="pencil" size={16} /></button>
+              {e.state === 'changed' && <button type="button" className="ld-icon-button brain-icon" disabled={!!busy} onClick={() => run('catalog_discard', e.entryKey)} aria-label={`${b.t('discard')}: ${name}`} title={b.t('discard')}><Icon name="undo" size={16} /></button>}
+              <button type="button" className="ld-icon-button brain-icon is-danger" disabled={!!busy} onClick={() => run('catalog_archive', e.entryKey)} aria-label={`${b.t('archive')}: ${name}`} title={b.t('archive')}><Icon name="trash" size={16} /></button>
             </div>}
           </li>;
         })}
