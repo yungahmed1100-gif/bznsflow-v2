@@ -22,7 +22,6 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
   const [headers, setHeaders] = useState([]);
   const [consent, setConsent] = useState({ how: '', other: '', date: today(), attested: false });
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [created, setCreated] = useState(null);
-  const [importId] = useState(() => crypto.randomUUID());
   useEffect(() => { if (!templates) dashboard('templates').then(r => setTemplates(r.templates)).catch(e => setError(s.reason(e.reason))); }, []);
   const template = templates?.find(t => t.id === templateId);
   const current = STEPS[step];
@@ -40,6 +39,8 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
   // New numbers become contacts with the owner's consent record before anything is previewed.
   const saveNumbers = async () => {
     setBusy(true); setError('');
+    // One consent record per save; numbers added after going back get their own.
+    const importId = crypto.randomUUID();
     try {
       const ids = new Map();
       for (let i = 0; i < unsaved.length; i += IMPORT_PAGE) {
