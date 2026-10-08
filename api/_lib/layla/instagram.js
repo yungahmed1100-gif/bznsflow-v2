@@ -167,7 +167,7 @@ export function verifiedInstagramRequest(signed,secret,now=Date.now()) {
 }
 
 async function instagramCallback({req,url,env,fetcher,store,accounts,now,redirect}) {
-  let lang='ar';
+  let lang='ar', returnTo='setup';
   const cancelled=url.searchParams.has('error');
   try {
     if(req.method!=='GET') throw new PilotError('method',405);
@@ -178,8 +178,8 @@ async function instagramCallback({req,url,env,fetcher,store,accounts,now,redirec
     const state=url.searchParams.get('state');
     if(!/^[a-f0-9]{64}$/.test(state || '')) throw new PilotError('invalid_oauth_state',403);
     const stateHash=digest(state),attempt=await store('consume',{sessionHash,stateHash});
-    lang=attempt?.lang || lang;
-    if(cancelled) return redirect(lang,'cancelled');
+    lang=attempt?.lang || lang; returnTo=attempt?.returnTo || returnTo;
+    if(cancelled) return redirect(lang,'cancelled',undefined,returnTo);
     const result=await exchangeInstagram({c,code:url.searchParams.get('code'),fetcher,now});
     const integration={id:randomUUID(),channel:'instagram',app:c.app,igAccount:result.igAccount,oauthUserId:result.oauthUserId,username:result.username};
     integration.credential=sealToken(result.token,credentialContext(sessionHash,integration),env);
@@ -192,12 +192,12 @@ async function instagramCallback({req,url,env,fetcher,store,accounts,now,redirec
       if (subscribed?.success!==true && !(await inspectInstagram({c,integration,token:result.token,fetcher})).connected) throw new PilotError('instagram_subscription_failed',502);
       await store('checked',{sessionHash,integrationId:integration.id,connected:true});
     } catch(e) {await store('checked',{sessionHash,integrationId:integration.id,connected:false});throw e;}
-    return redirect(lang,'connected');
+    return redirect(lang,'connected',undefined,returnTo);
   } catch(e) {
     // Declining on Instagram's screen is a cancel even when the state is gone.
-    if(cancelled) return redirect(lang,'cancelled');
+    if(cancelled) return redirect(lang,'cancelled',undefined,returnTo);
     console.error('instagram_callback_failed',JSON.stringify({reason:String(e?.code || e?.name || 'unknown').slice(0,80)}));
-    return redirect(lang,'connection_failed',e?.code);
+    return redirect(lang,'connection_failed',e?.code,returnTo);
   }
 }
 
@@ -205,9 +205,10 @@ export function createInstagramApi({env=process.env,fetcher=fetch,store=instagra
   return async(req,res,surface='instagram')=>{
     const origin=publicOrigin(env);
     const url=new URL(req.url || '/',origin);
-    const redirect=(lang,status,reason)=>{
-      const query=new URLSearchParams({instagram:status,...(INSTAGRAM_CALLBACK_REASONS.includes(reason)?{reason}:{})});
-      res.setHeader('Cache-Control','no-store');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Location',`${origin}/${lang==='ar'?'':'en/'}layla/setup?${query}`);res.status(303);res.end();
+    // Back to where the owner started: Settings › Channels in the dashboard, or the setup page.
+    const redirect=(lang,status,reason,returnTo='setup')=>{
+      const query=new URLSearchParams({...(returnTo==='dashboard'?{tab:'settings',view:'channels'}:{}),instagram:status,...(INSTAGRAM_CALLBACK_REASONS.includes(reason)?{reason}:{})});
+      res.setHeader('Cache-Control','no-store');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Location',`${origin}/${lang==='ar'?'':'en/'}${returnTo==='dashboard'?'layla/dashboard':'catalyst/setup'}?${query}`);res.status(303);res.end();
     };
     try {
       if (surface === 'instagram' && req.method === 'GET'
@@ -253,7 +254,7 @@ export function createInstagramApi({env=process.env,fetcher=fetch,store=instagra
       if(JSON.stringify(body).length>2000) throw new PilotError('body_too_large',413);
       if(body.action==='connect') {
         const state=randomBytes(32).toString('hex');
-        await store('begin',{sessionHash,stateHash:digest(state),lang:body.lang==='ar'?'ar':'en'});
+        await store('begin',{sessionHash,stateHash:digest(state),lang:body.lang==='ar'?'ar':'en',returnTo:body.returnTo==='setup'?'setup':'dashboard'});
         // Instagram sometimes drops a fresh sign-in on its feed and never returns.
         // A retry comes from a browser that is now signed in, so skip the forced
         // login and Instagram goes straight to the Allow screen.

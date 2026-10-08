@@ -52,7 +52,9 @@ const F = {
 const inPerson = [opt('branch', 'Branch visit', 'زيارة الفرع', ['clinic', 'office', 'visit', 'العيادة', 'المكتب', 'زيارة']),
   opt('online', 'Online', 'أونلاين', ['video', 'zoom', 'عن بعد', 'اون لاين']), opt('phone', 'Phone call', 'مكالمة', ['call', 'اتصال'])];
 
-const sector = (archetype, fields, groups) => ({ archetype, fields, groups });
+// `flow: 'reception'`: in Catalyst's BznsBrain mode the sector asks one detail at a time, name → service → (on
+// appointment interest) preferred time, and records an appointment request for reception.
+const sector = (archetype, fields, groups, flow) => ({ archetype, fields, groups, ...(flow ? { flow } : {}) });
 const req = (field, required = true) => ({ ...field, required });
 
 export const QUALIFICATION_PACKS = {
@@ -68,8 +70,8 @@ export const QUALIFICATION_PACKS = {
   ], [['need', 'property_type', 'area'], ['budget', 'finance_readiness', 'decision_maker'], ['timeline', 'bedrooms', 'must_haves']]),
   dental: sector('booking', [
     req(F.service([opt('checkup', 'Check-up', 'فحص', ['check up', 'examination', 'كشف']), opt('cleaning', 'Cleaning', 'تنظيف', ['scaling', 'تنظيف أسنان']), opt('whitening', 'Whitening', 'تبييض'), opt('orthodontics', 'Orthodontics', 'تقويم', ['braces', 'aligners']), opt('implants', 'Implants', 'زراعة', ['implant']), opt('fillings', 'Fillings', 'حشوة', ['filling', 'حشو'])])),
-    req(F.preferredTime()), req(F.location(inPerson.slice(0, 1))),
-  ], [['service', 'preferred_time', 'location']]),
+    req({ ...F.preferredTime(), appointment: true }), req({ ...F.location(inPerson.slice(0, 1)), askable: false }),
+  ], [['service', 'preferred_time', 'location']], 'reception'),
   clinic: sector('booking', [
     req(F.choice('service', 'Visit type', 'نوع الزيارة', [opt('consultation', 'Consultation', 'استشارة', ['doctor', 'appointment with doctor', 'كشف', 'دكتور']), opt('follow_up', 'Follow-up', 'متابعة', ['follow up', 'review visit', 'مراجعة']), opt('checkup', 'Check-up', 'فحص عام', ['general check', 'checkup', 'فحص']), opt('vaccination', 'Vaccination', 'تطعيم', ['vaccine', 'لقاح']), opt('lab_test', 'Lab test', 'تحليل', ['blood test', 'lab', 'مختبر', 'تحاليل'])],
       { en: 'the type of visit', ar: 'نوع الزيارة' })),
@@ -280,16 +282,19 @@ function extractCatalog(t, catalog) {
   const hits = names.filter(({ n }) => containsTerm(t, n));
   if (!hits.length) return null;
   const best = hits.sort((a, b) => b.n.length - a.n.length)[0];
-  return { value: clip(best.row.nameEn || best.row.nameAr, 80), confidence: 0.9 };
+  return { value: clip(best.row.nameEn || best.row.nameAr, 80), confidence: 0.9, ...(best.row.entryKey ? { ref: best.row.entryKey } : {}) };
 }
 
+const CONNECTORS = /^(and|or|but|i|im|i'm|want|wanted|would|need|needs|from|here|looking|calling|interested|with|my|the|a|an|to|for|please|asking|about|so|also|actually|again)$/i;
 /** Customer-provided name, never a guess from a greeting. */
 export function extractCustomerName(original) {
   const en = String(original || '').match(/\b(?:my name is|this is|i am|i'm|im)\s+([A-Za-z][A-Za-z'-]{1,20}(?:\s+[A-Z][A-Za-z'-]{1,20})?)\b/i);
   if (en) {
-    const first = en[1].split(/\s+/)[0];
+    const [first, second] = en[1].split(/\s+/);
     const introduced = /my name is|this is/i.test(en[0]);
-    if (!NOT_NAMES.has(first.toLowerCase()) && (introduced || /^[A-Z]/.test(first))) return clip(en[1], 40);
+    // "my name is Aisha and I want…": a joining word is not a surname.
+    const name = second && CONNECTORS.test(second) ? first : en[1];
+    if (!NOT_NAMES.has(first.toLowerCase()) && (introduced || /^[A-Z]/.test(first))) return clip(name, 40);
   }
   const ar = String(original || '').match(/(?:اسمي|أنا اسمي|انا اسمي|معك|معاك)\s+([؀-ۿ]{2,20}(?:\s+[؀-ۿ]{2,20})?)/);
   if (ar && !/^(ال)?(سؤال|استفسار|طلب)$/.test(ar[1].split(/\s+/)[0])) return clip(ar[1], 40);
@@ -386,7 +391,7 @@ export function mergeFields(existing = [], updates = [], now = Date.now()) {
     if (old?.source === 'owner') continue;
     if (old && old.value === u.value) continue;
     if (old && u.confidence < old.confidence - 0.1) continue;
-    map.set(u.key, { key: u.key, value: u.value, source: u.source, confidence: Math.round(u.confidence * 100) / 100, at: now });
+    map.set(u.key, { key: u.key, value: u.value, source: u.source, confidence: Math.round(u.confidence * 100) / 100, at: now, ...(u.ref ? { ref: u.ref } : {}) });
     changed = true;
   }
   return { fields: [...map.values()], changed };
@@ -477,4 +482,30 @@ export function packDescription(sectorId) {
   return { id: pack.id, archetype: pack.archetype, sensitive: pack.sensitive,
     fields: pack.fields.map(f => ({ key: f.key, kind: f.kind, en: f.en, ar: f.ar, required: !!f.required,
       options: (f.options || []).map(o => ({ id: o.id, en: o.en, ar: o.ar })) })) };
+}
+
+/**
+ * Catalyst's BznsBrain mode: one detail per turn, in the owner's order, never while an override holds.
+ * Name first (unless known, declined or switched off), then the owner's chosen details, then, once
+ * the customer wants to come in, the appointment preferences. A question just asked and not yet
+ * answered is not repeated within the cooldown.
+ * @returns {{ text: '', keys: string[] }}
+ */
+export function planReception({ sectorId, fields = [], askCounts = [], asked = [], lastAskedAt = 0, answeredNow = false, now = Date.now(),
+  knownName = false, nameDeclined = false, appointmentInterest = false, override = null, behaviour = null }) {
+  if (override) return { text: '', keys: [] };
+  const pack = qualificationPack(sectorId);
+  const rules = behaviour || { askName: true, ask: pack.fields.filter(f => f.required && f.askable !== false && !f.appointment).map(f => f.key), appointmentPreferences: pack.archetype === 'booking' };
+  const have = new Set(fields.filter(f => f.value).map(f => f.key));
+  const counts = new Map(askCounts.map(c => [c.key, c.count]));
+  const open = key => !have.has(key) && (counts.get(key) || 0) < MAX_ASKS_PER_FIELD;
+  const order = [
+    ...(rules.askName && !knownName && !nameDeclined ? [NAME_FIELD.key] : []),
+    ...rules.ask.filter(key => pack.fields.some(f => f.key === key && f.askable !== false && !f.appointment)),
+    ...(rules.appointmentPreferences && appointmentInterest ? pack.fields.filter(f => f.appointment).map(f => f.key) : []),
+  ];
+  const next = order.find(open);
+  if (!next) return { text: '', keys: [] };
+  if (!answeredNow && asked.includes(next) && lastAskedAt && now - lastAskedAt < ASK_COOLDOWN_MS) return { text: '', keys: [] };
+  return { text: '', keys: [next] };
 }

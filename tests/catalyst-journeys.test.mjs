@@ -82,7 +82,7 @@ test('the Catalyst dashboard is four tabs: Chats, Broadcasts, Customers and Sett
   const map = dashboardMap(null, caps);
   assert.deepEqual(map.sections, ['chats', 'broadcasts', 'customers', 'settings']);
   assert.deepEqual(map.views.customers, [], 'Customers is one list');
-  assert.deepEqual(map.views.settings, ['business', 'services', 'channels']);
+  assert.deepEqual(map.views.settings, ['brain', 'channels'], 'Settings: BznsBrain (bzns.md and the Catalog) and Channels');
   assert.deepEqual(dashboardMap(null, capabilitiesFor('catalyst', 'employee'), 'employee').sections, ['chats', 'customers'], 'staff answer chats and see customers');
   const p = dashboardPermissions({ capabilities: caps, workspaceRole: 'manager' });
   assert.deepEqual(p, { canExport: false, canExportCsv: true, canImport: true, canBroadcast: true, canDeleteCustomer: true });

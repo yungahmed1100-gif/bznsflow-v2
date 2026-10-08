@@ -28,6 +28,11 @@ export async function executeBlueAuth(ctx,a,now = Date.now()) {
     if(!hash(a.ipHash)) return fail('invalid_state');
     return await limit(`import:${a.ipHash}`,10,3600000) && await limit('import-global',200,86400000) ? ok(null) : fail('too_many');
   }
+  // BznsBrain extraction: each chunk is a model call, so callers and the platform are capped.
+  if(a.operation === 'limit_extract') {
+    if(!hash(a.ipHash)) return fail('invalid_state');
+    return await limit(`extract:${a.ipHash}`,60,3600000) && await limit('extract-global',3000,86400000) ? ok(null) : fail('too_many');
+  }
   if(a.operation === 'oauth_rate') {
     if(!hash(a.ipHash)) return fail('invalid_state');
     return await limit(`oauth:${a.ipHash}`,20,60000) && await limit('oauth-global',1000,86400000) ? ok(null) : fail('too_many');
@@ -108,6 +113,11 @@ export async function executeBlueAuth(ctx,a,now = Date.now()) {
       }
       await ctx.db.patch(draft._id,{...(draft.integration ? {integration:{...draft.integration,credential:a.credential}} : {}),accountId:account._id,metrics:{...draft.metrics,accountVerifiedAt:now},sessionHash:a.draftHash,expiresAt:Number.MAX_SAFE_INTEGER,...(!draft.integration ? {attempt:undefined} : {})});
       await ctx.db.patch(account._id,{draftHash:a.draftHash});
+      // BznsBrain: catalog rows added before sign-in belonged to the setup itself; they move to the account.
+      const setupKey=`review_${draft._id}`, accountKey=String(account._id);
+      for(const entry of await ctx.db.query('blueCatalogEntries').withIndex('by_owner_key',q=>q.eq('ownerKey',setupKey)).take(1000)) await ctx.db.patch(entry._id,{ownerKey:accountKey});
+      const meta=await ctx.db.query('blueCatalogMeta').withIndex('by_owner',q=>q.eq('ownerKey',setupKey)).unique();
+      if(meta && !(await ctx.db.query('blueCatalogMeta').withIndex('by_owner',q=>q.eq('ownerKey',accountKey)).unique())) await ctx.db.patch(meta._id,{ownerKey:accountKey});
       return ok({draftHash:a.draftHash});
     }
     const membership = await lookup('ascendWorkspaceMembers','by_account','accountId',account._id);

@@ -1,5 +1,5 @@
 import { createHash, createHmac, randomBytes, randomUUID } from 'node:crypto';
-import { convexConfigured, reviewStore, catalogStore } from '../convex.js';
+import { convexConfigured, reviewStore, catalogStore, brainStore } from '../convex.js';
 import { convexServiceSecret, publicOrigin, appUrl, greenDataReady, isGreenRuntime, customerSetupEnabled, whatsappVerifyToken, customerSignupConfig, websiteImportEnabled, greenOwnerCredentials } from '../green-config.js';
 import { blueAccountsAvailable, blueAuthStore, blueAccount, BLUE_ACCOUNT_COOKIE, hashAccountToken } from '../blue-auth.js';
 import { parseCookies } from '../cookies.js';
@@ -9,7 +9,10 @@ import { PilotError } from './config.js';
 import { importWebsite } from './website-import.js';
 import { validateReviewProfile } from './review-profile.js';
 import { aiTurn, profileSections } from '../../../config/layla-ai.js';
-import { qwenGenerator } from '../../../config/qwen-client.js';
+import { qwenGenerator, qwenExtractor } from '../../../config/qwen-client.js';
+import { extractionMessages, CHUNK_CHARS } from '../../../config/brain-extract.js';
+import { previewOutcome } from '../../../config/brain-preview.js';
+import { extractJson } from '../../../config/layla-ai.js';
 import { teamContactOf, langOf } from '../../../config/layla-tones.js';
 import { sectorIdFor } from '../../../config/layla-qualification.js';
 import { BZNS_MAX_CHARS, parseBzns, validateBzns } from '../../../src/lib/bzns-doc.js';
@@ -131,7 +134,7 @@ export function routingTakeoverApproved(env, i) {
   const parts = String(env.BLUE_ROUTING_TAKEOVER || '').split(':');
   return parts.length === 2 && parts.every(assetId) && i?.path === 'existing_cloud' && i.waba === parts[0] && i.phone === parts[1];
 }
-export function createReviewHandler({ env = process.env, fetcher = fetch, now = Date.now, store = reviewStore({ env, fetcher }), catalog = catalogStore({env,fetcher}), exchange = exchangeAndVerify, inspect = inspectReviewConnection, reviewMode = true, accountStore = blueAuthStore({env,fetcher}), websiteImport = importWebsite, verifyConfig = checkSignupConfiguration, generate = qwenGenerator(env, fetcher) } = {}) {
+export function createReviewHandler({ env = process.env, fetcher = fetch, now = Date.now, store = reviewStore({ env, fetcher }), catalog = catalogStore({env,fetcher}), exchange = exchangeAndVerify, inspect = inspectReviewConnection, reviewMode = true, accountStore = blueAuthStore({env,fetcher}), websiteImport = importWebsite, verifyConfig = checkSignupConfiguration, generate = qwenGenerator(env, fetcher), brain = brainStore({env,fetcher}), extract = qwenExtractor(env, fetcher) } = {}) {
   return async (req, res) => {
     let body;
     try {
@@ -185,7 +188,11 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         if (!next || next.expiresAt <= now()) throw new PilotError('review_backend_unavailable',503);
         row = next; return row;
       };
-      const ownerKey=String(row.accountId||sessionHash);
+      // Catalog rows belong to the account, or to this setup until it is saved to an account (claim_draft moves them).
+      const ownerKey=row.accountId ? String(row.accountId) : `review_${row._id}`;
+      // BznsBrain and catalog changes are the manager's: a team member never edits the business's knowledge.
+      if ((String(body.action || '').startsWith('brain_') || ['catalog_save','catalog_save_many','catalog_archive','catalog_approve','catalog_discard','catalog_publish'].includes(body.action)) && account?.workspaceRole === 'employee') throw new PilotError('manager_required',403);
+      const brainState = async () => brain('state',{sessionHash});
       const persistConnection = async (verified, waba, phone, connectionConfig = configuration(env)) => {
         if (!greenSubscriptionReady(env)) throw new PilotError('green_whatsapp_not_ready',503);
         const token = verified.token;
@@ -282,20 +289,74 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
       } else if (body.action === 'save_progress') {
         await write('save_progress', { journeyStep: body.journeyStep });
       } else if (body.action === 'catalog_list') {
-        if(!row.accountId)throw new PilotError('sign_in_required',401);
-        const value=await catalog('list',{ownerKey,cursor:body.cursor,limit:body.limit});return send(res,200,{...result(),catalog:value},{vary:'Cookie'});
+        const value=await catalog('list',{ownerKey,cursor:body.cursor,limit:body.limit,...(body.all===true?{all:true}:{})});return send(res,200,{...result(),catalog:value},{vary:'Cookie'});
       } else if (body.action === 'catalog_save') {
-        if(!row.accountId)throw new PilotError('sign_in_required',401);
         const value=await catalog('save',{ownerKey,entry:body.entry});return send(res,200,{...result(),catalog:value},{vary:'Cookie'});
       } else if (body.action === 'catalog_save_many') {
-        if(!row.accountId)throw new PilotError('sign_in_required',401);
         const value=await catalog('saveMany',{ownerKey,entries:body.entries});return send(res,200,{...result(),catalog:value},{vary:'Cookie'});
-      } else if (['catalog_archive','catalog_approve'].includes(body.action)) {
-        if(!row.accountId)throw new PilotError('sign_in_required',401);
-        const value=await catalog(body.action==='catalog_approve'?'approve':'archive',{ownerKey,entryKey:body.entryKey});return send(res,200,{...result(),catalog:value},{vary:'Cookie'});
+      } else if (['catalog_archive','catalog_approve','catalog_discard'].includes(body.action)) {
+        const value=await catalog(body.action.slice(8),{ownerKey,entryKey:body.entryKey});return send(res,200,{...result(),catalog:value},{vary:'Cookie'});
       } else if (body.action === 'catalog_publish') {
-        if(!row.accountId)throw new PilotError('sign_in_required',401);
         const value=await catalog('publish',{ownerKey});return send(res,200,{...result(),catalog:value},{vary:'Cookie'});
+      } else if (body.action === 'brain_state') {
+        return send(res,200,{...result(),brain:await brainState()},{vary:'Cookie'});
+      } else if (body.action === 'brain_test') {
+        // Test Layla: the live context builder and question planner (in Convex), the live AI turn and checks
+        // (here), on a simulated customer. Nothing is sent and no customer or conversation is written.
+        const variant = body.variant === 'draft' ? 'draft' : 'published';
+        const history = Array.isArray(body.history) ? body.history.slice(-12).filter(h => h && ['customer','layla'].includes(h.role) && typeof h.text === 'string').map(h => ({ role:h.role, text:h.text.slice(0,500) })) : [];
+        const latest = history.filter(h => h.role === 'customer').at(-1)?.text?.trim();
+        if (!latest) throw new PilotError('invalid_text');
+        const test = await brain('test_context',{sessionHash,variant,history,sim:body.sim && typeof body.sim === 'object' ? body.sim : {}});
+        const turn = await aiTurn(test.context, generate);
+        const outcome = previewOutcome(test.sim, turn, { sectorId:test.sectorId, catalog:test.context.catalog || [], reception:test.reception, latest });
+        if (row.profile?.reviewed && variant === 'published') await write('preview_result', { profileVersion: row.profileVersion || 1, preview: { question: latest.slice(0,1000), text: turn.reply.slice(0,1200), sourceFields: (turn.sources || []).map(x => x.label).slice(0,10), needsHuman: !!turn.needsTeam, intent: turn.intent, variant, ...(turn.ai?.fallback ? { fallback: String(turn.ai.fallback).slice(0,40) } : {}) } }).catch(() => {});
+        return send(res,200,{...result(),test:{ variant, reply:turn.reply, noReply:!!turn.noReply, intent:turn.intent, needsTeam:!!turn.needsTeam, askedField:turn.askedField || null,
+          sources:turn.sources || [], reason:turn.reason || '', fallback:turn.ai?.fallback || null, captured:outcome.captured, sim:outcome.sim, override:test.override, reception:test.reception, appointment:outcome.sim.appointment || null }},{vary:'Cookie'});
+      } else if (body.action === 'brain_extract') {
+        // One chunk of an owner's document, page or pasted text: Qwen proposes, Convex verifies and queues for review.
+        if (typeof body.text !== 'string' || !body.text.trim() || body.text.length > CHUNK_CHARS + 500 || !['file','website','paste'].includes(body.sourceKind)) throw new PilotError('invalid_extraction');
+        const ip = String(req.headers['x-vercel-forwarded-for'] || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0];
+        await accountStore('limit_extract',{ipHash:createHmac('sha256',secret).update(`blue-extract:${ip}`).digest('hex')});
+        let raw = null, failure = null;
+        try { raw = extractJson((await extract(extractionMessages(body.text, { business: row.profile?.businessName || '', sector: row.profile?.sector || '' }))).text); if (!raw) failure = 'invalid_json'; }
+        catch (e) { failure = e?.reason || 'ai_error'; }
+        if (failure) return send(res,200,{...result(),extraction:{ ok:false, reason:failure, added:0, duplicate:0, rejected:0 }},{vary:'Cookie'});
+        const counts = await brain('record_extraction',{sessionHash,raw,chunk:body.text,sourceKind:body.sourceKind,sourceLabel:String(body.sourceLabel || '').slice(0,200)});
+        return send(res,200,{...result(),extraction:{ ok:true, ...counts }},{vary:'Cookie'});
+      } else if (body.action === 'brain_website') {
+        // A web page read on the server (the existing importer), returned as text for the browser to send in chunks.
+        if (!websiteImportEnabled(env)) throw new PilotError('website_import_unavailable',503);
+        const ip = String(req.headers['x-vercel-forwarded-for'] || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0];
+        await accountStore('limit_import',{ipHash:createHmac('sha256',secret).update(`blue-import:${ip}`).digest('hex')});
+        const imported = await websiteImport(body.url);
+        return send(res,200,{...result(),page:{ url:imported.url, text:String(imported.text || '').slice(0,48000), partial:!!imported.partial || String(imported.text || '').length > 48000 }},{vary:'Cookie'});
+      } else if (['brain_accept','brain_dismiss'].includes(body.action)) {
+        if (typeof body.proposalId !== 'string' || body.proposalId.length > 64) throw new PilotError('proposal_not_found',404);
+        await brain(body.action === 'brain_accept' ? 'accept' : 'dismiss',{sessionHash,proposalId:body.proposalId,
+          ...(typeof body.text === 'string' ? { text:body.text.slice(0,1500) } : {}), ...(typeof body.section === 'string' ? { section:body.section } : {}), ...(body.replace === true ? { replace:true } : {}),
+          ...(body.entry && typeof body.entry === 'object' ? { entry:body.entry } : {})});
+        row = await store('get',{sessionHash});
+        return send(res,200,{...result(),brain:await brainState()},{vary:'Cookie'});
+      } else if (body.action === 'brain_behaviour') {
+        await brain('behaviour_save',{sessionHash,behaviour:body.behaviour,version:Number.isSafeInteger(body.version) ? body.version : -1});
+        row = await store('get',{sessionHash});
+        return send(res,200,{...result(),brain:await brainState()},{vary:'Cookie'});
+      } else if (body.action === 'brain_step') {
+        await brain('step',{sessionHash,brainStep:body.brainStep});
+        return send(res,200,{...result(),brain:await brainState()},{vary:'Cookie'});
+      } else if (body.action === 'brain_publish') {
+        // One Publish: bzns.md (checked here and again in Convex) and the catalog's drafts and staged edits.
+        const draft = row.bznsDraft, unpublished = !!draft && draft.markdown !== row.bznsPublished?.markdown;
+        if (unpublished) {
+          const checked = validateBzns(draft.markdown);
+          if (!checked.ok) return send(res,400,{ok:false,reason:'bzns_invalid',errors:checked.errors.map(({code,section,heading})=>({code,section,...(heading ? {heading} : {})}))},{vary:'Cookie'});
+          await write('bzns_publish',{ markdown:draft.markdown, version:draft.version || 0 });
+        }
+        if (body.catalog !== false) await catalog('publish',{ownerKey});
+        await brain('settle_publish',{sessionHash});
+        row = await store('get',{sessionHash});
+        return send(res,200,{...result(),brain:await brainState()},{vary:'Cookie'});
       } else if (body.action === 'begin') {
         const c = configuration(env);
         if (!reviewMode && (!account || !row.accountId)) throw new PilotError('sign_in_required',401);

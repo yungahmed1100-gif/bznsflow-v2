@@ -85,6 +85,7 @@ const signInAware = (reason) => reason === 'sign_in_required' ? 401 : 409;
 
 export const reviewStore = convexStore({ route: 'blue-review', fallback: 'review_backend_unavailable', reasons: REVIEW_REASONS });
 export const catalogStore = convexStore({ route: 'blue-catalog', fallback: 'catalog_unavailable' });
+export const brainStore = convexStore({ route: 'blue-brain', fallback: 'brain_unavailable' });
 export const blueAuthStore = convexStore({ route: 'blue-auth', fallback: 'account_unavailable', timeout: 6000, reasons: AUTH_REASONS });
 export const dashboardStore = convexStore({ route: 'blue-dashboard', fallback: 'dashboard_unavailable', status: signInAware });
 export const hasibStore = convexStore({ route: 'blue-hasib', fallback: 'hasib_unavailable', status: signInAware });

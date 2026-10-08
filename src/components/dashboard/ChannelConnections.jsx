@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
+import { instagramReturnMessage } from '../../lib/onboarding/explanations.js';
 import { InstagramConnection } from './InstagramConnection';
 import { ChannelSwitch } from './ChannelSwitch';
 import { BrandMark } from '../ui/BrandMark';
@@ -10,6 +11,9 @@ import { formatPhone } from '../../lib/dashboard/phone';
 export function ChannelConnections({s,data,onChange}) {
   const [busy,setBusy]=useState(''),[confirm,setConfirm]=useState(false),[notice,setNotice]=useState(null);
   const whatsapp=channelsFrom(data).find(c=>c.id==='whatsapp');
+  // Back from Instagram's screen (started here): say how it went, and switch Layla on for a new connection.
+  const [instagramReturn,setInstagramReturn]=useState(null);
+  useEffect(()=>{const q=new URLSearchParams(window.location.search),status=q.get('instagram');const text=instagramReturnMessage(status,q.get('reason'),s.lang);setInstagramReturn(text?{ok:status==='connected',text}:null);},[s.lang]);
   async function run(action) {
     setBusy(action);setNotice(null);
     try {
@@ -40,6 +44,7 @@ export function ChannelConnections({s,data,onChange}) {
       </div>}
       {notice && <p role={notice.ok?'status':'alert'}>{notice.text}</p>}
     </section>
-    <InstagramConnection lang={s.lang} onChange={onChange} replyState={data.instagramMessaging} />
+    {instagramReturn && <p className={instagramReturn.ok?'ld-notice':'ld-notice is-problem'} role={instagramReturn.ok?'status':'alert'}>{instagramReturn.text}</p>}
+    <InstagramConnection lang={s.lang} onChange={onChange} replyState={data.instagramMessaging} autoOn={!!instagramReturn?.ok} />
   </section>;
 }

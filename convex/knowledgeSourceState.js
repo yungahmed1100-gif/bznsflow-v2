@@ -9,7 +9,8 @@ export async function approvedKnowledge(ctx, accountId) {
   const sources = await ctx.db.query('knowledgeSources').withIndex('by_account', q => q.eq('accountId', accountId)).take(101);
   const result = [];
   for (const source of sources.filter(row => row.status === 'published').slice(0, 100)) {
-    for (const answer of source.approvedAnswers || []) result.push({ sourceKey:source.sourceKey, title:answer.question, revision:source.revision, text:answer.answer, reference:answer.label });
+    // An answer merged into bzns.md (BznsBrain) or dismissed by the owner is retired: kept, never read.
+    for (const answer of (source.approvedAnswers || []).filter(x => !x.retiredAt)) result.push({ sourceKey:source.sourceKey, title:answer.question, revision:source.revision, text:answer.answer, reference:answer.label });
   }
   return result;
 }

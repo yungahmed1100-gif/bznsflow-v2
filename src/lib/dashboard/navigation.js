@@ -14,22 +14,31 @@ const ALIASES = {
   contacts: ['customers', 'contacts'], broadcast: ['customers', 'broadcast'],
   channels: ['settings', 'channels'], business: ['settings', 'business'],
 };
-// Catalyst is four tabs: Chats, Broadcasts, Customers, Settings. Its older links land on them.
+// Catalyst is four tabs: Chats, Broadcasts, Customers, Settings. Settings holds BznsBrain (bzns.md and
+// the catalog, Layla's behaviour, review) and Channels. Older links land on them.
 const CATALYST_ALIASES = {
-  broadcast: ['broadcasts'], contacts: ['customers'], stock: ['settings', 'services'],
-  channels: ['settings', 'channels'], business: ['settings', 'business'],
+  broadcast: ['broadcasts'], contacts: ['customers'], stock: ['settings', 'brain'],
+  channels: ['settings', 'channels'], business: ['settings', 'brain'], brain: ['settings', 'brain'],
 };
+// Settings' old views (Business details, Services & prices) are now BznsBrain's two tabs.
+const CATALYST_VIEWS = { business: 'brain', services: 'brain' };
 const CATALYST = Object.freeze({
   sections: ['chats', 'broadcasts', 'customers', 'settings'],
-  views: { customers: [], settings: ['business', 'services', 'channels'] },
+  views: { customers: [], settings: ['brain', 'channels'] },
 });
+/** Which BznsBrain tab a URL opens: `part`, else the old Services & prices links open the catalog. */
+export function brainPart(params) {
+  const part = params.get('part');
+  if (['bzns', 'catalog'].includes(part)) return part;
+  return params.get('view') === 'services' || params.get('tab') === 'stock' ? 'catalog' : 'bzns';
+}
 const TEAM_PACKS = ['retail', 'retail-tech', 'dental', 'real-estate', 'clinic', 'construction', 'automotive'];
 export const SECTION_ORDER = ['today', 'chats', 'broadcasts', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings'];
 
 /** Preserve caller-owned URL parameters while clearing record state when changing sections. */
 export function dashboardSearch(current, tab, extra = {}) {
   const params = new URLSearchParams(current);
-  for (const key of ['tab', 'view', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'stage', 'filter']) params.delete(key);
+  for (const key of ['tab', 'view', 'part', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'stage', 'filter']) params.delete(key);
   params.set('tab', tab);
   for (const [key, value] of Object.entries(extra)) params.set(key, value);
   return params;
@@ -86,6 +95,6 @@ export function resolveTab(requestedTab, requestedView, map) {
   const views = map.views[tab];
   if (!views) return { tab, view: null };
   if (views.length === 0) return { tab, view: null };
-  const wanted = aliasView || requestedView;
+  const wanted = aliasView || (map.catalyst && CATALYST_VIEWS[requestedView]) || requestedView;
   return { tab, view: views.includes(wanted) ? wanted : views[0] };
 }

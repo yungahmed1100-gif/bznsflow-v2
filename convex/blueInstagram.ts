@@ -6,7 +6,7 @@ import { executeInstagram, purgeInstagram } from './blueInstagramState.js';
 
 export const execute = internalMutation({args:{
   operation:v.union(...['deletion_status','state','context','begin','consume','connect','checked','disconnect','disconnected','revoke','refresh_context','refresh_result'].map(s=>v.literal(s))),
-  deletionCode:v.optional(v.string()),sessionHash:v.optional(v.string()),stateHash:v.optional(v.string()),lang:v.optional(v.string()),integration:v.optional(instagramIntegration),
+  deletionCode:v.optional(v.string()),sessionHash:v.optional(v.string()),stateHash:v.optional(v.string()),lang:v.optional(v.string()),returnTo:v.optional(v.string()),integration:v.optional(instagramIntegration),
   integrationId:v.optional(v.string()),igAccount:v.optional(v.string()),tokenExpiresAt:v.optional(v.number()),credential:v.optional(instagramCredential),
   expectedUpdatedAt:v.optional(v.number()),issuedAt:v.optional(v.number()),connected:v.optional(v.boolean()),tokenOnly:v.optional(v.boolean()),deleteData:v.optional(v.boolean()),
 },handler:(ctx,args):Promise<{ok:boolean;value?:Value;reason?:string}>=>executeInstagram(ctx,{...args,purgeFunction:internal.blueInstagram.purge})});

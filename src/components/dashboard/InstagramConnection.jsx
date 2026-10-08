@@ -43,7 +43,7 @@ export function InstagramConnection({lang='en',onChange=()=>{},replyState=null,a
         await messaging(action,{channel:'instagram'});
         setNotice(t('Instagram connection is healthy.','اتصال إنستغرام سليم.'));
       } else {
-        const result=await callApi(endpoint,{body:{action,lang,...extra,...(action==='disconnect'?{confirm:true}:{})},csrf:state.data?.csrfToken});
+        const result=await callApi(endpoint,{body:{action,lang,...(action==='connect'?{returnTo:inSetup?'setup':'dashboard'}:{}),...extra,...(action==='disconnect'?{confirm:true}:{})},csrf:state.data?.csrfToken});
         if(result.url) {window.location.assign(result.url);return;}
         setNotice(result.revoked===false
           ?t('Instagram disconnected in BznsFlow. To finish, remove the BznsFlow app in Instagram → Settings → Apps and websites.','تم فصل إنستغرام في BznsFlow. لإكمال الفصل، أزل تطبيق BznsFlow من إنستغرام ← الإعدادات ← التطبيقات والمواقع.')

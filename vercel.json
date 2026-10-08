@@ -63,6 +63,26 @@
   ],
   "redirects": [
     {
+      "source": "/layla/setup",
+      "destination": "/catalyst/setup",
+      "permanent": false
+    },
+    {
+      "source": "/en/layla/setup",
+      "destination": "/en/catalyst/setup",
+      "permanent": false
+    },
+    {
+      "source": "/ascend/setup",
+      "destination": "/layla/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/en/ascend/setup",
+      "destination": "/en/layla/dashboard",
+      "permanent": false
+    },
+    {
       "source": "/ar",
       "destination": "/",
       "permanent": true

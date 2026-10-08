@@ -40,6 +40,7 @@ export function ContactsView({ s, overview, onOpenChat }) {
             <select value={status} onChange={e => { setStatus(e.target.value); setMore({ items: [], cursor: undefined }); }}>
               <option value="">{s.t('allStatuses')}</option>
               {['new', 'in_progress', 'qualified', 'not_qualified'].map(v => <option key={v} value={v}>{s.t(`q_${v}`)}</option>)}
+              <option value="appointment">{s.t('appointmentRequests')}</option>
             </select></label>
           {canExportCsv && <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => run('csv', () => exportContacts(pack.fields.map(f => f.key)))}>{busy === 'csv' ? s.t('exporting') : `${s.t('export')} CSV`}</button>}
           {canExport && <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => run('zip', () => exportAccount({ lang: s.lang, business: overview.business.name, fieldKeys: pack.fields.map(f => f.key) }))}>{busy === 'zip' ? s.t('exporting') : s.t('exportAll')}</button>}
@@ -67,7 +68,7 @@ export function ContactsView({ s, overview, onOpenChat }) {
                         <small>{c.channel==='instagram'?'Instagram':<><bdi dir="ltr" className="ld-num">{formatPhone(c.number)}</bdi> · {s.t(`name_${c.nameSource}`)}</>}</small>
                       </button>
                     </th>
-                    <td data-label={s.t('status')}><QualificationChip s={s} status={c.status} /></td>
+                    <td data-label={s.t('status')}><QualificationChip s={s} status={c.status} />{c.appointment && <span className="ld-chip is-yellow" title={c.appointment.preferences || ''}>{s.t('appointmentRequest')}</span>}</td>
                     <td data-label={s.t('fieldsHeading')} className="ld-fields-cell">{c.fields.slice(0, 3).map(f => <span key={f.key}><b>{fieldLabel(f.key)}:</b> <bdi>{valueLabel(f.key, f.value)}</bdi></span>)}</td>
                     <td data-label={s.t('source')}>{s.t(`source_${c.source}`)}</td>
                     <td data-label={s.t('consent')}>{c.optout ? <span className="ld-chip is-coral">{s.t('optedOut')}</span> : s.t(`consent_${c.consent.status}`)}</td>

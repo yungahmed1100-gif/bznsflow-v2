@@ -8,7 +8,7 @@ const env={CONVEX_CLOUD_URL:BLUE_CLOUD,BLUE_REVIEW_SERVICE_SECRET:'a'.repeat(64)
 function memory() {
   const rows=new Map(); let seq=0,now=1000;
   const db={
-    query(table){const filters=[];const range={eq(f,v){filters.push([f,v]);return range;}};const api={withIndex(_index,select){select(range);return api;},async unique(){return structuredClone([...rows.values()].find(r=>r.table===table && filters.every(([f,v])=>r[f]===v)));}};return api;},
+    query(table){const filters=[];const range={eq(f,v){filters.push([f,v]);return range;}};const api={withIndex(_index,select){select(range);return api;},async unique(){return structuredClone([...rows.values()].find(r=>r.table===table && filters.every(([f,v])=>r[f]===v)));},async take(n){return structuredClone([...rows.values()].filter(r=>r.table===table && filters.every(([f,v])=>r[f]===v)).slice(0,n));}};return api;},
     async insert(table,r){const id=String(++seq);rows.set(id,{_id:id,table,...structuredClone(r)});return id;},
     async get(id){return structuredClone(rows.get(id));},
     async patch(id,p){const r=rows.get(id);for(const[k,v]of Object.entries(p)){if(v===undefined)delete r[k];else r[k]=structuredClone(v);}},

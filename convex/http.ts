@@ -99,6 +99,17 @@ http.route({path:'/blue-catalog',method:'POST',handler:httpAction(async(ctx,requ
   const headers={'Content-Type':'application/json','Cache-Control':'no-store'};if(!serviceAuthorized(request))return new Response(null,{status:401});
   try{const raw=await request.text();if(raw.length>262144)return new Response(null,{status:413});const result=await ctx.runMutation((internal as any).blueCatalog.execute,JSON.parse(raw));return new Response(JSON.stringify(result),{headers});}catch{return new Response(JSON.stringify({ok:false,reason:'catalog_unavailable'}),{status:503,headers});}
 })});
+http.route({path:'/blue-brain',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text();if(raw.length>65536) return new Response(null,{status:413});
+    const args=JSON.parse(raw);
+    if(!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null,{status:400});
+    const result=await ctx.runMutation((internal as any).brain.execute,args);
+    return new Response(JSON.stringify(result),{headers});
+  } catch {return new Response(JSON.stringify({ok:false,reason:'brain_unavailable'}),{status:503,headers});}
+})});
 http.route({path:'/blue-instagram',method:'POST',handler:httpAction(async(ctx,request)=>{
   if(!serviceAuthorized(request)) return new Response(null,{status:401});
   const headers={'Content-Type':'application/json','Cache-Control':'no-store'};

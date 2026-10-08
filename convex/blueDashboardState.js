@@ -201,7 +201,8 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
   if (a.operation === 'contacts') {
     const remaining = await migrateAccount(ctx, tenant, now);
     const limit = clampLimit(a.limit, 50);
-    const status = ['new', 'in_progress', 'qualified', 'not_qualified'].includes(a.status) ? a.status : null;
+    // `appointment`: customers whose appointment request waits for reception (Catalyst's reception flow).
+    const status = ['new', 'in_progress', 'qualified', 'not_qualified', 'appointment'].includes(a.status) ? a.status : null;
     let rows;
     let next = null;
     if (typeof a.search === 'string' && a.search.trim()) {
@@ -217,7 +218,7 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
     const items = [];
     for (const contact of rows) {
       const item = publicContact(contact, await conversationFor(ctx, contact));
-      if (!status || item.status === status) items.push(item);
+      if (!status || (status === 'appointment' ? !!item.appointment : item.status === status)) items.push(item);
     }
     return ok({ items, cursor: next, migrationPending: remaining > 0, qualification: packDescription(sectorId) });
   }

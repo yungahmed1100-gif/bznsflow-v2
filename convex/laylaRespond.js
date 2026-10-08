@@ -13,7 +13,8 @@ export async function runReplyTurn({ exec, conversationId, key, generate }) {
   const turn = await aiTurn(read.value.context, generate);
   const ai = { model: turn.ai.model || '', ms: turn.ai.ms || 0, tokensIn: turn.ai.tokensIn || 0, tokensOut: turn.ai.tokensOut || 0, attempts: turn.ai.attempts || 0,
     ...(turn.ai.fallback ? { fallback: String(turn.ai.fallback).slice(0, 40) } : {}) };
-  const committed = await exec('reply_commit', { conversationId, key, text: turn.reply, intent: turn.intent, noReply: !!turn.noReply,
+  const committed = await exec('reply_commit', { conversationId, key, text: turn.reply, intent: turn.intent, noReply: !!turn.noReply, needsTeam: !!turn.needsTeam,
+    ...(turn.declined?.length ? { declined: turn.declined } : {}),
     ...(turn.askedField ? { askedField: turn.askedField } : {}), fields: turn.fields || {}, ai });
   return { committed: committed.value, reply: turn.reply, ai };
 }

@@ -360,3 +360,6 @@ a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ld-channel-card > p { margin: 0; }
 .ld-channel-identity { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--ink-2); font-size: 13px; }
 .ld-channel-identity .ld-health { font-weight: 400; }
+/* A one-line outcome above a card (for example, back from Instagram's screen). */
+.ld-notice { margin: 0 0 12px; padding: 8px 12px; border-inline-start: 3px solid var(--green-mark); background: var(--card); font-size: 14px; }
+.ld-notice.is-problem { border-inline-start-color: var(--coral-mark); }

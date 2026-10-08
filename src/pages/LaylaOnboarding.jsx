@@ -10,13 +10,10 @@ import '../styles/layla-onboarding.css';
 import { createSignupAttempt, signupOptions } from '../lib/layla-signup.js';
 import { prepareFacebook } from '../lib/meta-sdk.js';
 import { callApi } from '../lib/api-client.js';
-import { BznsEditor } from '../components/business/BznsEditor.jsx';
+import { BrainSetup } from '../components/brain/BrainSetup.jsx';
 import { SaveAccountPanel } from '../components/onboarding/SaveAccountPanel.jsx';
 import { WhatsAppConnect } from '../components/onboarding/WhatsAppConnect.jsx';
-import { TestLayla } from '../components/onboarding/TestLayla.jsx';
-import { ChatWidget } from '../components/chat/ChatWidget.jsx';
 import { explain as explainReason, instagramReturnMessage } from '../lib/onboarding/explanations.js';
-import { setupHelpReply, SUGGESTED, SUGGESTION_LABELS } from '../lib/onboarding/setupHelp.js';
 
 // Three steps, one primary action each: your business, connect a channel, live.
 // Ids are the saved journeyStep values; older saved steps (2, 3, 4) open the channels step.
@@ -35,7 +32,6 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   const [path, setPath] = useState('coexistence'), [preselect, setPreselect] = useState(EMPTY_PRESELECT);
   const [prepared, setPrepared] = useState(null), [preparing, setPreparing] = useState(false);
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
-  const [reply, setReply] = useState(null);
   const [saveOpen, setSaveOpen] = useState(false);
   // WhatsApp work starts only when the customer asks for it, so an Instagram-only
   // setup never opens a Meta attempt or spends the attempt budget.
@@ -77,7 +73,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
       if(!session.ok)throw Error(session.reason);
       const result=await fetch('/api/auth-session',{method:'DELETE',credentials:'same-origin',signal:AbortSignal.timeout(10000),headers:{'x-csrf-token':session.csrfToken}}).then(r=>r.json());
       if(!result.ok)throw Error(result.reason);
-      setData(null);setReply(null);setPrepared(null);
+      setData(null);setPrepared(null);
       window.location.replace(`${ar? '':'/en'}/catalyst/setup`);
     });
   }
@@ -86,30 +82,6 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   const errorRef = useRef(null);
   useEffect(() => { if (error) { errorRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' }); errorRef.current?.focus({ preventScroll: true }); } }, [error]);
   const explain = reason => explainReason(reason, lang);
-  const setupChatText = {
-    chat_greeting: tr('Hi, I’m Layla. Ask me anything about connecting WhatsApp.', 'مرحباً، أنا ليلى. اسألني عن ربط واتساب.'),
-    chat_error: tr('I couldn’t answer just now. Please try again or contact the BznsFlow team.', 'لم أتمكن من الإجابة الآن. حاول مجدداً أو تواصل مع فريق BznsFlow.'),
-    chat_close: tr('Close help chat', 'إغلاق محادثة المساعدة'),
-    chat_open_aria: tr('Open setup help chat', 'فتح محادثة مساعدة الإعداد'),
-    chat_invite: tr('Need help connecting?', 'تحتاج مساعدة في الربط؟'),
-    chat_title: tr('Setup help', 'مساعدة الإعداد'),
-    chat_messages_label: tr('Setup help messages', 'رسائل مساعدة الإعداد'),
-    chat_subtitle: tr('Ask about WhatsApp setup', 'اسأل عن إعداد واتساب'),
-    chat_placeholder: tr('Type your question…', 'اكتب سؤالك…'),
-    chat_send: tr('Send question', 'إرسال السؤال'),
-    chat_footnote: tr('Answers are about setup only. A person can help with anything else.', 'الإجابات عن الإعداد فقط. يستطيع شخص مساعدتك في أي أمر آخر.'),
-    chat_typing: tr('Layla is thinking', 'ليلى تفكر'),
-    chat_wa_prefix: tr('Please help me with Layla setup', 'أحتاج مساعدة في إعداد ليلى'),
-    chat_wa_cta: tr('Message the BznsFlow team', 'مراسلة فريق BznsFlow'),
-    chat_email_subject: tr('Help with Layla setup', 'مساعدة في إعداد ليلى'),
-    chat_email_cta: tr('Email the BznsFlow team', 'مراسلة فريق BznsFlow بالبريد'),
-    chat_suggestions_label: tr('Common setup questions', 'أسئلة شائعة عن الإعداد'),
-  };
-  const answerSetupQuestion = useCallback(question => setupHelpReply(question, lang), [lang]);
-  const setupSuggestions = SUGGESTED.map(id => ({
-    question: SUGGESTION_LABELS[id][lang === 'ar' ? 1 : 0],
-    label: SUGGESTION_LABELS[id][lang === 'ar' ? 1 : 0],
-  }));
   async function request(body) {
     const surface = reviewMode ? 'customer-review' : 'customer';
     // 60s: signup and website import both wait on Meta or a third-party site.
@@ -125,7 +97,6 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
       if (!r.account) setSaveOpen(true);
     }
     setData(r); setAvailable(r.available === true); setCsrf(r.csrfToken || '');
-    setReply(r.lastPreview?.text || null);
     setPath(r.integration?.path || r.prepared?.path || 'coexistence');
     setStep(r.journeyStep === 2 || r.journeyStep === undefined || r.journeyStep === null ? (r.profile ? 1 : 0) : r.journeyStep === 0 ? 0 : 1);
     if (r.prepared) {
@@ -257,7 +228,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     <div className="layla-customer-layout">
       <aside className="layla-intro">
         <h1>{tr('Meet your new front desk.', 'تعرّف على موظفة استقبالك الجديدة.')}</h1>
-        <p>{tr('Tell Layla about your business, connect Instagram, WhatsApp or both, and she is live. Three short steps.', 'عرّف ليلى على نشاطك، واربط إنستغرام أو واتساب أو كليهما، وتبدأ ليلى العمل. ثلاث خطوات قصيرة.')}</p>
+        <p>{tr('Give Layla your business information in BznsBrain, connect Instagram, WhatsApp or both, and she is live.', 'أعطِ ليلى معلومات نشاطك في BznsBrain، واربط إنستغرام أو واتساب أو كليهما، وتبدأ ليلى العمل.')}</p>
         <img src="/images/layla-onboarding-transparent.png" width="768" height="1376" alt={tr('Layla, wearing a teal jacket and a headset', 'ليلى ترتدي سترة بلون أزرق مخضر وسماعة رأس')} fetchpriority="high" />
         <p className="layla-intro-note">{tr('Your business. Your channels. You stay in control.', 'نشاطك. قنواتك. والقرار دائماً لك.')}</p>
       </aside>
@@ -277,8 +248,9 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
         {data?.profile && <p className={data.savedToAccount ? 'layla-saved' : 'layla-saved layla-saved--preview'}>{data.savedToAccount ? tr('Saved to your account', 'محفوظ في حسابك') : tr('Preview saved in this browser for 24 hours.', 'المعاينة محفوظة في هذا المتصفح لمدة ٢٤ ساعة.')}</p>}
         {saveOpen && step !== 1 && needsAccount && <SaveAccountPanel {...saveProps} />}
         {step !== 0 && step !== 1 && errorNote}
+        {/* BznsBrain: industry → information → review → behaviour → test and publish, on the same records Settings edits. */}
         {step === 0 && <>
-          <BznsEditor lang={lang} data={data} request={request} onState={applyState} disabled={checking} />
+          <BrainSetup lang={lang} onPublished={async () => applyState(await request())} />
           {errorNote}
         </>}
         {step === 1 && <section className="layla-channel-stage">
@@ -298,12 +270,10 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
             liveSwitch={!reviewMode && data?.savedToAccount ? <ChannelSwitch s={s} channel="whatsapp" autoOn={whatsappJustConnected} onActive={reportLive('whatsapp')} /> : null}
             errorNote={needsAccount && !data?.account ? null : errorNote} onClaim={() => run({ action: 'claim_draft' })} />
           <p className="layla-help">{s.t('handoffNote')}</p>
-          <TestLayla lang={lang} tr={tr} data={data} busy={busy} reviewMode={reviewMode} act={act} request={request} applyState={applyState} run={run} reply={reply} />
           <button className="layla-secondary" disabled={busy} onClick={() => leaveChannels(0)}>{tr('Back to business details','العودة إلى معلومات النشاط')}</button>
         </section>}
         <footer className="layla-customer-footer"><a href={ar ? '/privacy' : '/en/privacy'}>{tr('Privacy','الخصوصية')}</a><a href="mailto:ahmed@bznsflowai.com">{tr('Need a hand?','تحتاج مساعدة؟')}</a></footer>
       </div>
     </div>
-    <ChatWidget t={setupChatText} lang={lang} respond={answerSetupQuestion} suggestions={setupSuggestions} />
   </Container>;
 }

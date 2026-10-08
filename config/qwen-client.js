@@ -58,7 +58,9 @@ export async function qwenChat({ config, messages, fetcher = globalThis.fetch, t
 }
 
 /** A model call bound to one environment's Qwen settings; missing settings fail as `ai_not_configured`. */
-export const qwenGenerator = (env, fetcher = globalThis.fetch) => {
+export const qwenGenerator = (env, fetcher = globalThis.fetch, options = {}) => {
   const config = qwenConfig(env);
-  return messages => qwenChat({ config, messages, fetcher });
+  return messages => qwenChat({ config, messages, fetcher, ...options });
 };
+/** BznsBrain extraction: deterministic, room for a page of proposals, and a longer wait than a chat reply. */
+export const qwenExtractor = (env, fetcher = globalThis.fetch) => qwenGenerator(env, fetcher, { temperature: 0, maxTokens: 1500, timeoutMs: 20000 });

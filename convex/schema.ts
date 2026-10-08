@@ -6,7 +6,12 @@ import { v } from "convex/values";
 // Shared Green production schema: website state, authentication, Catalyst and
 // Ascend tables live in this deployment. Blue testing uses a separate deployment.
 const path = v.union(v.literal('coexistence'), v.literal('new_number'), v.literal('existing_cloud'));
-const qualificationField = v.object({key:v.string(),value:v.string(),source:v.string(),confidence:v.number(),at:v.number()});
+const qualificationField = v.object({key:v.string(),value:v.string(),source:v.string(),confidence:v.number(),at:v.number(),ref:v.optional(v.string())});
+const catalogPrice = v.object({type:v.string(),currency:v.string(),amount:v.optional(v.number()),minimum:v.optional(v.number()),maximum:v.optional(v.number()),unit:v.string(),label:v.string()});
+// An edit to an approved catalog entry waits here until the owner publishes; Layla keeps quoting the approved values.
+const catalogPending = v.object({kind:v.string(),nameEn:v.string(),nameAr:v.string(),category:v.string(),benefitEn:v.string(),benefitAr:v.string(),descriptionEn:v.string(),descriptionAr:v.string(),availability:v.string(),prices:v.array(catalogPrice),source:v.string(),confidence:v.number(),laylaUseEn:v.string(),laylaUseAr:v.string(),sortOrder:v.number()});
+// Catalyst BznsBrain: Layla's validated behaviour settings (config/layla-behaviour.js).
+const behaviour = v.object({tone:v.union(v.literal('sharp'),v.literal('sweet'),v.literal('informative')),askName:v.boolean(),ask:v.array(v.string()),appointmentPreferences:v.boolean(),handoffNote:v.string(),version:v.number(),savedAt:v.number()});
 const consent = v.object({status:v.union(v.literal('unknown'),v.literal('granted'),v.literal('revoked')),source:v.optional(v.string()),date:v.optional(v.string()),purpose:v.optional(v.string()),attestedAt:v.optional(v.number()),batchId:v.optional(v.id('blueConsentBatches'))});
 export const instagramCredential = v.object({v:v.number(),iv:v.string(),data:v.string(),tag:v.string()});
 export const instagramIntegration = v.object({id:v.string(),channel:v.literal('instagram'),app:v.string(),igAccount:v.string(),oauthUserId:v.optional(v.string()),username:v.string(),credential:v.optional(instagramCredential)});
@@ -17,7 +22,7 @@ export default defineSchema({
   hasibSettings: defineTable({accountId:v.id('accounts'),packId:v.optional(v.string()),currency:v.string(),vatRegistered:v.boolean(),vatRateBps:v.number(),pricesIncludeVat:v.boolean(),vatin:v.optional(v.string()),stockPolicy:v.union(v.literal('warn'),v.literal('block')),unsoldDays:v.optional(v.number()),absenceDays:v.optional(v.number()),listingFreshnessDays:v.optional(v.number()),constructionIncidentHoursDenominator:v.optional(v.number()),updatedAt:v.number()}).index('by_account',['accountId']),
   productSetupProgress: defineTable({accountId:v.id('accounts'),product:v.union(v.literal('catalyst'),v.literal('ascend')),step:v.number(),completed:v.boolean(),version:v.number(),requestId:v.string(),requestSignature:v.string(),updatedAt:v.number()}).index('by_account_product',['accountId','product']),
   productSetupAudit: defineTable({accountId:v.id('accounts'),product:v.string(),version:v.number(),action:v.string(),at:v.number()}).index('by_account',['accountId']),
-  knowledgeSources: defineTable({accountId:v.id('accounts'),sourceKey:v.string(),title:v.string(),approvedAnswers:v.optional(v.array(v.object({question:v.string(),answer:v.string(),label:v.string()}))),kind:v.string(),contentHash:v.string(),status:v.string(),revision:v.number(),updatedAt:v.number(),createdAt:v.number()}).index('by_account',['accountId']).index('by_account_key',['accountId','sourceKey']),
+  knowledgeSources: defineTable({accountId:v.id('accounts'),sourceKey:v.string(),title:v.string(),approvedAnswers:v.optional(v.array(v.object({question:v.string(),answer:v.string(),label:v.string(),retiredAt:v.optional(v.number())}))),kind:v.string(),contentHash:v.string(),status:v.string(),revision:v.number(),updatedAt:v.number(),createdAt:v.number()}).index('by_account',['accountId']).index('by_account_key',['accountId','sourceKey']),
   knowledgeRevisions: defineTable({accountId:v.id('accounts'),sourceKey:v.string(),revision:v.number(),text:v.string(),references:v.array(v.object({label:v.string(),text:v.string(),question:v.optional(v.string()),answer:v.optional(v.string())})),contentHash:v.string(),createdAt:v.number()}).index('by_account_key_revision',['accountId','sourceKey','revision']),
   knowledgeImportDrafts: defineTable({baseRevision:v.number(),accountId:v.id('accounts'),requestId:v.string(),sourceKey:v.string(),title:v.string(),kind:v.string(),text:v.string(),references:v.array(v.object({label:v.string(),text:v.string(),question:v.optional(v.string()),answer:v.optional(v.string())})),contentHash:v.string(),partial:v.boolean(),status:v.string(),version:v.number(),updatedAt:v.number()}).index('by_account',['accountId']).index('by_account_request',['accountId','requestId']).index('by_account_status',['accountId','status']),
   knowledgeAudit: defineTable({accountId:v.id('accounts'),sourceKey:v.string(),action:v.string(),revision:v.number(),at:v.number()}).index('by_account',['accountId']),
@@ -85,7 +90,7 @@ export default defineSchema({
   // Signed amounts: refunds are negative. Recorded only — BznsFlow never holds funds.
   hasibPayments: defineTable({accountId:v.id('accounts'),orderId:v.id('hasibOrders'),requestId:v.string(),amountMinor:v.number(),method:v.string(),reference:v.optional(v.string()),at:v.number()})
     .index('by_order_at',['orderId','at']).index('by_account_request',['accountId','requestId']).index('by_account_at',['accountId','at']),
-  blueInstagramAttempts: defineTable({sessionHash:v.string(),stateHash:v.string(),lang:v.string(),createdAt:v.number(),expiresAt:v.number(),used:v.boolean(),completed:v.boolean()}).index('by_session',['sessionHash']).index('by_expiry',['expiresAt']),
+  blueInstagramAttempts: defineTable({sessionHash:v.string(),stateHash:v.string(),lang:v.string(),returnTo:v.optional(v.string()),createdAt:v.number(),expiresAt:v.number(),used:v.boolean(),completed:v.boolean()}).index('by_session',['sessionHash']).index('by_expiry',['expiresAt']),
   blueInstagramConnections: defineTable({accountId:v.id('accounts'),sessionHash:v.string(),igAccount:v.string(),oauthUserId:v.optional(v.string()),integrationId:v.string(),integration:instagramIntegration,status:v.string(),connectedAt:v.optional(v.number()),tokenExpiresAt:v.number(),checkedAt:v.number(),tokenCheckedAt:v.optional(v.number()),refreshAt:v.number(),updatedAt:v.number(),deletePending:v.optional(v.boolean()),deletionCode:v.optional(v.string())}).index('by_account',['accountId']).index('by_ig_account',['igAccount']).index('by_oauth_user',['oauthUserId']).index('by_integration',['integrationId']).index('by_status_refresh',['status','refreshAt']).index('by_delete',['deletePending']).index('by_deletion_code',['deletionCode']),
   blueMessagingSettings: defineTable({key:v.string(),enabled:v.boolean(),rolloutMode:v.optional(v.union(v.literal('smoke'),v.literal('live'))),smokeAccountId:v.optional(v.id('accounts')),smokeRecipient:v.optional(v.string()),smokeExpiresAt:v.optional(v.number()),smokeVerifiedAt:v.optional(v.number()),smokeEvidence:v.optional(v.string())}).index('by_key',['key']),
   blueReviewerAccess: defineTable({tokenHash:v.string(),accountId:v.id('accounts'),expiresAt:v.number()}).index('by_hash',['tokenHash']).index('by_expiry',['expiresAt']),
@@ -99,6 +104,9 @@ export default defineSchema({
   blueContacts: defineTable({channel:v.optional(v.union(v.literal('whatsapp'),v.literal('instagram'))),igId:v.optional(v.string()),igAccount:v.optional(v.string()),accountId:v.id('accounts'),key:v.string(),state:v.union(v.literal('active'),v.literal('deleted')),waId:v.optional(v.string()),numberHash:v.string(),countryIso:v.optional(v.string()),
     ownerName:v.optional(v.string()),customerName:v.optional(v.string()),profileName:v.optional(v.string()),source:v.union(v.literal('inbound'),v.literal('manual'),v.literal('import')),
     sectorId:v.string(),fields:v.array(qualificationField),qualificationStatus:v.string(),qualificationOverride:v.optional(v.string()),asked:v.optional(v.array(v.string())),askCounts:v.optional(v.array(v.object({key:v.string(),count:v.number()}))),lastAskedAt:v.optional(v.number()),
+    // Catalyst reception flow: the customer chose not to give a name; they want to come in; their request for reception.
+    nameDeclined:v.optional(v.boolean()),appointmentInterestAt:v.optional(v.number()),
+    appointment:v.optional(v.object({status:v.literal('requested'),service:v.optional(v.string()),serviceRef:v.optional(v.string()),preferences:v.optional(v.string()),requestedAt:v.number(),updatedAt:v.number()})),
     consent:consent,optout:v.boolean(),optoutAt:v.optional(v.number()),lastActivityAt:v.number(),lastInboundAt:v.optional(v.number()),searchText:v.optional(v.string()),createdAt:v.number(),updatedAt:v.number(),deletedAt:v.optional(v.number())})
     .index('by_key',['key']).index('by_account_state_activity',['accountId','state','lastActivityAt']).index('by_account_hash',['accountId','numberHash']).index('by_instagram',['accountId','igAccount'])
     .searchIndex('search_contacts',{searchField:'searchText',filterFields:['accountId','state']}),
@@ -128,10 +136,22 @@ export default defineSchema({
   blueIntentUtterances: defineTable({tenantId:v.string(),revision:v.number(),intent:v.string(),text:v.string(),embedding:v.optional(v.array(v.float64())),approved:v.boolean(),createdAt:v.number()})
     .index('by_tenant_revision',['tenantId','revision'])
     .vectorIndex('by_embedding',{vectorField:'embedding',dimensions:1536,filterFields:['tenantId','revision','intent','approved']}),
-  blueCatalogEntries: defineTable({ownerKey:v.string(),entryKey:v.string(),kind:v.string(),status:v.string(),nameEn:v.string(),nameAr:v.string(),category:v.string(),benefitEn:v.string(),benefitAr:v.string(),descriptionEn:v.string(),descriptionAr:v.string(),availability:v.string(),prices:v.array(v.object({type:v.string(),currency:v.string(),amount:v.optional(v.number()),minimum:v.optional(v.number()),maximum:v.optional(v.number()),unit:v.string(),label:v.string()})),source:v.string(),confidence:v.number(),laylaUseEn:v.string(),laylaUseAr:v.string(),revision:v.number(),sortOrder:v.number(),createdAt:v.number(),updatedAt:v.number()})
+  blueCatalogEntries: defineTable({ownerKey:v.string(),entryKey:v.string(),kind:v.string(),status:v.string(),nameEn:v.string(),nameAr:v.string(),category:v.string(),benefitEn:v.string(),benefitAr:v.string(),descriptionEn:v.string(),descriptionAr:v.string(),availability:v.string(),prices:v.array(v.object({type:v.string(),currency:v.string(),amount:v.optional(v.number()),minimum:v.optional(v.number()),maximum:v.optional(v.number()),unit:v.string(),label:v.string()})),source:v.string(),confidence:v.number(),laylaUseEn:v.string(),laylaUseAr:v.string(),revision:v.number(),sortOrder:v.number(),createdAt:v.number(),updatedAt:v.number(),pending:v.optional(catalogPending),pendingAt:v.optional(v.number())})
     .index('by_owner_key',['ownerKey','entryKey'])
     .index('by_owner_status_order',['ownerKey','status','sortOrder']),
   blueCatalogMeta: defineTable({ownerKey:v.string(),revision:v.number(),publishedAt:v.optional(v.number()),updatedAt:v.number()}).index('by_owner',['ownerKey']),
+  // Catalyst BznsBrain review queue: what Qwen proposed from a document or page, old Q&A answers to merge
+  // into bzns.md, and questions customers asked that the business data does not cover. Keyed by the
+  // review row, which stays the same when a setup is claimed by an account. Nothing here is live until
+  // the owner accepts it into a draft and publishes.
+  brainProposals: defineTable({reviewId:v.id('blueReviewSessions'),kind:v.union(v.literal('bzns_section'),v.literal('catalog_entry'),v.literal('qa_migration'),v.literal('customer_gap')),
+    status:v.union(v.literal('open'),v.literal('quarantined'),v.literal('accepted'),v.literal('dismissed')),
+    target:v.object({section:v.optional(v.string()),heading:v.optional(v.string()),entryKey:v.optional(v.string()),sourceKey:v.optional(v.string()),question:v.optional(v.string())}),
+    existing:v.optional(v.string()),proposedText:v.optional(v.string()),
+    proposedEntry:v.optional(v.object({kind:v.string(),nameEn:v.string(),nameAr:v.string(),category:v.string(),descriptionEn:v.string(),descriptionAr:v.string(),prices:v.array(catalogPrice)})),
+    evidence:v.object({sourceKind:v.string(),sourceLabel:v.string(),quote:v.string()}),
+    flags:v.optional(v.array(v.string())),count:v.optional(v.number()),dedupeKey:v.string(),createdAt:v.number(),updatedAt:v.number(),resolvedAt:v.optional(v.number())})
+    .index('by_review_status',['reviewId','status','createdAt']).index('by_review_dedupe',['reviewId','dedupeKey']),
   blueAssetClaims: defineTable({phone:v.string(),waba:v.string(),sessionHash:v.string(),createdAt:v.number()}).index('by_phone',['phone']).index('by_waba',['waba']),
   blueAuthChallenges: defineTable({email:v.string(),codeHash:v.string(),challengeId:v.string(),createdAt:v.number(),expiresAt:v.number(),attempts:v.number(),sent:v.boolean()}).index('by_email',['email']).index('by_expiry',['expiresAt']),
   blueAuthLimits: defineTable({key:v.string(),count:v.number(),expiresAt:v.number()}).index('by_key',['key']).index('by_expiry',['expiresAt']),
@@ -149,7 +169,9 @@ export default defineSchema({
     // legacy: no longer written or read; kept so existing documents stay valid.
     previewReviewedVersion: v.optional(v.number()),
     previewIntents: v.optional(v.array(v.string())),
-    lastPreview: v.optional(v.object({ question: v.string(), text: v.string(), sourceFields: v.array(v.string()), needsHuman: v.boolean(), intent: v.string() })),
+    lastPreview: v.optional(v.object({ question: v.string(), text: v.string(), sourceFields: v.array(v.string()), needsHuman: v.boolean(), intent: v.string(), fallback: v.optional(v.string()), variant: v.optional(v.string()) })),
+    // Catalyst BznsBrain: behaviour settings, setup step, and when old Q&A answers became review proposals.
+    behaviour: v.optional(behaviour), brainStep: v.optional(v.number()), brainMigratedAt: v.optional(v.number()),
     profile: v.optional(v.object({ businessName: v.string(), sector: v.string(), services: v.string(), prices: v.string(), hours: v.string(), location: v.string(), humanContact: v.string(), handoffMode:v.optional(v.literal('inbox')),teamContact:v.optional(v.string()),tone:v.optional(v.union(v.literal('sharp'),v.literal('sweet'),v.literal('informative'))), faqs:v.optional(v.array(v.object({question:v.string(),answer:v.string()}))), reviewed: v.boolean() })),
     attempt: v.optional(v.object({ id: v.string(), stateHash: v.string(), path, expiresAt: v.number(), claimed: v.boolean(), preselect: v.optional(v.object({ business: v.optional(v.string()), waba: v.optional(v.string()) })) })),
     integration: v.optional(v.object({ id: v.string(), app: v.string(), waba: v.string(), phone: v.string(), sender: v.string(), path,

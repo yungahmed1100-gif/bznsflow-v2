@@ -197,6 +197,12 @@ const HEADINGS = {
   faq: { en: 'FAQ', ar: 'الأسئلة الشائعة' },
 };
 const FIELD_SECTION = { services: 'offer', hours: 'hours', location: 'location' };
+// BznsBrain's section targets: where an accepted proposal lands in bzns.md.
+export const BRAIN_SECTIONS = Object.freeze({
+  about: { en: 'About us', ar: 'من نحن' }, offer: { en: 'What we offer', ar: 'خدماتنا' }, areas: { en: 'Areas we cover', ar: 'المناطق' },
+  hours: { en: 'Hours', ar: 'ساعات العمل' }, location: { en: 'Location', ar: 'الموقع' }, contact: { en: 'Team contact', ar: 'جهة اتصال الفريق' },
+  policies: { en: 'Policies', ar: 'السياسات' },
+});
 const faqLines = (faqs, ar) => faqs.map(f => `${ar ? 'س' : 'Q'}: ${f.question}\n${ar ? 'ج' : 'A'}: ${f.answer}`).join('\n\n');
 
 function splitBlocks(markdown) {
@@ -271,4 +277,32 @@ export function setMeta(markdown, key, value) {
   const at = lines.findIndex(line => new RegExp(`^\\s*${key}\\s*:`).test(line));
   if (at >= 0) lines[at] = `${key}: ${value}`; else lines.push(`${key}: ${value}`);
   return `${front[1]}${lines.join('\n')}${front[3]}${source.slice(front[0].length)}`;
+}
+
+/**
+ * Writes accepted text into one bzns.md section: appended below what is there (default) or replacing
+ * it, adding the section when missing. `policies` and other free headings match by heading text.
+ * @param {string} markdown @param {string} target a BRAIN_SECTIONS key @param {string} text
+ * @param {{ replace?: boolean, lang?: 'en'|'ar' }} [options]
+ */
+export function upsertSection(markdown, target, text, { replace = false, lang = 'en' } = {}) {
+  const body = String(text || '').trim();
+  if (!body) return String(markdown || '');
+  const blocks = splitBlocks(markdown);
+  const sections = blocks.sections.map(s => ({ ...s, lines: [...s.lines] }));
+  const names = BRAIN_SECTIONS[target] || BRAIN_SECTIONS.policies;
+  const found = target in ALIASES ? sections.find(s => s.key === target)
+    : sections.find(s => [names.en, names.ar].some(n => normalizeText(s.heading.replace(/^##\s+/, '')) === normalizeText(n)));
+  if (found) {
+    const current = found.lines.join('\n').trim();
+    found.lines = [replace || !current ? body : normalizeText(current).includes(normalizeText(body)) ? current : `${current}\n${body}`];
+  } else sections.push({ heading: `## ${names[lang === 'ar' ? 'ar' : 'en']}`, key: target, lines: [body] });
+  return joinBlocks({ preamble: blocks.preamble, sections });
+}
+/** One section's current text, for showing existing versus proposed. */
+export function sectionText(markdown, target) {
+  const names = BRAIN_SECTIONS[target] || BRAIN_SECTIONS.policies;
+  const parsed = parseBzns(markdown);
+  const found = target in ALIASES ? parsed.sections.find(s => s.key === target) : parsed.sections.find(s => [names.en, names.ar].some(n => normalizeText(s.heading) === normalizeText(n)));
+  return found ? String(found.body || '').trim() : '';
 }

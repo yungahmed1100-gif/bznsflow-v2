@@ -15,8 +15,10 @@ import { AGENT_AVATARS } from '../../lib/agentAvatars';
 export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
   const account = useAccount();
   const owner = String(account?.email || '').trim().toLowerCase() === 'ahmed@bznsflowai.com';
-  const canSetup = key => ['catalyst', 'ascend'].includes(key) && (owner || account?.accessPlan === key || (key === 'catalyst' && account?.accessPlan === 'ascend'));
-  const setupLabel = key => lang === 'ar' ? `إعداد ${key === 'catalyst' ? 'Catalyst' : 'Ascend'}` : `Setup ${key === 'catalyst' ? 'Catalyst' : 'Ascend'}`;
+  // Catalyst first: Ascend has no self-serve entry for now, so its card keeps the WhatsApp contact.
+  const canSetup = key => key === 'catalyst' && (owner || ['catalyst', 'ascend'].includes(account?.accessPlan));
+  const setupHref = () => `${lang === 'ar' ? '' : '/en'}/catalyst/setup`;
+  const setupLabel = () => lang === 'ar' ? 'إعداد Catalyst' : 'Setup Catalyst';
   const planMsg = (name) => (t.wa_msg_plan || 'Hi BznsFlow — I am interested in the {plan} plan.').replace('{plan}', name);
   const Check = () => <Icon name="check" size={15} strokeWidth={2.5} />;
   const roster = lang === 'ar' ? AGENT_BY_KEY_AR : AGENT_BY_KEY;
@@ -150,7 +152,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
               <p className="tier-pull">{tier.pull}</p>
 
               <a
-                href={canSetup(tier.key) ? `${lang === 'ar' ? '' : '/en'}/${tier.key}/setup` : waLink(planMsg(tier.name))}
+                href={canSetup(tier.key) ? setupHref(tier.key) : waLink(planMsg(tier.name))}
                 target={canSetup(tier.key) ? undefined : '_blank'}
                 rel={canSetup(tier.key) ? undefined : 'noopener noreferrer'}
                 className={`btn ${tier.popular ? 'btn-primary' : 'btn-ghost'} pricing-btn`}

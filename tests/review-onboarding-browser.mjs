@@ -29,7 +29,7 @@ try {
           if(body.action==='connect') {
             connected=true;
             // Stand-in for returning from the external provider. Never used as review evidence.
-            result={url:`${BASE}/${ar?'':'en/'}layla/setup?instagram=connected`};
+            result={url:`${BASE}/${ar?'':'en/'}catalyst/setup?instagram=connected`};
           } else result={connection:connected?{username:'bznsflow',status:'connected'}:null,active,sendingEnabled:true};
         } else if(surface==='messaging') {
           if(body.action==='activate') active=true;
@@ -42,7 +42,7 @@ try {
       if(u.pathname.startsWith('/api/')) return route.fulfill({status:404,json:{ok:false}});
       return route.continue();
     });
-    await page.goto(`${BASE}/${ar?'':'en/'}layla/setup`);
+    await page.goto(`${BASE}/${ar?'':'en/'}catalyst/setup`);
     // Saved, confirmed facts open straight on the channels step: no preview approval.
     await page.getByRole('heading',{name:t('Connect a channel','اربط قناة'),exact:true}).waitFor();checks++;
     assert.equal(await page.getByRole('button',{name:t('The answer looks right','الإجابة مناسبة')}).count(),0,'no approval step');checks++;

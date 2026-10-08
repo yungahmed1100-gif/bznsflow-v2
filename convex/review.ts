@@ -11,7 +11,7 @@ export const execute = internalMutation({ args: {
   connectionChecks: v.optional(v.object({ routing: v.boolean(), registered: v.boolean(), path: v.boolean(), nameStatus:v.optional(v.string()), portfolio:v.optional(v.object({ id:v.string(), name:v.string(), verificationStatus:v.string() })) })),
   journeyStep: v.optional(v.number()), profileVersion: v.optional(v.number()),
   markdown: v.optional(v.string()), version: v.optional(v.number()),
-  preview: v.optional(v.object({ question: v.string(), text: v.string(), sourceFields: v.array(v.string()), needsHuman: v.boolean(), intent: v.string() })),
+  preview: v.optional(v.object({ question: v.string(), text: v.string(), sourceFields: v.array(v.string()), needsHuman: v.boolean(), intent: v.string(), fallback: v.optional(v.string()), variant: v.optional(v.string()) })),
   sessionHash: v.string(), profile: v.optional(profile), attempt: v.optional(v.string()), stateHash: v.optional(v.string()), path: v.optional(path),
   preselect: v.optional(v.object({ business: v.optional(v.string()), waba: v.optional(v.string()) })),
   integration: v.optional(integration), operationId: v.optional(v.string()), effect: v.optional(v.union(v.literal('register'),v.literal('subscribe'),v.literal('refresh'))),

@@ -1,5 +1,5 @@
 // WhatsApp setup rehearsal: API and Meta SDK are synthetic, external traffic blocked.
-// Proves the help journey, v4 launch options, and recovery from a Meta refusal.
+// Proves the readiness journey, v4 launch options, and recovery from a Meta refusal.
 // Not evidence of Meta consent or delivery.
 //   npm run build && npx vite preview --port 5199 & node tests/whatsapp-connect-browser.mjs http://127.0.0.1:5199
 import { chromium } from 'playwright';
@@ -37,7 +37,7 @@ try {
       if (u.pathname.startsWith('/api/')) { apiCalls.push(u.pathname); return route.fulfill({ status: 404, json: { ok: false } }); }
       return route.continue();
     });
-    await page.goto(`${BASE}/${ar ? '' : 'en/'}layla/setup`);
+    await page.goto(`${BASE}/${ar ? '' : 'en/'}catalyst/setup`);
     await page.getByRole('heading', { name: t('Connect a channel', 'اربط قناة'), exact: true }).waitFor();
     assert.equal(calls.includes('begin'), false, 'no Meta attempt before the customer asks for WhatsApp'); checks++;
     const card = page.getByRole('region', { name: 'WhatsApp', exact: true });
@@ -66,22 +66,11 @@ try {
     const metaGuide = card.getByText(t('What you’ll see in Facebook’s window', 'ما ستراه في نافذة فيسبوك'), { exact: true });
     await metaGuide.waitFor();
     assert.equal(calls.filter(c => c === 'begin').length, 0, 'the owner chooses when to prepare Meta'); checks++;
-    const launcher = page.getByRole('button', { name: t('Open setup help chat', 'فتح محادثة مساعدة الإعداد'), exact: true });
-    await launcher.click();
-    await page.getByRole('button', { name: t('I use regular WhatsApp', 'أستخدم واتساب العادي'), exact: true }).click();
-    await page.getByText(t('free WhatsApp Business app', 'تطبيق واتساب للأعمال المجاني'), { exact: false }).waitFor(); checks++;
-    const helpDialog = page.getByRole('dialog', { name: t('Setup help', 'مساعدة الإعداد') });
-    await helpDialog.getByRole('textbox', { name: t('Type your question…', 'اكتب سؤالك…') }).fill(t('My WhatsApp PIN is 908172', 'رمز PIN الخاص بي ٩٠٨١٧٢'));
-    await helpDialog.getByRole('button', { name: t('Send question', 'إرسال السؤال') }).click();
-    await helpDialog.getByText(t('Your question was not sent or saved.', 'لم نرسل سؤالك أو نحفظه.'), { exact: false }).waitFor(); checks++;
-    const supportHref = await helpDialog.locator('.chat-wa-btn').getAttribute('href');
-    assert.equal(decodeURIComponent(supportHref).includes('908172'), false, 'secret input is not copied into the support message'); checks++;
-    assert.equal(apiCalls.includes('/api/chat'), false, 'setup help stays local and never calls general chat'); checks++;
+    // The setup help chat is retired: BznsBrain and the WhatsApp card carry their own guidance.
+    assert.equal(await page.getByRole('button', { name: t('Open setup help chat', 'فتح محادثة مساعدة الإعداد') }).count(), 0); checks++;
     const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     const serious = axe.violations.filter(item => ['serious', 'critical'].includes(item.impact));
-    const contrast = await page.locator('.chat-wa-btn > span').evaluate(el => ({ color: getComputedStyle(el).color, background: getComputedStyle(el.parentElement).backgroundColor }));
-    assert.deepEqual(serious.map(item => ({ id: item.id, nodes: item.nodes.map(node => node.target) })), [], `serious accessibility findings at ${lang}/${width}; support colors ${JSON.stringify(contrast)}`); checks++;
-    await page.getByRole('dialog', { name: t('Setup help', 'مساعدة الإعداد') }).getByRole('button', { name: t('Close help chat', 'إغلاق محادثة المساعدة'), exact: true }).click();
+    assert.deepEqual(serious.map(item => ({ id: item.id, nodes: item.nodes.map(node => node.target) })), [], `serious accessibility findings at ${lang}/${width}`); checks++;
     await card.getByRole('radio', { name: new RegExp(t('Use another number I own', 'استخدام رقم آخر أملكه')) }).check();
     await card.getByRole('button', { name: t('Get Meta ready', 'تجهيز الربط مع Meta'), exact: true }).click();
     const connect = card.getByRole('button', { name: t('Connect with Facebook', 'الربط عبر فيسبوك'), exact: true });
@@ -128,7 +117,7 @@ try {
       if (u.pathname.startsWith('/api/')) return route.fulfill({ status: 404, json: { ok: false } });
       return route.continue();
     });
-    await page.goto(`${BASE}/layla/setup`);
+    await page.goto(`${BASE}/catalyst/setup`);
     const card = page.getByRole('region', { name: 'WhatsApp', exact: true });
     const alert = card.getByRole('alert');
     await alert.waitFor();

@@ -2,7 +2,7 @@ import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import { executeBlueAuth } from './blueAuthState.js';
 export const execute = internalMutation({args:{
-  operation:v.union(...['review_access','request_code','code_sent','verify_code','session','signout','claim_draft','limit_import','complete_profile','oauth_login','oauth_rate'].map(s=>v.literal(s))),
+  operation:v.union(...['review_access','request_code','code_sent','verify_code','session','signout','claim_draft','limit_import','limit_extract','complete_profile','oauth_login','oauth_rate'].map(s=>v.literal(s))),
   accessHash:v.optional(v.string()),
   credential:v.optional(v.object({v:v.number(),iv:v.string(),data:v.string(),tag:v.string()})),
   email:v.optional(v.string()),codeHash:v.optional(v.string()),ipHash:v.optional(v.string()),challengeId:v.optional(v.string()),tokenHash:v.optional(v.string()),sessionHash:v.optional(v.string()),draftHash:v.optional(v.string()),

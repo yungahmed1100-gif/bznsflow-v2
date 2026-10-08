@@ -1,7 +1,7 @@
 // Phase 4: the dashboard map and old links.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dashboardMap, resolveTab } from '../src/lib/dashboard/navigation.js';
+import { brainPart, dashboardMap, resolveTab } from '../src/lib/dashboard/navigation.js';
 
 const retail = { modules: ['orders', 'stock', 'expenses', 'insights'], setupRequired: false };
 const tech = { modules: ['orders', 'stock', 'expenses', 'insights', 'serials', 'repairs', 'tradeIns'], setupRequired: false };
@@ -13,7 +13,8 @@ test('Catalyst: four tabs, with chats as home', () => {
   assert.deepEqual(map.sections, ['chats', 'broadcasts', 'customers', 'settings']);
   assert.deepEqual(resolveTab(null, null, map), { tab: 'chats', view: null });
   assert.deepEqual(resolveTab('orders', null, map), { tab: 'chats', view: null }, 'Hasib sections are not reachable');
-  assert.deepEqual(resolveTab('settings', null, map), { tab: 'settings', view: 'business' }, 'Settings opens on the business document');
+  assert.deepEqual(resolveTab('settings', null, map), { tab: 'settings', view: 'brain' }, 'Settings opens on BznsBrain');
+  assert.deepEqual(map.views.settings, ['brain', 'channels'], 'BznsBrain and Channels: no extra tabs');
   assert.deepEqual(dashboardMap(null, { broadcasts: false }).sections, ['chats', 'customers', 'settings']);
 });
 
@@ -24,11 +25,22 @@ test('Catalyst: old links land on the four tabs', () => {
     ['customers', 'broadcast', { tab: 'broadcasts', view: null }],
     ['customers', 'contacts', { tab: 'customers', view: null }],
     ['contacts', null, { tab: 'customers', view: null }],
-    ['stock', 'services', { tab: 'settings', view: 'services' }],
+    ['stock', 'services', { tab: 'settings', view: 'brain' }],
+    ['settings', 'services', { tab: 'settings', view: 'brain' }],
+    ['settings', 'business', { tab: 'settings', view: 'brain' }],
     ['channels', null, { tab: 'settings', view: 'channels' }],
-    ['business', null, { tab: 'settings', view: 'business' }],
+    ['business', null, { tab: 'settings', view: 'brain' }],
     ['settings', 'channels', { tab: 'settings', view: 'channels' }],
   ]) assert.deepEqual(resolveTab(tab, view, map), where, `${tab}/${view}`);
+});
+
+test('BznsBrain opens the catalog for old Services & prices links, else bzns.md', () => {
+  const part = q => brainPart(new URLSearchParams(q));
+  assert.equal(part('tab=settings&view=services'), 'catalog');
+  assert.equal(part('tab=stock'), 'catalog');
+  assert.equal(part('tab=settings&view=brain&part=catalog'), 'catalog');
+  assert.equal(part('tab=settings&view=business'), 'bzns');
+  assert.equal(part('tab=settings&part=nope'), 'bzns');
 });
 
 test('Ascend before Hasib loads keeps its own map, not Catalyst\'s', () => {

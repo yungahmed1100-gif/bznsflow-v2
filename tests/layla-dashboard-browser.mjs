@@ -289,11 +289,11 @@ try {
   {
     const saved = { ok: true, csrfToken: 'a'.repeat(64), available: true, status: 'connected', profile: { businessName: 'Blue Studio Properties', sector: 'Real estate', services: 'Villas', prices: '', hours: '', location: '', humanContact: 'team@example.com', faqs: [], reviewed: true },
       journeyStep: 3, profileVersion: 1, capabilities: {}, integration: { id: 'i1', sender: '96890000000', path: 'new_number', status: 'connected' }, account: { email: 'owner@example.test' }, savedToAccount: true, accountSaveAvailable: true, catalog: { entries: [], cursor: null } };
-    const { page, context } = await openPage(browser, { width: 390, path: '/layla/setup?next=dashboard', handler: api(fixture()), extra: surface => surface === 'customer' ? { status: 200, json: saved } : null });
+    const { page, context } = await openPage(browser, { width: 390, path: '/catalyst/setup?next=dashboard', handler: api(fixture()), extra: surface => surface === 'customer' ? { status: 200, json: saved } : null });
     await page.waitForURL(/\/en\/layla\/dashboard$/); count++;
     await context.close();
     const signedOut = { ...saved, account: null, savedToAccount: false, integration: null, status: 'business_saved' };
-    const second = await openPage(browser, { width: 390, path: '/layla/setup?next=dashboard', handler: api(fixture()), extra: surface => surface === 'customer' ? { status: 200, json: signedOut } : surface === 'messaging' ? { status: 401, json: { ok: false, reason: 'sign_in_required' } } : null });
+    const second = await openPage(browser, { width: 390, path: '/catalyst/setup?next=dashboard', handler: api(fixture()), extra: surface => surface === 'customer' ? { status: 200, json: signedOut } : surface === 'messaging' ? { status: 401, json: { ok: false, reason: 'sign_in_required' } } : null });
     await second.page.getByRole('region', { name: 'Save your setup' }).waitFor(); count++;
     await second.context.close();
   }
@@ -304,7 +304,7 @@ try {
       journeyStep: 3, profileVersion: 1, capabilities: {}, integration: { id: 'i1', sender: '96890000000', path: 'new_number', status: 'connected' }, account: { email: 'owner@example.test' }, savedToAccount: true, accountSaveAvailable: true };
     let active = false;
     const handler = api(fixture());
-    const { page, context } = await openPage(browser, { width: 1280, path: '/layla/setup', handler, extra: (surface, request) => {
+    const { page, context } = await openPage(browser, { width: 1280, path: '/catalyst/setup', handler, extra: (surface, request) => {
       if (surface === 'customer') return { status: 200, json: { ...setup, catalog: { entries: [], cursor: null, total: 0 } } };
       if (surface === 'messaging') { if (request.method() === 'POST') active = true; return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), available: true, active, reason: active ? '' : 'not_activated', limits: { usedToday: 0 } } }; }
       return null;

@@ -3,7 +3,10 @@
 import { numberHash } from './hash.js';
 import { anonymizeContactOrders } from './hasib/contactLink.js';
 import { langOf } from '../config/layla-tones.js';
-import { NAME_FIELD, extractBareName, isQuestion, extractQualification, isSensitiveSector, mergeFields, planQuestions, qualificationStatus, sectorIdFor, validateFieldValue } from '../config/layla-qualification.js';
+import { NAME_FIELD, extractBareName, isQuestion, extractQualification, isSensitiveSector, mergeFields, planQuestions, planReception, qualificationPack, qualificationStatus, sectorIdFor, validateFieldValue } from '../config/layla-qualification.js';
+import { declinesName, overrideFor, wantsAppointment } from '../config/layla-overrides.js';
+
+const MEDICAL = new Set(['dental', 'clinic']);
 
 export const DAY = 86400000;
 export const TEXT_RETENTION_MS = 30 * DAY;
@@ -123,7 +126,17 @@ export async function applyOptout(ctx, contact, now) {
  * Apply one inbound message to the contact: activity, customer name and sector
  * fields. Returns the question plan Layla may append to its reply.
  */
-export async function applyInbound(ctx, contact, { text, intent, handoff, at, now, sectorId, catalog, tone }) {
+export async function applyInbound(ctx, contact, input) {
+  const planned = planInbound(contact, input);
+  await ctx.db.patch(contact._id, { ...planned.patch, searchText: planned.contact.searchText });
+  return planned;
+}
+
+/**
+ * What one inbound message does to a contact, without writing it: the patch, and the question plan
+ * Layla may append. Test Layla runs this on a simulated contact, so preview and live plan alike.
+ */
+export function planInbound(contact, { text, intent, handoff, at, now, sectorId, catalog, tone, mode = 'legacy', behaviour = null }) {
   // A short reply only answers Layla's question if that question is recent.
   const askedRecently = !!contact.lastAskedAt && now - contact.lastAskedAt < DAY;
   const extracted = extractQualification({ text, sectorId, catalog, asked: contact.asked || [], askedRecently, existing: contact.fields, intent });
@@ -143,14 +156,34 @@ export async function applyInbound(ctx, contact, { text, intent, handoff, at, no
   // question ("Al Mawaleh"), or a stated interest ("looking for a villa to rent in Al Mouj").
   const filled = answeredNow || !!bareName, statement = !isQuestion(text);
   const answeredOnly = filled && ((open && (askedRecently || statement)) || (intent === 'services' && statement));
+  // Catalyst's BznsBrain reception flow (dental first): one detail at a time, held back by a person
+  // request or a health question, never repeating a declined name, the WhatsApp name never counting
+  // as a confirmed one.
+  const reception = mode === 'brain' && qualificationPack(sectorId).flow === 'reception';
+  if (reception) {
+    const override = overrideFor(text, { medical: MEDICAL.has(sectorId) });
+    const declined = !customerName && !contact.customerName && askedRecently && (contact.asked || []).includes(NAME_FIELD.key) && declinesName(text);
+    if (declined) patch.nameDeclined = true;
+    if (!contact.appointmentInterestAt && wantsAppointment(text)) patch.appointmentInterestAt = now;
+    const known = !!(customerName || contact.customerName || contact.ownerName);
+    const plan = contact.optout ? { text: '', keys: [] } : planReception({ sectorId, fields: merged.fields, askCounts: contact.askCounts || [], asked: contact.asked || [], lastAskedAt: contact.lastAskedAt || 0,
+      answeredNow: answeredNow || !!bareName, now, knownName: known, nameDeclined: !!(contact.nameDeclined || declined), appointmentInterest: !!(contact.appointmentInterestAt || patch.appointmentInterestAt), override, behaviour });
+    const next = { ...contact, ...patch };
+    next.searchText = searchTextFor(next);
+    // Reception takes over once the customer wants to come in and nothing is left to ask.
+    const hasService = merged.fields.some(f => f.key === 'service' && f.value);
+    return { patch, contact: next, plan, updates: extracted.updates, answeredOnly, override, reception: !!next.appointmentInterestAt && hasService && !plan.keys.length && !override };
+  }
   const plan = contact.optout ? { text: '', keys: [] } : planQuestions({ sectorId, fields: merged.fields, askCounts: contact.askCounts || [], asked: contact.asked || [],
     lastAskedAt: contact.lastAskedAt || 0, answeredNow: answeredNow || !!bareName, intent: answeredOnly || intent === 'ai' ? 'faq' : intent, handoff: answeredOnly ? false : handoff, now, lang, tone,
     // An Instagram @handle is not a name, so Layla still asks for it.
     knownName: !!(customerName || contact.customerName || contact.ownerName || (contact.profileName && !String(contact.profileName).startsWith('@'))) });
+  // BznsBrain: once the owner has saved behaviour settings, only the details they chose are asked.
+  const allowed = mode === 'brain' && behaviour && !behaviour.legacy ? new Set([...(behaviour.askName ? [NAME_FIELD.key] : []), ...behaviour.ask]) : null;
+  const asking = allowed ? { ...plan, keys: plan.keys.filter(k => allowed.has(k)) } : plan;
   const next = { ...contact, ...patch };
   next.searchText = searchTextFor(next);
-  await ctx.db.patch(contact._id, { ...patch, searchText: next.searchText });
-  return { contact: next, plan, updates: extracted.updates, answeredOnly };
+  return { patch, contact: next, plan: asking, updates: extracted.updates, answeredOnly };
 }
 
 /** Record that questions were actually queued in a reply. */
@@ -214,6 +247,7 @@ export async function deleteContact(ctx, contact, now) {
   await anonymizeContactOrders(ctx, contact, now);
   await ctx.db.patch(contact._id, { state: 'deleted', key: `deleted:${contact._id}`, waId: undefined, igId:undefined, igAccount:undefined, countryIso: undefined, ownerName: undefined, customerName: undefined,
     profileName: undefined, fields: [], asked: undefined, askCounts: undefined, qualificationOverride: undefined, searchText: undefined,
+    appointment: undefined, appointmentInterestAt: undefined, nameDeclined: undefined,
     consent: { status: contact.optout ? 'revoked' : 'unknown' }, deletedAt: now, updatedAt: now });
 }
 
@@ -228,5 +262,6 @@ export function publicContact(contact, conversation) {
     status: contact.qualificationOverride || contact.qualificationStatus,
     consent: { status: contact.consent.status, source: contact.consent.source || '', date: contact.consent.date || '', purpose: contact.consent.purpose || '' },
     optout: contact.optout, lastActivityAt: contact.lastActivityAt, lastInboundAt: contact.lastInboundAt || null,
-    takeover: !!conversation?.takeover, conversationId: conversation?._id || null, windowOpenUntil: window };
+    takeover: !!conversation?.takeover, conversationId: conversation?._id || null, windowOpenUntil: window,
+    appointment: contact.appointment ? { service: contact.appointment.service || '', preferences: contact.appointment.preferences || '', requestedAt: contact.appointment.requestedAt } : null, nameDeclined: !!contact.nameDeclined };
 }

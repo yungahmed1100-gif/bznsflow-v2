@@ -165,3 +165,27 @@ export function bznsTemplate(sector, lang = 'en') {
     section(c.faq),
   ].join('\n\n') + '\n';
 }
+
+/**
+ * Catalyst BznsBrain's starting document: the same sector template without the parts BznsBrain moved
+ * elsewhere. Tone and handoff rules are Layla's behaviour settings; FAQs are gone (each fact has one
+ * home: bzns.md for information and policies, the Catalog for services and prices).
+ * @param {string} sector @param {'en'|'ar'} lang @returns {string}
+ */
+export function brainTemplate(sector, lang = 'en') {
+  const id = SECTORS[sector] ? sector : 'generic';
+  const l = lang === 'ar' ? 'ar' : 'en';
+  const c = COMMON[l], s = SECTORS[id][l];
+  const section = ([heading, body]) => `## ${heading}\n${String(body).replace(/Services & prices|الخدمات والأسعار/g, l === 'ar' ? 'الكتالوج' : 'the Catalog')}`;
+  return [
+    `---\nname: ${c.name}\nsector: ${id === 'generic' ? SECTOR_LINE[l] : id}\n---`,
+    `# ${c.name}`,
+    section(c.about),
+    section([OFFER_HEADING[l], s.offer.map(line => `- ${line}`).join('\n')]),
+    section(c.areas),
+    ...s.extra.map(section),
+    section(c.location),
+    section(c.hours),
+    section(c.contact),
+  ].join('\n\n') + '\n';
+}

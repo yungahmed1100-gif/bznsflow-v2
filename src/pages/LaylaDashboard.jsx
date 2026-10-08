@@ -27,7 +27,8 @@ import { ExpensesView } from '../components/hasib/ExpensesView';
 import { TodayView } from '../components/hasib/TodayView';
 import { TeamView } from '../components/hasib/TeamView';
 import { SectionTabs } from '../components/dashboard/SectionTabs';
-import { dashboardMap, dashboardSearch, resolveTab } from '../lib/dashboard/navigation';
+import { brainPart, dashboardMap, dashboardSearch, resolveTab } from '../lib/dashboard/navigation';
+import { BrainPage } from '../components/brain/BrainPage';
 import { ServiceView } from '../components/hasib/ServiceView';
 import { AccountsSettings } from '../components/hasib/AccountsSettings';
 import { browserTimezone } from '../lib/dashboard/format';
@@ -70,7 +71,6 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
     else if (error.reason === 'setup_required') window.location.replace(setupPath(lang));
   }, [overview.error, lang]);
   useEffect(() => {
-    if (overview.data && !overview.data.connected && !overview.data.capabilities?.operations && !overview.data.founderPreview) window.location.replace(setupPath(lang));
     // The business timezone starts as the owner's browser zone and stays editable.
     if (overview.data?.connected && !overview.data.timezone && overview.data.workspaceRole !== 'employee') dashboard('set_timezone', { timezone: browserTimezone() }).then(() => overview.refresh({ quiet: true })).catch(() => {});
   }, [overview.data?.connected, overview.data?.timezone, overview.data?.workspaceRole]);
@@ -131,6 +131,8 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                 : (tab === 'customers' && view === 'broadcast') || tab === 'broadcasts' ? (data.integration ? <BroadcastView s={s} overview={data} onTimezone={() => overview.refresh({ quiet: true })} /> : <div className="ld-state"><p>{s.t('broadcastWhatsAppOnly')}</p>{map.sections.includes('settings') && <button type="button" className="ld-button" onClick={() => go('settings', { view: 'channels' })}>{s.t('connectChannel')}</button>}</div>)
                 : tab === 'customers' ? <>{hasibOverview?.pack && <FollowupView s={s} h={h} packId={hasibOverview.pack.id} timezone={data.timezone} />}<ContactsView s={s} overview={data} onOpenChat={id => go('chats', { chat: id })} /></>
                 : tab === 'settings' && view === 'accounts' ? <AccountsSettings s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={() => { refreshHasib(); overview.refresh({ quiet: true }); }} />
+                : tab === 'settings' && view === 'brain' ? <BrainPage lang={lang} part={brainPart(params)} onPart={part => setParams(dashboardSearch(params, 'settings', { view: 'brain', part }), { replace: true })}
+                    channel={!!data.connected} active={!!data.messaging?.active} onGo={go} />
                 : tab === 'settings' && view === 'services' ? <BusinessDetails s={s} section="services" catalyst={!!map.catalyst} onSaved={() => overview.refresh({ quiet: true })} />
                 : tab === 'settings' && view === 'business' ? <><BusinessDetails s={s} catalyst={!!map.catalyst} section={map.catalyst || map.sections.includes('stock') ? 'details' : 'all'} initialIndustryId={hasibOverview?.readOnly ? undefined : hasibOverview?.legacyIndustryId || undefined} onSaved={map.catalyst ? () => overview.refresh({ quiet: true }) : refreshHasib} />
                     {!hasibOverview?.readOnly && hasibOverview?.pack && <IndustrySetup selection={false} heading={false} s={s} h={h} livePacks={hasibOverview.livePacks} industries={hasibOverview.industries} current={hasibOverview.pack.id} settings={hasibOverview.settings} onChosen={refreshHasib} />}</>

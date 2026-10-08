@@ -77,14 +77,14 @@ export async function executeInstagram(ctx, a, now = Date.now()) {
     if (connection?.deletePending || connection?.status==='disconnecting') return fail('connection_busy');
     const previous=await attempt();
     if (previous && now-previous.createdAt<10000) return fail('too_soon');
-    const value={sessionHash:a.sessionHash,stateHash:a.stateHash,lang:a.lang==='ar'?'ar':'en',createdAt:now,expiresAt:now+600000,used:false,completed:false};
+    const value={sessionHash:a.sessionHash,stateHash:a.stateHash,lang:a.lang==='ar'?'ar':'en',returnTo:a.returnTo==='setup'?'setup':'dashboard',createdAt:now,expiresAt:now+600000,used:false,completed:false};
     if (previous) await ctx.db.replace(previous._id,value); else await ctx.db.insert('blueInstagramAttempts',value);
     return ok(null);
   }
   if (a.operation === 'consume') {
     const pending=await attempt();
     if (!pending || pending.stateHash!==a.stateHash || pending.used || pending.expiresAt<=now) return fail('invalid_oauth_state');
-    await ctx.db.patch(pending._id,{used:true}); return ok({lang:pending.lang});
+    await ctx.db.patch(pending._id,{used:true}); return ok({lang:pending.lang,returnTo:pending.returnTo || 'setup'});
   }
   if (a.operation === 'connect') {
     const pending=await attempt(), i=a.integration;

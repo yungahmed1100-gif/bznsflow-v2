@@ -9,7 +9,9 @@ import { realEstateTurn } from './hasib/realEstateTurn.js';
 import { phrase, langOf } from '../config/layla-tones.js';
 import { byteLength } from '../api/_lib/layla/reply-guard.js';
 import { INSTAGRAM_MAX_BYTES, conversationHistory, runawayChat } from './laylaReply.js';
-import { REPLY_DEBOUNCE_MS, TOPIC_FOR_INTENT, turnContext } from './laylaTurn.js';
+import { REPLY_DEBOUNCE_MS, TOPIC_FOR_INTENT, turnContext, turnMode } from './laylaTurn.js';
+import { effectiveBehaviour } from '../config/layla-behaviour.js';
+import { recordGap } from './brainState.js';
 import { NAME_FIELD, mergeFields, qualificationStatus, validateFieldValue } from '../config/layla-qualification.js';
 // Abuse and cost guards, far below Meta's own limits (WhatsApp ~80 msg/s per number, Instagram
 // ~100 calls/s per account). The minute pace only delays a burst; the daily caps hand chats to the team.
@@ -62,7 +64,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
   }
   async function approvedCatalog(accountId, limit = 1000) {
     const rows = await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order',q=>q.eq('ownerKey',String(accountId)).eq('status','approved')).take(limit);
-    return rows.map(({nameEn,nameAr,prices,benefitEn,benefitAr,descriptionEn,descriptionAr})=>({nameEn,nameAr,prices,benefitEn,benefitAr,descriptionEn,descriptionAr}));
+    return rows.map(({entryKey,nameEn,nameAr,prices,benefitEn,benefitAr,descriptionEn,descriptionAr})=>({entryKey,nameEn,nameAr,prices,benefitEn,benefitAr,descriptionEn,descriptionAr}));
   }
   async function reconcileCampaignReceipt(e) {
     let target=e.intent?await find('blueCampaignRecipients','by_intent','intent',e.intent):null;
@@ -234,7 +236,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     const events=[...incoming].sort((x,y)=>Number(['optout','takeover'].includes(y.kind))-Number(['optout','takeover'].includes(x.kind)));
     const sectorId=sectorFor(row);
     const textKeep=await textRetention(ctx,row.accountId,row);
-    let catalog=null;
+    let catalog=null, brain=null;
     for(let e of events) {
       if(e.kind==='deleted') {
         const original=await message(`incoming:${a.integrationId}:${e.id}`);
@@ -298,7 +300,9 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         catalog ??= await approvedCatalog(row.accountId);
         // Fields are captured even while a person has taken over the chat. The words come from the model;
         // which detail to ask for next is decided here, one at a time.
-        applied=await applyInbound(ctx,contact,{text:e.text,intent:e.intent || 'ai',handoff:false,at:e.at,now,sectorId,catalog,tone});
+        // Catalyst's BznsBrain mode reads the owner's behaviour settings; Ascend keeps its own flow.
+        if(!brain) { const mode=await turnMode(ctx,row); brain={mode,behaviour:mode==='brain'?effectiveBehaviour(row,sectorId):null}; }
+        applied=await applyInbound(ctx,contact,{text:e.text,intent:e.intent || 'ai',handoff:false,at:e.at,now,sectorId,catalog,tone,mode:brain.mode,behaviour:brain.behaviour});
       }
       // Paused ingress keeps messages, contacts and opt-outs without creating work to replay.
       const automate=!a.suppressAutomation && rolloutAllows(global,row.accountId,person.number,now) && !!control?.active;
@@ -341,6 +345,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         photos:[...(prev?.photos || []),...(commerce?.photo?[commerce.photo]:[])].slice(-2),
         realEstate:realEstate?.opportunityId || realEstate?.handoff ? {opportunityId:realEstate.opportunityId,handoff:!!realEstate.handoff} : prev?.realEstate,
         askKey:applied?.plan?.keys?.[0] || null,
+        ...(applied?.override?{override:applied.override}:{}),...(applied?.reception || prev?.reception?{reception:true}:{}),
         notes:{media:!!(e.media || prev?.notes?.media),tooLong:!!(e.tooLong || prev?.notes?.tooLong)}};
       await ctx.db.patch(person._id,{pendingReply:pending});
       if(a.replyFunction) await ctx.scheduler.runAfter(REPLY_DEBOUNCE_MS,a.replyFunction,{conversationId:person._id,key:pending.key});
@@ -362,15 +367,28 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     await ctx.db.patch(person._id,{pendingReply:undefined});
     if(!enabled || !control?.active || !ready(row) || contact?.optout || now-pending.inboundAt>=DAY || !rolloutAllows(global,row.accountId,person.number,now)) return ok({skip:'not_allowed'});
     const sectorId=sectorFor(row);
+    const brain=(await turnMode(ctx,row))==='brain';
     // Details the model heard are proposals: kept only when they pass the sector's own validation.
     if(contact && a.fields) {
       const catalog=await approvedCatalog(row.accountId);
-      const updates=Object.entries(a.fields).map(([key,value])=>({key,value:validateFieldValue(sectorId,key,value,catalog)})).filter(u=>u.value).map(u=>({...u,confidence:0.8,source:'customer'}));
+      const updates=Object.entries(a.fields).map(([key,value])=>({key,value:validateFieldValue(sectorId,key,value,catalog)})).filter(u=>u.value).map(u=>{const row=u.key==='service'?catalog.find(r=>[r.nameEn,r.nameAr].includes(u.value)):null;return {...u,confidence:0.8,source:'customer',...(row?.entryKey?{ref:row.entryKey}:{})};});
       const merged=mergeFields(contact.fields,updates,now);
-      const name=!contact.customerName && typeof a.fields[NAME_FIELD.key]==='string' && /^[\p{L}][\p{L}' -]{1,39}$/u.test(a.fields[NAME_FIELD.key].trim()) ? a.fields[NAME_FIELD.key].trim() : '';
-      if(merged.changed || name) await ctx.db.patch(contact._id,{...(merged.changed?{fields:merged.fields,qualificationStatus:qualificationStatus(sectorId,merged.fields)}:{}),...(name?{customerName:name}:{}),updatedAt:now});
+      const inboundText=(await message(pending.inboundKey))?.text || '';
+      const proposed=typeof a.fields[NAME_FIELD.key]==='string' && /^[\p{L}][\p{L}' -]{1,39}$/u.test(a.fields[NAME_FIELD.key].trim()) ? a.fields[NAME_FIELD.key].trim() : '';
+      // BznsBrain: a name the customer corrects in their latest message replaces the one they gave before.
+      const correction=brain && proposed && contact.customerName && proposed!==contact.customerName && inboundText.toLocaleLowerCase().includes(proposed.toLocaleLowerCase());
+      const name=proposed && (!contact.customerName || correction) ? proposed : '';
+      const declined=brain && (a.declined || []).includes(NAME_FIELD.key) && !contact.customerName && !name;
+      // Reception (dental first): the request is recorded for the team to confirm; Layla stays on the chat.
+      const service=merged.fields.find(f=>f.key==='service' && f.value), when=merged.fields.find(f=>f.key==='preferred_time' && f.value);
+      const appointment=brain && pending.reception && service ? {status:'requested',service:service.value,...(service.ref?{serviceRef:service.ref}:{}),...(when?{preferences:when.value}:{}),requestedAt:contact.appointment?.requestedAt || now,updatedAt:now} : null;
+      if(merged.changed || name || declined || appointment) await ctx.db.patch(contact._id,{...(merged.changed?{fields:merged.fields,qualificationStatus:qualificationStatus(sectorId,merged.fields)}:{}),...(name?{customerName:name}:{}),...(declined?{nameDeclined:true}:{}),...(appointment?{appointment}:{}),updatedAt:now});
     }
     const inbound=await message(pending.inboundKey);
+    // BznsBrain: a question the business data did not cover becomes a review suggestion. It never edits published knowledge.
+    if(brain && a.needsTeam && !a.ai?.fallback && ['unknown','answer','services','prices','hours','location'].includes(a.intent) && inbound?.text) {
+      try { await recordGap(ctx,row,{question:inbound.text,sectorId,now}); } catch(err) { console.error('brain_gap_failed',err?.message); }
+    }
     if(inbound && TOPIC_FOR_INTENT[a.intent] && !inbound.topic) await ctx.db.patch(inbound._id,{topic:TOPIC_FOR_INTENT[a.intent]});
     const owner={...person,version:pending.version};
     let jobId=null;

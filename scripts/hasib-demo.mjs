@@ -22,6 +22,13 @@ import { hasibArgs } from '../api/_lib/hasib/validate.js';
 import { hasibPack } from '../config/hasib-packs.js';
 import { grantPlan } from '../convex/hasib/plans.js';
 import { checkPhotoBytes } from '../convex/hasib/photoBytes.js';
+import { executeReview } from '../convex/reviewState.js';
+import { executeCatalog } from '../convex/blueCatalogState.js';
+import { executeBrain } from '../convex/brainState.js';
+import { aiTurn } from '../config/layla-ai.js';
+import { previewOutcome } from '../config/brain-preview.js';
+import { validateBzns } from '../src/lib/bzns-doc.js';
+import { groundedModel } from '../tests/helpers/fake-model.mjs';
 
 const PORT = Number(process.argv.find(a => /^\d+$/.test(a)) || 5310), DIST = fileURLToPath(new URL('../dist/', import.meta.url));
 // --pack=retail-tech seeds a Muscat phone and electronics store, --pack=dental a Muscat dental clinic, instead of the abaya boutique.
@@ -234,7 +241,66 @@ async function api(req, res, url) {
     const r = await call(executeMessaging, op, { ...(args.conversationId ? { conversationId: args.conversationId } : {}), ...(args.text ? { text: args.text } : {}), ...(args.requestId ? { requestId: args.requestId } : {}) }, Date.now());
     return r.ok ? json(res, 200, { ok: true, ...(r.value || {}), csrfToken: CSRF }) : json(res, 409, { ok: false, reason: r.reason });
   }
+  if (surface === 'customer') return customer(req, res, body);
   return json(res, 404, { ok: false, reason: 'not_in_demo' });
+}
+
+// Settings › BznsBrain against the real state code (bzns.md, catalog, review queue, behaviour, Test Layla).
+// The model is a grounded stand-in, never Qwen; extraction reads "Name: 12 OMR" lines as a model would.
+const brainModel = groundedModel();
+const demoExtract = text => ({ catalog: String(text).split('\n').map(line => line.trim()).map(line => [line, /^(.{2,60}?)\s*[:–-]\s*(?:from\s+)?(\d+(?:\.\d+)?)\s*(OMR|ر\.ع)/i.exec(line)]).filter(([, m]) => m)
+  .map(([line, m]) => ({ kind: 'service', nameEn: /[؀-ۿ]/.test(m[1]) ? '' : m[1].trim(), nameAr: /[؀-ۿ]/.test(m[1]) ? m[1].trim() : '', price: { type: /from/i.test(line) ? 'from' : 'fixed', amount: Number(m[2]), currency: 'OMR' }, evidence: line })),
+  sections: String(text).split('\n').map(l => l.trim()).filter(l => l.length > 20 && !/\d+\s*(OMR|ر\.ع)/i.test(l)).slice(0, 4).map(line => ({ key: /cancel|insurance|pay|refund|deliver|إلغاء|تأمين|دفع/i.test(line) ? 'policies' : 'about', text: line, evidence: line })) });
+async function customer(req, res, body) {
+  const now = Date.now(), sessionHash = tenant.sessionHash, ownerKey = String(tenant.accountId);
+  const row = () => m.db.get(tenant.rowId);
+  const state = async () => {
+    const r = await row(), draft = r.bznsDraft, published = r.bznsPublished;
+    return { ok: true, csrfToken: CSRF, review: true, available: true, status: r.status, profile: r.profile || null, profileVersion: r.profileVersion || 1, lastPreview: r.lastPreview || null,
+      integration: r.integration ? { id: r.integration.id, sender: r.integration.sender, path: r.integration.path, status: r.status } : null, websiteImportAvailable: false, savedToAccount: true, accountSaveAvailable: true,
+      account: { email: 'n@example.com', industry: '' }, bzns: { markdown: draft?.markdown ?? published?.markdown ?? null, version: draft?.version || 0, publishedRevision: published?.revision || 0, publishedAt: published?.publishedAt || null, unpublishedChanges: !!draft && draft.markdown !== published?.markdown } };
+  };
+  const ok = async (extra = {}) => json(res, 200, { ...(await state()), ...extra });
+  const fail = r => json(res, 409, { ok: false, reason: r.reason || 'unavailable' });
+  const brain = async (operation, args = {}) => executeBrain(m.ctx, { operation, sessionHash, ...args }, Date.now());
+  const withBrain = async () => ok({ brain: (await brain('state')).value });
+  if (req.method === 'GET') return ok();
+  const { action } = body;
+  if (action === 'bzns_save' || action === 'bzns_publish') { const r = await executeReview(m.ctx, { operation: action, sessionHash, markdown: body.markdown, version: body.version }, now); return r.ok ? ok() : fail(r); }
+  if (String(action).startsWith('catalog_')) {
+    const op = { catalog_list: 'list', catalog_save: 'save', catalog_save_many: 'saveMany', catalog_archive: 'archive', catalog_discard: 'discard', catalog_approve: 'approve', catalog_publish: 'publish' }[action];
+    const r = await executeCatalog(m.ctx, { operation: op, ownerKey, ...(body.entry ? { entry: body.entry } : {}), ...(body.entries ? { entries: body.entries } : {}), ...(body.entryKey ? { entryKey: body.entryKey } : {}), ...(body.all ? { all: true, limit: 1000 } : {}) }, now);
+    return r.ok ? ok({ catalog: r.value }) : fail(r);
+  }
+  if (action === 'brain_state') return withBrain();
+  if (action === 'brain_step') { await brain('step', { brainStep: body.brainStep }); return withBrain(); }
+  if (action === 'brain_behaviour') { const r = await brain('behaviour_save', { behaviour: body.behaviour, version: body.version }); return r.ok ? withBrain() : fail(r); }
+  if (action === 'brain_accept' || action === 'brain_dismiss') {
+    const r = await brain(action === 'brain_accept' ? 'accept' : 'dismiss', { proposalId: body.proposalId, ...(typeof body.text === 'string' ? { text: body.text } : {}), ...(body.section ? { section: body.section } : {}) });
+    return r.ok ? withBrain() : fail(r);
+  }
+  if (action === 'brain_extract') { const r = await brain('record_extraction', { raw: demoExtract(body.text), chunk: body.text, sourceKind: body.sourceKind, sourceLabel: body.sourceLabel }); return r.ok ? ok({ extraction: { ok: true, ...r.value } }) : fail(r); }
+  if (action === 'brain_publish') {
+    const r0 = await row();
+    if (r0.bznsDraft && r0.bznsDraft.markdown !== r0.bznsPublished?.markdown) {
+      if (!validateBzns(r0.bznsDraft.markdown).ok) return json(res, 400, { ok: false, reason: 'bzns_invalid' });
+      const r = await executeReview(m.ctx, { operation: 'bzns_publish', sessionHash, markdown: r0.bznsDraft.markdown, version: r0.bznsDraft.version || 0 }, now);
+      if (!r.ok) return fail(r);
+    }
+    await executeCatalog(m.ctx, { operation: 'publish', ownerKey }, now);
+    await brain('settle_publish');
+    return withBrain();
+  }
+  if (action === 'brain_test') {
+    const t = await brain('test_context', { variant: body.variant, history: body.history, sim: body.sim || {} });
+    if (!t.ok) return fail(t);
+    const turn = await aiTurn(t.value.context, brainModel);
+    const latest = body.history.filter(h => h.role === 'customer').at(-1)?.text || '';
+    const outcome = previewOutcome(t.value.sim, turn, { sectorId: t.value.sectorId, catalog: t.value.context.catalog, reception: t.value.reception, latest });
+    return ok({ test: { variant: t.value.variant, reply: turn.reply, noReply: !!turn.noReply, intent: turn.intent, needsTeam: !!turn.needsTeam, sources: turn.sources || [], reason: turn.reason || '', fallback: turn.ai?.fallback || null,
+      captured: outcome.captured, sim: outcome.sim, override: t.value.override, reception: t.value.reception, appointment: outcome.sim.appointment || null } });
+  }
+  return json(res, 409, { ok: false, reason: 'not_in_demo' });
 }
 
 async function staticFile(res, pathname) {

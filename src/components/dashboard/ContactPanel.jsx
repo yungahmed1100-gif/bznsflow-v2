@@ -26,6 +26,8 @@ export function ContactPanel({ s, contact, pack, timezone, canDelete = true, onS
       <ContactOrders contactId={contact.id} />
       <dl className="ld-names">
         {[['customerName', 'name_customer'], ['profileName', 'name_whatsapp']].map(([key, label]) => contact[key] ? <div key={key}><dt>{s.t(label)}</dt><dd><bdi>{contact[key]}</bdi></dd></div> : null)}
+        {/* Catalyst reception flow: what the customer asked for, for the team to confirm. Layla never confirms it. */}
+        {contact.appointment && <div><dt>{s.t('appointmentFor')}</dt><dd><bdi>{contact.appointment.service}</bdi>{contact.appointment.preferences && <> · {s.t('appointmentPreferences')}: <bdi>{contact.appointment.preferences}</bdi></>}</dd></div>}
       </dl>
       <label className="ld-field">{s.t('ownerName')}<input value={ownerName} maxLength={80} onChange={e => setOwnerName(e.target.value)} placeholder={displayName} /></label>
       <fieldset className="ld-fieldset">

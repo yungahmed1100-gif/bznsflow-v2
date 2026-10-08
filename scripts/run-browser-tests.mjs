@@ -11,14 +11,13 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const SUITES = [
   'tests/auth-browser.mjs',
   'tests/owner-browser.mjs',
-  'tests/onboarding-browser.mjs',
   'tests/review-onboarding-browser.mjs',
   'tests/whatsapp-connect-browser.mjs',
   'tests/instagram-browser.mjs',
   'tests/layla-switch-browser.mjs',
   'tests/layla-dashboard-browser.mjs',
   'tests/product-setup-browser.mjs',
-  'tests/bzns-editor-browser.mjs',
+  'tests/brain-browser.mjs',
 ];
 
 const server = spawn(process.execPath, ['scripts/preview.mjs', '--port', String(PORT)], { stdio: 'ignore' });

@@ -39,6 +39,9 @@ test('product setup: boundary checks', async () => {
   assert.equal((await call(fetcher, post('product-setup', save, { origin: 'https://evil.example' }))).code, 403);
   assert.equal((await call(fetcher, post('product-setup', save, { 'x-csrf-token': 'bad' }))).body.reason, 'csrf');
   assert.equal((await call(fetcher, get('product-setup', '&product=bogus'))).code, 400);
+  // Ascend has no setup page: its settings are saved from the dashboard.
+  assert.deepEqual(await call(fetcher, get('product-setup', '&product=ascend', { headers: signed })).then(r => [r.code, r.body.reason]), [400, 'invalid_product']);
+  assert.equal((await call(fetcher, post('product-setup', { ...save, packId: 'retail' }))).code, 400);
   assert.equal((await call(fetcher, post('product-setup', { ...save, step: 4 }))).code, 400);
   assert.equal((await call(fetcher, post('product-setup', { ...save, vat: { registered: true, rateBps: 5, pricesIncludeVat: true, vatin: 'ab' } }))).code, 400);
   assert.equal((await call(fetcher, { ...get('product-setup', '&product=catalyst'), headers: { host: 'www.bznsflowai.com', cookie: 'bf_session=short' } })).code, 401);
@@ -47,10 +50,10 @@ test('product setup: boundary checks', async () => {
 
 test('product setup: Convex reasons map to statuses', async () => {
   for (const [reason, status] of [['access_required', 403], ['manager_required', 403], ['setup_conflict', 409], ['sign_in_required', 401], ['invalid_vat', 400]]) {
-    const res = await call(convex({ ok: false, reason }).fetcher, get('product-setup', '&product=ascend', { headers: signed }));
+    const res = await call(convex({ ok: false, reason }).fetcher, get('product-setup', '&product=catalyst', { headers: signed }));
     assert.deepEqual([res.code, res.body.reason], [status, reason]);
   }
-  const down = await call(convex(new Error('boom')).fetcher, get('product-setup', '&product=ascend', { headers: signed }));
+  const down = await call(convex(new Error('boom')).fetcher, get('product-setup', '&product=catalyst', { headers: signed }));
   assert.deepEqual([down.code, down.body.reason], [503, 'setup_unavailable']);
 });
 

@@ -100,11 +100,11 @@ test('Instagram callback always returns to the setup page, with only allowlisted
   const graph=[{data:[{access_token:'short',permissions:INSTAGRAM_SCOPES}]},{access_token:'long',expires_in:3600},{user_id:'178414000000001',username:'bznsflow'},{success:true},{user_id:'178414000000001',username:'bznsflow'},{data:[{id:'1234',subscribed_fields:['messages']}]}];
   const ops=[];
   const ok=await run({store:async(op)=>{ops.push(op);return op==='consume'?{lang:'en'}:null;},fetcher:async()=>new Response(JSON.stringify(graph.shift()))});
-  assert.equal(ok.pathname,'/en/layla/setup');assert.equal(ok.searchParams.get('instagram'),'connected');assert.equal(ok.searchParams.has('reason'),false);
+  assert.equal(ok.pathname,'/en/catalyst/setup');assert.equal(ok.searchParams.get('instagram'),'connected');assert.equal(ok.searchParams.has('reason'),false);
   assert.deepEqual(ops,['consume','connect','checked']);
 
   const signedOut=await run({store:async()=>null,accounts:async()=>null});
-  assert.equal(signedOut.pathname,'/layla/setup');assert.equal(signedOut.searchParams.get('reason'),'sign_in_required');
+  assert.equal(signedOut.pathname,'/catalyst/setup');assert.equal(signedOut.searchParams.get('reason'),'sign_in_required');
 
   const badState=await run({query:'state=nope&code=x',store:async()=>null});
   assert.equal(badState.searchParams.get('instagram'),'connection_failed');assert.equal(badState.searchParams.get('reason'),'invalid_oauth_state');
@@ -114,8 +114,12 @@ test('Instagram callback always returns to the setup page, with only allowlisted
 
   const grants=[{data:[{access_token:'short',permissions:INSTAGRAM_SCOPES}]},{access_token:'long',expires_in:3600},{user_id:'178414000000001',username:'bznsflow'}];
   const taken=await run({store:async(op)=>{if(op==='connect')throw new PilotError('asset_in_use',409);return op==='consume'?{lang:'ar'}:null;},fetcher:async()=>new Response(JSON.stringify(grants.shift()))});
-  assert.equal(taken.pathname,'/layla/setup');assert.equal(taken.searchParams.get('reason'),'asset_in_use');
+  assert.equal(taken.pathname,'/catalyst/setup');assert.equal(taken.searchParams.get('reason'),'asset_in_use');
 
+  // Started from Settings › Channels: the owner comes back there, not to setup.
+  const graph2=[{data:[{access_token:'short',permissions:INSTAGRAM_SCOPES}]},{access_token:'long',expires_in:3600},{user_id:'178414000000001',username:'bznsflow'},{success:true}];
+  const fromDashboard=await run({store:async(op)=>op==='consume'?{lang:'en',returnTo:'dashboard'}:null,fetcher:async()=>new Response(JSON.stringify(graph2.shift()))});
+  assert.equal(fromDashboard.pathname,'/en/layla/dashboard');assert.equal(fromDashboard.searchParams.get('view'),'channels');assert.equal(fromDashboard.searchParams.get('instagram'),'connected');
   const scopes=await run({store:async(op)=>op==='consume'?{lang:'en'}:null,fetcher:async()=>new Response(JSON.stringify({data:[{access_token:'short',permissions:['instagram_business_basic']}]}))});
   assert.equal(scopes.searchParams.get('reason'),'instagram_permissions_missing');
 
