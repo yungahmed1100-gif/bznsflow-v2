@@ -51,7 +51,7 @@
 .brain-card { background: var(--card); border: 1px solid var(--rule-strong); border-radius: var(--radius); padding: 0 16px; }
 .brain-card > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; min-height: 52px; cursor: pointer; list-style: none; }
 .brain-card > summary::-webkit-details-marker { display: none; }
-.brain-card > summary::after { content: ''; display: block; flex: none; inline-size: 8px; block-size: 8px; margin-inline-start: auto; border-inline-end: 2px solid var(--ink-2); border-block-end: 2px solid var(--ink-2); transform: rotate(45deg); transition: transform var(--ease); }
+.brain-card > summary::after { content: ''; display: block; flex: none; inline-size: 8px; block-size: 8px; margin-inline-start: auto; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: rotate(45deg); transition: transform var(--ease); }
 .brain-card[open] > summary::after { transform: rotate(-135deg); }
 .brain-card > summary:hover .brain-card-title { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .brain-card[open] { padding-block-end: 16px; }
@@ -131,10 +131,16 @@
 .brain .brain-icon.is-danger:hover:not(:disabled) { color: var(--coral); border-color: var(--coral-mark); }
 .brain-icon:disabled { opacity: .45; cursor: not-allowed; }
 
-/* Add information */
-.brain-add-row { display: flex; flex-wrap: wrap; align-items: end; gap: 8px 12px; margin-block-end: 12px; }
+/* Add information: File · Website · Text, one at a time. */
+.brain-add-modes { margin-block-end: 12px; }
+.brain-optional { font-weight: 500; opacity: .75; }
+.brain-add-panel { display: grid; gap: 8px; }
+.brain-add-panel:focus-visible { outline-offset: 2px; }
+.brain-add-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .brain-add-col { display: grid; gap: 8px; }
 .brain-add-col > div { display: flex; justify-content: flex-end; }
+.brain-add-hint { margin: 0; font-size: var(--fs-sm); color: var(--ink-2); }
+.brain-add .brain-note { margin-block-start: 12px; }
 
 /* Review */
 .brain-review > summary .ld-chip { margin-inline-start: 4px; }

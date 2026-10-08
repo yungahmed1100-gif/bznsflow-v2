@@ -107,7 +107,9 @@ try {
     assert.doesNotMatch(s.row.bznsDraft.markdown, /tone:|## FAQ|hand over/i, 'no tone, FAQ or handoff in BznsBrain\'s template'); count++;
     assert.equal(await noOverflow(page), true, `${lang} ${width} setup overflow`); count++;
     assert.deepEqual(await axe(page, '.brain-setup'), [], `${lang} ${width} setup axe`); count++;
-    await page.getByLabel(t('Or paste text', 'أو الصق نصاً')).fill('Whitening: 60 OMR\nWe accept Dhofar Insurance.');
+    assert.equal(await page.getByRole('tab', { name: new RegExp(t('Website', 'موقع')) }).count(), 1, 'website is one of the three sources'); count++;
+    await page.getByRole('tab', { name: t('Text', 'نص'), exact: true }).click();
+    await page.getByLabel(t('Paste text', 'الصق نصاً')).fill('Whitening: 60 OMR\nWe accept Dhofar Insurance.');
     await page.getByRole('button', { name: t('Read text', 'اقرأ النص') }).click();
     await page.getByText(t('2 suggestions to review', '2 اقتراحات للمراجعة')).waitFor(); count++;
     await page.getByRole('button', { name: t('Continue', 'متابعة') }).click();
