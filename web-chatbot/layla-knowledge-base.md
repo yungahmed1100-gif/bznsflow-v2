@@ -1,201 +1,107 @@
-# BZNSFLOW — Service Catalog Knowledge Base (Layla Website Widget)
-# دليل خدمات BZNSFLOW — قاعدة معرفة ليلى (ودجت الموقع)
+# BznsFlow — Knowledge Base (Layla Website Widget)
+# قاعدة معرفة ليلى على موقع BznsFlow
 
 > **KB usage rules (system-facing, do not read to customer):**
-> - Answer in the customer's language (Gulf Arabic or English). Arabic replies are always RTL.
-> - Prices are public — quote them plainly when asked (see section 21), then offer the free 20-minute diagnosis session to confirm which plan fits. Never invent a number that is not in section 21.
-> - Never call systems "chatbot", "CRM", "automation", "marketing", or "website" in isolation — use the outcome names below.
-> - Real Estate AI Workforce is the ONLY system live with real clients. Every other system is fully engineered and ready to build — say so honestly if asked.
+> - Answer in the customer's language (Arabic or English). Arabic replies are always RTL.
+> - Never quote a price. Pricing is shared on the free audit, with the agreed scope.
+> - Catalyst is the only plan available today. Ascend and Apex are in preparation; never describe their contents.
+> - Never promise bookings, sales, response times, refunds or guarantees. No voice calls.
 > - If a question is not covered here → escalate to the human team. Never invent capabilities, prices, or statistics.
-> - Contacts: WhatsApp **+20 1036755930** · Email **ahmed@bznsflowai.com** · Call **+968 99656590**
-> - Every closing message offers BOTH routes — WhatsApp first, email as the alternative.
+> - Contacts: WhatsApp **+20 103 675 5930** · Email **ahmed@bznsflowai.com** · Free audit: https://calendar.app.google/fUA7FtAyRHJ9okdk7
+> - Source of truth: the vault (Market/Pricing, Market/Product-Marketing-Context, Resources/client-materials/Testimonials). Update this file when they change.
 
 ---
 
 ## 00 — Who We Are / من نحن
-**Keywords:** bznsflow, who are you, about, من أنتم, شركة, growth engineering, وكالة, agency, عنكم
+**Keywords:** bznsflow, who are you, about, من أنتم, شركة, عنكم, company, agency, وكالة
 
-**EN:** BZNSFLOW is a Growth Engineering company — not a marketing agency. We engineer revenue infrastructure for SMEs in Oman, the GCC, and Europe: systems that capture the customer, convert them, collect the money through licensed Omani payment gateways, run your operations, and show you your numbers live. Every system we deliver ends in a financial transaction, not a conversation.
+**EN:** BznsFlow builds and runs AI and automation for small and medium businesses in the GCC, starting in Oman, as a done-for-you service. What we offer today is Catalyst: Layla on your WhatsApp and/or Instagram. Arabic first, with English alongside. Founded by Ahmed Darwish in 2024. BznsFlow is a verified Meta Tech Provider.
 
-**AR:** ‏BZNSFLOW شركة هندسة نمو — لسنا وكالة تسويق. نهندس البنية التحتية لإيراد المنشآت الصغيرة والمتوسطة في عُمان والخليج وأوروبا: أنظمة تلتقط العميل، تحوّله، تحصّل المال عبر بوابات دفع عمانية مرخّصة، تشغّل عملياتك، وتريك أرقامك لحظة بلحظة. كل نظام نسلّمه ينتهي بمعاملة مالية، لا بمحادثة.
-
-**How we build / كيف نبني:** Five layers, one system — L1 Revenue Capture · L2 Revenue Operations · L3 Operational Core · L4 Revenue Intelligence · L5 Money & Compliance. We start with the smallest layer that stops your biggest leak, then expand.
-خمس طبقات، نظام واحد: الالتقاط ← الإيراد ← التشغيل ← الذكاء ← المال والامتثال. نبدأ بأصغر طبقة توقف أكبر نزيف، ثم نتوسع.
+**AR:** BznsFlow يبني ويشغّل الذكاء الاصطناعي والأتمتة للأعمال الصغيرة والمتوسطة في الخليج، بدءاً من عُمان، كخدمة ننجزها لك. المتاح اليوم هو كاتاليست: ليلى على واتساب و/أو إنستغرام نشاطك. العربية أولاً والإنجليزية معها. أسسه أحمد درويش عام 2024. BznsFlow مزوّد تقنية موثّق لدى Meta.
 
 ---
 
-# SYSTEMS — FROM HEAVIEST TO LIGHTEST
-# الأنظمة — من الأثقل إلى الأخف
+## 01 — Catalyst / كاتاليست
+**Keywords:** catalyst, كاتاليست, layla, ليلى, whatsapp, واتساب, instagram, إنستغرام, chatbot, شات بوت, بوت, receptionist, استقبال, inquiries, استفسارات, leads, عملاء, qualify, تأهيل, what do you do, ماذا تقدمون, خدماتكم
+
+**EN:** Catalyst is Layla on your WhatsApp and/or Instagram. She answers customer inquiries only from the business facts and catalog you approve, asks your qualifying questions one at a time, and hands you the conversation and the customer record, ready for your next step. If she does not know an answer, she gives your team's contact instead of guessing. Every chat is in your dashboard, and you can take over any conversation at any time. Customer data can be deleted on request. Layla does not confirm bookings or promise sales; your written agreement sets what is delivered.
+
+**AR:** كاتاليست هو ليلى على واتساب و/أو إنستغرام نشاطك. ترد على استفسارات العملاء فقط من معلومات نشاطك وكتالوجك المعتمدة، وتسأل أسئلة التأهيل الخاصة بك سؤالاً في كل مرة، وتسلّمك المحادثة وسجل العميل جاهزين لخطوتك التالية. وإن لم تعرف الجواب، تعطي العميل رقم فريقك بدل أن تخمّن. كل محادثة في لوحتك، ويمكنك استلام أي محادثة في أي وقت. ويمكن حذف بيانات العميل عند الطلب. ليلى لا تؤكد الحجوزات ولا تعد بالمبيعات؛ اتفاقك المكتوب يحدد ما يُسلَّم.
 
 ---
 
-## 01 — Operational Core System (ERP-lite) / نظام التشغيل الأساسي
-**Keywords:** ERP, نظام إدارة, operations system, نظام تشغيل, inventory, مخزون, مشتريات, procurement, staff schedule, جدول موظفين, production ticket, تذكرة إنتاج, job card, بطاقة عمل, نظام متكامل
+## 02 — How Setup Works / كيف يتم الإعداد
+**Keywords:** how does it work, كيف يعمل, setup, إعداد, start, ابدأ, get started, how long, كم المدة, timeline, متى يجهز, bznsbrain, train, تدريب
 
-**EN:** Our heaviest system — a right-sized operational core built for your sector, without the weight and cost of enterprise ERP that nobody ends up using. Runs from WhatsApp and writes to a structured database. Modules by sector: inventory sync and reorder alerts (retail), supplier purchase orders and demand forecasting (cafes), digital production tickets with 100% spec extraction (cake shops), digital vehicle job cards with photo intake and one-tap approvals (car services), live project profitability from supplier invoices + labor hours (construction), staff rotas generated 48 hours ahead from actual demand.
+**EN:** We set Catalyst up with you. You approve your business information (bzns.md) and your services and prices (the catalog) in BznsBrain, choose Layla's style and the questions she asks, test her on your draft, then connect WhatsApp or Instagram and turn her on. Nothing goes live until you publish. The timeline depends on your scope and is agreed on the free audit.
 
-**Outcome:** operations run on structured data instead of memory and paper; margin leaks surface in week two, not at year end.
-
-**AR:** أثقل أنظمتنا — نواة تشغيلية مصغّرة حسب قطاعك، بلا ثقل وتكلفة أنظمة ERP الضخمة التي لا يستخدمها أحد. تعمل من واتساب وتكتب في قاعدة بيانات منظمة. وحدات حسب القطاع: مزامنة مخزون وتنبيهات إعادة طلب (التجزئة)، أوامر شراء الموردين والتنبؤ بالإقبال (المقاهي)، تذاكر إنتاج رقمية باستخراج 100% من المواصفات (محلات الكيك)، بطاقات عمل رقمية للمركبات بالصور والموافقة بضغطة (خدمات السيارات)، ربحية مشروع حيّة من فواتير الموردين وساعات العمل (المقاولات)، وجداول موظفين تُولَّد قبل 48 ساعة من الإقبال الفعلي.
-
-**النتيجة:** تشغيل يعمل على بيانات منظمة بدل الذاكرة والورق؛ تسرّب الهامش يظهر في الأسبوع الثاني لا نهاية السنة.
+**AR:** نعدّ كاتاليست معك. تعتمد معلومات نشاطك (bzns.md) وخدماتك وأسعارك (الكتالوج) في BznsBrain، وتختار أسلوب ليلى والأسئلة التي تسألها، وتجرّبها على مسودتك، ثم تربط واتساب أو إنستغرام وتشغّلها. لا يُنشر شيء قبل أن تنشر أنت. المدة تعتمد على نطاقك ونتفق عليها في التدقيق المجاني.
 
 ---
 
-## 02 — Revenue Intelligence Platform (Owner Dashboard) / منصة ذكاء الإيراد (لوحة المالك)
-**Keywords:** dashboard, لوحة, تقارير, reports, analytics, تحليلات, KPI, أرقام, cash flow, تدفق نقدي, ذكاء الأعمال, business intelligence
+## 03 — Plans / الباقات
+**Keywords:** plans, باقات, ascend, أسيند, apex, أبيكس, packages, tiers, مستويات, upgrade, ترقية
 
-**EN:** The owner's command view: cash position, overdue invoices and their aging, margins per product/service/doctor/branch, collection speed, no-show cost — plus a daily report in Arabic delivered to the owner every evening on WhatsApp. Decisions by numbers, not by feel.
+**EN:** Three plans. Catalyst is available now. Ascend (for answered inquiries that still need follow-up) and Apex (for inquiries spread across staff and branches) are in preparation, and we are defining them with the businesses that need them. If a visitor is interested in Ascend or Apex, take their details and connect them with the team.
 
-**AR:** لوحة المالك: النقد، الفواتير المتأخرة وأعمارها، الهوامش لكل منتج/خدمة/طبيب/فرع، سرعة التحصيل، تكلفة الغياب — مع تقرير عربي يومي يصل المالك كل مساء على واتساب. قراراتك بالأرقام لا بالإحساس.
-
----
-
-## 03 — Sales & Revenue Capture System (24/7 AI Workforce) / نظام المبيعات والالتقاط (فريق عمل ذكي 24/7)
-**Keywords:** sales system, نظام مبيعات, chatbot, شات بوت, بوت, رد آلي, واتساب, whatsapp, receptionist, استقبال, booking, حجز, مواعيد, leads, عملاء محتملين, تأهيل, voice call, voice agent, voice assistant, مكالمات, رد على الاتصالات
-
-**EN:** A 24/7 AI workforce that answers every WhatsApp inquiry and phone call in seconds — in Gulf Arabic and English — qualifies the customer (budget, need, location, timing), books the appointment or viewing into your calendar, scores every lead hot/warm/cold, filters out tire-kickers, and hands negotiation or sensitive questions to your human team. The owner receives a daily Arabic report. Evidence: responding within 5 minutes makes a lead 21x more likely to qualify (MIT / InsideSales Lead Response Study).
-
-**Status note:** the Real Estate version of this system is **LIVE with real clients today**. Versions for clinics, restaurants, salons, gyms, and the other sectors are fully engineered and ready to build on the same production architecture.
-
-**AR:** فريق عمل ذكي يعمل 24/7 يرد على كل استفسار واتساب وكل مكالمة خلال ثوانٍ — بالعربية الخليجية والإنجليزية — يؤهل العميل (الميزانية، الحاجة، الموقع، التوقيت)، يحجز الموعد أو المعاينة في تقويمك، يصنّف كل عميل ساخن/دافئ/بارد، يفلتر غير الجادين، ويحوّل التفاوض والأسئلة الحساسة لفريقك البشري. المالك يستلم تقريرًا عربيًا يوميًا. الدليل: الرد خلال 5 دقائق يرفع تأهيل العميل 21 ضعفًا (دراسة MIT / InsideSales).
-
-**ملاحظة الحالة:** نسخة العقارات من هذا النظام **مشغَّلة فعليًا لدى عملاء حقيقيين اليوم**. نسخ العيادات والمطاعم والصالونات والصالات وبقية القطاعات مهندَسة بالكامل وجاهزة للبناء على نفس البنية الإنتاجية.
+**AR:** ثلاث باقات. كاتاليست متاح الآن. أسيند (للاستفسارات المُجابة التي ما زالت تحتاج متابعة) وأبيكس (للاستفسارات الموزّعة بين الموظفين والفروع) قيد الإعداد، ونحدّدهما مع الأعمال التي تحتاجهما. إن كان الزائر مهتماً بأسيند أو أبيكس، خذ تفاصيله ووصّله بالفريق.
 
 ---
 
-## 04 — Real Estate AI Workforce — LIVE / فريق العقارات الذكي — مشغَّل فعليًا
-**Keywords:** real estate, عقارات, وكالة عقارية, ليلى, layla, هاتف, hatif, معاينة, viewing, portal, بوابات, bayut, إيجارات, rent collection, عمولات
+## 04 — Scoped Projects / مشاريع بنطاق مستقل
+**Keywords:** website, موقع, crm, automation, أتمتة, app, تطبيق, loyalty, ولاء, reorder, إعادة الشراء, outreach, تواصل, email, بريد, marketing, تسويق, acquisition, جذب العملاء, custom, مخصص
 
-**EN:** Our flagship live deployment. Four AI agents: Layla (WhatsApp sales assistant — qualifies, searches live listings, books viewings, never invents a price), Hatif (voice agent for inbound calls), Haris (security & data — dedup, lead scoring, secure storage, calendar sync), Raqib (operations overseer — daily Arabic owner report, KPIs, human-handoff alerts, conversation quality grading). Extensions: portal lead capture (Bayut and others enter the same qualification line automatically), commission pipeline visibility, and recurring rent invoicing with automatic escalation for late payers. Customer numbers stay encrypted, always. Ask for a live 20-minute demo on your own listings.
+**EN:** Beyond Catalyst, we scope projects separately and quote them in writing: customer acquisition systems, reorder journeys, loyalty journeys, WhatsApp and email outreach, websites, CRM and pipeline, automation and integrations, and custom apps. Scope and price are agreed before work starts.
 
-**AR:** نظامنا الرائد المشغَّل فعليًا. أربعة وكلاء: ليلى (مساعدة مبيعات واتساب — تؤهل، تبحث في عقاراتك الحية، تحجز المعاينات، ولا تخترع سعرًا أبدًا)، هاتف (وكيل الصوت للمكالمات الواردة)، حارس (الأمن والبيانات — إزالة التكرار، تصنيف العملاء، تخزين مشفّر، مزامنة التقويم)، رقيب (مراقب العمليات — تقرير عربي يومي للمالك، مؤشرات أداء، تنبيهات التحويل البشري، تقييم جودة المحادثات). إضافات: التقاط عملاء البوابات العقارية تلقائيًا، رؤية خط العمولات، وفوترة إيجارات دورية بتصعيد آلي للمتأخرين. أرقام العملاء مشفّرة دائمًا. اطلب عرضًا حيًا 20 دقيقة على عقاراتك أنت.
-
----
-
-## 05 — Invoicing & Collections Engine (Thawani-integrated) / محرك الفوترة والتحصيل (مرتبط بثواني)
-**Keywords:** invoicing, فواتير, فوترة, invoice, quote, عرض سعر, عروض أسعار, collections, تحصيل, ذمم, متأخرات, payment link, رابط دفع, thawani, ثواني, تقسيط, دفعات
-
-**EN:** From conversation to cash: a professional quote generated from a WhatsApp chat in seconds, automatic follow-up on pending quotes, then invoices with instant Thawani payment links — milestone invoicing for construction, treatment-plan installment billing for dental, B2B wholesale invoicing for retail, retention-amount tracking, time-to-invoice for professional services. A collections engine follows up every overdue invoice with polite, escalating Arabic/English sequences and an aging dashboard. Evidence: invoices paid electronically collect up to 2x faster (Xero); smart reminder tools collect ~5 days faster on average (QuickBooks).
-
-**AR:** من المحادثة إلى المال: عرض سعر احترافي يُنشأ من محادثة واتساب خلال ثوانٍ، متابعة آلية للعروض المعلّقة، ثم فواتير بروابط دفع «ثواني» فورية — فوترة مراحل الإنجاز للمقاولات، فوترة خطط العلاج بالأقساط للأسنان، فوترة الجملة B2B للتجزئة، تتبّع مبالغ الاحتجاز، ومن الساعة إلى الفاتورة للخدمات المهنية. محرك تحصيل يتابع كل فاتورة متأخرة بتسلسل مهذّب متصاعد عربي/إنجليزي مع لوحة أعمار الذمم. الدليل: الفواتير المدفوعة إلكترونيًا تُحصَّل حتى 2× أسرع (Xero)، وأدوات التذكير الذكية تحصّل أسرع بـ5 أيام في المتوسط (QuickBooks).
+**AR:** خارج كاتاليست، نحدد نطاق كل مشروع على حدة ونقدّم عرض سعر مكتوباً: أنظمة جذب العملاء، ورحلات إعادة الشراء، ورحلات الولاء، والتواصل عبر واتساب والبريد، والمواقع، ونظام CRM والمسار، والأتمتة والتكاملات، والتطبيقات المخصصة. نتفق على النطاق والسعر قبل بدء العمل.
 
 ---
 
-## 06 — Deposit-First Booking / الحجز بعربون
-**Keywords:** deposit, عربون, no-show, غياب, تخلف عن الموعد, حجز مؤكد, إلغاء
+## 20 — Who It's For / لمن هذا
+**Keywords:** industries, قطاعات, sectors, من تخدمون, هل تشتغلون مع, clinic, عيادة, dental, أسنان, restaurant, مطعم, real estate, عقارات, salon, صالون, retail, تجزئة
 
-**EN:** High-value appointments (dental implants, salon sessions, custom cakes, viewings) get a Thawani deposit link at booking time. No deposit, no slot — and for production businesses, no deposit, no production. Deposits cut no-shows by up to 65%, and cancellations are auto-offered to the waitlist.
+**EN:** Owner-run businesses in Oman and across the GCC that receive inquiries on WhatsApp or Instagram, ask customers the same qualifying questions again and again, and have someone who will act on each handed-over inquiry: for example real estate, clinics, salons, retail, restaurants and services. If your sector isn't listed, ask.
 
-**AR:** المواعيد عالية القيمة (زراعة الأسنان، جلسات الصالون، الكيك حسب الطلب، المعاينات) تحصل على رابط عربون «ثواني» لحظة الحجز. لا عربون، لا موعد — وفي أعمال الإنتاج: لا عربون، لا إنتاج. العربون يخفض الغياب حتى 65%، والإلغاءات تُعرض تلقائيًا على قائمة الانتظار.
-
----
-
-## 07 — Payments & Money Layer / طبقة الدفع والمال
-**Keywords:** payment gateway, بوابة دفع, thawani, ثواني, دفع إلكتروني, online payment, مدى, mada, tap, paymob, moyasar, myfatoorah, دفع رقمي
-
-**EN:** Every payment link, deposit, and invoice runs through licensed local gateways — Thawani (the first CBO-licensed Omani fintech) first in Oman, with certified local alternatives in every GCC market (Tap for UAE/KSA/Kuwait, Moyasar for Saudi Mada, MyFatoorah for Kuwait/Bahrain, Paymob). We never hold your money or your customers' card data — the license and security belong to the gateway; the system engineering is ours. Closed money loop: capture → deposit → invoice → automatic collection → settlement in your bank account.
-
-**AR:** كل رابط دفع وعربون وفاتورة يمر عبر بوابات محلية مرخّصة — «ثواني» (أول شركة تقنية مالية مرخّصة من البنك المركزي العماني) أولًا في عُمان، وبدائل محلية معتمدة في كل سوق خليجي (Tap للإمارات والسعودية والكويت، Moyasar لمدى السعودية، MyFatoorah للكويت والبحرين، وPaymob). لا نحتفظ بأموالك ولا ببيانات بطاقات عملائك أبدًا — الترخيص والأمان للبوابة، وهندسة النظام لنا. دورة مال مغلقة: التقاط ← عربون ← فاتورة ← تحصيل آلي ← تسوية في حسابك البنكي.
-
----
-
-## 08 — E-Invoicing Compliance Readiness / جاهزية الفوترة الإلكترونية
-**Keywords:** e-invoicing, فوترة إلكترونية, compliance, امتثال, ضريبة, tax, VAT, حكومي, عقود حكومية
-
-**EN:** Oman's e-invoicing pilot begins August 2026; the UAE's went live July 2026. Paper and PDF invoices are gradually losing validity in B2B transactions. Your invoice data with us is structured and tax-tagged from day one — so the transition is a connection, not a project. This also makes you ready for government contracts.
-
-**AR:** برنامج عُمان التجريبي للفوترة الإلكترونية يبدأ أغسطس 2026، والإمارات بدأت يوليو 2026. الفواتير الورقية وPDF تفقد صلاحيتها تدريجيًا في المعاملات B2B. بياناتك الفوترية عندنا منظمة وموسومة ضريبيًا من اليوم الأول — الانتقال وصلة، لا مشروع. وهذا يجعلك جاهزًا أيضًا للعقود الحكومية.
-
----
-
-## 09 — Loan-Readiness File & Finance Referrals / ملف الجاهزية التمويلية وإحالات التمويل
-**Keywords:** loan, قرض, تمويل, financing, bank, بنك, تقسيط للعملاء, BNPL, تمويل فواتير, شريعة, إسلامي
-
-**EN:** After months of operation, your structured data (revenue, receivables, collection speed) becomes a file ready to present to licensed financing providers — including Sharia-compliant options. We also embed licensed-partner options into your sales flow: customer installments for high-value treatments, invoice financing, and insurance referrals (e.g., vehicle insurance renewal at the moment of service). We are not a lender — we make your business fundable and connect you to licensed partners.
-
-**AR:** بعد أشهر من التشغيل، بياناتك المنظمة (إيراد، ذمم، سرعة تحصيل) تتحول لملف جاهز للعرض على جهات تمويل مرخّصة — بما فيها حلول متوافقة مع الشريعة. كما ندمج خيارات شركاء مرخّصين داخل مسار بيعك: تقسيط للعملاء في العلاجات المكلفة، تمويل الفواتير، وإحالات التأمين (مثل تجديد تأمين المركبة لحظة الخدمة). نحن لسنا جهة إقراض — نجعل منشأتك «قابلة للتمويل» ونوصلك بشركاء مرخّصين.
-
----
-
-## 10 — Retention & Repeat-Revenue Engines / محركات الاحتفاظ والإيراد المتكرر
-**Keywords:** loyalty, ولاء, retention, احتفاظ, عودة العملاء, win back, استرجاع, باقات, packages, اشتراك, subscription, استدعاء, recall, تذكير, reminders, تقييمات, reviews
-
-**EN:** Revenue from customers you already own — the cheapest revenue possible. Recall engines that automatically re-invite patients/customers on schedule (6-month check-up, oil change, annual cake order), win-back campaigns for customers silent 30+ days, prepaid packages and monthly subscriptions sold through Thawani links (cash upfront + committed return visits), failed-payment recovery for gyms (retry + instant WhatsApp payment link), personal-training session trackers, and automatic post-visit review requests that grow your digital reputation.
-
-**AR:** إيراد من عملاء تملكهم أصلًا — أرخص إيراد ممكن. محركات استدعاء تعيد دعوة المرضى/العملاء تلقائيًا حسب الجدول (مراجعة 6 أشهر، تغيير زيت، كيكة المناسبة السنوية)، حملات استرجاع لعملاء صمتوا 30+ يومًا، باقات مدفوعة مسبقًا واشتراكات شهرية تُباع بروابط «ثواني» (نقد مقدّم + التزام عودة)، استرداد الدفعات الفاشلة للصالات (إعادة محاولة + رابط دفع واتساب فوري)، متتبع جلسات التدريب الشخصي، وطلب تقييم آلي بعد كل زيارة ناجحة ينمّي سمعتك الرقمية.
-
----
-
-## 11 — WhatsApp Commerce Engine / محرك التجارة عبر واتساب
-**Keywords:** order, طلبات, بيع أونلاين, ecommerce, تجارة إلكترونية, متجر, قائمة, menu, طلب مسبق, pre-order, توصيل, delivery, عمولة تطبيقات
-
-**EN:** Menu/catalog, order, and Thawani payment — all inside WhatsApp, no middleman. Restaurants recover the 15–30% delivery-app commission on every direct order and own the customer data. Cafes take paid pre-orders ready at the door. Retail stores answer "is it available?" from live inventory and grow orders without hiring more reply staff. Abandoned inquiries get a timed follow-up sequence — the WhatsApp version of cart recovery.
-
-**AR:** قائمة وطلب ودفع «ثواني» — كل ذلك داخل واتساب، بلا وسيط. المطاعم تسترد عمولة تطبيقات التوصيل (15–30%) في كل طلب مباشر وتمتلك بيانات العميل. المقاهي تستلم طلبات مسبقة مدفوعة جاهزة عند الباب. متاجر التجزئة تجيب «هل متوفر؟» من المخزون الحي وتنمّي الطلبات دون توظيف إضافي. الاستفسارات المهجورة تدخل تسلسل متابعة مؤقّت — نسخة واتساب من استرداد السلة.
-
----
-
-## 12 — Conversion Websites (Lead Generation Engines) / مواقع التحويل (محركات توليد العملاء)
-**Keywords:** website, موقع, موقع إلكتروني, landing page, صفحة هبوط, تصميم موقع, web design, موقع شركة, دومين, domain
-
-**EN:** Our lightest, fastest entry system. Not a brochure — a Lead Generation Engine: a fast, bilingual (Arabic RTL + English) conversion website engineered around one job: turning visitors into WhatsApp conversations and booked appointments. Every page drives to a measurable action, connects directly into your capture line, and reports what it produced. Fast to deploy, and the natural first step before the heavier systems above.
-
-**AR:** أخف وأسرع أنظمتنا للدخول. ليس بروشورًا — بل محرك توليد عملاء: موقع تحويل سريع ثنائي اللغة (عربي RTL + إنجليزي) مهندَس حول مهمة واحدة: تحويل الزوار إلى محادثات واتساب ومواعيد محجوزة. كل صفحة تقود لفعل قابل للقياس، تتصل مباشرة بخط الالتقاط لديك، وتقرير بما أنتجته. سريع النشر، وهو الخطوة الأولى الطبيعية قبل الأنظمة الأثقل أعلاه.
-
----
-
-# GENERAL ANSWERS / إجابات عامة
-
-## 20 — Industries We Serve / القطاعات التي نخدمها
-**Keywords:** industries, قطاعات, sectors, من تخدمون, هل تشتغلون مع, clinic, عيادة, dental, أسنان, restaurant, مطعم, cafe, مقهى, cake, كيك, salon, صالون, gym, نادي, جيم, car service, سيارات, construction, مقاولات, retail, تجزئة, professional services, خدمات مهنية
-
-**EN:** Twelve SME sectors: medical clinics, dental clinics, restaurants, cafes, cake shops, real estate agencies, construction companies, retail stores, beauty salons, gyms, car services, and professional services. Markets: Oman first, then the wider GCC (UAE, Saudi), and Europe secondarily. If your sector isn't listed, ask — the five-layer architecture adapts.
-
-**AR:** اثنا عشر قطاعًا: العيادات الطبية، عيادات الأسنان، المطاعم، المقاهي، محلات الكيك، الوكالات العقارية، شركات المقاولات، متاجر التجزئة، صالونات التجميل، الصالات الرياضية، خدمات السيارات، والخدمات المهنية. الأسواق: عُمان أولًا، ثم الخليج (الإمارات والسعودية)، وأوروبا ثانويًا. إن لم يكن قطاعك مذكورًا، اسأل — البنية الخماسية قابلة للتكييف.
+**AR:** الأعمال التي يديرها أصحابها في عُمان والخليج، وتصلها استفسارات على واتساب أو إنستغرام، وتسأل العملاء أسئلة التأهيل نفسها مراراً، ولديها من يتابع كل استفسار يُسلَّم: مثل العقارات والعيادات والصالونات والتجزئة والمطاعم والخدمات. إن لم يكن قطاعك مذكوراً، اسأل.
 
 ## 21 — Pricing / الأسعار
-**Keywords:** price, سعر, كم التكلفة, cost, تكلفة, باقات, plans, كم يكلف, أسعاركم, pricing, بكم, كم سعر, الأسعار
+**Keywords:** price, سعر, كم التكلفة, cost, تكلفة, كم يكلف, أسعاركم, pricing, بكم, كم سعر, الأسعار, subscription, اشتراك, contract, عقد
 
-**EN:** Prices are public. Three plans, each a monthly subscription plus a one-time setup fee — no annual lock-in. Catalyst: OMR 40/month + OMR 70 setup (~USD 104/month + USD 182) — one service line, WhatsApp answered, qualified and booked 24/7. Ascend (most popular): OMR 120/month + OMR 210 setup (~USD 312/month + USD 546) — adds a lead-capture website, inbound voice AI, nurture sequences, a live dashboard and a daily owner report. Apex: OMR 300/month + OMR 525 setup (~USD 780/month + USD 1,365) — adds routing across the team, agents per location, outbound reactivation, deal-closing support and priority coverage. The 30-Day Leak Guarantee applies: if the system does not book the agreed number of qualified appointments in the first 30 days, you get a refund. Not sure which plan fits? Take the free 20-minute diagnosis on WhatsApp — we map where the revenue is leaking and recommend the smallest plan that stops it.
+**EN:** Pricing is shared on the free audit, together with the scope agreed for your business. The structure is a one-time setup and a monthly service, with a 90-day minimum. Messaging and AI usage are billed at cost.
 
-**AR:** الأسعار معلنة. ثلاث باقات، كل واحدة اشتراك شهري مع رسوم إعداد لمرة واحدة — بلا التزام سنوي. كاتاليست: 40 ر.ع. شهريًا + 70 ر.ع. إعداد (حوالي 104 دولار شهريًا + 182 دولار) — خط خدمة واحد، رد على واتساب وتأهيل وحجز 24/7. أسيند (الأكثر طلبًا): 120 ر.ع. شهريًا + 210 ر.ع. إعداد (حوالي 312 دولار شهريًا + 546 دولار) — تضيف موقع التقاط عملاء، ردًا صوتيًا ذكيًا على المكالمات، تسلسلات متابعة، لوحة حيّة وتقريرًا يوميًا للمالك. أبيكس: 300 ر.ع. شهريًا + 525 ر.ع. إعداد (حوالي 780 دولار شهريًا + 1,365 دولار) — تضيف التوجيه عبر الفريق، ووكلاء لكل فرع، وتواصلًا صادرًا لإعادة التنشيط، ودعم إغلاق الصفقات وتغطية بأولوية. ضمان الثلاثين يومًا ساري: إذا لم يحجز النظام العدد المتفق عليه من المواعيد المؤهلة خلال أول 30 يومًا، تسترد أموالك. غير متأكد أي باقة تناسبك؟ خذ جلسة التشخيص المجانية 20 دقيقة على واتساب — نحدد أين يتسرّب إيرادك ونرشّح أصغر باقة توقفه.
+**AR:** نشاركك السعر في التدقيق المجاني، مع النطاق المتفق عليه لنشاطك. الهيكل: رسوم إعداد لمرة واحدة واشتراك شهري، بحد أدنى 90 يوماً. استهلاك الرسائل والذكاء الاصطناعي يُحتسب بالتكلفة.
 
-## 22 — How Fast Can You Deploy? / كم تستغرق مدة التنفيذ؟
-**Keywords:** how long, كم المدة, timeline, مدة التنفيذ, متى يجهز, deployment, deliver, تستغرق
+## 22 — Arabic and Tone / العربية والأسلوب
+**Keywords:** arabic, عربي, english, إنجليزي, language, لغة, dialect, لهجة, tone, أسلوب, sound like us, نبرة
 
-**EN:** We deploy in modular MVPs — the smallest system that stops the biggest leak goes live first, then we expand layer by layer. Exact timelines depend on scope and are confirmed in the diagnosis session. We don't do year-long enterprise projects.
+**EN:** Arabic first, with English alongside. Layla replies in the language the customer writes in. You choose her style in BznsBrain and approve every fact she uses before anything goes live.
 
-**AR:** ننفّذ بأنظمة مصغّرة معيارية — أصغر نظام يوقف أكبر نزيف يعمل أولًا، ثم نتوسع طبقة بعد طبقة. المدد الدقيقة تعتمد على النطاق وتُؤكَّد في جلسة التشخيص. لا ننفّذ مشاريع ضخمة تمتد سنة.
+**AR:** العربية أولاً والإنجليزية معها. ليلى ترد بلغة العميل التي يكتب بها. تختار أسلوبها في BznsBrain وتعتمد كل معلومة تستخدمها قبل أن يُنشر أي شيء.
 
-## 23 — Data Privacy & Security / خصوصية البيانات والأمان
-**Keywords:** privacy, خصوصية, security, أمان, بياناتي, تشفير, encryption, آمن, secure
+## 23 — Data Privacy / خصوصية البيانات
+**Keywords:** privacy, خصوصية, security, أمان, بياناتي, data, بيانات, delete, حذف, secure
 
-**EN:** Customer phone numbers are stored encrypted, always. We never hold your money or your customers' card data — payments live entirely inside licensed gateways like Thawani. Your business data is stored in a structured, secure database that you benefit from (reporting, compliance readiness, loan-readiness).
+**EN:** Each business's data is kept separate. Customer records can be deleted on request, and you can delete contacts yourself from the dashboard. Our privacy policy is at bznsflowai.com/en/privacy.
 
-**AR:** أرقام هواتف العملاء تُخزَّن مشفّرة دائمًا. لا نحتفظ بأموالك ولا ببيانات بطاقات عملائك — المدفوعات تعيش بالكامل داخل بوابات مرخّصة مثل «ثواني». بيانات منشأتك في قاعدة بيانات منظمة وآمنة تستفيد منها أنت (تقارير، جاهزية امتثال، جاهزية تمويل).
+**AR:** بيانات كل نشاط منفصلة. يمكن حذف سجلات العملاء عند الطلب، ويمكنك حذف جهات الاتصال بنفسك من اللوحة. سياسة الخصوصية على bznsflowai.com/privacy.
 
-## 24 — Do You Replace My Staff? / هل تستبدلون موظفيني؟
-**Keywords:** replace staff, استبدال الموظفين, وظائف, jobs, يحل محل, موظفين
+## 24 — Human Takeover / الاستلام البشري
+**Keywords:** human, إنسان, موظف, staff, replace staff, استبدال الموظفين, takeover, استلام, handoff, تحويل
 
-**EN:** No. Our systems replace repetitive work — answering at midnight, copying leads, chasing invoices — never human judgment. Your team receives only qualified, scored leads and handles negotiation, care, and decisions. Agents close; they don't type.
+**EN:** Layla does the first conversation; your team decides. When a customer wants a person, or Layla cannot help, she gives your team's contact and keeps the conversation open, and you can take over any chat from the dashboard. She does not replace your team's judgment.
 
-**AR:** لا. أنظمتنا تستبدل العمل المتكرر — الرد منتصف الليل، نسخ العملاء، مطاردة الفواتير — لا الحكم البشري أبدًا. فريقك يستلم فقط عملاء مؤهَّلين مصنَّفين، ويتولى التفاوض والعناية والقرار. الفريق يُغلق الصفقات، لا يكتب الرسائل.
+**AR:** ليلى تبدأ المحادثة، وفريقك يقرر. حين يطلب العميل شخصاً، أو لا تستطيع ليلى المساعدة، تعطيه رقم فريقك وتبقي المحادثة مفتوحة، ويمكنك استلام أي محادثة من اللوحة. هي لا تحل محل حكم فريقك.
 
-## 25 — Book a Diagnosis Session / احجز جلسة تشخيص
-**Keywords:** book, احجز, demo, عرض, تجربة, تواصل, contact, جلسة, consultation, استشارة, رقم, اتصال, واتساب, sign up, التسجيل, ابدأ, get started, email, mail, إيميل, ايميل, بريد, بريد إلكتروني
+## 25 — Free Audit / التدقيق المجاني
+**Keywords:** book, احجز, demo, عرض, تجربة, تواصل, contact, جلسة, consultation, استشارة, audit, تدقيق, رقم, اتصال, sign up, التسجيل, get started, email, إيميل, بريد
 
-**EN:** One entry for everything: a free 20-minute engineering diagnosis — numbers, not a sales pitch. Two ways to start, whichever suits you: WhatsApp **+20 1036755930** (fastest) or email **ahmed@bznsflowai.com**. Phone: **+968 99656590**. Real estate agencies can request a live demo on their own listings, in their own dialect.
+**EN:** The next step is a free audit of your business and customer funnel. Book it here: https://calendar.app.google/fUA7FtAyRHJ9okdk7, or message us on WhatsApp +20 103 675 5930 (fastest), or email ahmed@bznsflowai.com. Sharing the link does not confirm a booking.
 
-**AR:** الدخول لكل شيء واحد: جلسة تشخيص هندسية مجانية 20 دقيقة — بالأرقام، لا عرض مبيعات. طريقتان للبدء، اختر ما يناسبك: واتساب **‎+20 1036755930** (الأسرع) أو البريد الإلكتروني **ahmed@bznsflowai.com**. للاتصال: **‎+968 99656590**. الوكالات العقارية يمكنها طلب عرض حي على عقاراتها هي، وبلهجتها.
+**AR:** الخطوة التالية تدقيق مجاني لنشاطك ومسار عملائك. احجزه هنا: https://calendar.app.google/fUA7FtAyRHJ9okdk7، أو راسلنا على واتساب ‎+20 103 675 5930 (الأسرع)، أو على البريد ahmed@bznsflowai.com. مشاركة الرابط لا تعني تأكيد الحجز.
 
----
+## 26 — What Clients Say / ماذا يقول عملاؤنا
+**Keywords:** reviews, تقييمات, testimonials, شهادات, clients, عملاء سابقين, proof, دليل, examples, أمثلة, mawa, مأوى, bizbay
 
-# SOURCES / المصادر
-1. MIT / InsideSales.com — Lead Response Management Study (5-minute response = 21x qualification).
-2. Xero — electronically paid invoices collect up to 2x faster.
-3. QuickBooks — smart reminders collect ~5 days faster on average.
-4. Automated reminders study — 1.6M appointments, 64 practices (no-show reduction).
-5. CBO / Ministry announcements — Thawani licensing; Oman e-invoicing pilot Aug 2026; UAE e-invoicing July 2026.
+**EN:** Approved client quotes, word for word: Mawa Real Estate · مأوى (Muscat, Oman): "Enquiries reach me already qualified, in the same sheet we already worked from. I stopped asking about budget on the first call — it's there before I dial." Five Gates (Bahrain): "Years of WhatsApp became one file per client. I stopped digging through threads to remember what we agreed." Each describes the project we delivered for that business.
 
-> Methodology note / ملاحظة منهجية: figures marked as estimates are declared operating assumptions calibrated to your numbers during the diagnosis session. We never fabricate statistics. الأرقام الموسومة بـ«تقدير» افتراضات تشغيلية معلنة تُعاير على أرقامك خلال جلسة التشخيص — نحن لا نختلق إحصاءات.
+**AR:** شهادات معتمدة بكلمات أصحابها: مأوى · Mawa Real Estate (مسقط، عُمان): «الاستفسارات توصلني مؤهلة وجاهزة في نفس الشيت اللي نشتغل عليه. ما عدت أسأل عن الميزانية في أول مكالمة — الجواب موجود قبل لا أتصل.» Five Gates (البحرين): «سنين من محادثات الواتساب صارت ملف واحد لكل عميل. ما عدت أفتّش في المحادثات عشان أعرف وش اتفقنا عليه.» كل شهادة تصف المشروع الذي أنجزناه لذلك النشاط.

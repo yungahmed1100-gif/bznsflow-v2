@@ -23,7 +23,7 @@ export function Layout({ children }) {
     <meta property="og:site_name" content="BznsFlow" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="BznsFlow — AI Receptionist, Booking & WhatsApp Order Automation, in Arabic & English" />
+    <meta property="og:image:alt" content="BznsFlow — Qualified inquiries on WhatsApp and Instagram, in Arabic and English" />
 
 
     <meta name="twitter:card" content="summary_large_image" />

@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { livePackSummaries } from '../../config/hasib-packs';
+import '../styles/owner.css';
 
-const labels = { catalyst: 'Catalyst · Layla only', ascend: 'Ascend · Layla + Hasib' };
+const labels = { catalyst: ['Catalyst · Layla only', 'كاتاليست · ليلى فقط'], ascend: ['Ascend · Layla + Hasib', 'أسيند · ليلى + حاسب'] };
 
-export default function AccessAdmin() {
+export default function AccessAdmin({ lang = 'en' }) {
+  const ar = lang === 'ar', prefix = ar ? '' : '/en', tr = (en, arabic) => (ar ? arabic : en);
   const [authorized, setAuthorized] = useState(false);
   const [packId, setPackId] = useState('');
   const [csrf, setCsrf] = useState('');
@@ -13,28 +15,28 @@ export default function AccessAdmin() {
   const [note, setNote] = useState('');
   const [grants, setGrants] = useState([]);
   const [revoked, setRevoked] = useState([]);
-  const [status, setStatus] = useState('Loading access list…');
+  const [status, setStatus] = useState(ar ? 'جارٍ تحميل قائمة الصلاحيات…' : 'Loading access list…');
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     setAuthorized(false);
     const session = await fetch('/api/auth-session', { credentials: 'same-origin', cache: 'no-store' }).then(r => r.json());
     setCsrf(session?.csrfToken || '');
-    if (!session?.account) { setStatus('Sign in with the administrator account to manage access.'); return; }
+    if (!session?.account) { setStatus(tr('Sign in with the administrator account to manage access.', 'سجّل الدخول بحساب المدير لإدارة الصلاحيات.')); return; }
     const response = await fetch('/api/access-admin', { credentials: 'same-origin', cache: 'no-store' });
     const data = await response.json();
-    if (!response.ok) { setStatus(data.reason === 'admin_required' ? 'This account cannot manage access.' : 'Could not load access grants.'); return; }
+    if (!response.ok) { setStatus(data.reason === 'admin_required' ? tr('This account cannot manage access.', 'هذا الحساب لا يملك إدارة الصلاحيات.') : tr('Could not load access grants.', 'تعذّر تحميل الصلاحيات.')); return; }
     setAuthorized(true);
     setGrants(data.grants || []);
     setRevoked((data.revoked || []).filter(row => !(data.grants || []).some(g => g.email === row.email)));
-    setStatus('Access list is up to date.');
+    setStatus(tr('Access list is up to date.', 'قائمة الصلاحيات محدّثة.'));
   }, []);
 
-  useEffect(() => { load().catch(() => setStatus('Could not load access grants.')); }, [load]);
+  useEffect(() => { load().catch(() => setStatus(tr('Could not load access grants.', 'تعذّر تحميل الصلاحيات.'))); }, [load]);
 
   async function changeAccess(method, body) {
     setBusy(true);
-    setStatus('Saving…');
+    setStatus(tr('Saving…', 'جارٍ الحفظ…'));
     try {
       const response = await fetch('/api/access-admin', {
         method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
@@ -46,48 +48,52 @@ export default function AccessAdmin() {
       setEmail(''); setNote('');
       await load();
       // A grant only works once someone signs in with exactly this address; say so while it is fresh.
-      if (method === 'POST' && data.hasAccount === false) setStatus(`Granted to ${data.email}, but no account uses this address yet. Access starts when someone signs up with exactly this email. Check the spelling.`);
+      if (method === 'POST' && data.hasAccount === false) setStatus(tr(`Granted to ${data.email}, but no account uses this address yet. Access starts when someone signs up with exactly this email. Check the spelling.`, `مُنحت الصلاحية لـ ${data.email}، لكن لا يوجد حساب بهذا البريد بعد. تبدأ الصلاحية عندما يسجّل أحد بهذا البريد نفسه. تحقّق من الكتابة.`));
     } catch (error) {
-      setStatus(error.message === 'admin_required' ? 'This account cannot manage access.' : 'Access update failed. Try again.');
+      setStatus(error.message === 'admin_required' ? tr('This account cannot manage access.', 'هذا الحساب لا يملك إدارة الصلاحيات.') : tr('Access update failed. Try again.', 'تعذّر تحديث الصلاحية. حاول مجدداً.'));
     } finally { setBusy(false); }
   }
 
-  return <main style={{ maxWidth: 900, margin: '0 auto', padding: '48px 24px', color: '#171923' }}>
-
-    <p><Link to="/owner">Admin dashboard</Link></p>
-    <h1>Product access</h1>
-    <p>Only this account can grant or revoke access. New users can verify an email address, but receive no product access until granted.</p>
-    {authorized && <><form onSubmit={event => { event.preventDefault(); changeAccess('POST', { email, plan, note, ...(plan === 'ascend' && packId ? { packId } : {}) }); }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 12, maxWidth: 680 }}>
-      <label>Email<input required type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} style={inputStyle} /></label>
-      <label>Product<select value={plan} onChange={event => setPlan(event.target.value)} style={inputStyle}><option value="catalyst">Catalyst</option><option value="ascend">Ascend</option></select></label>
-      {plan === 'ascend' && <label>Live sector (optional)<select value={packId} onChange={event => setPackId(event.target.value)} style={inputStyle}><option value="">Keep existing sector</option>{livePackSummaries().map(pack => <option key={pack.id} value={pack.id}>{pack.en}</option>)}</select></label>}
-      <label style={{ gridColumn: '1 / -1' }}>Internal note (optional)<input maxLength={200} value={note} onChange={event => setNote(event.target.value)} style={inputStyle} /></label>
-      <button disabled={busy || !csrf} type="submit" style={buttonStyle}>Grant access</button>
-    </form>
-    <h2>Active grants</h2>
-    {grants.length ? <GrantTable rows={grants} action="Revoke" busy={busy} onAction={grant => changeAccess('DELETE', { email: grant.email })} /> : <p>No active access grants.</p>}
-    {revoked.length > 0 && <><h2>Revoked</h2>
-      <GrantTable rows={revoked} action="Grant again" busy={busy} onAction={grant => changeAccess('POST', { email: grant.email, plan: grant.plan, ...(grant.packId ? { packId: grant.packId } : {}) })} /></>}</>}
-    <p role="status" aria-live="polite">{status}</p>
-    {!authorized && <Link to="/signin">Sign in</Link>}
+  return <main className="owner-home owner-access" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
+    <nav aria-label={tr('Administration links', 'روابط الإدارة')}>
+      <Link className="owner-brand" to={prefix || '/'}><img src="/logo.png" alt="" width="32" height="32" />BznsFlow</Link>
+      <Link to={`${ar ? '/en' : ''}/owner/access`} lang={ar ? 'en' : 'ar'}>{ar ? 'English' : 'العربية'}</Link>
+    </nav>
+    <header className="owner-heading">
+      <p><Link to={`${prefix}/owner`}>{tr('Admin dashboard', 'لوحة الإدارة')}</Link></p>
+      <h1>{tr('Product access', 'صلاحيات المنتجات')}</h1>
+      <p>{tr('Only this account can grant or revoke access. New users can verify an email address, but receive no product access until granted.', 'هذا الحساب وحده يمنح الصلاحيات ويلغيها. يستطيع المستخدم الجديد تأكيد بريده، لكنه لا يحصل على أي منتج قبل المنح.')}</p>
+    </header>
+    {authorized && <>
+      <form className="owner-form" onSubmit={event => { event.preventDefault(); changeAccess('POST', { email, plan, note, ...(plan === 'ascend' && packId ? { packId } : {}) }); }}>
+        <label>{tr('Email', 'البريد')}<input required type="email" autoComplete="email" dir="ltr" value={email} onChange={event => setEmail(event.target.value)} /></label>
+        <label>{tr('Product', 'المنتج')}<select value={plan} onChange={event => setPlan(event.target.value)}><option value="catalyst">{tr('Catalyst', 'كاتاليست')}</option><option value="ascend">{tr('Ascend', 'أسيند')}</option></select></label>
+        {plan === 'ascend' && <label>{tr('Live sector (optional)', 'القطاع (اختياري)')}<select value={packId} onChange={event => setPackId(event.target.value)}><option value="">{tr('Keep existing sector', 'أبقِ القطاع الحالي')}</option>{livePackSummaries().map(pack => <option key={pack.id} value={pack.id}>{ar ? pack.ar : pack.en}</option>)}</select></label>}
+        <label className="owner-form-wide">{tr('Internal note (optional)', 'ملاحظة داخلية (اختيارية)')}<input maxLength={200} value={note} onChange={event => setNote(event.target.value)} /></label>
+        <div className="owner-form-wide"><button className="owner-primary" disabled={busy || !csrf} type="submit">{tr('Grant access', 'امنح الصلاحية')}</button></div>
+      </form>
+      <section><h2>{tr('Active grants', 'الصلاحيات الفعّالة')}</h2>
+        {grants.length ? <GrantTable rows={grants} action={tr('Revoke', 'ألغِ')} busy={busy} tr={tr} ar={ar} onAction={grant => changeAccess('DELETE', { email: grant.email })} /> : <p>{tr('No active access grants.', 'لا توجد صلاحيات فعّالة.')}</p>}
+      </section>
+      {revoked.length > 0 && <section><h2>{tr('Revoked', 'الملغاة')}</h2>
+        <GrantTable rows={revoked} action={tr('Grant again', 'امنح من جديد')} busy={busy} tr={tr} ar={ar} onAction={grant => changeAccess('POST', { email: grant.email, plan: grant.plan, ...(grant.packId ? { packId: grant.packId } : {}) })} /></section>}
+    </>}
+    <p className="owner-status" role="status" aria-live="polite">{status}</p>
+    {!authorized && <Link className="owner-primary" to={`${prefix}/signin`}>{tr('Sign in', 'تسجيل الدخول')}</Link>}
   </main>;
 }
 
 // "Signed up" matters: a grant does nothing until someone signs in with exactly that address.
-function GrantTable({ rows, action, busy, onAction }) {
-  return <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-    <thead><tr>{['Email', 'Access', 'Signed up', 'Date', 'Note', 'Action'].map(h => <th key={h} style={cellStyle}>{h}</th>)}</tr></thead>
+function GrantTable({ rows, action, busy, onAction, tr, ar }) {
+  return <div className="owner-table-scroll"><table className="owner-table">
+    <thead><tr>{[tr('Email', 'البريد'), tr('Access', 'الصلاحية'), tr('Signed up', 'مسجّل'), tr('Date', 'التاريخ'), tr('Note', 'ملاحظة'), tr('Action', 'إجراء')].map(h => <th key={h} scope="col">{h}</th>)}</tr></thead>
     <tbody>{rows.map(grant => <tr key={grant.email}>
-      <td style={cellStyle}>{grant.email}</td>
-      <td style={cellStyle}>{labels[grant.plan] || grant.plan}</td>
-      <td style={{ ...cellStyle, ...(grant.hasAccount ? {} : { color: '#9c2e35', fontWeight: 600 }) }}>{grant.hasAccount ? 'Yes' : 'No account with this email yet'}</td>
-      <td style={cellStyle}>{new Date(grant.status === 'revoked' && grant.revokedAt ? grant.revokedAt : grant.grantedAt).toLocaleDateString()}</td>
-      <td style={cellStyle}>{grant.note}</td>
-      <td style={cellStyle}><button disabled={busy} type="button" onClick={() => onAction(grant)}>{action}</button></td>
+      <td dir="ltr">{grant.email}</td>
+      <td>{labels[grant.plan]?.[ar ? 1 : 0] || grant.plan}</td>
+      <td className={grant.hasAccount ? undefined : 'is-warning'}>{grant.hasAccount ? tr('Yes', 'نعم') : tr('No account with this email yet', 'لا يوجد حساب بهذا البريد بعد')}</td>
+      <td>{new Date(grant.status === 'revoked' && grant.revokedAt ? grant.revokedAt : grant.grantedAt).toLocaleDateString(ar ? 'ar-OM' : 'en-GB')}</td>
+      <td>{grant.note}</td>
+      <td><button type="button" className="owner-secondary" disabled={busy} onClick={() => onAction(grant)}>{action}</button></td>
     </tr>)}</tbody>
   </table></div>;
 }
-
-const inputStyle = { display: 'block', boxSizing: 'border-box', width: '100%', marginTop: 6, padding: '12px 14px', border: '1px solid #a5a8b2', borderRadius: 8, font: 'inherit' };
-const buttonStyle = { padding: '12px 18px', border: 0, borderRadius: 8, color: '#fff', background: '#25283a', font: 'inherit', fontWeight: 700, cursor: 'pointer' };
-const cellStyle = { padding: '12px 8px', borderBottom: '1px solid #ddd' };

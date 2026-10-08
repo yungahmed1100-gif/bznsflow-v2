@@ -21,9 +21,6 @@
 .ld-main:not([data-tab=chats]) { padding: 24px clamp(16px, 2.5vw, 36px) 40px; }
 .ld-main > .hb-today, .ld-main > .hb-work, .ld-main > .hb-real-estate { max-inline-size: 1440px; margin-inline: auto; }
 .ld-button { min-block-size: 44px; font-size: 13px; }
-.ld-primary { box-shadow: none; }
-.ld-primary:hover:not(:disabled), .ld-primary:active:not(:disabled) { transform: none; box-shadow: none; }
-.ld-button:hover:not(:disabled) { border-color: var(--blue); }
 .ld :focus-visible, .ld-dialog :focus-visible { outline: 2px solid #2f6ea3; outline-offset: 3px; }
 .ld input, .ld select, .ld textarea { max-inline-size: 100%; }
 .ld-field, .ld-toolbar > *, .hb-page-heading > div { min-inline-size: 0; }

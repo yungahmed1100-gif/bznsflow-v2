@@ -329,7 +329,9 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         if (!websiteImportEnabled(env)) throw new PilotError('website_import_unavailable',503);
         const ip = String(req.headers['x-vercel-forwarded-for'] || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0];
         await accountStore('limit_import',{ipHash:createHmac('sha256',secret).update(`blue-import:${ip}`).digest('hex')});
-        const imported = await websiteImport(body.url);
+        // An owner types "bznsflowai.com"; the importer needs https://, so add it when no scheme was given.
+        const address = typeof body.url === 'string' && !/^[a-z][a-z0-9+.-]*:/i.test(body.url.trim()) ? `https://${body.url.trim()}` : body.url;
+        const imported = await websiteImport(address, { summary: true });
         return send(res,200,{...result(),page:{ url:imported.url, text:String(imported.text || '').slice(0,48000), partial:!!imported.partial || String(imported.text || '').length > 48000 }},{vary:'Cookie'});
       } else if (['brain_accept','brain_dismiss'].includes(body.action)) {
         if (typeof body.proposalId !== 'string' || body.proposalId.length > 64) throw new PilotError('proposal_not_found',404);

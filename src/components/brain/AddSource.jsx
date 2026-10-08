@@ -63,7 +63,7 @@ export function AddSource({ b, request, take, act, busy, websiteAvailable, onDon
             onChange={e => { const file = e.target.files?.[0]; e.target.value = ''; if (file) fromFile(file); }} />
         </div>}
         {mode === 'website' && (websiteAvailable ? <form className="brain-add-row" onSubmit={e => { e.preventDefault(); if (url.trim()) fromWebsite(); }}>
-          <label className="brain-grow"><span className="ld-visually-hidden">{b.t('website')}</span><input type="url" inputMode="url" dir="ltr" maxLength={2000} placeholder="https://www.example.com" value={url} onChange={e => setUrl(e.target.value)} disabled={!!busy} aria-label={b.t('website')} /></label>
+          <label className="brain-grow"><span className="ld-visually-hidden">{b.t('website')}</span><input type="text" inputMode="url" autoComplete="url" spellCheck={false} dir="ltr" maxLength={2000} placeholder="www.example.com" value={url} onChange={e => setUrl(e.target.value)} disabled={!!busy} aria-label={b.t('website')} /></label>
           <button type="submit" className="ld-button" disabled={!!busy || !url.trim()}>{b.t('readWebsite')}</button>
         </form> : <p className="brain-add-hint">{b.t('websiteOff')}</p>)}
         {mode === 'text' && <form className="brain-add-col" onSubmit={e => { e.preventDefault(); if (text.trim()) fromText(); }}>

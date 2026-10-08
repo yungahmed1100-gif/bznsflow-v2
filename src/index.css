@@ -49,9 +49,6 @@
 /* Living-website motion layer */
 @import './styles/motion.css';
 
-/* Meet the AI team */
-@import './styles/ai-team.css';
-
 /* Solutions menu + centered layout pass */
 @import './styles/solutions-menu.css';
 
@@ -63,3 +60,6 @@
 
 /* Client logo tape (appended last — new classes only) */
 @import './styles/client-tape.css';
+
+/* Plans without prices and approved client quotes (appended last; new classes only) */
+@import './styles/offers.css';

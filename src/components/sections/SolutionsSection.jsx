@@ -5,14 +5,14 @@ import { waLink } from '../../lib/whatsapp';
 // The menu of tech solutions — BznsFlow as a "business in a box" tech company.
 // The AI front office is one solution among websites, CRM, automation, apps, etc.
 const SOLUTIONS = [
-  { key: 'sol_1', icon: 'bot' },
+  { key: 'sol_1', icon: 'target' },
   { key: 'sol_2', icon: 'globe' },
   { key: 'sol_3', icon: 'bar-chart' },
   { key: 'sol_4', icon: 'link' },
-  { key: 'sol_5', icon: 'brain' },
+  { key: 'sol_5', icon: 'repeat' },
   { key: 'sol_6', icon: 'smartphone' },
-  { key: 'sol_7', icon: 'trending-up' },
-  { key: 'sol_8', icon: 'star' },
+  { key: 'sol_7', icon: 'star' },
+  { key: 'sol_8', icon: 'mail' },
 ];
 
 export function SolutionsSection({ t, trackEvent }) {

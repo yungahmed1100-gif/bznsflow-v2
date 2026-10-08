@@ -34,7 +34,7 @@
 .chat-widget--rtl .chat-launcher { align-self: flex-start; }
 .chat-launcher:hover { transform: translate(calc(-2px * var(--x-sign)), -2px); box-shadow: var(--shadow-lifted); }
 .chat-launcher:active { transform: translateY(-1px) scale(1.0); }
-.chat-launcher:focus-visible { outline: 3px solid rgba(92, 149, 198, 0.5); outline-offset: 3px; }
+.chat-launcher:focus-visible { outline: 2px solid #2f6ea3; outline-offset: 2px; }
 /* When open, the avatar fades out and a gradient backdrop reveals the close × */
 .chat-launcher.is-open { background: var(--text-primary); }
 
@@ -232,7 +232,8 @@
   font-family: inherit; font-size: 0.9rem; line-height: 1.45;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
-.chat-input:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(92,149,198,0.15); }
+.chat-input:focus { outline: none; border-color: #2f6ea3; }
+.chat-input:focus-visible { outline: 2px solid #2f6ea3; outline-offset: 1px; }
 .chat-input::placeholder { color: var(--text-muted); }
 
 .chat-send {

@@ -14,10 +14,10 @@ import { dentalDoc, scriptedModel } from './helpers/layla-conversation.mjs';
 
 const env = { CONVEX_CLOUD_URL: GREEN_CLOUD, BLUE_REVIEW_SERVICE_SECRET: 'a'.repeat(64), OTP_SHARED_SECRET: 'otp-secret-for-tests', LEAD_ENDPOINT: 'https://leads.example.test/x' };
 const unwrap = async r => { const v = await r; if (!v.ok) throw new PilotError(v.reason, 409); return v.value; };
-function setup({ account = null, extract } = {}) {
+function setup({ account = null, extract, websiteImport, env: extraEnv = {} } = {}) {
   const m = convexMemory();
   const model = scriptedModel(() => ({ reply: 'Cleaning is From 15 OMR.', intent: 'prices', sources: ['C1'], reason: 'Price from the catalog.' }));
-  const handler = createReviewHandler({ env, now: m.now, generate: model, ...(extract ? { extract } : {}),
+  const handler = createReviewHandler({ env: { ...env, ...extraEnv }, now: m.now, generate: model, ...(extract ? { extract } : {}), ...(websiteImport ? { websiteImport } : {}),
     store: (operation, args) => unwrap(executeReview(m.ctx, { operation, ...args }, m.now())),
     catalog: (operation, args) => unwrap(executeCatalog(m.ctx, { operation, ...args }, m.now())),
     brain: (operation, args) => unwrap(executeBrain(m.ctx, { operation, ...args }, m.now())),
@@ -86,4 +86,15 @@ test('BznsBrain over the API: a model failure during extraction writes nothing; 
     const res = await staff.call({ action });
     assert.deepEqual([res.statusCode, res.body.reason], [403, 'manager_required'], action);
   }
+});
+
+test('Read website accepts a bare domain by adding https://', async () => {
+  const asked = [];
+  const s = setup({ env: { LAYLA_WEBSITE_IMPORT_ENABLED: 'true', BLUE_WEBSITE_IMPORT_ENABLED: 'true' }, websiteImport: async url => { asked.push(url); return { url, text: 'Cleaning from 15 OMR', partial: false }; } });
+  await s.call();
+  const res = await s.call({ action: 'brain_website', url: 'bznsflowai.com' });
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(asked, ['https://bznsflowai.com']);
+  await s.call({ action: 'brain_website', url: 'https://www.example.com/menu' });
+  assert.equal(asked[1], 'https://www.example.com/menu', 'an address with a scheme is passed through unchanged');
 });

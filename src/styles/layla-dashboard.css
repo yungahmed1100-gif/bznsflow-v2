@@ -68,10 +68,10 @@
 .ld-button { font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--ink); background: var(--paper); color: var(--ink);
   cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; white-space: nowrap; transition: transform 120ms, box-shadow 120ms, background-color 120ms; }
 .ld-button:hover:not(:disabled) { background: var(--paper-ruled); }
-.ld-primary { background: var(--ink); color: var(--paper); box-shadow: calc(4px * var(--x-sign, 1)) 4px 0 var(--ink-2); }
+.ld-primary { background: var(--ink); color: var(--paper); box-shadow: calc(4px * var(--x-sign, 1)) 4px 0 var(--ink); }
 /* Beats host link colour rules (e.g. the setup page) so primary links keep paper text. */
 .ld-button.ld-primary { color: var(--paper); }
-.ld-primary:hover:not(:disabled) { background: var(--ink); transform: translate(calc(-1px * var(--x-sign, 1)), -2px); box-shadow: calc(6px * var(--x-sign, 1)) 6px 0 var(--ink-2); }
+.ld-primary:hover:not(:disabled) { background: var(--ink); transform: translate(calc(-1px * var(--x-sign, 1)), -2px); box-shadow: calc(6px * var(--x-sign, 1)) 6px 0 var(--ink); }
 .ld-primary:active:not(:disabled) { transform: translate(calc(4px * var(--x-sign, 1)), 4px); box-shadow: none; }
 .ld-quiet { border-color: var(--rule-strong); background: transparent; }
 .ld-danger { border-color: var(--coral); color: var(--coral); background: transparent; }

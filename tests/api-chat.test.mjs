@@ -7,6 +7,7 @@ import { extractJson, parseReply }
   from '../api/_lib/llm.js';
 import { detectLang, pickSections, renderHistory, buildSystemMessage }
   from '../api/_lib/prompt.js';
+import { SECTIONS } from '../api/_lib/kb.generated.js';
 
 let pass = 0, fail = 0;
 const t = (name, fn) => {
@@ -151,13 +152,16 @@ t('language from CURRENT message, ignoring Arabic history', () =>
   assert.equal(detectLang('now in english please'), 'en'));
 t('pricing question hits §21', () =>
   assert.ok(pickSections('how much does it cost?').some((s) => s.id === '21')));
-t('invoicing hits §05 and NOT §03 (the "voice" substring bug)', () => {
-  const ids = pickSections('my customers never pay their invoices').map((s) => s.id);
-  assert.ok(ids.includes('05'), 'expected §05');
-  assert.ok(!ids.includes('03'), 'must not pull the sales/voice section');
+t('a Catalyst question reaches the Catalyst section (§01)', () =>
+  assert.ok(pickSections('what does Layla do on WhatsApp?').some((s) => s.id === '01')));
+t('Ascend and Apex questions reach the plans section (§03), which only says "in preparation"', () => {
+  assert.ok(pickSections('tell me about ascend').some((s) => s.id === '03'));
+  assert.ok(pickSections('ما هي باقة أبيكس').some((s) => s.id === '03'));
 });
-t('voice agent still reaches §03', () =>
-  assert.ok(pickSections('do you have a voice agent for calls').some((s) => s.id === '03')));
+t('no knowledge section offers voice, refunds or prices', () => {
+  const text = SECTIONS.map((s) => `${s.en} ${s.ar}`).join(' ');
+  assert.doesNotMatch(text, /voice agent|refund|guarantee|ضمان|OMR \d|\d+ ر\.ع|24\/7/i);
+});
 t('unmatched message falls back to §00 + §20', () => {
   const ids = pickSections('sure').map((s) => s.id);
   assert.deepEqual(ids, ['00', '20']);

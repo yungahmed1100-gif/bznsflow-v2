@@ -8,7 +8,7 @@ const PIPELINE_ICONS = [
   <svg key="b" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>,
   <svg key="c" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   <svg key="d" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
-  <svg key="e" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  <svg key="e" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
 ];
 
 // One industry chip per vertical the two engines serve.
@@ -24,7 +24,7 @@ function PipelineDiagram({ t }) {
   ];
 
   return (
-    <div className="pipeline-diagram" aria-label="AI lead pipeline" role="img">
+    <div className="pipeline-diagram" aria-label={t.hero_pipeline_label} role="img">
       {steps.map((step, i) => (
         <React.Fragment key={i}>
           <div className="pipeline-node" style={{ '--i': i }}>
@@ -149,23 +149,14 @@ export function HeroSection({ t, trackEvent, CALENDAR_URL }) {
           </div>
         </div>
 
-        {/* Reads as a specification line, not a metric display. Two of these
-            three were never measurements -- "always on" and "bilingual" are
-            properties of the service -- so setting all three at display scale
-            dressed a fact up as a statistic. Label leads, value follows. */}
+        {/* What Catalyst does, as a specification line: three properties of the service, not metrics. */}
         <dl className="hero-spec">
-          <div className="hero-spec-row">
-            <dt>{t.stat_1}</dt>
-            <dd className="tabular">{'<'}30s</dd>
-          </div>
-          <div className="hero-spec-row">
-            <dt>{t.stat_2}</dt>
-            <dd className="tabular">24/7</dd>
-          </div>
-          <div className="hero-spec-row">
-            <dt>{t.stat_3}</dt>
-            <dd>AR·EN</dd>
-          </div>
+          {[1, 2, 3].map(n => (
+            <div key={n} className="hero-spec-row">
+              <dt>{t[`stat_${n}`]}</dt>
+              <dd>{t[`stat_${n}_value`]}</dd>
+            </div>
+          ))}
         </dl>
 
         <div className="trust-strip">

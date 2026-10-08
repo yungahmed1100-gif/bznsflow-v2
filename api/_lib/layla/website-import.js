@@ -31,6 +31,52 @@ export function relevantLinks(html,baseUrl,limit=19) {
   }
   return links;
 }
+const decode = s => String(s || '').replace(/&(?:nbsp|amp|lt|gt|quot|apos|#39);/g, m => ({ '&nbsp;': ' ', '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&apos;': "'", '&#39;': "'" }[m])).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+const PRICE_LINE = /(?:OMR|RO|ر\.?\s?ع\.?|AED|SAR|QAR|BHD|KWD|USD|\$|د\.?\s?إ\.?|ر\.?\s?س\.?)\s*\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s*(?:OMR|RO|ريال|درهم|AED|SAR|QAR|BHD|KWD|USD)/i;
+/**
+ * What a search result shows, plus the page's service headings and price lines: the title, the meta (Google)
+ * description, the social-card title and description, h1–h3 headings, and short sentences carrying a price.
+ * Small enough for one quick AI read, and it skips menus, footers and long marketing copy.
+ */
+export function pageSummary(html, limit = 4000) {
+  const body = String(html || '').replace(/<!--[\s\S]*?-->/g, ' ').replace(/<(script|style|noscript|svg)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ');
+  const meta = name => { const m = String(html || '').match(new RegExp(`<meta\\b[^>]*(?:name|property)\\s*=\\s*["']${name}["'][^>]*>`, 'i')); const c = m?.[0].match(/\bcontent\s*=\s*(?:"([^"]*)"|'([^']*)')/i); return decode(c?.[1] ?? c?.[2] ?? ''); };
+  const title = decode(String(html || '').match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]);
+  const lines = [], seen = new Set();
+  const add = (label, text) => { const t = decode(text).slice(0, 300); const key = t.toLowerCase(); if (t.length < 2 || seen.has(key)) return; seen.add(key); lines.push(label ? `${label}: ${t}` : t); };
+  add('Title', title); add('Description', meta('description')); add('Title', meta('og:title')); add('Description', meta('og:description'));
+  const headings = [...body.replace(/<(nav|footer)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ').matchAll(/<h([1-3])\b[^>]*>([\s\S]*?)<\/h\1>/gi)].map(m => m[2]).slice(0, 40);
+  if (headings.length) { lines.push('Headings:'); headings.forEach(h => add('', h)); }
+  // Price lines, paragraph by paragraph (abbreviations like "ر.ع." break sentence splitting): a short paragraph
+  // whole, a long one as a window around each price.
+  const blocks = body.replace(/<(nav|footer)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ').replace(/<h[1-6]\b[^>]*>/gi, '\n\u0001')
+    .replace(/<\/?(p|li|div|h[1-6]|td|tr|section|article|br|dd|dt)\b[^>]*>/gi, '\n').split('\n')
+    .map(b => ({ heading: b.startsWith('\u0001'), text: decode(b.replace('\u0001', '')) })).filter(b => b.text);
+  const snippets = [], seenAmounts = new Set();
+  let heading = '';
+  for (const block of blocks) {
+    if (snippets.length >= 15) break;
+    if (block.heading) { heading = block.text.slice(0, 80); continue; }
+    if (!PRICE_LINE.test(block.text)) continue;
+    // The nearest heading names what the price is for ("Catalyst" above "OMR 40 a month").
+    const named = text => (heading && !text.includes(heading) ? `${heading} — ${text}` : text);
+    // A comparison table repeats amounts already listed with their plan; repeating them would misname them.
+    const amounts = [...block.text.matchAll(new RegExp(PRICE_LINE.source, 'gi'))].map(m => m[0].replace(/[^\d.,]/g, ''));
+    if (amounts.length && amounts.every(a => seenAmounts.has(a))) continue;
+    amounts.forEach(a => seenAmounts.add(a));
+    if (block.text.length <= 220) { snippets.push(named(block.text)); continue; }
+    for (const m of block.text.matchAll(new RegExp(PRICE_LINE.source, 'gi'))) {
+      const from = Math.max(0, m.index - 70), to = Math.min(block.text.length, m.index + m[0].length + 50);
+      let cut = block.text.slice(from, to);
+      if (from > 0) cut = cut.replace(/^\S*\s/, '');
+      if (to < block.text.length) cut = cut.replace(/\s\S*$/, '');
+      snippets.push(named(cut.trim()));
+      if (snippets.length >= 15) break;
+    }
+  }
+  if (snippets.length) { lines.push('Prices:'); snippets.forEach(s => add('', s)); }
+  return lines.join('\n').slice(0, limit);
+}
 export function extractCatalogFacts(text, source='website') {
   const clean=String(text||'').replace(/\s+/g,' ').trim();
   const parts=clean.split(/(?<=[.!؟])\s+|\s*[|•·]\s*/).map(s=>s.trim()).filter(s=>s.length>=4&&s.length<=500);
@@ -54,7 +100,7 @@ async function retrieve(url,address,signal) {
     req.on('error',reject);req.end();
   });
 }
-export async function importWebsite(input,{resolve = lookup,get = retrieve} = {}) {
+export async function importWebsite(input,{resolve = lookup,get = retrieve,summary = false} = {}) {
   if(typeof input !== 'string' || input.length>2000) throw new PilotError('website_url_invalid');
   let url;
   try {url=new URL(input);} catch {throw new PilotError('website_url_invalid');}
@@ -80,6 +126,19 @@ export async function importWebsite(input,{resolve = lookup,get = retrieve} = {}
   }
   const root=await fetchPage(url);
   if(!root.text) throw new PilotError('website_empty',422);
+  // Summary mode (BznsBrain): the title, Google description, headings and price lines of the home page and up to
+  // three service or price pages, capped so the whole site is one short AI read.
+  if(summary){
+    const html=/^text\/html/i.test(root.type);
+    const parts=[html?pageSummary(root.body):root.text.slice(0,4000)],pages=[root.url.href];
+    for(const link of html?relevantLinks(root.body,root.url.href,3):[]){
+      if(signal.aborted)break;
+      try{const page=await fetchPage(link);if(/^text\/html/i.test(page.type)){parts.push(`Page ${page.url.pathname}\n${pageSummary(page.body,1500)}`);pages.push(page.url.href);}}catch{/* a missing page leaves the summary shorter */}
+    }
+    const text=parts.filter(Boolean).join('\n\n').slice(0,4000);
+    if(!text.trim()) throw new PilotError('website_empty',422);
+    return {url:root.url.href,text,partial:false,pages};
+  }
   const pages=[root.url.href],texts=[root.text];let partial=root.partial,total=Buffer.byteLength(root.body||'');
   const links=/^text\/html/i.test(root.type)?relevantLinks(root.body,root.url.href):[];
   for(const link of links){

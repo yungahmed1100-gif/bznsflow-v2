@@ -1,15 +1,16 @@
-.layla-pilot { max-width: 850px; margin: 7rem auto 3rem; padding: 1.5rem; color: #171717; }
+.layla-pilot { max-width: 850px; margin: 2rem auto 3rem; padding: 1.5rem; color: #1a1a1a; }
 .layla-pilot h2 { margin-top: 2rem; }
 .layla-pilot p { margin: 1rem 0; overflow-wrap: anywhere; }
 .layla-pilot label { display: block; margin: 1rem 0; }
-.layla-pilot textarea { display: block; width: 100%; min-height: 5rem; padding: .7rem; color: #171717; background: #fff; border-radius: .4rem; }
-.layla-pilot button { padding: .65rem 1rem; margin: .35rem; background: #ecd68d; color: #171717; border: 1px solid #9c8640; border-radius: .4rem; cursor: pointer; }
-.layla-pilot button:disabled { opacity: .5; cursor: wait; }
+.layla-pilot textarea { display: block; width: 100%; min-height: 5rem; padding: .7rem; color: #1a1a1a; background: #fff; border: 1px solid rgba(0,0,0,.35); border-radius: 4px; }
+.layla-pilot button { font: inherit; font-weight: 600; min-height: 44px; padding: .65rem 1rem; margin-block: .35rem; margin-inline: 0 .5rem; background: #1a1a1a; color: #f6efdf; border: 1px solid #1a1a1a; border-radius: 4px; cursor: pointer; }
+.layla-pilot button:focus-visible { outline: 2px solid #2f6ea3; outline-offset: 2px; }
+.layla-pilot button:disabled { background: #ebe1c9; color: #565e6b; border-color: rgba(0,0,0,.15); cursor: wait; }
 .layla-pilot pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-.layla-pilot [role=alert] { border: 1px solid #ec9999; padding: 1rem; }
-.layla-preview { padding: 1rem; border: 1px solid #777; }
+.layla-pilot [role=alert] { border-inline-start: 3px solid #e16b71; background: #fff; padding: 1rem; }
+.layla-preview { padding: 1rem; border: 1px solid rgba(0,0,0,.15); border-radius: 4px; background: #fff; }
 .layla-steps { display: flex; flex-wrap: wrap; gap: 1.4rem; padding: 1rem 1.4rem; }
-.layla-steps li { color: #aab5c7; padding-right: .6rem; }
-.layla-steps li[aria-current="step"] { color: #fff; font-weight: 700; }
+.layla-steps li { color: #4b5563; padding-inline-end: .6rem; }
+.layla-steps li[aria-current="step"] { color: #1a1a1a; font-weight: 700; }
 .layla-onboarding details { margin: 1.2rem 0; }
 .layla-onboarding summary { cursor: pointer; padding: .8rem 0; }

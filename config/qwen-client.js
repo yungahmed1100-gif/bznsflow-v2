@@ -63,4 +63,5 @@ export const qwenGenerator = (env, fetcher = globalThis.fetch, options = {}) => 
   return messages => qwenChat({ config, messages, fetcher, ...options });
 };
 /** BznsBrain extraction: deterministic, room for a page of proposals, and a longer wait than a chat reply. */
-export const qwenExtractor = (env, fetcher = globalThis.fetch) => qwenGenerator(env, fetcher, { temperature: 0, maxTokens: 1500, timeoutMs: 20000 });
+// Extraction writes a long JSON answer: allow up to 45 s and 3,000 tokens (the API function stops at 60 s).
+export const qwenExtractor = (env, fetcher = globalThis.fetch) => qwenGenerator(env, fetcher, { temperature: 0, maxTokens: 3000, timeoutMs: 45000 });

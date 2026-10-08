@@ -1,109 +1,58 @@
 # BznsFlow
 
-> BznsFlow is a business-in-a-box tech solutions company — done for you. We build the tech that runs and grows your business: an AI front office (receptionist, booking, WhatsApp order-taking, CRM), lead-capture websites, automation and integrations, AI agents, and custom apps. 24/7, in Arabic and English. One promise: stop losing customers to slow replies. Primary contact channel is WhatsApp. Built for businesses worldwide. Proven in Oman.
+> BznsFlow builds and runs AI and automation for small and medium businesses in the GCC, starting in Oman, as a done-for-you service. What we offer today is Catalyst: Layla on WhatsApp and/or Instagram. Layla answers customer inquiries from the business facts the owner approves, asks the owner's qualifying questions, and hands the owner the conversation and the customer record, ready for the next step. The owner can take over any conversation at any time. Arabic first, with English alongside.
 
-BznsFlow is a Meta-verified Tech Provider (WhatsApp Business Platform).
+BznsFlow is a verified Meta Tech Provider (business verification, 2026-09-16).
 
-## The AI team (your front office, done for you)
+## Catalyst (available now)
 
-BznsFlow isn't one bot — it's a team of named AI systems:
-- **Layla** — AI receptionist. Answers every message in seconds on WhatsApp and the website, qualifies, books appointments, takes orders, follows up.
-- **Hatif** — AI voice agent. Answers phone calls, qualifies, and books — no call goes to voicemail.
-- **Haris** — AI security & data guardian. Guards customer data, keeps conversations private, handles compliance.
-- **Hasib** — AI data & reporting analyst. Turns activity into a live dashboard and a daily owner report.
-- **Raqib** — AI operations overseer. Watches the whole system 24/7, routes work, and flags anything that needs a human.
-- **Wisal** — AI outreach & reactivation. Revives dormant leads and old customer lists with smart outbound follow-up.
-- **Saqr** — AI sales closer. Works hot leads through objections to a signed deal.
-- **Rashid** — AI business growth strategist. Reads the numbers and sets the next quarter's plan.
-- **Samira** — AI social media manager. Plans, writes, and publishes the content calendar in Arabic and English.
-- **Adiba** — AI copywriter. Writes the ads, pages, and offers that make people enquire.
-- **Dalil** — AI SEO specialist. Gets the business found in search.
-- **Rasil** — AI email marketing. Runs the newsletters and lifecycle campaigns.
+- Layla on WhatsApp and/or Instagram.
+- Answers only from the business information and catalog the owner approves in BznsBrain; when she does not know, she gives the team's contact instead of guessing.
+- Asks the owner's qualifying questions, one at a time.
+- Every chat and customer record in the owner's dashboard; human takeover at any time.
+- Customer data deletion on request.
 
-## Two engines, one promise
+Layla does not confirm bookings or promise sales. The written agreement for each business sets what is delivered.
 
-Most businesses lose customers the same way: a message arrives, nobody replies fast enough, and the customer goes to whoever answered first. BznsFlow plugs that leak with two AI engines.
+## Plans
 
-- **Lead Engine** — an AI receptionist that replies in seconds, qualifies the lead by intent, books the viewing or appointment, and follows up automatically. For businesses where one lead is worth thousands.
-- **Order Engine** — AI that takes orders, reservations, and FAQs instantly over WhatsApp, confirms automatically, and brings customers back with reminders. For businesses drowning in high-volume messages.
+- **Catalyst** — available now.
+- **Ascend** — in preparation, for answered inquiries that still need follow-up.
+- **Apex** — in preparation, for inquiries spread across staff and branches.
 
-It's done entirely for you — receptionist, booking, order-taking, and CRM, built and run by BznsFlow. No software to learn. Live in days.
+Pricing is shared on the free audit, together with the agreed scope: a one-time setup and a monthly service, with a 90-day minimum. Messaging and AI usage are billed at cost.
 
-## Who it's for
+## Scoped projects beyond Catalyst
 
-### Lead Engine (Track A)
-- **Real estate** — AI receptionist for brokerages and agents: answers portal and WhatsApp leads in seconds, qualifies by budget and area, books viewings. Built for real estate teams.
-- **Dental clinics** — AI receptionist and appointment booking for dental practices: answers patients 24/7, books and confirms appointments, cuts no-shows with reminders. Proven with Mazoon Dental.
-- **Medical clinics** — AI patient receptionist for clinics: answers inquiries, books appointments, and routes urgent cases. Built for medical and healthcare practices.
-- **HVAC** — AI answering service for heating, ventilation, and air-conditioning companies: captures emergency and quote requests instantly, books service calls. Built for HVAC businesses.
-- **Construction & contractors** — AI lead capture for contractors: answers quote requests, qualifies the job, and follows up so no estimate goes cold. Built for construction businesses.
+Quoted separately in writing: customer acquisition systems, reorder journeys, loyalty journeys, WhatsApp and email outreach, websites, CRM and pipeline, automation and integrations, custom apps.
 
-### Order Engine (Track B)
-- **Cake galleries & bakeries** — AI WhatsApp order taking for bakeries: handles cake orders, dates, and prices automatically, confirms, and reminds. Built for cake shops and bakeries.
-- **Coffee & dessert shops** — AI order and reservation bot for cafés: takes orders, answers FAQs, and runs loyalty reminders. Built for coffee shops and dessert businesses.
-- **Restaurants** — AI reservation and WhatsApp ordering for restaurants: takes bookings and orders, confirms automatically, and brings diners back. Built for restaurants.
+## What clients say (approved, verbatim)
 
-Honest scope: BznsFlow is **proven with** named deployments in real estate and dental (below). The other verticals are **built for** the same engine — not yet named case studies.
+- **Mawa Real Estate · مأوى (Muscat, Oman):** "Enquiries reach me already qualified, in the same sheet we already worked from. I stopped asking about budget on the first call — it's there before I dial."
+- **BizBay · mybizbay.com (Bahrain):** "242 enquiries in two months, one missed. I used to answer between meetings. Now every one gets a reply in two seconds and I read the summary at 9pm." (One client, Twilio message logs, 6 June to 4 August 2026.)
+- **Five Gates (Bahrain):** "Years of WhatsApp became one file per client. I stopped digging through threads to remember what we agreed."
+- **Mekka Hijama:** "Our patients speak three languages. They all book the same way now — nobody calls to ask how to book any more."
+- **Reading Jeel (Oman):** "I sell digital books without running any system. The order arrives and the file reaches the customer automatically."
+- **Wild Muscat (Oman):** "The site reads Arabic-first, not translated. That's what we were after."
+- **Royal Fish:** "Guests find the menu and they find the door. In two languages. That's all I needed it to do."
 
-## Proof (Oman)
+Each quote describes the project BznsFlow delivered for that business.
 
-- **Muscat Heights — Real Estate (Oman).** Live BznsFlow AI receptionist: answers property inquiries in seconds, qualifies buyers, and books viewings 24/7 in Arabic and English.
-- **Mazoon Dental Clinic — Dental (Oman).** Live BznsFlow AI front desk: answers patients, books appointments, and sends reminders automatically, around the clock in Arabic and English.
+## Next step
 
-## Sound familiar? (the problems we remove)
+A free audit of your business and customer funnel.
 
-These are the exact problems customers describe, and what BznsFlow does about each:
-
-- "Nobody replied." — A customer messages after hours and books with whoever answered first. BznsFlow replies in seconds, 24/7.
-- "We forgot to call back." — A high-value lead slips through while the team is busy. BznsFlow captures, qualifies, and follows up every inquiry.
-- "We're too busy." — Orders and questions pile up on WhatsApp faster than anyone can type. BznsFlow takes orders and bookings automatically.
-- "They keep asking the same thing." — The team repeats prices, hours, and dates all day. BznsFlow answers the repeat questions instantly.
-
-## How it works (3 steps)
-
-1. **Free Growth Audit** — we map exactly where you're losing customers. No cost, no obligation.
-2. **We build your system** — AI receptionist, booking, and CRM, trained in your voice, in Arabic and English. Done for you, live in days.
-3. **You watch bookings rise** — we track the ROI so you see the revenue, not just the tech, and keep tuning it every month.
-
-## Outcomes
-
-- Reply in seconds, 24/7 — even at 2am, even when you're slammed.
-- Never drop a lead — every inquiry captured, qualified, and followed up.
-- More bookings, fewer no-shows — automated confirmations and reminders.
-- Cheaper than a hire — an AI employee that doesn't sleep, quit, or call in sick.
-
-## Plans (Catch → Convert → Dominate)
-
-Packaged, done-for-you plans with public pricing. Each plan is a monthly subscription plus a one-time setup fee — no annual lock-in. Priced in Omani rial (OMR); USD figures are the pegged equivalent (1 OMR = 2.6008 USD).
-- **Catalyst (Catch)** — OMR 40/month (~USD 104) + OMR 70 one-time setup (~USD 182). Stop customers leaving before anyone replies. Layla on WhatsApp Business API answers, qualifies, books appointments and takes orders 24/7; instant hot-lead alerts; covers one service line. Replaces a part-time receptionist. Team: Layla.
-- **Ascend (Convert)** — OMR 120/month (~USD 312) + OMR 210 one-time setup (~USD 546). Most businesses start here. Everything in Catalyst, plus a done-for-you lead-capture website, inbound voice AI, automated multi-touch nurture, a live dashboard with lead scoring, a daily owner report, and multi-language coverage across several service lines. Team adds: Hatif, Haris, Hasib.
-- **Apex (Dominate)** — OMR 300/month (~USD 780) + OMR 525 one-time setup (~USD 1,365). Everything in Ascend, plus automatic routing across your team, agents tuned per service line or location, outbound reactivation of dormant lists, deal-closing support, a quarterly growth plan, and priority support with white-glove setup. Team adds: Raqib, Wisal, Saqr, Rashid.
-- **Growth Pack (add-on)** — bolts onto any plan and creates demand rather than handling it: social, copy, SEO, and email. Team: Samira, Adiba, Dalil, Rasil.
-- **30-Day Leak Guarantee** — if the system doesn't book the agreed number of qualified appointments in the first 30 days, you get a full refund.
-
-## Markets & languages
-
-Global / worldwide. Proven in Oman. Bilingual by default — fluent Arabic and English, switching automatically based on how customers write.
-
-## Differentiators
-
-- Done-for-you, managed service — no software learning curve, no technical work.
-- Answers in seconds, 24/7, across WhatsApp, web, and calls.
-- An AI receptionist that qualifies, books, takes orders, follows up, and logs to a CRM — not a basic chatbot.
-- Honest proof: named deployments where they exist; "built for" everywhere else.
+- WhatsApp: https://wa.me/201036755930
+- Book the free audit: https://calendar.app.google/fUA7FtAyRHJ9okdk7
+- Email: ahmed@bznsflowai.com
+- Website: https://www.bznsflowai.com
 
 ## Founder
 
 Ahmed Darwish. Founded 2024.
 
-## Contact
-
-- WhatsApp: https://wa.me/201036755930
-- Email: ahmed@bznsflowai.com
-- Book a free growth audit: https://calendar.app.google/KS48NKMVXPugQEhm6
-- Website: https://www.bznsflowai.com
-
 ## Key pages
 
-- [Home / الصفحة الرئيسية (Arabic)](https://www.bznsflowai.com/)
-- [English home](https://www.bznsflowai.com/en)
+- [Home (Arabic)](https://www.bznsflowai.com/)
+- [Home (English)](https://www.bznsflowai.com/en)
+- [Privacy](https://www.bznsflowai.com/en/privacy)

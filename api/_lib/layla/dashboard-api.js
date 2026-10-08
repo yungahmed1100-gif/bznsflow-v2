@@ -19,7 +19,9 @@ import { isHasibFounder } from '../hasib/founder.js';
 const SITE_ORIGIN = env => env.PUBLIC_SITE_ORIGIN || 'https://www.bznsflowai.com';
 const GRAPH = { app: '1388038082832745', version: 'v25.0' };
 const READ_ACTIONS = new Set(['conversations', 'handoffs', 'thread', 'contacts', 'templates', 'campaigns', 'campaign_detail', 'export_chat', 'export_contacts', 'export_account']);
-const BROADCAST_ACTIONS = new Set(['sync_templates', 'campaign_preview', 'campaign_create', 'campaign_cancel']);
+// Sending is behind the broadcast switch. Syncing approved templates only reads them from Meta, so an owner
+// can prepare templates before sending is switched on (Ahmed, 2026-10-09).
+const BROADCAST_ACTIONS = new Set(['campaign_preview', 'campaign_create', 'campaign_cancel']);
 const LIMITS = { import_contacts: 60000, campaign_preview: 40000, campaign_create: 40000 };
 const DEFAULT_BODY_LIMIT = 6000;
 const id = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value) ? value : undefined;

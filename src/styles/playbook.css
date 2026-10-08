@@ -73,9 +73,9 @@
 .playbook-close:hover { color: var(--text-primary); border-color: var(--border-hover); }
 
 .playbook-close:focus-visible {
-  outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(92, 149, 198, 0.22);
+  outline: 2px solid #2f6ea3;
+  outline-offset: 2px;
+  border-color: #2f6ea3;
 }
 
 .playbook-title {
@@ -196,9 +196,9 @@
 
 .playbook-field input:focus-visible,
 .playbook-field select:focus-visible {
-  outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(92, 149, 198, 0.22);
+  outline: 2px solid #2f6ea3;
+  outline-offset: 2px;
+  border-color: #2f6ea3;
 }
 
 /* The phone number is Latin digits and a dial code. Isolated so the leading "+"

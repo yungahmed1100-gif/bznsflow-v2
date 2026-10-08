@@ -7,11 +7,16 @@
 // Pure module shared by the Vercel API (which calls the model) and Convex (which checks again).
 import { BRAIN_SECTIONS } from '../src/lib/bzns-doc.js';
 
-export const CHUNK_CHARS = 6000;
-export const MAX_CHUNKS = 8;
+// Smaller parts keep each Qwen call well inside the API's 60-second limit (a 6,000-character page took ~28 s).
+export const CHUNK_CHARS = 4000;
+export const MAX_CHUNKS = 12;
 const MAX_CATALOG = 40, MAX_SECTIONS = 10, SECTION_MAX = 1500, QUOTE_MIN = 8, QUOTE_MAX = 300;
 const PRICE_TYPES = ['fixed', 'from', 'range', 'free', 'quote', 'recurring', 'unavailable'];
 const CURRENCIES = ['OMR', 'AED', 'SAR', 'USD', 'QAR', 'BHD', 'KWD'];
+// The currency written in the evidence wins over the model's guess (it read "ر.ع." as SAR once).
+const CURRENCY_MARKS = [['OMR', /ر\.?\s?ع\b|ر\.ع|ريال\s*عماني|\bOMR\b|\bR\.?O\.?\b/i], ['SAR', /ر\.?\s?س\b|ر\.س|ريال\s*سعودي|\bSAR\b/i], ['AED', /د\.?\s?إ|درهم|\bAED\b/i],
+  ['QAR', /ر\.?\s?ق\b|ر\.ق|ريال\s*قطري|\bQAR\b/i], ['BHD', /د\.?\s?ب\b|د\.ب|دينار\s*بحريني|\bBHD\b/i], ['KWD', /د\.?\s?ك\b|د\.ك|دينار\s*كويتي|\bKWD\b/i], ['USD', /\$|\bUSD\b|دولار/i]];
+export const writtenCurrency = text => (CURRENCY_MARKS.find(([, re]) => re.test(String(text || ''))) || [])[0];
 export const SECTION_KEYS = Object.freeze(Object.keys(BRAIN_SECTIONS).filter(k => k !== 'contact'));
 const INSTRUCTION = /\b(ignore|disregard|forget)\b[^.\n]{0,30}\b(instructions?|rules?|prompt)\b|\bsystem prompt\b|\byou are now\b|\bact as\b|\bpretend (to be|you)\b|\bnew instructions?\b|تجاهل\s*(التعليمات|القواعد)|انس\s*(التعليمات|القواعد)|أنت الآن/i;
 const MONEY = /(\d[\d.,]*)\s*(omr|r\.?o\.?|rial|riyal|baisa|aed|sar|usd|qar|bhd|kwd|\$|€|£|ر\.?\s?ع|ريال|بيسة|درهم)|(omr|aed|sar|usd|\$|ريال|درهم)\s*\d/i;
@@ -87,13 +92,15 @@ export function verifyProposals(raw, chunk) {
     const evidence = clip(item?.evidence, QUOTE_MAX);
     if (!name) { rejected.push({ reason: 'no_name' }); continue; }
     if (!found(evidence)) { rejected.push({ reason: 'evidence_not_found', name }); continue; }
-    // The name itself must be in the document, not a model paraphrase.
-    if (!foldText(name).split(' ').filter(w => w.length > 2).every(w => source.includes(w))) { rejected.push({ reason: 'name_not_found', name }); continue; }
+    // A name must be in the document, not a model paraphrase. One grounded name is enough: the model may add the
+    // other language's name (an Arabic page's "كاتاليست" with "Catalyst"), and the owner reviews it before anything is live.
+    const inSource = n => !!n && foldText(n).split(' ').filter(w => w.length > 2).every(w => source.includes(w));
+    if (!inSource(nameEn) && !inSource(nameAr)) { rejected.push({ reason: 'name_not_found', name }); continue; }
     let prices = [];
     const p = item?.price;
     if (p && typeof p === 'object') {
       if (!PRICE_TYPES.includes(p.type)) { rejected.push({ reason: 'invalid_price', name }); continue; }
-      const price = { type: p.type, currency: CURRENCIES.includes(String(p.currency || '').toUpperCase()) ? String(p.currency).toUpperCase() : 'OMR', unit: clip(p.unit, 40),
+      const price = { type: p.type, currency: writtenCurrency(evidence) || (CURRENCIES.includes(String(p.currency || '').toUpperCase()) ? String(p.currency).toUpperCase() : 'OMR'), unit: clip(p.unit, 40),
         ...(num(p.amount) !== undefined ? { amount: num(p.amount) } : {}), ...(num(p.minimum) !== undefined ? { minimum: num(p.minimum) } : {}), ...(num(p.maximum) !== undefined ? { maximum: num(p.maximum) } : {}) };
       // Every amount must be written in the evidence: no invented or converted prices.
       const digits = foldText(evidence).replace(/[,\s]/g, '');

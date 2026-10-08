@@ -10,7 +10,7 @@ import { business, dentalDoc, scriptedModel } from './helpers/layla-conversation
 import { executeBrain } from '../convex/brainState.js';
 import { executeCatalog } from '../convex/blueCatalogState.js';
 import { executeReview } from '../convex/reviewState.js';
-import { chunkText, extractChunk, priceLabel, verifyProposals } from '../config/brain-extract.js';
+import { CHUNK_CHARS, MAX_CHUNKS, writtenCurrency, chunkText, extractChunk, priceLabel, verifyProposals } from '../config/brain-extract.js';
 import { validateBehaviour, effectiveBehaviour } from '../config/layla-behaviour.js';
 import { buildMessages, validateReply, parseModelOutput, sourceIndex } from '../config/layla-ai.js';
 
@@ -50,8 +50,8 @@ test('extraction: a model failure or invalid JSON proposes nothing; long text is
   const broken = await extractChunk(DOC, async () => ({ text: 'not json' }));
   assert.deepEqual([broken.ok, broken.reason], [false, 'invalid_json']);
   const { chunks, partial } = chunkText(Array.from({ length: 40 }, (_, i) => `Paragraph ${i} ${'x'.repeat(1500)}`).join('\n\n'));
-  assert.equal(chunks.length, 8); assert.equal(partial, true);
-  assert.ok(chunks.every(c => c.length <= 6000));
+  assert.equal(chunks.length, MAX_CHUNKS); assert.equal(partial, true);
+  assert.ok(chunks.every(c => c.length <= CHUNK_CHARS));
 });
 
 async function setup(name = 'a') {
@@ -246,4 +246,23 @@ test('a behaviour save or a catalog publish while a reply is being written drops
   release();
   assert.deepEqual(await sending, [], 'the reply written under the old settings is never sent');
   assert.equal(b.h.m.table('blueMessages').filter(x => x.direction === 'out').length, 0);
+});
+
+test('a catalog item needs one name from the page; the other language may be added', () => {
+  const page = 'كاتاليست الالتقاط ر.ع. 40 شهرياً + ر.ع. 70 رسوم إعداد لمرة واحدة';
+  const raw = { catalog: [
+    { kind: 'service', nameEn: 'Catalyst', nameAr: 'كاتاليست', price: { type: 'recurring', amount: 40, currency: 'OMR' }, evidence: 'كاتاليست الالتقاط ر.ع. 40 شهرياً' },
+    { kind: 'service', nameEn: 'Ascend', nameAr: 'أسند', price: { type: 'recurring', amount: 40, currency: 'OMR' }, evidence: 'كاتاليست الالتقاط ر.ع. 40 شهرياً' },
+  ], sections: [] };
+  const out = verifyProposals(raw, page);
+  assert.deepEqual(out.catalog.map(e => e.nameAr), ['كاتاليست'], 'the Arabic name on the page grounds the item, English translation kept');
+  assert.equal(out.catalog[0].nameEn, 'Catalyst');
+  assert.deepEqual(out.rejected.map(r => r.reason), ['name_not_found'], 'an item with neither name on the page is still refused');
+});
+
+test('the currency written on the page wins over the model\'s guess', () => {
+  const page = 'كاتاليست الالتقاط ر.ع. 40 شهرياً';
+  const out = verifyProposals({ catalog: [{ kind: 'service', nameAr: 'كاتاليست', price: { type: 'recurring', amount: 40, currency: 'SAR' }, evidence: page }], sections: [] }, page);
+  assert.equal(out.catalog[0].prices[0].currency, 'OMR');
+  assert.deepEqual(['ر.ع. 40', '15 OMR', 'AED 20', '٢٠ ر.س', 'USD 104', 'no currency here'].map(writtenCurrency), ['OMR', 'OMR', 'AED', 'SAR', 'USD', undefined]);
 });

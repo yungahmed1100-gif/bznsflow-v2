@@ -295,11 +295,6 @@ export default function SignIn({ lang = 'ar' }) {
 
 
       <main className="auth-shell" id="main-content">
-        <div className="auth-aurora" aria-hidden="true">
-          <span className="auth-blob auth-blob--a" />
-          <span className="auth-blob auth-blob--b" />
-        </div>
-
         <header className="auth-nav">
           <a className="auth-brand" href={ar ? '/' : '/en'}>
             <img src="/logo.png" alt="BznsFlow" width="40" height="40" />

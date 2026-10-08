@@ -49,7 +49,7 @@ export default function OwnerHome({ lang = 'ar' }) {
   const ar = lang === 'ar', prefix = ar ? '' : '/en';
   return <OwnerGate lang={lang}><main className="owner-home" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
 
-    <nav aria-label={ar ? 'روابط الإدارة' : 'Administration links'}><Link className="owner-brand" to={prefix || '/'}>BznsFlow</Link><Link to={`${ar ? '/en' : ''}/owner`}>{ar ? 'English' : 'العربية'}</Link></nav>
+    <nav aria-label={ar ? 'روابط الإدارة' : 'Administration links'}><Link className="owner-brand" to={prefix || '/'}><img src="/logo.png" alt="" width="32" height="32" />BznsFlow</Link><Link to={`${ar ? '/en' : ''}/owner`} lang={ar ? 'en' : 'ar'}>{ar ? 'English' : 'العربية'}</Link></nav>
     <header className="owner-heading"><p>{ar ? 'مساحة أحمد' : 'Ahmed’s workspace'}</p><h1>{ar ? 'لوحة الإدارة' : 'Admin dashboard'}</h1><p>{ar ? 'إدارة الوصول، مراجعة القطاعات، ومتابعة نشاطك.' : 'Manage access, review the sectors, and open your business.'}</p></header>
     <div className="owner-workspaces">
       <section><div className="owner-section-heading"><h2>{ar ? 'نشاطي' : 'My business'}</h2><span className="owner-label">{ar ? 'بيانات حقيقية' : 'Real workspace'}</span></div><SetupStatus lang={lang} /><Link className="owner-primary" to={`${prefix}/layla/dashboard`}>{ar ? 'فتح نشاطي' : 'Open my business'} <span aria-hidden="true">{ar ? '←' : '→'}</span></Link><div className="owner-setup-links"><Link to={`${prefix}/catalyst/setup`}>{ar ? 'إعداد Catalyst وليلى' : 'Set up Catalyst & Layla'}</Link></div></section>

@@ -112,8 +112,7 @@
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  border: 1px solid var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(92, 149, 198, 0.18);
+  border: 2px solid #2f6ea3;
   opacity: 0;
   pointer-events: none;
   animation: nodeLight 3.6s infinite;
@@ -171,7 +170,7 @@
 .pipeline-arrow-track {
   width: 2px;
   height: 100%;
-  background: linear-gradient(to bottom, var(--border), var(--border-hover));
+  background: var(--border-hover);
   border-radius: 999px;
   position: relative;
   overflow: hidden;
@@ -304,15 +303,12 @@
   letter-spacing: normal;
 }
 
-/* These values are Latin and numeric, so they are isolated and forced LTR.
-   Without this the "<" in "<30s" is reordered by the bidi algorithm under
-   dir="rtl" and renders as "30s>", which states the opposite of the claim. */
+/* The values are words in the page's language, so they follow its direction. */
 .hero-spec dd {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
-  direction: ltr;
   unicode-bidi: isolate;
 }
 

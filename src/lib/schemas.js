@@ -3,12 +3,12 @@ import { SITE } from '../routes-manifest';
 // Per-locale homepage SEO copy (en/ar are the prerendered locales).
 export const HOME_SEO = {
   en: {
-    title: 'AI Receptionist & WhatsApp Automation | BznsFlow',
-    description: 'An AI front office that answers every lead in seconds: receptionist, booking and WhatsApp order-taking, 24/7 in English and Arabic. Done for you.',
+    title: 'Qualified inquiries on WhatsApp & Instagram | BznsFlow',
+    description: 'Catalyst: Layla answers your WhatsApp and Instagram inquiries from the facts you approve, asks your qualifying questions and hands you the chat and customer record. Free audit.',
   },
   ar: {
-    title: 'موظف استقبال ذكي وأتمتة واتساب | BznsFlow',
-    description: 'مكتب استقبال ذكي يرد على كل عميل خلال ثوانٍ — استقبال وحجز مواعيد واستقبال طلبات واتساب، 24/7 بالعربية والإنجليزية. منجز لك بالكامل.',
+    title: 'استفسارات مؤهلة على واتساب وإنستغرام | BznsFlow',
+    description: 'كاتاليست: ليلى ترد على استفسارات واتساب وإنستغرام من معلوماتك المعتمدة، وتسأل أسئلة التأهيل الخاصة بك، وتسلّمك المحادثة وسجل العميل. احجز التدقيق المجاني.',
   },
 };
 
@@ -25,8 +25,8 @@ export function buildSchemas(t, lang) {
     url: SITE,
     logo: `${SITE}/logo.png`,
     description: isAr
-      ? 'BznsFlow شركة حلول تقنية متكاملة لأعمالك — منجزة لك. نبني التقنية التي تُشغّل أعمالك وتُنمّيها: مكتب استقبال ذكي، مواقع لجذب العملاء، نظام CRM، أتمتة وتكاملات، وكلاء ذكاء اصطناعي، وتطبيقات مخصصة. 24/7 بالعربية والإنجليزية. لأعمال حول العالم، ومُثبَت في عُمان.'
-      : 'BznsFlow is a business-in-a-box tech solutions company — done for you. We build the tech that runs and grows your business: an AI front office, lead-capture websites, a CRM, automation and integrations, AI agents, and custom apps. 24/7 in Arabic and English. For businesses worldwide, proven in Oman.',
+      ? 'BznsFlow يبني ويشغّل الذكاء الاصطناعي والأتمتة للأعمال الصغيرة والمتوسطة في الخليج، بدءاً من عُمان. المتاح اليوم: كاتاليست، ليلى على واتساب وإنستغرام، بالعربية والإنجليزية.'
+      : 'BznsFlow builds and runs AI and automation for small and medium businesses in the GCC, starting in Oman. Available today: Catalyst, Layla on WhatsApp and Instagram, in Arabic and English.',
     founder: {
       '@type': 'Person',
       name: 'Ahmed Darwish',
@@ -34,10 +34,10 @@ export function buildSchemas(t, lang) {
       sameAs: ['https://www.linkedin.com/in/ahmed-darwish-723822230/'],
     },
     foundingDate: '2024',
-    areaServed: 'Worldwide',
+    areaServed: ['Oman', 'GCC'],
     knowsAbout: isAr
-      ? ['حلول تقنية للأعمال', 'البرمجيات كخدمة', 'تطوير المواقع', 'تطبيقات مخصصة', 'أتمتة الأعمال', 'تكاملات الأنظمة', 'نظام CRM', 'وكلاء ذكاء اصطناعي', 'مكتب استقبال ذكي', 'أتمتة واتساب', 'مواقع لجذب العملاء', 'التسويق الرقمي', 'إدارة العملاء']
-      : ['business tech solutions', 'business-in-a-box SaaS', 'web development', 'custom apps', 'business automation', 'system integrations', 'CRM', 'AI agents', 'AI front office', 'WhatsApp automation', 'lead-capture websites', 'digital marketing', 'customer management'],
+      ? ['تأهيل الاستفسارات', 'أتمتة واتساب', 'أتمتة إنستغرام', 'الذكاء الاصطناعي للأعمال', 'أتمتة الأعمال', 'جذب العملاء', 'تطوير المواقع', 'نظام CRM']
+      : ['inquiry qualification', 'WhatsApp automation', 'Instagram automation', 'AI for business', 'business automation', 'customer acquisition', 'web development', 'CRM'],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
@@ -67,8 +67,8 @@ export function buildSchemas(t, lang) {
     url: SITE,
     inLanguage: lang,
     description: isAr
-      ? 'موظف استقبال آلي وحجز وأتمتة طلبات واتساب بالذكاء الاصطناعي للأعمال حول العالم — رد فوري وتأهيل وحجز واستقبال طلبات بالعربية والإنجليزية.'
-      : 'AI receptionist, booking, and WhatsApp order automation for businesses worldwide — instant replies, lead qualification, appointment booking, and order taking in Arabic and English.',
+      ? 'استفسارات مؤهلة على واتساب وإنستغرام لأعمال عُمان والخليج، بالعربية والإنجليزية.'
+      : 'Qualified inquiries on WhatsApp and Instagram for businesses in Oman and the GCC, in Arabic and English.',
   };
 
   const software = {
@@ -76,12 +76,12 @@ export function buildSchemas(t, lang) {
     '@type': 'SoftwareApplication',
     name: 'BznsFlow',
     applicationCategory: 'BusinessApplication',
-    applicationSubCategory: isAr ? 'حلول تقنية متكاملة للأعمال' : 'Business-in-a-Box Tech Solutions',
-    operatingSystem: 'Web, WhatsApp, iOS, Android',
+    applicationSubCategory: isAr ? 'تأهيل الاستفسارات على واتساب وإنستغرام' : 'Inquiry qualification on WhatsApp and Instagram',
+    operatingSystem: 'Web, WhatsApp, Instagram',
     url: SITE,
     description: isAr
-      ? 'حلول تقنية متكاملة منجزة لك: مكتب استقبال ذكي، مواقع لجذب العملاء، نظام CRM، أتمتة وتكاملات، وكلاء ذكاء اصطناعي، وتطبيقات مخصصة — 24/7 بالعربية والإنجليزية.'
-      : 'Done-for-you tech solutions: an AI front office, lead-capture websites, a CRM, automation and integrations, AI agents, and custom apps — 24/7 in Arabic and English.',
+      ? 'كاتاليست: ليلى ترد من معلوماتك المعتمدة، وتسأل أسئلة التأهيل الخاصة بك، وتسلّمك المحادثة وسجل العميل مع إمكانية الاستلام في أي وقت.'
+      : 'Catalyst: Layla answers from your approved facts, asks your qualifying questions and hands you the chat and customer record, with human takeover any time.',
     provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
   };
 
@@ -96,53 +96,20 @@ export function buildSchemas(t, lang) {
     ? { '@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: lang, mainEntity: faqItems }
     : null;
 
-  // Two engines, modelled as Service items with serviceType + audience so search
-  // and answer engines can match per-vertical "AI receptionist / order taking" queries.
-  const engines = [
-    {
-      name: isAr ? 'محرك العملاء' : 'Lead Engine',
-      serviceType: isAr ? 'موظف استقبال آلي وتأهيل العملاء بالذكاء الاصطناعي' : 'AI receptionist & lead qualification',
-      description: isAr
-        ? 'موظف استقبال آلي يرد في ثوانٍ، يؤهّل العميل، يحجز المعاينة أو الموعد، ويتابع آلياً — للأعمال التي تعيش على العملاء عالي القيمة.'
-        : 'AI receptionist that replies in seconds, qualifies the lead, books the viewing or appointment, and follows up automatically — for high-value lead businesses.',
-      audience: isAr
-        ? 'العقارات، عيادات الأسنان، العيادات الطبية، التكييف والتبريد، المقاولات'
-        : 'Real estate, dental clinics, medical clinics, HVAC, and construction businesses',
-    },
-    {
-      name: isAr ? 'محرك الطلبات' : 'Order Engine',
-      serviceType: isAr ? 'استقبال الطلبات والحجوزات بالذكاء الاصطناعي عبر واتساب' : 'AI order taking & customer response (WhatsApp)',
-      description: isAr
-        ? 'الذكاء الاصطناعي يستقبل الطلبات والحجوزات والأسئلة فوراً، ويؤكّدها آلياً، ويعيد العملاء بالتذكيرات — للأعمال عالية حجم الطلبات.'
-        : 'AI that takes orders, reservations, and FAQs instantly, confirms automatically, and brings customers back with reminders — for high-volume order businesses.',
-      audience: isAr
-        ? 'معارض الكيك، المقاهي ومحلات الحلويات، المطاعم'
-        : 'Cake galleries, coffee & dessert shops, and restaurants',
-    },
-  ];
-
-  const serviceList = {
+  // The one plan on offer today, as a Service (no price: pricing is shared on the free audit).
+  const catalyst = {
     '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: isAr ? 'محرّكا BznsFlow بالذكاء الاصطناعي' : 'BznsFlow AI Engines',
-    description: isAr ? 'محرّكان بالذكاء الاصطناعي منجزان لك — محرك العملاء ومحرك الطلبات' : 'Two done-for-you AI engines — Lead Engine and Order Engine',
-    url: SITE,
-    numberOfItems: engines.length,
-    itemListElement: engines.map((engine, idx) => ({
-      '@type': 'ListItem',
-      position: idx + 1,
-      item: {
-        '@type': 'Service',
-        name: engine.name,
-        serviceType: engine.serviceType,
-        description: engine.description,
-        provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
-        areaServed: 'Worldwide',
-        audience: { '@type': 'Audience', audienceType: engine.audience },
-      },
-    })),
+    '@type': 'Service',
+    name: isAr ? 'كاتاليست' : 'Catalyst',
+    serviceType: isAr ? 'تأهيل الاستفسارات على واتساب وإنستغرام' : 'Inquiry answering and qualification on WhatsApp and Instagram',
+    description: isAr
+      ? 'ليلى ترد على الاستفسارات من معلومات النشاط المعتمدة، وتسأل أسئلة التأهيل المحددة، وتسلّم صاحب العمل المحادثة وسجل العميل.'
+      : 'Layla answers inquiries from approved business facts, asks configured qualifying questions and hands the owner the conversation and customer record.',
+    provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
+    areaServed: ['Oman', 'GCC'],
+    availableChannel: { '@type': 'ServiceChannel', serviceUrl: SITE, availableLanguage: ['Arabic', 'English'] },
   };
 
-  return [organization, website, software, serviceList, ...(faq ? [faq] : [])];
+  return [organization, website, software, catalyst, ...(faq ? [faq] : [])];
 }
 

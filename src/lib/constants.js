@@ -1,5 +1,5 @@
 // Site-wide shared constants.
-export const CALENDAR_URL = 'https://calendar.app.google/KS48NKMVXPugQEhm6';
+export const CALENDAR_URL = 'https://calendar.app.google/fUA7FtAyRHJ9okdk7';
 export const WHATSAPP_URL = 'https://wa.me/201036755930';
 
 // Second conversion route, offered alongside WhatsApp wherever Layla closes —

@@ -39,3 +39,17 @@ test('reviewed FAQs are validated and kept for Layla’s AI turn',()=>{
   assert.deepEqual(profile.faqs,[{question:'Do you deliver photos?',answer:'Digital delivery in two days.'}]);
   assert.throws(()=>validateReviewProfile({...profile,faqs:[{question:'',answer:'bad'}]}));
 });
+
+test('BznsBrain website summary keeps the title, Google description, headings and whole price lines', async () => {
+  const { pageSummary } = await import('../api/_lib/layla/website-import.js');
+  const html = `<html><head><title>Noor Abayas | Muscat</title><meta name="description" content="Handmade abayas &amp; tailoring in Muscat."><meta property="og:title" content="Noor Abayas | Muscat"></head>
+    <body><nav><h2>Menu link</h2></nav><script>ignore()</script><h1>Abayas made for you</h1><h2>Classic black abaya</h2><p>Long story about our craft. ${'x '.repeat(300)}</p>
+    <p>عباية سوداء كلاسيكية ر.ع. 25 للقطعة. Embroidered abaya from 38.5 OMR.</p><footer><h3>Footer heading</h3></footer></body></html>`;
+  const text = pageSummary(html);
+  assert.match(text, /^Title: Noor Abayas \| Muscat\nDescription: Handmade abayas & tailoring in Muscat\./);
+  assert.equal((text.match(/Noor Abayas \| Muscat/g) || []).length, 1, 'the social-card title is not repeated');
+  assert.match(text, /Abayas made for you/); assert.match(text, /Classic black abaya/);
+  assert.doesNotMatch(text, /Menu link|Footer heading|ignore\(\)|x x x x/, 'no menus, footers, scripts or long copy');
+  assert.match(text, /ر\.ع\. 25/); assert.match(text, /38\.5 OMR/, 'a price keeps its currency and amount together');
+  assert.ok(text.length <= 4000);
+});

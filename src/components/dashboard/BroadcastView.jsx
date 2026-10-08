@@ -8,17 +8,16 @@ import { Dialog } from './Dialog';
 const MANAGER_URL = 'https://business.facebook.com/wa/manage/message-templates/';
 
 export function BroadcastView({ s, overview, onTimezone }) {
-  const enabled = overview.broadcastApiEnabled ?? overview.broadcastEnabled;
+  // Templates are always available to sync and review; only sending waits for the broadcast switch.
   const sending = overview.broadcastEnabled;
-  const templates = usePolling(() => dashboard('templates'), [], { interval: 0, enabled });
-  const campaigns = usePolling(() => dashboard('campaigns'), [], { interval: 10000, enabled });
+  const templates = usePolling(() => dashboard('templates'), [], { interval: 0 });
+  const campaigns = usePolling(() => dashboard('campaigns'), [], { interval: 10000 });
   const [busy, setBusy] = useState(''), [error, setError] = useState(''), [wizard, setWizard] = useState(false), [openId, setOpenId] = useState(null);
   const detail = usePolling(() => dashboard('campaign_detail', { campaignId: openId }), [openId], { interval: 10000, enabled: !!openId });
   const run = async (label, task) => {
     setBusy(label); setError('');
     try { await task(); } catch (e) { setError(s.reason(e.reason)); } finally { setBusy(''); }
   };
-  if (!enabled) return <div className="ld-broadcast"><h1>{s.t('broadcast')}</h1><p className="ld-state">{s.t('broadcastUnavailable')}</p></div>;
   const list = templates.data?.templates || [];
 
   return (

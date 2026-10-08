@@ -35,16 +35,24 @@ async function open(path, width, access = 200) {
   return { page, context, errors, writes };
 }
 try {
-  for (const status of [401, 403, 503]) for (const path of ['/en/owner', '/owner/access']) {
+  for (const status of [401, 403, 503]) for (const path of ['/en/owner', '/en/owner/access']) {
     const { page, context } = await open(path, 320, status);
     await page.getByRole('status').filter({ hasText: /Sign in|cannot|Could not/ }).waitFor();
     assert.equal(await page.locator('form').count(), 0);
     assert.equal(await page.locator('a[href*="/owner/preview/"]').count(), 0);
     await context.close(); checked++;
   }
+  // The Arabic access page is right-to-left with Arabic labels.
+  {
+    const { page, context, errors } = await open('/owner/access', 375);
+    await page.getByRole('heading', { name: 'صلاحيات المنتجات' }).waitFor();
+    assert.equal(await page.locator('main').getAttribute('dir'), 'rtl');
+    await page.getByText('لا يوجد حساب بهذا البريد بعد').waitFor();
+    assert.deepEqual(errors, []); await context.close(); checked++;
+  }
   // Access page: an address nobody signs in with is flagged, and a revoked address stays one press away.
   for (const width of [320, 1280]) {
-    const { page, context, errors, writes } = await open('/owner/access', width);
+    const { page, context, errors, writes } = await open('/en/owner/access', width);
     await page.getByText('No account with this email yet').waitFor();
     await page.getByRole('heading', { name: 'Revoked' }).waitFor();
     await page.getByRole('button', { name: 'Grant again' }).click();

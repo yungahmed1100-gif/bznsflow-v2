@@ -18,39 +18,7 @@
   align-items: center;
   padding: var(--space-6) var(--container-pad) var(--space-12);
   background: var(--bg-primary);
-  overflow-x: hidden; /* contains the blur bleed below, never the page */
-}
-
-/* Ambient wash, matching the home page's .aurora treatment. Static — there is
-   nothing to animate, so nothing to freeze under reduced motion. */
-.auth-aurora {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.auth-blob {
-  position: absolute;
-  display: block;
-  width: min(46rem, 90vw);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.5;
-  mix-blend-mode: multiply;
-}
-
-.auth-blob--a {
-  inset-block-start: -18rem;
-  inset-inline-start: -14rem;
-  background: radial-gradient(circle, rgba(92, 149, 198, 0.28), transparent 68%);
-}
-
-.auth-blob--b {
-  inset-block-end: -22rem;
-  inset-inline-end: -16rem;
-  background: radial-gradient(circle, rgba(81, 164, 123, 0.24), transparent 68%);
+  overflow-x: hidden;
 }
 
 /* ── Local header ───────────────────────────────────────────────────────────
@@ -81,14 +49,14 @@
 }
 
 .auth-brand {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.01em;
 }
 
 .auth-brand img {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-sm);
 }
 
@@ -266,9 +234,9 @@
 
 .auth-field input:focus-visible,
 .auth-field select:focus-visible {
-  outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(92, 149, 198, 0.22);
+  outline: 2px solid #2f6ea3;
+  outline-offset: 2px;
+  border-color: #2f6ea3;
 }
 
 /* The code is six digits and nothing else: tabular figures stop the field
@@ -338,11 +306,12 @@
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--accent-blue);
+  color: #2f6ea3;
   background: none;
   border: none;
   cursor: pointer;
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   transition: color var(--transition);
 }
 
@@ -451,9 +420,9 @@
 /* Matches the input focus ring exactly — a link that behaves like a control
    should be as findable by keyboard as the fields around it. */
 .auth-provider:focus-visible {
-  outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(92, 149, 198, 0.22);
+  outline: 2px solid #2f6ea3;
+  outline-offset: 2px;
+  border-color: #2f6ea3;
 }
 
 .auth-provider[aria-disabled='true'] {
