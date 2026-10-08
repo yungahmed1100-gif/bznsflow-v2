@@ -29,9 +29,15 @@
 | Smoke | 200 for `/`, `/en`, `/layla/dashboard`, `/en/layla/dashboard`, `/llms.txt`; 307 for `/layla/setup`. Live AR and EN home pages: no Outcomes section, no quotes, logo strip and plans present. |
 | Rollback | `npx vercel promote dpl_3q13X59kDivR2AP7F1Wr5m93NKSo --yes`. The Convex change is additive. |
 
+## Follow-up: Convex deployed and sending switched on (2026-10-09)
+
+| Item | Value |
+|---|---|
+| Convex | Ahmed ran `npx convex deploy` from `work/release/ca4d4e5`. Confirmed live: `blueDashboard:execute` accepts `values`. |
+| Convex switch | Ahmed ran `blueCampaign:setBroadcastEnabled {enabled:true}`. Confirmed by reading `blueMessagingSettings`: `broadcast` `enabled: true`; `global` `rolloutMode: live` with smoke evidence. |
+| Vercel switch | `GREEN_BROADCAST_ENABLED=true` (Production), redeployed `ca4d4e5` as `dpl_7CL1EZYrbwWKr1mXYUYsx4uGrmjC`, promoted. Smoke: 200 for `/`, `/en`, `/layla/dashboard`, `/en/layla/dashboard`; an unauthenticated `campaign_create` returns 401. |
+| Brake | `npx convex run blueCampaign:setBroadcastEnabled '{"enabled":false}' --env-file .env.green-convex.local` (it also blocks scheduled and processing campaigns); then `npx vercel env rm GREEN_BROADCAST_ENABLED production` and redeploy. |
+| Not yet seen | A real broadcast delivered. No message has been sent by the agent. Ahmed's first broadcast goes to his own number. |
+
 ## Open
-- **Until the Convex deploy runs**, step 3 of the wizard cannot load its preview: the old validator rejects `values`. Nothing can be sent either way while sending is off.
-- **Sending is still off.** Ahmed's go (2026-10-09) is to switch it on after this release:
-  - set `GREEN_BROADCAST_ENABLED=true` in Vercel production, then redeploy;
-  - run `npx convex run blueCampaign:setBroadcastEnabled '{"enabled":true}'` on `rare-fish-465`.
-- **Brake:** run the same command with `false` (it also stops scheduled campaigns), and remove the env var.
+- The first real broadcast and its delivery receipts (sent → delivered) still need to be seen on production.
