@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { hasibPack, industryCatalog, visibleModules } from '../config/hasib-packs.js';
 import { capabilitiesFor } from '../convex/hasib/capabilities.js';
+import { resolveParameters, recipientValueMap } from '../config/layla-templates.js';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:5199';
 const OUT = process.env.LAYLA_BROWSER_OUT || 'work/layla-dashboard-browser';
@@ -32,12 +33,12 @@ function fixture() {
     'c-k2': [{ id: 'm4', direction: 'in', text: 'كم سعر الشقة في الموالح؟', status: 'received', at: now - 30 * HOUR }, { id: 'm5', direction: 'template', templateName: 'autumn_offer', text: 'Hello محمد, enjoy 10% off.', status: 'failed', errorCode: 131049, at: now - 29 * HOUR }],
     'c-k3': [{ id: 'm6', direction: 'in', text: 'stop', status: 'received', at: now - 3 * HOUR }],
   };
-  return { contacts, messages, campaigns: [], calls: [], takeover: {} };
+  return { contacts, messages, campaigns: [], calls: [], bodies: [], takeover: {}, imported: new Map() };
 }
 
-function api(state, { overviewStatus = 200, overviewReason, founderPreview = false } = {}) {
+function api(state, { overviewStatus = 200, overviewReason, founderPreview = false, broadcastEnabled = true } = {}) {
   // The real overview always carries the plan's capabilities (convex/blueDashboardState.js); this owner is on Ascend.
-  const overview = { ok: true, csrfToken: 'a'.repeat(64), account: { email: 'owner@example.test' }, plan: 'ascend', workspaceRole: 'manager', capabilities: capabilitiesFor('ascend'), dashboardAvailable: true, broadcastEnabled: true, connected: true,
+  const overview = { ok: true, csrfToken: 'a'.repeat(64), account: { email: 'owner@example.test' }, plan: 'ascend', workspaceRole: 'manager', capabilities: capabilitiesFor('ascend'), dashboardAvailable: true, broadcastEnabled, connected: true,
     founderPreview,
     business: { name: 'Blue Studio Properties', sector: 'Real estate', sectorId: 'real-estate' }, integration: { sender: '96890000000', path: 'new_number', status: 'connected', checks: { routing: true, registered: true, path: true }, checkedAt: now },
     messaging: { available: true, active: true, reason: '', broadcastAvailable: true, limits: { perMinute: 10, perDay: 100, usedToday: 7 } }, timezone: 'Asia/Muscat', migrationPending: false, qualification: pack };
@@ -47,6 +48,7 @@ function api(state, { overviewStatus = 200, overviewReason, founderPreview = fal
     updatedAt: c.lastActivityAt, takeover: !!state.takeover[c.conversationId], optout: c.optout, windowOpenUntil: c.windowOpenUntil });
   return async (surface, method, body) => {
     state.calls.push({ surface, method, action: body?.action });
+    if (body?.action) state.bodies.push(body);
     const ok = value => ({ status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), ...value } });
     if (surface === 'dashboard' && method === 'GET') return overviewStatus === 200 ? { status: 200, json: overview } : { status: overviewStatus, json: { ok: false, reason: overviewReason } };
     if (surface === 'messaging') {
@@ -64,7 +66,25 @@ function api(state, { overviewStatus = 200, overviewReason, founderPreview = fal
       case 'contacts': return ok({ items: state.contacts.map(c => ({ ...c, takeover: !!state.takeover[c.conversationId] })), cursor: null, migrationPending: false, qualification: pack });
       case 'templates': return ok({ templates: [template], syncedAt: now, broadcastAvailable: true });
       case 'campaigns': return ok({ items: state.campaigns, cursor: null });
-      case 'campaign_preview': return ok({ eligible: body.contactIds.filter(id => id === 'k2').map(id => ({ contactId: id, name: 'محمد الحارثي', number: '+968 9234 5678' })), excluded: body.contactIds.filter(id => id !== 'k2').map(id => ({ contactId: id, name: 'x', number: '', reason: 'consent_unknown' })), cap: 100, allowance: 250, maxRecipients: 100 });
+      case 'import_contacts': {
+        // Imported numbers become consented contacts; the wizard maps them back by number.
+        const contacts = body.rows.map(r => ({ id: `n${r.waId}`, number: r.waId, name: r.name || `+${r.waId}`, consent: { status: body.consent?.attested ? 'granted' : 'unknown' } }));
+        for (const c of contacts) state.imported.set(c.id, c);
+        return ok({ created: contacts.length, updated: 0, contacts });
+      }
+      case 'campaign_preview': {
+        // The same resolver Convex uses, so the per-contact preview is what would be frozen.
+        const own = recipientValueMap(body.values);
+        const known = id => state.imported.get(id) || state.contacts.find(c => c.id === id);
+        const eligible = [], excluded = [];
+        for (const id of body.contactIds) {
+          const c = known(id), granted = c?.consent?.status === 'granted' && !c.optout;
+          const { parameters, missing } = resolveParameters(template, body.mapping, c, own.get(id));
+          if (!granted || missing.length) excluded.push({ contactId: id, name: c?.name || '', number: c ? `+${c.number}` : '', reason: granted ? 'missing_variable' : 'consent_unknown' });
+          else eligible.push({ contactId: id, name: c.name, number: `+${c.number}`, parameters });
+        }
+        return ok({ eligible, excluded, cap: 100, allowance: 250, maxRecipients: 100, sendingAvailable: broadcastEnabled });
+      }
       case 'campaign_create': state.campaigns.push({ id: 'camp1', name: 'autumn_offer', origin: 'broadcast', status: 'scheduled', reason: null, template: { name: 'autumn_offer', language: 'en', body: template.body }, scheduledAt: now + HOUR, timezone: 'Asia/Muscat', recipientCount: 1, createdAt: now, counts: { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 0 } });
         return ok({ campaign: state.campaigns[0] });
       default: return { status: 400, json: { ok: false, reason: 'invalid_action' } };
@@ -254,21 +274,71 @@ try {
     await page.getByRole('heading', { name: 'Broadcast', exact: true }).waitFor();
     await page.getByRole('button', { name: 'New broadcast' }).click();
     const dialog = page.getByRole('dialog');
+    // Step 1: template, with its variables shown.
     await dialog.getByRole('radio', { name: /autumn_offer/ }).check();
+    assert.equal(await dialog.locator('.ld-var').count(), 2); count++;
     await dialog.getByRole('button', { name: 'Continue' }).click();
-    assert.match(await dialog.locator('.ld-template-preview').textContent(), /Hello .+, enjoy 10% off/); count++;
-    await dialog.getByRole('button', { name: 'Continue' }).click();
+    // Step 2: type a number, upload a list, pick a saved contact; each row has its own {{2}}.
+    await dialog.getByLabel('Phone number').fill('9111 2222');
+    await dialog.getByLabel('Name (optional)').fill('Salim');
+    await dialog.getByRole('button', { name: 'Add number' }).click();
+    await dialog.getByRole('textbox', { name: '{{2}} · Salim' }).fill('20%');
+    await dialog.getByRole('tab', { name: 'Upload list' }).click();
+    await dialog.locator('input[type=file]').setInputFiles({ name: 'list.csv', mimeType: 'text/csv', buffer: Buffer.from('phone,name,{{2}}\n+968 9333 4444,Huda,15%\n') });
+    await dialog.getByRole('button', { name: 'Add 1 to the list' }).click();
+    assert.equal(await dialog.getByRole('textbox', { name: '{{2}} · Huda' }).inputValue(), '15%', 'the {{2}} column fills that variable'); count++;
+    await dialog.getByRole('tab', { name: 'Saved contacts' }).click();
     assert.equal(await dialog.getByRole('checkbox', { name: /Aisha/ }).isDisabled(), true, 'no consent → not selectable'); count++;
     await dialog.getByRole('checkbox', { name: /محمد/ }).check();
-    await dialog.getByRole('button', { name: 'Continue' }).click();
-    await dialog.getByRole('radio', { name: 'Schedule for later' }).check();
-    await dialog.getByRole('button', { name: 'Continue' }).click();
-    await dialog.getByText('1 will receive it').waitFor(); count++;
+    await dialog.getByText('1 rows have an empty variable').waitFor(); count++;
+    assert.equal(await dialog.getByRole('button', { name: 'Continue' }).isDisabled(), true, 'an empty variable blocks sending'); count++;
+    await dialog.getByRole('textbox', { name: '{{2}} · محمد الحارثي' }).fill('10%');
+    assert.equal(await dialog.getByRole('button', { name: 'Continue' }).isDisabled(), true, 'new numbers need the consent record'); count++;
+    await dialog.getByLabel('How did they agree?').selectOption('store');
+    await dialog.getByRole('checkbox', { name: /I confirm each of these customers/ }).check();
     assert.deepEqual(await axe(page), []); count++;
-    await page.screenshot({ path: `${OUT}/broadcast-review-1280.png` });
-    await dialog.getByRole('button', { name: 'Schedule for 1' }).click();
+    await page.screenshot({ path: `${OUT}/broadcast-numbers-1280.png` });
+    await dialog.getByRole('button', { name: 'Continue' }).click();
+    // Step 3: every customer's own message, then send.
+    await dialog.getByText('3 will receive it').waitFor(); count++;
+    const shown = [];
+    for (let i = 0; i < 3; i++) {
+      shown.push(await dialog.locator('.ld-per-contact p').textContent());
+      if (i < 2) await dialog.getByRole('button', { name: 'Next customer' }).click();
+    }
+    assert.deepEqual(shown, ['Hello Salim, enjoy 20% off this week.', 'Hello Huda, enjoy 15% off this week.', 'Hello محمد الحارثي, enjoy 10% off this week.'].map(t => `${t}\n\nTap Stop promotions to opt out`)); count++;
+    assert.deepEqual(await axe(page), []); count++;
+    await page.screenshot({ path: `${OUT}/broadcast-send-1280.png` });
+    await dialog.getByRole('button', { name: 'Send to 3 now' }).click();
     await dialog.getByText('Broadcast saved.').waitFor(); count++;
-    assert.ok(state.calls.some(c => c.action === 'campaign_create')); count++;
+    const sent = state.bodies.find(b => b.action === 'campaign_create');
+    assert.deepEqual(sent.values.map(v => v.values.find(x => x.key === 'body:2').text), ['20%', '15%', '10%']); count++;
+    assert.equal(state.bodies.find(b => b.action === 'import_contacts').consent.source, 'They signed up in store'); count++;
+    await context.close();
+  }
+
+  // Sending off: a broadcast can be built and checked, but Send stays disabled. Arabic, phone width.
+  {
+    const state = fixture();
+    const { page, context } = await openPage(browser, { width: 375, lang: 'ar', path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state, { broadcastEnabled: false }) });
+    await page.getByRole('button', { name: 'رفع قائمة' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('radio', { name: /autumn_offer/ }).check();
+    await dialog.getByRole('button', { name: 'متابعة' }).click();
+    assert.equal(await dialog.getByRole('tab', { name: 'رفع قائمة' }).getAttribute('aria-selected'), 'true', 'Upload list opens on its tab'); count++;
+    await dialog.getByRole('tab', { name: 'جهات محفوظة' }).click();
+    await dialog.getByRole('checkbox', { name: /محمد/ }).check();
+    await dialog.getByRole('textbox', { name: '{{2}} · محمد الحارثي' }).fill('١٠٪');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'numbers step fits 375'); count++;
+    await dialog.locator('.ld-recipient-table').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `${OUT}/broadcast-numbers-ar-375.png` });
+    await dialog.getByRole('button', { name: 'متابعة' }).click();
+    await dialog.getByText('الإرسال غير مفعّل بعد').waitFor(); count++;
+    assert.equal(await dialog.getByRole('button', { name: /إرسال إلى 1 الآن/ }).isDisabled(), true); count++;
+    assert.equal(await page.locator('.ld').getAttribute('dir'), 'rtl'); count++;
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'no page overflow at 375'); count++;
+    assert.deepEqual(await axe(page), []); count++;
+    await page.screenshot({ path: `${OUT}/broadcast-off-ar-375.png`, fullPage: true });
     await context.close();
   }
 

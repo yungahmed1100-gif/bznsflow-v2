@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { sanitizeTemplate, renderTemplate, templateComponents, resolveParameters, cleanParameter, templateSendResult, messagingAllowance, validMapping } from '../config/layla-templates.js';
+import { sanitizeTemplate, renderTemplate, templateComponents, resolveParameters, cleanParameter, templateSendResult, messagingAllowance, validMapping, validRecipientValues } from '../config/layla-templates.js';
 import { zonedLocalToUtc, validTimezone } from '../api/_lib/layla/timezone.js';
 import { runCampaignSend, runCampaignStart } from '../api/_lib/layla/campaign-worker.js';
 import { fetchApprovedTemplates } from '../api/_lib/layla/templates.js';
@@ -105,6 +105,37 @@ test('recipient preview excludes unknown, revoked, deleted and opted-out contact
   assert.equal((await h.campaigns('campaign_preview', { sessionHash: t.sessionHash, templateId: '111', mapping: mapping.slice(0, 1), contactIds: ids, allowance: 250 })).reason, 'invalid_mapping');
   const big = await campaignTenant({ contacts: MAX_RECIPIENTS + 1 });
   assert.equal((await big.create()).reason, 'recipient_limit');
+});
+
+test('each recipient gets their own typed or imported values, with the fallback only for empty cells', async () => {
+  const { h, t, ids, create } = await campaignTenant();
+  const mapping = [{ key: 'header:1', source: 'recipient', value: 'friend' }, { key: 'body:1', source: 'recipient', value: 'there' }, { key: 'body:2', source: 'recipient', value: '' }];
+  const values = [
+    { contactId: ids[0], values: [{ key: 'header:1', text: 'Aisha' }, { key: 'body:1', text: 'Aisha' }, { key: 'body:2', text: '20%' }] },
+    { contactId: ids[1], values: [{ key: 'body:2', text: '5%' }] },
+    { contactId: ids[2], values: [{ key: 'body:1', text: 'Omar' }] },
+  ];
+  const preview = (await h.campaigns('campaign_preview', { sessionHash: t.sessionHash, templateId: '111', mapping, values, contactIds: ids, allowance: 250 })).value;
+  assert.deepEqual(preview.eligible.map(e => e.parameters.map(p => p.text)), [['Aisha', 'Aisha', '20%'], ['friend', 'there', '5%']]);
+  assert.deepEqual(preview.excluded.map(e => [e.contactId, e.reason]), [[ids[2], 'missing_variable']], 'an empty cell with no fallback is never sent');
+  const created = await create({ mapping, values, contactIds: ids.slice(0, 2) });
+  assert.equal(created.ok, true);
+  const frozen = h.m.table('blueCampaignRecipients').map(r => r.parameters.map(p => p.text));
+  assert.deepEqual(frozen, preview.eligible.map(e => e.parameters.map(p => p.text)), 'what preview showed is what is frozen');
+  assert.equal((await h.campaigns('campaign_preview', { sessionHash: t.sessionHash, templateId: '111', mapping, values: [{ contactId: ids[0], values: 'x' }], contactIds: ids, allowance: 250 })).reason, 'invalid_recipients');
+  assert.equal(validRecipientValues([{ contactId: 'a', values: [{ key: 'body:1', text: 'x'.repeat(1025) }] }]), false);
+  assert.equal(validRecipientValues(Array.from({ length: 101 }, () => ({ contactId: 'a', values: [] }))), false);
+});
+
+test('a broadcast can be previewed while sending is off, but not created', async () => {
+  const { h, t, ids, mapping, create } = await campaignTenant();
+  const row = h.m.table('blueMessagingSettings').find(r => r.key === 'broadcast');
+  await h.m.db.patch(row._id, { enabled: false });
+  const preview = await h.campaigns('campaign_preview', { sessionHash: t.sessionHash, templateId: '111', mapping, contactIds: ids, allowance: 250 });
+  assert.equal(preview.ok, true);
+  assert.equal(preview.value.sendingAvailable, false);
+  assert.equal((await create()).reason, 'broadcast_unavailable');
+  assert.equal(h.m.table('blueCampaigns').length, 0);
 });
 
 test('campaign creation is idempotent, freezes the snapshot, and can be cancelled only until processing starts', async () => {

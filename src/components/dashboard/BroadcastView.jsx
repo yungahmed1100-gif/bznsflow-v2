@@ -8,23 +8,31 @@ import { Dialog } from './Dialog';
 const MANAGER_URL = 'https://business.facebook.com/wa/manage/message-templates/';
 
 export function BroadcastView({ s, overview, onTimezone }) {
-  // Templates are always available to sync and review; only sending waits for the broadcast switch.
+  // Templates sync and broadcasts can be built and previewed any time; only the final Send waits for the switch.
   const sending = overview.broadcastEnabled;
   const templates = usePolling(() => dashboard('templates'), [], { interval: 0 });
   const campaigns = usePolling(() => dashboard('campaigns'), [], { interval: 10000 });
-  const [busy, setBusy] = useState(''), [error, setError] = useState(''), [wizard, setWizard] = useState(false), [openId, setOpenId] = useState(null);
+  const [busy, setBusy] = useState(''), [error, setError] = useState(''), [wizard, setWizard] = useState(null), [openId, setOpenId] = useState(null);
   const detail = usePolling(() => dashboard('campaign_detail', { campaignId: openId }), [openId], { interval: 10000, enabled: !!openId });
   const run = async (label, task) => {
     setBusy(label); setError('');
     try { await task(); } catch (e) { setError(s.reason(e.reason)); } finally { setBusy(''); }
   };
   const list = templates.data?.templates || [];
+  const ready = list.some(t => t.sendable);
+  const start = (
+    <div className="ld-actions ld-broadcast-start">
+      <button type="button" className="ld-button ld-primary" onClick={() => setWizard('manual')} disabled={!ready}>{s.t('newBroadcast')}</button>
+      <button type="button" className="ld-button" onClick={() => setWizard('file')} disabled={!ready}>{s.t('uploadList')}</button>
+      <button type="button" className="ld-button" onClick={() => setWizard('manual')} disabled={!ready}>{s.t('typeNumbers')}</button>
+    </div>
+  );
 
   return (
     <div className="ld-broadcast">
       <div className="ld-page-head">
         <div><h1>{s.t('broadcast')}</h1><p className="ld-lede">{s.t('broadcastIntro')}</p></div>
-        <button type="button" className="ld-button ld-primary" onClick={() => setWizard(true)} disabled={!sending || !list.some(t => t.sendable)}>{s.t('newBroadcast')}</button>
+        {start}
       </div>
       {!sending && <p className="ld-help" role="status">{s.t('broadcastSendingOff')}</p>}
       {error && <p className="ld-inline-error" role="alert">{error}</p>}
@@ -32,7 +40,13 @@ export function BroadcastView({ s, overview, onTimezone }) {
       <section className="ld-section" aria-labelledby="ld-campaigns">
         <h2 id="ld-campaigns">{s.t('campaigns')}</h2>
         {campaigns.loading && !campaigns.data ? <p className="ld-state" role="status">{s.t('loading')}</p>
-          : !campaigns.data?.items.length ? <p className="ld-state">{s.t('noCampaigns')}</p>
+          : !campaigns.data?.items.length ? (
+            <div className="ld-broadcast-empty">
+              <p className="ld-state">{s.t('noCampaigns')}</p>
+              <ol className="ld-steps">{['template', 'recipients', 'send'].map((id, i) => <li key={id}><span className="ld-num">{i + 1}</span>{s.t(`step_${id}`)}</li>)}</ol>
+              <p className="ld-help">{ready ? s.t('broadcastSteps') : s.t('noTemplates')}</p>
+            </div>
+          )
           : <ul className="ld-campaigns">
             {campaigns.data.items.map(c => (
               <li key={c.id} className="ld-campaign">
@@ -84,8 +98,8 @@ export function BroadcastView({ s, overview, onTimezone }) {
           </ul>
         )}
       </section>
-      {wizard && <Dialog s={s} title={s.t('newBroadcast')} onClose={() => setWizard(false)} wide>
-        <CampaignWizard s={s} overview={overview} templates={list} onTimezone={onTimezone} onDone={() => { setWizard(false); campaigns.refresh({ quiet: true }); }} />
+      {wizard && <Dialog s={s} title={s.t('newBroadcast')} onClose={() => setWizard(null)} wide>
+        <CampaignWizard s={s} overview={overview} templates={list} tab={wizard} onTimezone={onTimezone} onDone={() => { setWizard(null); campaigns.refresh({ quiet: true }); }} />
       </Dialog>}
     </div>
   );

@@ -68,11 +68,11 @@
 .ld-button { font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--ink); background: var(--paper); color: var(--ink);
   cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; white-space: nowrap; transition: transform 120ms, box-shadow 120ms, background-color 120ms; }
 .ld-button:hover:not(:disabled) { background: var(--paper-ruled); }
-.ld-primary { background: var(--ink); color: var(--paper); box-shadow: calc(4px * var(--x-sign, 1)) 4px 0 var(--ink); }
+.ld-primary { background: var(--ink); color: var(--paper); box-shadow: calc(4px * var(--x-sign)) 4px 0 var(--ink); }
 /* Beats host link colour rules (e.g. the setup page) so primary links keep paper text. */
 .ld-button.ld-primary { color: var(--paper); }
-.ld-primary:hover:not(:disabled) { background: var(--ink); transform: translate(calc(-1px * var(--x-sign, 1)), -2px); box-shadow: calc(6px * var(--x-sign, 1)) 6px 0 var(--ink); }
-.ld-primary:active:not(:disabled) { transform: translate(calc(4px * var(--x-sign, 1)), 4px); box-shadow: none; }
+.ld-primary:hover:not(:disabled) { background: var(--ink); transform: translate(calc(-1px * var(--x-sign)), -2px); box-shadow: calc(6px * var(--x-sign)) 6px 0 var(--ink); }
+.ld-primary:active:not(:disabled) { transform: translate(calc(4px * var(--x-sign)), 4px); box-shadow: none; }
 .ld-quiet { border-color: var(--rule-strong); background: transparent; }
 .ld-danger { border-color: var(--coral); color: var(--coral); background: transparent; }
 .ld-danger:hover:not(:disabled) { background: var(--card); }
@@ -156,7 +156,7 @@
 .ld-menu { position: relative; }
 .ld-menu summary { list-style: none; }
 .ld-menu summary::-webkit-details-marker { display: none; }
-.ld-menu-list { position: absolute; inset-inline-end: 0; top: calc(100% + 6px); background: var(--card); border: 1px solid var(--ink); box-shadow: calc(4px * var(--x-sign, 1)) 4px 0 var(--ink); display: grid; min-width: 150px; z-index: 6; }
+.ld-menu-list { position: absolute; inset-inline-end: 0; top: calc(100% + 6px); background: var(--card); border: 1px solid var(--ink); box-shadow: calc(4px * var(--x-sign)) 4px 0 var(--ink); display: grid; min-width: 150px; z-index: 6; }
 .ld-menu-list button { font: inherit; text-align: start; border: 0; background: none; padding: 10px 14px; cursor: pointer; }
 .ld-menu-list button:hover { background: var(--paper-ruled); }
 .ld-messages { list-style: none; margin: 0; padding: 16px clamp(12px, 3vw, 32px); overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
@@ -240,6 +240,29 @@
 .ld-recipients { max-height: 320px; overflow-y: auto; border-top: 1px solid var(--rule); }
 .ld-manual { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(140px, 1fr) auto; gap: 0 12px; align-items: end; }
 .ld-manual .ld-button { margin-block: 10px; }
+.ld-manual > p { grid-column: 1 / -1; }
+/* Broadcast: three steps, one recipients table, a message per customer. */
+.ld-broadcast-start { flex-wrap: wrap; gap: 8px; }
+.ld-broadcast-empty { display: grid; gap: 10px; padding: 16px; border: 1px dashed var(--rule-strong); border-radius: var(--radius); }
+.ld-broadcast-empty .ld-state { margin: 0; }
+.ld-template-body { display: block; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ld-var { display: inline-block; padding: 0 5px; margin: 0 1px; border-radius: 3px; background: var(--paper-ruled); border: 1px solid var(--rule-strong); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; color: var(--ink); white-space: nowrap; }
+.ld-add-panel { padding: 4px 0 8px; border-bottom: 1px solid var(--rule); }
+.ld-rules { display: grid; gap: 4px; }
+.ld-rule { display: grid; grid-template-columns: 96px minmax(0, 1fr) minmax(0, 1fr); gap: 0 12px; align-items: end; }
+.ld-rule .ld-var { justify-self: start; margin-block-end: 14px; }
+.ld-recipient-table { max-height: 360px; overflow: auto; }
+.ld-recipient-table th[scope=row] { position: sticky; inset-inline-start: 0; background: var(--card); z-index: 1; white-space: nowrap; }
+.ld-recipient-table thead th { position: sticky; top: 0; background: var(--card); z-index: 2; }
+.ld-recipient-table thead th:first-child { inset-inline-start: 0; z-index: 3; }
+.ld-cell { font: inherit; font-size: 13px; width: 100%; min-width: 120px; padding: 6px 8px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--card); color: var(--ink); }
+.ld-cell[aria-invalid=true] { border-color: var(--coral); box-shadow: inset 0 -2px 0 var(--coral); }
+.ld-recipient-table tr.is-missing th[scope=row] { box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--coral); }
+.ld-recipient-table .ld-icon-button { width: 32px; height: 32px; font-size: 18px; }
+.ld-per-contact figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.ld-pager { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.ld-pager .ld-icon-button { width: 32px; height: 32px; font-size: 18px; }
+.ld-icon-button:disabled { opacity: 0.4; cursor: not-allowed; }
 .ld-consent { background: var(--card); padding: 12px 16px; border: 1px solid var(--rule-strong); border-radius: var(--radius); }
 
 /* Dialog (transient overlay: hard 8px shadow, no blur) */
@@ -297,6 +320,8 @@
   .ld-table td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; color: var(--ink-2); }
   .ld-counts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ld-manual { grid-template-columns: minmax(0, 1fr); }
+  .ld-rule { grid-template-columns: minmax(0, 1fr); }
+  .ld-rule .ld-var { margin-block: 8px 0; }
   .ld-button { white-space: normal; }
 }
 @media (max-width: 480px) { .ld-lang { font-size: 12px; } .ld-page-head { align-items: stretch; } }

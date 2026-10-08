@@ -21,8 +21,10 @@ const GRAPH = { app: '1388038082832745', version: 'v25.0' };
 const READ_ACTIONS = new Set(['conversations', 'handoffs', 'thread', 'contacts', 'templates', 'campaigns', 'campaign_detail', 'export_chat', 'export_contacts', 'export_account']);
 // Sending is behind the broadcast switch. Syncing approved templates only reads them from Meta, so an owner
 // can prepare templates before sending is switched on (Ahmed, 2026-10-09).
-const BROADCAST_ACTIONS = new Set(['campaign_preview', 'campaign_create', 'campaign_cancel']);
-const LIMITS = { import_contacts: 60000, campaign_preview: 40000, campaign_create: 40000 };
+// Preview sends nothing, so a broadcast can be built and checked before sending is switched on.
+const BROADCAST_ACTIONS = new Set(['campaign_create', 'campaign_cancel']);
+// Per-recipient values ride on preview and create; Convex's dashboard route accepts up to 256 KiB.
+const LIMITS = { import_contacts: 60000, campaign_preview: 240000, campaign_create: 240000 };
 const DEFAULT_BODY_LIMIT = 6000;
 const id = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value) ? value : undefined;
 const uuid = value => typeof value === 'string' && /^[a-f0-9-]{36}$/.test(value) ? value : undefined;
@@ -30,6 +32,15 @@ const optionalString = (value, n) => typeof value === 'string' && value.length <
 
 export const dashboardAvailable = (env = process.env) => convexConfigured(env) && env.BLUE_DASHBOARD_ENABLED !== 'false';
 export const broadcastAvailable = (env = process.env) => dashboardAvailable(env) && broadcastMessagingEnabled(env);
+
+/** Each recipient's own variable values, typed or imported in the broadcast wizard. */
+function recipientValues(list) {
+  if (list === undefined) return undefined;
+  if (!Array.isArray(list) || list.length > 100) throw new PilotError('invalid_recipients');
+  return list.map(r => ({ contactId: id(r?.contactId) || '', values: (Array.isArray(r?.values) ? r.values : []).slice(0, 20)
+    .filter(v => typeof v?.key === 'string' && typeof v?.text === 'string').map(v => ({ key: v.key.slice(0, 70), text: v.text.slice(0, 1024) })) }))
+    .filter(r => r.contactId);
+}
 
 function importRows(rows) {
   if (!Array.isArray(rows) || !rows.length || rows.length > 100) throw new PilotError('invalid_import');
@@ -116,11 +127,12 @@ export function createDashboardApi({ env = process.env, fetcher = fetch, now = D
         return reply(await store('templates', { sessionHash, actorAccountId: account.id }));
       }
       if (action === 'campaign_preview' || action === 'campaign_create') {
+        const values = recipientValues(body.values);
         const { integration, token, c } = await graphContext(sessionHash);
         const limit = await allowance({ c, integration, token, fetcher });
         const mapping = Array.isArray(body.mapping) ? body.mapping.slice(0, 20).map(m => ({ key: String(m?.key || '').slice(0, 60), source: String(m?.source || '').slice(0, 50), value: String(m?.value ?? '').slice(0, 1024) })) : [];
         const contactIds = Array.isArray(body.contactIds) ? body.contactIds.slice(0, 500).map(id).filter(Boolean) : [];
-        const args = { sessionHash, actorAccountId: account.id, templateId: optionalString(body.templateId, 30) || '', mapping, contactIds, allowance: Number.isFinite(limit) ? Math.min(limit, 1e9) : 1e9 };
+        const args = { sessionHash, actorAccountId: account.id, templateId: optionalString(body.templateId, 30) || '', mapping, contactIds, ...(values ? { values } : {}), allowance: Number.isFinite(limit) ? Math.min(limit, 1e9) : 1e9 };
         if (action === 'campaign_preview') return reply(await store('campaign_preview', args));
         const timezone = body.schedule?.timezone;
         if (!validTimezone(timezone)) throw new PilotError('invalid_timezone');

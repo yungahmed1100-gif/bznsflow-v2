@@ -7,7 +7,7 @@ import { DAY, displayName } from './blueContacts.js';
 import { marketingEligibility } from './blueAudienceState.js';
 import { messagingReady } from './blueMessagingState.js';
 import { formatPhone } from '../src/lib/dashboard/phone.js';
-import { resolveParameters, validMapping, validTemplateRecord } from '../config/layla-templates.js';
+import { resolveParameters, validMapping, validTemplateRecord, validRecipientValues, recipientValueMap } from '../config/layla-templates.js';
 
 export const MAX_RECIPIENTS = 100;
 export const CAMPAIGN_PER_MINUTE = 20;
@@ -83,11 +83,14 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
 
   if (['campaign_preview', 'campaign_create'].includes(a.operation)) {
     if (!integration || !tenant.connected || !messagingReady(row, now)) return fail('connection_not_ready');
-    if (!await broadcastEnabled(ctx)) return fail('broadcast_unavailable');
+    // Preview sends nothing, so an owner can build and check a broadcast before sending is switched on.
+    if (a.operation === 'campaign_create' && !await broadcastEnabled(ctx)) return fail('broadcast_unavailable');
     const template = await ctx.db.query('blueTemplates').withIndex('by_account_template', q => q.eq('accountId', accountId).eq('templateId', String(a.templateId || ''))).unique();
     if (!template || template.integrationId !== integration.id || !template.sendable || template.status !== 'APPROVED' || template.category !== 'MARKETING') return fail('template_not_sendable');
     if (!validMapping(template, a.mapping || [])) return fail('invalid_mapping');
     if (!Array.isArray(a.contactIds) || !a.contactIds.length || a.contactIds.length > 500) return fail('invalid_recipients');
+    if (a.values !== undefined && !validRecipientValues(a.values)) return fail('invalid_recipients');
+    const own = recipientValueMap(a.values);
     const allowance = Number.isFinite(a.allowance) ? a.allowance : 0;
     const remaining = Math.max(0, allowance - await sentInLastDay(ctx, integration.id, now));
     const cap = Math.min(MAX_RECIPIENTS, remaining);
@@ -97,11 +100,11 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
       const reason = marketingEligibility(contact);
       const shown = contact?.state === 'active' ? { contactId: contact._id, name: displayName(contact).name, number: formatPhone(contact.waId) } : { contactId: String(id), name: '', number: '' };
       if (reason) { excluded.push({ ...shown, reason }); continue; }
-      const { parameters, missing } = resolveParameters(template, a.mapping, contact);
+      const { parameters, missing } = resolveParameters(template, a.mapping, contact, own.get(String(id)));
       if (missing.length) { excluded.push({ ...shown, reason: 'missing_variable' }); continue; }
       eligible.push({ ...shown, contact, parameters });
     }
-    const preview = { eligible: eligible.map(({ contact, ...e }) => e), excluded, cap, allowance, maxRecipients: MAX_RECIPIENTS };
+    const preview = { eligible: eligible.map(({ contact, ...e }) => e), excluded, cap, allowance, maxRecipients: MAX_RECIPIENTS, sendingAvailable: await broadcastEnabled(ctx) };
     if (a.operation === 'campaign_preview') return ok(preview);
 
     if (!/^[a-f0-9-]{36}$/.test(a.requestId || '')) return fail('invalid_request');

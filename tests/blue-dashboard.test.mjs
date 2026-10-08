@@ -176,6 +176,9 @@ test('dashboard API requires sign-in, a saved setup, its gate and CSRF, and deri
   // Template sync is not behind the broadcast switch: without a connected WhatsApp it asks for the connection.
   assert.equal((await run({ ...signedIn, reviews: async () => null }, request('POST', { action: 'sync_templates' }))).body.reason, 'connection_not_ready');
   assert.equal((await run(signedIn, request('POST', { action: 'campaign_create' }))).body.reason, 'broadcast_unavailable', 'sending stays behind the switch');
+  // Preview sends nothing, so it is not behind the switch either; it still needs the WhatsApp connection.
+  assert.equal((await run({ ...signedIn, reviews: async () => null }, request('POST', { action: 'campaign_preview', templateId: '1', contactIds: ['c1'] }))).body.reason, 'connection_not_ready');
+  assert.equal((await run(signedIn, request('POST', { action: 'campaign_preview', values: 'nope' }))).body.reason, 'invalid_recipients');
   const overview = await run(signedIn, request('GET'));
   assert.equal(overview.body.broadcastEnabled, false);
   assert.equal(overview.body.founderPreview, false);
