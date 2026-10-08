@@ -35,3 +35,15 @@
 - **Known pre-existing issues:**
   - The Facebook pixel still runs on `/catalyst/setup`.
   - `tests/hasib-dashboard-browser.mjs` fails the same way on the previous commit.
+
+## Follow-up release 2026-10-08: BznsBrain polish
+
+| Item | Value |
+|---|---|
+| Source | `da1043c` on `master`, released at Ahmed's request ("polish ui … then deploy for production"). Frontend only; no Convex change. |
+| Change | Settings › BznsBrain redesign within the Ledger system: header row, setup progress strip, tab counts, ledger catalog with icon actions, segmented tone, Test Layla composer at the bottom. Explanatory copy removed. The founder account's dashboard follows its own plan (previews at `/owner/preview/<pack>`). |
+| Verification | 814/814 unit tests; build; 9/9 browser suites (177 BznsBrain checks, axe, overflow, EN/AR, 320–1440); visual review at 375 and 1440 in EN/AR. |
+| Vercel | `dpl_5rHHxXtfMK5QZaerySh2H5Tfom9M`, promoted. |
+| Smoke | 200 for `/`, `/en`, `/catalyst/setup`, `/en/catalyst/setup`, `/layla/dashboard`, `/en/layla/dashboard`, `/en/owner/access`. 307 for `/layla/setup` (query kept) and `/ascend/setup`. Live `assets/brain-CyQ6rfxT.js` carries the new copy. |
+| Rollback | `npx vercel promote dpl_8PsaFZQhxYH85jC9LUc1iEfgNnsE --yes` |
+| Owner action | Ahmed's account (ahmed@bznsflowai.com) is on Ascend, so it still shows Ascend's Business screen. Granting it Catalyst at `/en/owner/access` shows BznsBrain; grants never delete records. |
