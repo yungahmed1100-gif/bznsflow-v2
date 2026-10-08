@@ -47,3 +47,13 @@
 | Smoke | 200 for `/`, `/en`, `/catalyst/setup`, `/en/catalyst/setup`, `/layla/dashboard`, `/en/layla/dashboard`, `/en/owner/access`. 307 for `/layla/setup` (query kept) and `/ascend/setup`. Live `assets/brain-CyQ6rfxT.js` carries the new copy. |
 | Rollback | `npx vercel promote dpl_8PsaFZQhxYH85jC9LUc1iEfgNnsE --yes` |
 | Owner action | Ahmed's account (ahmed@bznsflowai.com) is on Ascend, so it still shows Ascend's Business screen. Granting it Catalyst at `/en/owner/access` shows BznsBrain; grants never delete records. |
+
+## Follow-up release 2026-10-08: source tabs and website reading
+
+| Item | Value |
+|---|---|
+| Source | `d919a37` on `master`. Add information becomes File · Website (optional) · Text tabs; clearer "nothing new" result; RTL chevron fix. |
+| Config | `LAYLA_WEBSITE_IMPORT_ENABLED=true` added to Vercel production at Ahmed's request ("runit"). The importer allows https on the same domain only, pinned public IPv4, 12 s timeout, rate-limited. |
+| Verification | 814/814 unit tests; build; 9/9 browser suites (183 BznsBrain checks). |
+| Vercel | `dpl_CSgyB7g7dusn4ifZCCg1rvxrbQrs`, promoted. Smoke: 200 for `/`, `/en/layla/dashboard`, `/catalyst/setup`; 307 for `/layla/setup`; live customer surface reports `websiteImportAvailable: true`. |
+| Rollback | `npx vercel promote dpl_5rHHxXtfMK5QZaerySh2H5Tfom9M --yes` (and remove the env var to turn website reading off). |
