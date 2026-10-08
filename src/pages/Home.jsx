@@ -19,7 +19,6 @@ import { ChatWidget }         from '../components/chat/ChatWidget';
 import { ClientTape }        from '../components/sections/ClientTape';
 import { TestimonialsSection } from '../components/sections/TestimonialsSection';
 import { TiersSection }       from '../components/sections/TiersSection';
-import { BenefitsSection }    from '../components/sections/BenefitsSection';
 import { AboutSection }       from '../components/sections/AboutSection';
 import { FAQSection }         from '../components/sections/FAQSection';
 import { Footer }             from '../components/layout/Footer';
@@ -121,7 +120,6 @@ export default function Home({ lang: routeLang = 'ar' }) {
       <main id="main-content">
         <HeroSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
         <ClientTape t={t} />
-        <BenefitsSection t={t} />
         <TiersSection t={t} tiers={activeTiers} lang={lang} trackEvent={trackEvent} />
         <TestimonialsSection t={t} lang={lang} />
         <AboutSection t={t} CALENDAR_URL={CALENDAR_URL} trackEvent={trackEvent} />
