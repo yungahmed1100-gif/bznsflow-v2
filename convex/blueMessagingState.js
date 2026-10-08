@@ -6,12 +6,11 @@ import { applyInbound, applyOptout, linkConversation, recordQuestions, sectorFor
 import { recordDemand } from './hasib/demandState.js';
 import { commerceTurn } from './hasib/laylaOrders.js';
 import { realEstateTurn } from './hasib/realEstateTurn.js';
-import { approvedKnowledge, publishedSections } from './knowledgeSourceState.js';
 import { phrase, langOf } from '../config/layla-tones.js';
 import { byteLength } from '../api/_lib/layla/reply-guard.js';
-import { GENERIC_INTENTS, INSTAGRAM_MAX_BYTES, composeReply, continuationReply, conversationHistory, runawayChat } from './laylaReply.js';
-// "ok", 👍 and "thanks": answered briefly or not at all, never handed to the team.
-const SMALL_TALK=new Set(['ack','thanks']);
+import { INSTAGRAM_MAX_BYTES, conversationHistory, runawayChat } from './laylaReply.js';
+import { REPLY_DEBOUNCE_MS, TOPIC_FOR_INTENT, turnContext } from './laylaTurn.js';
+import { NAME_FIELD, mergeFields, qualificationStatus, validateFieldValue } from '../config/layla-qualification.js';
 // Abuse and cost guards, far below Meta's own limits (WhatsApp ~80 msg/s per number, Instagram
 // ~100 calls/s per account). The minute pace only delays a burst; the daily caps hand chats to the team.
 export const RATE_LIMITS=Object.freeze({perMinute:30,perDay:1000,globalPerDay:10000});
@@ -91,6 +90,19 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     return row ? rowForIntegration(ctx,row,job.integrationId,now) : null;
   }
   const ready = row => messagingReady(row, now);
+  /** The chat's pending reply, if this action still owns it and the chat and business are unchanged. */
+  async function pendingTurn(conversationId,key) {
+    const person=conversationId && await ctx.db.get(conversationId);
+    const pending=person?.pendingReply;
+    if(!pending || pending.key!==key) return {ok:false,reason:'superseded'};
+    if((person.version || 0)!==pending.version || person.takeover || person.optout) return {ok:false,reason:'conversation_changed'};
+    const control=await controls(person.integrationId);
+    const row=await rowForControl(control) || await find('blueReviewSessions','by_integration','integration.id',person.integrationId) || await rowForInstagram(person.integrationId);
+    if(!row?.accountId || String(row.accountId)!==String(person.accountId) || row.integration?.id!==person.integrationId) return {ok:false,reason:'integration_not_ready'};
+    if((row.profileVersion || 1)!==pending.profileVersion) return {ok:false,reason:'profile_changed'};
+    const contact=person.contactId ? await ctx.db.get(person.contactId) : null;
+    return {ok:true,person,row,control,contact,pending};
+  }
   async function queue(row, person, text, key, manual = false, handoff = false, media = undefined, tracking = undefined) {
     const pending = await ctx.db.query('blueMessages').withIndex('by_integration_status',q=>q.eq('integrationId',row.integration.id).eq('status','queued')).take(100);
     const textKeep=await textRetention(ctx,row.accountId,row);
@@ -104,11 +116,11 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     const row=connection && await find('blueReviewSessions','by_hash','sessionHash',connection.sessionHash);
     const bound=instagramRow(row,connection,now);
     // Server-only answer: the sealed credential lets the webhook look up the sender's @username.
-    return ok(bound && row.expiresAt>now ? {integrationId:connection.integrationId,channel:'instagram',app:connection.integration.app,igAccount:connection.igAccount,sessionHash:connection.sessionHash,integration:connection.integration,profile:row.profile,profileVersion:row.profileVersion || 1,catalog:await approvedCatalog(row.accountId,100),knowledge:await approvedKnowledge(ctx,row.accountId),sections:await publishedSections(ctx,row.accountId,row.bznsPublished?.revision)}:null);
+    return ok(bound && row.expiresAt>now ? {integrationId:connection.integrationId,channel:'instagram',app:connection.integration.app,igAccount:connection.igAccount,sessionHash:connection.sessionHash,integration:connection.integration,profile:row.profile,profileVersion:row.profileVersion || 1}:null);
   }
   if(a.operation==='binding') {
     const row=await ctx.db.query('blueReviewSessions').withIndex('by_phone',q=>q.eq('phone',a.phone)).unique();
-    return ok(row?.accountId && row.expiresAt>now && row.integration?.waba===a.waba ? {integrationId:row.integration.id,app:row.integration.app,waba:row.integration.waba,phone:row.integration.phone,sender:row.integration.sender,profile:row.profile,profileVersion:row.profileVersion || 1,catalog:await approvedCatalog(row.accountId,100),knowledge:await approvedKnowledge(ctx,row.accountId),sections:await publishedSections(ctx,row.accountId,row.bznsPublished?.revision)}:null);
+    return ok(row?.accountId && row.expiresAt>now && row.integration?.waba===a.waba ? {integrationId:row.integration.id,app:row.integration.app,waba:row.integration.waba,phone:row.integration.phone,sender:row.integration.sender,profile:row.profile,profileVersion:row.profileVersion || 1}:null);
   }
   if(a.operation==='health_context') {
     const control=await controls(a.integrationId),row=await rowForControl(control);
@@ -271,7 +283,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       if(e.kind!=='message' && e.kind!=='echo') continue;
       const msgKey=`incoming:${a.integrationId}:${e.id}`;
       if(await message(msgKey)) continue;
-      await ctx.db.insert('blueMessages',{key:msgKey,integrationId:a.integrationId,accountId:row.accountId,conversationId:person._id,direction:e.kind==='echo'?'human':'in',...(e.medicalContentWithheld?{reason:'medical_content_withheld'}:{text:e.text}),...(e.kind==='message'&&MESSAGE_TOPICS.has(e.intent)?{topic:e.intent}:{}),at:e.at,expiresAt:now+MESSAGE_RETENTION_MS,textExpiresAt:e.medicalContentWithheld?Number.MAX_SAFE_INTEGER:now+textKeep,status:'received'});
+      await ctx.db.insert('blueMessages',{key:msgKey,integrationId:a.integrationId,accountId:row.accountId,conversationId:person._id,direction:e.kind==='echo'?'human':'in',text:e.text,...(e.kind==='message'&&MESSAGE_TOPICS.has(e.intent)?{topic:e.intent}:{}),at:e.at,expiresAt:now+MESSAGE_RETENTION_MS,textExpiresAt:e.medicalContentWithheld?Number.MAX_SAFE_INTEGER:now+textKeep,status:'received'});
       if(e.kind==='echo') {
         await ctx.db.patch(person._id,{takeover:true,...nativeHandling(person,e,now),updatedAt:now,version:(person.version || 0)+1});
         await stopQueued(a.integrationId,person._id,'native_reply');
@@ -281,75 +293,100 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       const tone=row.profile?.tone, lang=langOf(e.text);
       // Layla's own recent replies in this chat: the first reply welcomes, and a runaway chat stops.
       const history=await conversationHistory(ctx,person._id,now);
-      // A chat that opens with "ok" or "thanks" still gets the welcome and the first question.
-      if(history.firstReply && SMALL_TALK.has(e.intent)) e={...e,intent:'greeting',reply:phrase(tone,'howHelp',lang)};
       let applied=null;
       if(e.intent!=='optout') {
         catalog ??= await approvedCatalog(row.accountId);
-        // Fields are captured even while a person has taken over the chat.
-        applied=await applyInbound(ctx,contact,{text:e.text,intent:e.intent,handoff:!!e.handoff,at:e.at,now,sectorId,catalog,tone});
-        // "Sara" or "Al Mawaleh" answers Layla's own question: thank them and carry on, never hand off.
-        if(applied.answeredOnly && !person.takeover) {
-          // The welcome already greets by name; later, a newly given name is thanked once.
-          const newName=history.firstReply || contact.customerName ? '' : applied.contact.customerName;
-          e={...e,intent:'answer',handoff:false,handoffReason:undefined,reply:continuationReply({tone,lang,newName})};
-        }
+        // Fields are captured even while a person has taken over the chat. The words come from the model;
+        // which detail to ask for next is decided here, one at a time.
+        applied=await applyInbound(ctx,contact,{text:e.text,intent:e.intent || 'ai',handoff:false,at:e.at,now,sectorId,catalog,tone});
       }
       // Paused ingress keeps messages, contacts and opt-outs without creating work to replay.
       const automate=!a.suppressAutomation && rolloutAllows(global,row.accountId,person.number,now) && !!control?.active;
       let commerce=null, realEstate=null;
-      if(automate && applied && !e.medicalContentWithheld) {
+      if(automate && applied) {
         // Hasib's lost-demand report: a product question becomes a PII-free signal (no-op while Hasib is off).
         // Hasib must never stop Layla replying: a failed signal is logged and the message carries on.
         try { await recordDemand(ctx,{accountId:row.accountId,contact:applied.contact,conversationId:person._id,updates:applied.updates,intent:e.intent,at:e.at}); }
         catch(err) { console.error('hasib_demand_failed',err?.message); }
-        // Layla's commerce turn (Ascend): answer from stock, file and confirm the order; the same isolation applies.
+        // Stock, orders and listings stay deterministic: their lines reach the customer word for word.
         try { commerce=await commerceTurn(ctx,{row,person,contact:applied.contact,text:e.text,intent:e.intent,now,secret:a.hashSecret}); }
         catch(err) { console.error('hasib_order_failed',err?.message); }
         try { realEstate=await realEstateTurn(ctx,{row,person,contact:applied.contact,text:e.text,now,secret:a.hashSecret}); }
         catch(err) { console.error('real_estate_turn_failed',err?.message); }
-        // Live stock or a listing answered the price or "unknown" question, so it was never one for the team.
-        if(e.handoffReason==='needs_review' && GENERIC_INTENTS.has(e.intent) && (commerce?.facts || commerce?.ack || realEstate?.facts) && !realEstate?.handoff) e={...e,handoff:false,handoffReason:undefined};
       }
-      if(e.intent==='optout' || e.handoff) await stopQueued(a.integrationId,person._id,e.intent==='optout'?'contact_opted_out':'human_takeover');
-      const version=(person.version || 0)+(e.intent==='optout' || e.handoff?1:0);
-      await ctx.db.patch(person._id,{version,lastInbound:Math.max(person.lastInbound,e.at),updatedAt:now,...(e.intent==='optout'?{optout:true}:{}),...(e.handoff?{takeover:true,handoffState:'open',handoffReason:e.medicalContentWithheld?'clinical_boundary':e.handoffReason || (e.intent==='human'?'customer_requested':'needs_review'),handoffOpenedAt:now,handoffResolvedAt:undefined,handoffResolvedBy:undefined}:{})});
-      // Asking for a person hands the chat to the owner; the owner's waiting reply is that person.
-      if(e.handoff && e.intent!=='optout') await restampOwnerReplies(a.integrationId,person._id,version);
+      if(e.intent==='optout') await stopQueued(a.integrationId,person._id,'contact_opted_out');
+      const version=(person.version || 0)+(e.intent==='optout'?1:0);
+      await ctx.db.patch(person._id,{version,lastInbound:Math.max(person.lastInbound,e.at),updatedAt:now,...(e.intent==='optout'?{optout:true,pendingReply:undefined}:{})});
       if(e.intent==='optout') {await applyOptout(ctx,contact,now);continue;}
       if(!automate) continue;
-      if(e.medicalContentWithheld) {
-        const existing=await ctx.db.query('clinicTasks').withIndex('by_entity',q=>q.eq('entityType','conversation').eq('entityId',String(person._id))).take(20);
-        if(!existing.some(task=>task.status==='open'&&task.kind==='medical_handoff')) await ctx.db.insert('clinicTasks',{accountId:row.accountId,kind:'medical_handoff',entityType:'conversation',entityId:String(person._id),status:'open',reason:'medical_content_withheld',createdAt:now,updatedAt:now});
-        // The safety reply is sent once a day per chat; staff are already on it after that.
-        const safetySent=history.sentToday.includes(e.reply);
-        if(!safetySent&&enabled&&control.active&&ready(row)&&!person.optout&&!contact.optout&&now-e.at<DAY&&e.reply) await queue(row,{...person,version},e.reply,`reply:${a.integrationId}:${e.id}`,false,true);
-        await ctx.db.patch(person._id,{takeover:true,handoffState:'open',handoffReason:'clinical_boundary',handoffOpenedAt:now,updatedAt:now,version});
-        continue;
-      }
-      if(!enabled || !control.active || !ready(row) || person.optout || person.takeover || contact.optout || now-e.at>=DAY || !e.reply) continue;
-      // Safety net, not a conversation limit: a bot loop or flood goes to the team after one notice.
+      if(!enabled || !control.active || !ready(row) || person.optout || person.takeover || contact.optout || now-e.at>=DAY) continue;
+      // Safety net, not a conversation limit: a bot loop or flood stops Layla in this chat after one notice.
       if(runawayChat(history,e.text)) {
         // Stop older queued replies first, then send the one notice under the new version so its fence holds.
         await stopQueued(a.integrationId,person._id,'human_takeover');
-        await ctx.db.patch(person._id,{takeover:true,handoffState:'open',handoffReason:'reply_limit',handoffOpenedAt:now,updatedAt:now,version:version+1});
+        await ctx.db.patch(person._id,{takeover:true,handoffState:'open',handoffReason:'reply_limit',handoffOpenedAt:now,updatedAt:now,version:version+1,pendingReply:undefined});
         await queue(row,{...person,version:version+1},phrase(tone,'replyLimit',lang),`reply:${a.integrationId}:${e.id}`,false,true);
         continue;
       }
-      const known=applied.contact.customerName || applied.contact.ownerName || applied.contact.profileName;
-      const {text:reply,asked}=composeReply({firstReply:history.firstReply,intent:e.intent,handoffReason:e.handoffReason,reply:e.reply,liveFacts:realEstate?.facts || commerce?.facts,
-        ack:commerce?.ack,questions:applied.plan.text,tone,lang,business:row.profile?.businessName,knownName:known,channel:row.integration.channel});
-      await queue(row,{...person,version},reply,`reply:${a.integrationId}:${e.id}`,false,!!e.handoff || !!realEstate?.handoff,undefined,realEstate);
-      if(realEstate?.opportunityId) await ctx.db.patch(realEstate.opportunityId,{replyQueuedAt:now,updatedAt:now});
-      if(realEstate?.handoff) await ctx.db.patch(person._id,{takeover:true,handoffState:'open',handoffReason:'opportunity_review',handoffOpenedAt:now,updatedAt:now,version});
-      // The product photo follows the answer, once per product per chat each day.
-      if(commerce?.photo) {
-        const recent=await ctx.db.query('blueMessages').withIndex('by_conversation_at',q=>q.eq('conversationId',person._id).gte('at',now-DAY)).take(200);
-        if(!recent.some(m=>m.media?.storageId===commerce.photo.storageId)) await queue(row,{...person,version},commerce.photo.caption,`photo:${a.integrationId}:${e.id}`,false,!!e.handoff,{kind:'image',storageId:commerce.photo.storageId});
-      }
-      await recordQuestions(ctx,applied.contact,asked?applied.plan.keys:[],now);
+      // Cost guard: once this number or the platform has used its daily sends, no model call is made.
+      const capped=await Promise.all([[`day:${a.integrationId}:${Math.floor(now/DAY)}`,RATE_LIMITS.perDay],[`global:${Math.floor(now/DAY)}`,RATE_LIMITS.globalPerDay]].map(async([key,max])=>((await find('blueMessageRates','by_key','key',key))?.count || 0)>=max));
+      if(capped.some(Boolean)) continue;
+      // One pending reply per chat: a quick run of messages is answered once, with every fact it produced.
+      const prev=person.pendingReply?.version===version ? person.pendingReply : null;
+      const liveFacts=realEstate?.facts || commerce?.facts;
+      const pending={key:`reply:${a.integrationId}:${e.id}`,inboundKey:msgKey,version,profileVersion:row.profileVersion || 1,inboundAt:e.at,
+        firstReply:prev ? prev.firstReply : history.firstReply,
+        facts:[...(prev?.facts || []),...(liveFacts?[liveFacts]:[])].slice(-4),
+        acks:[...(prev?.acks || []),...(commerce?.ack?[commerce.ack]:[])].slice(-3),
+        photos:[...(prev?.photos || []),...(commerce?.photo?[commerce.photo]:[])].slice(-2),
+        realEstate:realEstate?.opportunityId || realEstate?.handoff ? {opportunityId:realEstate.opportunityId,handoff:!!realEstate.handoff} : prev?.realEstate,
+        askKey:applied?.plan?.keys?.[0] || null,
+        notes:{media:!!(e.media || prev?.notes?.media),tooLong:!!(e.tooLong || prev?.notes?.tooLong)}};
+      await ctx.db.patch(person._id,{pendingReply:pending});
+      if(a.replyFunction) await ctx.scheduler.runAfter(REPLY_DEBOUNCE_MS,a.replyFunction,{conversationId:person._id,key:pending.key});
     }
     return ok(null);
+  }
+  // Layla's AI turn, part 1: everything the model may use for this chat's pending reply.
+  if(a.operation==='reply_context') {
+    const turn=await pendingTurn(a.conversationId,a.key);
+    if(!turn.ok) return ok({skip:turn.reason});
+    const {person,row,contact,pending}=turn;
+    return ok({context:await turnContext(ctx,{row,person,contact,pending,sectorId:sectorFor(row),now}),version:pending.version,profileVersion:pending.profileVersion});
+  }
+  // Part 2: the checked reply goes out only if nothing changed while the model was writing it.
+  if(a.operation==='reply_commit') {
+    const turn=await pendingTurn(a.conversationId,a.key);
+    if(!turn.ok) return ok({skip:turn.reason});
+    const {person,row,control,contact,pending}=turn;
+    await ctx.db.patch(person._id,{pendingReply:undefined});
+    if(!enabled || !control?.active || !ready(row) || contact?.optout || now-pending.inboundAt>=DAY || !rolloutAllows(global,row.accountId,person.number,now)) return ok({skip:'not_allowed'});
+    const sectorId=sectorFor(row);
+    // Details the model heard are proposals: kept only when they pass the sector's own validation.
+    if(contact && a.fields) {
+      const catalog=await approvedCatalog(row.accountId);
+      const updates=Object.entries(a.fields).map(([key,value])=>({key,value:validateFieldValue(sectorId,key,value,catalog)})).filter(u=>u.value).map(u=>({...u,confidence:0.8,source:'customer'}));
+      const merged=mergeFields(contact.fields,updates,now);
+      const name=!contact.customerName && typeof a.fields[NAME_FIELD.key]==='string' && /^[\p{L}][\p{L}' -]{1,39}$/u.test(a.fields[NAME_FIELD.key].trim()) ? a.fields[NAME_FIELD.key].trim() : '';
+      if(merged.changed || name) await ctx.db.patch(contact._id,{...(merged.changed?{fields:merged.fields,qualificationStatus:qualificationStatus(sectorId,merged.fields)}:{}),...(name?{customerName:name}:{}),updatedAt:now});
+    }
+    const inbound=await message(pending.inboundKey);
+    if(inbound && TOPIC_FOR_INTENT[a.intent] && !inbound.topic) await ctx.db.patch(inbound._id,{topic:TOPIC_FOR_INTENT[a.intent]});
+    const owner={...person,version:pending.version};
+    let jobId=null;
+    if(!a.noReply && a.text) {
+      jobId=await queue(row,owner,a.text,pending.key,false,false,undefined,pending.realEstate);
+      if(a.ai) await ctx.db.patch(jobId,{ai:a.ai});
+    }
+    if(pending.realEstate?.opportunityId) await ctx.db.patch(pending.realEstate.opportunityId,{replyQueuedAt:now,updatedAt:now});
+    if(pending.realEstate?.handoff) await ctx.db.patch(person._id,{takeover:true,handoffState:'open',handoffReason:'opportunity_review',handoffOpenedAt:now,updatedAt:now});
+    // A product photo follows the answer, once per product per chat each day.
+    if(pending.photos?.length) {
+      const recent=await ctx.db.query('blueMessages').withIndex('by_conversation_at',q=>q.eq('conversationId',person._id).gte('at',now-DAY)).take(200);
+      for(const [i,photo] of pending.photos.entries()) if(!recent.some(m=>m.media?.storageId===photo.storageId)) await queue(row,owner,photo.caption,`photo:${pending.key}:${i}`,false,false,{kind:'image',storageId:photo.storageId});
+    }
+    if(contact && a.askedField) await recordQuestions(ctx,await ctx.db.get(contact._id),[a.askedField],now);
+    return ok({queued:jobId});
   }
   if(a.operation==='claim') {
     const job=await ctx.db.get(a.jobId);

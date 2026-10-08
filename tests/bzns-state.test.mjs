@@ -16,6 +16,8 @@ Family agency in Muscat.
 ${hours}
 ## Location
 Al Qurum, Muscat
+## Team contact
+WhatsApp +968 9100 2000
 ## FAQ
 Q: Are viewings free?
 A: Yes.
@@ -67,9 +69,9 @@ test('an account publish replaces only its own retrieval sections', async () => 
   assert.equal((await executeReview(m.ctx, { operation: 'bzns_publish', sessionHash: s, markdown: doc('Daily 9 to 9'), version: 1 }, m.now())).ok, true);
   const rows = await m.db.query('blueKnowledgeChunks').collect();
   const own = rows.filter(r => r.tenantId === String(mine)), foreign = rows.filter(r => r.tenantId === String(theirs));
-  assert.equal(own.length, 5); assert.ok(own.every(r => r.revision === 2 && r.source === 'bzns'));
+  assert.equal(own.length, 6); assert.ok(own.every(r => r.revision === 2 && r.source === 'bzns'));
   assert.ok(own.some(r => r.text.includes('Daily 9 to 9')) && !own.some(r => r.text.includes('Sunday')));
-  assert.equal(foreign.length, 5, 'another account is untouched');
+  assert.equal(foreign.length, 6, 'another account is untouched');
   const row = await rowFor(m, s);
   assert.equal(row.profileVersion, 2); assert.equal(row.bznsPublished.revision, 2);
 });
@@ -88,7 +90,7 @@ test('Layla reads the published sections by revision, however much other knowled
   assert.equal((await executeReview(m.ctx, { operation: 'bzns_publish', sessionHash: s, markdown: doc(), version: 0 }, m.now())).ok, true);
   const row = await rowFor(m, s);
   const sections = await publishedSections(m.ctx, mine, row.bznsPublished.revision);
-  assert.equal(sections.length, 5);
+  assert.equal(sections.length, 6);
   assert.ok(sections.every(x => x.heading && x.body && !x.body.startsWith('#')), 'heading line stripped from the body');
   assert.deepEqual(await publishedSections(m.ctx, mine, undefined), [], 'nothing published, nothing quoted');
 });

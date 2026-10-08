@@ -1,4 +1,7 @@
-// Layla's three built-in styles. Tone changes only the connecting sentences:
+// Layla's three built-in styles. The model writes her replies in the chosen style (config/layla-ai.js);
+// the lines kept here are the few that stay exact: the honest fallback, the team pointer, the
+// flood notice, the lead question, and the stock, order and listing facts.
+// Tone changes only the connecting sentences:
 // owner facts (profile text, FAQ answers, catalog, stock, prices, listings) and
 // safety copy are never reworded. `informative` is the default and keeps the
 // wording Layla used before styles existed, apart from `unknown`, which no
@@ -19,13 +22,10 @@ export const toneOf = value => (TONE_IDS.includes(value) ? value : DEFAULT_TONE)
 const P = {
   informative: {
     en: {
-      greeting: 'I’m Layla, the virtual assistant for {business}. How can I help?',
       welcome: 'Hello{customer}, I’m Layla from {business}.',
-      handoffInbox: 'I’ll leave this conversation for our team to follow up here.',
-      handoffContact: 'You can speak with our team directly.',
-      contactSuffix: ' You can contact our team: {contact}',
-      disabled: 'Our team will arrange this booking with you and confirm it here shortly.',
-      unknown: 'I don’t have confirmed information about that yet. Our team will reply here shortly.',
+      teamLater: 'Our team will get back to you.',
+      contactSuffix: 'Please contact our team directly: {contact}',
+      unknown: 'I don’t have confirmed information about that.',
       askMore: 'To help you further, could you share {list}?',
       orderReceived: 'Order #{number} received — the team will confirm availability and the total shortly.',
       orderConfirmed: 'Order #{number} confirmed — {items}, {total}. We’ll message you about delivery or pickup.',
@@ -33,24 +33,13 @@ const P = {
       inStock: '{name} — in stock · {price}',
       available: '{name} — available in {options} · {price}',
       propertyNoMatch: 'The team will check suitable properties and return with confirmed details.',
-      negotiation: 'Our team handles pricing questions like this one and will reply here shortly.',
-      abuse: 'I’m here to help with questions about {business}. I’ve passed this conversation to our team.',
-      media: 'Thanks, I’ve received your message. Our team will review it and reply here.',
-      tooLong: 'Thanks for the details. Our team will read your message and reply here.',
-      adviceBoundary: 'I can’t give legal or financial advice here. Our team will follow up with you directly.',
       replyLimit: 'Our team will take it from here and reply shortly.',
-      thanks: 'Thank you{customer}.',
-      howHelp: 'How can I help you today?',
-      youreWelcome: 'You’re welcome. If you need anything else, just message here.',
     },
     ar: {
-      greeting: 'أنا ليلى، المساعدة الافتراضية لدى {business}. كيف أساعدك؟',
       welcome: 'أهلاً{customer}، معك ليلى من {business}.',
-      handoffInbox: 'سأترك هذه المحادثة لفريقنا للمتابعة هنا.',
-      handoffContact: 'أفهمك. يمكنك التواصل مع الفريق مباشرة.',
-      contactSuffix: ' للتواصل مع الفريق: {contact}',
-      disabled: 'سيرتب فريقنا الحجز معك ويؤكده هنا قريباً.',
-      unknown: 'لا تتوفر لدي معلومة مؤكدة عن ذلك بعد. سيرد عليك فريقنا هنا قريباً.',
+      teamLater: 'سيتواصل معك فريقنا.',
+      contactSuffix: 'يرجى التواصل مع فريقنا مباشرة: {contact}',
+      unknown: 'لا تتوفر لدي معلومة مؤكدة عن ذلك.',
       askMore: 'حتى نساعدك بشكل أفضل، ممكن تخبرنا {list}؟',
       orderReceived: 'تم استلام طلبك رقم {number} — سيؤكد الفريق التوفّر والمجموع قريباً.',
       orderConfirmed: 'تم تأكيد طلبك رقم {number} — {items}، {total}. سنراسلك بخصوص التوصيل أو الاستلام.',
@@ -58,26 +47,15 @@ const P = {
       inStock: '{name} — في المخزون · {price}',
       available: '{name} — المتوفر: {options} · {price}',
       propertyNoMatch: 'سيتحقق الفريق من العقارات المناسبة ويعود إليك بالمعلومات المؤكدة.',
-      negotiation: 'يتولى فريقنا أسئلة الأسعار مثل هذا السؤال وسيرد عليك هنا قريباً.',
-      abuse: 'أنا هنا للمساعدة في أسئلتك عن {business}. حوّلت المحادثة لفريقنا.',
-      media: 'شكراً، وصلتني رسالتك. سيراجعها فريقنا ويرد عليك هنا.',
-      tooLong: 'شكراً على التفاصيل. سيقرأ فريقنا رسالتك ويرد عليك هنا.',
-      adviceBoundary: 'لا أستطيع تقديم استشارات قانونية أو مالية هنا. سيتواصل معك فريقنا مباشرة.',
       replyLimit: 'سيتابع فريقنا معك من هنا ويرد قريباً.',
-      thanks: 'شكراً{customer}.',
-      howHelp: 'كيف أساعدك اليوم؟',
-      youreWelcome: 'العفو. إذا احتجت أي شيء آخر، راسلنا هنا.',
     },
   },
   sharp: {
     en: {
-      greeting: 'Layla, {business}. How can I help?',
       welcome: 'Hello{customer}. Layla, {business}.',
-      handoffInbox: 'Our team will follow up in this chat.',
-      handoffContact: 'Our team can help you directly.',
-      contactSuffix: ' Team contact: {contact}',
-      disabled: 'Our team will confirm the booking here.',
-      unknown: 'I don’t have confirmed information on that. Our team will reply here.',
+      teamLater: 'Our team will get back to you.',
+      contactSuffix: 'Contact our team directly: {contact}',
+      unknown: 'I don’t have confirmed information on that.',
       askMore: 'To proceed, please share {list}.',
       orderReceived: 'Order #{number} received. The team will confirm availability and total shortly.',
       orderConfirmed: 'Order #{number} confirmed: {items}, {total}. Delivery or pickup details to follow.',
@@ -85,24 +63,13 @@ const P = {
       inStock: '{name} — in stock · {price}',
       available: '{name} — options: {options} · {price}',
       propertyNoMatch: 'The team will check matching properties and confirm details.',
-      negotiation: 'Pricing decisions are handled by our team. They’ll reply here.',
-      abuse: 'I can help with questions about {business}. This chat is now with our team.',
-      media: 'Received. Our team will review and reply here.',
-      tooLong: 'Received. Our team will review your message and reply here.',
-      adviceBoundary: 'I can’t give legal or financial advice. Our team will follow up directly.',
       replyLimit: 'Our team will continue from here.',
-      thanks: 'Noted{customer}.',
-      howHelp: 'How can I help?',
-      youreWelcome: 'You’re welcome.',
     },
     ar: {
-      greeting: 'ليلى، {business}. كيف أساعدك؟',
       welcome: 'أهلاً{customer}. معك ليلى، {business}.',
-      handoffInbox: 'سيتابع فريقنا معك في هذه المحادثة.',
-      handoffContact: 'يمكن لفريقنا مساعدتك مباشرة.',
-      contactSuffix: ' تواصل الفريق: {contact}',
-      disabled: 'سيؤكد فريقنا الحجز هنا.',
-      unknown: 'لا تتوفر لدي معلومة مؤكدة عن ذلك. سيرد فريقنا هنا.',
+      teamLater: 'سيتواصل معك فريقنا.',
+      contactSuffix: 'تواصل مع فريقنا مباشرة: {contact}',
+      unknown: 'لا معلومة مؤكدة لدي عن ذلك.',
       askMore: 'للمتابعة نحتاج معرفة {list}.',
       orderReceived: 'تم استلام الطلب رقم {number}. سيؤكد الفريق التوفّر والمجموع قريباً.',
       orderConfirmed: 'تم تأكيد الطلب رقم {number}: {items}، {total}. ستصلك تفاصيل التوصيل أو الاستلام.',
@@ -110,26 +77,15 @@ const P = {
       inStock: '{name} — متوفر · {price}',
       available: '{name} — الخيارات: {options} · {price}',
       propertyNoMatch: 'سيتحقق الفريق من العقارات المطابقة ويؤكد التفاصيل.',
-      negotiation: 'قرارات الأسعار يتولاها فريقنا. سيرد عليك هنا.',
-      abuse: 'أستطيع المساعدة في الأسئلة عن {business}. المحادثة الآن مع فريقنا.',
-      media: 'تم الاستلام. سيراجع فريقنا ويرد هنا.',
-      tooLong: 'تم الاستلام. سيراجع فريقنا رسالتك ويرد هنا.',
-      adviceBoundary: 'لا أستطيع تقديم استشارات قانونية أو مالية. سيتابع فريقنا معك مباشرة.',
       replyLimit: 'سيكمل فريقنا معك من هنا.',
-      thanks: 'شكراً{customer}.',
-      howHelp: 'كيف أساعدك؟',
-      youreWelcome: 'العفو.',
     },
   },
   sweet: {
     en: {
-      greeting: 'Hi! I’m Layla from {business} 😊 How can I help you today?',
       welcome: 'Hi{customer}! I’m Layla from {business} 😊',
-      handoffInbox: 'I’ve asked our team to jump in, they’ll reply right here.',
-      handoffContact: 'Our lovely team can help you directly.',
-      contactSuffix: ' You can reach our team here: {contact}',
-      disabled: 'Lovely! Our team will arrange your booking and confirm it right here 😊',
-      unknown: 'I’m not sure about that one, so I’ve asked our team. They’ll reply right here 💛',
+      teamLater: 'Our team will get back to you very soon 💛',
+      contactSuffix: 'Our lovely team will be happy to help, just reach them directly: {contact}',
+      unknown: 'I’m not sure about that one.',
       askMore: 'So I can help you better, could you tell me {list}? 🙏',
       orderReceived: 'Yay, order #{number} is in! The team will confirm availability and the total very soon.',
       orderConfirmed: 'Order #{number} is confirmed: {items}, {total}. We’ll message you about delivery or pickup 😊',
@@ -137,24 +93,13 @@ const P = {
       inStock: '{name} — in stock · {price}',
       available: '{name} — available in {options} · {price}',
       propertyNoMatch: 'Our team will look for the right properties for you and come back with confirmed details.',
-      negotiation: 'Let me pass this to our team, they’re the best people to help with pricing 😊',
-      abuse: 'I’m here to help with anything about {business}. I’ve passed this chat to our team.',
-      media: 'Thank you! I’ve got your message and our team will take a look and reply here 😊',
-      tooLong: 'Thank you for all the details! Our team will read it and reply here.',
-      adviceBoundary: 'I’m not able to give legal or financial advice, but our team will follow up with you directly.',
       replyLimit: 'Our team will take it from here and reply very soon 💛',
-      thanks: 'Thank you{customer}! 😊',
-      howHelp: 'What can I help you with today?',
-      youreWelcome: 'You’re very welcome! 😊 Message me anytime.',
     },
     ar: {
-      greeting: 'أهلاً! أنا ليلى من {business} 😊 كيف أقدر أساعدك اليوم؟',
       welcome: 'أهلاً وسهلاً{customer}! معك ليلى من {business} 😊',
-      handoffInbox: 'طلبت من فريقنا يتابع معك، وبيردون عليك هنا.',
-      handoffContact: 'فريقنا يسعده يساعدك مباشرة.',
-      contactSuffix: ' تقدر تتواصل مع فريقنا هنا: {contact}',
-      disabled: 'جميل! فريقنا راح يرتب حجزك ويؤكده لك هنا 😊',
-      unknown: 'ما عندي معلومة أكيدة عن هذا، فطلبت من فريقنا يرد عليك هنا 💛',
+      teamLater: 'فريقنا بيتواصل معك قريباً 💛',
+      contactSuffix: 'فريقنا يسعده يساعدك، تواصل معهم مباشرة: {contact}',
+      unknown: 'ما عندي معلومة أكيدة عن هذا.',
       askMore: 'عشان أساعدك أكثر، ممكن تخبرني {list}؟ 🙏',
       orderReceived: 'وصلنا طلبك رقم {number}! الفريق بيأكد التوفّر والمجموع قريباً جداً.',
       orderConfirmed: 'تم تأكيد طلبك رقم {number}: {items}، {total}. بنراسلك بخصوص التوصيل أو الاستلام 😊',
@@ -162,15 +107,7 @@ const P = {
       inStock: '{name} — متوفر · {price}',
       available: '{name} — متوفر بخيارات {options} · {price}',
       propertyNoMatch: 'فريقنا بيدور لك على العقارات المناسبة ويرجع لك بالتفاصيل المؤكدة.',
-      negotiation: 'خليني أحول سؤالك لفريقنا، هم أفضل من يساعدك في الأسعار 😊',
-      abuse: 'أنا هنا عشان أساعدك في أي شيء عن {business}. حوّلت المحادثة لفريقنا.',
-      media: 'شكراً لك! وصلتني رسالتك وفريقنا بيراجعها ويرد عليك هنا 😊',
-      tooLong: 'شكراً على كل التفاصيل! فريقنا بيقرأ رسالتك ويرد عليك هنا.',
-      adviceBoundary: 'ما أقدر أقدم استشارات قانونية أو مالية، لكن فريقنا بيتواصل معك مباشرة.',
       replyLimit: 'فريقنا بيكمل معك من هنا ويرد قريباً 💛',
-      thanks: 'شكراً لك{customer}! 😊',
-      howHelp: 'بإيش أقدر أساعدك اليوم؟',
-      youreWelcome: 'العفو! 😊 راسلني في أي وقت.',
     },
   },
 };
@@ -189,6 +126,17 @@ export function phrase(tone, key, lang = 'en', vars = {}) {
   const set = P[toneOf(tone)][lang === 'ar' ? 'ar' : 'en'];
   const template = set[key] ?? P.informative[lang === 'ar' ? 'ar' : 'en'][key] ?? '';
   return template.replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ''));
+}
+
+/** Who a customer can reach when Layla can't help: the bzns.md team contact. Inbox mode never advertises a legacy contact. */
+export const teamContactOf = profile => String((profile?.handoffMode === 'inbox' ? profile?.teamContact : profile?.humanContact || profile?.teamContact) || '').trim();
+/**
+ * Layla is the whole front office: what she can't handle gets a polite pointer to the team,
+ * and she stays on the chat. `lead` is what she says first ("Pricing decisions are made by our team.").
+ */
+export function withTeamPointer(lead, profile, lang = 'en') {
+  const contact = teamContactOf(profile);
+  return [lead, phrase(profile?.tone, contact ? 'contactSuffix' : 'teamLater', lang, { contact })].filter(Boolean).join(' ');
 }
 
 /** The welcome greeting's customer slot: ", Sara" in English, " سارة" in Arabic, or nothing. */

@@ -57,9 +57,12 @@ test('money in today and this month, and what customers still owe', async () => 
   assert.deepEqual(t.money, { todayMinor: 20000, monthMinor: 20000, owedMinor: 30000 });
 });
 
-test('chats handed to the owner count while the customer is still waiting', async () => {
+test('chats the owner stopped Layla on count while the customer is still waiting', async () => {
   const { h, a, today } = await setup();
   await h.inbound(a, { from: '96891111111', text: 'Can I talk to a person?', intent: 'human', handoff: true, reply: 'Connecting you' });
+  assert.equal((await today()).needsYou.chats, 0, 'Layla answered with the team contact; nothing waits');
+  const [chat] = h.m.table('blueConversations');
+  await h.m.db.patch(chat._id, { takeover: true, handoffState: 'handling', handoffReason: 'team_takeover' });
   assert.equal((await today()).needsYou.chats, 1);
   h.m.advance(2 * 86400000);
   assert.equal((await today()).needsYou.chats, 0, 'after the 24-hour window it is no longer “waiting”');

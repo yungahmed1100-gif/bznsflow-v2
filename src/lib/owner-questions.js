@@ -108,7 +108,7 @@ export const OWNER_QUESTIONS = { booking, catalog, project };
 
 /**
  * FAQ copy is shared across archetypes: the value of an FAQ does not depend on
- * the kind of business, and previewAnswer resolves an exact FAQ match before
+ * the kind of business, and Layla's AI turn reads the published FAQ before
  * catalog and before the intent router — so these are the highest-leverage
  * words a customer can give us.
  */

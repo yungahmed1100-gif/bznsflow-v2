@@ -50,7 +50,8 @@ test('an Instagram DM signed by the Instagram app reaches Layla with a reply', a
   assert.equal(res.statusCode, 200);
   const [event] = r.ingested().events;
   assert.equal(event.from, CUSTOMER);
-  assert.ok(event.reply, 'answered by liveAnswer');
+  assert.equal(event.text.length > 0, true, 'the message text reaches Convex; Layla’s AI turn writes the reply there');
+  assert.equal(event.reply, undefined, 'nothing is answered inside the webhook');
   assert.equal(r.ingested().suppressAutomation, false);
 });
 

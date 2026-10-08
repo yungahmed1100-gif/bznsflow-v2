@@ -121,6 +121,8 @@ export function validateBzns(markdown) {
   }
   // Layla hands the team contact to a customer in one reply, so it must fit one short line.
   const contact = parsed.sections.find(s => s.key === 'contact' && s.body);
+  // Layla is the whole front office: when she can't help, this is who she points the customer to.
+  if (!contact) errors.push({ code: 'bzns_contact_required', section: 'contact' });
   if (contact && !PLACEHOLDER.test(contact.body) && plain(contact.body).join(' · ').length > CONTACT_MAX) errors.push({ code: 'bzns_contact_too_long', section: 'contact', heading: contact.heading });
   // A section counts as written only once its template hints are replaced.
   const checklist = RECOMMENDED_SECTIONS.map(key => ({ key, present: parsed.sections.some(s => s.key === key && s.body && !PLACEHOLDER.test(s.body)) }));
@@ -250,7 +252,7 @@ export function profileToBzns({ businessName = '', profile = {}, answers = [], l
     seen.add(key); return true;
   });
   const sections = [
-    ['offer', profile.services], ['hours', profile.hours], ['location', profile.location], ['contact', profile.teamContact || (profile.handoffMode === 'inbox' ? '' : profile.humanContact)],
+    ['offer', profile.services], ['hours', profile.hours], ['location', profile.location], ['contact', profile.teamContact || (profile.handoffMode === 'inbox' ? '' : profile.humanContact) || (ar ? '[رقم هاتف أو بريد فريقك]' : '[Your team’s phone number or email]')],
   ].filter(([, text]) => String(text || '').trim()).map(([key, text]) => `## ${HEADINGS[key][ar ? 'ar' : 'en']}\n${String(text).trim()}`);
   if (faqs.length) sections.push(`## ${HEADINGS.faq[ar ? 'ar' : 'en']}\n${faqLines(faqs, ar)}`);
   return [`---\nname: ${businessName}\nsector: ${industry?.id || profile.sector || ''}\n---`, `# ${businessName}`, ...sections].join('\n\n') + '\n';

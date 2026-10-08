@@ -133,16 +133,18 @@ export async function applyInbound(ctx, contact, { text, intent, handoff, at, no
   if (merged.changed) { patch.fields = merged.fields; patch.qualificationStatus = qualificationStatus(sectorId, merged.fields); }
   // Layla asked for the name moments ago: a short bare reply ("Sara") is the answer.
   // Only when the reply filled no other field: "Al Mawaleh" answers the area question, not the name.
-  const bareName = intent === 'unknown' && !extracted.customerName && !extracted.updates.length && askedRecently && (contact.asked || []).includes(NAME_FIELD.key) && !contact.customerName ? extractBareName(text) : null;
+  // `ai`: the model answers this turn, so any message may be the reply to Layla's last question.
+  const open = intent === 'unknown' || intent === 'ai';
+  const bareName = open && !extracted.customerName && !extracted.updates.length && askedRecently && (contact.asked || []).includes(NAME_FIELD.key) && !contact.customerName ? extractBareName(text) : null;
   const customerName = extracted.customerName || bareName;
   if (customerName && customerName !== contact.customerName) patch.customerName = customerName;
   const lang = langOf(text);
   // A reply that only gives details is not a question for the team: an answer to Layla's
   // question ("Al Mawaleh"), or a stated interest ("looking for a villa to rent in Al Mouj").
   const filled = answeredNow || !!bareName, statement = !isQuestion(text);
-  const answeredOnly = filled && ((intent === 'unknown' && (askedRecently || statement)) || (intent === 'services' && statement));
+  const answeredOnly = filled && ((open && (askedRecently || statement)) || (intent === 'services' && statement));
   const plan = contact.optout ? { text: '', keys: [] } : planQuestions({ sectorId, fields: merged.fields, askCounts: contact.askCounts || [], asked: contact.asked || [],
-    lastAskedAt: contact.lastAskedAt || 0, answeredNow: answeredNow || !!bareName, intent: answeredOnly ? 'faq' : intent, handoff: answeredOnly ? false : handoff, now, lang, tone,
+    lastAskedAt: contact.lastAskedAt || 0, answeredNow: answeredNow || !!bareName, intent: answeredOnly || intent === 'ai' ? 'faq' : intent, handoff: answeredOnly ? false : handoff, now, lang, tone,
     // An Instagram @handle is not a name, so Layla still asks for it.
     knownName: !!(customerName || contact.customerName || contact.ownerName || (contact.profileName && !String(contact.profileName).startsWith('@'))) });
   const next = { ...contact, ...patch };

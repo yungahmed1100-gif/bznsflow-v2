@@ -1,6 +1,7 @@
 import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import { syncServicesForOwner } from './hasib/serviceSync.js';
+import { fenceRepliesForOwner } from './laylaTurn.js';
 
 const price=v.object({type:v.string(),currency:v.string(),amount:v.optional(v.number()),minimum:v.optional(v.number()),maximum:v.optional(v.number()),unit:v.string(),label:v.string()});
 const entry=v.object({entryKey:v.string(),kind:v.string(),nameEn:v.string(),nameAr:v.string(),category:v.string(),benefitEn:v.string(),benefitAr:v.string(),descriptionEn:v.string(),descriptionAr:v.string(),availability:v.string(),prices:v.array(price),source:v.string(),confidence:v.number(),laylaUseEn:v.string(),laylaUseAr:v.string(),sortOrder:v.number()});
@@ -45,6 +46,9 @@ export const execute=internalMutation({args:{operation:v.union(...['list','match
     const drafts=await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order',q=>q.eq('ownerKey',args.ownerKey).eq('status','draft')).collect();for(const row of drafts)await ctx.db.patch(row._id,{status:'approved',revision:revision+1,updatedAt:now});
     if(meta)await ctx.db.patch(meta._id,{revision:revision+1,publishedAt:now,updatedAt:now});else await ctx.db.insert('blueCatalogMeta',{ownerKey:args.ownerKey,revision:2,publishedAt:now,updatedAt:now});
   }
+  // What Layla may quote changed: bump the business's profile version so replies written from the
+  // old catalog are fenced out at claim and send time, like a bzns.md publish.
+  if(['archive','approve','publish'].includes(args.operation)) await fenceRepliesForOwner(ctx,args.ownerKey,now);
   // Clinics charge visits from these services: keep Hasib's service items in step. Never blocks the catalog write.
   if(['save','saveMany','archive','approve','publish'].includes(args.operation)){try{await syncServicesForOwner(ctx,args.ownerKey,now);}catch(error){console.error('hasib_service_sync_failed',error instanceof Error?error.message:'unknown');}}
   const approved=await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order',q=>q.eq('ownerKey',args.ownerKey).eq('status','approved')).collect();

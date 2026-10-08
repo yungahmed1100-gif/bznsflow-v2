@@ -4,7 +4,6 @@ import { build } from 'esbuild';
 import { fileURLToPath } from 'node:url';
 import { blueHarness, seedTenant } from './helpers/blue-tenant.mjs';
 import { approvedKnowledge } from '../convex/knowledgeSourceState.js';
-import { matchPublishedKnowledge } from '../src/lib/knowledge-match.js';
 import { extractInformation } from '../src/lib/information-import.js';
 const bundle = await build({ entryPoints:[fileURLToPath(new URL('../convex/knowledgeSources.ts',import.meta.url))], bundle:true, write:false, platform:'node', format:'esm' });
 const { execute } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`);
@@ -37,7 +36,7 @@ test('saved and cancelled drafts cannot enter retrieval; partial extraction requ
 test('publication is idempotent, current revisions replace retrieval and archive removes evidence',async()=>{
   const {h,a,call,save,publish}=await setup(); await save(); assert.equal((await publish()).ok,true);
   assert.equal((await publish()).value.replay,true); assert.equal(h.m.table('knowledgeRevisions').length,1);
-  const old=await approvedKnowledge(h.m.ctx,a.accountId);assert.equal(matchPublishedKnowledge('Can I bring my dog?',old).text,'Dogs are welcome in the garden.');
+  const old=await approvedKnowledge(h.m.ctx,a.accountId);assert.equal(old.find(k=>k.title==='Can I bring my dog?')?.text,'Dogs are welcome in the garden.','published answers reach Layla’s AI turn');
   await save({requestId:'draft-2',text:'Dogs are welcome on the terrace.'});
   assert.equal((await publish({requestId:'draft-2'})).reason,'source_changed');
   await publish({requestId:'draft-2',expectedRevision:1});
@@ -65,13 +64,6 @@ test('optimistic drafts, duplicate content, conflicting titles and invalid conte
   assert.equal((await save({requestId:'bad',text:'\0'})).reason,'invalid_import');
   assert.equal((await call('save',{requestId:'bad'})).reason,'invalid_import');
 });
-test('knowledge matching abstains on ambiguity, unrelated questions and prices',()=>{
-  const source={title:'Can I bring my dog?',text:'Yes.',sourceKey:'one',revision:1};
-  assert.equal(matchPublishedKnowledge('Can I bring my dog',[source]).text,'Yes.');
-  assert.equal(matchPublishedKnowledge('Can I bring my dog',[source,source]),null);
-  assert.equal(matchPublishedKnowledge('What is the price?',[source]),null);
-  assert.equal(matchPublishedKnowledge(source.title,[{...source,text:'OMR 20'}]),null);
-});
 test('cancellation terminates the parsing worker and does not resolve stale output',async()=>{
   const old=globalThis.Worker; let worker;
   globalThis.Worker=class { constructor(){worker=this;} postMessage(){} terminate(){this.terminated=true;} };
@@ -87,7 +79,7 @@ test('reviewed passage mapping retrieves uploaded facts and refuses pricing or m
  const text='Long extracted document. '.repeat(200);
  await save({text,references:[{label:'Page 2',text:'Dogs are welcome.',question:'Can my dog come?',answer:'Dogs are welcome.'}]});
  assert.equal((await publish()).ok,true);
- assert.equal(matchPublishedKnowledge('Can my dog come?',await approvedKnowledge(h.m.ctx,a.accountId)).text,'Dogs are welcome.');
+ assert.equal((await approvedKnowledge(h.m.ctx,a.accountId)).find(k=>k.title==='Can my dog come?')?.text,'Dogs are welcome.');
  await save({requestId:'other',sourceKey:'other',title:'Other',text,references:[]});
  // Duplicate raw source is explicitly detected before a second publication.
  assert.equal((await publish({requestId:'other'})).reason,'duplicate_source');

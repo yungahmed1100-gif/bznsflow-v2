@@ -1,4 +1,3 @@
-import { matchPublishedKnowledge } from '../../../src/lib/knowledge-match.js';
 import { randomUUID } from 'node:crypto';
 import { SUBSCRIPTION_PROOF_MS, checkInstagramToken, instagramConfig, instagramSendResult, instagramUsername, postInstagramMessage, refreshInstagram, subscribeInstagram } from './instagram.js';
 import { convexConfigured, instagramStore, messagingStore, reviewStore } from '../convex.js';
@@ -6,20 +5,13 @@ import { blueAccount, blueAuthStore } from '../blue-auth.js';
 import { ensureCsrfToken, verifyCsrf, safeEqual } from '../cookies.js';
 import { send, readBody } from '../http.js';
 import { PilotError } from './config.js';
-import { classify, answer } from './domain.js';
-import { route } from './route.js';
-import { previewAnswer } from './review-profile.js';
 import { credentialContext, openToken } from './customer-meta.js';
 import { inspectReviewConnection } from './review-api.js';
 import { parseEvents } from './webhook.js';
 import { providerResult } from './gateway.js';
 import { campaignStore } from './dashboard-store.js';
 import { runCampaignSend, runCampaignStart } from './campaign-worker.js';
-import { clinicIngressDecision, clinicSafetyMessage } from '../../../config/clinic-safety.js';
-import { adviceDecision } from '../../../config/sector-safety.js';
-import { phrase, langOf } from '../../../config/layla-tones.js';
-import { safeReply } from './reply-guard.js';
-import { answerFromDocument, matchFaq } from './document-answer.js';
+import { isOptOut, STOP_BUTTON } from '../../../config/layla-optout.js';
 import { isGreenRuntime, publicOrigin, whatsappMessagingEnabled, instagramMessagingEnabled, broadcastMessagingEnabled, messagingWorkerSecret } from '../green-config.js';
 
 // messagingStore is built in ../convex.js with the other five route clients, and
@@ -35,40 +27,12 @@ export function whatsappPayload(job) {
 }
 export const instagramMessage=job=>job.imageUrl ? {attachment:{type:'image',payload:{url:job.imageUrl}}} : {text:job.text};
 
-/** One acknowledgement in the business's style for what Layla can't read (a photo, a voice note, a very long message). Same on both channels. */
-export function nonTextAcknowledgement(profile,kind,sample='') {
-  const tooLong=kind==='too_long', lang=langOf(`${profile?.services||''} ${String(sample).slice(0,200)}`);
-  return {handoffReason:tooLong?'too_long':'unsupported_media',reply:phrase(profile?.tone,tooLong?'tooLong':'media',lang)};
-}
-// Guards run first and each hand-off names its reason, so the attention queue shows why.
-const GUARDED_REASONS={negotiation:'negotiation',abuse:'abuse'};
-export function liveAnswer(text,profile,catalog=[],knowledge=[],sections=[]) {
-  const safety=clinicIngressDecision(text,profile);
-  if(safety.withheld) return {intent:'medical_content_withheld',reply:clinicSafetyMessage(safety.language),handoff:true,medicalContentWithheld:true,handoffReason:'clinical_boundary'};
-  const lang=langOf(text);
-  if(adviceDecision(text,profile).boundary) return {intent:'advice_boundary',reply:phrase(profile.tone,'adviceBoundary',lang),handoff:true,handoffReason:'advice_boundary'};
-  const intent=classify(text);
-  if(intent==='optout') return {intent,reply:null,handoff:false};
-  // "thanks" gets a short reply; "ok" or 👍 needs none. Neither is a question for the team.
-  if(intent==='ack') return {intent,reply:null,handoff:false};
-  if(intent==='thanks') return {intent,reply:phrase(profile.tone,'youreWelcome',lang),handoff:false};
-  if(intent==='human') return {intent,reply:answer(text,profile,true).text,handoff:true,handoffReason:'customer_requested'};
-  if(GUARDED_REASONS[intent]) return {intent,reply:phrase(profile.tone,intent,lang,{business:profile.businessName||''}),handoff:true,handoffReason:GUARDED_REASONS[intent]};
-  const result=previewAnswer(text,profile,catalog);
-  // A reworded owner FAQ beats a generic intent answer: it is the owner's own approved reply.
-  const faq=result.intent!=='faq' ? matchFaq(text,profile.faqs || []) : null;
-  if(faq) return {intent:'faq',reply:safeReply(faq.answer,700),handoff:false};
-  const published=result.needsHuman ? matchPublishedKnowledge(text,knowledge) : null;
-  if(published) return {intent:result.intent,reply:safeReply(published.text),handoff:false};
-  // A bzns.md section, quoted verbatim, answers what the profile can't. It also beats a generic
-  // address or services list ("do you deliver to Seeb?" is about delivery, not where the shop is)
-  // and a weak profile-similarity guess ("what documents do I need?" is not about opening hours).
-  const soft=['unknown','location','services'].includes(result.intent) || route(text,profile).via==='profile';
-  const section=soft && result.intent!=='faq' ? answerFromDocument(text,{sections}) : null;
-  if(section) return {intent:'faq',reply:section.text,handoff:false};
-  return {intent:result.intent,reply:result.text,handoff:result.needsHuman,...(result.needsHuman?{handoffReason:'needs_review'}:{})};
-}
-const STOP_BUTTON=/^(stop promotions?|stop|unsubscribe|opt out|إيقاف العروض|ايقاف العروض|إيقاف|ايقاف|إلغاء الاشتراك|الغاء الاشتراك)$/i;
+// What reaches Convex for one customer message: its text and the one decision made here, a STOP.
+// Everything Layla says is written later by the model, from the business's own setup
+// (convex/laylaRespond.js); prices, stock and orders stay deterministic in Convex.
+export const inboundDecision = text => (isOptOut(text) ? {intent:'optout',reply:null,handoff:false} : {});
+// What Layla cannot open: the model is told, and offers the team contact.
+const MEDIA_TEXT='[The customer sent a photo, voice note or file]';
 // WhatsApp profile names keyed by wa_id. Only ever used as a display fallback.
 export function profileNames(value) {
   const names=new Map();
@@ -107,8 +71,9 @@ export async function ingestInstagramEnvelope(envelope,{store=messagingStore(),n
     const names=await instagramUsernames(binding,[...new Set(parsed.filter(e=>e.kind==='message').map(e=>e.from))],{env,fetcher});
     const events=parsed.map(({nonText,sample,...e})=>{
       const named=e.kind==='message' && names.get(e.from)?{...e,profileName:names.get(e.from)}:e;
-      if(nonText) return {...named,...nonTextAcknowledgement(binding.profile,nonText,sample)};
-      return named.kind==='message' && !named.handoff ? {...named,...liveAnswer(named.text,binding.profile,binding.catalog || [],binding.knowledge || [],binding.sections || [])}:named;
+      if(nonText==='too_long') return {...named,text:String(sample || named.text || '').slice(0,1000),tooLong:true};
+      if(nonText) return {...named,text:MEDIA_TEXT,media:true};
+      return named.kind==='message' ? {...named,...inboundDecision(named.text)}:named;
     });
     total+=events.length;if(total>100) throw new PilotError('too_many_events',413);
     if(events.length) await store('ingest',{integrationId:binding.integrationId,profileVersion:binding.profileVersion,events,suppressAutomation});
@@ -138,7 +103,7 @@ export async function ingestBlueEnvelope(envelope,{store=messagingStore(),now=Da
     const names=new Map(group.changes.flatMap(change=>[...profileNames(change.value)]));
     const errors=new Map(group.changes.flatMap(change=>(change.value?.statuses || []).map(s=>[`${s?.id}:${s?.status}`,Number(s?.errors?.[0]?.code)]).filter(([,code])=>Number.isSafeInteger(code))));
     const events=parseEvents(raw,binding,now()).map(e=>{
-      if(e.kind==='message') return {...e,...liveAnswer(e.text,binding.profile,binding.catalog || [],binding.knowledge || [],binding.sections || []),...(names.get(e.from)?{profileName:names.get(e.from)}:{})};
+      if(e.kind==='message') return {...e,...inboundDecision(e.text),...(names.get(e.from)?{profileName:names.get(e.from)}:{})};
       if(e.kind==='receipt' && errors.has(`${e.id}:${e.status}`)) return {...e,errorCode:errors.get(`${e.id}:${e.status}`)};
       return e;
     });
@@ -156,10 +121,9 @@ export async function ingestBlueEnvelope(envelope,{store=messagingStore(),now=Da
           events.push({kind:'message',id:m.id,from:m.from,at:Number(m.timestamp)*1000,text:title,intent:'optout',reply:null,handoff:false,...profile});
           continue;
         }
-        // Media, voice notes and over-long text get one acknowledgement in the business's style, then the team.
+        // A tapped button is text; media and over-long text are flagged so Layla can say what she can't read.
         const tooLong=m.type==='text' && typeof m.text?.body==='string';
-        events.push({kind:'message',id:m.id,from:m.from,at:Number(m.timestamp)*1000,text:title || '[Message needs human attention]',intent:'human',handoff:true,
-          ...(title ? {handoffReason:'customer_requested'} : nonTextAcknowledgement(binding.profile,tooLong?'too_long':'media',tooLong?m.text.body:'')),...profile});
+        events.push({kind:'message',id:m.id,from:m.from,at:Number(m.timestamp)*1000,...(title ? {text:title} : tooLong ? {text:m.text.body.slice(0,1000),tooLong:true} : {text:MEDIA_TEXT,media:true}),...profile});
       }
     }
     total+=events.length;if(total>100) throw new PilotError('too_many_events',413);

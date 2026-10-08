@@ -33,6 +33,7 @@ test('Instagram-only tenant can activate, receive, reply, and use the shared inb
   const inbound={kind:'message',id:'mid.1',from:'17890000000000001',at:h.m.now(),text:'services',reply:'Villas',intent:'services'};
   await h.messaging('ingest',{integrationId:integration.id,events:[inbound]});
   await h.messaging('ingest',{integrationId:integration.id,events:[inbound]});
+  await h.turns('Villas');
   const jobs=h.m.table('blueMessages').filter(m=>m.direction==='out');
   assert.equal(jobs.length,1);
   const contact=h.m.table('blueContacts')[0];
@@ -51,6 +52,7 @@ test('disconnect fences queued and claimed Instagram work without pausing WhatsA
   await h.messaging('activate',{sessionHash:tenant.sessionHash});
   await h.messaging('activate',{sessionHash:tenant.sessionHash,channel:'instagram'});
   await h.messaging('ingest',{integrationId:integration.id,events:[{kind:'message',id:'mid.2',from:'17890000000000001',at:h.m.now(),text:'hi',reply:'Hi',intent:'greeting'}]});
+  await h.turns('Hi');
   const job=h.m.table('blueMessages').find(m=>m.direction==='out');
   await h.messaging('claim',{jobId:job._id,intent:'send2'});
   await ig('disconnect');
@@ -62,6 +64,7 @@ test('our own Instagram echoes do not trigger takeover; external human echoes do
   await h.messaging('activate',{sessionHash:tenant.sessionHash,channel:'instagram'});
   const from='17890000000000001';
   await h.messaging('ingest',{integrationId:integration.id,events:[{kind:'message',id:'in1',from,at:h.m.now(),text:'hi',reply:'Hello',intent:'greeting'}]});
+  await h.turns('Hello');
   const job=h.m.table('blueMessages').find(m=>m.direction==='out');
   await h.messaging('claim',{jobId:job._id,intent:'send'});
   const echo={kind:'echo',id:'mid.sent',from,at:h.m.now(),text:'Hello'};
@@ -266,6 +269,7 @@ test('one customer the send fails for never pauses Layla for everyone else; a co
   await h.messaging('activate',{sessionHash:tenant.sessionHash,channel:'instagram'});
   const send=async (from,reason)=>{
     await h.messaging('ingest',{integrationId:integration.id,events:[{kind:'message',id:`mid.${from}`,from,at:h.m.now(),text:'hi',reply:'Hi',intent:'greeting'}]});
+    await h.turns('Hi');
     const job=h.m.table('blueMessages').filter(m=>m.direction==='out').at(-1);
     await h.messaging('claim',{jobId:job._id,intent:`i.${from}`});
     await h.messaging('result',{jobId:job._id,intent:`i.${from}`,status:'failed',reason});

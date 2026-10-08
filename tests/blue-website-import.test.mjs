@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { publicIPv4, importWebsite, readableText, relevantLinks, extractCatalogFacts } from '../api/_lib/layla/website-import.js';
-import { validateReviewProfile, previewAnswer } from '../api/_lib/layla/review-profile.js';
+import { validateReviewProfile } from '../api/_lib/layla/review-profile.js';
 import { extractCatalogRows, readCatalogFile } from '../src/lib/catalog-import.js';
 test('website imports reject private addresses and revalidate redirect destinations',async()=>{
   for(const ip of ['127.0.0.1','10.0.0.1','169.254.169.254','172.16.0.1','192.168.1.1','100.64.0.1','::1','198.18.0.1','224.0.0.1']) assert.equal(publicIPv4(ip),false);
@@ -34,10 +34,8 @@ test('catalog text and local text files become owner-reviewable service drafts',
   const parsed=await readCatalogFile(file);assert.equal(parsed.entries[0].source,'prices.csv');assert.equal(parsed.entries[0].prices[0].label,'30 OMR');
   assert.equal(extractCatalogFacts('Delivery service helps customers. Express delivery 5 OMR').entries.length,1);
 });
-test('reviewed FAQs are exact normalized answers and unknown queries still fall back',()=>{
+test('reviewed FAQs are validated and kept for Layla’s AI turn',()=>{
   const profile={businessName:'Studio',...validateReviewProfile({sector:'Studio',services:'Portraits',reviewed:true,faqs:[{question:'Do you deliver photos?',answer:'Digital delivery in two days.'}]})};
-  assert.equal(previewAnswer('Do you deliver photos',profile).text,'Digital delivery in two days.');
-  assert.deepEqual(previewAnswer('Do you deliver photos?',profile).sourceFields,['faqs']);
-  assert.equal(previewAnswer('Can you fly a plane?',profile).needsHuman,true);
+  assert.deepEqual(profile.faqs,[{question:'Do you deliver photos?',answer:'Digital delivery in two days.'}]);
   assert.throws(()=>validateReviewProfile({...profile,faqs:[{question:'',answer:'bad'}]}));
 });

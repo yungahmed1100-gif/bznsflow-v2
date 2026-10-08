@@ -1,3 +1,4 @@
+import { groundedModel } from './helpers/fake-model.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -39,8 +40,9 @@ async function client(handler, extraCookie='') {
 function harness(overrides={}) {
   const db=memory();const effects=[];
   const fetcher=async(url,options)=>{effects.push({path:new URL(url).pathname,body:options.body});return {ok:true,text:async()=>JSON.stringify({success:true})};};
-  const handler=createReviewHandler({env,store:db.store,now:db.now,fetcher,exchange:async()=>({token:'synthetic-token-'.repeat(4),sender:'96890000000'}),inspect:async()=>({isolated:true,connected:true}),portfolio:async()=>null,verifyConfig:async()=>{},...overrides});
-  return {db,handler,effects};
+  const model=groundedModel();
+  const handler=createReviewHandler({env,store:db.store,now:db.now,fetcher,generate:model,exchange:async()=>({token:'synthetic-token-'.repeat(4),sender:'96890000000'}),inspect:async()=>({isolated:true,connected:true}),portfolio:async()=>null,verifyConfig:async()=>{},...overrides});
+  return {db,handler,effects,model};
 }
 async function begin(c,path='coexistence') {assert.equal((await c.call({action:'profile',businessName:profile.businessName,profile})).statusCode,200);const r=await c.call({action:'begin',path});assert.equal(r.statusCode,200);return {action:'finish',attempt:r.body.attempt,state:r.body.state,code:'secret-code',waba:'1712714900182074',phone:'1234'};}
 
@@ -312,8 +314,9 @@ test('preview-first accepts missing contact, persists answer and step, and does 
   assert.equal(saved.body.journeyStep,4,'saved facts proceed to reply and handoff review'); assert.equal(saved.body.capabilities.preview,true); assert.equal(saved.body.capabilities.connect,false);
   assert.equal((await c.call({action:'begin',path:'new_number'})).statusCode,409);
   const preview = await c.call({action:'preview',text:'What services do you offer?'});
-  assert.equal(preview.body.preview,'Portraits'); assert.deepEqual(preview.body.sourceFields,['services']);
-  assert.equal((await c.call()).body.lastPreview.text,'Portraits');
+  assert.equal(preview.body.preview,'Hello, I’m Layla from Blue Review Studio. Portraits', 'the AI turn answered from the owner’s saved services');
+  assert.match(h.model.calls.at(-1)[0].content,/## What we offer\nPortraits/,'the model was given the setup');
+  assert.equal((await c.call()).body.lastPreview.text,preview.body.preview);
   assert.equal((await c.call()).body.journeyStep,4,'trying a question never moves the owner back a step');
   assert.equal((await c.call({action:'review_preview',profileVersion:preview.body.profileVersion})).statusCode,400,'there is no approval action any more');
   assert.equal((await c.call({action:'save_progress',journeyStep:2})).statusCode,409,'the old separate preview step is gone');
@@ -331,7 +334,9 @@ test('editing facts during reconciliation preserves the integration and clears t
   assert.equal(edited.body.status,'reconciliation_required'); assert.equal(edited.body.integration.id,before.integration.id);
   assert.equal(edited.body.lastPreview,null);
   assert.equal((await c.call({action:'save_progress',journeyStep:3})).statusCode,200,'going live needs the confirmed facts, not a preview approval');
-  assert.equal((await c.call({action:'preview',text:'What are your prices?'})).body.preview,'30 OMR');
+  const priced=await c.call({action:'preview',text:'What are your prices?'});
+  assert.equal(priced.body.needsHuman,true,'prices come only from the approved catalog, never from old profile text');
+  assert.doesNotMatch(priced.body.preview,/30 OMR/);
   assert.equal(h.effects.filter(e=>e.path.endsWith('/register')).length,1);
 });
 test('unknown answers explain missing facts without inventing a source', async () => {
@@ -339,7 +344,7 @@ test('unknown answers explain missing facts without inventing a source', async (
   await c.call({action:'profile',businessName:profile.businessName,profile:{...profile,prices:'',humanContact:''}});
   const r=await c.call({action:'preview',text:'How much does it cost?'});
   assert.equal(r.body.needsHuman,true); assert.deepEqual(r.body.sourceFields,[]);
-  assert.match(r.body.preview,/Add your team/); assert.equal(h.effects.length,0);
+  assert.match(r.body.preview,/Our team will get back to you\.$/,'no invented price, and no contact was given to invent'); assert.equal(h.effects.length,0);
 });
 
 test('Coexistence WABA-only completion resolves on the server and requires selection for multiple phones',async()=>{
@@ -383,7 +388,7 @@ test('signup completion is accepted from Meta subdomains but never from look-ali
 });
 test('bzns.md drafts save with versions, publish returns section errors, and a published document drives answers',async()=>{
   const h=harness(),c=await client(h.handler);
-  const md=`---\nname: Qurum Coast Properties\nsector: real-estate\n---\n## What we offer\n- Rentals and sales\n## Hours\nSunday to Thursday 8:30 to 17:30\n## Location\nAl Qurum, Muscat\n`;
+  const md=`---\nname: Qurum Coast Properties\nsector: real-estate\n---\n## What we offer\n- Rentals and sales\n## Hours\nSunday to Thursday 8:30 to 17:30\n## Location\nAl Qurum, Muscat\n## Team contact\nWhatsApp +968 9100 2000\n`;
   assert.deepEqual(c.initial.body.bzns,{markdown:null,version:0,publishedRevision:0,publishedAt:null,unpublishedChanges:false});
   const saved=await c.call({action:'bzns_save',markdown:'## draft',version:0});
   assert.equal(saved.statusCode,200);assert.equal(saved.body.bzns.markdown,'## draft');assert.equal(saved.body.bzns.version,1);assert.equal(saved.body.profile,null);

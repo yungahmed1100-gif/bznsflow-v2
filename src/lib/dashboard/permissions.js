@@ -4,13 +4,14 @@
 
 /**
  * @param {{ capabilities?: Record<string, boolean>, workspaceRole?: string } | null | undefined} overview the dashboard overview
- * @returns {{ canExport: boolean, canImport: boolean, canBroadcast: boolean, canDeleteCustomer: boolean }}
+ * @returns {{ canExport: boolean, canExportCsv: boolean, canImport: boolean, canBroadcast: boolean, canDeleteCustomer: boolean }}
  */
 export function dashboardPermissions(overview) {
   const caps = overview?.capabilities || {};
   const manager = (overview?.workspaceRole || 'manager') === 'manager';
   return {
     canExport: !!caps.exports && manager,
+    canExportCsv: !!caps.customerExport && manager,
     canImport: !!caps.imports && manager,
     canBroadcast: !!caps.broadcasts && manager,
     canDeleteCustomer: !!caps.customerDelete && manager,

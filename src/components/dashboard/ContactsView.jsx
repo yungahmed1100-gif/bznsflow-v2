@@ -27,7 +27,7 @@ export function ContactsView({ s, overview, onOpenChat }) {
   };
   const reset = () => { setMore({ items: [], cursor: undefined }); list.refresh({ quiet: true }); };
   const open = items.find(i => i.id === openId);
-  const { canExport, canImport, canDeleteCustomer } = dashboardPermissions(overview);
+  const { canExport, canExportCsv, canImport, canDeleteCustomer } = dashboardPermissions(overview);
 
   return (
     <div className="ld-contacts">
@@ -41,7 +41,7 @@ export function ContactsView({ s, overview, onOpenChat }) {
               <option value="">{s.t('allStatuses')}</option>
               {['new', 'in_progress', 'qualified', 'not_qualified'].map(v => <option key={v} value={v}>{s.t(`q_${v}`)}</option>)}
             </select></label>
-          {canExport && <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => run('csv', () => exportContacts(pack.fields.map(f => f.key)))}>{busy === 'csv' ? s.t('exporting') : `${s.t('export')} CSV`}</button>}
+          {canExportCsv && <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => run('csv', () => exportContacts(pack.fields.map(f => f.key)))}>{busy === 'csv' ? s.t('exporting') : `${s.t('export')} CSV`}</button>}
           {canExport && <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => run('zip', () => exportAccount({ lang: s.lang, business: overview.business.name, fieldKeys: pack.fields.map(f => f.key) }))}>{busy === 'zip' ? s.t('exporting') : s.t('exportAll')}</button>}
           {canImport && <button type="button" className="ld-button ld-primary" onClick={() => setImporting(true)}>{s.t('addContacts')}</button>}
         </div>

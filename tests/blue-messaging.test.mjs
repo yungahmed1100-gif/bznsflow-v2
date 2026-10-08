@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {executeMessaging, RATE_LIMITS } from '../convex/blueMessagingState.js';
-import {liveAnswer,ingestBlueEnvelope,createBlueWorker,createMessagingApi} from '../api/_lib/layla/blue-messaging.js';
+import {ingestBlueEnvelope,createBlueWorker,createMessagingApi,inboundDecision} from '../api/_lib/layla/blue-messaging.js';
 import {sealToken,credentialContext} from '../api/_lib/layla/customer-meta.js';
+import {runReplyTurn} from '../convex/laylaRespond.js';
 import {GREEN_CLOUD as BLUE_CLOUD} from './helpers/green-env.mjs';
 
 const env={CONVEX_CLOUD_URL:BLUE_CLOUD,BLUE_REVIEW_SERVICE_SECRET:'a'.repeat(64),LAYLA_CREDENTIAL_ENCRYPTION_KEY:'b'.repeat(64),BLUE_MESSAGING_WORKER_SECRET:'c'.repeat(64),BLUE_LIVE_MESSAGING_ENABLED:'true'};
@@ -25,9 +26,11 @@ async function setup() {
   const sessionHash='d'.repeat(64);integration.credential=sealToken('synthetic-token-only',credentialContext(sessionHash,integration),env);
   const rowId=await m.db.insert('blueReviewSessions',{accountId:'accountA',sessionHash,expiresAt:1e15,status:'connected',profile,profileVersion:1,checkedAt:m.now(),connectionChecks:{routing:true,registered:true,path:true},integration,phone:integration.phone});
   assert.equal((await m.call('activate',{sessionHash})).ok,true);
-  const inbound=(id='in1',extra={})=>m.call('ingest',{integrationId:integration.id,events:[{kind:'message',id,from:'96891111111',at:m.now(),text:'services',reply:'Portraits',intent:'services',...extra}]});
+  // Layla's AI turn for each pending chat, with a stand-in model that writes `reply`.
+  const turns=async(reply='Portraits')=>{for(const c of [...m.rows.values()].filter(r=>r.table==='blueConversations'&&r.pendingReply))await runReplyTurn({exec:m.call,conversationId:c._id,key:c.pendingReply.key,generate:async()=>({text:JSON.stringify(reply?{reply,intent:'answer'}:{reply:'',no_reply:true}),usage:{input:1,output:1},ms:1,model:'test-model'})});};
+  const inbound=async(id='in1',extra={})=>{const r=await m.call('ingest',{integrationId:integration.id,events:[{kind:'message',id,from:'96891111111',at:m.now(),text:'services',reply:'Portraits',intent:'services',...extra}]});await turns(extra.reply===undefined?'Portraits':extra.reply);return r;};
   const outgoing=()=>[...m.rows.values()].filter(r=>r.table==='blueMessages'&&r.direction==='out');
-  return {...m,rowId,integration,sessionHash,inbound,outgoing};
+  return {...m,rowId,integration,sessionHash,inbound,outgoing,turns};
 }
 test('durable incoming deduplication produces exactly one reply and one competing claim',async()=>{
   const m=await setup();await m.inbound();await m.inbound();assert.equal(m.outgoing().length,1);assert.equal(m.scheduled.length,1);
@@ -78,15 +81,18 @@ test('human echo fences a claimed reply even after conversation resume',async()=
   assert.equal((await m.call('send_gate',{jobId,intent:'one'})).value,false);
 });
 test('opt-out beats a custom FAQ and prevents manual and automatic replies',async()=>{
-  assert.equal(liveAnswer('stop',{...profile,faqs:[{question:'stop',answer:'wrong'}]}).reply,null);
+  assert.deepEqual(inboundDecision('stop'),{intent:'optout',reply:null,handoff:false},'STOP is decided before the model, whatever the FAQ says');
+  assert.deepEqual(inboundDecision('stop by tomorrow?'),{},'only a whole-message STOP');
   const m=await setup();await m.inbound('stop',{intent:'optout',reply:null});
   await m.inbound('again');assert.equal(m.outgoing().length,0);
   const person=[...m.rows.values()].find(r=>r.table==='blueConversations');
   assert.equal((await m.call('manual_reply',{sessionHash:m.sessionHash,conversationId:person._id,text:'hello',requestId:randomUUID()})).reason,'contact_opted_out');
 });
-test('handoff sends one acknowledgement then waits for the team',async()=>{
+test('a request for a person is answered with the team contact and Layla keeps replying',async()=>{
   const m=await setup();await m.inbound('human',{intent:'human',handoff:true});await m.inbound('more');
-  assert.equal(m.outgoing().length,1);const jobId=m.outgoing()[0]._id;
+  assert.equal(m.outgoing().length,2,'the next message is still answered');
+  assert.equal([...m.rows.values()].find(r=>r.table==='blueConversations').takeover,false,'no pause, no queue');
+  const jobId=m.outgoing()[0]._id;
   assert((await m.call('claim',{jobId,intent:'one'})).value);
   assert.equal((await m.call('send_gate',{jobId,intent:'one'})).value,true);
 });
@@ -151,9 +157,11 @@ test('real webhook envelope persists incoming facts and mirrors business-app ech
   const value={messaging_product:'whatsapp',metadata:{phone_number_id:m.integration.phone},messages:[{id:'wamid.in',from:'96891111111',timestamp:String(m.now()/1000),type:'text',text:{body:'What services do you offer?'}}]};
   const envelope={entry:[{id:m.integration.waba,changes:[{field:'messages',value}]}]};
   await ingestBlueEnvelope(envelope,{store,now:m.now});
-  // Layla answers first, then asks the sector's first group of missing fields.
-  // The first reply welcomes with the business and Layla, answers, then asks for the name and the interest.
-  assert.match(m.outgoing()[0].text,/^Hello, I’m Layla from Studio\. Portraits\n\nTo help you further, could you share your name and .+\?$/);
+  // The webhook stores the message and plans the turn; the AI turn writes the reply.
+  const chat=[...m.rows.values()].find(r=>r.table==='blueConversations');
+  assert.equal(chat.pendingReply.askKey,'customer_name','the name is the one question planned');
+  await m.turns('Hello, I’m Layla from Studio. We do portraits. May I have your name?');
+  assert.equal(m.outgoing()[0].text,'Hello, I’m Layla from Studio. We do portraits. May I have your name?');
   envelope.entry[0].changes=[{field:'smb_message_echoes',value:{messaging_product:'whatsapp',metadata:value.metadata,message_echoes:[{id:'wamid.echo',from:m.integration.sender,to:'96891111111',type:'text',text:{body:'I will help you'}}]}}];
   await ingestBlueEnvelope(envelope,{store,now:m.now});
   assert.equal(m.outgoing()[0].status,'blocked');

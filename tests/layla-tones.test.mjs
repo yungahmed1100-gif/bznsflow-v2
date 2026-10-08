@@ -16,7 +16,7 @@ test('every style has every phrase in both languages, filled and short', () => {
 });
 
 test('the three styles read differently for customer-facing lines', () => {
-  for (const key of ['greeting', 'welcome', 'unknown', 'askMore', 'negotiation']) for (const lang of ['en', 'ar']) {
+  for (const key of ['welcome', 'askMore', 'contactSuffix']) for (const lang of ['en', 'ar']) {
     assert.equal(new Set(TONE_IDS.map(t => phrase(t, key, lang, vars))).size, 3, `${key}/${lang}`);
   }
 });
@@ -29,7 +29,7 @@ test('Informative & nice is the default and keeps the pre-style wording', () => 
   assert.equal(phrase('informative', 'askMore', 'ar', { list: 'منطقتك' }), 'حتى نساعدك بشكل أفضل، ممكن تخبرنا منطقتك؟');
   assert.equal(phrase('informative', 'outOfStock', 'en', { name: 'Black abaya' }), 'Black abaya is out of stock right now — we’ll let you know when it’s back.');
   assert.equal(phrase('informative', 'orderReceived', 'en', { number: 3 }), 'Order #3 received — the team will confirm availability and the total shortly.');
-  assert.equal(phrase('informative', 'greeting', 'en', { business: 'Blue Studio' }), 'I’m Layla, the virtual assistant for Blue Studio. How can I help?');
+  assert.equal(phrase('informative', 'unknown', 'en'), 'I don’t have confirmed information about that.');
 });
 
 test('emoji appear only in Helpful & sweet, at most one per phrase', () => {

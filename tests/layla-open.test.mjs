@@ -48,8 +48,8 @@ test('only fresh inbound messages create replies, any sender allowed; global con
   assert.equal(store.state.openTest.attempts, 2);
   const view = JSON.stringify(openView(store.state, c, env, NOW)); assert(!view.includes(from)); assert(!view.includes(c.token));
 });
-test('STOP, human request and echoes outrank questions and prevent later automation', async () => {
-  for (const control of [message('stop', 'STOP'), message('human', 'human'), { kind: 'takeover', from, id: 'echo.1' }, { kind: 'optout', from }]) {
+test('STOP and echoes outrank questions and prevent later automation', async () => {
+  for (const control of [message('stop', 'STOP'), { kind: 'takeover', from, id: 'echo.1' }, { kind: 'optout', from }]) {
     const store = await started(); await accept(store, [message(), control, message('later')]);
     assert.equal((await worker(store)).processed, false);
     await accept(store, [message('yet-later')]); assert.equal((await worker(store)).processed, false);

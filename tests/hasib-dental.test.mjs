@@ -183,7 +183,7 @@ test('Today for a clinic: service requests, unpaid visits, low supplies and Layl
   assert.deepEqual(d.needsYou.requests[1].service, { en: 'Whitening', ar: 'تبييض' }, 'a listed option carries both languages');
   assert.ok(first.conversationId);
   assert.deepEqual([d.layla.priceQuestions, d.layla.appointmentRequests, d.layla.serviceQuestions], [1, 1, 1]);
-  assert.equal(d.needsYou.chats, 1);
+  assert.equal(d.needsYou.chats, 0, 'Layla answers a request for a person herself, with the team contact');
   assert.deepEqual([d.needsYou.lowStockCount, d.needsYou.lowStock[0].nameEn], [1, 'Gloves']);
   assert.deepEqual(d.setup, { laylaSector: true, treatments: true, supplies: true });
 

@@ -56,13 +56,16 @@ test('the Catalyst owner journey: a customer writes, the owner reads, takes over
   assert.deepEqual((await h.dashboard('contacts', { sessionHash: a.sessionHash })).value.items, []);
 });
 
-test('the server refuses Catalyst exports with plan_required, and allows imports and broadcasts to the manager only', async () => {
+test('Catalyst exports its customer list as CSV; chat and full-account exports stay plan_required', async () => {
   const { h, a } = await catalyst();
   await h.inbound(a, { from: '96891111111', text: 'Hello' });
   const [chat] = (await h.dashboard('conversations', { sessionHash: a.sessionHash })).value.items;
-  for (const [operation, args] of [['export_chat', { conversationId: chat.id }], ['export_contacts', {}], ['export_account', {}]]) {
+  for (const [operation, args] of [['export_chat', { conversationId: chat.id }], ['export_account', {}]]) {
     assert.equal((await h.dashboard(operation, { sessionHash: a.sessionHash, ...args })).reason, 'plan_required', operation);
   }
+  const csv = await h.dashboard('export_contacts', { sessionHash: a.sessionHash });
+  assert.equal(csv.ok, true, 'the customer list exports');
+  assert.equal(csv.value.items.length, 1);
   const caps = capabilitiesFor('catalyst');
   for (const operation of ['import_contacts', 'templates', 'campaign_preview', 'campaign_create', 'campaign_cancel']) {
     assert.equal(dashboardGate(operation, caps, 'manager'), null, operation);
@@ -74,17 +77,20 @@ test('the server refuses Catalyst exports with plan_required, and allows imports
   assert.equal(dashboardGate('import_contacts', capabilitiesFor('ascend', 'employee'), 'employee'), 'manager_required');
 });
 
-test('the Catalyst dashboard shows Chats, Customers (with broadcasts) and Settings, and hides exports', () => {
+test('the Catalyst dashboard is four tabs: Chats, Broadcasts, Customers and Settings, with CSV export only', () => {
   const caps = capabilitiesFor('catalyst');
   const map = dashboardMap(null, caps);
-  assert.deepEqual(map.sections, ['chats', 'customers', 'settings']);
-  assert.deepEqual(map.views.customers, ['contacts', 'broadcast']);
+  assert.deepEqual(map.sections, ['chats', 'broadcasts', 'customers', 'settings']);
+  assert.deepEqual(map.views.customers, [], 'Customers is one list');
+  assert.deepEqual(map.views.settings, ['business', 'services', 'channels']);
+  assert.deepEqual(dashboardMap(null, capabilitiesFor('catalyst', 'employee'), 'employee').sections, ['chats', 'customers'], 'staff answer chats and see customers');
   const p = dashboardPermissions({ capabilities: caps, workspaceRole: 'manager' });
-  assert.deepEqual(p, { canExport: false, canImport: true, canBroadcast: true, canDeleteCustomer: true });
+  assert.deepEqual(p, { canExport: false, canExportCsv: true, canImport: true, canBroadcast: true, canDeleteCustomer: true });
   const ascend = dashboardPermissions({ capabilities: capabilitiesFor('ascend'), workspaceRole: 'manager' });
-  assert.deepEqual(ascend, { canExport: true, canImport: true, canBroadcast: true, canDeleteCustomer: true });
+  assert.deepEqual(ascend, { canExport: true, canExportCsv: true, canImport: true, canBroadcast: true, canDeleteCustomer: true });
   const employee = dashboardPermissions({ capabilities: capabilitiesFor('ascend', 'employee'), workspaceRole: 'employee' });
   assert.equal(employee.canExport, false);
+  assert.equal(employee.canExportCsv, false);
   assert.equal(employee.canImport, false);
   assert.equal(employee.canDeleteCustomer, false, 'the server denies contact_delete to employees');
 });
@@ -106,4 +112,18 @@ test('every refusal an owner can meet has its own message in English and Arabic,
   }
   const { createStrings: c } = await import('../src/lib/dashboard/strings.js');
   assert.match(c('en').reason('plan_required'), /plan/i, 'a plan refusal says it is about the plan, not a retry');
+});
+
+test('the overview tells a live Catalyst owner what is still missing: services & prices, and a team contact', async () => {
+  const { h, a } = await catalyst();
+  const setup = async () => (await h.dashboard('overview', { sessionHash: a.sessionHash })).value.setup;
+  assert.deepEqual(await setup(), { services: false, teamContact: false });
+  const row = await h.m.db.get(a.rowId);
+  await h.m.db.patch(a.rowId, { profile: { ...row.profile, teamContact: 'Sara · +968 9123 4567' } });
+  const entry = { ownerKey: String(a.accountId), entryKey: randomUUID(), kind: 'service', nameEn: 'Valuation', nameAr: 'تقييم', category: '', benefitEn: '', benefitAr: '', descriptionEn: '', descriptionAr: '',
+    availability: '', prices: [], source: 'owner', confidence: 1, laylaUseEn: '', laylaUseAr: '', revision: 1, sortOrder: 0, createdAt: h.m.now(), updatedAt: h.m.now() };
+  await h.m.db.insert('blueCatalogEntries', { ...entry, status: 'draft' });
+  assert.deepEqual(await setup(), { services: false, teamContact: true }, 'a draft service is not yet something Layla offers');
+  await h.m.db.insert('blueCatalogEntries', { ...entry, entryKey: randomUUID(), status: 'approved' });
+  assert.deepEqual(await setup(), { services: true, teamContact: true });
 });

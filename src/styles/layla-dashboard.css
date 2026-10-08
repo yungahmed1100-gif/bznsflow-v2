@@ -114,6 +114,13 @@
 /* Chats: list + thread */
 .ld-chats { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); height: 100%; }
 .ld-list { border-inline-end: 1px solid var(--rule-strong); display: flex; flex-direction: column; min-height: 0; background: var(--paper); }
+/* Catalyst's "still to add" card, pinned at the top of the chat list. */
+.ld-reminder { margin: 12px 12px 0; padding: 12px 14px; border: 1px solid var(--rule-strong); border-inline-start: 3px solid var(--yellow); border-radius: var(--radius); background: var(--card); display: grid; gap: 6px; }
+.ld-reminder h2 { margin: 0; font-size: 14px; }
+.ld-reminder p { margin: 0; font-size: 13px; color: var(--ink-2); }
+.ld-reminder ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.ld-reminder a { display: inline-flex; align-items: center; min-height: 32px; font-size: 13px; font-weight: 600; color: var(--blue); }
+.ld-reminder a::after { content: '→'; margin-inline-start: 6px; display: inline-block; transform: scaleX(var(--x-sign)); }
 .ld-list-head { padding: 16px; border-bottom: 1px solid var(--rule); display: grid; gap: 10px; }
 .ld-list-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ld-list-title .ld-button { min-height: 34px; padding: 4px 10px; font-size: 13px; }

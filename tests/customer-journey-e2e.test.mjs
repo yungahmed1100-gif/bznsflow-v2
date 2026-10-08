@@ -24,7 +24,8 @@ import { executeDashboard } from '../convex/blueDashboardState.js';
 import { executeProductSetup } from '../convex/productSetupState.js';
 import { executeKnowledge } from '../convex/knowledgeSourceState.js';
 import { realEstateDoc } from './helpers/layla-conversation.mjs';
-import { phrase } from '../config/layla-tones.js';
+import { runReplyTurn } from '../convex/laylaRespond.js';
+import { REPLY_DEBOUNCE_MS } from '../convex/laylaTurn.js';
 
 const IG_APP = '1674756910890232', IG_ACCOUNT = '17841400000000088', CSRF = 'f'.repeat(64);
 const env = {
@@ -123,7 +124,19 @@ const signedWebhook = async (w, envelope, secret) => {
   await w.webhook({ method: 'POST', url: '/api/layla-meta-webhook', headers: { 'x-hub-signature-256': `sha256=${createHmac('sha256', secret).update(raw).digest('hex')}` }, body: raw }, res);
   return res.statusCode;
 };
+// Layla's AI turn with a stand-in for Qwen: it answers viewings from the published FAQ, and
+// records every prompt so the test can check the model was given the owner's facts.
+const WELCOME = 'Hello Sara, I’m Layla from Qurum Coast Properties. We rent villas in Al Mouj.';
+const prompts = [];
+const model = async messages => {
+  prompts.push(messages);
+  const q = [...messages].reverse().find(m => m.role === 'user').content;
+  return { text: JSON.stringify({ reply: /viewings/i.test(q) ? 'Yes, viewings are always free.' : WELCOME, intent: 'answer' }), usage: { input: 1, output: 1 }, ms: 1, model: 'test-model' };
+};
 const runQueued = async w => {
+  w.m.advance(REPLY_DEBOUNCE_MS);
+  for (const c of w.m.table('blueConversations').filter(c => c.pendingReply))
+    await runReplyTurn({ exec: (operation, args) => executeMessaging(w.m.ctx, { operation, ...args, hashSecret: SECRET }, w.m.now()), conversationId: c._id, key: c.pendingReply.key, generate: model });
   for (const job of w.m.table('blueMessages').filter(x => x.direction === 'out' && x.status === 'queued')) {
     const res = { headers: {}, setHeader() {}, status(n) { this.statusCode = n; }, end() {} };
     await w.worker({ method: 'POST', headers: { authorization: `Bearer ${env.GREEN_MESSAGING_WORKER_SECRET}` }, body: { jobId: job._id } }, res);
@@ -179,11 +192,13 @@ test('a granted customer sets up, connects Instagram, activates, and Layla answe
   await runQueued(w);
   const [welcome] = w.sent;
   assert.equal(welcome.channel, 'instagram');
-  assert.ok(welcome.text.startsWith(phrase('informative', 'welcome', 'en', { business: 'Qurum Coast Properties', customer: ', Sara' })), welcome.text);
+  assert.equal(welcome.text, WELCOME);
+  assert.match(prompts.at(-1)[0].content, /introducing yourself as Layla from Qurum Coast Properties/);
   w.m.advance(60000);
   assert.equal(await signedWebhook(w, dm('Are the viewings free?'), 'instagram-secret'), 200);
   await runQueued(w);
   assert.equal(w.sent.at(-1).text, 'Yes, viewings are always free.');
+  assert.match(prompts.at(-1)[0].content, /Are viewings free\?\s*A: Yes, viewings are always free\./, 'the model was given the owner’s own FAQ');
   // The owner's inbox shows the chat, its channel and what Layla captured.
   const chats = await owner.post('/api/layla-meta?surface=dashboard', { action: 'conversations' });
   assert.equal(chats.status, 200, JSON.stringify(chats.body));
@@ -208,7 +223,7 @@ test('the same journey on WhatsApp gives the same answers', async () => {
     messages: [{ id: `wamid.${w.m.now()}`, from: '96891234567', timestamp: String(Math.floor(w.m.now() / 1000)), type: 'text', text: { body: text } }] } }] }] });
   assert.equal(await signedWebhook(w, msg("Hi I'm Sara, looking for a villa to rent in Al Mouj"), 'parent-secret'), 200);
   await runQueued(w);
-  assert.ok(w.sent[0].text.startsWith(phrase('informative', 'welcome', 'en', { business: 'Qurum Coast Properties', customer: ', Sara' })), w.sent[0].text);
+  assert.equal(w.sent[0].text, WELCOME);
   w.m.advance(60000);
   assert.equal(await signedWebhook(w, msg('Are the viewings free?'), 'parent-secret'), 200);
   await runQueued(w);

@@ -25,6 +25,9 @@ Sunday–Thursday 8:30–17:30. Closed Friday.
 ## Location
 Al Qurum, Way 2601, Muscat. https://maps.example.test/qcp
 
+## Team contact
+WhatsApp +968 9100 2000 (Sara)
+
 ## FAQ
 **Q:** Do you charge for viewings?
 A: No, viewings are free.
@@ -37,7 +40,7 @@ test('parses front matter and bilingual section headings', () => {
   const parsed = parseBzns(doc);
   assert.equal(parsed.meta.name, 'Qurum Coast Properties');
   assert.equal(parsed.meta.sector, 'real-estate');
-  assert.deepEqual(parsed.sections.map(s => s.key), ['about', 'offer', 'hours', 'location', 'faq']);
+  assert.deepEqual(parsed.sections.map(s => s.key), ['about', 'offer', 'hours', 'location', 'contact', 'faq']);
   const ar = parseBzns('---\nname: عقارات القرم\nsector: real-estate\n---\n## من نحن\nوكالة عائلية\n## خدماتنا\n- بيع وشراء\n## ساعات العمل\nمن الأحد إلى الخميس\n## الموقع\nالقرم\n## الأسئلة الشائعة\n**س:** هل المعاينة مجانية؟\nج: نعم');
   assert.deepEqual(ar.sections.map(s => s.key), ['about', 'offer', 'hours', 'location', 'faq']);
   assert.deepEqual(ar.faqs, [{ question: 'هل المعاينة مجانية؟', answer: 'نعم' }]);
@@ -58,7 +61,7 @@ test('a valid document derives a profile the existing validator accepts', () => 
 
 test('required fields, placeholders, HTML and size are reported per section', () => {
   const codes = text => validateBzns(text).errors.map(e => `${e.code}:${e.section || ''}`);
-  assert.deepEqual(codes('## About us\nhello'), ['bzns_name_required:', 'bzns_sector_required:', 'bzns_offer_required:offer']);
+  assert.deepEqual(codes('## About us\nhello'), ['bzns_name_required:', 'bzns_sector_required:', 'bzns_offer_required:offer', 'bzns_contact_required:contact']);
   assert.ok(codes(doc.replace('Family-run agency', '[Who you are]')).includes('bzns_placeholder:about'));
   assert.ok(!codes(doc.replace('https://maps.example.test/qcp', '[Map](https://maps.example.test/qcp)')).includes('bzns_placeholder:location'), 'markdown links are not placeholders');
   assert.ok(codes(doc.replace('Family-run', '<script>x</script>')).includes('bzns_html:about'));
@@ -79,7 +82,7 @@ test('FAQ extraction keeps the first twelve pairs for the profile', () => {
 
 test('chunks are one per section, tenant scoped, normalized and hashed', () => {
   const rows = bznsChunks(parseBzns(doc), { tenantId: 'acct1', revision: 3, now: 5 });
-  assert.equal(rows.length, 5);
+  assert.equal(rows.length, 6);
   for (const row of rows) {
     assert.equal(row.tenantId, 'acct1'); assert.equal(row.revision, 3); assert.equal(row.approved, true);
     assert.equal(row.source, 'bzns'); assert.match(row.contentHash, /^[a-f0-9]{8,}$/); assert.ok(row.text.length <= 12000);
@@ -112,7 +115,7 @@ test('guided answers replace or add the matching sections and never add prices',
 });
 
 test('saved details convert into a publishable document without prices', () => {
-  const md = profileToBzns({ businessName: 'Noor Abayas', profile: { sector: 'Retail & e-commerce', services: 'Abayas and scarves', prices: 'From 25 OMR', hours: '10am to 10pm', location: 'Muscat Grand Mall', faqs: [{ question: 'Do you deliver?', answer: 'Yes, across Muscat.' }] },
+  const md = profileToBzns({ businessName: 'Noor Abayas', profile: { sector: 'Retail & e-commerce', services: 'Abayas and scarves', prices: 'From 25 OMR', hours: '10am to 10pm', location: 'Muscat Grand Mall', teamContact: 'WhatsApp +968 9100 2000', faqs: [{ question: 'Do you deliver?', answer: 'Yes, across Muscat.' }] },
     answers: [{ question: 'Can I return an item?', answer: 'Within 7 days.' }], lang: 'en' });
   const result = validateBzns(md);
   assert.equal(result.ok, true, JSON.stringify(result.errors));
@@ -124,7 +127,7 @@ test('saved details convert into a publishable document without prices', () => {
 test('the checklist only ticks sections the owner has actually written', () => {
   const ticked = text => validateBzns(text).checklist.filter(i => i.present).map(i => i.key);
   assert.deepEqual(ticked(bznsTemplate('real-estate', 'en')), [], 'template hints are not done');
-  assert.deepEqual(ticked(doc), ['about', 'offer', 'location', 'faq']);
+  assert.deepEqual(ticked(doc), ['about', 'offer', 'location', 'contact', 'faq']);
   assert.ok(!validateBzns(doc).checklist.some(i => i.key === 'hours'), 'Layla is 24/7: hours are optional');
 });
 
@@ -141,21 +144,20 @@ test('the tone line picks Layla\'s style; missing or unknown falls back to Infor
   assert.doesNotThrow(() => validateReviewProfile(deriveProfile(parseBzns(sharp)).profile));
 });
 
-test('a Team contact section becomes the contact Layla gives a customer who asks for a person', async () => {
-  const { answer } = await import('../api/_lib/layla/domain.js');
+test('a Team contact section becomes the contact Layla gives a customer she cannot help', async () => {
+  const { teamContactOf } = await import('../config/layla-tones.js');
   const doc = (contact) => `---\nname: Qurum Coast\nsector: real-estate\ntone: informative\n---\n# Qurum Coast\n## About us\nFamily agency.\n## What we offer\n- Rentals\n${contact}`;
   const withContact = deriveProfile(validateBzns(doc('## Team contact\nWhatsApp +968 9123 4567 (Huda)\n')).parsed).profile;
   assert.equal(withContact.teamContact, 'WhatsApp +968 9123 4567 (Huda)', 'a phone number is not mistaken for a price');
   assert.equal(withContact.humanContact, '', 'kept apart from any legacy contact');
-  assert.equal(withContact.handoffMode, 'inbox', 'the chat still waits in the owner’s inbox');
-  assert.match(answer('I want to talk to a person', { ...withContact, businessName: 'Qurum Coast' }, true).text, /WhatsApp \+968 9123 4567 \(Huda\)$/);
+  assert.equal(withContact.handoffMode, 'inbox');
+  assert.equal(teamContactOf(withContact), 'WhatsApp +968 9123 4567 (Huda)', 'this is what Layla’s AI turn is given');
+  assert.equal(teamContactOf({ ...withContact, teamContact: '', humanContact: 'legacy@example.test' }), '', 'inbox mode never advertises a legacy contact');
   const arabic = deriveProfile(validateBzns(doc('## جهة اتصال الفريق\nواتساب 96891234567\n')).parsed).profile;
   assert.equal(arabic.teamContact, 'واتساب 96891234567');
-  // Without the section Layla only promises a reply in the chat, and other answers never carry a contact.
   const none = deriveProfile(validateBzns(doc('')).parsed).profile;
   assert.equal(none.teamContact, undefined);
-  assert.equal(answer('I want to talk to a person', { ...none, businessName: 'Qurum Coast' }, true).text, 'I’ll leave this conversation for our team to follow up here.');
-  assert.doesNotMatch(answer('what is the price of a 3 bedroom villa', { ...withContact, businessName: 'Qurum Coast' }, true).text, /9123/);
+  assert.equal(validateBzns(doc('')).errors.some(e => e.code === 'bzns_contact_required'), true, 'a document without a team contact cannot be published');
 });
 
 test('a team contact longer than one short line is refused, never silently dropped', () => {
@@ -167,4 +169,18 @@ test('a team contact longer than one short line is refused, never silently dropp
   const tooLong = validateBzns(doc(`${exactly}y`));
   assert.equal(tooLong.ok, false);
   assert.deepEqual(tooLong.errors.map(e => [e.code, e.section]), [['bzns_contact_too_long', 'contact']]);
+});
+
+test('every sector template asks for what customers ask Layla: offer, how to order or book, payment, location, team contact', () => {
+  const topics = {
+    order: /order|book|viewing|quote|service|طلب|حجز|معاين|عرض|عروض|زيار|صيانة/i,
+    payment: /payment|pay|دفع/i,
+  };
+  for (const sector of BZNS_TEMPLATE_SECTORS) for (const lang of ['en', 'ar']) {
+    const parsed = parseBzns(bznsTemplate(sector, lang));
+    const keys = parsed.sections.map(s => s.key), headings = parsed.sections.map(s => s.heading).join(' | ');
+    for (const key of ['offer', 'location', 'contact']) assert.ok(keys.includes(key), `${sector}/${lang}: ${key}`);
+    assert.match(headings, topics.order, `${sector}/${lang}: how to order or book`);
+    if (sector !== 'real-estate' && sector !== 'construction') assert.match(headings, topics.payment, `${sector}/${lang}: payment methods`);
+  }
 });

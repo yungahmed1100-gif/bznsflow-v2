@@ -18,29 +18,35 @@ test('inbox handoffs require no external staff address and preserve legacy conta
   assert.equal(messagingReady({ accountId: 'owner', expiresAt: 100, status: 'connected', profile: facts }, 1), true);
   for (const question of ['I want to speak to a human', 'أريد التحدث مع موظف']) {
     const result = answer(question, { ...facts, humanContact: 'legacy@example.test' }, true);
-    assert.equal(result.intent, 'human'); assert.ok(!result.text.includes('legacy@example.test'));
+    assert.ok(!result.text.includes('legacy@example.test'), 'inbox mode never advertises a legacy contact');
   }
 });
 
-test('human queue has reason, customer message and captured context; resolving never restarts cancelled automation', async () => {
+test('asking for a person is answered by Layla; the owner switch still pauses a chat, and resolving never restarts cancelled automation', async () => {
   const h = blueHarness(); await h.enable();
   const tenant = await seedTenant(h.m);
   await h.messaging('activate', { sessionHash: tenant.sessionHash });
   await h.inbound(tenant, { text: 'I want a villa', from: '96891111111' });
   await h.inbound(tenant, { text: 'Please let me speak to a person', intent: 'human', handoff: true, from: '96891111111' });
+  // Layla is the whole front office: she answers with the team contact and stays on the chat.
+  assert.equal((await entry(h, tenant, 'handoffs')).value.items.length, 0, 'nothing waits in a queue');
+  assert.equal(h.m.table('blueConversations')[0].takeover, false);
+  // The owner's own switch (Stop Layla) still pauses that one chat.
+  const [chat] = (await entry(h, tenant, 'conversations')).value.items;
+  const stopped = await entry(h, tenant, 'takeover_handoff', { conversationId: chat.id, expectedVersion: chat.handoff?.version || 0 });
+  assert.equal(stopped.ok, true, JSON.stringify(stopped));
   let queue = await entry(h, tenant, 'handoffs');
   assert.equal(queue.ok, true); assert.equal(queue.value.items.length, 1);
   const item = queue.value.items[0];
-  assert.equal(item.handoff.reason, 'customer_requested');
+  assert.equal(item.handoff.reason, 'team_takeover');
   assert.equal(item.lastCustomerMessage.text, 'Please let me speak to a person');
   assert.ok(Array.isArray(item.contact.fields));
   // Long staff activity must not hide the retained customer message from the queue.
   for (let i = 0; i < 55; i++) await h.m.db.insert('blueMessages', { conversationId: item.id, accountId: tenant.accountId, integrationId: tenant.integration.id, direction: 'out', text: 'Staff reply', textExpiresAt: 1e15, at: h.m.now() + i + 1, status: 'sent' });
   assert.equal((await entry(h, tenant, 'handoffs')).value.items[0].lastCustomerMessage.text, 'Please let me speak to a person');
   const conversationId = item.id;
-  const takeover = await entry(h, tenant, 'takeover_handoff', { conversationId, expectedVersion: item.handoff.version });
-  assert.equal(takeover.value.handoff.state, 'handling');
-  const args = { conversationId, expectedVersion: takeover.value.handoff.version };
+  assert.equal(stopped.value.handoff.state, 'handling');
+  const args = { conversationId, expectedVersion: stopped.value.handoff.version };
   assert.equal((await entry(h, tenant, 'resolve_handoff', args)).ok, true);
   assert.equal((await entry(h, tenant, 'resolve_handoff', args)).ok, true);
   assert.equal(h.m.table('blueHandoffAudit').filter(x => x.action === 'resolve').length, 1);

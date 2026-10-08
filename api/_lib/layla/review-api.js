@@ -7,8 +7,12 @@ import { safeEqual } from '../cookies.js';
 import { readBody, send, sendPilotError } from '../http.js';
 import { PilotError } from './config.js';
 import { importWebsite } from './website-import.js';
-import { validateReviewProfile, previewAnswer } from './review-profile.js';
-import { BZNS_MAX_CHARS, validateBzns } from '../../../src/lib/bzns-doc.js';
+import { validateReviewProfile } from './review-profile.js';
+import { aiTurn, profileSections } from '../../../config/layla-ai.js';
+import { qwenGenerator } from '../../../config/qwen-client.js';
+import { teamContactOf, langOf } from '../../../config/layla-tones.js';
+import { sectorIdFor } from '../../../config/layla-qualification.js';
+import { BZNS_MAX_CHARS, parseBzns, validateBzns } from '../../../src/lib/bzns-doc.js';
 import { credentialContext, exchangeAndVerify, metaRequest, openToken, sealToken } from './customer-meta.js';
 import { verifySignupConfiguration } from './eligibility.js';
 
@@ -127,7 +131,7 @@ export function routingTakeoverApproved(env, i) {
   const parts = String(env.BLUE_ROUTING_TAKEOVER || '').split(':');
   return parts.length === 2 && parts.every(assetId) && i?.path === 'existing_cloud' && i.waba === parts[0] && i.phone === parts[1];
 }
-export function createReviewHandler({ env = process.env, fetcher = fetch, now = Date.now, store = reviewStore({ env, fetcher }), catalog = catalogStore({env,fetcher}), exchange = exchangeAndVerify, inspect = inspectReviewConnection, reviewMode = true, accountStore = blueAuthStore({env,fetcher}), websiteImport = importWebsite, verifyConfig = checkSignupConfiguration } = {}) {
+export function createReviewHandler({ env = process.env, fetcher = fetch, now = Date.now, store = reviewStore({ env, fetcher }), catalog = catalogStore({env,fetcher}), exchange = exchangeAndVerify, inspect = inspectReviewConnection, reviewMode = true, accountStore = blueAuthStore({env,fetcher}), websiteImport = importWebsite, verifyConfig = checkSignupConfiguration, generate = qwenGenerator(env, fetcher) } = {}) {
   return async (req, res) => {
     let body;
     try {
@@ -160,7 +164,7 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
       const attemptState = attempt => createHmac('sha256', secret).update(`blue-review-attempt:${sessionHash}:${attempt}`).digest('hex');
       const result = () => ({ ...publicState(row, reviewAvailable(env), reviewMode || !!account && !!row.accountId), csrfToken: csrf,
         reviewMode, websiteImportAvailable: websiteImportEnabled(env), accountSaveAvailable: accountsAvailable, savedToAccount: !!row.accountId,
-        account: account ? { email:account.email } : null,
+        account: account ? { email:account.email, industry:account.industry || '' } : null,
         ownerConnectAvailable: !reviewMode && !!row.accountId && !row.integration && !row.pendingSelection && !!ownerConnection(env,account),
         ...(isGreenRuntime(env) && String(account?.email || '').trim().toLowerCase() === 'ahmed@bznsflowai.com' ? {
           ownerConnectionReadiness: {
@@ -263,8 +267,16 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
       } else if (body.action === 'preview') {
         if (!row.profile?.reviewed) throw new PilotError('profile_unreviewed',409);
         if (typeof body.text !== 'string' || !body.text.trim() || body.text.length > 1000) throw new PilotError('invalid_text');
-        const catalogPage=row.accountId?await catalog('match',{ownerKey,query:body.text.trim()}):{entries:[]};
-        const preview = previewAnswer(body.text.trim(), row.profile,catalogPage.entries);
+        // The same AI turn a customer gets, from the same setup: document, approved catalog, tone and contact.
+        const text = body.text.trim();
+        const markdown = row.bznsPublished?.markdown || row.bznsDraft?.markdown || '';
+        const parsed = parseBzns(markdown).sections.map(({ key, heading, body: sectionBody }) => ({ key, heading, body: sectionBody }));
+        const sections = parsed.length ? parsed : profileSections(row.profile);
+        const approved = row.accountId ? ((await catalog('list',{ownerKey,limit:50})).entries || []).filter(entry => entry.status === 'approved') : [];
+        const turn = await aiTurn({ business: { name: row.profile.businessName || '', sector: row.profile.sector || '', sectorId: sectorIdFor(row.profile.sector) },
+          tone: row.profile.tone, channel: 'whatsapp', teamContact: teamContactOf(row.profile), sections, catalog: approved, knowledge: [], facts: [], acks: [],
+          customer: {}, ask: null, firstReply: true, history: [{ role: 'customer', text }], fieldKeys: [], lang: langOf(text) }, generate);
+        const preview = { question: text, text: turn.reply.slice(0, 1200), sourceFields: [], needsHuman: !!turn.needsTeam, intent: turn.intent, ...(turn.ai?.fallback ? { fallback: turn.ai.fallback } : {}) };
         await write('preview_result', { profileVersion: row.profileVersion || 1, preview });
         return send(res,200,{...result(), preview: preview.text, sourceFields: preview.sourceFields, needsHuman: preview.needsHuman},{vary:'Cookie'});
       } else if (body.action === 'save_progress') {

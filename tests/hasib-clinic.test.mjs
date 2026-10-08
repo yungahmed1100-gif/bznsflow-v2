@@ -5,7 +5,6 @@ import { convexMemory } from './helpers/convex-memory.mjs';
 import { executeClinic, containsClinicalContent, clinicSafetyMessage } from '../convex/hasib/clinicState.js';
 import { executeBookings } from '../convex/hasib/bookingsState.js';
 import { clinicIngressDecision } from '../config/clinic-safety.js';
-import { liveAnswer } from '../api/_lib/layla/blue-messaging.js';
 import { blueHarness, seedTenant } from './helpers/blue-tenant.mjs';
 
 async function setup() {
@@ -29,17 +28,6 @@ test('clinic ingress withholds medical text and uses deterministic bilingual eme
   assert.match(clinicSafetyMessage('ar'),/9999/);
 });
 
-test('medical content never persists and creates one reception handoff task and safety reply',async()=>{
-  const h=blueHarness();await h.enable();const tenant=await seedTenant(h.m,{name:'clinic',sector:'Medical clinics'});await h.messaging('activate',{sessionHash:tenant.sessionHash});
-  const text='I have severe pain and swelling. What treatment should I take?';
-  const safety=liveAnswer(text,{sector:'Medical clinics',humanContact:'reception@example.com',reviewed:true},[]);
-  await h.messaging('ingest',{integrationId:tenant.integration.id,events:[{kind:'message',id:'medical-1',from:'96891111111',at:h.m.now(),text,...safety}]});
-  const incoming=h.m.table('blueMessages').find(row=>row.key.endsWith('medical-1')&&row.direction==='in');
-  assert.equal(incoming.text,undefined);assert.equal(incoming.reason,'medical_content_withheld');
-  assert.equal(h.m.table('clinicTasks').filter(row=>row.kind==='medical_handoff').length,1);
-  const reply=h.m.table('blueMessages').find(row=>row.direction==='out');assert.match(reply.text,/9999/);assert.equal(reply.handoff,true);
-  assert.ok(!JSON.stringify([...h.m.rows.values()]).includes('severe pain'));
-});
 
 test('governance cannot approve clinic activation without permit and cross-border disposition',async()=>{
   const {clinic}=await setup();

@@ -1,6 +1,7 @@
 // One published business behind the real webhook path, on WhatsApp or Instagram:
-// envelope → ingestBlueEnvelope / ingestInstagramEnvelope → liveAnswer → Convex ingest
-// (memory) → worker → a fake Meta sender. Tests read exactly what each customer receives.
+// envelope → ingestBlueEnvelope / ingestInstagramEnvelope → Convex ingest (memory) → Layla's
+// AI turn (runReplyTurn with a scripted model, never a real one) → worker → a fake Meta sender.
+// Tests read exactly what each customer receives, and every prompt the model was given.
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { blueHarness, seedTenant } from './blue-tenant.mjs';
@@ -10,10 +11,31 @@ import { executeHasib } from '../../convex/hasib/hasibState.js';
 import { executeInstagram } from '../../convex/blueInstagramState.js';
 import { grantPlan } from '../../convex/hasib/plans.js';
 import { ingestBlueEnvelope, ingestInstagramEnvelope, createBlueWorker } from '../../api/_lib/layla/blue-messaging.js';
+import { runReplyTurn } from '../../convex/laylaRespond.js';
+import { REPLY_DEBOUNCE_MS } from '../../convex/laylaTurn.js';
 import { sealToken, credentialContext } from '../../api/_lib/layla/customer-meta.js';
 import { GREEN_CLOUD } from './green-env.mjs';
 
 export const IG_APP = '1674756910890232', IG_ACCOUNT = '17841400000000077';
+
+/** The last customer message in a prompt. */
+export const lastCustomer = messages => [...messages].reverse().find(m => m.role === 'user')?.content || '';
+/**
+ * A scripted stand-in for Qwen: `answer(question, messages)` returns the reply text, or an object
+ * with any of {reply, intent, needs_team, no_reply, asked_field, fields}. The default repeats the
+ * question, which always passes the language and grounding checks.
+ */
+export const scriptedModel = (answer = q => `About "${q}": here is what we have.`) => {
+  const calls = [];
+  const generate = async messages => {
+    calls.push(messages);
+    const out = await answer(lastCustomer(messages), messages);
+    const body = typeof out === 'string' ? { reply: out, intent: 'answer' } : { intent: 'answer', ...out };
+    return { text: JSON.stringify(body), usage: { input: 100, output: 20 }, ms: 5, model: 'qwen-plus' };
+  };
+  generate.calls = calls;
+  return generate;
+};
 // Green runtime, both channels open, as in production.
 export const env = { CONVEX_CLOUD_URL: GREEN_CLOUD, GREEN_CONVEX_CLOUD_URL: GREEN_CLOUD, CONVEX_SERVICE_SECRET: 'a'.repeat(64), LAYLA_CREDENTIAL_ENCRYPTION_KEY: 'b'.repeat(64),
   GREEN_MESSAGING_WORKER_SECRET: 'c'.repeat(64), GREEN_WHATSAPP_ENABLED: 'true', GREEN_INSTAGRAM_APPROVED: 'true', GREEN_INSTAGRAM_ENABLED: 'true',
@@ -27,6 +49,8 @@ tone: ${tone}
 ---
 ## About us
 Family agency in Muscat since 2012.
+## Team contact
+WhatsApp +968 9100 2000 (Sara)
 ## What we offer
 - Villa and apartment rentals
 - Property sales
@@ -46,6 +70,7 @@ A: Yes, viewings are always free.
  */
 export async function business(options = {}) {
   const h = blueHarness(); await h.enable();
+  const model = options.model || scriptedModel();
   const tenant = await seedTenant(h.m, { sector: options.sectorLabel || 'Real estate' });
   // A real sealed credential so the worker can open it, as in production.
   const row = await h.m.db.get(tenant.rowId);
@@ -85,6 +110,13 @@ export async function business(options = {}) {
   };
   const queued = () => h.m.table('blueMessages').filter(m => m.direction === 'out' && m.status === 'queued');
   const flush = async () => { for (const job of queued()) await runJob(job._id); };
+  /** Layla's pending AI turns, as the debounced reply action runs them in production. */
+  const turns = async () => {
+    h.m.advance(REPLY_DEBOUNCE_MS);
+    const results = [];
+    for (const c of h.m.table('blueConversations').filter(c => c.pendingReply)) results.push(await runReplyTurn({ exec: (operation, args) => h.messaging(operation, args), conversationId: c._id, key: c.pendingReply.key, generate: model }));
+    return results;
+  };
   /** A webhook envelope for one inbound message on this business's channel. */
   const envelope = (from, message, { name, id = `wamid.${randomUUID()}` } = {}) => {
     if (instagram) return instagramEnvelope(from, message, id.replace('wamid', 'mid'), h.m.now());
@@ -99,6 +131,7 @@ export async function business(options = {}) {
     h.m.advance(1000);
     const before = sent.length;
     await ingest(envelope(from, message, { name }));
+    await turns();
     await flush();
     return sent.slice(before).filter(s => s.to === from && !s.image).map(s => s.text);
   };
@@ -109,7 +142,7 @@ export async function business(options = {}) {
     const r = await executeReview(h.m.ctx, { operation: 'bzns_publish', sessionHash: tenant.sessionHash, markdown, version: current.bznsDraft?.version || 0 }, h.m.now());
     assert.equal(r.ok, true, JSON.stringify(r));
   };
-  return { h, tenant, integration, hasib, say, envelope, ingest, flush, runJob, queued, conversation, contact, sent, republish, channel: instagram ? 'instagram' : 'whatsapp' };
+  return { h, tenant, integration, hasib, say, envelope, ingest, turns, flush, runJob, queued, conversation, contact, sent, republish, model, channel: instagram ? 'instagram' : 'whatsapp' };
 }
 
 /** Connect an Instagram professional account to the tenant, with a real sealed token. */
@@ -143,6 +176,8 @@ tone: ${tone}
 ---
 ## About us
 Family agency in Muscat since 2012.
+## Team contact
+WhatsApp +968 9100 2000 (Sara)
 ## What we offer
 - Villa and apartment rentals
 - Property sales
@@ -169,6 +204,8 @@ tone: ${tone}
 ---
 ## About us
 Abaya boutique in Muscat Grand Mall since 2015.
+## Team contact
+WhatsApp +968 9100 2000 (Sara)
 ## What we offer
 - Abayas and shaylas
 - Custom tailoring
@@ -189,6 +226,8 @@ tone: ${tone}
 ---
 ## About us
 Family dental clinic in Al Khuwair.
+## Team contact
+WhatsApp +968 9100 2000 (Sara)
 ## What we offer
 - Check-ups and cleaning
 - Whitening

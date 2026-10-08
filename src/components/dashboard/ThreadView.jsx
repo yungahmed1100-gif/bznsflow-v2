@@ -1,5 +1,6 @@
 import { ChatOrders } from '../hasib/ChatOrders';
 import { CapturedDetails } from './CapturedDetails';
+import { LaylaSwitch } from './LaylaSwitch';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { dashboard, messaging } from '../../lib/dashboard/api';
@@ -11,7 +12,7 @@ import { StatusTicks, QualificationChip } from './Badges';
 import { CampaignWizard } from './CampaignWizard';
 import { Dialog } from './Dialog';
 import { dashboardPermissions } from '../../lib/dashboard/permissions';
-import { handoffReason, handoffState } from '../../lib/dashboard/handoff';
+import { handoffReason } from '../../lib/dashboard/handoff';
 
 const newRequestId = () => crypto.randomUUID();
 
@@ -51,7 +52,6 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
   };
   const takeover = conversation.takeover;
   const handoff = conversation.handoff || { state: takeover ? 'open' : 'none', version: 0 };
-  const handleHandoff = action => act(action, () => dashboard(action, { conversationId, expectedVersion: handoff.version }));
   const send = e => {
     e.preventDefault();
     const text = draft.text.trim();
@@ -80,14 +80,17 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
           </details>}
         </div>
         <section className="ld-handoff" aria-label={s.ar ? 'متابعة الفريق' : 'Team handling'}>
-          <strong role="status">{handoffState(handoff.state, s.ar)}</strong>
-          {takeover && <p>{handoffReason(handoff.reason, s.ar)}</p>}
-          <div className="ld-actions">
-            {handoff.state !== 'handling' && handoff.state !== 'resolved' && <button className="ld-button" type="button" disabled={!!busy} onClick={() => handleHandoff('takeover_handoff')}>{s.ar ? 'استلام المحادثة' : 'Take over'}</button>}
-            {takeover && handoff.state !== 'resolved' && <button className="ld-button" type="button" disabled={!!busy} onClick={() => handleHandoff('resolve_handoff')}>{s.ar ? 'تم الحل' : 'Resolve'}</button>}
-            {takeover && <button className="ld-button" type="button" disabled={!!busy || contact.optout} onClick={() => handleHandoff('return_handoff')}>{s.ar ? 'إعادة إلى ليلى' : 'Return to Layla'}</button>}
-          </div>
-          <p>{takeover ? (s.ar ? 'إنهاء المتابعة يُبقي ليلى متوقفة. الإعادة إلى ليلى تسمح بالرد على الرسائل الجديدة المؤهلة فقط.' : 'Resolving keeps Layla paused. Return to Layla allows replies to future eligible messages only.') : (s.ar ? 'استلام المحادثة يوقف ردود ليلى الآلية.' : 'Taking over stops Layla’s automated replies.')}</p>
+          {/* While Layla replies the switch says it all; once stopped, say why (the owner, a reply from the WhatsApp app, a flood). */}
+          {takeover && <p role="status">{handoffReason(handoff.reason, s.ar)}</p>}
+          {/* One switch per chat: on, Layla replies here; off, the team does. A refusal moves it back and says why. */}
+          <LaylaSwitch s={s} on={!takeover} channel={conversation.channel}
+            label={!takeover ? s.t('chatLaylaOn') : s.t('chatLaylaOff')}
+            detail={!takeover ? s.t('chatLaylaOnHelp') : contact.optout ? s.t('optedOut') : s.t('chatLaylaOffHelp')}
+            disabled={!!busy || (takeover && contact.optout)}
+            onToggle={async next => {
+              await dashboard(next ? 'return_handoff' : 'takeover_handoff', { conversationId, expectedVersion: handoff.version });
+              await thread.refresh({ quiet: true }); onChanged();
+            }} />
         </section>
         <CapturedDetails s={s} contact={contact} qualification={data.qualification} conversationId={conversationId} channel={conversation.channel} />
         <ChatOrders s={s} conversationId={conversationId} />

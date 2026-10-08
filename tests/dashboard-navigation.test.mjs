@@ -8,11 +8,35 @@ const tech = { modules: ['orders', 'stock', 'expenses', 'insights', 'serials', '
 const construction = { modules: ['orders', 'stock', 'expenses', 'insights'], setupRequired: false, pack: { id: 'construction' }, workspaceRole: 'manager' };
 const automotive = { modules: ['orders', 'stock', 'expenses', 'insights'], setupRequired: false, pack: { id: 'automotive' }, workspaceRole: 'manager' };
 
-test('Layla only: chats, customers and settings, with chats as home', () => {
+test('Catalyst: four tabs, with chats as home', () => {
   const map = dashboardMap(null);
-  assert.deepEqual(map.sections, ['chats', 'customers', 'settings']);
+  assert.deepEqual(map.sections, ['chats', 'broadcasts', 'customers', 'settings']);
   assert.deepEqual(resolveTab(null, null, map), { tab: 'chats', view: null });
   assert.deepEqual(resolveTab('orders', null, map), { tab: 'chats', view: null }, 'Hasib sections are not reachable');
+  assert.deepEqual(resolveTab('settings', null, map), { tab: 'settings', view: 'business' }, 'Settings opens on the business document');
+  assert.deepEqual(dashboardMap(null, { broadcasts: false }).sections, ['chats', 'customers', 'settings']);
+});
+
+test('Catalyst: old links land on the four tabs', () => {
+  const map = dashboardMap(null);
+  for (const [tab, view, where] of [
+    ['broadcast', null, { tab: 'broadcasts', view: null }],
+    ['customers', 'broadcast', { tab: 'broadcasts', view: null }],
+    ['customers', 'contacts', { tab: 'customers', view: null }],
+    ['contacts', null, { tab: 'customers', view: null }],
+    ['stock', 'services', { tab: 'settings', view: 'services' }],
+    ['channels', null, { tab: 'settings', view: 'channels' }],
+    ['business', null, { tab: 'settings', view: 'business' }],
+    ['settings', 'channels', { tab: 'settings', view: 'channels' }],
+  ]) assert.deepEqual(resolveTab(tab, view, map), where, `${tab}/${view}`);
+});
+
+test('Ascend before Hasib loads keeps its own map, not Catalyst\'s', () => {
+  const map = dashboardMap(null, { operations: true, broadcasts: true, money: true });
+  assert.equal(map.catalyst, undefined);
+  assert.deepEqual(map.sections, ['chats', 'customers', 'settings']);
+  assert.deepEqual(map.views.customers, ['contacts', 'broadcast']);
+  assert.deepEqual(map.views.settings, ['channels', 'business']);
 });
 
 test('retail shop: Today is home; Service is only for phone stores', () => {
@@ -69,6 +93,6 @@ test('a dental clinic: the same sections, a clinic’s views, and old links stil
 
 test('Accounts and VAT appear in Settings once an industry is set', () => {
   assert.deepEqual(dashboardMap(retail).views.settings, ['channels', 'business', 'accounts']);
-  assert.deepEqual(dashboardMap(null).views.settings, ['channels', 'business']);
+  assert.deepEqual(dashboardMap(null, { operations: true }).views.settings, ['channels', 'business']);
   assert.deepEqual(dashboardMap({ modules: [], setupRequired: true }).views.settings, ['channels', 'business']);
 });

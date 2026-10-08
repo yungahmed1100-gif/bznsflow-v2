@@ -13,9 +13,10 @@ const endpoint = '/api/layla-meta?surface=customer';
  * Dashboard → Business: edit the facts Layla answers from, any time. Saving is
  * the owner's confirmation; Layla uses the new answers straight away, and live
  * replies stay on. `section`: 'all', 'details' (Settings when Stock exists), or
- * 'services' (Stock → Services).
+ * 'services' (Stock → Services, or Catalyst's Settings → Services & prices when `catalyst`).
+ * Catalyst's Settings is also the one place its sector changes (`catalyst`).
  */
-export function BusinessDetails({ s, section = 'all', onSaved }) {
+export function BusinessDetails({ s, section = 'all', onSaved, catalyst = false }) {
   const { lang, ar } = s;
   const tr = (en, arabic) => ar ? arabic : en;
   const explain = reason => explainReason(reason, lang);
@@ -39,14 +40,14 @@ export function BusinessDetails({ s, section = 'all', onSaved }) {
     <div className="layla-customer layla-embedded" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
       <div className="layla-workspace">
         {section === 'services' ? <>
-          <h1>{tr('Services', 'الخدمات')}</h1>
-          <p className="layla-stage-intro">{tr('The services and prices Layla offers. Your products come from Stock.', 'الخدمات والأسعار التي تعرضها ليلى. أما منتجاتك فتأتي من المخزون.')}</p>
+          <h1>{catalyst ? s.t('view_settings_services') : tr('Services', 'الخدمات')}</h1>
+          <p className="layla-stage-intro">{catalyst ? tr('What Layla offers and its prices. Add them one by one, or upload your price list.', 'ما تعرضه ليلى وأسعاره. أضفها واحدة تلو الأخرى، أو ارفع قائمة أسعارك.') : tr('The services and prices Layla offers. Your products come from Stock.', 'الخدمات والأسعار التي تعرضها ليلى. أما منتجاتك فتأتي من المخزون.')}</p>
         </> : <>
           <h1>{tr('Your business', 'نشاطك التجاري')}</h1>
           <p className="layla-stage-intro">{tr('What Layla tells your customers. Change anything here and she answers with it from the next message.', 'ما تخبر به ليلى عملاءك. غيّر أي شيء هنا وستجيب به من الرسالة التالية.')}</p>
         </>}
         {error && <p className="layla-error" role="alert">{error}</p>}
-        {section !== 'services' && <BznsEditor lang={lang} data={setup} request={request} onState={next => { setSetup(next); onSaved?.(); }} disabled={busy} />}
+        {section !== 'services' && <BznsEditor lang={lang} data={setup} request={request} onState={next => { setSetup(next); onSaved?.(); }} disabled={busy} sectorControl={catalyst} />}
         {/* Older accounts keep their published Q&A until bzns.md replaces it. */}
         {setup.profile && section !== 'services' && !setup.bzns?.publishedRevision && <AddInformation lang={lang} request={request} />}
         {setup.profile && section !== 'details' && <section {...(section === 'all' ? { 'aria-labelledby': 'business-catalog-heading' } : { 'aria-label': tr('Services', 'الخدمات') })}>

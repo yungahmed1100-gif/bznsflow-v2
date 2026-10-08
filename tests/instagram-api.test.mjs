@@ -1,5 +1,4 @@
 import test from 'node:test';
-import { phrase } from '../config/layla-tones.js';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { exchangeInstagram, inspectInstagram, verifiedInstagramRequest, createInstagramApi, instagramConfig, INSTAGRAM_CALLBACK, INSTAGRAM_SCOPES } from '../api/_lib/layla/instagram.js';
@@ -56,11 +55,12 @@ test('a retry skips the forced Instagram login so a dropped sign-in can finish',
   assert.notEqual(retry.searchParams.get('state'),first.searchParams.get('state'));
   assert.deepEqual(calls.map(c=>c.op),['begin','begin','begin']);
 });
-test('Instagram webhook routes by server-bound account; a photo gets the same one acknowledgement as on WhatsApp, then a human',async()=>{
+test('Instagram webhook routes by server-bound account; a photo is flagged so Layla says she cannot open it',async()=>{
   const calls=[];const binding={channel:'instagram',app:'1234',igAccount:'178414000000001',integrationId:'connection',profileVersion:1};
   await ingestInstagramEnvelope({object:'instagram',entry:[{id:binding.igAccount,messaging:[{sender:{id:'178900000000001'},recipient:{id:binding.igAccount},timestamp:1000,message:{mid:'mid.1',attachments:[{type:'image'}]}}]}]}, {app:'1234',now:()=>1000,store:async(op,args)=>{calls.push({op,args});return op==='binding'?binding:null;}});
   const [event]=calls[1].args.events;
-  assert.deepEqual([event.handoff,event.handoffReason,event.reply],[true,'unsupported_media',phrase('informative','media','en')]);
+  assert.deepEqual([event.media,event.text],[true,'[The customer sent a photo, voice note or file]']);
+  assert.ok(!event.reply,'nothing is answered inside the webhook');
   assert.equal(event.nonText,undefined,'parser hints never reach Convex');
   assert.equal(calls[0].args.channel,'instagram');
 });

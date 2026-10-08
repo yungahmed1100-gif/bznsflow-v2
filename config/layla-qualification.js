@@ -452,7 +452,8 @@ export function extractBareName(original) {
  * @returns {{ text: string, keys: string[] }}
  */
 export function planQuestions({ sectorId, fields, askCounts = [], asked = [], lastAskedAt = 0, answeredNow = false, intent, handoff, now = Date.now(), lang, tone, knownName = true }) {
-  if (handoff && intent !== 'disabled') return { text: '', keys: [] };
+  // A redirect already gave the team contact, so asking for details would contradict it.
+  if (handoff === 'redirect' || (handoff && intent !== 'disabled')) return { text: '', keys: [] };
   if (!['services', 'prices', 'hours', 'location', 'faq', 'disabled', 'catalog', 'greeting', 'identity'].includes(intent)) return { text: '', keys: [] };
   // Do not repeat an unanswered question too soon; once it is answered, move on.
   const have = new Set(fields.filter(f => f.value).map(f => f.key));

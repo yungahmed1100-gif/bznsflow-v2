@@ -212,8 +212,8 @@ try {
     const listVisible = await page.locator('.ld-list').isVisible();
     assert.equal(listVisible, width > 768, `list beside thread at ${width}`); count++;
     assert.match(await page.locator('.ld-messages').textContent(), /Text removed after 30 days/); count++;
-    await page.getByRole('button', { name: 'Take over', exact: true }).click();
-    await page.getByRole('button', { name: 'Return to Layla', exact: true }).waitFor();
+    await page.getByRole('switch', { name: /Layla is live in this chat/ }).click();
+    await page.getByRole('switch', { name: /Layla is stopped in this chat/ }).waitFor();
     assert.ok(state.calls.some(c => c.action === 'takeover_handoff')); count++;
     assert.equal(await noOverflow(page), true, `no horizontal overflow at ${width}`); count++;
     assert.deepEqual(await axe(page), [], `axe at ${width}`); count++;

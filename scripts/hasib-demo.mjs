@@ -14,6 +14,7 @@ import { randomUUID } from 'node:crypto';
 import { convexMemory, SECRET } from '../tests/helpers/convex-memory.mjs';
 import { seedTenant } from '../tests/helpers/blue-tenant.mjs';
 import { executeMessaging } from '../convex/blueMessagingState.js';
+import { runReplyTurn } from '../convex/laylaRespond.js';
 import { executeDashboard } from '../convex/blueDashboardState.js';
 import { executeCampaigns } from '../convex/blueCampaignState.js';
 import { executeHasib } from '../convex/hasib/hasibState.js';
@@ -46,7 +47,21 @@ await m.db.patch(tenant.rowId, { profile: PACK === 'dental' ? DENTAL : PACK === 
 for (const key of ['global', 'broadcast', 'hasib']) await m.db.insert('blueMessagingSettings', { key, enabled: key !== 'broadcast', ...(key === 'global' ? { rolloutMode: 'live', smokeVerifiedAt: 1, smokeEvidence: 'local-memory-demo-no-provider' } : {}) });
 if (!CATALYST) await grantPlan(m.ctx, { email: 'n@example.com', plan: 'ascend', packId: ['retail-tech', 'dental'].includes(PACK) ? PACK : 'retail' }, m.now());
 await m.db.insert('blueBusinessSettings', { accountId: tenant.accountId, timezone: 'Asia/Muscat', updatedAt: m.now() });
-const call = (fn, operation, args = {}, at = m.now()) => fn(m.ctx, { operation, sessionHash: tenant.sessionHash, hashSecret: SECRET, workerFunction: 'dispatch', ...args }, at);
+const rawCall = (fn, operation, args = {}, at = m.now()) => fn(m.ctx, { operation, sessionHash: tenant.sessionHash, hashSecret: SECRET, workerFunction: 'dispatch', ...args }, at);
+// Layla's replies are written by the AI turn after ingest. The demo never calls Qwen: a stand-in
+// model writes each event's canned reply, through the same checks and commit as production.
+const call = async (fn, operation, args = {}, at = m.now()) => {
+  const result = await rawCall(fn, operation, args, at);
+  if (fn === executeMessaging && operation === 'ingest' && result.ok) {
+    const replies = new Map((args.events || []).filter(e => e.kind === 'message' && e.reply).map(e => [e.from, e.reply]));
+    for (const c of m.table('blueConversations').filter(c => c.pendingReply)) {
+      const reply = replies.get(c.number) || 'Thanks!';
+      await runReplyTurn({ exec: (op, extra) => rawCall(executeMessaging, op, extra, at), conversationId: c._id, key: c.pendingReply.key,
+        generate: async () => ({ text: JSON.stringify({ reply, intent: 'answer' }), usage: { input: 0, output: 0 }, ms: 0, model: 'demo' }) });
+    }
+  }
+  return result;
+};
 // The signed-in person for HTTP calls; seeding always runs as the manager.
 let actorAccountId = null;
 const hasib = async (operation, args, at) => { const r = await call(executeHasib, operation, args, at); if (!r.ok) throw Error(`${operation}: ${r.reason}`); return r.value; };

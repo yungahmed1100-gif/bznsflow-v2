@@ -36,6 +36,10 @@ const PROCESSORS = [
     ar: ['OpenAI', 'يولّد ردود مساعد المحادثة لدينا، ويستقبل الرسائل التي تكتبها فيه.', 'الولايات المتحدة'],
   },
   {
+    en: ['Alibaba Cloud (Model Studio)', 'Writes Layla’s replies to the customers of businesses that use BznsFlow. Receives the conversation and that business’s published information.', 'Singapore'],
+    ar: ['Alibaba Cloud (Model Studio)', 'يكتب ردود ليلى لعملاء الأنشطة التي تستخدم BznsFlow، ويستقبل المحادثة والمعلومات المنشورة لذلك النشاط.', 'سنغافورة'],
+  },
+  {
     en: ['Meta (Facebook)', 'Measures our advertising. Receives a pseudonymous identifier, not your name.', 'United States / global'],
     ar: ['Meta (Facebook)', 'يقيس أداء إعلاناتنا. يستقبل معرّفاً مستعاراً لا اسمك.', 'الولايات المتحدة / عالمي'],
   },

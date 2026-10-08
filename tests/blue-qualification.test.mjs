@@ -93,27 +93,21 @@ test('owner-entered values outrank messages, and question plans respect intent, 
   assert.equal(sectorIdFor('Custom furniture'), 'other');
 });
 
-test('live ingest answers first, asks up to three related questions once, captures partial answers and marks the lead qualified', async () => {
+test('live ingest captures details by rule, plans one question at a time for the model, and marks the lead qualified', async () => {
   const h = blueHarness();
   await h.enable();
   const t = await seedTenant(h.m, { name: 'q', sector: 'Real estate' });
   await h.messaging('activate', { sessionHash: t.sessionHash });
-  await h.inbound(t, { id: 'm1', text: 'Do you have villas for rent?', reply: 'We have villas from 500 OMR.', intent: 'services' });
-  let replies = h.m.table('blueMessages').filter(r => r.direction === 'out').map(r => r.text);
-  // Welcome first, then name and interest in the same message.
-  assert.equal(replies[0], 'Hello, I’m Layla from Blue Studio. We have villas from 500 OMR.\n\nTo help you further, could you share your name and your area?');
+  const ask = () => h.m.table('blueConversations')[0].pendingReply?.askKey;
+  await h.inbound(t, { id: 'm1', text: 'Do you have villas for rent?', reply: 'Yes, we have villas for rent.', intent: 'services', turn: false });
+  assert.equal(ask(), 'customer_name', 'the name first, one question at a time');
+  await h.turns('Yes, we have villas for rent. May I have your name?');
+  assert.equal(h.m.table('blueMessages').filter(r => r.direction === 'out').at(-1).text, 'Yes, we have villas for rent. May I have your name?', 'the model writes the words');
   h.m.advance(60000);
   await h.inbound(t, { id: 'm2', text: 'Al Mawaleh', reply: 'Thanks!', intent: 'unknown' });
-  replies = h.m.table('blueMessages').filter(r => r.direction === 'out').map(r => r.text);
-  // An answer is thanked and the next questions follow at once, so they are not repeated after.
-  assert.equal(replies.at(-1), 'Thank you.\n\nTo help you further, could you share your name and your approximate budget?');
   let contact = h.m.table('blueContacts')[0];
   assert.deepEqual(values(contact.fields), { need: 'rent', property_type: 'villa', area: 'Mawaleh' });
   assert.equal(contact.qualificationStatus, 'in_progress');
-  h.m.advance(60000);
-  await h.inbound(t, { id: 'm3', text: 'How much are they?', reply: 'From 500 OMR.', intent: 'prices' });
-  replies = h.m.table('blueMessages').filter(r => r.direction === 'out').map(r => r.text);
-  assert.equal(replies.at(-1), 'From 500 OMR.', 'the same question is never asked twice in a row');
   h.m.advance(60000);
   await h.inbound(t, { id: 'm4', text: 'budget 600 OMR, cash buyer, I decide, next month', reply: 'Noted.', intent: 'prices' });
   contact = h.m.table('blueContacts')[0];

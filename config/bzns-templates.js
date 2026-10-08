@@ -12,7 +12,7 @@ const COMMON = {
     location: ['Location', '[Building, street, area and city. Add your Google Maps link.]'],
     hours: ['Hours', '[For example: Sunday to Thursday 8:30 to 17:30, Saturday 9:00 to 13:00, closed Friday.]'],
     handoff: ['When Layla should hand over to the team', '[Complaints, negotiations, legal or medical questions, and anything not written in this document.]'],
-    contact: ['Team contact', '[The phone, WhatsApp number or email Layla gives a customer who asks for a person. Delete this section if they should only wait for your reply in the chat.]'],
+    contact: ['Team contact', '[The phone, WhatsApp number or email Layla gives a customer she can’t help, for example: WhatsApp +968 9123 4567 (Sara). Required.]'],
     faq: ['FAQ', '**Q:** [A question customers often ask]\nA: [Your approved answer]\n\n**Q:** [Another common question]\nA: [Your approved answer]'],
   },
   ar: {
@@ -22,7 +22,7 @@ const COMMON = {
     location: ['الموقع', '[المبنى والشارع والمنطقة والمدينة. أضف رابط خرائط Google.]'],
     hours: ['ساعات العمل', '[مثال: من الأحد إلى الخميس من 8:30 إلى 17:30، والسبت من 9:00 إلى 13:00، والجمعة إجازة.]'],
     handoff: ['متى تحوّل ليلى المحادثة للفريق', '[الشكاوى والتفاوض والأسئلة القانونية أو الطبية وأي شيء غير مكتوب في هذا المستند.]'],
-    contact: ['جهة اتصال الفريق', '[الهاتف أو رقم واتساب أو البريد الذي تعطيه ليلى لعميل يطلب التحدث مع شخص. احذف هذا القسم إذا كان يكفي أن ينتظر ردكم في المحادثة.]'],
+    contact: ['جهة اتصال الفريق', '[الهاتف أو رقم واتساب أو البريد الذي تعطيه ليلى لعميل لا تستطيع مساعدته، مثال: واتساب 96891234567 (سارة). مطلوب.]'],
     faq: ['الأسئلة الشائعة', '**س:** [سؤال يسأله العملاء كثيراً]\nج: [إجابتك المعتمدة]\n\n**س:** [سؤال شائع آخر]\nج: [إجابتك المعتمدة]'],
   },
 };
@@ -30,8 +30,8 @@ const COMMON = {
 // Per sector: what the business offers, plus sector sections between Areas and Location.
 const SECTORS = {
   generic: {
-    en: { offer: ['[Your main service or product]', '[Another service or product]'], extra: [['How to order or book', '[What the customer should send and what happens next.]']] },
-    ar: { offer: ['[خدمتك أو منتجك الرئيسي]', '[خدمة أو منتج آخر]'], extra: [['طريقة الطلب أو الحجز', '[ما الذي يرسله العميل وماذا يحدث بعد ذلك.]']] },
+    en: { offer: ['[Your main service or product]', '[Another service or product]'], extra: [['How to order or book', '[What the customer should send and what happens next.]'], ['Payment methods', '[Cash, card, bank transfer or payment links. No amounts here: prices live in Services & prices.]']] },
+    ar: { offer: ['[خدمتك أو منتجك الرئيسي]', '[خدمة أو منتج آخر]'], extra: [['طريقة الطلب أو الحجز', '[ما الذي يرسله العميل وماذا يحدث بعد ذلك.]'], ['طرق الدفع', '[نقداً أو بطاقة أو تحويل بنكي أو رابط دفع. بدون مبالغ هنا: الأسعار في الخدمات والأسعار.]']] },
   },
   'real-estate': {
     en: {
@@ -69,16 +69,20 @@ const SECTORS = {
   },
   'retail-tech': {
     en: { offer: ['[Phones, laptops and accessories you sell]', '[Repairs you handle]', '[Trade-ins]'], extra: [
+      ['How to order', '[Order on WhatsApp, in store or online; what the customer should send.]'],
       ['Warranty', '[Who provides the warranty, how long it lasts, and what it covers.]'],
       ['Repairs and trade-ins', '[How to book a repair, typical turnaround, and how trade-in values are checked.]'],
       ['Delivery and pickup', '[Areas you deliver to and pickup options.]'],
       ['Returns', '[Return window and condition required.]'],
+      ['Payment methods', '[Cash, card, bank transfer or payment links. No amounts here: prices live in Services & prices.]'],
     ] },
     ar: { offer: ['[الهواتف والحواسيب والإكسسوارات التي تبيعونها]', '[أعمال الصيانة]', '[الاستبدال بأجهزة مستعملة]'], extra: [
+      ['طريقة الطلب', '[الطلب عبر واتساب أو في المتجر أو أونلاين، وما يرسله العميل.]'],
       ['الضمان', '[من يقدم الضمان ومدته وما يشمله.]'],
       ['الصيانة والاستبدال', '[طريقة حجز الصيانة والمدة المعتادة وكيف تُقيَّم الأجهزة المستعملة.]'],
       ['التوصيل والاستلام', '[مناطق التوصيل وخيارات الاستلام.]'],
       ['الاسترجاع', '[مدة الاسترجاع والحالة المطلوبة.]'],
+      ['طرق الدفع', '[نقداً أو بطاقة أو تحويل بنكي أو رابط دفع. بدون مبالغ هنا: الأسعار في الخدمات والأسعار.]'],
     ] },
   },
   dental: {
@@ -87,12 +91,16 @@ const SECTORS = {
       ['First visit', '[What to bring and how long it takes.]'],
       ['Insurance', '[Which insurers you accept.]'],
       ['Emergencies', '[What counts as an emergency and how patients reach you. Layla never gives medical advice.]'],
+      ['Rescheduling and cancellation', '[How patients move or cancel an appointment, and how much notice you need.]'],
+      ['Payment methods', '[Cash, card, bank transfer or payment links. No amounts here: prices live in Services & prices.]'],
     ] },
     ar: { offer: ['[الفحص والتنظيف]', '[الحشوات وعلاج العصب والتيجان]', '[التقويم والزراعة والتبييض]'], extra: [
       ['حجز موعد', '[طريقة الحجز وما يرسله المريض ومدة الحجز المسبق.]'],
       ['الزيارة الأولى', '[ما يحضره المريض والمدة المتوقعة.]'],
       ['التأمين', '[شركات التأمين المعتمدة.]'],
       ['الحالات الطارئة', '[ما يعد حالة طارئة وكيف يتواصل المريض معكم. ليلى لا تقدم نصائح طبية.]'],
+      ['تغيير الموعد أو إلغاؤه', '[كيف يغيّر المريض موعده أو يلغيه، وكم يلزم من إشعار مسبق.]'],
+      ['طرق الدفع', '[نقداً أو بطاقة أو تحويل بنكي أو رابط دفع. بدون مبالغ هنا: الأسعار في الخدمات والأسعار.]'],
     ] },
   },
   construction: {
@@ -115,12 +123,16 @@ const SECTORS = {
       ['Parts', '[Genuine or aftermarket, and how you confirm availability.]'],
       ['Approval and collection', '[How you ask approval before extra work and how collection works.]'],
       ['Warranty', '[Warranty on parts and labour.]'],
+      ['Pickup and drop-off', '[Whether you collect and return cars, which areas, and how to arrange it.]'],
+      ['Payment methods', '[Cash, card, bank transfer or payment links. No amounts here: prices live in Services & prices.]'],
     ] },
     ar: { offer: ['[الصيانة الدورية وتغيير الزيت]', '[الفحص والإصلاح]', '[الإطارات والبطاريات وقطع الغيار]'], extra: [
       ['حجز الصيانة', '[طريقة الحجز وما يرسله العميل (الطراز والسنة والمشكلة).]'],
       ['قطع الغيار', '[أصلية أو تجارية وكيف تتأكدون من توفرها.]'],
       ['الموافقة والاستلام', '[كيف تطلبون الموافقة قبل أي عمل إضافي وطريقة الاستلام.]'],
       ['الضمان', '[الضمان على القطع والعمل.]'],
+      ['استلام السيارة وتوصيلها', '[هل تستلمون السيارة وتعيدونها، وأي مناطق، وكيف يتم الترتيب.]'],
+      ['طرق الدفع', '[نقداً أو بطاقة أو تحويل بنكي أو رابط دفع. بدون مبالغ هنا: الأسعار في الخدمات والأسعار.]'],
     ] },
   },
 };

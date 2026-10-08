@@ -4,6 +4,8 @@ import { executeDashboard } from '../../convex/blueDashboardState.js';
 import { executeAudience } from '../../convex/blueAudienceState.js';
 import { executeCampaigns, executeCampaignWorker, maintainCampaigns } from '../../convex/blueCampaignState.js';
 import { convexMemory, SECRET, APP } from './convex-memory.mjs';
+import { runReplyTurn } from '../../convex/laylaRespond.js';
+import { REPLY_DEBOUNCE_MS } from '../../convex/laylaTurn.js';
 
 export const profileFor = (sector = 'Real estate') => ({ businessName: 'Blue Studio', sector, services: 'Villas and apartments', prices: 'From 500 OMR', hours: '9–5', location: 'Muscat', humanContact: 'team@example.com', reviewed: true });
 
@@ -32,7 +34,21 @@ export function blueHarness() {
     await m.db.insert('blueMessagingSettings', { key: 'global', enabled: true, rolloutMode:'live',smokeVerifiedAt:1,smokeEvidence:'synthetic-test' });
     await m.db.insert('blueMessagingSettings', { key: 'broadcast', enabled: true });
   };
-  const inbound = (tenant, { id = randomUUID(), from = '96891111111', text = 'Hello', reply = 'Thanks', intent = 'services', profileName, handoff = false } = {}) =>
-    messaging('ingest', { integrationId: tenant.integration.id, events: [{ kind: 'message', id, from, at: m.now(), text, reply, intent, handoff, ...(profileName ? { profileName } : {}) }] });
-  return { m, messaging, dashboard, audience, campaigns, worker, maintain, enable, inbound };
+  /**
+   * Layla's pending AI turns, run as the debounced reply action does. `reply` is what the stand-in
+   * model writes (null or '' means no reply); the real checks and commit still decide what is sent.
+   */
+  const turns = async (reply = 'Thanks', { advance = true } = {}) => {
+    if (advance) m.advance(REPLY_DEBOUNCE_MS);
+    const generate = async () => ({ text: JSON.stringify(reply ? { reply, intent: 'answer' } : { reply: '', no_reply: true, intent: 'ack' }), usage: { input: 1, output: 1 }, ms: 1, model: 'test-model' });
+    const results = [];
+    for (const c of m.table('blueConversations').filter(c => c.pendingReply)) results.push(await runReplyTurn({ exec: messaging, conversationId: c._id, key: c.pendingReply.key, generate }));
+    return results;
+  };
+  const inbound = async (tenant, { id = randomUUID(), from = '96891111111', text = 'Hello', reply = 'Thanks', intent = 'services', profileName, handoff = false, turn = true } = {}) => {
+    const result = await messaging('ingest', { integrationId: tenant.integration.id, events: [{ kind: 'message', id, from, at: m.now(), text, reply, intent, handoff, ...(profileName ? { profileName } : {}) }] });
+    if (turn && result.ok) await turns(reply, { advance: false });
+    return result;
+  };
+  return { m, messaging, dashboard, audience, campaigns, worker, maintain, enable, inbound, turns };
 }

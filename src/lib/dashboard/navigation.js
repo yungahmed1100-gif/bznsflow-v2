@@ -14,8 +14,17 @@ const ALIASES = {
   contacts: ['customers', 'contacts'], broadcast: ['customers', 'broadcast'],
   channels: ['settings', 'channels'], business: ['settings', 'business'],
 };
+// Catalyst is four tabs: Chats, Broadcasts, Customers, Settings. Its older links land on them.
+const CATALYST_ALIASES = {
+  broadcast: ['broadcasts'], contacts: ['customers'], stock: ['settings', 'services'],
+  channels: ['settings', 'channels'], business: ['settings', 'business'],
+};
+const CATALYST = Object.freeze({
+  sections: ['chats', 'broadcasts', 'customers', 'settings'],
+  views: { customers: [], settings: ['business', 'services', 'channels'] },
+});
 const TEAM_PACKS = ['retail', 'retail-tech', 'dental', 'real-estate', 'clinic', 'construction', 'automotive'];
-export const SECTION_ORDER = ['today', 'chats', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings'];
+export const SECTION_ORDER = ['today', 'chats', 'broadcasts', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings'];
 
 /** Preserve caller-owned URL parameters while clearing record state when changing sections. */
 export function dashboardSearch(current, tab, extra = {}) {
@@ -33,6 +42,11 @@ export function dashboardSearch(current, tab, extra = {}) {
  * @returns {{ sections: string[], views: Record<string, string[]> }}
  */
 export function dashboardMap(hasib, capabilities = { broadcasts: true, money: true }, role = 'manager') {
+  // Catalyst (no operations): Chats, Broadcasts, Customers, Settings. Ascend keeps the map below.
+  if (!hasib && !capabilities.operations) {
+    const sections = CATALYST.sections.filter(id => (id !== 'broadcasts' || capabilities.broadcasts) && (id !== 'settings' || role !== 'employee'));
+    return { sections, views: CATALYST.views, catalyst: true };
+  }
   // The main overview already knows the role, so an employee never sees Settings flash while Hasib loads.
   const workspaceRole = hasib?.workspaceRole ?? role;
   const on = m => !!hasib && !hasib.setupRequired && hasib.modules.includes(m);
@@ -63,7 +77,9 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
 
 /** The section and view to show for a URL, falling back to the home section. */
 export function resolveTab(requestedTab, requestedView, map) {
-  const [aliasTab, aliasView] = ALIASES[requestedTab] || [];
+  const aliases = map.catalyst ? CATALYST_ALIASES : ALIASES;
+  // Catalyst's Broadcasts used to be a view of Customers.
+  const [aliasTab, aliasView] = map.catalyst && requestedTab === 'customers' && requestedView === 'broadcast' ? ['broadcasts'] : aliases[requestedTab] || [];
   const tab = aliasTab || requestedTab;
   const home = map.sections[0] === 'today' ? 'today' : 'chats';
   if (!map.sections.includes(tab)) return { tab: home, view: null };

@@ -21,13 +21,20 @@ const TEXT_FILE = /\.(md|markdown|txt)$/i;
  *   request: (body: object) => Promise<object>,
  *   onState: (state: object) => void,
  *   disabled?: boolean,
+ *   sectorControl?: boolean,
  * }} props
+ *
+ * The sector comes from sign-up. `sectorControl` (Settings → Business) is the one place it can change.
  */
-export function BznsEditor({ lang = 'en', data, request, onState, disabled = false }) {
+export function BznsEditor({ lang = 'en', data, request, onState, disabled = false, sectorControl = false }) {
   const ar = lang === 'ar', tr = (en, arabic) => (ar ? arabic : en);
   const saved = data?.bzns?.markdown ?? '';
   const [text, setText] = useState(saved);
-  const [sector, setSector] = useState('');
+  const signup = BUSINESS_INDUSTRIES.find(row => row.id === data?.account?.industry) || null;
+  // The owner's pick, else the sign-up sector (which can arrive after the first render).
+  const [picked, setSector] = useState('');
+  const sector = picked || signup?.id || '';
+  const sectorName = id => { const row = BUSINESS_INDUSTRIES.find(item => item.id === id); return row ? (ar ? row.ar : row.en) : id; };
   const [view, setView] = useState('edit');
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -72,12 +79,13 @@ export function BznsEditor({ lang = 'en', data, request, onState, disabled = fal
       <section className="bzns-editor bzns-start" aria-labelledby="bzns-start-title">
         <h3 id="bzns-start-title">{tr('Start your business document', 'ابدأ مستند نشاطك')}</h3>
         <p>{tr('One document tells Layla how your business works. Pick your sector to get a template with every section filled with hints.', 'مستند واحد يخبر ليلى كيف يعمل نشاطك. اختر مجالك لتحصل على قالب فيه كل الأقسام مع أمثلة توضيحية.')}</p>
-        <label>{tr('Your sector', 'مجال نشاطك')}
+        {signup && !sectorControl ? <p className="bzns-sector">{tr('Your sector', 'مجال نشاطك')}: <strong>{sectorName(signup.id)}</strong></p>
+          : <label>{tr('Your sector', 'مجال نشاطك')}
           <select value={sector} onChange={e => setSector(e.target.value)} disabled={disabled}>
             <option value="">{tr('Choose your sector', 'اختر مجالك')}</option>
             {BUSINESS_INDUSTRIES.map(row => <option key={row.id} value={row.id}>{ar ? row.ar : row.en}</option>)}
           </select>
-        </label>
+        </label>}
         <div className="bzns-actions">
           <button type="button" className="layla-primary" disabled={!sector || disabled} onClick={() => edit(bznsTemplate(sector, lang).replace(/^sector: .*$/m, `sector: ${sector}`))}>{tr('Use this template', 'استخدم هذا القالب')}</button>
           {data?.profile && <button type="button" className="layla-secondary" disabled={disabled} onClick={() => edit(profileToBzns({ businessName: data.profile.businessName, profile: data.profile, lang }))}>{tr('Start from my saved details', 'ابدأ من معلوماتي المحفوظة')}</button>}
@@ -97,6 +105,12 @@ export function BznsEditor({ lang = 'en', data, request, onState, disabled = fal
           {!published ? tr('Not published yet', 'لم يُنشر بعد') : dirty || data?.bzns?.unpublishedChanges ? tr('Changes not published yet', 'تعديلات لم تُنشر بعد') : tr('Layla is answering from this version', 'تجيب ليلى من هذه النسخة')}
         </p>
       </div>
+      {sectorControl && <label className="bzns-sector">{tr('Sector', 'المجال')}
+        <select value={check.parsed.meta.sector || ''} onChange={e => edit(setMeta(text, 'sector', e.target.value))} disabled={disabled || busy}>
+          {!BUSINESS_INDUSTRIES.some(row => row.id === check.parsed.meta.sector) && <option value={check.parsed.meta.sector || ''}>{check.parsed.meta.sector || tr('Choose your sector', 'اختر مجالك')}</option>}
+          {BUSINESS_INDUSTRIES.map(row => <option key={row.id} value={row.id}>{ar ? row.ar : row.en}</option>)}
+        </select>
+      </label>}
       <ul className="bzns-rules">
         <li>{tr('Write in Arabic or English. Layla replies in the customer\'s language.', 'اكتب بالعربية أو الإنجليزية. ترد ليلى بلغة العميل.')}</li>
         <li>{tr('No prices, rents or stock here. Layla reads them live from Services & Prices or Hasib.', 'لا تكتب أسعاراً أو إيجارات أو مخزوناً هنا. تقرأها ليلى مباشرة من الخدمات والأسعار أو حاسب.')}</li>

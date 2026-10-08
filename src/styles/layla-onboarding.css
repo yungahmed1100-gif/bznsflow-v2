@@ -257,6 +257,9 @@
 .bzns-editor{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
 .bzns-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
 .bzns-head h3,.bzns-start h3{margin:0}
+/* The sector: fixed from sign-up in setup, a picker only in Settings → Business. */
+.bzns-sector{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0}
+.bzns-sector select{max-inline-size:100%}
 .bzns-rules{margin:0;padding-inline-start:20px;color:var(--layla-muted);display:grid;gap:4px}
 .bzns-tabs,.bzns-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .bzns-field{display:grid;gap:6px;font-weight:600}

@@ -26,12 +26,14 @@ test('300 customers × 4 messages: one reply per message at most, paced, never s
     const started = performance.now();
     await b.ingest(b.envelope(from, LINES[(i + turn) % LINES.length]));
     timings.push(performance.now() - started);
+    await b.turns();
     await b.flush();
   }
   await drain(b, 90);
   const inbound = b.h.m.table('blueMessages').filter(m => m.direction === 'in');
   assert.equal(inbound.length, 1200, 'every message stored once');
   const jobs = outbound(b).filter(m => !m.manual);
+  assert.ok(jobs.length >= 900, `Layla answered the burst: ${jobs.length} reply jobs`);
   const perMessage = new Map();
   for (const job of jobs) perMessage.set(job.key, (perMessage.get(job.key) || 0) + 1);
   assert.ok([...perMessage.values()].every(n => n === 1), 'one reply job per inbound message');
@@ -55,9 +57,9 @@ test('the same webhook delivered three times produces one stored message and one
   const b = await fixtureBusiness('retail', 'sweet');
   const body = b.envelope('96891230001', 'Hi, do you have the black abaya?');
   for (let i = 0; i < 3; i++) await b.ingest(body);
-  await b.flush();
+  await b.turns(); await b.flush();
   await b.ingest(body);
-  await b.flush();
+  await b.turns(); await b.flush();
   assert.equal(b.h.m.table('blueMessages').filter(m => m.direction === 'in').length, 1);
   assert.equal(b.sent.filter(s => !s.image).length, 1);
 });
@@ -65,6 +67,7 @@ test('the same webhook delivered three times produces one stored message and one
 test('a job handed to the worker twice reaches Meta once', async () => {
   const b = await fixtureBusiness('realestate', 'sharp');
   await b.ingest(b.envelope('96891230002', 'Hi'));
+  await b.turns();
   const [job] = b.queued();
   await b.runJob(job._id);
   await b.runJob(job._id);
@@ -74,6 +77,7 @@ test('a job handed to the worker twice reaches Meta once', async () => {
 test('republishing mid-burst fences replies written under the old document; new ones use the new style', async () => {
   const b = await fixtureBusiness('realestate', 'informative');
   for (const from of ['96891230010', '96891230011', '96891230012']) await b.ingest(b.envelope(from, 'Hi'));
+  await b.turns();
   assert.equal(b.queued().length, 3);
   await b.republish(realEstateDoc('sharp'));
   await b.flush();
@@ -81,7 +85,8 @@ test('republishing mid-burst fences replies written under the old document; new 
   assert.ok(outbound(b).every(j => j.status === 'blocked' && j.reason === 'conversation_or_profile_changed'));
   b.h.m.advance(MINUTE);
   const [reply] = await b.say('96891230013', 'Hi');
-  assert.ok(reply.startsWith(phrase('sharp', 'welcome', 'en', { business: 'Qurum Coast Properties', customer: '' })), reply);
+  assert.ok(reply, 'a new chat is answered under the new document');
+  assert.match(b.model.calls.at(-1)[0].content, /Professional & sharp/, 'in the new style');
 });
 
 test('a bot ping-pong gets one notice and then silence, whatever it keeps sending', async () => {

@@ -43,24 +43,21 @@ test('a stock product appears in Layla’s catalog automatically, stays in sync,
   assert.equal(entries(h, a)[0].status, 'archived');
 });
 
-test('Layla answers from live stock: sizes in stock and price, replacing her generic reply', async () => {
+test('Layla answers from live stock: sizes in stock and price reach the customer word for word', async () => {
   const { h, a, hasib } = await setup();
   await abaya(hasib, { s52: 0, s56: 3 });
   await h.inbound(a, { from: '96891111111', text: 'Do you have the black abaya?', intent: 'prices', reply: 'I can confirm the price from the approved business information.' });
   const [reply] = layla(h, a);
   assert.match(reply, /Black abaya — available in 56 · 25\.000 OMR/);
-  assert.doesNotMatch(reply, /approved business information/, 'the generic line is replaced');
   assert.equal(h.m.table('hasibDemandSignals').length, 1, 'a price question about a stock product is recorded as demand');
 });
 
-test('in Arabic, with the Arabic name; after a greeting the stock line is appended, not replacing it', async () => {
+test('in Arabic, with the Arabic name: the stock line follows whatever Layla wrote', async () => {
   const { h, a, hasib } = await setup();
   await abaya(hasib);
   await h.inbound(a, { from: '96891111111', text: 'السلام عليكم، عندكم عباية سوداء؟', intent: 'greeting', reply: 'وعليكم السلام، أهلاً بك!' });
   const [reply] = layla(h, a);
-  // The first reply's welcome replaces the generic greeting, so the chat never says hello twice.
-  assert.match(reply, /^أهلاً، معك ليلى من .+\./);
-  assert.ok(!reply.includes('وعليكم السلام، أهلاً بك!'));
+  assert.ok(reply.startsWith('وعليكم السلام، أهلاً بك!'), 'the model writes the words');
   // Gender-neutral Arabic: "المتوفر" reads correctly for any product name (عباية، آيفون).
   assert.match(reply, /عباية سوداء — المتوفر: 52، 56 · 25\.000 ر\.ع\./);
 });

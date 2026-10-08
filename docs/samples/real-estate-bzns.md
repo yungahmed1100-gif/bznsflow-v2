@@ -36,6 +36,9 @@ Building 41, Way 2601, Al Qurum, Muscat.
 ## Hours
 Sunday to Thursday 8:30 to 17:30. Saturday 9:00 to 13:00. Closed Friday.
 
+## Team contact
+WhatsApp +968 9123 4567 (Sara, sales)
+
 ## When Layla should hand over to the team
 Price negotiations, complaints, contract disputes and anything legal.
 

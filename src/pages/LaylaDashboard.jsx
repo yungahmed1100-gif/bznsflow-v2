@@ -7,6 +7,7 @@ import logoImg from '../assets/logo_bznsflow.png';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { DashboardNav } from '../components/dashboard/DashboardNav';
 import { ChatsView } from '../components/dashboard/ChatsView';
+import { SetupReminder } from '../components/dashboard/SetupReminder';
 import { ContactsView } from '../components/dashboard/ContactsView';
 import { BroadcastView } from '../components/dashboard/BroadcastView';
 import { usePolling } from '../hooks/usePolling';
@@ -77,6 +78,8 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const go = (next, extra = {}) => {
     const search = dashboardSearch(params, next, extra);
     setParams(search, { replace: false });
+    // Back on Chats after Settings, the setup reminder reflects what was just added.
+    if (next === 'chats' && tab !== 'chats' && map.catalyst) overview.refresh({ quiet: true });
   };
   const refreshHasib = useCallback(() => hasibState.refresh({ quiet: true }), [hasibState.refresh]); // eslint-disable-line react-hooks/exhaustive-deps
   const changePreview = async value => {
@@ -125,14 +128,15 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                 : tab === 'service' ? <ServiceView initialRepairId={params.get('repair')} initialAction={params.get('action') || ''} s={s} h={h} timezone={data.timezone} staff={hasibOverview?.workspaceRole === 'employee'} onClearLink={() => setParams(new URLSearchParams({ tab: 'service' }), { replace: true })} onChanged={refreshHasib} />
                 : tab === 'money' && view === 'expenses' ? <ExpensesView s={s} h={h} overview={hasibOverview} timezone={data.timezone} initialCreate={params.get('action') === 'expense'} />
                 : tab === 'money' ? <InsightsView s={s} h={h} overview={hasibOverview} onGo={go} />
-                : tab === 'customers' && view === 'broadcast' ? (data.integration ? <BroadcastView s={s} overview={data} onTimezone={() => overview.refresh({ quiet: true })} /> : <p className="ld-state">{s.ar ? 'الرسائل الجماعية متاحة لقناة واتساب فقط.' : 'Messaging many customers is available on WhatsApp only.'}</p>)
+                : (tab === 'customers' && view === 'broadcast') || tab === 'broadcasts' ? (data.integration ? <BroadcastView s={s} overview={data} onTimezone={() => overview.refresh({ quiet: true })} /> : <div className="ld-state"><p>{s.t('broadcastWhatsAppOnly')}</p>{map.sections.includes('settings') && <button type="button" className="ld-button" onClick={() => go('settings', { view: 'channels' })}>{s.t('connectChannel')}</button>}</div>)
                 : tab === 'customers' ? <>{hasibOverview?.pack && <FollowupView s={s} h={h} packId={hasibOverview.pack.id} timezone={data.timezone} />}<ContactsView s={s} overview={data} onOpenChat={id => go('chats', { chat: id })} /></>
                 : tab === 'settings' && view === 'accounts' ? <AccountsSettings s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={() => { refreshHasib(); overview.refresh({ quiet: true }); }} />
-                : tab === 'settings' && view === 'business' ? <><BusinessDetails s={s} section={map.sections.includes('stock') ? 'details' : 'all'} initialIndustryId={hasibOverview?.readOnly ? undefined : hasibOverview?.legacyIndustryId || undefined} onSaved={refreshHasib} />
+                : tab === 'settings' && view === 'services' ? <BusinessDetails s={s} section="services" catalyst={!!map.catalyst} onSaved={() => overview.refresh({ quiet: true })} />
+                : tab === 'settings' && view === 'business' ? <><BusinessDetails s={s} catalyst={!!map.catalyst} section={map.catalyst || map.sections.includes('stock') ? 'details' : 'all'} initialIndustryId={hasibOverview?.readOnly ? undefined : hasibOverview?.legacyIndustryId || undefined} onSaved={map.catalyst ? () => overview.refresh({ quiet: true }) : refreshHasib} />
                     {!hasibOverview?.readOnly && hasibOverview?.pack && <IndustrySetup selection={false} heading={false} s={s} h={h} livePacks={hasibOverview.livePacks} industries={hasibOverview.industries} current={hasibOverview.pack.id} settings={hasibOverview.settings} onChosen={refreshHasib} />}</>
                 : tab === 'team' ? <TeamView s={s} h={h} />
                 : tab === 'settings' ? <ChannelConnections s={s} data={data} onChange={() => overview.refresh({ quiet: true })} />
-                : <ChatsView s={s} overview={data} selected={params.get('chat')} queue={params.get('queue') === 'attention'} onQueue={value => go('chats', { ...(value ? { queue: 'attention' } : {}), ...(params.get('chat') ? { chat: params.get('chat') } : {}) })} onSelect={id => go('chats', { ...(id ? { chat: id } : {}), ...(params.get('queue') === 'attention' ? { queue: 'attention' } : {}) })} />}
+                : <ChatsView s={s} overview={data} reminder={map.catalyst && data.workspaceRole !== 'employee' ? <SetupReminder s={s} setup={data.setup} onGo={go} /> : null} selected={params.get('chat')} onSelect={id => go('chats', id ? { chat: id } : {})} />}
             </>
           ) : <p className="ld-state" role="status">{s.t('loading')}</p>}
       </main>

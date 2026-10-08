@@ -1,8 +1,7 @@
-import { phrase, langOf } from '../../../config/layla-tones.js';
+import { phrase, langOf, withTeamPointer } from '../../../config/layla-tones.js';
 import { safeReply } from './reply-guard.js';
 import { PilotError, binding } from './config.js';
-import { classifyWithGuard } from './guards.js';
-import { route } from './route.js';
+import { isOptOut } from '../../../config/layla-optout.js';
 export const DAY = 86400000;
 export const blankProfile = () => ({ sector: '', services: '', prices: '', hours: '', location: '', humanContact: '', reviewed: false });
 export function initialState(c) {
@@ -27,42 +26,18 @@ export function reviewProfile(input) {
   return profile;
 }
 /**
- * Layla's intent router: the regex guards, then the authored lexicon, then the
- * tenant's own approved profile text.
- *
- * `profile` is optional and only the last layer uses it, so every existing
- * caller keeps working and gains whatever the first two layers can give.
- * Passing it is strictly better: it is what lets "what is on your menu?" reach
- * a restaurant's services text, which is vocabulary we never authored.
- *
- * See api/_lib/layla/route.js for the layering and why it cannot regress a
- * question that routes correctly today.
+ * The retired pilot's only remaining decision: a whole-message STOP. Layla's live replies are
+ * written by the model (config/layla-ai.js, convex/laylaRespond.js); the old keyword router is gone.
  */
-export const classify = (text, profile = null) => route(text, profile).intent;
+export const classify = text => (isOptOut(text) ? 'optout' : 'unknown');
 
-export { classifyWithGuard };
-
+/** The retired pilot's reply: the honest pointer to the team, in the customer's language and tone. */
 export function answer(text, profile, introduced = false) {
-  const lang = langOf(text), ar = lang === 'ar', intent = classify(text, profile), tone = profile.tone;
-  const say = (key, vars) => phrase(tone, key, lang, { business: profile.businessName || 'BznsFlow', ...vars });
-  // Inbox mode offers only the bzns.md team contact, and only to a customer who asks for a person.
-  // A legacy humanContact kept from an older setup is never advertised there.
-  const shared = profile.handoffMode === 'inbox' ? profile.teamContact : profile.humanContact;
-  const teamContact = shared ? say('contactSuffix', { contact: shared }) : '';
-  const contact = profile.handoffMode === 'inbox' ? '' : teamContact;
-  let reply;
-  if (intent === 'optout') return { intent, text: null };
-  if (intent === 'human') reply = profile.handoffMode === 'inbox' ? say('handoffInbox') + teamContact : say('handoffContact');
-  else if (intent === 'negotiation' || intent === 'abuse') reply = say(intent);
-  else if (intent === 'disabled') reply = say('disabled');
-  else if (intent === 'thanks') reply = say('youreWelcome');
-  else if (intent === 'ack') reply = say('howHelp');
-  else if (intent === 'identity' || intent === 'greeting') reply = ar ? 'أنا ليلى، المساعدة الافتراضية لدى BznsFlow. كيف أساعدك في أسئلتك عن خدماتنا؟' : 'I’m Layla, BznsFlow’s virtual assistant. What would you like to know about our services?';
-  else if (['services', 'prices', 'hours', 'location'].includes(intent) && profile[intent]) reply = profile[intent];
-  else reply = say('unknown');
-  if (['human', 'disabled', 'unknown', 'negotiation'].includes(intent) || (['prices','hours','location'].includes(intent) && !profile[intent])) reply += contact;
-  if (!introduced && !['identity', 'greeting'].includes(intent)) reply = (ar ? 'أنا ليلى، المساعدة الافتراضية لدى BznsFlow. ' : 'I’m Layla, BznsFlow’s virtual assistant. ') + reply;
-  return { intent, text: safeReply(reply, 700) };
+  const lang = langOf(text), ar = lang === 'ar';
+  if (classify(text) === 'optout') return { intent: 'optout', text: null };
+  let reply = withTeamPointer(phrase(profile.tone, 'unknown', lang), profile, lang);
+  if (!introduced) reply = (ar ? 'أنا ليلى، المساعدة الافتراضية. ' : 'I’m Layla, the virtual assistant. ') + reply;
+  return { intent: 'unknown', text: safeReply(reply, 700) };
 }
 export function guard(s, c, job, now) {
   assertBinding(s, c);

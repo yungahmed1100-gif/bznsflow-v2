@@ -100,7 +100,8 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
   if (!actor) return fail('workspace_access_revoked');
   const capabilities = capabilitiesFor(plan, actor.role);
   if (actor.role !== 'manager' && ['set_timezone', 'contact_delete', 'export_chat', 'export_contacts', 'export_account'].includes(a.operation)) return fail('manager_required');
-  if (['export_chat', 'export_contacts', 'export_account'].includes(a.operation) && !capabilities.exports) return fail('plan_required');
+  if (['export_chat', 'export_account'].includes(a.operation) && !capabilities.exports) return fail('plan_required');
+  if (a.operation === 'export_contacts' && !capabilities.customerExport) return fail('plan_required');
   const sectorId = sectorFor(row);
 
   if (a.operation === 'overview') {
@@ -108,7 +109,10 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
     const unlinked = (await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).order('desc').take(500)).some(r => !r.contactId);
     const open = await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).order('desc').take(125);
     const handoffsOpen = open.filter(p => p.takeover && !['resolved', 'returned'].includes(p.handoffState) && ownsIntegration(tenant, p.integrationId)).length;
+    // What the owner still has to add after going live: approved services and a person customers can reach.
+    const services = !!(await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved')).first());
     return ok({ handoffsOpen, business: { name: row.profile?.businessName || '', sector: row.profile?.sector || '', sectorId },
+      setup: { services, teamContact: !!row.profile?.teamContact },
       connected: tenant.connected, integration: tenant.integration ? { sender: tenant.integration.sender, path: tenant.integration.path, status: row.status,
         checks: row.connectionChecks || null, checkedAt: row.checkedAt || null } : null,
       instagram:publicInstagram(tenant.instagramConnection), instagramMessaging:tenant.instagram ? await messagingState(ctx,{...tenant,row:tenant.instagram,integration:tenant.instagram.integration},now) : null,
