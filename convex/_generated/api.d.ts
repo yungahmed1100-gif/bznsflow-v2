@@ -92,6 +92,8 @@ import type * as knowledgeSourceState from "../knowledgeSourceState.js";
 import type * as knowledgeSources from "../knowledgeSources.js";
 import type * as layla from "../layla.js";
 import type * as laylaReply from "../laylaReply.js";
+import type * as laylaRespond from "../laylaRespond.js";
+import type * as laylaTurn from "../laylaTurn.js";
 import type * as migrate from "../migrate.js";
 import type * as productSetup from "../productSetup.js";
 import type * as productSetupState from "../productSetupState.js";
@@ -190,6 +192,8 @@ declare const fullApi: ApiFromModules<{
   knowledgeSources: typeof knowledgeSources;
   layla: typeof layla;
   laylaReply: typeof laylaReply;
+  laylaRespond: typeof laylaRespond;
+  laylaTurn: typeof laylaTurn;
   migrate: typeof migrate;
   productSetup: typeof productSetup;
   productSetupState: typeof productSetupState;
