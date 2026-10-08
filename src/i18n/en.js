@@ -202,10 +202,6 @@ export default {
   "tier_soon": "In preparation",
   "tier_problem": "Solves",
   "tier_setup": "Set up Catalyst",
-  "clients_nav": "Clients",
-  "clients_title": "What clients say about <span class=\"mark\">work we delivered</span>",
-  "clients_sub": "Quoted word for word and approved by each business. Each describes the project we built for them.",
-  "clients_source": "Source",
   "hero_pipeline_label": "How Catalyst handles an inquiry",
   "footer_privacy": "Privacy Policy",
 

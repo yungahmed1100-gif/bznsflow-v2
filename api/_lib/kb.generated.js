@@ -82,8 +82,8 @@ export const SECTIONS = [
   },
   {
     id: "26",
-    kw: ["reviews","تقييمات","testimonials","شهادات","clients","عملاء سابقين","proof","دليل","examples","أمثلة","mawa","مأوى","bizbay"],
-    en: "WHAT CLIENTS SAY: Approved client quotes, word for word: Mawa Real Estate · مأوى (Muscat, Oman): \"Enquiries reach me already qualified, in the same sheet we already worked from. I stopped asking about budget on the first call — it's there before I dial.\" Five Gates (Bahrain): \"Years of WhatsApp became one file per client. I stopped digging through threads to remember what we agreed.\" Each describes the project we delivered for that business.",
-    ar: "ماذا يقول عملاؤنا: شهادات معتمدة بكلمات أصحابها: مأوى · Mawa Real Estate (مسقط، عُمان): «الاستفسارات توصلني مؤهلة وجاهزة في نفس الشيت اللي نشتغل عليه. ما عدت أسأل عن الميزانية في أول مكالمة — الجواب موجود قبل لا أتصل.» Five Gates (البحرين): «سنين من محادثات الواتساب صارت ملف واحد لكل عميل. ما عدت أفتّش في المحادثات عشان أعرف وش اتفقنا عليه.» كل شهادة تصف المشروع الذي أنجزناه لذلك النشاط.",
+    kw: ["reviews","تقييمات","testimonials","شهادات","clients","عملاء سابقين","proof","دليل","examples","أمثلة","portfolio","أعمالنا"],
+    en: "SELECTED WORK: Businesses we have delivered work for include BizBay (Bahrain), Mawa Real Estate (Oman), Mekka Hijama, Reading Jeel (Oman), Royal Fish, Wild Muscat (Oman) and Five Gates (Bahrain). We don't quote results in chat; on the free audit we walk you through the work that matches your business.",
+    ar: "من أعمالنا: من الأعمال التي أنجزنا لها مشاريع: BizBay (البحرين)، ومأوى للعقارات (عُمان)، وMekka Hijama، وReading Jeel (عُمان)، وRoyal Fish، وWild Muscat (عُمان)، وFive Gates (البحرين). لا نذكر نتائج في المحادثة؛ في التدقيق المجاني نعرض عليك الأعمال الأقرب لنشاطك.",
   },
 ];

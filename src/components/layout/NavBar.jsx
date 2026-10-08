@@ -64,7 +64,6 @@ export function NavBar({
 
           <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`} id="navLinks">
             {account?.email?.trim().toLowerCase() === 'ahmed@bznsflowai.com' && <li><a className="nav-link" href={lang === 'en' ? '/en/owner' : '/owner'}>{lang === 'ar' ? 'لوحة الإدارة' : 'Admin dashboard'}</a></li>}
-            <li><a href="#clients"    className={`nav-link ${activeLink === 'clients'    ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#clients')}>{t.clients_nav}</a></li>
             <li><a href="#tiers"      className={`nav-link ${activeLink === 'tiers'      ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.tiers_label}</a></li>
             <li><a href="#about"      className={`nav-link ${activeLink === 'about'      ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#about')}>{t.nav_about}</a></li>
             <li><a href="#solutions"  className={`nav-link ${activeLink === 'solutions'  ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.nav_solution}</a></li>

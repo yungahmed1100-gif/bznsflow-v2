@@ -26,17 +26,9 @@ Pricing is shared on the free audit, together with the agreed scope: a one-time 
 
 Quoted separately in writing: customer acquisition systems, reorder journeys, loyalty journeys, WhatsApp and email outreach, websites, CRM and pipeline, automation and integrations, custom apps.
 
-## What clients say (approved, verbatim)
+## Selected work
 
-- **Mawa Real Estate · مأوى (Muscat, Oman):** "Enquiries reach me already qualified, in the same sheet we already worked from. I stopped asking about budget on the first call — it's there before I dial."
-- **BizBay · mybizbay.com (Bahrain):** "242 enquiries in two months, one missed. I used to answer between meetings. Now every one gets a reply in two seconds and I read the summary at 9pm." (One client, Twilio message logs, 6 June to 4 August 2026.)
-- **Five Gates (Bahrain):** "Years of WhatsApp became one file per client. I stopped digging through threads to remember what we agreed."
-- **Mekka Hijama:** "Our patients speak three languages. They all book the same way now — nobody calls to ask how to book any more."
-- **Reading Jeel (Oman):** "I sell digital books without running any system. The order arrives and the file reaches the customer automatically."
-- **Wild Muscat (Oman):** "The site reads Arabic-first, not translated. That's what we were after."
-- **Royal Fish:** "Guests find the menu and they find the door. In two languages. That's all I needed it to do."
-
-Each quote describes the project BznsFlow delivered for that business.
+BizBay (Bahrain), Mawa Real Estate (Oman), Mekka Hijama, Reading Jeel (Oman), Royal Fish, Wild Muscat (Oman) and Five Gates (Bahrain). Madrasaty is BznsFlow's own venture.
 
 ## Next step
 

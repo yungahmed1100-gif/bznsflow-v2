@@ -25,7 +25,6 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             <div className="footer-col">
               <h3 className="footer-heading">{t.footer_nav_heading}</h3>
               <ul className="footer-links">
-                <li><a href="#clients" onClick={(e) => onSmoothScroll(e, '#clients')}>{t.clients_nav}</a></li>
                 <li><a href="#tiers" onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.tiers_label}</a></li>
                 <li><a href="#about" onClick={(e) => onSmoothScroll(e, '#about')}>{t.footer_nav_5}</a></li>
                 <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_nav_2}</a></li>

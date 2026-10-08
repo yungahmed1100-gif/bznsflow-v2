@@ -33,26 +33,6 @@
   max-width: 65ch;
 }
 
-/* Approved client quotes: the lead quote set large on a rule, the rest as a ruled list. */
-.client-quote { margin: 0; }
-.client-quote blockquote { margin: 0; }
-.client-quote blockquote p { margin: 0; color: var(--text-primary); font-size: 1.05rem; line-height: 1.7; }
-[lang="ar"] .client-quote blockquote p, .client-quote blockquote[lang="ar"] p { line-height: 1.9; }
-.client-quote figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 12px; font-size: 0.85rem; color: var(--text-secondary); }
-.client-quote-name { font-weight: 700; color: var(--text-primary); }
-.client-quote-source { flex-basis: 100%; font-size: 0.8rem; }
-.client-quote--lead {
-  padding: 28px 0;
-  border-top: 2px solid var(--text-primary);
-  border-bottom: 1px solid var(--border-hover);
-  margin-bottom: 8px;
-}
-.client-quote--lead blockquote p { font-size: clamp(1.3rem, 1rem + 1.2vw, 1.9rem); font-weight: 700; line-height: 1.45; letter-spacing: -0.01em; max-width: 34ch; }
-[lang="ar"] .client-quote--lead blockquote p, .client-quote--lead blockquote[lang="ar"] p { letter-spacing: 0; line-height: 1.7; }
-.client-quotes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; }
-.client-quotes .client-quote { padding: 24px 0; border-bottom: 1px solid var(--border); }
-@media (max-width: 1024px) { .client-quotes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 640px) { .client-quotes { grid-template-columns: 1fr; } }
 .pricing-card--soon { height: auto; }
 
 /* Arabic has no case and letter-spacing breaks its joins (DESIGN.md, Arabic-First Rule). */

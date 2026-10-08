@@ -201,10 +201,6 @@ export default {
   "tier_soon": "قيد الإعداد",
   "tier_problem": "يحل",
   "tier_setup": "إعداد كاتاليست",
-  "clients_nav": "عملاؤنا",
-  "clients_title": "ماذا يقول عملاؤنا عن <span class=\"mark\">أعمال أنجزناها</span>",
-  "clients_sub": "بكلماتهم كما هي، وبموافقة كل نشاط. كل شهادة تصف المشروع الذي بنيناه له.",
-  "clients_source": "المصدر",
   "hero_pipeline_label": "كيف يتعامل كاتاليست مع الاستفسار",
   "footer_privacy": "سياسة الخصوصية",
 
