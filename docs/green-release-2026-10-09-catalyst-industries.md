@@ -57,6 +57,8 @@ Post-promotion verification passed:
 
 Sanitized local evidence: `work/catalyst-production/live-smoke.json`, `live-assets.json` and `monitor.json`.
 
+The implementation and release evidence were pushed to `origin/master`. A subsequent public setup fetch still returned 200 with the expected `manifest-c4c544a2.js` release bundle. The final redundant Vercel CLI inspection could not resolve `api.vercel.com` (`ENOTFOUND`); the earlier successful canonical-domain deployment inspection and direct live checks remain the deployment evidence. This CLI DNS failure is not a measured application outage.
+
 No live WhatsApp/Instagram message, channel connection/disconnection, provider consent flow or real campaign was performed. Those provider interactions are not newly verified under Ahmed's automated-only instruction. Automated synthetic tests cover their application behavior; they cannot prove end-to-end provider delivery. The real owner smoke covers an existing authorized Catalyst account, not every customer account or fresh production signup.
 
 Private artifacts and logs remain ignored under `work/catalyst-production/` and `/tmp`; no cookies, credentials or customer records are committed. UI rollback remains the previous deployment listed above with the additive Media backend retained.
