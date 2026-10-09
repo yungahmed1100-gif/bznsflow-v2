@@ -29,7 +29,7 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
   const chooseTemplate = id => {
     const t = templates.find(x => x.id === id);
     setTemplateId(id);
-    setRules(defaultRules(t, headers));
+    setRules(defaultRules(t, headers, rows.map(r => r.cells || [])));
   };
   const unsaved = rows.filter(r => !r.contactId);
   const incomplete = rows.filter(r => rowMissing(r, rules).length).length;

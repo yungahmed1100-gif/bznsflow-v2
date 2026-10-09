@@ -10,6 +10,8 @@ export function countryForWaId(waId) {
   const found = BY_DIAL_LENGTH.find(([, dial]) => String(waId).startsWith(dial));
   return found ? (found[1] === '1' ? 'US' : found[0]) : '';
 }
+// Longest national number (without trunk 0) per country; anything longer already carries a country code.
+const NATIONAL_MAX = { OM: 8, BH: 8, QA: 8, KW: 8, SA: 9, AE: 9, JO: 9, LB: 8, EG: 10, IQ: 10, YE: 9, SY: 9, MA: 9, DZ: 9, TN: 8, SD: 9, LY: 10, IN: 10, PK: 10, BD: 10, PH: 10, GB: 10, US: 10, CA: 10, DE: 11, AT: 13 };
 export const isValidWaId = waId => /^[1-9]\d{7,14}$/.test(waId || '');
 
 /**
@@ -31,7 +33,11 @@ export function normalizePhone(input, countryIso = '') {
     if (!dial) return { error: 'missing_country' };
     const national = digits.replace(/^0+/, '');
     // A pasted "968 9123 4567" already carries the code; keep it once.
-    waId = national.startsWith(dial) && national.length - dial.length >= 7 ? national : `${dial}${national}`;
+    if (national.startsWith(dial) && national.length - dial.length >= 7) waId = national;
+    // Longer than any local number here: it is a full international number written
+    // without "+" (e.g. 966502886202 in a list whose fallback country is Oman).
+    else if (national.length > (NATIONAL_MAX[iso] || 10) && countryForWaId(national) && isValidWaId(national)) waId = national;
+    else waId = `${dial}${national}`;
   }
   if (!isValidWaId(waId)) return { error: 'invalid_phone' };
   const detected = countryForWaId(waId);

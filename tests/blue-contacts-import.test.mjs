@@ -36,7 +36,7 @@ test('import preview maps columns, merges duplicates, reports malformed rows and
   const fields = [{ key: 'area', en: 'Area', ar: 'المنطقة' }, { key: 'budget', en: 'Budget', ar: 'الميزانية' }];
   const rows = [['Mobile', 'Full name', 'Country', 'Area'], ['91234567', 'Aisha', 'Oman', 'Seeb'], ['+968 9123 4567', '', '', 'Qurum'], ['0501234567', 'Omar', '+971', ''], ['abc', 'Bad', 'OM', ''], ['', 'Empty', 'OM', ''], ['123', 'Short', 'OM', '']];
   const mapping = guessMapping(rows[0], fields);
-  assert.deepEqual(mapping, { phone: 0, name: 1, country: 2, fields: { area: 3 } });
+  assert.deepEqual(mapping, { phone: 0, name: 1, country: 2, type: -1, fields: { area: 3 } });
   const preview = buildImportPreview(rows, mapping, 'OM', fields);
   assert.deepEqual(preview.valid.map(v => [v.waId, v.name, v.fields]), [['96891234567', 'Aisha', [{ key: 'area', value: 'Seeb' }]], ['971501234567', 'Omar', []]]);
   assert.equal(preview.duplicates, 1);

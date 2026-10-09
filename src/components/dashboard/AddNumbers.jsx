@@ -56,7 +56,7 @@ export function UploadList({ s, template, rows, setRows, setRules, setHeaders })
     const merged = mergeRows(rows, rowsFromSheet(sheet, preview));
     setRows(merged.rows);
     setHeaders(sheet[0]);
-    setRules(list => applyColumns(list, sheet[0], template));
+    setRules(list => applyColumns(list, sheet[0], template, sheet.slice(1)));
     setResult({ added: merged.rows.length - rows.length, duplicates: merged.duplicates + preview.duplicates, overLimit: merged.overLimit });
   };
   const sample = () => {
@@ -72,7 +72,7 @@ export function UploadList({ s, template, rows, setRows, setRules, setHeaders })
         <fieldset className="ld-fieldset">
           <legend>{s.t('mapColumns')}</legend>
           <div className="ld-grid-3">
-            {['phone', 'name', 'country'].map(key => (
+            {['phone', 'name', 'country', 'type'].map(key => (
               <label key={key} className="ld-field">{s.t(`column_${key}`)}
                 <select value={mapping[key]} onChange={e => setMapping({ ...mapping, [key]: Number(e.target.value) })}>
                   <option value={-1}>{s.t('noColumn')}</option>
@@ -84,7 +84,8 @@ export function UploadList({ s, template, rows, setRows, setRules, setHeaders })
               <select value={country} onChange={e => setCountry(e.target.value)}>{countries.map(c => <option key={c.iso} value={c.iso}>{c.name} +{c.dial}</option>)}</select>
             </label>
           </div>
-          {preview && <p className="ld-num">{s.t('importPreview', { valid: preview.valid.length, duplicates: preview.duplicates, invalid: preview.invalid.length })}</p>}
+          {preview && <p className="ld-num" role="status">{s.t('importPreview', { valid: preview.valid.length, duplicates: preview.duplicates, invalid: preview.invalid.length })}{preview.notWhatsApp ? ` · ${s.t('notWhatsApp', { count: preview.notWhatsApp })}` : ''}</p>}
+          {preview && preview.valid.length > MAX_BROADCAST - rows.length && <p className="ld-help">{s.t('overLimit', { count: preview.valid.length - Math.max(0, MAX_BROADCAST - rows.length), max: MAX_BROADCAST })}</p>}
           {!!preview?.invalid.length && <ul className="ld-issues">{preview.invalid.slice(0, 20).map(i => <li key={i.line}>{s.t('importRowIssue', { line: i.line, reason: s.t(i.reason) })} <bdi dir="ltr">{i.value}</bdi></li>)}</ul>}
           <button type="button" className="ld-button" disabled={!preview?.valid.length} onClick={add}>{s.t('addToList', { count: preview?.valid.length || 0 })}</button>
         </fieldset>

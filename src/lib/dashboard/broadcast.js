@@ -8,20 +8,26 @@ export const MAX_BROADCAST = 100;
 const norm = text => String(text ?? '').toLowerCase().replace(/[{}\s_\-:#]+/g, '');
 const NAME_KEY = /name|اسم/i;
 
-/** Rule sources: 'name' | 'column:<index>' | 'field:<key>' | 'static' | 'each' (typed per contact). */
-export function guessVariableColumns(headers = [], template) {
-  const out = {};
+/**
+ * Which file column fills each variable. A header naming the variable wins ({{2}}, body_2,
+ * the named parameter, or the example); otherwise the column whose values contain the
+ * template's example (e.g. example "Riyadh" is found in a City column).
+ * Rule sources: 'name' | 'column:<index>' | 'field:<key>' | 'static' | 'each' (typed per contact).
+ */
+export function guessVariableColumns(headers = [], template, rows = []) {
+  const out = {}, sample = rows.slice(0, 200);
   for (const v of template?.variables || []) {
     const wanted = new Set([norm(v.key), norm(`${v.component}${v.key}`), norm(`var${v.key}`), norm(`variable${v.key}`), ...(v.example ? [norm(v.example)] : [])].filter(Boolean));
-    const index = headers.findIndex(h => wanted.has(norm(h)));
+    let index = headers.findIndex(h => wanted.has(norm(h)));
+    if (index < 0 && v.example && norm(v.example)) index = headers.findIndex((_, i) => sample.some(r => norm(r[i]) === norm(v.example)));
     if (index >= 0) out[variableId(v)] = index;
   }
   return out;
 }
 
 /** One rule per variable. The customer's name fills body {{1}} or a variable called *name*. */
-export function defaultRules(template, headers = []) {
-  const columns = guessVariableColumns(headers, template);
+export function defaultRules(template, headers = [], rows = []) {
+  const columns = guessVariableColumns(headers, template, rows);
   return (template?.variables || []).map(v => {
     const key = variableId(v);
     const isName = (v.component === 'body' && v.key === '1') || NAME_KEY.test(v.key);
@@ -31,8 +37,8 @@ export function defaultRules(template, headers = []) {
 }
 
 /** Columns found in a new file take over rules still left to typing. */
-export function applyColumns(rules, headers, template) {
-  const columns = guessVariableColumns(headers, template);
+export function applyColumns(rules, headers, template, rows = []) {
+  const columns = guessVariableColumns(headers, template, rows);
   return rules.map(r => r.source === 'each' && columns[r.key] !== undefined ? { ...r, source: `column:${columns[r.key]}` } : r);
 }
 
