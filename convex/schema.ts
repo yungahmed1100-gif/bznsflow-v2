@@ -106,6 +106,8 @@ export default defineSchema({
     sectorId:v.string(),fields:v.array(qualificationField),qualificationStatus:v.string(),qualificationOverride:v.optional(v.string()),asked:v.optional(v.array(v.string())),askCounts:v.optional(v.array(v.object({key:v.string(),count:v.number()}))),lastAskedAt:v.optional(v.number()),
     // Catalyst reception flow: the customer chose not to give a name; they want to come in; their request for reception.
     nameDeclined:v.optional(v.boolean()),appointmentInterestAt:v.optional(v.number()),
+    // WhatsApp reported this number undeliverable (131026); broadcasts skip it until the customer writes.
+    undeliverableAt:v.optional(v.number()),
     appointment:v.optional(v.object({status:v.literal('requested'),service:v.optional(v.string()),serviceRef:v.optional(v.string()),preferences:v.optional(v.string()),requestedAt:v.number(),updatedAt:v.number()})),
     consent:consent,optout:v.boolean(),optoutAt:v.optional(v.number()),lastActivityAt:v.number(),lastInboundAt:v.optional(v.number()),searchText:v.optional(v.string()),createdAt:v.number(),updatedAt:v.number(),deletedAt:v.optional(v.number())})
     .index('by_key',['key']).index('by_account_state_activity',['accountId','state','lastActivityAt']).index('by_account_hash',['accountId','numberHash']).index('by_instagram',['accountId','igAccount'])

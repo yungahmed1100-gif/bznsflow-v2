@@ -4,7 +4,7 @@ import { rolloutAllows } from './greenRollout.js';
 // replies, so a broadcast can never pause or duplicate a chat response.
 import { resolveTenant, owned, encodeCursor, decodeCursor, afterCursor } from './blueTenant.js';
 import { DAY, displayName } from './blueContacts.js';
-import { marketingEligibility } from './blueAudienceState.js';
+import { marketingEligibility, recordUndeliverable } from './blueAudienceState.js';
 import { messagingReady } from './blueMessagingState.js';
 import { formatPhone } from '../src/lib/dashboard/phone.js';
 import { resolveParameters, validMapping, validTemplateRecord, validRecipientValues, recipientValueMap } from '../config/layla-templates.js';
@@ -250,6 +250,7 @@ export async function executeCampaignWorker(ctx, a, now = Date.now()) {
         await ctx.db.patch(job._id, { status: 'queued', nextAttemptAt: now + RETRY_BACKOFF_MS[job.attempts - 1], reason: 'provider_throttled', intent: undefined, ...code, updatedAt: now });
       } else {
         const status = a.status === 'retry' ? 'failed' : a.status;
+        if (status === 'failed') await recordUndeliverable(ctx, job, a.errorCode, now);
         await ctx.db.patch(job._id, { status, ...(a.providerId ? { providerId: a.providerId } : {}), ...(a.reason ? { reason: String(a.reason).slice(0, 60) } : {}), ...code, updatedAt: now });
       }
     } else if (a.providerId && !job.providerId) await ctx.db.patch(job._id, { providerId: a.providerId, updatedAt: now });

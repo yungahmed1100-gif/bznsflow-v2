@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { dashboard } from '../../lib/dashboard/api';
 import { countryOptions } from '../../lib/countries';
-import { normalizePhone, formatPhone } from '../../lib/dashboard/phone';
+import { normalizePhone, formatPhone, isMobileNumber } from '../../lib/dashboard/phone';
 import { buildImportPreview, guessMapping, readContactsFile } from '../../lib/dashboard/import';
 import { toCsv } from '../../lib/dashboard/csv';
 import { download } from '../../lib/dashboard/exports';
@@ -21,6 +21,7 @@ export function ManualAdd({ s, rows, setRows }) {
     e.preventDefault();
     const normalized = normalizePhone(entry.number, entry.country);
     if (normalized.error) { setError(s.t(normalized.error)); return; }
+    if (isMobileNumber(normalized.waId) === false) { setError(s.t('not_mobile')); return; }
     setError('');
     const merged = mergeRows(rows, [{ waId: normalized.waId, countryIso: normalized.countryIso, name: entry.name.trim(), origin: 'manual' }]);
     setRows(merged.rows);
@@ -100,7 +101,7 @@ export function SavedPicker({ s, rows, setRows }) {
   const [search, setSearch] = useState(''), [data, setData] = useState(null), [error, setError] = useState('');
   const query = useDebounced(search.trim(), 300);
   useEffect(() => { setData(null); dashboard('contacts', query ? { search: query } : { limit: 50 }).then(setData).catch(e => setError(s.reason(e.reason))); }, [query]);
-  const eligible = c => c.channel !== 'instagram' && !c.optout && c.consent.status === 'granted';
+  const eligible = c => c.channel !== 'instagram' && !c.optout && !c.notOnWhatsApp && c.consent.status === 'granted';
   const picked = new Set(rows.map(r => r.waId));
   const toggle = c => setRows(list => picked.has(c.number) ? list.filter(r => r.waId !== c.number) : mergeRows(list, [rowFromContact(c)]).rows);
   return (
@@ -114,7 +115,7 @@ export function SavedPicker({ s, rows, setRows }) {
             <li key={c.id}>
               <label className={`ld-choice ${eligible(c) ? '' : 'is-disabled'}`}>
                 <input type="checkbox" disabled={!eligible(c) || (!picked.has(c.number) && rows.length >= MAX_BROADCAST)} checked={picked.has(c.number)} onChange={() => toggle(c)} />
-                <span><bdi>{c.name}</bdi> <bdi dir="ltr" className="ld-num">{formatPhone(c.number)}</bdi><small>{c.optout ? s.t('optedOut') : s.t(`consent_${c.consent.status}`)}</small></span>
+                <span><bdi>{c.name}</bdi> <bdi dir="ltr" className="ld-num">{formatPhone(c.number)}</bdi><small>{c.optout ? s.t('optedOut') : c.notOnWhatsApp ? s.t('reason_not_on_whatsapp') : s.t(`consent_${c.consent.status}`)}</small></span>
               </label>
             </li>
           ))}

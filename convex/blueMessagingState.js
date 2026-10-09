@@ -4,6 +4,7 @@ import { instagramConnection, instagramRow, rowForIntegration } from './blueInst
 // durable outbound intent has been claimed; uncertain sends are never retried.
 import { applyInbound, applyOptout, linkConversation, recordQuestions, sectorFor, textRetention, MESSAGE_RETENTION_MS } from './blueContacts.js';
 import { recordDemand } from './hasib/demandState.js';
+import { recordUndeliverable } from './blueAudienceState.js';
 import { commerceTurn } from './hasib/laylaOrders.js';
 import { realEstateTurn } from './hasib/realEstateTurn.js';
 import { phrase, langOf } from '../config/layla-tones.js';
@@ -72,6 +73,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     if(!target || target.integrationId!==a.integrationId || (target.waId && target.waId!==e.recipient) || (target.providerId && target.providerId!==e.id)) return;
     if((receiptRank[e.status] || 0)<=(receiptRank[target.status] || 0)) return;
     await ctx.db.patch(target._id,{status:e.status,providerId:e.id,updatedAt:now,...(e.status==='failed'&&Number.isSafeInteger(e.errorCode)?{errorCode:e.errorCode,reason:'provider_delivery_failed'}:{})});
+    if(e.status==='failed') await recordUndeliverable(ctx,target,e.errorCode,now);
     if(target.realEstateDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.realEstateDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
   }
   async function rowForInstagram(integrationId) {

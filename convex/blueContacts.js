@@ -246,7 +246,7 @@ export async function deleteContact(ctx, contact, now) {
   }
   await anonymizeContactOrders(ctx, contact, now);
   await ctx.db.patch(contact._id, { state: 'deleted', key: `deleted:${contact._id}`, waId: undefined, igId:undefined, igAccount:undefined, countryIso: undefined, ownerName: undefined, customerName: undefined,
-    profileName: undefined, fields: [], asked: undefined, askCounts: undefined, qualificationOverride: undefined, searchText: undefined,
+    profileName: undefined, undeliverableAt: undefined, fields: [], asked: undefined, askCounts: undefined, qualificationOverride: undefined, searchText: undefined,
     appointment: undefined, appointmentInterestAt: undefined, nameDeclined: undefined,
     consent: { status: contact.optout ? 'revoked' : 'unknown' }, deletedAt: now, updatedAt: now });
 }
@@ -261,7 +261,7 @@ export function publicContact(contact, conversation) {
     qualificationStatus: contact.qualificationStatus, qualificationOverride: contact.qualificationOverride || null,
     status: contact.qualificationOverride || contact.qualificationStatus,
     consent: { status: contact.consent.status, source: contact.consent.source || '', date: contact.consent.date || '', purpose: contact.consent.purpose || '' },
-    optout: contact.optout, lastActivityAt: contact.lastActivityAt, lastInboundAt: contact.lastInboundAt || null,
+    optout: contact.optout, notOnWhatsApp: !!contact.undeliverableAt && !((contact.lastInboundAt || 0) > contact.undeliverableAt), lastActivityAt: contact.lastActivityAt, lastInboundAt: contact.lastInboundAt || null,
     takeover: !!conversation?.takeover, conversationId: conversation?._id || null, windowOpenUntil: window,
     appointment: contact.appointment ? { service: contact.appointment.service || '', preferences: contact.appointment.preferences || '', requestedAt: contact.appointment.requestedAt } : null, nameDeclined: !!contact.nameDeclined };
 }

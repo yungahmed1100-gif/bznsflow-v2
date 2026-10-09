@@ -1,7 +1,7 @@
 // Contact import: column mapping, normalization, duplicate merging and preview.
 // Nothing here sends a message; the server re-validates every row.
 import { parseDelimited, toCsv } from './csv.js';
-import { normalizePhone } from './phone.js';
+import { isMobileNumber, normalizePhone } from './phone.js';
 import { COUNTRIES, COUNTRY_CODES } from '../countries.js';
 
 export const IMPORT_MAX_ROWS = 1000;
@@ -63,6 +63,7 @@ export function buildImportPreview(rows, mapping, defaultCountry, fields = []) {
   const truncated = data.length > IMPORT_MAX_ROWS;
   const byWaId = new Map(), invalid = [];
   let duplicates = 0, notWhatsApp = 0;
+  const notMobile = [];
   data.slice(0, IMPORT_MAX_ROWS).forEach((cells, index) => {
     const line = index + 2;
     // Rows the file itself marks as landline or toll-free cannot receive WhatsApp.
@@ -71,6 +72,7 @@ export function buildImportPreview(rows, mapping, defaultCountry, fields = []) {
     const country = (mapping.country >= 0 && countryFromCell(cells[mapping.country])) || defaultCountry;
     const normalized = normalizePhone(raw, country);
     if (normalized.error) { invalid.push({ line, reason: raw ? normalized.error : 'missing_phone', value: String(raw || '').slice(0, 40) }); return; }
+    if (isMobileNumber(normalized.waId) === false) { notMobile.push({ line, value: String(raw || '').slice(0, 40) }); return; }
     const name = mapping.name >= 0 ? String(cells[mapping.name] || '').trim().slice(0, 80) : '';
     const rowFields = fields.map(f => ({ key: f.key, value: String(cells[mapping.fields?.[f.key]] ?? '').trim().slice(0, 120) })).filter(f => mapping.fields?.[f.key] >= 0 && f.value);
     const existing = byWaId.get(normalized.waId);
@@ -82,7 +84,7 @@ export function buildImportPreview(rows, mapping, defaultCountry, fields = []) {
     }
     byWaId.set(normalized.waId, { line, waId: normalized.waId, countryIso: normalized.countryIso, name, fields: rowFields });
   });
-  return { valid: [...byWaId.values()], invalid, duplicates, notWhatsApp, truncated };
+  return { valid: [...byWaId.values()], invalid, duplicates, notWhatsApp: notWhatsApp + notMobile.length, notMobile, truncated };
 }
 
 /** A wa.me / api.whatsapp.com link is always international; other cells pass through. */

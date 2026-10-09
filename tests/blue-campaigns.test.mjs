@@ -293,3 +293,27 @@ test('sync lists every approved template but only marketing ones are sendable', 
   const list = await fetchApprovedTemplates({ c: { app: '1', version: 'v25.0' }, integration: { waba: '9' }, token: 'synthetic', fetcher });
   assert.deepEqual(list.map(t => [t.name, t.sendable, t.unsupportedReason || null]), [['autumn_offer', true, null], ['appointment_reminder', false, 'not_marketing']]);
 });
+
+test('a number WhatsApp could not deliver to (131026) is skipped by later broadcasts until the customer writes', async () => {
+  const { h, t, ids, mapping, create } = await campaignTenant({ contacts: 2 });
+  const campaign = (await create()).value.campaign;
+  await h.maintain();
+  await h.worker('start_result', { campaignId: campaign.id, ready: true, allowance: 250 });
+  const jobs = h.m.table('blueCampaignRecipients');
+  // One undeliverable through a delivery receipt, one other failure that says nothing about the number.
+  for (const [job, code] of [[jobs[0], 131026], [jobs[1], 131049]]) {
+    const claim = await h.worker('claim', { jobId: job._id, intent: randomUUID() });
+    await h.worker('result', { jobId: job._id, intent: claim.value.intent, status: 'submitted', providerId: `wamid.${code}` });
+    await h.messaging('ingest', { integrationId: t.integration.id, events: [{ kind: 'receipt', id: `wamid.${code}`, recipient: job.waId, status: 'failed', errorCode: code, at: h.m.now() }] });
+  }
+  const preview = async () => (await h.campaigns('campaign_preview', { sessionHash: t.sessionHash, templateId: '111', mapping, contactIds: ids, allowance: 250 })).value;
+  const first = await preview();
+  assert.deepEqual(first.excluded.map(e => [e.contactId, e.reason]), [[jobs[0].contactId, 'not_on_whatsapp']]);
+  assert.deepEqual(first.eligible.map(e => e.contactId), [jobs[1].contactId], 'a template-specific failure does not mark the number');
+  const listed = (await h.dashboard('contacts', { sessionHash: t.sessionHash })).value.items.find(c => c.id === jobs[0].contactId);
+  assert.equal(listed.notOnWhatsApp, true);
+  // When the customer writes, the number evidently has WhatsApp again.
+  h.m.advance(1000);
+  await h.inbound(t, { from: jobs[0].waId, text: 'Hi', reply: null });
+  assert.equal((await preview()).eligible.length, 2);
+});

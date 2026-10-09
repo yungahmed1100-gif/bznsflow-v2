@@ -8,11 +8,26 @@ export const IMPORT_BATCH_ROWS = 100;
 const ok = value => ({ ok: true, value }), fail = reason => ({ ok: false, reason });
 const text = (value, n) => typeof value === 'string' && value.length <= n && !/[\x00-\x1f\x7f]/.test(value) ? value.trim() : null;
 
+// Meta's "message undeliverable": usually the number has no WhatsApp account. Meta offers no
+// way to check a number before sending, so a failed send is what teaches us.
+export const UNDELIVERABLE = 131026;
+
+/** True once WhatsApp could not deliver to this number, until the customer writes to us. */
+export const notOnWhatsApp = contact => !!contact?.undeliverableAt && !((contact.lastInboundAt || 0) > contact.undeliverableAt);
+
+/** Remember an undeliverable number on its contact, so later broadcasts skip it. */
+export async function recordUndeliverable(ctx, job, errorCode, now) {
+  if (errorCode !== UNDELIVERABLE || !job?.contactId) return;
+  const contact = await ctx.db.get(job.contactId);
+  if (contact && contact.state === 'active' && contact.numberHash === job.numberHash) await ctx.db.patch(contact._id, { undeliverableAt: now });
+}
+
 /** A contact may receive a marketing template only with granted, unrevoked consent. */
 export function marketingEligibility(contact) {
   if(contact?.channel==='instagram') return 'wrong_channel';
   if (!contact || contact.state !== 'active') return 'contact_deleted';
   if (contact.optout) return 'opted_out';
+  if (notOnWhatsApp(contact)) return 'not_on_whatsapp';
   if (contact.consent?.status === 'revoked') return 'consent_revoked';
   if (contact.consent?.status !== 'granted') return 'consent_unknown';
   return null;

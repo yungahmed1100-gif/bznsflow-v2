@@ -47,6 +47,19 @@ export function normalizePhone(input, countryIso = '') {
   return { waId, countryIso: COUNTRY_CODES.has(countryIso) && waId.startsWith(dialFor(countryIso)) ? countryIso : detected };
 }
 
+// Mobile number plans (wa_id form) for the markets we serve. WhatsApp accounts sit on mobile
+// numbers; a landline or toll-free number here cannot receive a broadcast. Other countries
+// are not checked (null), so nothing valid is ever thrown away for lack of a rule.
+const MOBILE = {
+  SA: /^9665\d{8}$/, AE: /^9715\d{8}$/, OM: /^968[79]\d{7}$/, BH: /^973[36]\d{7}$/, QA: /^974[3567]\d{7}$/,
+  KW: /^965[4569]\d{7}$/, EG: /^201[0125]\d{8}$/, JO: /^9627[789]\d{7}$/,
+};
+/** true: a mobile number; false: a landline, toll-free or short number; null: no rule for this country. */
+export function isMobileNumber(waId) {
+  const rule = MOBILE[countryForWaId(waId)];
+  return rule ? rule.test(waId) : null;
+}
+
 /** "+968 9123 4567" style display; never used as an identifier. */
 export function formatPhone(waId) {
   if (!isValidWaId(waId)) return waId ? `+${waId}` : '';

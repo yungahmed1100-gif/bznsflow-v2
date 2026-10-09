@@ -14,6 +14,7 @@ Al Ayan Real Estate Broker LLC,UAE,,Commercial real estate agency,971550000003,h
 Axis Real Estate Brokerage Dubai,UAE,Dubai,Real estate agency,971520000004,https://wa.me/971520000004,Mobile,5
 Harbor Real Estate Broker LLC,UAE,Dubai,Real estate consultant,97140000005,,Landline,4.7
 Wasalt Real Estate Services,KSA,Riyadh,Real estate agency,9668000000006,,Unified/toll-free,4.6
+Coldwell Banker Saudi Arabia,KSA,Riyadh,Real estate consultant,966110000007,,,4.1
 `;
 
 test('a two-country list keeps each number in its own country, whatever the fallback country is', () => {
@@ -22,7 +23,8 @@ test('a two-country list keeps each number in its own country, whatever the fall
   assert.deepEqual([sheet[0][mapping.phone], sheet[0][mapping.name], sheet[0][mapping.country], sheet[0][mapping.type]], ['Phone (E.164)', 'Company', 'Country', 'Number Type']);
   const preview = buildImportPreview(sheet, mapping, 'OM');
   assert.deepEqual(preview.valid.map(r => [r.waId, r.countryIso]), [['966500000001', 'SA'], ['966530000002', 'SA'], ['971550000003', 'AE'], ['971520000004', 'AE']]);
-  assert.equal(preview.notWhatsApp, 2, 'landline and toll-free rows are skipped');
+  assert.equal(preview.notWhatsApp, 3, 'landline and toll-free rows are skipped, by the type column or by the number itself');
+  assert.deepEqual(preview.notMobile.map(r => r.value), ['966110000007'], 'a Riyadh landline with no type is caught by its number');
   assert.equal(preview.invalid.length, 0);
   // With no phone column, the wa.me link is used.
   const linkOnly = buildImportPreview(sheet, { ...mapping, phone: sheet[0].indexOf('WhatsApp Link') }, 'OM');
