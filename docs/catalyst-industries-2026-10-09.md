@@ -1,6 +1,6 @@
 # Catalyst industry preparation — 2026-10-09
 
-Status: production release authorized on 2026-10-09; release verification in progress. Ahmed requested automated tests only, so no live channel message is part of this release.
+Status: deployed to Green production on 2026-10-09; automated release gates and post-promotion checks passed. Ahmed requested automated tests only, so no live channel message is part of this release. Deployment and current evidence: [release record](green-release-2026-10-09-catalyst-industries.md).
 
 ## Scope and acceptance
 
@@ -21,9 +21,19 @@ Ascend operational releases, clinic governance gates, production configuration a
 - Selecting Other now preserves `sector: other`; unknown or inherited-object names use the generic template safely. Existing owner-written documents survive an industry change.
 - The shared industry-catalog test increases its total and pending count for Media; the Hasib registry, capabilities and operational implementation are unchanged. This is Catalyst preparation only.
 
+## Live template inventory after release
+
+| Group | Industries | Production status |
+| --- | --- | --- |
+| Existing six dedicated starters | Real estate, dental, construction, automotive, retail/e-commerce, electronics/phone stores | Live in Catalyst, English and Arabic. |
+| Eighteen completed starters | Medical clinics, air conditioning, cakes, coffee/dessert, restaurants, beauty/salons, fitness/wellness, education/training, cleaning/facilities, logistics/delivery, travel/hospitality, events/weddings, legal services, finance/accounting, marketing/agencies, technology/software, manufacturing, Media/production | Live in Catalyst, English and Arabic. |
+| Generic starter | Other | Live in Catalyst, English and Arabic. |
+
+All 25 Catalyst starter choices are deployed; none remain pending as templates. Owners must still supply and publish their business facts and configure their channels. Template availability does not mean specialist operational packs, integrations or provider delivery have been certified for every industry.
+
 ## Verification
 
-Local checks against the current working tree on 2026-10-09:
+Initial preparation checks on 2026-10-09 (before deployment authorization; the release record contains the later 882-test inventory and full release checklist):
 
 | Check | Observed result |
 | --- | --- |
@@ -36,6 +46,6 @@ Local checks against the current working tree on 2026-10-09:
 | BznsBrain browser suite | 1,403 checks passed against the final rebuilt bundle. Covers 150 industry/language/viewport selection and reload scenarios at 320/768/1440px, keyboard/focus and Axe checks for Media, preservation of owner text, and existing setup/Settings journeys. |
 | Local diff review | Dedicated bilingual content, sector-id preservation, unknown-key fallback, generated-data consistency and unchanged operational release gates checked. `git diff --check` passed. |
 
-The browser suite uses the static production build on localhost, stateful synthetic API responses and blocked external traffic. The backend cases use the real domain executors with the in-memory Convex harness. These checks do not certify real Meta delivery, real customer data or live model quality for each industry. No production deployment, production mutation, paid model evaluation or live outbound message was performed.
+The preparation browser suite uses the static production build on localhost, stateful synthetic API responses and blocked external traffic. The backend cases use the real domain executors with the in-memory Convex harness. These checks do not certify real Meta delivery, real customer data or live model quality for each industry. At this preparation stage, no production deployment, production mutation, paid model evaluation or live outbound message had been performed; the subsequent authorized release is recorded separately.
 
 Deployment needs both the website build and Green Convex functions because Media qualification is shared backend code. The preparation above predates the deployment authorization. Current release evidence is recorded in `docs/green-release-2026-10-09-catalyst-industries.md`.
