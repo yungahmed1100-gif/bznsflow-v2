@@ -59,6 +59,7 @@ try {
     await page.locator('.brain').waitFor();
     assert.equal(await page.getByRole('tab', { name: 'bzns.md' }).getAttribute('aria-selected'), 'true'); count++;
     await page.getByRole('tab', { name: lang === 'en' ? 'Catalog' : 'الكتالوج' }).click();
+    await page.getByRole('tab', { name: lang === 'en' ? 'Catalog' : 'الكتالوج', selected: true }).waitFor();
     assert.equal(await page.getByRole('tab', { name: lang === 'en' ? 'Catalog' : 'الكتالوج' }).getAttribute('aria-selected'), 'true'); count++;
     await context.close();
   }
@@ -100,12 +101,14 @@ try {
     await links.first().click();
     await page.waitForFunction(() => document.querySelector('main')?.dataset.tab === 'settings');
     assert.match(page.url(), /tab=settings&view=brain&part=catalog/, `${lang}: services link opens BznsBrain → Catalog`); count++;
+    await page.getByRole('tab', { name: lang === 'en' ? 'Catalog' : 'الكتالوج', selected: true }).waitFor();
     assert.equal(await page.getByRole('tab', { name: lang === 'en' ? 'Catalog' : 'الكتالوج' }).getAttribute('aria-selected'), 'true'); count++;
     await page.goBack();
     await reminder.waitFor();
     await links.nth(1).click();
     await page.waitForFunction(() => document.querySelector('main')?.dataset.tab === 'settings');
     assert.match(page.url(), /tab=settings&view=brain&part=bzns/, `${lang}: team contact link opens BznsBrain → bzns.md`); count++;
+    await page.getByRole('tab', { name: 'bzns.md', selected: true }).waitFor();
     assert.equal(await page.getByRole('tab', { name: 'bzns.md' }).getAttribute('aria-selected'), 'true'); count++;
     assert.deepEqual(problems, [], `${lang}: reminder without errors`); count++;
     await context.close();
