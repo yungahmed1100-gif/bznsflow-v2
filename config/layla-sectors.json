@@ -4,7 +4,7 @@
   "archetypes": {
     "booking": {"sectors":["dental","clinic","beauty","fitness","automotive","legal","finance","cleaning"],"intents":["appointment_info","preparation","reschedule","cancel"]},
     "catalog": {"sectors":["cakes","cafe","restaurant","retail"],"intents":["catalog_item","order_policy","delivery_info","availability_request"]},
-    "project": {"sectors":["real-estate","construction","hvac","logistics","travel","events","marketing","technology","manufacturing","education"],"intents":["project_scope","coverage","quote_requirements","lead_qualification"]}
+    "project": {"sectors":["real-estate","construction","hvac","logistics","travel","events","marketing","media","technology","manufacturing","education"],"intents":["project_scope","coverage","quote_requirements","lead_qualification"]}
   },
   "rules": {"missing_fact":"fallback_to_human", "similarity_floor":0.72, "max_clarifications":1, "unsupported_action":"state_capability_and_offer_human"},
   "sourcePolicy": "Only tenant-approved signup facts and tenant-approved FAQs are authoritative."

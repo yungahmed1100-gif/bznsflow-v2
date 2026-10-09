@@ -9,7 +9,7 @@ import { blueHarness, seedTenant } from './helpers/blue-tenant.mjs';
 const run = (sectorId, text, extra = {}) => mergeFields([], extractQualification({ text, sectorId, ...extra }).updates, 1).fields;
 const values = fields => Object.fromEntries(fields.map(f => [f.key, f.value]));
 
-test('all 22 sector packs define bilingual required fields and grouped prompts of at most three questions', () => {
+test('all sector packs define bilingual required fields and grouped prompts of at most three questions', () => {
   assert.deepEqual(new Set(QUALIFICATION_SECTOR_IDS), new Set(INDUSTRIES.filter(i => i.id !== 'other').map(i => i.id)));
   for (const id of [...QUALIFICATION_SECTOR_IDS, 'other']) {
     const pack = qualificationPack(id);
@@ -131,7 +131,7 @@ function answerFor(field, lang) {
     default: return ar ? 'تجهيز مكتب جديد' : 'Office fit out';
   }
 }
-test('every one of the 22 sector configurations reaches Qualified from natural Arabic and English answers', () => {
+test('every sector configuration reaches Qualified from natural Arabic and English answers', () => {
   const catalog = [{ nameEn: 'Deluxe Package', nameAr: 'الباقة المميزة' }];
   for (const id of QUALIFICATION_SECTOR_IDS) {
     for (const lang of ['en', 'ar']) {

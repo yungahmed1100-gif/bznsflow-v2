@@ -12,8 +12,8 @@ const OUT = process.env.CATALYST_BROWSER_OUT || 'work/hardening/catalyst/browser
 await mkdir(OUT, { recursive: true });
 const noOverflow = page => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 const axe = async page => (await new AxeBuilder({ page }).include('.ld').analyze()).violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.length}`);
-// Settings → Business details and Instagram call surfaces the demo does not serve; they are checked live.
-const DEMO_ONLY = /surface=(customer|instagram)/;
+// The demo serves the real BznsBrain state code; Instagram connection uses a separate browser suite.
+const DEMO_ONLY = /surface=instagram/;
 
 const browser = await chromium.launch();
 let count = 0;
@@ -51,11 +51,15 @@ try {
     }
   }
 
-  // 2. Settings holds the business document, services & prices and channels, in that order.
+  // 2. Settings holds BznsBrain (business document and Catalog) and Channels.
   for (const lang of ['en', 'ar']) {
     const { page, context } = await open(1440, lang, '/layla/dashboard?tab=settings');
     const views = await page.locator('.ld-section-tabs a').allInnerTexts();
-    assert.deepEqual(views.map(v => v.trim()), lang === 'en' ? ['Business details', 'Services & prices', 'Channels'] : ['بيانات النشاط', 'الخدمات والأسعار', 'القنوات'], `${lang}: Settings views`); count++;
+    assert.deepEqual(views.map(v => v.trim()), lang === 'en' ? ['BznsBrain', 'Channels'] : ['BznsBrain', 'القنوات'], `${lang}: Settings views`); count++;
+    await page.locator('.brain').waitFor();
+    assert.equal(await page.getByRole('tab', { name: 'bzns.md' }).getAttribute('aria-selected'), 'true'); count++;
+    await page.getByRole('tab', { name: lang === 'en' ? 'Catalog' : 'الكتالوج' }).click();
+    assert.equal(await page.getByRole('tab', { name: lang === 'en' ? 'Catalog' : 'الكتالوج' }).getAttribute('aria-selected'), 'true'); count++;
     await context.close();
   }
 
@@ -95,12 +99,14 @@ try {
     assert.equal(await links.count(), 2, `${lang}: services and team contact are both missing in the demo`); count++;
     await links.first().click();
     await page.waitForFunction(() => document.querySelector('main')?.dataset.tab === 'settings');
-    assert.match(page.url(), /tab=settings&view=services/, `${lang}: services link opens Settings → Services & prices`); count++;
+    assert.match(page.url(), /tab=settings&view=brain&part=catalog/, `${lang}: services link opens BznsBrain → Catalog`); count++;
+    assert.equal(await page.getByRole('tab', { name: lang === 'en' ? 'Catalog' : 'الكتالوج' }).getAttribute('aria-selected'), 'true'); count++;
     await page.goBack();
     await reminder.waitFor();
     await links.nth(1).click();
     await page.waitForFunction(() => document.querySelector('main')?.dataset.tab === 'settings');
-    assert.match(page.url(), /tab=settings&view=business/, `${lang}: team contact link opens Settings → Business`); count++;
+    assert.match(page.url(), /tab=settings&view=brain&part=bzns/, `${lang}: team contact link opens BznsBrain → bzns.md`); count++;
+    assert.equal(await page.getByRole('tab', { name: 'bzns.md' }).getAttribute('aria-selected'), 'true'); count++;
     assert.deepEqual(problems, [], `${lang}: reminder without errors`); count++;
     await context.close();
   }

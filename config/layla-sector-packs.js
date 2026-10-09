@@ -11,7 +11,7 @@ const labels = {
   beauty:['booking','salon services','خدمات الصالون'], fitness:['booking','fitness and wellness','اللياقة والعافية'], education:['project','courses and training','الدورات والتدريب'],
   automotive:['booking','vehicle services','خدمات السيارات'], logistics:['project','delivery services','خدمات التوصيل'], travel:['project','travel and hospitality','السفر والضيافة'],
   events:['project','events and weddings','المناسبات والأعراس'], legal:['booking','legal services','الخدمات القانونية'], finance:['booking','accounting and finance','المحاسبة والمالية'],
-  marketing:['project','marketing services','خدمات التسويق'], technology:['project','software services','خدمات البرمجيات'], manufacturing:['project','manufacturing products','منتجات التصنيع'], cleaning:['booking','cleaning services','خدمات التنظيف']
+  marketing:['project','marketing services','خدمات التسويق'], media:['project','media and production services','خدمات الإعلام والإنتاج'], technology:['project','software services','خدمات البرمجيات'], manufacturing:['project','manufacturing products','منتجات التصنيع'], cleaning:['booking','cleaning services','خدمات التنظيف']
 };
 const core = (id, archetype, en, ar) => ({
   id, archetype, intents: archetype === 'booking' ? booking : archetype === 'catalog' ? catalog : project,

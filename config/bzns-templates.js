@@ -1,8 +1,10 @@
-// Starter bzns.md documents, one per live sector and language.
+// Starter bzns.md documents, one per named Catalyst industry and language.
 //
 // Every [bracket] is something the owner must replace; publish is refused while any
 // remain. Prices, fees and stock are deliberately absent: Layla reads them live from
 // Hasib or Services & Prices.
+import { ADDITIONAL_BZNS_TEMPLATES } from './bzns-industry-templates.js';
+import { INDUSTRY_IDS } from '../src/lib/industries.js';
 
 const COMMON = {
   en: {
@@ -29,6 +31,7 @@ const COMMON = {
 
 // Per sector: what the business offers, plus sector sections between Areas and Location.
 const SECTORS = {
+  ...ADDITIONAL_BZNS_TEMPLATES,
   generic: {
     en: { offer: ['[Your main service or product]', '[Another service or product]'], extra: [['How to order or book', '[What the customer should send and what happens next.]'], ['Payment methods', '[Cash, card, bank transfer or payment links. No amounts here: prices live in Services & prices.]']] },
     ar: { offer: ['[خدمتك أو منتجك الرئيسي]', '[خدمة أو منتج آخر]'], extra: [['طريقة الطلب أو الحجز', '[ما الذي يرسله العميل وماذا يحدث بعد ذلك.]'], ['طرق الدفع', '[نقداً أو بطاقة أو تحويل بنكي أو رابط دفع. بدون مبالغ هنا: الأسعار في الخدمات والأسعار.]']] },
@@ -142,17 +145,17 @@ const OFFER_HEADING = { en: 'What we offer', ar: 'خدماتنا' };
 const SECTOR_LINE = { en: '[your sector]', ar: '[مجال نشاطك]' };
 
 /**
- * @param {string} sector A live sector id; anything else gets the generic template.
+ * @param {string} sector An industry id; anything else gets the generic template.
  * @param {'en'|'ar'} lang
  * @returns {string}
  */
 export function bznsTemplate(sector, lang = 'en') {
-  const id = SECTORS[sector] ? sector : 'generic';
+  const id = Object.hasOwn(SECTORS, sector) ? sector : 'generic';
   const l = lang === 'ar' ? 'ar' : 'en';
   const c = COMMON[l], s = SECTORS[id][l];
   const section = ([heading, body]) => `## ${heading}\n${body}`;
   return [
-    `---\nname: ${c.name}\nsector: ${id === 'generic' ? SECTOR_LINE[l] : id}\ntone: informative\n---`,
+    `---\nname: ${c.name}\nsector: ${INDUSTRY_IDS.has(sector) ? sector : SECTOR_LINE[l]}\ntone: informative\n---`,
     `# ${c.name}`,
     section(c.about),
     section([OFFER_HEADING[l], s.offer.map(line => `- ${line}`).join('\n')]),
@@ -173,12 +176,12 @@ export function bznsTemplate(sector, lang = 'en') {
  * @param {string} sector @param {'en'|'ar'} lang @returns {string}
  */
 export function brainTemplate(sector, lang = 'en') {
-  const id = SECTORS[sector] ? sector : 'generic';
+  const id = Object.hasOwn(SECTORS, sector) ? sector : 'generic';
   const l = lang === 'ar' ? 'ar' : 'en';
   const c = COMMON[l], s = SECTORS[id][l];
   const section = ([heading, body]) => `## ${heading}\n${String(body).replace(/Services & prices|الخدمات والأسعار/g, l === 'ar' ? 'الكتالوج' : 'the Catalog')}`;
   return [
-    `---\nname: ${c.name}\nsector: ${id === 'generic' ? SECTOR_LINE[l] : id}\n---`,
+    `---\nname: ${c.name}\nsector: ${INDUSTRY_IDS.has(sector) ? sector : SECTOR_LINE[l]}\n---`,
     `# ${c.name}`,
     section(c.about),
     section([OFFER_HEADING[l], s.offer.map(line => `- ${line}`).join('\n')]),

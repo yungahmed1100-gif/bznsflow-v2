@@ -1,4 +1,4 @@
-// Deterministic lead qualification for Layla's 22 sector packs.
+// Deterministic lead qualification for Layla's sector packs.
 //
 // Pure module shared by Convex (ingest), the dashboard API and tests. It never
 // calls a model: fields come from closed vocabularies, approved catalog names
@@ -145,6 +145,14 @@ export const QUALIFICATION_PACKS = {
     req(F.need([opt('social_media', 'Social media', 'سوشال ميديا', ['instagram', 'tiktok', 'social', 'التواصل الاجتماعي']), opt('ads', 'Paid ads', 'إعلانات', ['ads', 'advertising', 'campaign', 'اعلانات', 'حملة']), opt('branding', 'Branding', 'هوية', ['logo', 'brand', 'شعار']), opt('website', 'Website', 'موقع', ['web site', 'landing page', 'موقع إلكتروني']), opt('content', 'Content', 'محتوى', ['video', 'photography', 'تصوير'])])),
     req(F.budget()), req(F.timeline()),
   ], [['need', 'budget', 'timeline']]),
+  media: sector('project', [
+    req(F.need([opt('photography', 'Photography', 'تصوير فوتوغرافي', ['photoshoot', 'photo shoot', 'تصوير صور']),
+      opt('video', 'Video production', 'إنتاج فيديو', ['video', 'filming', 'videography', 'تصوير فيديو']),
+      opt('audio', 'Audio and podcast', 'إنتاج صوتي وبودكاست', ['podcast', 'audio recording', 'تسجيل صوتي', 'بودكاست']),
+      opt('editing', 'Editing and post-production', 'مونتاج وما بعد الإنتاج', ['editing', 'post production', 'retouching', 'مونتاج'])],
+    { en: 'the type of production you need', ar: 'نوع الإنتاج الذي تحتاجه' })),
+    req(F.dateNeeded()), req(F.area()), F.budget(),
+  ], [['need', 'date_needed', 'area'], ['budget']]),
   technology: sector('project', [
     req(F.need([opt('website', 'Website', 'موقع', ['web site', 'web app', 'موقع إلكتروني']), opt('mobile_app', 'Mobile app', 'تطبيق', ['app', 'ios', 'android', 'تطبيق جوال']), opt('automation', 'Automation', 'أتمتة', ['automate', 'workflow', 'chatbot', 'بوت']), opt('software', 'Custom software', 'برنامج مخصص', ['system', 'erp', 'crm', 'نظام']), opt('it_support', 'IT support', 'دعم فني', ['support', 'network', 'شبكة'])])),
     req(F.budget()), req(F.timeline()),

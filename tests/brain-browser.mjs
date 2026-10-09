@@ -7,6 +7,8 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { validateBzns, deriveProfile, upsertSection, parseBzns } from '../src/lib/bzns-doc.js';
 import { capabilitiesFor } from '../convex/hasib/capabilities.js';
+import { BUSINESS_INDUSTRIES } from '../src/lib/industries.js';
+import { brainTemplate } from '../config/bzns-templates.js';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:5199';
 const noOverflow = page => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
@@ -92,6 +94,54 @@ async function open(browser, { width, lang, path, s, role = 'manager', signedIn 
 const browser = await chromium.launch();
 let count = 0;
 try {
+  // Every Catalyst industry must save its own starter and resume it, in both languages and at
+  // all supported widths. This uses the actual built selector and template, without live data.
+  for (const lang of ['en', 'ar']) for (const width of [320, 768, 1440]) {
+    const ar = lang === 'ar';
+    for (const industry of BUSINESS_INDUSTRIES) {
+      const s = surface();
+      const { page, context, errors } = await open(browser, { width, lang, path: '/catalyst/setup', s, signedIn: false });
+      const select = page.getByLabel(ar ? 'المجال' : 'Industry');
+      await select.waitFor();
+      assert.equal(await select.locator('option').count(), BUSINESS_INDUSTRIES.length + 1); count++;
+      await select.selectOption(industry.id);
+      if (industry.id === 'media') {
+        await select.focus();
+        await page.keyboard.press('Tab');
+        assert.equal(await page.getByRole('button', { name: ar ? 'متابعة' : 'Continue' }).evaluate(el => el === document.activeElement), true, 'keyboard reaches Continue'); count++;
+        await page.keyboard.press('Enter');
+      } else await page.getByRole('button', { name: ar ? 'متابعة' : 'Continue' }).click();
+      const heading = page.getByRole('heading', { name: ar ? 'أضف معلوماتك' : 'Add your information' });
+      await heading.waitFor();
+      assert.equal(s.row.bznsDraft.markdown, brainTemplate(industry.id, lang), `${industry.id}/${lang}: actual template saved`); count++;
+      assert.equal(parseBzns(s.row.bznsDraft.markdown).meta.sector, industry.id); count++;
+      assert.equal(await noOverflow(page), true, `${industry.id}/${lang}/${width}: overflow`); count++;
+      assert.equal(await page.locator('.brain-setup').getAttribute('dir'), ar ? 'rtl' : 'ltr'); count++;
+      if (industry.id === 'media') {
+        assert.deepEqual(await axe(page, '.brain-setup'), [], `${lang}/${width}: Media accessibility`); count++;
+        assert.equal(await heading.evaluate(el => el === document.activeElement), true, 'focus moves to the new step'); count++;
+      }
+      await page.reload();
+      await heading.waitFor();
+      assert.equal(s.row.bznsDraft.markdown, brainTemplate(industry.id, lang), 'reload preserves the draft'); count++;
+      assert.equal(s.writes.filter(action => action === 'bzns_save').length, 1, 'reload does not overwrite it'); count++;
+      assert.deepEqual(errors, [], `${industry.id}/${lang}/${width}: browser exceptions`); count++;
+      await context.close();
+    }
+    console.log(`Catalyst industry setup: ${BUSINESS_INDUSTRIES.length} selections passed (${lang}, ${width}px).`);
+  }
+
+  // Choosing a newly added sector must preserve a business's existing owner-written document.
+  for (const lang of ['en', 'ar']) {
+    const s = surface({ markdown: VALID });
+    const { page, context } = await open(browser, { width: 768, lang, path: '/catalyst/setup', s, signedIn: false });
+    await page.getByLabel(lang === 'ar' ? 'المجال' : 'Industry').selectOption('media');
+    await page.getByRole('button', { name: lang === 'ar' ? 'متابعة' : 'Continue' }).click();
+    await page.getByRole('heading', { name: lang === 'ar' ? 'أضف معلوماتك' : 'Add your information' }).waitFor();
+    assert.equal(s.row.bznsDraft.markdown, VALID.replace('sector: dental', 'sector: media'), 'changing industry keeps owner content'); count++;
+    await context.close();
+  }
+
   // 1. Setup: industry → information → review → behaviour → test and publish, then the channel step.
   for (const lang of ['en', 'ar']) for (const width of [320, 768, 1440]) {
     const ar = lang === 'ar', t = (en, arabic) => (ar ? arabic : en);

@@ -90,7 +90,7 @@ test('chunks are one per section, tenant scoped, normalized and hashed', () => {
   assert.equal(bznsChunks(parseBzns('---\nname: ع\nsector: x\n---\n## الموقع\nمسقط'), { tenantId: 't', revision: 1, now: 1 })[0].locale, 'ar');
 });
 
-test('every live sector has English and Arabic templates that only fail on placeholders', () => {
+test('every Catalyst template has English and Arabic versions that only fail on placeholders', () => {
   for (const sector of BZNS_TEMPLATE_SECTORS) for (const lang of ['en', 'ar']) {
     const template = bznsTemplate(sector, lang);
     const result = validateBzns(template);
@@ -173,7 +173,7 @@ test('a team contact longer than one short line is refused, never silently dropp
 
 test('every sector template asks for what customers ask Layla: offer, how to order or book, payment, location, team contact', () => {
   const topics = {
-    order: /order|book|viewing|quote|service|طلب|حجز|معاين|عرض|عروض|زيار|صيانة/i,
+    order: /order|book|viewing|quote|service|request|enrolment|طلب|حجز|معاين|عرض|عروض|زيار|صيانة|تسجيل/i,
     payment: /payment|pay|دفع/i,
   };
   for (const sector of BZNS_TEMPLATE_SECTORS) for (const lang of ['en', 'ar']) {

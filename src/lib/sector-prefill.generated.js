@@ -161,6 +161,14 @@ export const SECTOR_PREFILL = {
       ar: ["ما الخدمات المتاحة في التسويق والوكالات؟", "كم تبلغ الأسعار؟", "ما مواعيد العمل والتوفر؟", "كيف أتواصل مع الفريق؟"],
     },
   },
+  media: {
+    archetype: "project",
+    services: { en: "Photography, video and audio production, briefs, shoot requests and delivery", ar: "التصوير الفوتوغرافي وإنتاج الفيديو والصوت والمتطلبات وطلبات التصوير والتسليم" },
+    questions: {
+      en: ["What production services do you offer?", "Can I request a shoot quote?", "How do revisions and delivery work?", "What usage rights are included?"],
+      ar: ["ما الخدمات المتاحة في الإعلام والإنتاج؟", "كم تبلغ الأسعار؟", "ما مواعيد العمل والتوفر؟", "كيف أتواصل مع الفريق؟"],
+    },
+  },
   technology: {
     archetype: "project",
     services: { en: "Software services, implementation questions, support and project intake", ar: "خدمات البرمجيات وأسئلة التنفيذ والدعم وبدء المشروع" },

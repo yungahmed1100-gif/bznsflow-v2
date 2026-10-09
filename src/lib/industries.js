@@ -32,6 +32,7 @@ export const INDUSTRIES = [
   { id: 'legal',         en: 'Legal services',           ar: 'الخدمات القانونية' },
   { id: 'finance',       en: 'Finance & accounting',     ar: 'المالية والمحاسبة' },
   { id: 'marketing',     en: 'Marketing & agencies',     ar: 'التسويق والوكالات' },
+  { id: 'media',         en: 'Media & production',       ar: 'الإعلام والإنتاج' },
   { id: 'technology',    en: 'Technology & software',    ar: 'التقنية والبرمجيات' },
   { id: 'manufacturing', en: 'Manufacturing',            ar: 'التصنيع' },
   { id: 'cleaning',      en: 'Cleaning & facilities',    ar: 'النظافة وإدارة المرافق' },

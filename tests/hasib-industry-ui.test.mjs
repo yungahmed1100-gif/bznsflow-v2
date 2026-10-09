@@ -8,10 +8,10 @@ import { ordersCsv } from '../src/lib/hasib/exports.js';
 test('one catalog covers Setup plus electronics and labels live, preview and pending packs', () => {
   const catalog = industryCatalog();
   assert.deepEqual(new Set(catalog.map(row => row.id)), new Set(BUSINESS_INDUSTRIES.map(row => row.id)));
-  assert.equal(catalog.length, 24);
+  assert.equal(catalog.length, 25);
   assert.deepEqual(new Set(catalog.filter(row => row.status === 'live').map(row => row.id)), new Set(HASIB_LIVE_PACKS));
   assert.deepEqual(new Set(catalog.filter(row => row.status === 'preview').map(row => row.id)), new Set(HASIB_PREVIEW_PACKS));
-  assert.equal(catalog.filter(row => row.status === 'pending').length, 9);
+  assert.equal(catalog.filter(row => row.status === 'pending').length, 10);
   for (const row of catalog) assert.ok(row.id && row.en && row.ar && ['live', 'preview', 'pending'].includes(row.status));
 });
 
