@@ -368,3 +368,19 @@ button.hb-visual-metric:hover, button.hb-visual-metric:focus-visible { border-co
 .hb-re-history { color: var(--ink-2); font-size: .92rem; }
 .hb-warn { color: var(--coral); font-weight: 600; }
 .hb-real-estate .hb-confirm { position: sticky; inset-block-start: 8px; z-index: 2; }
+
+/* ============================================================
+   Ledger and colour pass (2026-10-10): square corners, hard shadows, no
+   gradients; each metric carries its meaning colour along its top edge.
+   ============================================================ */
+.hb-page-icon, .hb-action-icon, .hb-metric-icon, .hb-chart, .hb-action-card, .hb-visual-metric, .hb-empty-state { border-radius: var(--radius); }
+.hb-action-card:hover, .hb-action-card:focus-visible { border-color: var(--ink); box-shadow: calc(4px * var(--x-sign)) 4px 0 var(--ink); transform: translateY(-2px); }
+.hb-action-card:focus-visible, button.hb-visual-metric:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+button.hb-visual-metric:hover { border-color: var(--ink); outline: none; }
+.hb-visual-metric { position: relative; overflow: hidden; }
+.hb-visual-metric::before { content: ''; position: absolute; inset: 0 0 auto; block-size: 3px; background: var(--metric-mark, var(--blue-mark, #5c95c6)); }
+.hb-visual-metric:has(.hb-metric-icon.is-green) { --metric-mark: var(--green-mark); }
+.hb-visual-metric:has(.hb-metric-icon.is-yellow) { --metric-mark: var(--yellow); }
+.hb-visual-metric:has(.hb-metric-icon.is-coral) { --metric-mark: var(--coral-mark); }
+.hb-chart-track > span { background: var(--blue-mark, #5c95c6); }
+.hb-property-cover { background: var(--paper-ruled); }

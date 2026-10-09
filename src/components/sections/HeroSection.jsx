@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Icon } from '../ui/Icon';
 import { MetaVerified } from '../ui/MetaVerified';
 import { waLink } from '../../lib/whatsapp';
@@ -14,33 +14,72 @@ const PIPELINE_ICONS = [
 // One industry chip per vertical the two engines serve.
 const TRUST_ICONS = ['building-2', 'tooth', 'stethoscope', 'snowflake', 'hard-hat', 'cake', 'coffee', 'utensils'];
 
-function PipelineDiagram({ t }) {
-  const steps = [
-    { label: t.hero_pipeline_step1, sub: t.hero_pipeline_step1_sub },
-    { label: t.hero_pipeline_step2, sub: t.hero_pipeline_step2_sub },
-    { label: t.hero_pipeline_step3, sub: t.hero_pipeline_step3_sub },
-    { label: t.hero_pipeline_step4, sub: t.hero_pipeline_step4_sub },
-    { label: t.hero_pipeline_step5, sub: t.hero_pipeline_step5_sub },
-  ];
+// One meaning colour per step (base.css MEANING): the customer, Layla, qualifying, the record, you.
+const STEP_TONES = ['blue', 'green', 'yellow', 'orange', ''];
+const CHIP_TONES = ['blue', 'green', 'yellow', 'orange'];
+const STEP_MS = 2600;
 
-  return (
-    <div className="pipeline-diagram" aria-label={t.hero_pipeline_label} role="img">
-      {steps.map((step, i) => (
-        <React.Fragment key={i}>
-          <div className="pipeline-node" style={{ '--i': i }}>
-            <div className="pipeline-node-icon" aria-hidden="true">{PIPELINE_ICONS[i]}</div>
-            <div className="pipeline-node-label">{step.label}</div>
-            <div className="pipeline-node-sub">{step.sub}</div>
-          </div>
-          {i < steps.length - 1 && (
-            <div className="pipeline-arrow" aria-hidden="true" style={{ '--i': i }}>
-              <div className="pipeline-arrow-track">
-                <div className="pipeline-arrow-fill" />
-              </div>
-            </div>
-          )}
-        </React.Fragment>
+/** "Need: Buy · Area: Al Mouj" → [['Need', 'Buy'], ['Area', 'Al Mouj']] */
+const recordPairs = text => String(text || '').split(' · ').map(part => part.split(/:\s*/)).filter(p => p.length === 2);
+
+function PipelineExample({ t, step }) {
+  if (step === 0) return <p className="pipeline-bubble is-in"><small>{t.hero_demo_customer}</small>{t.hero_demo_1}</p>;
+  if (step === 1 || step === 2) return <p className="pipeline-bubble is-out"><small>{t.hero_demo_layla}</small>{t[`hero_demo_${step + 1}`]}</p>;
+  if (step === 3) return (
+    <ul className="pipeline-record">
+      {recordPairs(t.hero_demo_4).map(([key, value], n) => (
+        <li key={key} style={{ '--n': n, '--chip-tint': `var(--${CHIP_TONES[n % 4]}-tint)`, '--chip-ink': `var(--${CHIP_TONES[n % 4]}-ink)` }}><b>{key}</b>{value}</li>
       ))}
+    </ul>
+  );
+  return <><div className="pipeline-actions">{t.hero_demo_5.split(' · ').map(a => <span key={a}>{a}</span>)}</div><p>{t.hero_pipeline_step5_sub}</p></>;
+}
+
+/**
+ * The five steps of one inquiry, with a worked example of the active step.
+ * It cycles on its own until the visitor hovers, focuses or picks a step;
+ * under reduced motion it never cycles and the visitor clicks through.
+ */
+function PipelineDiagram({ t }) {
+  const [active, setActive] = useState(0);
+  const [held, setHeld] = useState(false), [picked, setPicked] = useState(false), [still, setStill] = useState(true);
+  useEffect(() => {
+    const query = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const sync = () => setStill(!!query?.matches);
+    sync();
+    query?.addEventListener?.('change', sync);
+    return () => query?.removeEventListener?.('change', sync);
+  }, []);
+  useEffect(() => {
+    if (still || held || picked) return undefined;
+    const id = setInterval(() => { if (!document.hidden) setActive(a => (a + 1) % 5); }, STEP_MS);
+    return () => clearInterval(id);
+  }, [still, held, picked]);
+
+  const steps = [1, 2, 3, 4, 5].map(n => ({ label: t[`hero_pipeline_step${n}`], sub: t[`hero_pipeline_step${n}_sub`] }));
+  const tone = STEP_TONES[active];
+  return (
+    <div className="pipeline" onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}
+      onFocus={() => setHeld(true)} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setHeld(false); }}>
+      <ol className="pipeline-diagram" aria-label={t.hero_pipeline_label}>
+        {steps.map((step, i) => (
+          <li key={i} className={`pipeline-step${STEP_TONES[i] ? ` tone-${STEP_TONES[i]}` : ''}`} data-state={i < active ? 'done' : i === active ? 'active' : 'next'}
+            style={i < 4 ? { '--next-tone': STEP_TONES[i + 1] ? `var(--${STEP_TONES[i + 1] === 'blue' ? 'accent-blue' : STEP_TONES[i + 1]})` : 'var(--text-primary)' } : undefined}>
+            <button type="button" className="pipeline-node" aria-pressed={i === active} onClick={() => { setActive(i); setPicked(true); }}>
+              <span className="pipeline-node-icon" aria-hidden="true">{PIPELINE_ICONS[i]}</span>
+              <span className="pipeline-node-text">
+                <span className="pipeline-node-label">{step.label}</span>
+                <span className="pipeline-node-sub">{step.sub}</span>
+              </span>
+            </button>
+            {i < steps.length - 1 && <span className="pipeline-arrow" aria-hidden="true"><span className="pipeline-arrow-track"><span className="pipeline-arrow-fill" /></span></span>}
+          </li>
+        ))}
+      </ol>
+      <figure className={`pipeline-example pipeline-step${tone ? ` tone-${tone}` : ''}`}>
+        <figcaption><span className="pipeline-example-tag">{t.hero_demo_label}</span><span>{steps[active].label}</span></figcaption>
+        <div className="pipeline-example-body" key={active}><PipelineExample t={t} step={active} /></div>
+      </figure>
     </div>
   );
 }

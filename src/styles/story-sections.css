@@ -79,35 +79,6 @@
   gap: 32px;
 }
 
-.about-avatar {
-  position: relative;
-  width: 200px;
-  height: 200px;
-}
-
-.avatar-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: var(--text-primary);
-  z-index: 0;
-}
-
-.avatar-placeholder {
-  position: relative;
-  z-index: 1;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: var(--bg-card);
-  border: 3px solid var(--bg-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  overflow: hidden;
-}
-
 .about-card-detail {
   width: 100%;
   background: var(--bg-card);

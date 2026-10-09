@@ -6,6 +6,10 @@
   --paper: #f6efdf; --paper-ruled: #ebe1c9; --card: #fff; --ink: #1a1a1a; --ink-2: #4b5563; --ink-muted: #565e6b;
   --rule: rgba(0, 0, 0, .08); --rule-strong: rgba(0, 0, 0, .15);
   --blue: #2f6ea3; --green: #22603f; --green-mark: #51a47b; --orange: #f28c54; --coral: #9c2e35; --coral-mark: #e16b71; --yellow: #eeb462;
+  --blue-mark: #5c95c6; --blue-ink: #1f4f7a; --yellow-ink: #7a5200; --orange-ink: #9a4a1c;
+  /* Meaning tints (base.css MEANING): small indicators only. */
+  --blue-tint: color-mix(in srgb, #5c95c6 20%, #f6efdf); --green-tint: color-mix(in srgb, #51a47b 22%, #f6efdf);
+  --yellow-tint: color-mix(in srgb, #eeb462 30%, #f6efdf); --orange-tint: color-mix(in srgb, #f28c54 22%, #f6efdf); --coral-tint: color-mix(in srgb, #e16b71 20%, #f6efdf);
   --radius: 4px;
 }
 .ld, .ld-dialog {
@@ -388,3 +392,48 @@ a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
 /* A one-line outcome above a card (for example, back from Instagram's screen). */
 .ld-notice { margin: 0 0 12px; padding: 8px 12px; border-inline-start: 3px solid var(--green-mark); background: var(--card); font-size: 14px; }
 .ld-notice.is-problem { border-inline-start-color: var(--coral-mark); }
+
+/* ============================================================
+   Colour that means something (2026-10-10). Blue the customer, green
+   Layla / done, yellow in progress, orange what matters next, coral a
+   problem. Tinted fills on small indicators only; no gradients or blur.
+   ============================================================ */
+.ld-chip.is-green { background: var(--green-tint); }
+.ld-chip.is-yellow { background: var(--yellow-tint); color: var(--yellow-ink); }
+.ld-chip.is-coral { background: var(--coral-tint); }
+.ld-chip.is-blue { background: var(--blue-tint); color: var(--blue-ink); box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--blue-mark); }
+.ld-chip.is-orange { background: var(--orange-tint); color: var(--orange-ink); box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--orange); }
+
+/* Sidebar: each section's icon sits on a tile in its colour, so the eye finds it before the label. */
+.ld-nav a { --nav-tone: var(--ink-2); --nav-tint: transparent; }
+.ld-nav a[data-section="today"] { --nav-tone: var(--orange-ink); --nav-tint: var(--orange-tint); --nav-mark: var(--orange); }
+.ld-nav a[data-section="chats"] { --nav-tone: var(--blue-ink); --nav-tint: var(--blue-tint); --nav-mark: var(--blue-mark); }
+.ld-nav a[data-section="broadcasts"] { --nav-tone: var(--yellow-ink); --nav-tint: var(--yellow-tint); --nav-mark: var(--yellow); }
+.ld-nav a:is([data-section="orders"], [data-section="stock"], [data-section="service"], [data-section="customers"]) { --nav-tone: var(--green); --nav-tint: var(--green-tint); --nav-mark: var(--green-mark); }
+.ld-nav a[data-section="money"] { --nav-tone: var(--green); --nav-tint: var(--green-tint); --nav-mark: var(--green-mark); }
+.ld-nav a[data-section="team"] { --nav-tone: var(--blue-ink); --nav-tint: var(--blue-tint); --nav-mark: var(--blue-mark); }
+.ld-nav a svg { box-sizing: content-box; padding: 5px; border-radius: var(--radius); background: var(--nav-tint); color: var(--nav-tone); transition: background-color .16s, color .16s; }
+.ld-nav a:hover svg { background: var(--nav-mark, var(--paper-ruled)); color: var(--ink); }
+.ld-nav a[aria-current=page] svg { background: var(--nav-mark, var(--paper)); color: var(--ink); }
+
+/* Section tabs underline in the colour of the section they belong to. */
+.ld-section-tabs a[aria-current=page] { border-block-end-color: var(--tab-mark, currentColor); }
+
+/* Header status: Layla on is green, paused is yellow; a channel needing attention is coral. */
+.ld-health:not(.is-ok) .ld-dot { background: var(--coral-mark); }
+.ld-layla-switch.is-on .ld-switch input:checked + .ld-switch-track { background: var(--green-mark); border-color: var(--ink); }
+.ld-layla-switch.is-on .ld-switch input:checked + .ld-switch-track::after { background: var(--ink); }
+.ld-layla-switch:not(.is-on) .ld-switch-track { background: var(--yellow-tint); }
+.ld-layla.is-on::before, .ld-layla:not(.is-on)::before { content: ''; width: 9px; height: 9px; border-radius: 999px; box-shadow: 0 0 0 2px var(--ink) inset; background: var(--yellow); }
+.ld-layla.is-on::before { background: var(--green-mark); }
+
+/* Broadcast wizard: done steps green, the current step orange; variables blue. */
+.ld-steps li[aria-current=step] span { background: var(--orange); color: var(--ink); }
+.ld-steps li[aria-current=step] { border-color: var(--orange); }
+.ld-steps li:has(~ li[aria-current=step]) span { background: var(--green-mark); color: var(--ink); }
+.ld-steps li:has(~ li[aria-current=step]) { border-color: var(--green-mark); color: var(--ink); }
+.ld-var { background: var(--blue-tint); border-color: color-mix(in srgb, var(--blue-mark) 45%, transparent); color: var(--blue-ink); }
+
+/* Campaign status chips get their meaning colour; the counts read at a glance. */
+.ld-counts div:nth-child(2) dd { color: var(--green); }
+.ld-counts div:nth-child(4) dd { color: var(--coral); }

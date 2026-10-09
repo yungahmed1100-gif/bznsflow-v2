@@ -27,7 +27,7 @@ export function DashboardNav({ s, h, sections, tab, onSelect, badges = {}, packI
   const links = <ul>
         {sections.map(id => (
           <li key={id}>
-            <a href={`?${dashboardSearch(search, id)}`} aria-current={tab === id ? 'page' : undefined} onClick={e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); onSelect(id); setOpen(false); }}>
+            <a href={`?${dashboardSearch(search, id)}`} data-section={id} aria-current={tab === id ? 'page' : undefined} onClick={e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); onSelect(id); setOpen(false); }}>
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d={ICONS[id]} fill="currentColor" /></svg>
               <span>{label(id)}</span>
               {badges[id] > 0 && <span className="ld-nav-badge" aria-label={h.t('laylaWaitingTile')}>{badges[id]}</span>}

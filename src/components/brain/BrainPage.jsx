@@ -104,7 +104,7 @@ export function BrainPage({ lang, part = 'bzns', onPart, channel = false, active
       <div className="brain-tabs">
         <div role="tablist" aria-label={b.t('tabsLabel')} className="brain-tablist" onKeyDown={onTabKey}>
           {TABS.map(id => <button key={id} ref={el => { tabRefs.current[id] = el; }} type="button" role="tab" id={`brain-tab-${id}`} aria-controls={`brain-panel-${id}`} aria-selected={part === id} tabIndex={part === id ? 0 : -1}
-            className="brain-tab" onClick={() => select(id)}>{id === 'bzns' ? <BznsWord /> : b.t('tabCatalog')}<span className="brain-tab-count" aria-hidden="true">{counts[id]}</span></button>)}
+            className="brain-tab" data-tab={id} onClick={() => select(id)}>{id === 'bzns' ? <BznsWord /> : b.t('tabCatalog')}<span className="brain-tab-count" aria-hidden="true">{counts[id]}</span></button>)}
         </div>
         <div role="tabpanel" id={`brain-panel-${part}`} aria-labelledby={`brain-tab-${part}`} className="brain-panel" tabIndex={0}>
           {part === 'catalog' ? <CatalogTab b={b} catalog={catalog} request={request} take={take} act={act} busy={busy} loadCatalog={loadCatalog} />

@@ -71,7 +71,7 @@ export function ChatsView({ s, overview, selected, onSelect, reminder = null }) 
                       {item.lastMessage && item.lastMessage.direction !== 'in' && <StatusTicks s={s} status={item.lastMessage.status} channel={item.contact.channel} />}
                       <span className="ld-preview" dir="auto">{item.lastMessage?.text ?? (item.lastMessage ? s.t('textExpired') : '')}</span>
                     </span>
-                    <span className="ld-conversation-tags"><span className="ld-chip">{item.channel==='instagram'?'Instagram':'WhatsApp'}</span>
+                    <span className="ld-conversation-tags"><span className="ld-chip is-blue">{item.channel==='instagram'?'Instagram':'WhatsApp'}</span>
                       {item.takeover && <span className="ld-chip is-ink">{s.t('handling')}</span>}
                       {item.optout && <span className="ld-chip is-coral">{s.t('optedOut')}</span>}
                       {item.contact.status !== 'new' && <QualificationChip s={s} status={item.contact.status} />}

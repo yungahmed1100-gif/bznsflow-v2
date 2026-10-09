@@ -4,15 +4,17 @@ import { waLink } from '../../lib/whatsapp';
 
 // The menu of tech solutions — BznsFlow as a "business in a box" tech company.
 // The AI front office is one solution among websites, CRM, automation, apps, etc.
+// Tones follow the site's colour meanings: reaching customers blue, running the
+// business green, bringing customers back orange, things we build yellow.
 const SOLUTIONS = [
-  { key: 'sol_1', icon: 'target' },
-  { key: 'sol_2', icon: 'globe' },
-  { key: 'sol_3', icon: 'bar-chart' },
-  { key: 'sol_4', icon: 'link' },
-  { key: 'sol_5', icon: 'repeat' },
-  { key: 'sol_6', icon: 'smartphone' },
-  { key: 'sol_7', icon: 'star' },
-  { key: 'sol_8', icon: 'mail' },
+  { key: 'sol_1', icon: 'target', tone: 'blue' },
+  { key: 'sol_2', icon: 'globe', tone: 'yellow' },
+  { key: 'sol_3', icon: 'bar-chart', tone: 'green' },
+  { key: 'sol_4', icon: 'link', tone: 'green' },
+  { key: 'sol_5', icon: 'repeat', tone: 'orange' },
+  { key: 'sol_6', icon: 'smartphone', tone: 'yellow' },
+  { key: 'sol_7', icon: 'star', tone: 'orange' },
+  { key: 'sol_8', icon: 'mail', tone: 'blue' },
 ];
 
 export function SolutionsSection({ t, trackEvent }) {
@@ -23,8 +25,8 @@ export function SolutionsSection({ t, trackEvent }) {
         <p className="section-subtitle" data-reveal>{t.sol_sub}</p>
 
         <div className="solutions-grid">
-          {SOLUTIONS.map(({ key, icon }) => (
-            <div key={key} className="solution-tile" data-reveal>
+          {SOLUTIONS.map(({ key, icon, tone }) => (
+            <div key={key} className="solution-tile" data-tone={tone} data-reveal>
               <span className="solution-emoji" aria-hidden="true"><Icon name={icon} size={26} strokeWidth={1.8} /></span>
               <h3 className="solution-tile-title">{t[`${key}_title`]}</h3>
               <p className="solution-tile-desc">{t[`${key}_desc`]}</p>

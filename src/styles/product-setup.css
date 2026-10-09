@@ -3,3 +3,7 @@
 .product-setup[lang=ar] { font-family: 'IBM Plex Sans Arabic', Poppins, sans-serif; line-height: 1.8; }
 .product-setup[lang=ar] .setup-eyebrow { letter-spacing: normal; }
 .setup-signin{border-inline-start:3px solid #346d83;padding:12px;background:#eef4f6;margin:0 0 16px}
+
+/* Colour that means something (2026-10-10): done steps green, the current step orange. */
+.setup-steps li[data-state=done] span{background:#51a47b;border-color:#1a1a1a;color:#1a1a1a}
+.setup-steps li[data-state=current] span{background:#f28c54;border-color:#1a1a1a;color:#1a1a1a;font-weight:800}

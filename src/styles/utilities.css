@@ -158,9 +158,8 @@ html {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  /* Pipeline loop + connector draw off; nodes render static, line full. */
-  .pipeline-node::after { animation: none !important; }
-  .pipeline-arrow-fill { animation: none !important; transform: scaleY(1); opacity: 0; }
+  /* The pipeline never cycles under reduced motion (HeroSection), and nothing slides. */
+  .pipeline-node, .pipeline-node-icon, .pipeline-arrow-fill { transition: none !important; }
 }
 
 /* ============================================================

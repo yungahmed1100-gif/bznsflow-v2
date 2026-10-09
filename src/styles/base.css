@@ -38,7 +38,25 @@
   --green:            #51A47B;
   --red:              #E16B71;
   --orange:           #F28C54;
+  --yellow:           #EEB462;
   --whatsapp:         #25D366;
+
+  /* ---- MEANING (2026-10-10) ----
+     The five marks carry one meaning each, on the site and in the app:
+     blue = the customer / an inquiry, green = Layla working / available / done,
+     yellow = in progress / needs input, orange = what matters next / the record,
+     coral = a problem / needs attention. Tints fill small indicators only
+     (chips, icon tiles, an active step); text on a tint is ink or a -ink colour. */
+  --blue-tint:        color-mix(in srgb, var(--accent-blue) 20%, var(--bg-primary));
+  --green-tint:       color-mix(in srgb, var(--green) 22%, var(--bg-primary));
+  --yellow-tint:      color-mix(in srgb, var(--yellow) 30%, var(--bg-primary));
+  --orange-tint:      color-mix(in srgb, var(--orange) 22%, var(--bg-primary));
+  --coral-tint:       color-mix(in srgb, var(--red) 20%, var(--bg-primary));
+  --blue-ink:         #1f4f7a;   /* text on --blue-tint; links and focus keep #2f6ea3 */
+  --green-ink:        #22603f;
+  --yellow-ink:       #7a5200;
+  --orange-ink:       #9a4a1c;
+  --coral-ink:        #9c2e35;
 
   --navbar-height:    72px;
 

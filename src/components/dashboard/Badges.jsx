@@ -20,6 +20,7 @@ export function StatusTicks({ s, status, channel }) {
   );
 }
 export function QualificationChip({ s, status }) {
-  const tone = status === 'qualified' ? 'is-green' : status === 'in_progress' ? 'is-yellow' : status === 'not_qualified' ? 'is-muted' : '';
+  // A new inquiry is the customer's (blue); qualifying is in progress (yellow); qualified is done (green).
+  const tone = status === 'qualified' ? 'is-green' : status === 'in_progress' ? 'is-yellow' : status === 'not_qualified' ? 'is-muted' : 'is-blue';
   return <span className={`ld-chip ${tone}`}>{s.t(`q_${status}`)}</span>;
 }

@@ -63,3 +63,6 @@
 
 /* Plans without prices and approved client quotes (appended last; new classes only) */
 @import './styles/offers.css';
+
+/* Colour that means something (2026-10-10; appended last) */
+@import './styles/colour.css';

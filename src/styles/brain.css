@@ -6,6 +6,9 @@
   --paper: #f6efdf; --paper-ruled: #ebe1c9; --card: #fff; --ink: #1a1a1a; --ink-2: #4b5563; --ink-muted: #565e6b;
   --rule: rgba(0, 0, 0, .08); --rule-strong: rgba(0, 0, 0, .15); --blue: #2f6ea3; --green: #22603f; --green-mark: #51a47b;
   --orange: #f28c54; --coral: #9c2e35; --coral-mark: #e16b71; --yellow: #eeb462; --radius: 4px;
+  --blue-mark: #5c95c6; --blue-ink: #1f4f7a; --yellow-ink: #7a5200; --orange-ink: #9a4a1c;
+  --blue-tint: color-mix(in srgb, #5c95c6 20%, #f6efdf); --green-tint: color-mix(in srgb, #51a47b 22%, #f6efdf); --yellow-tint: color-mix(in srgb, #eeb462 30%, #f6efdf);
+  --orange-tint: color-mix(in srgb, #f28c54 22%, #f6efdf); --coral-tint: color-mix(in srgb, #e16b71 20%, #f6efdf);
   --fs-xs: 12px; --fs-sm: 13px; --fs-md: 15px; --fs-lg: 16px; --ease: 120ms ease-out;
 }
 .brain { --x-sign: 1; --brain-gap: 16px; display: grid; gap: var(--brain-gap); max-width: 1040px; color: var(--ink); }
@@ -235,3 +238,17 @@
 .brain-setup-industry label { display: grid; gap: 4px; font-size: var(--fs-sm); font-weight: 600; }
 .brain-setup-nav, .brain-setup-publish { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; }
 .brain-setup-publish { justify-content: flex-start; }
+
+/* Colour that means something (2026-10-10): what is done is green, the next step orange,
+   and each tab underlines in its own colour. */
+.brain-progress-bar li[data-done=false]:first-of-type,
+.brain-progress-bar li[data-done=true] + li[data-done=false] { background: var(--orange); }
+.brain-next { background: var(--orange-tint); border-color: color-mix(in srgb, var(--orange) 55%, transparent); }
+.brain-next:hover { background: var(--orange); border-color: var(--ink); }
+.brain-tab[data-tab=bzns] .brain-tab-count { background: var(--green-tint); color: var(--green); }
+.brain-tab[data-tab=catalog] .brain-tab-count { background: var(--orange-tint); color: var(--orange-ink); }
+.brain-tab[aria-selected=true] { box-shadow: inset 0 -3px 0 var(--tab-mark, var(--ink)); }
+.brain-tab[data-tab=bzns] { --tab-mark: var(--green-mark); }
+.brain-tab[data-tab=catalog] { --tab-mark: var(--orange); }
+.brain-setup-steps li[data-state=current] > span { background: var(--orange); color: var(--ink); border-color: var(--ink); }
+.brain-setup-steps li[data-state=done] > span { background: var(--green-mark); color: var(--ink); border-color: var(--ink); }

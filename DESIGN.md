@@ -165,9 +165,21 @@ A warm, low-contrast paper ground carrying near-black text, with five saturated 
 
 ### Named Rules
 
-**The Annotation Rule.** Accent colours mark the page; they never build it. No accent may be a section background, a card fill, or a large area of colour. If an accent occupies more than roughly 5% of a viewport, it has stopped annotating and become decoration.
+**The Annotation Rule.** Accent colours mark the page; they never build it. No accent may be a section background, a card fill, or a large area of colour. If an accent occupies more than roughly 5% of a viewport, it has stopped annotating and become decoration. *Amended 2026-10-10 (Ahmed asked for more colour that helps people find their way):* a light **tint** of an accent (about 20% mixed into Paper, tokens `--blue-tint` … `--coral-tint`) may fill a **small indicator**: a chip, an icon tile, a step number, or the active step of the hero pipeline. Text on a tint is Ink or the accent's text-safe ink (`--blue-ink #1f4f7a`, `--green-ink #22603f`, `--yellow-ink #7a5200`, `--orange-ink #9a4a1c`, `--coral-ink #9c2e35`). Cards, bands and sections stay untinted.
 
-**The One Blue Rule.** Annotation Blue means "interactive" and nothing else. A static element may not be blue for emphasis — use Orange, or use weight.
+**The Meaning Rule (2026-10-10).** Each accent means one thing, on the site and in the app, so colour is read before words:
+
+| Accent | Means | For example |
+|---|---|---|
+| Blue | The customer, an inquiry, and what you can act on | "A customer asks", Chats, channel chips, links, focus |
+| Green | Layla working; available; done | "Layla answers", Available now, qualified, connected, granted consent |
+| Yellow | In progress; needs input | "She qualifies", In preparation, pending, paused |
+| Orange | What matters next; the record | "You get the record", the next setup step, the current wizard step |
+| Coral | A problem; needs attention | "Solves", failed, opted out, a channel needing attention |
+
+Section headings underline in their section's colour (Plans green, About blue, FAQ yellow, Solutions coral, the hero orange).
+
+**The One Blue Rule.** Annotation Blue means the customer side and "interactive"; it is never used for generic emphasis — use Orange, or use weight.
 
 **The Muted Floor Rule.** Ink Muted on Paper Ruled fails WCAG 2.2 AA and is prohibited. Inside a Paper Ruled band, supporting text steps up to Ink Secondary.
 

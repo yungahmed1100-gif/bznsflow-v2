@@ -11,12 +11,13 @@ export function FAQSection({ t, trackEvent }) {
         <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.faq_title }} />
 
         <div className="faq-list">
-          {FAQ_KEYS.map((qKey) => {
+          {FAQ_KEYS.map((qKey, i) => {
             const aKey = qKey.replace('_q', '_a');
             return (
               <details key={qKey} className="faq-item" data-reveal>
                 <summary className="faq-question">
-                  <span>{t[qKey]}</span>
+                  <span className="faq-num" aria-hidden="true">{i + 1}</span>
+                  <span className="faq-question-text">{t[qKey]}</span>
                   <svg className="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="6 9 12 15 18 9" />
                   </svg>

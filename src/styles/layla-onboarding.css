@@ -56,7 +56,8 @@
 .layla-customer-steps [data-state=done]{border-top-color:var(--green);color:var(--layla-green-ink)}
 .layla-customer-steps [data-state=done] .layla-step-mark{background:var(--green);border-color:var(--green);color:var(--bg-card)}
 .layla-customer-steps [data-state=current]{border-top-color:var(--layla-ink);color:var(--layla-ink);font-weight:700}
-.layla-customer-steps [data-state=current] .layla-step-mark{background:var(--layla-blue-ink);border-color:var(--layla-blue-ink);color:var(--bg-card)}
+/* The current step is what matters next: orange, as on the site and in BznsBrain (2026-10-10). */
+.layla-customer-steps [data-state=current] .layla-step-mark{background:var(--orange);border-color:var(--layla-ink);color:var(--layla-ink)}
 .layla-step-count{display:none}
 
 /* ---- Step-0 chapters: one numbered block per job, each marked Required or Optional ---- */

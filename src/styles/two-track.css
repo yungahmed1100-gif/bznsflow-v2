@@ -36,9 +36,15 @@
 }
 
 .trust-flag svg {
-  color: var(--text-muted);
+  color: var(--flag-ink, var(--text-muted));
   flex-shrink: 0;
 }
+/* Industry icons take the five meaning colours in turn (text-safe inks). */
+.trust-flag:nth-of-type(5n + 1) { --flag-ink: var(--blue-ink); }
+.trust-flag:nth-of-type(5n + 2) { --flag-ink: var(--green-ink); }
+.trust-flag:nth-of-type(5n + 3) { --flag-ink: var(--yellow-ink); }
+.trust-flag:nth-of-type(5n + 4) { --flag-ink: var(--orange-ink); }
+.trust-flag:nth-of-type(5n + 5) { --flag-ink: var(--coral-ink); }
 @media (max-width: 640px) {
   .trust-strip { gap: 8px 12px; font-size: 0.8rem; }
 }

@@ -1,0 +1,94 @@
+/* ============================================================
+   Colour that means something (2026-10-10).
+   The five marks carry one meaning each (base.css MEANING): blue the
+   customer, green Layla / available / done, yellow in progress, orange
+   what matters next, coral a problem. Tints fill small indicators only;
+   no section background, gradient, blur or glow (DESIGN.md).
+   ============================================================ */
+
+/* A tone sets three variables; any indicator inside reads them. */
+[data-tone="blue"]   { --tone: var(--accent-blue); --tint: var(--blue-tint);   --tone-ink: var(--blue-ink); }
+[data-tone="green"]  { --tone: var(--green);       --tint: var(--green-tint);  --tone-ink: var(--green-ink); }
+[data-tone="yellow"] { --tone: var(--yellow);      --tint: var(--yellow-tint); --tone-ink: var(--yellow-ink); }
+[data-tone="orange"] { --tone: var(--orange);      --tint: var(--orange-tint); --tone-ink: var(--orange-ink); }
+[data-tone="coral"]  { --tone: var(--red);         --tint: var(--coral-tint);  --tone-ink: var(--coral-ink); }
+
+/* ---- Each section underlines its heading in its own colour ---- */
+.mark { text-decoration-color: var(--section-mark, var(--orange)); }
+#tiers     { --section-mark: var(--green); }
+#about     { --section-mark: var(--accent-blue); }
+#faq       { --section-mark: var(--yellow); }
+#solutions { --section-mark: var(--red); }
+
+/* ---- Plans ---- */
+.tier-status.is-available,
+[dir="rtl"] .tier-status.is-available { background: var(--green-tint); color: var(--green-ink); box-shadow: none; }
+.tier-status.is-soon,
+[dir="rtl"] .tier-status.is-soon { background: var(--yellow-tint); color: var(--yellow-ink); box-shadow: none; }
+.tier-status::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: currentColor; margin-inline-end: 6px; vertical-align: 1px; }
+.tier-status.is-available::before { animation: liveDot 2.4s ease-in-out infinite; }
+@keyframes liveDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+[data-tier="catalyst"] { --tier-tint: var(--green-tint); --tier-ink: var(--green-ink); --tier-tone: var(--green); }
+[data-tier="ascend"]   { --tier-tint: var(--blue-tint);  --tier-ink: var(--blue-ink);  --tier-tone: var(--accent-blue); }
+[data-tier="apex"]     { --tier-tint: var(--orange-tint); --tier-ink: var(--orange-ink); --tier-tone: var(--orange); }
+[data-tier] .tier-stage-tag { background: var(--tier-tint); color: var(--tier-ink); }
+[data-tier] .tier-bottleneck-label { color: var(--coral-ink); }
+/* The plan you can buy carries its colour as a rule along the top edge, inside the card. */
+.pricing-card[data-tier] { position: relative; }
+.pricing-card[data-tier]::before { content: ''; position: absolute; inset: 0 0 auto; height: 4px; background: var(--tier-tone); border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.pricing-card--soon[data-tier]::before { opacity: 0.55; }
+[data-tier="catalyst"] .pricing-features svg { color: var(--green-ink); }
+
+/* ---- About: brand artwork instead of the placeholder avatar ---- */
+.about-art {
+  margin: 0;
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.about-art img { width: 78%; height: auto; display: block; }
+.detail-icon[data-tone] { width: 30px; height: 30px; justify-content: center; border-radius: var(--radius-sm); background: var(--tint); color: var(--tone-ink); }
+
+/* ---- FAQ: numbered in turn through the five colours ---- */
+.faq-item { --tone: var(--accent-blue); --tint: var(--blue-tint); --tone-ink: var(--blue-ink); }
+.faq-item:nth-child(5n + 2) { --tone: var(--green); --tint: var(--green-tint); --tone-ink: var(--green-ink); }
+.faq-item:nth-child(5n + 3) { --tone: var(--yellow); --tint: var(--yellow-tint); --tone-ink: var(--yellow-ink); }
+.faq-item:nth-child(5n + 4) { --tone: var(--orange); --tint: var(--orange-tint); --tone-ink: var(--orange-ink); }
+.faq-item:nth-child(5n + 5) { --tone: var(--red); --tint: var(--coral-tint); --tone-ink: var(--coral-ink); }
+.faq-question { justify-content: flex-start; }
+.faq-question-text { flex: 1; }
+.faq-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--tint);
+  color: var(--tone-ink);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.faq-item { transition: border-color var(--transition), box-shadow var(--transition); }
+.faq-item:hover { border-color: var(--tone); }
+.faq-item[open] { border-color: var(--tone); box-shadow: inset calc(4px * var(--x-sign)) 0 0 var(--tone); }
+.faq-item[open] .faq-num { background: var(--tone); color: var(--text-primary); }
+.faq-item[open] .faq-chevron { color: var(--tone-ink); }
+
+/* ---- Solutions: an icon tile in the colour of the kind of work ---- */
+.solution-tile[data-tone] .solution-emoji { background: var(--tint); border-color: transparent; color: var(--tone-ink); transition: background-color var(--transition), color var(--transition), transform var(--transition); }
+.solution-tile[data-tone]:hover .solution-emoji { background: var(--tone); color: var(--text-primary); transform: rotate(calc(var(--x-sign) * -4deg)); }
+.solution-tile[data-tone] { box-shadow: inset 0 0 0 transparent; transition: background-color var(--transition), box-shadow var(--transition); }
+.solution-tile[data-tone]:hover { box-shadow: inset 0 2px 0 var(--tone); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tier-status.is-available::before { animation: none; }
+  .solution-tile[data-tone]:hover .solution-emoji { transform: none; }
+}

@@ -18,6 +18,7 @@ const SUITES = [
   'tests/layla-dashboard-browser.mjs',
   'tests/product-setup-browser.mjs',
   'tests/brain-browser.mjs',
+  'tests/home-browser.mjs',
 ];
 
 const server = spawn(process.execPath, ['scripts/preview.mjs', '--port', String(PORT)], { stdio: 'ignore' });

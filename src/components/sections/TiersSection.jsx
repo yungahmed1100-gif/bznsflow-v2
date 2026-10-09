@@ -27,7 +27,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
           {tiers.map(tier => {
             const cta = link(tier);
             return (
-              <article key={tier.key} className={`pricing-card pricing-card--ladder${tier.available ? ' pricing-card--popular' : ' pricing-card--soon'}`}>
+              <article key={tier.key} data-tier={tier.key} className={`pricing-card pricing-card--ladder${tier.available ? ' pricing-card--popular' : ' pricing-card--soon'}`}>
                 <div className="pricing-header">
                   <div className="tier-stage-row">
                     <h3 className="pricing-tier">{tier.name}</h3>

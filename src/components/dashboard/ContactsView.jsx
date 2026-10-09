@@ -71,7 +71,7 @@ export function ContactsView({ s, overview, onOpenChat }) {
                     <td data-label={s.t('status')}><QualificationChip s={s} status={c.status} />{c.appointment && <span className="ld-chip is-yellow" title={c.appointment.preferences || ''}>{s.t('appointmentRequest')}</span>}</td>
                     <td data-label={s.t('fieldsHeading')} className="ld-fields-cell">{c.fields.slice(0, 3).map(f => <span key={f.key}><b>{fieldLabel(f.key)}:</b> <bdi>{valueLabel(f.key, f.value)}</bdi></span>)}</td>
                     <td data-label={s.t('source')}>{s.t(`source_${c.source}`)}</td>
-                    <td data-label={s.t('consent')}>{c.optout ? <span className="ld-chip is-coral">{s.t('optedOut')}</span> : s.t(`consent_${c.consent.status}`)}</td>
+                    <td data-label={s.t('consent')}>{c.optout ? <span className="ld-chip is-coral">{s.t('optedOut')}</span> : c.consent.status === 'granted' ? <span className="ld-chip is-green">{s.t('consent_granted')}</span> : s.t(`consent_${c.consent.status}`)}</td>
                     <td data-label={s.t('lastActivity')} className="ld-num">{listTimestamp(c.lastActivityAt, s.lang, overview.timezone)}</td>
                     <td data-label={s.t('takeover')}>{c.conversationId ? <button type="button" className="ld-link" onClick={() => onOpenChat(c.conversationId)}>{c.takeover ? s.t('handling') : s.t('openChat')}</button> : '—'}</td>
                   </tr>
