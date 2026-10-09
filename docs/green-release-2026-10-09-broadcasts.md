@@ -39,5 +39,19 @@
 | Brake | `npx convex run blueCampaign:setBroadcastEnabled '{"enabled":false}' --env-file .env.green-convex.local` (it also blocks scheduled and processing campaigns); then `npx vercel env rm GREEN_BROADCAST_ENABLED production` and redeploy. |
 | Not yet seen | A real broadcast delivered. No message has been sent by the agent. Ahmed's first broadcast goes to his own number. |
 
+## Follow-up: mixed-country lists and non-WhatsApp numbers (2026-10-09)
+
+Prompted by Ahmed's upload of a KSA + UAE list where numbers carry their code without "+".
+
+| Item | Value |
+|---|---|
+| Bug fixed | `966…`/`971…` numbers were read with the fallback country's code prepended (`968966…`). A number longer than any local number for the fallback country is now read as international; the country column understands KSA, UAE and Arabic names; wa.me links count as numbers (`49d69e9`). |
+| Upload check | Each number must match its country's mobile plan (SA, AE, OM, BH, QA, KW, EG, JO). Landline, toll-free and short numbers are skipped and counted, as are rows a "Number type" column marks so; countries without a rule are kept (`4ef409d`). |
+| Learn from sends | Meta discontinued the "does this number have WhatsApp" check, so a 131026 (undeliverable) failure now sets `blueContacts.undeliverableAt`; later broadcasts exclude the contact (`not_on_whatsapp`) until the customer writes in. Other failure codes do not mark the number. |
+| Verification | On `4ef409d` alone: build; 828/828 unit tests; all 9 browser suites; Convex typecheck; Convex dry run clean (one optional field). |
+| Convex | Ahmed ran `npx convex deploy` from `work/release/4ef409d` (reported "done"; the code itself cannot be read back from the function list). |
+| Vercel | `dpl_CcvFtRnmhU7hCJWwzUiLnbKq8qM3`, promoted; the domain serves it. Smoke: 200 for `/`, `/en`, `/layla/dashboard`, `/en/layla/dashboard`; 307 for `/layla/setup`; an unauthenticated preview returns 401. |
+| Rollback | `npx vercel promote dpl_7CL1EZYrbwWKr1mXYUYsx4uGrmjC --yes` (keeps sending on). The Convex field is additive. |
+
 ## Open
 - The first real broadcast and its delivery receipts (sent → delivered) still need to be seen on production.
