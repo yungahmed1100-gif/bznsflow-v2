@@ -73,7 +73,6 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             <p className="footer-legal">
               <a href={lang === 'en' ? '/en/privacy' : '/privacy'}>{t.footer_privacy}</a>
             </p>
-            <p className="footer-founder">{t.footer_founder}</p>
           </div>
         </div>
       </footer>

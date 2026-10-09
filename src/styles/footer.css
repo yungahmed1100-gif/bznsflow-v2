@@ -118,8 +118,7 @@
 }
 
 .footer-copy,
-.footer-legal,
-.footer-founder {
+.footer-legal {
   font-size: 0.82rem;
   color: var(--text-secondary);
 }

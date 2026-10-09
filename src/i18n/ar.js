@@ -63,7 +63,6 @@ export default {
   "footer_contact_heading": "تواصل معنا",
   "footer_book": "احجز التدقيق المجاني",
   "footer_copy": "© 2025 BznsFlow. جميع الحقوق محفوظة.",
-  "footer_founder": "عُمان أولاً · وعبر الخليج",
   "wa_tooltip": "تحدث معنا عبر واتساب",
   "trust_label": "مناسب لأعمال مثل",
   "meta_verified": "مزوّد تقنية موثّق لدى",

@@ -64,7 +64,6 @@ export default {
   "footer_contact_heading": "Contact",
   "footer_book": "Book the free audit",
   "footer_copy": "© 2025 BznsFlow. All rights reserved.",
-  "footer_founder": "Oman first · across the GCC",
   "wa_tooltip": "Let's talk on WhatsApp",
   "trust_label": "Made for businesses like",
   "meta_verified": "Verified Tech Provider",

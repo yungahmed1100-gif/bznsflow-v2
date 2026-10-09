@@ -437,3 +437,5 @@ a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
 /* Campaign status chips get their meaning colour; the counts read at a glance. */
 .ld-counts div:nth-child(2) dd { color: var(--green); }
 .ld-counts div:nth-child(4) dd { color: var(--coral); }
+/* A chip is as wide as its words, also when table cells stack on a phone. */
+.ld-table td .ld-chip { justify-self: start; inline-size: fit-content; }
