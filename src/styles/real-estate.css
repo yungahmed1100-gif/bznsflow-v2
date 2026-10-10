@@ -1,0 +1,169 @@
+/* Real Estate's six-tab workspace (ascend/real-estate.md). The Ledger's rules hold:
+   paper and ink, hard edges, no gradients or blur, tints only on small indicators.
+   Colour keeps its meaning: blue the customer, yellow in progress, orange what is next,
+   green done, coral a problem. Logical properties only, so Arabic mirrors. */
+
+/* ---- Tones shared by chips, strip items and filters ---- */
+.hb-real-estate [data-tone="coral"] { --tone: var(--coral-mark); --tone-ink: var(--coral); --tone-tint: var(--coral-tint); }
+.hb-real-estate [data-tone="orange"] { --tone: var(--orange); --tone-ink: var(--orange-ink); --tone-tint: var(--orange-tint); }
+.hb-real-estate [data-tone="yellow"] { --tone: var(--yellow); --tone-ink: var(--yellow-ink); --tone-tint: var(--yellow-tint); }
+.hb-real-estate [data-tone="blue"] { --tone: var(--blue-mark); --tone-ink: var(--blue-ink); --tone-tint: var(--blue-tint); }
+.hb-real-estate [data-tone="green"] { --tone: var(--green-mark); --tone-ink: var(--green); --tone-tint: var(--green-tint); }
+.ld-chip[data-tone] { background: var(--tone-tint); color: var(--tone-ink); box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--tone); }
+
+/* Stages: the customer arrives (blue), is worked (yellow), reaches the record (orange), ends. */
+[data-stage="new"], [data-stage="contacted"] { --stage: var(--blue-mark); --stage-tint: var(--blue-tint); --stage-ink: var(--blue-ink); }
+[data-stage="qualified"], [data-stage="viewing"] { --stage: var(--yellow); --stage-tint: var(--yellow-tint); --stage-ink: var(--yellow-ink); }
+[data-stage="offer"] { --stage: var(--orange); --stage-tint: var(--orange-tint); --stage-ink: var(--orange-ink); }
+[data-stage="won"] { --stage: var(--green-mark); --stage-tint: var(--green-tint); --stage-ink: var(--green); }
+[data-stage="lost"] { --stage: var(--coral-mark); --stage-tint: var(--coral-tint); --stage-ink: var(--coral); }
+.ld-chip[data-stage] { background: var(--stage-tint); color: var(--stage-ink); box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--stage); }
+
+.hb-real-estate { display: grid; gap: 16px; min-inline-size: 0; }
+.hb-real-estate > * { min-inline-size: 0; }
+/* Filters and period pickers keep their own width instead of stretching across the page. */
+.hb-real-estate > .ld-segmented { justify-self: start; max-inline-size: 100%; }
+.hb-real-estate h2 { margin-block: 0; }
+.hb-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* A view's own heading under the Deals header: smaller, no icon, one action. */
+.hb-section-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 16px; }
+.hb-section-header h2 { font-size: 18px; }
+.hb-section-header p { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; max-inline-size: 75ch; }
+
+/* ---- Needs attention ---- */
+.hb-attention { display: flex; flex-wrap: wrap; gap: 8px; }
+.hb-attention-item { appearance: none; display: inline-flex; align-items: baseline; gap: 8px; padding: 8px 12px; font: inherit; font-size: 14px; color: var(--ink);
+  background: var(--card); border: 1px solid var(--rule-strong); border-inline-start: 4px solid var(--tone); border-radius: var(--radius); cursor: pointer; text-align: start;
+  transition: transform .12s ease, box-shadow .12s ease; }
+.hb-attention-item b { font-size: 18px; color: var(--tone-ink); }
+.hb-attention-item:hover { box-shadow: calc(3px * var(--x-sign)) 3px 0 var(--ink); transform: translate(calc(-1px * var(--x-sign)), -1px); }
+.hb-attention-item:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.hb-attention-clear { margin: 0; padding: 8px 12px; font-size: 14px; color: var(--ink-2); border-inline-start: 4px solid var(--green-mark); background: var(--card); border-radius: var(--radius); }
+
+/* ---- Board ---- */
+.hb-board-filters { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.hb-board-filters .ld-segmented { margin: 0; }
+.hb-board-layout { display: grid; gap: 16px; align-items: start; }
+.hb-board-layout.has-preview { grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); }
+.hb-board { display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)); gap: 10px; overflow-x: auto; padding-block-end: 6px; }
+.hb-board-column { display: grid; align-content: start; gap: 8px; min-inline-size: 0; padding: 10px; background: var(--paper-ruled, #ebe1c9); border-radius: var(--radius); border-block-start: 4px solid var(--stage); }
+.hb-board-column h2 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 700; }
+.hb-board-column h2 .ld-num { color: var(--stage-ink); }
+.hb-board-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.hb-deal-card { display: grid; gap: 8px; padding: 10px; background: var(--card); border: 1px solid var(--rule-strong); border-radius: var(--radius); min-inline-size: 0; }
+.hb-deal-card[data-selected] { border-color: var(--ink); box-shadow: calc(3px * var(--x-sign)) 3px 0 var(--ink); }
+.hb-deal-open { appearance: none; display: grid; gap: 2px; padding: 0; text-align: start; font: inherit; color: var(--ink); background: none; border: 0; cursor: pointer; overflow-wrap: anywhere; }
+.hb-deal-open b { font-size: 15px; }
+.hb-deal-open span { font-size: 13px; color: var(--ink-2); }
+.hb-deal-open:hover b { text-decoration: underline; text-decoration-color: var(--stage); text-decoration-thickness: 2px; }
+.hb-deal-open:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 2px; }
+.hb-deal-card-facts { display: grid; gap: 4px; margin: 0; font-size: 12.5px; }
+.hb-deal-card-facts div { display: flex; gap: 6px; min-inline-size: 0; }
+.hb-deal-card-facts dt { color: var(--ink-2); flex: none; }
+.hb-deal-card-facts dt::after { content: ':'; }
+.hb-deal-card-facts dd { margin: 0; overflow-wrap: anywhere; }
+.hb-deal-move { display: grid; gap: 4px; font-size: 12.5px; color: var(--ink-2); }
+.hb-real-estate .hb-deal-move select { font: inherit; font-size: 13px; block-size: auto; min-block-size: 34px; padding: 4px 8px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--card); color: var(--ink); min-inline-size: 0; }
+.hb-deal-preview { position: sticky; inset-block-start: 12px; display: grid; gap: 12px; }
+.hb-deal-preview .hb-deal-facts { grid-template-columns: 1fr; }
+
+/* ---- Record ---- */
+.hb-record-nav { display: flex; flex-wrap: wrap; gap: 6px 16px; padding-block: 8px; border-block-end: 1px solid var(--rule); font-size: 14px; }
+.hb-record-nav a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+.hb-deal-detail [id^="re-"] { scroll-margin-block-start: 16px; }
+
+/* ---- Viewings ---- */
+.hb-viewings { display: grid; gap: 8px; }
+.hb-viewings h2 { font-size: 16px; display: flex; gap: 8px; align-items: baseline; }
+.hb-re-list > li.hb-viewing-row { justify-content: space-between; border-inline-start: 4px solid var(--rule-strong); }
+.hb-re-list > li.hb-viewing-row[data-status="missing"] { border-inline-start-color: var(--coral-mark); }
+.hb-re-list > li.hb-viewing-row[data-status="confirmed"] { border-inline-start-color: var(--green-mark); }
+.hb-re-list > li.hb-viewing-row[data-status="requested"] { border-inline-start-color: var(--yellow); }
+.hb-viewing-row p { margin: 4px 0 0; }
+.ld-chip[data-status="completed"] { background: var(--green-tint); color: var(--green); }
+.ld-chip[data-status="missed"], .ld-chip[data-status="cancelled"] { background: var(--coral-tint); color: var(--coral); }
+.ld-chip[data-status="requested"] { background: var(--yellow-tint); color: var(--yellow-ink); }
+.ld-chip[data-status="confirmed"] { background: var(--blue-tint); color: var(--blue-ink); }
+
+/* ---- Follow-ups ---- */
+.hb-followup-filters label[data-tone] input:checked + span { box-shadow: inset 0 -3px 0 var(--tone); }
+.hb-followup-filters b { margin-inline-start: 4px; color: var(--ink-2); }
+.hb-followups > li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; border-inline-start: 4px solid var(--rule-strong); }
+.hb-followups > li > div:first-child { flex: 1 1 320px; min-inline-size: 0; }
+.hb-followups > li p { margin: 4px 0 0; }
+.hb-followups > li[data-bucket="overdue"], .hb-followups > li[data-bucket="blocked"] { border-inline-start-color: var(--coral-mark); }
+.hb-followups > li[data-bucket="today"] { border-inline-start-color: var(--orange); }
+.hb-followups > li[data-bucket="approval"] { border-inline-start-color: var(--yellow); }
+.hb-followups > li[data-bucket="scheduled"] { border-inline-start-color: var(--blue-mark); }
+.hb-followups > li[data-bucket="completed"] { border-inline-start-color: var(--green-mark); }
+.hb-draft-text { margin: 8px 0 0; padding: 8px 12px; border-inline-start: 2px solid var(--rule-strong); background: var(--paper); font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.hb-snooze { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.hb-filter-note { margin: 0; font-size: 14px; }
+
+/* ---- Insights ---- */
+.hb-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.hb-kpi { appearance: none; display: grid; align-content: start; gap: 6px; padding: 14px; text-align: start; font: inherit; color: var(--ink); background: var(--card);
+  border: 1px solid var(--rule-strong); border-block-start: 4px solid var(--green-mark); border-radius: var(--radius); cursor: pointer; min-inline-size: 0;
+  transition: transform .12s ease, box-shadow .12s ease; }
+.hb-kpi[data-backlog] { border-block-start-color: var(--coral-mark); }
+.hb-kpi > span { font-weight: 700; font-size: 14px; }
+.hb-kpi > strong { font-size: clamp(1.4rem, 2.6vw, 1.9rem); line-height: 1.1; overflow-wrap: anywhere; }
+.hb-kpi small { color: var(--ink-2); font-size: 12.5px; }
+.hb-kpi:hover { box-shadow: calc(3px * var(--x-sign)) 3px 0 var(--ink); transform: translate(calc(-1px * var(--x-sign)), -1px); }
+.hb-kpi[aria-pressed="true"] { border-color: var(--ink); box-shadow: calc(4px * var(--x-sign)) 4px 0 var(--ink); }
+.hb-kpi:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.hb-kpi-empty { font-size: 15px; font-weight: 600; color: var(--ink-2); }
+.hb-kpi-detail { display: grid; gap: 10px; }
+.hb-kpi-detail > p { margin: 0; max-inline-size: 75ch; }
+.hb-kpi-notes { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; font-size: 14px; }
+.hb-diagnostics, .hb-segments { display: grid; gap: 8px; }
+.hb-segments select { inline-size: auto; min-inline-size: min(100%, 240px); font: inherit; padding: 6px 8px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--card); }
+.ld-table tr[aria-selected="true"] td { background: var(--paper); }
+.hb-records tr[data-counted="yes"] td:first-child { box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--green-mark); }
+
+.hb-trend { margin: 0; display: grid; gap: 8px; }
+.hb-trend figcaption { font-weight: 700; font-size: 14px; }
+.hb-trend ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; align-items: end; }
+.hb-trend li { display: grid; justify-items: center; gap: 2px; min-inline-size: 0; text-align: center; }
+.hb-trend-bar { display: flex; align-items: flex-end; inline-size: 100%; max-inline-size: 44px; block-size: 96px; background: var(--paper-ruled); border-radius: 2px; overflow: hidden; }
+.hb-trend-bar i { display: block; inline-size: 100%; background: var(--green-mark); }
+.hb-trend-bar[data-empty] { background: transparent; border: 1px dashed var(--rule-strong); }
+.hb-trend b { font-size: 13px; }
+.hb-trend small { font-size: 11.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-inline-size: 100%; }
+
+/* ---- Settings → rules ---- */
+.hb-rules { display: grid; gap: 12px; }
+.hb-rule { border-inline-start: 4px solid var(--rule-strong); }
+.hb-rule[data-enabled] { border-inline-start-color: var(--green-mark); }
+.hb-rule legend, .hb-rules fieldset > legend { font-weight: 700; padding-inline: 4px; }
+.hb-rule-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 10px 16px; }
+/* A rule's amount and unit are short; what it does needs room to read in full. */
+.hb-rule .hb-rule-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr); }
+@media (max-width: 640px) { .hb-rule .hb-rule-fields { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- Deal context beside a chat or a customer ---- */
+.hb-deal-context { display: grid; gap: 8px; margin-block: 8px; }
+.hb-deal-context-card { display: grid; gap: 6px; padding: 10px 12px; background: var(--card); border: 1px solid var(--rule-strong); border-inline-start: 4px solid var(--stage, var(--rule-strong)); border-radius: var(--radius); }
+.hb-deal-context-card p { margin: 0; }
+.hb-deal-context-followups { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
+.hb-deal-context-followups li[data-bucket="overdue"], .hb-deal-context-followups li[data-bucket="blocked"] { color: var(--coral); font-weight: 600; }
+
+@media (max-width: 1099px) {
+  .hb-board-layout.has-preview { grid-template-columns: minmax(0, 1fr); }
+  .hb-deal-preview { position: static; }
+}
+@media (max-width: 1024px) { .hb-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Under 768px the board reads as one list: each stage stacks with its cards. */
+@media (max-width: 767px) {
+  .hb-board { grid-template-columns: minmax(0, 1fr); overflow-x: visible; }
+  .hb-attention { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .hb-attention-item { padding: 6px 10px; font-size: 13px; }
+}
+@media (max-width: 480px) {
+  .hb-kpis { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hb-attention-item, .hb-kpi { transition: none; }
+  .hb-attention-item:hover, .hb-kpi:hover { transform: none; }
+}

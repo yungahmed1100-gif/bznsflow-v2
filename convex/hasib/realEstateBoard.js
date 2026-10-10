@@ -5,6 +5,7 @@ import { audit } from './workspaceState.js';
 import { businessTimezone } from './expensesState.js';
 import { periodRange } from './period.js';
 import { displayName } from '../blueContacts.js';
+import { ruleWanted, ruleDraftText, RULE_TASK_KINDS } from './realEstateRules.js';
 
 export const DAY = 86400000;
 export const OPEN_STAGES = ['new', 'contacted', 'qualified', 'viewing', 'offer'];
@@ -12,7 +13,8 @@ const LIVE_VIEWING = new Set(['requested', 'confirmed']);
 const LIVE_OFFER = new Set(['approved', 'presented', 'countered']);
 const FIRST_RESPONSE_MS = 5 * 60000, SECOND_ATTEMPT_MS = 2 * 3600000, OFFER_ANSWER_MS = 2 * 3600000, SCAN = 500;
 // Tasks Today opens from the records themselves; each closes itself once the cause is gone.
-const AUTO_TASKS = new Set(['first_response_overdue', 'second_attempt_overdue', 'stale_listing', 'viewing_outcome_missing', 'offer_unanswered']);
+const AUTO_TASKS = new Set(['first_response_overdue', 'second_attempt_overdue', 'stale_listing', 'viewing_outcome_missing', 'offer_unanswered', ...RULE_TASK_KINDS]);
+const ARABIC = /[\u0600-\u06FF]/;
 
 export const publicRow = row => { const { _id, _seq, table, accountId, requestId, ...rest } = row; return { id: _id, ...rest }; };
 
@@ -75,16 +77,47 @@ function currentTasks({ opportunities, properties, viewings, offers }, now, fres
   return wanted;
 }
 
-/** Opens tasks the records call for and closes automatic ones whose cause is gone. */
-async function syncTasks(ctx, accountId, records, now, freshnessMs) {
-  const wanted = currentTasks(records, now, freshnessMs);
-  const key = (kind, entityId) => `${kind}:${entityId}`;
-  const wantedKeys = new Set(wanted.map(([kind, , entityId]) => key(kind, entityId)));
+/** The customer's latest message on a deal's conversation, cached for one sync. */
+function inboundReader(ctx) {
+  const cache = new Map();
+  return async o => {
+    if (!o.conversationId) return 0;
+    if (!cache.has(String(o.conversationId))) cache.set(String(o.conversationId), (await ctx.db.get(o.conversationId))?.lastInbound || 0);
+    return cache.get(String(o.conversationId));
+  };
+}
+
+/** A rule draft in the customer's language (from their latest message), built from the deal's approved records. */
+async function insertRuleDraft(ctx, accountId, item, timezone, now) {
+  const o = item.opportunity, contact = await ctx.db.get(o.contactId), property = item.viewing ? await ctx.db.get(item.viewing.propertyId) : null;
+  const last = o.conversationId ? await ctx.db.query('blueMessages').withIndex('by_conversation_direction_at', q => q.eq('conversationId', o.conversationId).eq('direction', 'in')).order('desc').first() : null;
+  const name = contact?.state === 'active' ? displayName(contact).name : '';
+  const text = ruleDraftText(item, { name: name && !/^\+?\d/.test(name) ? name : '', propertyLabel: property?.label, location: property?.location, timezone, arabic: last?.text ? ARABIC.test(last.text) : true });
+  await ctx.db.insert('realEstateDrafts', { accountId, requestId: `rule:${item.key}`, opportunityId: o._id, ...(o.conversationId ? { conversationId: o.conversationId } : {}),
+    kind: item.rule.id === 'viewing_confirmation' ? 'viewing_confirmation' : 'follow_up', text, ruleId: item.rule.id, ruleKey: item.key, status: 'draft', version: 1, createdAt: now, updatedAt: now });
+}
+
+/** Opens tasks the records call for and closes automatic ones whose cause is gone; rule drafts follow the same life. */
+async function syncTasks(ctx, accountId, records, now, settings, timezone) {
+  const wanted = currentTasks(records, now, ((settings.listingFreshnessDays ?? 30) * DAY));
+  const rules = await ruleWanted(records, now, settings, inboundReader(ctx));
+  for (const item of rules) if (item.rule.mode === 'task') wanted.push([item.kind, item.entityType, item.entityId, item.reason, item.dueAt, item.opportunity.assignedAccountId]);
+  // A rule task is keyed by when it fired, so a rescheduled viewing replaces its reminder.
+  const key = (kind, entityId, dueAt) => RULE_TASK_KINDS.has(kind) ? `${kind}:${entityId}:${dueAt}` : `${kind}:${entityId}`;
+  const wantedKeys = new Set(wanted.map(([kind, , entityId, , dueAt]) => key(kind, entityId, dueAt)));
   const open = await ctx.db.query('realEstateTasks').withIndex('by_account_status', q => q.eq('accountId', accountId).eq('status', 'open')).take(SCAN);
-  const openKeys = new Set(open.map(t => key(t.kind, t.entityId)));
-  for (const t of open) if (AUTO_TASKS.has(t.kind) && !wantedKeys.has(key(t.kind, t.entityId))) await ctx.db.patch(t._id, { status: 'resolved', resolvedAt: now, resolution: 'cleared', updatedAt: now });
-  for (const [kind, entityType, entityId, reason, dueAt] of wanted) if (!openKeys.has(key(kind, entityId)))
-    await ctx.db.insert('realEstateTasks', { accountId, kind, entityType, entityId: String(entityId), status: 'open', reason, ...(dueAt ? { dueAt } : {}), createdAt: now, updatedAt: now });
+  const openKeys = new Set(open.map(t => key(t.kind, t.entityId, t.dueAt)));
+  for (const t of open) if (AUTO_TASKS.has(t.kind) && !wantedKeys.has(key(t.kind, t.entityId, t.dueAt))) await ctx.db.patch(t._id, { status: 'resolved', resolvedAt: now, resolution: 'cleared', updatedAt: now });
+  for (const [kind, entityType, entityId, reason, dueAt, assignedAccountId] of wanted) if (!openKeys.has(key(kind, entityId, dueAt))) {
+    // A rule fires once: a task someone resolved is not reopened for the same firing.
+    if (RULE_TASK_KINDS.has(kind) && (await ctx.db.query('realEstateTasks').withIndex('by_entity', q => q.eq('entityType', entityType).eq('entityId', String(entityId))).take(50)).some(t => t.kind === kind && t.dueAt === dueAt)) continue;
+    await ctx.db.insert('realEstateTasks', { accountId, kind, entityType, entityId: String(entityId), status: 'open', reason, ...(dueAt ? { dueAt } : {}), ...(assignedAccountId ? { assignedAccountId } : {}), createdAt: now, updatedAt: now });
+  }
+  // Draft-mode rules: one draft per firing; an unsent one is cancelled once its cause is gone.
+  const draftKeys = new Set(rules.filter(i => i.rule.mode === 'draft').map(i => i.key));
+  const existing = new Map(records.drafts.filter(d => d.ruleKey).map(d => [d.ruleKey, d]));
+  for (const d of existing.values()) if (d.status === 'draft' && !draftKeys.has(d.ruleKey)) await ctx.db.patch(d._id, { status: 'cancelled', version: d.version + 1, updatedAt: now });
+  for (const item of rules) if (item.rule.mode === 'draft' && !existing.has(item.key)) await insertRuleDraft(ctx, accountId, item, timezone, now);
 }
 
 /** A task belongs to the agent when its deal (directly or through a viewing or offer) does. */
@@ -97,19 +130,26 @@ async function taskVisible(ctx, tenant, actor, task) {
   return !!deal && canSeeDeal(actor, deal);
 }
 
-export async function overview(ctx, tenant, actor, now) {
-  const accountId = tenant.accountId;
+/** Reads the agency's records and brings its tasks and rule drafts up to date. */
+export async function refreshTasks(ctx, accountId, now) {
   const all = { opportunities: await take(ctx, 'realEstateOpportunities', accountId), properties: await take(ctx, 'hasibProperties', accountId),
     viewings: await take(ctx, 'realEstateViewings', accountId, 'by_account_date'), offers: await take(ctx, 'realEstateOffers', accountId), drafts: await take(ctx, 'realEstateDrafts', accountId) };
-  const freshnessMs = ((await settingsFor(ctx, accountId)).listingFreshnessDays ?? 30) * DAY;
-  await syncTasks(ctx, accountId, all, now, freshnessMs);
+  const settings = await settingsFor(ctx, accountId), timezone = await businessTimezone(ctx, accountId);
+  await syncTasks(ctx, accountId, all, now, settings, timezone);
+  return { all: { ...all, drafts: await take(ctx, 'realEstateDrafts', accountId) }, settings, timezone };
+}
+
+export async function overview(ctx, tenant, actor, now) {
+  const accountId = tenant.accountId;
+  const { all, settings, timezone } = await refreshTasks(ctx, accountId, now);
+  const freshnessMs = (settings.listingFreshnessDays ?? 30) * DAY;
   const deals = all.opportunities.filter(o => canSeeDeal(actor, o)), dealIds = new Set(deals.map(o => String(o._id)));
   const viewings = all.viewings.filter(v => dealIds.has(String(v.opportunityId))), offers = all.offers.filter(o => dealIds.has(String(o.opportunityId)));
   const drafts = all.drafts.filter(d => dealIds.has(String(d.opportunityId)));
   const openTasks = await ctx.db.query('realEstateTasks').withIndex('by_account_status', q => q.eq('accountId', accountId).eq('status', 'open')).take(SCAN);
   const tasks = [];
   for (const t of openTasks) if (await taskVisible(ctx, tenant, actor, t)) tasks.push(publicRow(t));
-  const today = periodRange('today', now, await businessTimezone(ctx, accountId));
+  const today = periodRange('today', now, timezone);
   const fresh = p => p.availability === 'available' && p.verificationAt && p.verificationAt >= now - freshnessMs;
   const listings = Object.fromEntries(['available', 'reserved', 'unavailable'].map(s => [s, all.properties.filter(p => p.availability === s).length]));
   const freshCount = all.properties.filter(fresh).length;

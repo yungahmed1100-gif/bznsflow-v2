@@ -188,16 +188,19 @@ async function seedCatalyst() {
   await say('96891234502', 'And what are your opening hours?', 'Salma Al Harthy', 1);
 }
 
+let realEstate = null;
 if (CATALYST) await seedCatalyst();
 else if (PACK === 'dental') await (await import('./hasib-demo-dental.mjs')).seedDental({ m, tenant, call, hasib, executeMessaging, DAY, HOUR });
 else if (PACK === 'retail-tech') await (await import('./hasib-demo-tech.mjs')).seedTech({ m, tenant, call, hasib, executeMessaging, DAY, HOUR });
 else if (PACK === 'retail') await seedFashion();
+else if (PACK === 'real-estate') realEstate = await (await import('./hasib-demo-real-estate.mjs')).seedRealEstate({ m, tenant, hasib, DAY, HOUR });
 else {
   await hasib('settings_update', { packId: PACK });
   await (await import('./hasib-demo-industries.mjs')).seedIndustry({ m, tenant, hasib, pack: hasibPack(PACK) });
 }
 
-if (EMPLOYEE && !CATALYST) {
+if (EMPLOYEE && realEstate) actorAccountId = realEstate.agentId; // the agency's seeded agent
+else if (EMPLOYEE && !CATALYST) {
   // An invited, verified employee of the seeded business.
   const member = await hasib('team_invite', { email: 'staff@noor.example' });
   actorAccountId = await m.db.insert('accounts', { email: 'staff@noor.example', role: 'customer', createdAt: m.now() });
@@ -347,5 +350,5 @@ createServer(async (req, res) => {
     return await staticFile(res, url.pathname === '/' ? '/layla/dashboard' : url.pathname);
   } catch (e) { json(res, 500, { ok: false, reason: 'demo_error', detail: String(e.message).slice(0, 200) }); }
 }).listen(PORT, '127.0.0.1', () => {
-  console.log(`Hasib demo (${PACK === 'dental' ? 'Bayan Dental Clinic' : PACK === 'retail-tech' ? 'Muscat Mobile' : 'Noor Abayas'}${EMPLOYEE ? ', signed in as an employee' : ''}) → http://localhost:${PORT}/layla/dashboard?tab=insights   ·   English: http://localhost:${PORT}/en/layla/dashboard?tab=insights`);
+  console.log(`Hasib demo (${PACK === 'dental' ? 'Bayan Dental Clinic' : PACK === 'retail-tech' ? 'Muscat Mobile' : PACK === 'real-estate' ? 'Bayt Muscat Properties' : 'Noor Abayas'}${EMPLOYEE ? ', signed in as an employee' : ''}) → http://localhost:${PORT}/layla/dashboard?tab=insights   ·   English: http://localhost:${PORT}/en/layla/dashboard?tab=insights`);
 });

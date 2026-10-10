@@ -15,7 +15,7 @@ const bookingArgs = {
  resourceId:v.optional(v.id('hasibResources')),resourceIds:v.optional(v.array(v.id('hasibResources'))),serviceId:v.optional(v.id('hasibServices')),bookingId:v.optional(v.id('hasibBookings')),waitlistId:v.optional(v.id('hasibWaitlist')),
  membershipId:v.optional(v.id('hasibMemberships')),guardianId:v.optional(v.id('blueContacts')),creditId:v.optional(v.id('hasibCredits')),followupId:v.optional(v.id('hasibFollowups')),
  kind:v.optional(v.string()),name:v.optional(v.string()),capacity:v.optional(v.number()),availability:v.optional(v.array(v.object({startsAt:v.number(),endsAt:v.number()}))),durationMinutes:v.optional(v.number()),startsAt:v.optional(v.number()),endsAt:v.optional(v.number()),earliestAt:v.optional(v.number()),latestAt:v.optional(v.number()),credits:v.optional(v.number()),attendedAt:v.optional(v.number()),replacementForId:v.optional(v.id('hasibBookings')),
- linkedType:v.optional(v.union(v.literal('booking'),v.literal('membership'),v.literal('order'),v.literal('job'),v.literal('property'))),linkedId:v.optional(v.string()),
+ linkedType:v.optional(v.union(v.literal('booking'),v.literal('membership'),v.literal('order'),v.literal('job'),v.literal('property'),v.literal('opportunity'))),linkedId:v.optional(v.string()),
 };
 
 const workflow = v.object({
@@ -52,7 +52,7 @@ const workflow = v.object({
   estimateVersion: v.optional(v.number()),
   reference: v.optional(v.string()), transactionType: v.optional(v.string()), propertyType: v.optional(v.string()), area: v.optional(v.string()), pricePeriod: v.optional(v.string()), description: v.optional(v.string()), authorityStatus: v.optional(v.string()),
   source: v.optional(v.string()), need: v.optional(v.string()), financeReadiness: v.optional(v.string()), decisionMakerReadiness: v.optional(v.string()), timeline: v.optional(v.string()), nextAction: v.optional(v.string()), lostReason: v.optional(v.string()), outcome: v.optional(v.string()), terms: v.optional(v.string()), text: v.optional(v.string()), templateId: v.optional(v.string()),
-  budgetMinMinor: v.optional(v.number()), budgetMaxMinor: v.optional(v.number()), bedrooms: v.optional(v.number()), bathrooms: v.optional(v.number()), sizeSqm: v.optional(v.number()), verificationAt: v.optional(v.number()), firstInboundAt: v.optional(v.number()), replyQueuedAt: v.optional(v.number()), providerSubmittedAt: v.optional(v.number()), deliveredAt: v.optional(v.number()), scheduledAt: v.optional(v.number()), amountMinor: v.optional(v.number()),
+  budgetMinMinor: v.optional(v.number()), budgetMaxMinor: v.optional(v.number()), bedrooms: v.optional(v.number()), bathrooms: v.optional(v.number()), sizeSqm: v.optional(v.number()), verificationAt: v.optional(v.number()), firstInboundAt: v.optional(v.number()), replyQueuedAt: v.optional(v.number()), providerSubmittedAt: v.optional(v.number()), deliveredAt: v.optional(v.number()), scheduledAt: v.optional(v.number()), amountMinor: v.optional(v.number()), decisionDueAt: v.optional(v.number()),
   areas: v.optional(v.array(v.string())), propertyTypes: v.optional(v.array(v.string())), mustHaves: v.optional(v.array(v.string())), features: v.optional(v.array(v.string())), photoIds: v.optional(v.array(v.string())),
   identityStatus:v.optional(v.string()),financingStatus:v.optional(v.string()),agreementStatus:v.optional(v.string()),completionStatus:v.optional(v.string()),
   contractType:v.optional(v.string()), originalContractMinor:v.optional(v.number()), originalBudgetMinor:v.optional(v.number()), startAt:v.optional(v.number()), contractFinishAt:v.optional(v.number()), forecastFinishAt:v.optional(v.number()), estimateToCompleteMinor:v.optional(v.number()),
@@ -90,7 +90,10 @@ export const hasibEntryArgs = {
     customFields: v.optional(v.array(option)), notes: v.optional(v.string()), customerName: v.optional(v.string()),
     to: v.optional(v.string()), version: v.optional(v.number()), amountMinor: v.optional(v.number()), method: v.optional(v.string()), reference: v.optional(v.string()),
     vat: v.optional(v.object({ registered: v.boolean(), rateBps: v.number(), pricesIncludeVat: v.boolean(), vatin: v.optional(v.string()) })),
-    unsoldDays: v.optional(v.number()), absenceDays: v.optional(v.number()), listingFreshnessDays:v.optional(v.number()), constructionIncidentHoursDenominator:v.optional(v.number()), channelCostMinor: v.optional(v.number()),
+    unsoldDays: v.optional(v.number()), absenceDays: v.optional(v.number()), listingFreshnessDays:v.optional(v.number()), constructionIncidentHoursDenominator:v.optional(v.number()),
+    realEstate: v.optional(v.object({ viewingWindowDays:v.optional(v.number()), closeWindowDaysRent:v.optional(v.number()), closeWindowDaysSale:v.optional(v.number()), lateCancelHours:v.optional(v.number()), responseSlaMinutes:v.optional(v.number()), commissionTermsDays:v.optional(v.number()),
+      rules:v.optional(v.array(v.object({ id:v.string(), enabled:v.boolean(), mode:v.string(), offsetMinutes:v.number() }))) })),
+    metric: v.optional(v.string()), segment: v.optional(v.string()), filter: v.optional(v.string()), channelCostMinor: v.optional(v.number()),
     stockPolicy: v.optional(v.string()), packId: v.optional(v.string()),
     products: v.optional(v.array(v.object({ requestId: v.string(), item: itemArg, variants: v.array(importVariant) }))),
     storageId: v.optional(v.string()), photoId: v.optional(v.string()), photoCheck: v.optional(v.union(v.literal('ok'), v.literal('bad'), v.literal('missing'))),

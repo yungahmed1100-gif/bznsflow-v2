@@ -1,4 +1,5 @@
 import { ChatOrders } from '../hasib/ChatOrders';
+import { DealContext } from '../hasib/realestate/DealContext';
 import { CapturedDetails } from './CapturedDetails';
 import { LaylaSwitch } from './LaylaSwitch';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -94,6 +95,7 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
         </section>
         <CapturedDetails s={s} contact={contact} qualification={data.qualification} conversationId={conversationId} channel={conversation.channel} />
         <ChatOrders s={s} conversationId={conversationId} />
+        <DealContext s={s} conversationId={conversationId} />
       </header>
       <ol className="ld-messages" ref={scroller} tabIndex={0} aria-live="polite" aria-relevant="additions"
         onScroll={e => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>

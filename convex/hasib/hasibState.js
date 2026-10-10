@@ -10,6 +10,7 @@ import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERAT
 import { executeClinic } from './clinicState.js';
 import { executeConstruction } from './constructionState.js';
 import { executeAutomotive } from './automotiveState.js';
+import { realEstateSettings, mergeRealEstateSettings } from './realEstateSettings.js';
 // Hasib entry point: gate, tenant, then one of the feature executors.
 // The tenant is always resolved from the verified session hash; ids in the
 // request are re-checked against it by `owned()` inside each executor.
@@ -34,6 +35,7 @@ import { executeSerials } from './serialsState.js';
 import { executeRepairs } from './repairsState.js';
 import { executeRestaurant } from './restaurantState.js';
 import { executeRealEstate } from './realEstateState.js';
+import { followupQueue } from './realEstateFollowups.js';
 import { actorWorkspace, executeTeam } from './workspaceState.js';
 import { capabilitiesFor, roleAllows } from './capabilities.js';
 import { staffArgs, staffResult, auditChange } from './staffPolicy.js';
@@ -50,7 +52,7 @@ const moduleOf = op => Object.keys(MODULE_OPS).find(m => MODULE_OPS[m].includes(
 
 export { hasibEnabled };
 
-const publicSettings = s => ({ currency: s.currency, vatRegistered: s.vatRegistered, vatRateBps: s.vatRateBps, pricesIncludeVat: s.pricesIncludeVat, vatin: s.vatin || '', stockPolicy: s.stockPolicy, unsoldDays: s.unsoldDays ?? 60, absenceDays: s.absenceDays ?? 14, listingFreshnessDays: s.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:s.constructionIncidentHoursDenominator ?? 200000 });
+const publicSettings = s => ({ currency: s.currency, vatRegistered: s.vatRegistered, vatRateBps: s.vatRateBps, pricesIncludeVat: s.pricesIncludeVat, vatin: s.vatin || '', stockPolicy: s.stockPolicy, unsoldDays: s.unsoldDays ?? 60, absenceDays: s.absenceDays ?? 14, listingFreshnessDays: s.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:s.constructionIncidentHoursDenominator ?? 200000, realEstate: realEstateSettings(s) });
 
 /** What choosing an industry changes beyond the setting itself. */
 async function applyPackChoice(ctx, accountId, pack, now) {
@@ -91,13 +93,18 @@ export async function updateSettings(ctx, accountId, a, now) {
     if (!Number.isSafeInteger(a.constructionIncidentHoursDenominator) || a.constructionIncidentHoursDenominator < 10000 || a.constructionIncidentHoursDenominator > 1000000) return fail('invalid_settings');
     next.constructionIncidentHoursDenominator = a.constructionIncidentHoursDenominator;
   }
+  if (a.realEstate !== undefined) {
+    const merged = mergeRealEstateSettings(next.realEstate, a.realEstate);
+    if (!merged) return fail('invalid_settings');
+    next.realEstate = merged;
+  }
   // The Hasib industry is the owner's explicit choice; Layla's own sector is never written here.
   if (a.packId !== undefined) {
     if (!isLivePack(a.packId) && !(ctx.hasibPreview === true && HASIB_PACKS[a.packId])) return fail('pack_not_live');
     next.packId = a.packId;
   }
   const row = { accountId, ...(next.packId ? { packId: next.packId } : {}), currency: next.currency, vatRegistered: next.vatRegistered, vatRateBps: next.vatRateBps, pricesIncludeVat: next.pricesIncludeVat,
-    ...(next.vatin ? { vatin: next.vatin } : {}), stockPolicy: next.stockPolicy, unsoldDays: next.unsoldDays ?? 60, absenceDays: next.absenceDays ?? 14, listingFreshnessDays: next.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:next.constructionIncidentHoursDenominator ?? 200000, updatedAt: now };
+    ...(next.vatin ? { vatin: next.vatin } : {}), stockPolicy: next.stockPolicy, unsoldDays: next.unsoldDays ?? 60, absenceDays: next.absenceDays ?? 14, listingFreshnessDays: next.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:next.constructionIncidentHoursDenominator ?? 200000, ...(next.realEstate ? { realEstate: next.realEstate } : {}), updatedAt: now };
   if (current) await ctx.db.replace(current._id, row); else await ctx.db.insert('hasibSettings', row);
   if (a.packId !== undefined) await applyPackChoice(ctx, accountId, hasibPack(a.packId), now);
   return ok({ settings: publicSettings(row) });
@@ -144,7 +151,9 @@ async function dispatchHasib(ctx, tenant, actor, plan, pack, a, now) {
     return ok({ pack: { id: pack.id, archetype: pack.archetype, version: pack.version, ownerUi: pack.ownerUi, todayMetrics: pack.todayMetrics, thresholds: pack.thresholds, variantOptions: pack.variantOptions, orderFields: pack.orderFields, expenseCategories: pack.expenseCategories, modules: pack.modules,
         ...(pack.labels ? { labels: pack.labels, sensitive: pack.sensitive, noOrderNotes: pack.noOrderNotes, fulfilment: pack.fulfilment, internalStock: pack.internalStock, serviceItems: pack.serviceItems } : {}) },
       selectedIndustryId: pack.id, legacyIndustryId: settings.packId || null, industry: industryCatalog().find(row => row.id === pack.id),
-      plan, workspaceRole: actor.role, capabilities: capabilitiesFor(plan, actor.role), teamSummary: { role: actor.role, operationalRole: actor.operationalRole || (actor.role === 'manager' ? 'manager' : 'service_advisor'), actorAccountId: actor.actorAccountId, employeeLimit: actor.workspace.employeeLimit }, setupRequired: false, livePacks: livePackSummaries(), industries: industryCatalog().map(i => ctx.hasibPreview === true ? { ...i, live: true, preview: true } : i), modules: visibleModules(pack), settings: publicSettings(settings), counts: { pendingOrders: pending.length, lowStock: low.length, laylaWaiting: layla.length, laylaOverdue: layla.filter(o => now - o.createdAt > 86400000).length } });
+      plan, workspaceRole: actor.role, capabilities: capabilitiesFor(plan, actor.role), teamSummary: { role: actor.role, operationalRole: actor.operationalRole || (actor.role === 'manager' ? 'manager' : 'service_advisor'), actorAccountId: actor.actorAccountId, employeeLimit: actor.workspace.employeeLimit }, setupRequired: false, livePacks: livePackSummaries(), industries: industryCatalog().map(i => ctx.hasibPreview === true ? { ...i, live: true, preview: true } : i), modules: visibleModules(pack), settings: publicSettings(settings), counts: { pendingOrders: pending.length, lowStock: low.length, laylaWaiting: layla.length, laylaOverdue: layla.filter(o => now - o.createdAt > 86400000).length,
+        // Real Estate's Deals badge: follow-ups that need someone now (never unread messages).
+        ...(pack.id === 'real-estate' ? { followupsActionable: (await followupQueue(ctx, tenant, actor, {}, now)).value.actionable } : {}) } });
   }
   // Photos go straight from the owner's browser to Convex storage; the id is checked when the product is saved.
   if (a.operation === 'photo_upload_url') {

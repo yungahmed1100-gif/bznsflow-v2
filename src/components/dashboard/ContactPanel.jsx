@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { dashboard } from '../../lib/dashboard/api';
 import { formatPhone } from '../../lib/dashboard/phone';
 import { formatDateTime } from '../../lib/dashboard/format';
+import { DealContext } from '../hasib/realestate/DealContext';
 
 export function ContactPanel({ s, contact, pack, timezone, canDelete = true, onSaved, onDeleted, onOpenChat }) {
   const initialFields = Object.fromEntries(pack.fields.map(f => [f.key, contact.fields.find(x => x.key === f.key)?.value || '']));
@@ -24,6 +25,7 @@ export function ContactPanel({ s, contact, pack, timezone, canDelete = true, onS
     <form className="ld-contact-panel" onSubmit={save}>
       <p className="ld-contact-summary"><bdi dir="ltr" className="ld-num">{contact.channel==='instagram'?'Instagram':formatPhone(contact.number)}</bdi> · {s.t(`source_${contact.source}`)} · {s.t('lastActivity')}: {formatDateTime(contact.lastActivityAt, s.lang, timezone)}</p>
       <ContactOrders contactId={contact.id} />
+      <DealContext s={s} contactId={contact.id} />
       <dl className="ld-names">
         {[['customerName', 'name_customer'], ['profileName', 'name_whatsapp']].map(([key, label]) => contact[key] ? <div key={key}><dt>{s.t(label)}</dt><dd><bdi>{contact[key]}</bdi></dd></div> : null)}
         {/* Catalyst reception flow: what the customer asked for, for the team to confirm. Layla never confirms it. */}

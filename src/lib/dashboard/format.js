@@ -12,6 +12,11 @@ export function formatDateTime(ms, lang, timezone) {
   if (!ms) return '';
   return new Intl.DateTimeFormat(locale(lang), { dateStyle: 'medium', timeStyle: 'short', timeZone: safeZone(timezone) }).format(ms);
 }
+/** A calendar date with no time, for due dates. */
+export function formatDate(ms, lang, timezone) {
+  if (!ms) return '';
+  return new Intl.DateTimeFormat(locale(lang), { dateStyle: 'medium', timeZone: safeZone(timezone) }).format(ms);
+}
 function dayKey(ms, timezone) {
   return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: safeZone(timezone) }).format(ms);
 }

@@ -84,8 +84,14 @@ export function buildRealEstateSubmission(form, values, context = {}) {
             propertyId: values.propertyId,
             amountMinor: omrToMinor(values.amount),
             terms: values.terms,
+            ...(values.decisionDue ? { decisionDueAt: new Date(values.decisionDue).getTime() } : {}),
           },
         },
+      };
+    case 'followup':
+      return {
+        operation: 'followup_save',
+        body: { requestId, contactId: values.contactId, reason: values.reason, dueAt: new Date(values.dueAt).getTime(), linkedType: 'opportunity', linkedId: values.opportunityId },
       };
     case 'draft': {
       const opportunity = context.opportunities?.find(row => row.id === values.opportunityId);
@@ -125,6 +131,8 @@ export function buildRealEstateSubmission(form, values, context = {}) {
           opportunityId: values.opportunityId,
           offerId: values.offerId,
           commissionMinor: omrToMinor(values.commission),
+          // Due at the end of the chosen day, in the browser's calendar.
+          ...(values.dueDate ? { dueAt: new Date(`${values.dueDate}T23:59`).getTime() } : {}),
         },
       };
     default:

@@ -14,6 +14,8 @@ const ICONS = {
   money: 'M3 6h18v12H3V6zm2 2v8h14V8H5zm7 1.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM6 9h2v2H6V9zm10 4h2v2h-2v-2z',
   customers: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z',
   team: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8-1a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM8 13c-3.3 0-6 1.7-6 4v2h12v-2c0-2.3-2.7-4-6-4zm8-.5c-.8 0-1.5.1-2.2.3 1.4 1 2.2 2.4 2.2 4.2v2h6v-2c0-2.5-2.7-4.5-6-4.5z',
+  work: 'M3 21V9l9-6 9 6v12h-6v-7H9v7H3zm8-11h2V8h-2v2z',
+  insights: 'M4 20V10h3v10H4zm6.5 0V4h3v16h-3zM17 20v-7h3v7h-3z',
   settings: 'M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4L10.7 6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5-2.1-1.6zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z',
 };
 const HASIB_LABELS = new Set(['orders', 'stock', 'service']);
@@ -23,14 +25,16 @@ export function DashboardNav({ s, h, sections, tab, onSelect, badges = {}, packI
   const [open, setOpen] = useState(false);
   const pack = hasibPack(packId);
   const sector = livePackSummaries().find(item => item.id === packId);
-  const label = id => id === 'team' ? (s.ar ? 'الفريق' : 'Team') : packId && ['orders', 'stock'].includes(id) ? pack.ownerUi[id === 'orders' ? 'work' : 'stock'][s.ar ? 'ar' : 'en'] : (HASIB_LABELS.has(id) ? h.t(id) : s.t(id));
+  const label = id => id === 'team' ? (s.ar ? 'الفريق' : 'Team') : packId && ['orders', 'stock', 'work'].includes(id) ? pack.ownerUi[id === 'stock' ? 'stock' : 'work'][s.ar ? 'ar' : 'en'] : (HASIB_LABELS.has(id) ? h.t(id) : s.t(id));
+  // Deals counts follow-ups that need someone now; Orders counts what Layla is waiting on.
+  const badgeLabel = id => id === 'work' ? (s.ar ? 'متابعات تحتاج إجراء' : 'Follow-ups needing action') : h.t('laylaWaitingTile');
   const links = <ul>
         {sections.map(id => (
           <li key={id}>
             <a href={`?${dashboardSearch(search, id)}`} data-section={id} aria-current={tab === id ? 'page' : undefined} onClick={e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); onSelect(id); setOpen(false); }}>
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d={ICONS[id]} fill="currentColor" /></svg>
               <span>{label(id)}</span>
-              {badges[id] > 0 && <span className="ld-nav-badge" aria-label={h.t('laylaWaitingTile')}>{badges[id]}</span>}
+              {badges[id] > 0 && <span className="ld-nav-badge" aria-label={badgeLabel(id)}>{badges[id]}</span>}
             </a>
           </li>
         ))}

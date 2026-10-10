@@ -8,7 +8,7 @@ import { label, OPEN_STAGES, CHECKS, VIEWING_NEXT, OFFER_NEXT, LOST_REASONS } fr
 const lostReason = (code, ar) => { const row = LOST_REASONS.find(([id]) => id === code); return row ? (ar ? row[2] : row[1]) : code; };
 
 /** Everything about one deal on one screen, with the next step for each part of it. */
-export function DealDetail({ deal, ar, h, s, timezone, manager, busy, viewings, offers, drafts, act, openForm, onGo, onClose }) {
+export function DealDetail({ deal, ar, h, s, timezone, manager, busy, viewings, offers, drafts, followups = [], backLabel, termsDays = 30, act, openForm, onGo, onClose, onFollowups }) {
   const tr = (en, arabic) => (ar ? arabic : en);
   const extra = usePolling(async () => ({
     matches: await hasib('matches', { opportunityId: deal.id }),
@@ -26,13 +26,17 @@ export function DealDetail({ deal, ar, h, s, timezone, manager, busy, viewings, 
   return <section className="hb-panel hb-deal-detail" aria-labelledby="re-deal-title">
     <div className="hb-status-line">
       <h2 id="re-deal-title">{who}</h2>
-      <span className="ld-chip">{label('stage', deal.stage, ar)}</span>
-      <button type="button" className="ld-button ld-quiet" onClick={onClose}>{tr('Back to all deals', 'العودة إلى كل الصفقات')}</button>
+      <span className="ld-chip" data-stage={deal.stage}>{label('stage', deal.stage, ar)}</span>
+      <button type="button" className="ld-button ld-quiet" onClick={onClose}>{backLabel || tr('Back to all deals', 'العودة إلى كل الصفقات')}</button>
     </div>
+    <nav className="hb-record-nav" aria-label={tr('Sections of this deal', 'أقسام هذه الصفقة')}>
+      <a href="#re-overview">{tr('Overview', 'نظرة عامة')}</a><a href="#re-followups">{tr('Follow-ups', 'المتابعات')} <span className="ld-num">{followups.filter(f => f.bucket !== 'completed').length}</span></a><a href="#re-activity">{tr('Activity', 'النشاط')}</a>
+    </nav>
+    <h3 id="re-overview" className="ld-visually-hidden">{tr('Overview', 'نظرة عامة')}</h3>
     <dl className="hb-deal-facts">
       <div><dt>{tr('Areas', 'المناطق')}</dt><dd>{deal.areas.join('، ') || '—'}</dd></div>
-      <div><dt>{tr('Property types', 'أنواع العقار')}</dt><dd>{deal.propertyTypes.join('، ') || '—'}</dd></div>
-      <div><dt>{tr('Budget', 'الميزانية')}</dt><dd>{deal.budgetMinMinor ? <><Money h={h} minor={deal.budgetMinMinor} /> – </> : null}<Money h={h} minor={deal.budgetMaxMinor} /></dd></div>
+      <div><dt>{tr('Property types', 'أنواع العقار')}</dt><dd>{deal.propertyTypes.map(t => label('propertyType', t, ar)).join('، ') || '—'}</dd></div>
+      <div><dt>{tr('Budget', 'الميزانية')}</dt><dd>{deal.budgetMaxMinor ? <>{deal.budgetMinMinor ? <><Money h={h} minor={deal.budgetMinMinor} /> – </> : null}<Money h={h} minor={deal.budgetMaxMinor} /></> : tr('Not given yet', 'غير محددة بعد')}</dd></div>
       <div><dt>{tr('Finance', 'التمويل')}</dt><dd>{label('finance', deal.financeReadiness, ar)}</dd></div>
       <div><dt>{tr('Decision maker', 'صاحب القرار')}</dt><dd>{label('decision', deal.decisionMakerReadiness, ar)}</dd></div>
       <div><dt>{tr('Timeline', 'الإطار الزمني')}</dt><dd>{deal.timeline === 'unknown' ? label('finance', 'unknown', ar) : deal.timeline}</dd></div>
@@ -71,7 +75,8 @@ export function DealDetail({ deal, ar, h, s, timezone, manager, busy, viewings, 
     <h3>{tr('Offers', 'العروض')}</h3>
     {open && <button type="button" className="ld-button" onClick={() => openForm('offer', { opportunityId: deal.id, lockedDeal: who })}>{tr('Draft an offer', 'مسودة عرض')}</button>}
     {offers.length ? <ul className="hb-re-list">{offers.map(o => <li key={o.id}>
-      <b><Money h={h} minor={o.amountMinor} /></b> · {o.propertyLabel} <span className="ld-chip">{label('offer', o.status, ar)}</span><p>{o.terms}</p>
+      <b><Money h={h} minor={o.amountMinor} /></b> · {o.propertyLabel} <span className="ld-chip">{label('offer', o.status, ar)}</span>
+      {o.decisionDueAt && <span className={o.decisionDueAt < Date.now() && ['approved', 'presented', 'countered'].includes(o.status) ? 'hb-warn' : 'ld-help'}> · {tr('decision by', 'القرار قبل')} {formatDateTime(o.decisionDueAt, s.lang, timezone)}</span>}<p>{o.terms}</p>
       <span className="ld-actions">
         {manager && o.status === 'draft' && <button type="button" className="ld-button ld-primary" disabled={busy} onClick={() => act('offer_approve', { offerId: o.id, version: o.version }, null, tr('Approve this offer so it can be presented?', 'اعتماد هذا العرض ليُقدَّم؟'))}>{tr('Approve', 'اعتماد')}</button>}
         {(OFFER_NEXT[o.status] || []).filter(st => st !== 'countered').map(st => <button key={st} type="button" className={`ld-button ${['rejected', 'withdrawn'].includes(st) ? 'ld-quiet' : ''}`} disabled={busy}
@@ -93,9 +98,19 @@ export function DealDetail({ deal, ar, h, s, timezone, manager, busy, viewings, 
           </span>}
         </li>;
       })}</ul>
-      {manager && accepted && deal.stage !== 'won' && <button type="button" className="ld-button ld-primary" disabled={busy || !allChecked} onClick={() => openForm('close', { opportunityId: deal.id, offerId: accepted.id })}>{allChecked ? tr('Close the deal', 'إغلاق الصفقة') : tr('Confirm all five checks to close', 'أكّد البنود الخمسة للإغلاق')}</button>}
+      {manager && accepted && deal.stage !== 'won' && <button type="button" className="ld-button ld-primary" disabled={busy || !allChecked} onClick={() => openForm('close', { opportunityId: deal.id, offerId: accepted.id, dueDate: dueDateIn(termsDays) })}>{allChecked ? tr('Close the deal', 'إغلاق الصفقة') : tr('Confirm all five checks to close', 'أكّد البنود الخمسة للإغلاق')}</button>}
       {!manager && accepted && <p className="ld-help">{tr('The manager confirms compliance and closes the deal.', 'يؤكد المدير الامتثال ويغلق الصفقة.')}</p>}
     </>}
+
+    <h3 id="re-followups">{tr('Follow-ups', 'المتابعات')}</h3>
+    {followups.length ? <ul className="hb-re-list">{followups.map(f => <li key={`${f.source}:${f.id}`} data-bucket={f.bucket}>
+      <b>{f.source === 'draft' ? label('draftKind', f.kind, ar) : label('task', f.kind, ar)}</b> <span className="ld-chip">{label('bucket', f.bucket, ar)}</span> · {formatDateTime(f.resolvedAt || f.dueAt, s.lang, timezone)}
+      {f.source === 'followup' && <p>{f.reason}</p>}
+    </li>)}</ul> : <p className="ld-help">{tr('No follow-ups for this deal.', 'لا متابعات لهذه الصفقة.')}</p>}
+    <div className="ld-actions">
+      {onFollowups && <button type="button" className="ld-button ld-quiet" onClick={onFollowups}>{tr('Open in Follow-ups', 'فتح في المتابعات')}</button>}
+      {open && <button type="button" className="ld-button" onClick={() => openForm('followup', { opportunityId: deal.id, contactId: deal.contactId, lockedDeal: who })}>{tr('Add a dated follow-up', 'إضافة متابعة بموعد')}</button>}
+    </div>
 
     <h3>{tr('Messages to the customer', 'رسائل للعميل')}</h3>
     {open && <button type="button" className="ld-button" onClick={() => openForm('draft', { opportunityId: deal.id, lockedDeal: who, kind: 'follow_up' })}>{tr('Draft a message', 'مسودة رسالة')}</button>}
@@ -104,9 +119,15 @@ export function DealDetail({ deal, ar, h, s, timezone, manager, busy, viewings, 
       {manager && d.status === 'draft' && <button type="button" className="ld-button ld-primary" disabled={busy} onClick={() => act('draft_approve', { draftId: d.id, version: d.version }, null, tr('Send this message to the customer?', 'إرسال هذه الرسالة إلى العميل؟'))}>{tr('Approve and send', 'اعتماد وإرسال')}</button>}
     </li>)}</ul> : <p className="ld-help">{tr('No messages drafted.', 'لا توجد رسائل.')}</p>}
 
-    <h3>{tr('History', 'السجل')}</h3>
+    <h3 id="re-activity">{tr('Activity', 'النشاط')}</h3>
     <ol className="hb-re-history">{(more.history?.items || []).map(e => <li key={e.id}>{formatDateTime(e.at, s.lang, timezone)} — {e.fromStage ? `${label('stage', e.fromStage, ar)} → ` : ''}{label('stage', e.toStage, ar)}{e.reason ? ` (${lostReason(e.reason, ar)})` : ''}</li>)}</ol>
   </section>;
+}
+
+/** A date input's value this many days from today, in the browser's calendar. */
+export function dueDateIn(days = 30) {
+  const d = new Date(Date.now() + days * 86400000);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /** The deal's saved requirements as form values (money in OMR, lists as text). */

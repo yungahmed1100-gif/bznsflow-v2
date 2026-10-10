@@ -39,7 +39,7 @@ export async function workflowLinks(ctx, accountId, args) {
 }
 
 const FILTER_PAGES = 5;
-const LINK_TABLES = Object.freeze({ booking: 'hasibBookings', membership: 'hasibMemberships', order: 'hasibOrders', job: 'hasibJobs', property: 'hasibProperties' });
+const LINK_TABLES = Object.freeze({ booking: 'hasibBookings', membership: 'hasibMemberships', order: 'hasibOrders', job: 'hasibJobs', property: 'hasibProperties', opportunity: 'realEstateOpportunities' });
 async function followupPublic(ctx, row) {
   // Resolve the existing conversation on read, so adding a conversation later still gives an action.
   const conversation = row.conversationId ? await owned(ctx, row.conversationId, row.accountId, 'blueConversations')

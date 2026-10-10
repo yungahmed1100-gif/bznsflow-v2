@@ -251,7 +251,7 @@ export async function paymentsOf(ctx, orderId) {
     .map(p => ({ id: p._id, amountMinor: p.amountMinor, method: p.method, reference: p.reference || '', at: p.at }));
 }
 
-async function recordPayment(ctx, accountId, a, now) {
+export async function recordPayment(ctx, accountId, a, now) {
   if (!REQUEST_ID.test(a.requestId || '')) return fail('invalid_request');
   const replay = await byRequest(ctx, 'hasibPayments', accountId, a.requestId);
   if (replay) return ok({ order: await publicOrder(ctx, await ctx.db.get(replay.orderId)) });

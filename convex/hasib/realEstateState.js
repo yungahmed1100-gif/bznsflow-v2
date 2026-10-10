@@ -4,9 +4,12 @@
 import { owned } from '../blueTenant.js';
 import { ok, fail, bounded, REQUEST_ID, byRequest, settingsFor } from './shared.js';
 import { isMinor } from './money.js';
-import { createOrder } from './ordersState.js';
+import { createOrder, recordPayment } from './ordersState.js';
 import { audit, workspaceContainsAccount } from './workspaceState.js';
-import { DAY, OPEN_STAGES, publicRow, canSeeDeal, visibleOpportunity, readable, dealList, overview, resolveTask, insights } from './realEstateBoard.js';
+import { DAY, OPEN_STAGES, publicRow, canSeeDeal, visibleOpportunity, readable, dealList, overview, resolveTask, refreshTasks } from './realEstateBoard.js';
+import { realEstateInsights, metricRecords } from './realEstateInsights.js';
+import { followupQueue, snoozeTask, dealContext, commissionRows } from './realEstateFollowups.js';
+import { realEstateSettings } from './realEstateSettings.js';
 
 const STAGES = [...OPEN_STAGES, 'won', 'lost'];
 const NEEDS = ['buy', 'rent', 'sell', 'invest'];
@@ -15,7 +18,7 @@ const VIEWING_NEXT = { requested: ['confirmed', 'completed', 'missed', 'cancelle
 const OFFER_NEXT = { draft: [], approved: ['presented', 'withdrawn'], presented: ['countered', 'accepted', 'rejected', 'withdrawn'], countered: ['countered', 'presented', 'accepted', 'rejected', 'withdrawn'], accepted: [], rejected: [], withdrawn: [] };
 const COMPLIANCE_CHECKS = ['identity', 'authority', 'financing', 'agreement', 'completion'];
 const COMPLIANCE_DONE = new Set(['confirmed', 'not_applicable']);
-const MANAGER_ONLY = new Set(['real_estate_insights', 'commissions', 'commission_record', 'deal_close', 'offer_approve', 'draft_approve', 'compliance_update']);
+const MANAGER_ONLY = new Set(['real_estate_insights', 'real_estate_metric_records', 'commissions', 'commission_record', 'deal_close', 'offer_approve', 'draft_approve', 'compliance_update']);
 
 const strings = (value, max = 10, length = 120) => Array.isArray(value) ? [...new Set(value.map(x => bounded(x, length)).filter(Boolean))].slice(0, max) : null;
 const qualified = row => row.areas.length && row.propertyTypes.length && isMinor(row.budgetMaxMinor) && row.budgetMaxMinor > 0
@@ -165,7 +168,8 @@ async function viewingSave(ctx, tenant, actor, a, now) {
   if (row && status === row.status && !VIEWING_NEXT[row.status].length) return fail('invalid_viewing_transition');
   const outcome = bounded(w.outcome ?? row?.outcome, 500), nextAction = bounded(w.nextAction ?? row?.nextAction, 200);
   if (status === 'completed' && !outcome) return fail('viewing_outcome_required');
-  const data = { opportunityId, propertyId, status, scheduledAt, ...(outcome ? { outcome } : {}), ...(nextAction ? { nextAction } : {}), version: (row?.version || 0) + 1, updatedAt: now };
+  const statusAt = !row || row.status !== status ? now : row.statusAt;
+  const data = { opportunityId, propertyId, status, scheduledAt, ...(statusAt ? { statusAt } : {}), ...(outcome ? { outcome } : {}), ...(nextAction ? { nextAction } : {}), version: (row?.version || 0) + 1, updatedAt: now };
   let id; if (row) { await ctx.db.patch(row._id, data); id = row._id; } else id = await ctx.db.insert('realEstateViewings', { ...data, accountId: tenant.accountId, requestId: a.requestId, createdAt: now });
   if (status !== 'cancelled') await advanceOpportunity(ctx, tenant, actor, opportunityId, 'viewing', now);
   await audit(ctx, tenant, actor, row ? 'viewing_updated' : 'viewing_created', 'viewing', id, now, status);
@@ -200,7 +204,9 @@ async function offerSave(ctx, tenant, actor, a, now) {
   if (reprices && !['draft', 'countered'].includes(status)) return fail('invalid_offer_transition');
   if (row && status === row.status && status !== 'draft' && status !== 'countered') return fail('invalid_offer_transition');
   if (!isMinor(amountMinor) || amountMinor <= 0 || !terms) return fail('invalid_offer');
-  const data = { opportunityId, propertyId, amountMinor, terms, status, version: (row?.version || 0) + 1, updatedAt: now };
+  const decisionDueAt = w.decisionDueAt !== undefined ? w.decisionDueAt : row?.decisionDueAt;
+  if (decisionDueAt !== undefined && decisionDueAt !== null && (!Number.isSafeInteger(decisionDueAt) || decisionDueAt <= 0)) return fail('invalid_offer');
+  const data = { opportunityId, propertyId, amountMinor, terms, status, ...(decisionDueAt ? { decisionDueAt } : {}), version: (row?.version || 0) + 1, updatedAt: now };
   let id; if (row) { await ctx.db.patch(row._id, data); id = row._id; } else id = await ctx.db.insert('realEstateOffers', { ...data, accountId: tenant.accountId, requestId: a.requestId, createdAt: now });
   if (!['rejected', 'withdrawn'].includes(status)) await advanceOpportunity(ctx, tenant, actor, opportunityId, 'offer', now);
   await audit(ctx, tenant, actor, row ? 'offer_updated' : 'offer_created', 'offer', id, now, `${status}|${amountMinor}`);
@@ -245,11 +251,13 @@ async function closeDeal(ctx, tenant, actor, a, now) {
   const compliance = await ctx.db.query('realEstateCompliance').withIndex('by_opportunity', q => q.eq('opportunityId', opportunity._id)).unique();
   if (!compliance || COMPLIANCE_CHECKS.some(check => !COMPLIANCE_DONE.has(compliance[`${check}Status`]))) return fail('compliance_incomplete');
   if (!isMinor(a.commissionMinor) || a.commissionMinor <= 0) return fail('commission_required');
+  if (a.dueAt !== undefined && (!Number.isSafeInteger(a.dueAt) || a.dueAt < now - DAY)) return fail('invalid_commission');
+  const dueAt = a.dueAt ?? now + realEstateSettings(await settingsFor(ctx, tenant.accountId)).commissionTermsDays * DAY;
   const property = await owned(ctx, offer.propertyId, tenant.accountId, 'hasibProperties');
   const label = `Agency commission${property?.label ? `: ${property.label}` : ''}`.slice(0, 120);
   const charge = await createOrder(ctx, tenant, { requestId: `commission:${opportunity._id}`, channel: 'walk_in', contactId: opportunity.contactId, fulfilment: { type: 'in_store' }, lines: [{ name: label, qty: 1, unitPriceMinor: a.commissionMinor }] }, now, { internal: true });
   if (!charge.ok) return charge;
-  const id = await ctx.db.insert('realEstateCommissions', { accountId: tenant.accountId, opportunityId: opportunity._id, orderId: charge.value.id, amountMinor: a.commissionMinor, status: 'due', createdAt: now, updatedAt: now });
+  const id = await ctx.db.insert('realEstateCommissions', { accountId: tenant.accountId, opportunityId: opportunity._id, orderId: charge.value.id, amountMinor: a.commissionMinor, status: 'due', dueAt, createdAt: now, updatedAt: now });
   if (property) await ctx.db.patch(property._id, { availability: 'unavailable', version: property.version + 1, updatedAt: now });
   await ctx.db.patch(opportunity._id, { stage: 'won', version: opportunity.version + 1, updatedAt: now });
   await dealEvent(ctx, tenant, actor, opportunity._id, opportunity.stage, 'won', now);
@@ -257,14 +265,21 @@ async function closeDeal(ctx, tenant, actor, a, now) {
   return ok(await one(ctx, tenant.accountId, await ctx.db.get(id)));
 }
 
+/** "Paid" records the remaining balance as a payment on the commission's order, so the order stays the one record of money. */
 async function recordCommission(ctx, tenant, actor, a, now) {
   const row = await owned(ctx, a.commissionId, tenant.accountId, 'realEstateCommissions');
   if (!row) return fail('commission_not_found');
-  if (!['due', 'paid'].includes(a.status)) return fail('invalid_commission');
-  if (row.status === a.status) return ok(await one(ctx, tenant.accountId, row));
-  await ctx.db.patch(row._id, { status: a.status, ...(a.status === 'paid' ? { paidAt: now } : { paidAt: undefined }), updatedAt: now });
-  await audit(ctx, tenant, actor, 'commission_recorded', 'commission', row._id, now, a.status);
-  return ok(await one(ctx, tenant.accountId, await ctx.db.get(row._id)));
+  if (a.status !== 'paid') return fail('invalid_commission');
+  const order = await owned(ctx, row.orderId, tenant.accountId, 'hasibOrders');
+  if (!order) return fail('order_not_found');
+  const balance = order.totalMinor - order.paidMinor;
+  if (balance > 0) {
+    const paid = await recordPayment(ctx, tenant.accountId, { requestId: a.requestId, orderId: order._id, amountMinor: balance, method: 'bank_transfer', reference: 'commission' }, now);
+    if (!paid.ok) return paid;
+  }
+  if (row.status !== 'paid') await ctx.db.patch(row._id, { status: 'paid', paidAt: now, updatedAt: now });
+  await audit(ctx, tenant, actor, 'commission_recorded', 'commission', row._id, now, String(balance));
+  return ok((await commissionRows(ctx, tenant.accountId, [await ctx.db.get(row._id)]))[0]);
 }
 
 async function draftSave(ctx, tenant, actor, a, now) {
@@ -275,6 +290,10 @@ async function draftSave(ctx, tenant, actor, a, now) {
     if (!row || !await visibleOpportunity(ctx, tenant, actor, row.opportunityId)) return fail('draft_not_found');
     if (row.version !== a.version) return fail('draft_conflict');
     if (row.status !== 'draft') return fail('invalid_draft_transition');
+  } else {
+    if (!REQUEST_ID.test(a.requestId || '')) return fail('invalid_request');
+    const replay = await byRequest(ctx, 'realEstateDrafts', tenant.accountId, a.requestId);
+    if (replay) return ok(await one(ctx, tenant.accountId, replay));
   }
   const opportunityId = row?.opportunityId || w.opportunityId;
   const opportunity = await visibleOpportunity(ctx, tenant, actor, opportunityId);
@@ -338,29 +357,46 @@ async function compliance(ctx, tenant, actor, a) {
   return ok(row ? publicRow(row) : { version: 0, ...Object.fromEntries(COMPLIANCE_CHECKS.map(check => [`${check}Status`, 'pending'])), confirmedAt: {}, confirmedBy: {} });
 }
 
+/** Every viewing, offer or draft of one deal, read through its index rather than the agency's newest page. */
+async function forDeal(ctx, tenant, actor, table, opportunityId) {
+  const deal = await visibleOpportunity(ctx, tenant, actor, opportunityId);
+  if (!deal) return fail('opportunity_not_found');
+  const rows = await ctx.db.query(table).withIndex('by_opportunity', q => q.eq('opportunityId', deal._id)).take(200);
+  return ok({ items: await readable(ctx, tenant.accountId, rows.sort((x, y) => (y.scheduledAt || y.createdAt) - (x.scheduledAt || x.createdAt))), cursor: null });
+}
+
 export async function executeRealEstate(ctx, tenant, actor, a, now) {
   if (MANAGER_ONLY.has(a.operation) && actor.role !== 'manager') return fail('manager_required');
   switch (a.operation) {
-    case 'real_estate_overview': return overview(ctx, tenant, actor, now);
-    case 'real_estate_insights': return insights(ctx, tenant);
+    case 'real_estate_overview': {
+      const result = await overview(ctx, tenant, actor, now);
+      if (!result.ok) return result;
+      const queue = await followupQueue(ctx, tenant, actor, { filter: 'overdue' }, now);
+      return ok({ ...result.value, followups: { counts: queue.value.counts, actionable: queue.value.actionable }, settings: realEstateSettings(await settingsFor(ctx, tenant.accountId)) });
+    }
+    case 'real_estate_insights': return realEstateInsights(ctx, tenant, a, now);
+    case 'real_estate_metric_records': return metricRecords(ctx, tenant, a, now);
+    case 'real_estate_followups': await refreshTasks(ctx, tenant.accountId, now); return followupQueue(ctx, tenant, actor, a, now);
+    case 'real_estate_task_snooze': return snoozeTask(ctx, tenant, actor, a, now);
+    case 'real_estate_context': await refreshTasks(ctx, tenant.accountId, now); return dealContext(ctx, tenant, actor, a, now);
     case 'real_estate_task_resolve': return resolveTask(ctx, tenant, actor, a, now);
-    case 'opportunities': return dealList(ctx, tenant, actor, 'realEstateOpportunities', a);
+    case 'opportunities': { if (!a.opportunityId) return dealList(ctx, tenant, actor, 'realEstateOpportunities', a); const row = await visibleOpportunity(ctx, tenant, actor, a.opportunityId); return row ? ok({ items: await readable(ctx, tenant.accountId, [row]), cursor: null }) : fail('opportunity_not_found'); }
     case 'opportunity_save': return opportunitySave(ctx, tenant, actor, a, now);
     case 'opportunity_stage': return opportunityStage(ctx, tenant, actor, a, now);
     case 'matches': { const row = await visibleOpportunity(ctx, tenant, actor, a.opportunityId); if (!row) return fail('opportunity_not_found'); const rows = await ctx.db.query('realEstateMatches').withIndex('by_opportunity', q => q.eq('opportunityId', row._id)).take(200); return ok({ items: await readable(ctx, tenant.accountId, rows) }); }
     case 'match_generate': return generateMatches(ctx, tenant, actor, a, now);
     case 'match_update': return matchUpdate(ctx, tenant, actor, a, now);
-    case 'viewings': return dealList(ctx, tenant, actor, 'realEstateViewings', a, 'by_account_date');
+    case 'viewings': return a.opportunityId ? forDeal(ctx, tenant, actor, 'realEstateViewings', a.opportunityId) : dealList(ctx, tenant, actor, 'realEstateViewings', a, 'by_account_date');
     case 'viewing_save': return viewingSave(ctx, tenant, actor, a, now);
-    case 'offers': return dealList(ctx, tenant, actor, 'realEstateOffers', a);
+    case 'offers': return a.opportunityId ? forDeal(ctx, tenant, actor, 'realEstateOffers', a.opportunityId) : dealList(ctx, tenant, actor, 'realEstateOffers', a);
     case 'offer_save': return offerSave(ctx, tenant, actor, a, now);
     case 'offer_approve': return approveOffer(ctx, tenant, actor, a, now);
     case 'compliance': return compliance(ctx, tenant, actor, a);
     case 'compliance_update': return complianceUpdate(ctx, tenant, actor, a, now);
     case 'deal_close': return closeDeal(ctx, tenant, actor, a, now);
-    case 'commissions': { const page = await ctx.db.query('realEstateCommissions').withIndex('by_account_created', q => q.eq('accountId', tenant.accountId)).order('desc').take(200); return ok({ items: await readable(ctx, tenant.accountId, page), cursor: null }); }
+    case 'commissions': { const page = await ctx.db.query('realEstateCommissions').withIndex('by_account_created', q => q.eq('accountId', tenant.accountId)).order('desc').take(200); return ok({ items: await commissionRows(ctx, tenant.accountId, page), cursor: null }); }
     case 'commission_record': return recordCommission(ctx, tenant, actor, a, now);
-    case 'drafts': return dealList(ctx, tenant, actor, 'realEstateDrafts', a);
+    case 'drafts': return a.opportunityId ? forDeal(ctx, tenant, actor, 'realEstateDrafts', a.opportunityId) : dealList(ctx, tenant, actor, 'realEstateDrafts', a);
     case 'draft_save': return draftSave(ctx, tenant, actor, a, now);
     case 'draft_approve': return approveDraft(ctx, tenant, actor, a, now);
     case 'real_estate_tasks': { const result = await overview(ctx, tenant, actor, now); return result.ok ? ok({ items: result.value.tasks }) : result; }

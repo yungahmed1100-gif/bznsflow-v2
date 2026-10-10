@@ -6,6 +6,7 @@ const TITLES = {
   invite: ['Invite an agent', 'دعوة وكيل'], property: ['Listing', 'الإعلان'], opportunity: ['Customer requirements', 'متطلبات العميل'], viewing: ['Schedule a viewing', 'جدولة معاينة'],
   outcome: ['How did the viewing go?', 'كيف كانت المعاينة؟'], offer: ['Draft an offer', 'مسودة عرض'], counter: ['Record the counter-offer', 'تسجيل العرض المضاد'],
   draft: ['Draft a message to the customer', 'مسودة رسالة للعميل'], close: ['Close the deal', 'إغلاق الصفقة'], lost: ['Mark the deal as lost', 'تسجيل الصفقة كخاسرة'],
+  followup: ['Add a dated follow-up', 'إضافة متابعة بموعد'],
 };
 
 /** The one form on screen, for whichever record the agent is adding or changing. */
@@ -86,6 +87,7 @@ export function RecordForm({ form, values, setValues, ar, h, s, busy, data, mana
         {select('propertyId', tr('Property', 'العقار'), listings)}
         {field('amount', tr('Offer amount (OMR)', 'قيمة العرض (ر.ع.)'), 'number', true, { min: 0, step: '0.001' })}
         {area('terms', tr('Terms (payment, dates, conditions)', 'الشروط (الدفع، المواعيد، الشروط)'))}
+        {field('decisionDue', tr('Decision expected by (optional)', 'القرار متوقع قبل (اختياري)'), 'datetime-local', false)}
         <p className="ld-help">{tr('The manager approves an offer before it is presented.', 'يعتمد المدير العرض قبل تقديمه.')}</p>
       </>}
       {form === 'counter' && <>
@@ -101,7 +103,14 @@ export function RecordForm({ form, values, setValues, ar, h, s, busy, data, mana
       </>}
       {form === 'close' && <>
         {field('commission', tr('Agency commission (OMR)', 'عمولة الوكالة (ر.ع.)'), 'number', true, { min: 0, step: '0.001' })}
+        {field('dueDate', tr('Commission due on', 'تاريخ استحقاق العمولة'), 'date')}
         <p className="ld-help">{tr('Only the commission is recorded as income. The listing becomes unavailable and the deal is won.', 'تُسجَّل العمولة فقط كدخل، ويصبح العقار غير متاح وتُحتسب الصفقة رابحة.')}</p>
+      </>}
+      {form === 'followup' && <>
+        {values.lockedDeal && <p className="ld-help">{values.lockedDeal}</p>}
+        {field('reason', tr('What to do', 'ما المطلوب'), 'text', true, { maxLength: 160 })}
+        {field('dueAt', tr('When', 'متى'), 'datetime-local')}
+        <p className="ld-help">{tr('A reminder for the team only; nothing is sent to the customer.', 'تذكير للفريق فقط؛ لا يُرسل شيء إلى العميل.')}</p>
       </>}
       {form === 'lost' && select('reason', tr('Why was it lost?', 'لماذا خُسرت؟'), LOST_REASONS.map(([id, en2, ar2]) => ({ id, label: ar ? ar2 : en2 })))}
       <div className="ld-actions">

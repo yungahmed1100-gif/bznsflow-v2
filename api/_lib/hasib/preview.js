@@ -33,8 +33,12 @@ export function hasibPreviewResponse(packId, operation) {
   const industry = industryCatalog().find(row => row.id === packId);
   if (!industry?.built) throw new PilotError(industry ? 'preview_not_available' : 'invalid_industry', 409);
   if (operation === 'overview') return overview(packId);
-  if (operation === 'real_estate_overview') return { synthetic: true, counts: {}, pipeline: [], tasks: [] };
-  if (operation === 'real_estate_insights') return { synthetic: true, sourceConversion: [], lostReasons: [] };
+  if (operation === 'real_estate_overview') return { synthetic: true, counts: {}, pipeline: Object.fromEntries(['new', 'contacted', 'qualified', 'viewing', 'offer', 'won', 'lost'].map(s => [s, 0])), tasks: [],
+    listings: { available: 0, reserved: 0, unavailable: 0, verifiedFresh: 0, stale: 0 }, viewings: { today: 0, upcoming: 0, outcomeMissing: 0 }, approvals: { offers: 0, drafts: 0, total: 0 },
+    followups: { counts: { today: 0, overdue: 0, scheduled: 0, approval: 0, blocked: 0, completed: 0 }, actionable: 0 } };
+  if (operation === 'real_estate_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, sourceConversion: [], lostReasons: [] };
+  if (operation === 'real_estate_followups') return { items: [], counts: { today: 0, overdue: 0, scheduled: 0, approval: 0, blocked: 0, completed: 0 }, actionable: 0 };
+  if (operation === 'real_estate_context' || operation === 'real_estate_metric_records') return { items: [] };
   if (operation === 'today') return today(packId);
   if (operation === 'clinic_overview') return { synthetic:true, governance:{status:'review_required',permitStatus:'unknown',approved:false}, activationReady:false,
     metrics:[{id:'unconfirmed_48h',value:0},{id:'missed_today',value:0},{id:'outstanding_minor',value:0}], requests:[], bookings:[], tasks:[], workspaceRole:'manager' };

@@ -208,6 +208,19 @@ try {
       if (body.action === 'real_estate_tasks') return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), items: [] } };
       return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), items: [], members: [], cursor: null, limit: 5 } };
     } });
+    if (packId === 'real-estate') {
+      // Real Estate is six tabs: an old Today link opens Deals, with what needs attention above the board.
+      await page.locator('.hb-attention').waitFor();
+      assert.equal(await page.locator('.ld-section-tabs a').count(), 4, `real-estate ${lang} Deals views at ${width}`); count++;
+      assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr'); count++;
+      assert.equal(await noOverflow(page), true, `real-estate ${lang} no overflow at ${width}`); count++;
+      assert.deepEqual(await axe(page), [], `real-estate ${lang} axe at ${width}`); count++;
+      await page.getByRole('button', { name: lang === 'ar' ? 'استفسار جديد' : 'New inquiry' }).first().click();
+      await page.locator('.hb-action-fields').waitFor(); count++;
+      if (width === 320 || width === 1440) await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
+      await context.close();
+      continue;
+    }
     await page.locator('.hb-action-strip').first().waitFor();
     assert.equal(await page.locator('.hb-action-card').count(), 4, `${packId} ${lang} actions at ${width}`); count++;
     assert.equal(await page.locator('.hb-visual-metric').count(), packId === 'real-estate' ? 6 : 3, `${packId} ${lang} metrics at ${width}`); count++;

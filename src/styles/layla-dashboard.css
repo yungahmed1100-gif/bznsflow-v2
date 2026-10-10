@@ -412,6 +412,9 @@ a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ld-nav a:is([data-section="orders"], [data-section="stock"], [data-section="service"], [data-section="customers"]) { --nav-tone: var(--green); --nav-tint: var(--green-tint); --nav-mark: var(--green-mark); }
 .ld-nav a[data-section="money"] { --nav-tone: var(--green); --nav-tint: var(--green-tint); --nav-mark: var(--green-mark); }
 .ld-nav a[data-section="team"] { --nav-tone: var(--blue-ink); --nav-tint: var(--blue-tint); --nav-mark: var(--blue-mark); }
+/* Real Estate: Deals is the record of what happens next; Insights reads results. */
+.ld-nav a[data-section="work"] { --nav-tone: var(--orange-ink); --nav-tint: var(--orange-tint); --nav-mark: var(--orange); }
+.ld-nav a[data-section="insights"] { --nav-tone: var(--green); --nav-tint: var(--green-tint); --nav-mark: var(--green-mark); }
 .ld-nav a svg { box-sizing: content-box; padding: 5px; border-radius: var(--radius); background: var(--nav-tint); color: var(--nav-tone); transition: background-color .16s, color .16s; }
 .ld-nav a:hover svg { background: var(--nav-mark, var(--paper-ruled)); color: var(--ink); }
 .ld-nav a[aria-current=page] svg { background: var(--nav-mark, var(--paper)); color: var(--ink); }

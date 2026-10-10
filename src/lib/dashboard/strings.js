@@ -62,7 +62,7 @@ const en = {
   invalid_phone: 'not a valid number', missing_phone: 'no number', missing_country: 'needs a country', importNow: 'Import {count} contacts', imported: '{created} added, {updated} updated.',
   truncated: 'Only the first 1,000 rows are imported.', consentOptional: 'Also record marketing consent for these contacts', 
   dashboardUnavailable: 'The dashboard isn’t switched on yet. Your setup and Layla’s replies are unaffected.',
-  view_accounts: 'Accounts and VAT', capturedNone: 'Layla hasn’t captured any details from this chat yet.', openRecord: 'Open contact',
+  view_accounts: 'Accounts and VAT', insights: 'Insights', view_work_board: 'Board', view_work_viewings: 'Viewings', view_work_properties: 'Properties', view_work_followups: 'Follow-ups', view_settings_rules: 'Follow-up rules', view_settings_team: 'Team', capturedNone: 'Layla hasn’t captured any details from this chat yet.', openRecord: 'Open contact',
   textCleared: 'Text cleared after 24 hours', textClearedHelp: 'For patients’ privacy, message text is erased after 24 hours. What Layla captured stays.',
 };
 const ar = {
@@ -127,7 +127,7 @@ const ar = {
   invalid_phone: 'رقم غير صالح', missing_phone: 'بلا رقم', missing_country: 'يحتاج دولة', importNow: 'استيراد {count} جهة اتصال', imported: 'أُضيف {created}، وحُدّث {updated}.',
   truncated: 'يُستورد أول ١٠٠٠ صف فقط.', consentOptional: 'سجّل أيضاً موافقة التسويق لهذه الجهات', 
   dashboardUnavailable: 'اللوحة غير مفعّلة بعد. إعدادك وردود ليلى لا تتأثر.',
-  view_accounts: 'الحسابات والضريبة', capturedNone: 'لم تسجّل ليلى أي تفاصيل من هذه المحادثة بعد.', openRecord: 'افتح جهة الاتصال',
+  view_accounts: 'الحسابات والضريبة', insights: 'المؤشرات', view_work_board: 'اللوحة', view_work_viewings: 'المعاينات', view_work_properties: 'العقارات', view_work_followups: 'المتابعات', view_settings_rules: 'قواعد المتابعة', view_settings_team: 'الفريق', capturedNone: 'لم تسجّل ليلى أي تفاصيل من هذه المحادثة بعد.', openRecord: 'افتح جهة الاتصال',
   textCleared: 'حُذف النص بعد 24 ساعة', textClearedHelp: 'حفاظاً على خصوصية المرضى، يُحذف نص الرسائل بعد 24 ساعة. ما سجّلته ليلى يبقى.',
 };
 

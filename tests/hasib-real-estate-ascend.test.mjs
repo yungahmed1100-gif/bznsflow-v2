@@ -96,7 +96,7 @@ test('manager close is compliance-gated and creates one commission charge only',
   assert.notEqual(m.table('hasibOrders')[0].totalMinor, property.askingPriceMinor);
   const due = value(await executeRealEstate(m.ctx, tenant, actor, { operation: 'real_estate_insights' }, m.now()));
   assert.equal(due.commissions.dueMinor, 2000000);
-  value(await executeRealEstate(m.ctx, tenant, actor, { operation: 'commission_record', commissionId: first.id, status: 'paid' }, m.now()));
+  value(await executeRealEstate(m.ctx, tenant, actor, { operation: 'commission_record', requestId: randomUUID(), commissionId: first.id, status: 'paid' }, m.now()));
   const paid = value(await executeRealEstate(m.ctx, tenant, actor, { operation: 'real_estate_insights' }, m.now()));
   assert.equal(paid.commissions.paidMinor, 2000000);
   assert.equal(paid.offerToCloseRate, 100);

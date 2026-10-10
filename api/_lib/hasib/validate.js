@@ -86,16 +86,25 @@ const SHAPES = {
   batch_create: b => ({ requestId: uuid(b.requestId), outputVariantId: id(b.outputVariantId), outputQty: quantity(b.outputQty), inputs: list(b.inputs, 50, i => compact({ variantId: id(i?.variantId), qty: quantity(i?.qty), unit: str(i?.unit, 20) })) || [], note: str(b.note, 200), producedOn: str(b.producedOn, 10), useBy: str(b.useBy, 10) }),
   restaurant_summary: b => ({ period: str(b.period, 12) }),
   stock_expiry: b => ({ days: int(b.days) }),
-  settings_update: b => ({ unsoldDays: int(b.unsoldDays), absenceDays: int(b.absenceDays), listingFreshnessDays:int(b.listingFreshnessDays), constructionIncidentHoursDenominator:int(b.constructionIncidentHoursDenominator), stockPolicy: str(b.stockPolicy, 10), packId: str(b.packId, 30),
+  settings_update: b => ({ unsoldDays: int(b.unsoldDays), absenceDays: int(b.absenceDays), listingFreshnessDays:int(b.listingFreshnessDays), constructionIncidentHoursDenominator:int(b.constructionIncidentHoursDenominator), stockPolicy: str(b.stockPolicy, 10), packId: str(b.packId, 30), realEstate: realEstateSettings(b.realEstate),
     vat: b.vat && typeof b.vat === 'object' ? compact({ registered: bool(b.vat.registered), rateBps: int(b.vat.rateBps) ?? -1, pricesIncludeVat: bool(b.vat.pricesIncludeVat), vatin: str(b.vat.vatin, 20) }) : undefined }),
 };
+// Real Estate's windows and follow-up rules; Convex checks every range.
+const RE_SETTING_KEYS = ['viewingWindowDays', 'closeWindowDaysRent', 'closeWindowDaysSale', 'lateCancelHours', 'responseSlaMinutes', 'commissionTermsDays'];
+function realEstateSettings(r) {
+  if (!r || typeof r !== 'object') return undefined;
+  return compact({ ...Object.fromEntries(RE_SETTING_KEYS.map(k => [k, int(r[k])])),
+    rules: list(r.rules, 3, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) });
+}
 const bookingFields = new Set(Object.values(BOOKING_OPERATIONS).flat());
 const workflowStrings = new Set('title kind label identifier location availability status viewingOutcome approvedBy reference transactionType propertyType area pricePeriod description authorityStatus source need financeReadiness decisionMakerReadiness timeline nextAction lostReason outcome terms text templateId contractType reason supplier package category severity mitigation'.split(' '));
 const workflowIds = new Set('contactId conversationId assignedAccountId equipmentId repeatOfId propertyId opportunityId variantId orderId projectId milestoneId'.split(' '));
-const workflowNumbers = new Set('dueAt recurringDays actualMinutes budgetMinor budgetMinMinor budgetMaxMinor nextServiceAt visitsRemaining askingPriceMinor viewingAt followUpAt commissionMinor qty estimateVersion bedrooms bathrooms sizeSqm verificationAt firstInboundAt replyQueuedAt providerSubmittedAt deliveredAt scheduledAt amountMinor originalContractMinor originalBudgetMinor startAt contractFinishAt forecastFinishAt estimateToCompleteMinor weightBps plannedStartAt plannedFinishAt actualProgressBps plannedBps actualBps workerHours asOfAt incurredAt contractDeltaMinor budgetDeltaMinor scheduleDeltaDays requiredAt grossMinor retentionMinor advanceRecoveryMinor netMinor retentionReleaseAt reportDate toolboxTalks inspections recordableIncidents lostTimeIncidents lostDays probability impact'.split(' '));
+const workflowNumbers = new Set('dueAt recurringDays actualMinutes budgetMinor budgetMinMinor budgetMaxMinor nextServiceAt visitsRemaining askingPriceMinor viewingAt followUpAt commissionMinor qty estimateVersion bedrooms bathrooms sizeSqm verificationAt firstInboundAt replyQueuedAt providerSubmittedAt deliveredAt scheduledAt amountMinor decisionDueAt originalContractMinor originalBudgetMinor startAt contractFinishAt forecastFinishAt estimateToCompleteMinor weightBps plannedStartAt plannedFinishAt actualProgressBps plannedBps actualBps workerHours asOfAt incurredAt contractDeltaMinor budgetDeltaMinor scheduleDeltaDays requiredAt grossMinor retentionMinor advanceRecoveryMinor netMinor retentionReleaseAt reportDate toolboxTalks inspections recordableIncidents lostTimeIncidents lostDays probability impact'.split(' '));
+// Free text a record keeps: the length Convex stores, so a long offer term or message is never dropped here.
+const WORKFLOW_LENGTHS = { title: 120, label: 120, terms: 2000, outcome: 500, viewingOutcome: 500, text: 4000, description: 2000, location: 160, reference: 80, nextAction: 200, lostReason: 200, reason: 200, mitigation: 500, timeline: 80 };
 function workflowShape(w = {}) {
   const out = {};
-  for (const k of workflowStrings) if (w[k] !== undefined) out[k] = str(w[k], k === 'title' || k === 'label' ? 120 : 100);
+  for (const k of workflowStrings) if (w[k] !== undefined) out[k] = str(w[k], WORKFLOW_LENGTHS[k] || 100);
   for (const k of workflowIds) if (w[k] !== undefined) out[k] = id(w[k]);
   for (const k of workflowNumbers) if (w[k] !== undefined) out[k] = int(w[k]);
   if (w.costsComplete !== undefined) out.costsComplete = typeof w.costsComplete === 'boolean' ? w.costsComplete : undefined;
@@ -127,7 +136,7 @@ for (const operation of JOB_OPERATIONS) {
   if (operation.endsWith('_create')) NEEDS_REQUEST.add(operation);
 }
 for (const operation of REAL_ESTATE_OPERATIONS) {
-  SHAPES[operation] = b => ({ requestId:uuid(b.requestId), version:int(b.version), opportunityId:id(b.opportunityId), matchId:id(b.matchId), viewingId:id(b.viewingId), offerId:id(b.offerId), draftId:id(b.draftId), commissionId:id(b.commissionId), taskId:id(b.taskId), propertyId:id(b.propertyId), kind:str(b.kind,30), reason:str(b.reason,200), memberId:id(b.memberId), email:str(b.email,254), commissionMinor:int(b.commissionMinor), status:str(b.status,30), cursor:str(b.cursor,2048), limit:int(b.limit), workflow:workflowShape(b.workflow) });
+  SHAPES[operation] = b => ({ requestId:uuid(b.requestId), version:int(b.version), opportunityId:id(b.opportunityId), matchId:id(b.matchId), viewingId:id(b.viewingId), offerId:id(b.offerId), draftId:id(b.draftId), commissionId:id(b.commissionId), taskId:id(b.taskId), propertyId:id(b.propertyId), kind:str(b.kind,30), reason:str(b.reason,200), memberId:id(b.memberId), contactId:id(b.contactId), conversationId:id(b.conversationId), dueAt:int(b.dueAt), metric:str(b.metric,40), segment:str(b.segment,40), period:str(b.period,20), filter:str(b.filter,20), email:str(b.email,254), commissionMinor:int(b.commissionMinor), status:str(b.status,30), cursor:str(b.cursor,2048), limit:int(b.limit), workflow:workflowShape(b.workflow) });
   if (['opportunity_save','viewing_save','offer_save','draft_save'].includes(operation)) NEEDS_REQUEST.add(operation);
 }
 for (const operation of TEAM_OPERATIONS) {

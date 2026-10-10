@@ -1,4 +1,4 @@
-// The owner dashboard's map: eight plain sections, some with a few views inside.
+// The owner dashboard's map: plain sections, some with a few views inside (Real Estate has six, below).
 // Section ids never change by industry; only labels and views do (a clinic's Orders read as Visits).
 // Old `?tab=` links (insights, expenses, contacts, broadcast, channels, business)
 // keep working by landing on the section and view that now holds them.
@@ -26,6 +26,17 @@ const CATALYST = Object.freeze({
   sections: ['chats', 'broadcasts', 'customers', 'settings'],
   views: { customers: [], settings: ['brain', 'channels'] },
 });
+// Real Estate on Ascend is six tabs (ascend/real-estate.md): Chats, Deals (the `work` key),
+// Customers, Broadcasts, Insights and Settings. Today, Properties, Money and Team now live inside them.
+const REAL_ESTATE_VIEWS = Object.freeze({
+  work: ['board', 'viewings', 'properties', 'followups'],
+  settings: ['brain', 'rules', 'team', 'business', 'channels', 'accounts'],
+});
+const REAL_ESTATE_ALIASES = {
+  today: ['work', 'board'], orders: ['work', 'board'], stock: ['work', 'properties'], followups: ['work', 'followups'],
+  money: ['insights'], expenses: ['insights'], team: ['settings', 'team'], broadcast: ['broadcasts'], contacts: ['customers'],
+  channels: ['settings', 'channels'], business: ['settings', 'business'], brain: ['settings', 'brain'], accounts: ['settings', 'accounts'],
+};
 /** Which BznsBrain tab a URL opens: `part`, else the old Services & prices links open the catalog. */
 export function brainPart(params) {
   const part = params.get('part');
@@ -38,7 +49,7 @@ export const SECTION_ORDER = ['today', 'chats', 'broadcasts', 'orders', 'stock',
 /** Preserve caller-owned URL parameters while clearing record state when changing sections. */
 export function dashboardSearch(current, tab, extra = {}) {
   const params = new URLSearchParams(current);
-  for (const key of ['tab', 'view', 'part', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'stage', 'filter']) params.delete(key);
+  for (const key of ['tab', 'view', 'part', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'stage', 'filter', 'metric', 'segment', 'period', 'from', 'quick']) params.delete(key);
   params.set('tab', tab);
   for (const [key, value] of Object.entries(extra)) params.set(key, value);
   return params;
@@ -66,6 +77,11 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
   const automotive = hasib?.pack?.id === 'automotive' && !hasib.setupRequired;
   // Real Estate's Properties is one listings screen, not products and services.
   const realEstate = hasib?.pack?.id === 'real-estate' && !hasib.setupRequired;
+  if (realEstate) {
+    const has = { chats: true, work: true, customers: true, broadcasts: workspaceRole === 'manager' && capabilities.broadcasts !== false,
+      insights: workspaceRole === 'manager' && capabilities.insights !== false, settings: workspaceRole !== 'employee' };
+    return { sections: ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings'].filter(id => has[id]), views: { ...REAL_ESTATE_VIEWS, customers: [] }, sixTab: true };
+  }
   // Services are edited in Business details, which is the manager's.
   const managerViews = list => list.filter(v => v !== 'services' || workspaceRole !== 'employee');
   const views = {
@@ -86,12 +102,12 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
 
 /** The section and view to show for a URL, falling back to the home section. */
 export function resolveTab(requestedTab, requestedView, map) {
-  const aliases = map.catalyst ? CATALYST_ALIASES : ALIASES;
-  // Catalyst's Broadcasts used to be a view of Customers.
-  const [aliasTab, aliasView] = map.catalyst && requestedTab === 'customers' && requestedView === 'broadcast' ? ['broadcasts'] : aliases[requestedTab] || [];
+  const aliases = map.sixTab ? REAL_ESTATE_ALIASES : map.catalyst ? CATALYST_ALIASES : ALIASES;
+  // Catalyst's and Real Estate's Broadcasts used to be a view of Customers.
+  const [aliasTab, aliasView] = (map.catalyst || map.sixTab) && requestedTab === 'customers' && requestedView === 'broadcast' ? ['broadcasts'] : aliases[requestedTab] || [];
   const tab = aliasTab || requestedTab;
-  const home = map.sections[0] === 'today' ? 'today' : 'chats';
-  if (!map.sections.includes(tab)) return { tab: home, view: null };
+  const home = map.sixTab ? 'work' : map.sections[0] === 'today' ? 'today' : 'chats';
+  if (!map.sections.includes(tab)) return { tab: home, view: map.views[home]?.[0] ?? null };
   const views = map.views[tab];
   if (!views) return { tab, view: null };
   if (views.length === 0) return { tab, view: null };

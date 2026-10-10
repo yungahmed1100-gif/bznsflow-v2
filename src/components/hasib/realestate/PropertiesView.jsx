@@ -2,7 +2,7 @@ import React from 'react';
 import { formatDateTime } from '../../../lib/dashboard/format';
 import { Money } from '../Badges';
 import { Icon } from '../../ui/Icon';
-import { EmptyState, PageHeader } from '../DashboardVisuals';
+import { EmptyState, SectionHeader } from '../DashboardVisuals';
 import { label } from './labels.js';
 
 const DAY = 86400000;
@@ -13,7 +13,7 @@ export function PropertiesView({ ar, h, s, data, busy, timezone, freshnessDays =
   const rows = data.properties?.items || [];
   const fresh = row => row.verificationAt && row.verificationAt >= Date.now() - freshnessDays * DAY;
   return <>
-    <PageHeader title={tr('Properties', 'العقارات')} description={tr('Only listings verified in the last 30 days, with authority to market them, are offered to customers.', 'تُعرض على العملاء فقط الإعلانات الموثقة خلال آخر ٣٠ يوماً والتي لديك صلاحية تسويقها.')} icon="home" primary={{ label: tr('Add a listing', 'إضافة إعلان'), onClick: onAdd }} />
+    <SectionHeader title={tr('Properties', 'العقارات')} description={tr(`Only listings verified in the last ${freshnessDays} days, with authority to market them, are offered to customers.`, `تُعرض على العملاء فقط الإعلانات الموثقة خلال آخر ${freshnessDays} يوماً والتي لديك صلاحية تسويقها.`)} icon="home" primary={{ label: tr('Add a listing', 'إضافة إعلان'), onClick: onAdd }} />
     {rows.length ? <div className="hb-real-grid">{rows.map(row => <article className="hb-panel hb-property-card" key={row.id}>
       {row.photoUrls?.find(Boolean)
         ? <img src={row.photoUrls.find(Boolean)} alt={row.label} loading="lazy" className="hb-property-cover" />

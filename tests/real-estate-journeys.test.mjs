@@ -43,12 +43,12 @@ const villa = (run, extra = {}) => run('property_save', { requestId: randomUUID(
 const need = (run, contactId, extra = {}) => run('opportunity_save', { requestId: randomUUID(), workflow: { contactId, need: 'buy', areas: ['Qurum'], propertyTypes: ['villa'], budgetMinMinor: 100000000, budgetMaxMinor: 130000000, bedrooms: 3, financeReadiness: 'cash', decisionMakerReadiness: 'ready', timeline: '30 days', mustHaves: [], ...extra } });
 const offerTo = async (run, opportunity, property, amountMinor = 115000000) => value(await run('offer_save', { requestId: randomUUID(), workflow: { opportunityId: opportunity.id, propertyId: property.id, amountMinor, terms: 'Cash, completion in 30 days' } }));
 
-test('real estate on Ascend: the manager sees every section; an agent sees no Money, Team or Settings', async () => {
+test('real estate on Ascend: the manager sees all six tabs; an agent sees no Broadcasts, Insights or Settings', async () => {
   const { manager, agent } = await agency();
   const m = value(await manager('overview'));
-  assert.deepEqual(dashboardMap(m, m.capabilities).sections, ['today', 'chats', 'orders', 'stock', 'money', 'customers', 'team', 'settings']);
+  assert.deepEqual(dashboardMap(m, m.capabilities).sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
   const e = value(await agent('overview'));
-  assert.deepEqual(dashboardMap(e, e.capabilities).sections, ['today', 'chats', 'orders', 'stock', 'customers']);
+  assert.deepEqual(dashboardMap(e, e.capabilities).sections, ['chats', 'work', 'customers']);
 });
 
 test('Today stays up while offers are live (the overview used to crash)', async () => {

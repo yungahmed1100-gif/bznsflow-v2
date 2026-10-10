@@ -8,6 +8,14 @@ export function PageHeader({ title, description, icon = 'bar-chart', primary, ch
   </header>;
 }
 
+/** A heading for one view inside a section that already has its page header. */
+export function SectionHeader({ id, title, description, primary }) {
+  return <header className="hb-section-header">
+    <div><h2 id={id}>{title}</h2>{description && <p>{description}</p>}</div>
+    {primary && <button type="button" className="ld-button" onClick={primary.onClick}><Icon name={primary.icon || 'plus'} size={17} />{primary.label}</button>}
+  </header>;
+}
+
 export function ActionCards({ actions, label }) {
   if (!actions?.length) return null;
   return <section className="hb-action-strip" aria-label={label}>{actions.map((action, index) => <button type="button" className={`hb-action-card ${index === 0 ? 'is-primary' : ''}`} key={action.id} onClick={action.onClick} disabled={action.disabled}>

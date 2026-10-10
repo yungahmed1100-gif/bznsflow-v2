@@ -22,7 +22,7 @@ export const capabilitiesFor = (plan, role = 'manager') => {
 export const EMPLOYEE_DENIED = new Set([
   'team_invite', 'team_resend', 'team_revoke', 'settings_update', 'contact_delete',
   'offer_approve', 'draft_approve', 'deal_close', 'commission_record', 'expenses',
-  'expense_create', 'expense_void', 'insights', 'real_estate_insights', 'export_account', 'export_contacts', 'items_import',
+  'expense_create', 'expense_void', 'insights', 'real_estate_insights', 'real_estate_metric_records', 'export_account', 'export_contacts', 'items_import',
   'clinic_insights', 'clinic_governance', 'clinic_governance_update', 'clinic_metric_snapshot',
   'construction_insights', 'construction_baseline_approve', 'construction_retention_release',
   'automotive_insights',
