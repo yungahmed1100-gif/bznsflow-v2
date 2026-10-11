@@ -10,11 +10,12 @@ const checks = [
   ['node', ['scripts/test-demo-browser.mjs', 'catalyst']],
   ['node', ['tests/retail-browser.mjs']],
   ['node', ['tests/retail-tech-browser.mjs']],
-  ['node', ['scripts/test-demo-browser.mjs', 'dental']],
   ['node', ['tests/real-estate-browser.mjs']],
   // Media & production is a preview pack (not live): its suite proves the workspace before any release decision.
   ['node', ['tests/media-browser.mjs']],
   ['node', ['tests/fitness-browser.mjs']],
+  // Dental clinics: the six-tab Visits workspace (ascend/dental.md) replaced the old dental screens and their suite.
+  ['node', ['tests/dental-browser.mjs']],
   ['node', ['tests/hasib-industries-browser.mjs', 'construction', 'automotive']],
 ];
 for (const [command, args] of checks) {

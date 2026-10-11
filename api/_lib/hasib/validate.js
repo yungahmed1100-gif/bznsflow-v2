@@ -1,4 +1,4 @@
-import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
+import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
 // Per-action argument allow-lists for the Hasib API. Unknown keys are dropped,
 // strings are length-bounded, numbers must already be integers (money is sent
 // in minor units and never coerced from a string). Convex re-validates all of it.
@@ -211,6 +211,27 @@ const FITNESS_SETTING_KEYS = ['conversionWindowDays', 'gapDays', 'minObservation
 const mediaSettingsShape = SHAPES.settings_update;
 SHAPES.settings_update = b => ({ ...mediaSettingsShape(b), fitnessSettings: b.fitnessSettings && typeof b.fitnessSettings === 'object' ? compact({ ...Object.fromEntries(FITNESS_SETTING_KEYS.map(k => [k, int(b.fitnessSettings[k])])),
   rules: list(b.fitnessSettings.rules, 3, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) }) : undefined });
+
+// Dental: one typed payload; ids are checked as ids and Convex re-checks every value.
+const dentalPayload = d => d && typeof d === 'object' ? compact({
+  resourceId: id(d.resourceId), kind: str(d.kind, 20), name: str(d.name, 80), active: flag(d.active),
+  providerId: id(d.providerId), chairId: typeof d.chairId === 'string' && d.chairId === '' ? '' : id(d.chairId), serviceItemId: id(d.serviceItemId), startsAt: int(d.startsAt), durationMinutes: int(d.durationMinutes),
+  forMinor: flag(d.forMinor), guardianContactId: id(d.guardianContactId), source: str(d.source, 20), replacementForId: id(d.replacementForId),
+  recallDueAt: int(d.recallDueAt), clearRecall: flag(d.clearRecall), disputed: flag(d.disputed), text: str(d.text, 4000), templateId: str(d.templateId, 80),
+}) : undefined;
+const dentalShape = b => ({ requestId: uuid(b.requestId), version: int(b.version), visitId: id(b.visitId), contactId: id(b.contactId), conversationId: id(b.conversationId),
+  draftId: id(b.draftId), taskId: id(b.taskId), status: str(b.status, 30), reason: str(b.reason, 200), amountMinor: int(b.amountMinor), method: str(b.method, 20), reference: str(b.reference, 80),
+  dueAt: int(b.dueAt), fromAt: int(b.fromAt), toAt: int(b.toAt), metric: str(b.metric, 40), segment: str(b.segment, 80), period: str(b.period, 12), filter: str(b.filter, 20),
+  lines: list(b.lines, 20, x => compact({ variantId: id(x?.variantId), qty: int(x?.qty), unitPriceMinor: int(x?.unitPriceMinor) })), dental: dentalPayload(b.dental) });
+const DENTAL_REQUEST = { dental_resource_save: null, dental_visit_book: null, dental_charge: null, dental_payment_record: null };
+for (const operation of DENTAL_OPERATIONS) {
+  SHAPES[operation] = dentalShape;
+  if (operation in DENTAL_REQUEST) NEEDS_REQUEST.add(operation);
+}
+const DENTAL_SETTING_KEYS = ['visitMinutes', 'lateCancelHours', 'balanceDueDays', 'recallWindowDays', 'chairDayMinutes', 'openDaysPerWeek'];
+const fitnessSettingsShape = SHAPES.settings_update;
+SHAPES.settings_update = b => ({ ...fitnessSettingsShape(b), dentalSettings: b.dentalSettings && typeof b.dentalSettings === 'object' ? compact({ ...Object.fromEntries(DENTAL_SETTING_KEYS.map(k => [k, int(b.dentalSettings[k])])),
+  rules: list(b.dentalSettings.rules, 4, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) }) : undefined });
 
 export const HASIB_ACTIONS = Object.keys(SHAPES);
 

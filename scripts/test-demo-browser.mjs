@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
+// Catalyst's demo suite. Dental runs its own demos inside tests/dental-browser.mjs.
 const mode = process.argv[2];
-if (!['catalyst','dental'].includes(mode)) throw Error('Choose catalyst or dental');
+if (mode !== 'catalyst') throw Error('Choose catalyst (dental: node tests/dental-browser.mjs)');
 const servers = [];
 function start(port, flags) {
   const child = spawn(process.execPath, ['scripts/hasib-demo.mjs', String(port), ...flags], { stdio: ['ignore','pipe','inherit'] });
@@ -13,10 +14,8 @@ function start(port, flags) {
   });
 }
 try {
-  const port=mode==='catalyst'?5320:5312;
-  await start(port,[mode==='catalyst'?'--plan=catalyst':'--pack=dental']);
-  if(mode==='dental') await start(5313,['--pack=dental','--role=employee']);
-  const suite=mode==='catalyst'?'tests/catalyst-browser.mjs':'tests/hasib-dental-browser.mjs';
-  const child=spawn(process.execPath,[suite,`http://127.0.0.1:${port}`,...(mode==='dental'?['http://127.0.0.1:5313']:[])],{stdio:'inherit'});
+  const port=5320;
+  await start(port,['--plan=catalyst']);
+  const child=spawn(process.execPath,['tests/catalyst-browser.mjs',`http://127.0.0.1:${port}`],{stdio:'inherit'});
   process.exitCode=await new Promise((resolve,reject)=>{child.once('exit',resolve);child.once('error',reject);});
 } finally { for(const child of servers) child.kill(); }

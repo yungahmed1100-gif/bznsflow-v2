@@ -87,6 +87,13 @@ const media = v.object({
   link: v.optional(v.string()), final: v.optional(v.boolean()), text: v.optional(v.string()), templateId: v.optional(v.string()),
 });
 const mediaRule = v.object({ id: v.string(), enabled: v.boolean(), mode: v.string(), offsetMinutes: v.number() });
+// Dental payload: typed fields only; Convex re-checks every value in dentalState.js.
+const dental = v.object({
+  resourceId: v.optional(v.string()), kind: v.optional(v.string()), name: v.optional(v.string()), active: v.optional(v.boolean()),
+  providerId: v.optional(v.string()), chairId: v.optional(v.string()), serviceItemId: v.optional(v.string()), startsAt: v.optional(v.number()), durationMinutes: v.optional(v.number()),
+  forMinor: v.optional(v.boolean()), guardianContactId: v.optional(v.string()), source: v.optional(v.string()), replacementForId: v.optional(v.string()),
+  recallDueAt: v.optional(v.number()), clearRecall: v.optional(v.boolean()), disputed: v.optional(v.boolean()), text: v.optional(v.string()), templateId: v.optional(v.string()),
+});
 // Fitness payload: typed fields only; Convex re-checks every value in fitnessState.js.
 const fitness = v.object({
   name: v.optional(v.string()), kind: v.optional(v.string()), termDays: v.optional(v.number()), billingMonths: v.optional(v.number()), priceMinor: v.optional(v.number()), credits: v.optional(v.number()),
@@ -123,6 +130,8 @@ export const hasibEntryArgs = {
     mediaSettings: v.optional(v.object({ quoteWindowDays: v.optional(v.number()), revisionWindowDays: v.optional(v.number()), prepCutoffHours: v.optional(v.number()), reviewResponseHours: v.optional(v.number()),
       revisionAllowance: v.optional(v.number()), depositPercent: v.optional(v.number()), extraRoundPriceMinor: v.optional(v.number()), resourceHoursPerDay: v.optional(v.number()), holdHours: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     fitness: v.optional(fitness), planId: v.optional(v.string()), classId: v.optional(v.string()), seatId: v.optional(v.string()),
+    dental: v.optional(dental), visitId: v.optional(v.string()),
+    dentalSettings: v.optional(v.object({ visitMinutes: v.optional(v.number()), lateCancelHours: v.optional(v.number()), balanceDueDays: v.optional(v.number()), recallWindowDays: v.optional(v.number()), chairDayMinutes: v.optional(v.number()), openDaysPerWeek: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     fitnessSettings: v.optional(v.object({ conversionWindowDays: v.optional(v.number()), gapDays: v.optional(v.number()), minObservationDays: v.optional(v.number()), renewalNoticeDays: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     metric: v.optional(v.string()), segment: v.optional(v.string()), filter: v.optional(v.string()), channelCostMinor: v.optional(v.number()),
     stockPolicy: v.optional(v.string()), packId: v.optional(v.string()),

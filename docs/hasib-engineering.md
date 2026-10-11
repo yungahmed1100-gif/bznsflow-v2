@@ -265,7 +265,7 @@ Built from Ahmed's "Dental Clinics Hasib Tabs" spec. Worktree `Desktop/bznsflow-
 **Evidence (local, 2026-09-28).**
 - `npm test`: Layla 167/167, Blue 191/191, Hasib 144/144, including the new `tests/hasib-dental.test.mjs` (14 tests).
 - Both type-checks pass. Lint has 0 errors and 12 warnings, all pre-existing. `npm run build` passes.
-- `tests/hasib-dental-browser.mjs` against `node scripts/hasib-demo.mjs 5312 --pack=dental`, a fictional "Bayan Dental Clinic" with invented data and no clinical text: 267 assertions.
+- `tests/dental-browser.mjs` (six-tab Visits workspace, 2026-10-11; it replaced `tests/hasib-dental-browser.mjs` and the old dental screens) runs its own manager and receptionist demos of the fictional "Bayan Dental Clinic", with invented data and no clinical text.
   - Covers every screen at 1440/1024/768/375/320 in English and Arabic: only the seven tabs, no overflow, zero serious/critical axe issues, no page errors.
   - Flow: Today → a request → chat → Record visit (prefilled, no notes, no delivery) → revenue moves by exactly the visit, cash by exactly the payment, and the request clears.
   - Also checks the Accounts and VAT save.

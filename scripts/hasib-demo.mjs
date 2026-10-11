@@ -41,7 +41,7 @@ const DAY = 86400000, HOUR = 3600000, CSRF = 'd'.repeat(64);
 const m = convexMemory({ start: Date.now() - 30 * DAY });
 // Server-owned context flag, never accepted from an HTTP argument or live Convex.
 // Retail runs as production does (live pack checks on); other packs are previews.
-m.ctx.hasibPreview = !['retail', 'retail-tech', 'fitness'].includes(PACK);
+m.ctx.hasibPreview = !['retail', 'retail-tech', 'fitness', 'dental'].includes(PACK);
 // Photos upload to this server and are served back from it, like Convex storage.
 m.ctx.storage.generateUploadUrl = async () => `http://localhost:${PORT}/demo/upload`;
 m.ctx.storage.getUrl = async id => `http://localhost:${PORT}/demo/file/${encodeURIComponent(id)}`;
@@ -188,9 +188,9 @@ async function seedCatalyst() {
   await say('96891234502', 'And what are your opening hours?', 'Salma Al Harthy', 1);
 }
 
-let realEstate = null, media = null, fitness = null;
+let realEstate = null, media = null, fitness = null, dental = null;
 if (CATALYST) await seedCatalyst();
-else if (PACK === 'dental') await (await import('./hasib-demo-dental.mjs')).seedDental({ m, tenant, call, hasib, executeMessaging, DAY, HOUR });
+else if (PACK === 'dental') dental = await (await import('./hasib-demo-dental.mjs')).seedDental({ m, tenant, call, hasib, executeMessaging, DAY, HOUR });
 else if (PACK === 'retail-tech') await (await import('./hasib-demo-tech.mjs')).seedTech({ m, tenant, call, hasib, executeMessaging, DAY, HOUR });
 else if (PACK === 'retail') await seedFashion();
 else if (PACK === 'real-estate') realEstate = await (await import('./hasib-demo-real-estate.mjs')).seedRealEstate({ m, tenant, hasib, DAY, HOUR });

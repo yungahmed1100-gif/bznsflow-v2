@@ -86,8 +86,8 @@ const OWNER_PACKS = {
   retail: ['Orders', 'الطلبات', 'Products', 'المنتجات', 'orders', [['best_variant', 'Best-selling variant', 'المقاس واللون الأكثر مبيعاً'], ['unsold_stock', 'Stock unsold 60 days', 'بضاعة لم تُبع منذ ٦٠ يوماً'], ['product_requests', 'Unfilled product requests', 'طلبات منتجات لم تُلبَّ']]],
   'retail-tech': ['Orders', 'الطلبات', 'Products', 'المنتجات', 'orders', [['device_profit', 'Profit per device', 'الربح لكل جهاز'], ['unsold_stock', 'Stock held 60 days', 'بضاعة منذ ٦٠ يوماً'], ['overdue_repairs', 'Overdue repairs', 'إصلاحات متأخرة']]],
   beauty: ['Bookings', 'الحجوزات', 'Supplies', 'المستلزمات', 'bookings', [['missed_visits', 'Missed visits', 'زيارات فائتة'], ['booked_hours', 'Booked hours', 'الساعات المحجوزة'], ['return_visits', 'Completed return visits', 'زيارات متكررة مكتملة']]],
-  // Dental reads Hasib orders as Visits and stock as Services (treatments plus internal supplies).
-  dental: ['Visits', 'الزيارات', 'Services', 'الخدمات', 'orders', [['missed_visits', 'Missed visits', 'زيارات فائتة'], ['followups_due', 'Follow-ups due', 'متابعات مستحقة'], ['unpaid_visits', 'Unpaid visit charges', 'رسوم زيارات غير مدفوعة']]],
+  // Dental on Ascend is the six-tab Visits workspace (ascend/dental.md): appointments with attendance, charges on Hasib orders.
+  dental: ['Visits', 'الزيارات', 'Services', 'الخدمات', 'dental', [['missed_visits', 'Missed visits', 'زيارات فائتة'], ['followups_due', 'Follow-ups due', 'متابعات مستحقة'], ['overdue_balances', 'Overdue visit balances', 'أرصدة زيارات متأخرة']]],
   clinic: ['Visits', 'الزيارات', 'Supplies', 'المستلزمات', 'bookings', [['unconfirmed_visits', 'Unconfirmed visits', 'زيارات غير مؤكدة'], ['missed_visits', 'Missed visits', 'زيارات فائتة'], ['unpaid_visits', 'Unpaid visit charges', 'رسوم زيارات غير مدفوعة']]],
   restaurant: ['Orders', 'الطلبات', 'Menu', 'القائمة', 'orders', [['waste_cost', 'Waste cost', 'تكلفة الهدر'], ['dish_profit', 'Profit by dish', 'الربح حسب الطبق'], ['channel_profit', 'Money left by sales channel', 'المتبقي حسب قناة البيع']]],
   cafe: ['Orders', 'الطلبات', 'Menu', 'القائمة', 'orders', [['drink_profit', 'Profit by drink', 'الربح حسب المشروب'], ['remake_waste', 'Milk and remake waste', 'هدر الحليب وإعادة التحضير'], ['low_ingredients', 'Ingredients running low', 'مكونات قاربت على النفاد']]],
@@ -116,10 +116,10 @@ const PRESENTATION = {
     ['order', 'New sale', 'بيع جديد', 'receipt', ['orders', { create: '1' }]],
   ] },
   dental: { icon: 'tooth', actions: [
-    ['visit', 'Add visit', 'إضافة زيارة', 'calendar', ['orders', { create: '1' }]],
-    ['charge', 'Record charge', 'تسجيل رسوم', 'receipt', ['orders', { create: '1' }]],
-    ['setup', 'Service or provider', 'خدمة أو مقدم', 'users', ['orders', { action: 'setup' }]],
-    ['followup', 'Follow-up', 'متابعة', 'message-circle', ['customers']],
+    ['visit', 'Add visit', 'إضافة زيارة', 'calendar', ['work', { view: 'schedule', action: 'visit' }]],
+    ['schedule', 'Today’s schedule', 'جدول اليوم', 'calendar', ['work', { view: 'schedule' }]],
+    ['setup', 'Providers and chairs', 'الأطباء والكراسي', 'users', ['work', { view: 'services' }]],
+    ['followup', 'Follow-ups', 'المتابعات', 'message-circle', ['work', { view: 'followups' }]],
   ] },
   clinic: { icon: 'stethoscope', actions: [
     ['request', 'Appointment request', 'طلب موعد', 'calendar', ['orders', { action: 'request' }]],

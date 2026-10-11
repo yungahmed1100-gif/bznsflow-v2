@@ -465,9 +465,38 @@ const fitnessReasons = {
   invalid_assignment: ['Choose someone from your team.', 'اختر شخصاً من فريقك.'],
   member_not_found: ['That member is no longer available.', 'هذا العضو لم يعد متاحاً.'],
 };
+const dentalReasons = {
+  invalid_resource: ['Give a name, and choose provider or chair.', 'أدخل اسماً واختر طبيباً أو كرسياً.'],
+  resource_not_found: ['That provider or chair is no longer available.', 'هذا الطبيب أو الكرسي لم يعد متاحاً.'],
+  resource_conflict: ['Someone changed this. Try again.', 'عدّل شخص آخر هذا. أعد المحاولة.'],
+  resource_has_visits: ['Visits are still booked with them. Move or cancel those first.', 'ما زالت هناك زيارات محجوزة معه. انقلها أو ألغها أولاً.'],
+  provider_required: ['Choose a provider who takes bookings.', 'اختر طبيباً يقبل الحجوزات.'],
+  chair_not_found: ['Choose a chair that takes bookings.', 'اختر كرسياً يقبل الحجوزات.'],
+  service_not_found: ['Choose a treatment from Layla’s catalog.', 'اختر خدمة من كتالوج ليلى.'],
+  guardian_required: ['For a minor, choose the guardian first. Messages go to them.', 'للقاصر، اختر ولي الأمر أولاً، فالرسائل تُرسل إليه.'],
+  invalid_visit: ['Check the visit time and length (5 minutes to 8 hours).', 'راجع وقت الزيارة ومدتها (من ٥ دقائق إلى ٨ ساعات).'],
+  invalid_replacement: ['That earlier visit can’t be rebooked from here.', 'لا يمكن إعادة حجز تلك الزيارة من هنا.'],
+  patient_booking_conflict: ['The patient already has a visit at that time.', 'لدى المريض زيارة في هذا الوقت.'],
+  provider_busy: ['The provider is booked at that time. Choose another time or provider.', 'الطبيب محجوز في هذا الوقت. اختر وقتاً أو طبيباً آخر.'],
+  chair_busy: ['That chair is booked at that time.', 'هذا الكرسي محجوز في هذا الوقت.'],
+  visit_not_found: ['That visit is no longer available.', 'هذه الزيارة لم تعد متاحة.'],
+  visit_conflict: ['Someone changed this visit. It has been reloaded; try again.', 'عدّل شخص آخر هذه الزيارة. أعد المحاولة بعد التحديث.'],
+  visit_locked: ['Only a booked or confirmed visit can be moved.', 'لا تُنقل إلا الزيارة المحجوزة أو المؤكدة.'],
+  invalid_transition: ['That step isn’t possible for this visit now.', 'لا يمكن تنفيذ هذه الخطوة على الزيارة الآن.'],
+  visit_not_started: ['Record arrival once the visit time is near.', 'سجّل الوصول عند اقتراب موعد الزيارة.'],
+  visit_not_finished: ['Record a missed visit after its time has passed.', 'سجّل الزيارة الفائتة بعد مرور وقتها.'],
+  visit_finished: ['This visit’s time has passed. Record whether the patient came instead.', 'مر وقت هذه الزيارة. سجّل ما إذا حضر المريض بدلاً من ذلك.'],
+  cancellation_reason_required: ['Choose the reason for cancelling.', 'اختر سبب الإلغاء.'],
+  visit_not_attended: ['Charges are recorded once the patient has arrived.', 'تُسجل الرسوم بعد وصول المريض.'],
+  charges_recorded: ['Charges are already recorded for this visit.', 'الرسوم مسجلة لهذه الزيارة بالفعل.'],
+  invalid_charge: ['Choose at least one treatment.', 'اختر خدمة واحدة على الأقل.'],
+  visit_not_completed: ['Set a recall date on a completed visit.', 'حدد موعد المراجعة على زيارة مكتملة.'],
+  invalid_recall: ['Enter the future date the clinician gave (within 3 years).', 'أدخل التاريخ القادم الذي حدده الطبيب (خلال ٣ سنوات).'],
+  task_closes_itself: ['This closes by itself once it is recorded.', 'تُغلق تلقائياً عند تسجيلها.'],
+};
 // Each sector's words apply on its own pack only, so a shared code keeps each sector's own wording.
 const byLang = table => ({ en: Object.fromEntries(Object.entries(table).map(([k, [e]]) => [k, e])), ar: Object.fromEntries(Object.entries(table).map(([k, [, a]]) => [k, a])) });
-const PACK_REASONS = { media: byLang(mediaReasons), fitness: byLang(fitnessReasons) };
+const PACK_REASONS = { media: byLang(mediaReasons), fitness: byLang(fitnessReasons), dental: byLang(dentalReasons) };
 
 const GROUPED = new Intl.NumberFormat('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 

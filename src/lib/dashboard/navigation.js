@@ -49,9 +49,15 @@ const FITNESS_VIEWS = Object.freeze({
   settings: ['brain', 'rules', 'team', 'business', 'channels', 'accounts'],
 });
 const FITNESS_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'members'], orders: ['work', 'members'], stock: ['work', 'plans'] };
+// Dental clinics: Visits as Work, with Schedule · Visit list · Services · Follow-ups (ascend/dental.md).
+const DENTAL_VIEWS = Object.freeze({
+  work: ['schedule', 'visits', 'services', 'followups'],
+  settings: ['brain', 'rules', 'team', 'business', 'channels', 'accounts'],
+});
+const DENTAL_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'schedule'], orders: ['work', 'visits'], stock: ['work', 'services'] };
 // Packs whose Ascend workspace is the six tabs, with their Work views and old-link aliases.
 const SIX_TAB_PACKS = Object.freeze({ 'real-estate': { views: REAL_ESTATE_VIEWS, aliases: REAL_ESTATE_ALIASES }, media: { views: MEDIA_VIEWS, aliases: MEDIA_ALIASES },
-  fitness: { views: FITNESS_VIEWS, aliases: FITNESS_ALIASES } });
+  fitness: { views: FITNESS_VIEWS, aliases: FITNESS_ALIASES }, dental: { views: DENTAL_VIEWS, aliases: DENTAL_ALIASES } });
 export const isSixTabPack = id => !!SIX_TAB_PACKS[id];
 /** Which BznsBrain tab a URL opens: `part`, else the old Services & prices links open the catalog. */
 export function brainPart(params) {
@@ -65,7 +71,7 @@ export const SECTION_ORDER = ['today', 'chats', 'broadcasts', 'orders', 'stock',
 /** Preserve caller-owned URL parameters while clearing record state when changing sections. */
 export function dashboardSearch(current, tab, extra = {}) {
   const params = new URLSearchParams(current);
-  for (const key of ['tab', 'view', 'part', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'production', 'member', 'stage', 'filter', 'metric', 'segment', 'period', 'from', 'quick']) params.delete(key);
+  for (const key of ['tab', 'view', 'part', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'production', 'member', 'visit', 'patient', 'day', 'stage', 'filter', 'metric', 'segment', 'period', 'from', 'quick']) params.delete(key);
   params.set('tab', tab);
   for (const [key, value] of Object.entries(extra)) params.set(key, value);
   return params;

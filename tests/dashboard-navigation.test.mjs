@@ -91,14 +91,15 @@ test('automotive keeps the legacy stock URL and exposes its dedicated Money sect
   assert.deepEqual(resolveTab('money', null, map), { tab: 'money', view: null });
 });
 
-test('a dental clinic: the same sections, a clinic’s views, and old links still land', () => {
+test('a dental clinic: the six Ascend tabs with Visits as Work, and old links land in Visits', () => {
   const dental = { modules: ['orders', 'stock', 'expenses', 'insights'], setupRequired: false, pack: { id: 'dental' } };
   const map = dashboardMap(dental);
-  assert.deepEqual(map.sections, ['today', 'chats', 'orders', 'stock', 'money', 'customers', 'team', 'settings'], 'dental has a front-desk team');
-  assert.deepEqual(map.views.stock, ['services', 'products'], 'treatments first, then supplies');
-  assert.deepEqual(map.views.customers, ['contacts'], 'no mass messaging to patients');
-  assert.deepEqual(resolveTab('broadcast', null, map), { tab: 'customers', view: 'contacts' });
-  assert.deepEqual(resolveTab('stock', null, map), { tab: 'stock', view: 'services' });
+  assert.deepEqual(map.sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
+  assert.deepEqual(map.views.work, ['schedule', 'visits', 'services', 'followups']);
+  assert.deepEqual(map.views.customers, [], 'one patient list');
+  assert.deepEqual(resolveTab('stock', null, map), { tab: 'work', view: 'services' });
+  assert.deepEqual(resolveTab('orders', null, map), { tab: 'work', view: 'visits' });
+  assert.deepEqual(resolveTab('today', null, map), { tab: 'work', view: 'schedule' });
   assert.deepEqual(dashboardMap(retail).views.stock, ['products', 'services'], 'shops are unchanged');
   assert.deepEqual(dashboardMap(retail).views.customers, ['contacts', 'broadcast']);
 });

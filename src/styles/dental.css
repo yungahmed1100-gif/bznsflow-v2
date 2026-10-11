@@ -1,0 +1,38 @@
+/* Dental clinics' own pieces; the shared workspace lives in workspace.css.
+   Colour keeps its meaning: blue the patient (new, confirmed), yellow in progress (booked, awaiting
+   approval), orange the record (arrived), green done (completed), coral a problem (missed, outcome
+   not recorded, past-due balance). No gradients. */
+
+/* The day schedule: one column per provider, one panel per visit, its tone the visit's state. */
+.hb-day-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-block: 4px 12px; }
+.hb-day-label { min-inline-size: 10ch; }
+.hb-schedule { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; align-items: start; }
+.hb-schedule-col h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; }
+.hb-schedule-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.hb-visit { display: grid; gap: 6px; border-inline-start: 4px solid var(--tone, var(--rule-strong)); }
+.hb-visit p { margin: 0; overflow-wrap: anywhere; }
+.hb-visit .hb-status-line { flex-wrap: wrap; gap: 6px 12px; }
+.hb-visit[data-status="cancelled"] { opacity: .75; }
+.hb-visit-open { font-weight: 600; }
+.hb-visits .ld-chip, .hb-visit .ld-chip { margin-inline-start: 4px; }
+
+/* The visit list: a row's tone is the visit's state. */
+.hb-visits tbody tr { box-shadow: inset calc(4px * var(--x-sign, 1)) 0 0 var(--tone, var(--rule-strong)); }
+.hb-visits tbody tr[aria-selected="true"] { background: var(--tone-tint, var(--card)); }
+.hb-visits td .ld-button { margin-inline-start: 6px; }
+
+/* Services and the visit record. */
+.hb-services-block { margin-block-end: 24px; }
+.hb-resources > li, .hb-supplies > li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.hb-resources > li:not([data-active]) { opacity: .8; }
+.hb-supplies > li[data-tone] { border-inline-start: 4px solid var(--tone); padding-inline-start: 8px; }
+.hb-visit-record > header[data-tone] { border-inline-start: 4px solid var(--tone); }
+.hb-visit-record .hb-re-list > li[data-tone] { border-inline-start: 4px solid var(--tone); padding-inline-start: 8px; }
+.hb-visit-record .hb-deal-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px 16px; margin: 0; }
+.hb-visit-record .hb-deal-detail dt { font-size: 12px; color: var(--ink-2); letter-spacing: .02em; }
+.hb-visit-record .hb-deal-detail dd { margin: 0; font-weight: 600; }
+
+@media (max-width: 767px) {
+  .hb-visits tbody tr { box-shadow: none; border-inline-start: 4px solid var(--tone, var(--rule-strong)); }
+  .hb-schedule { grid-template-columns: 1fr; }
+}

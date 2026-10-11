@@ -47,23 +47,20 @@ const gloves = async manager => {
 const visit = (run, lines, extra = {}) => run('order_create', { requestId: randomUUID(), channel: 'whatsapp', fulfilment: { type: 'in_store' }, confirm: true, lines, ...extra });
 const activity = h => h.m.table('ascendActivity').map(r => [r.action, r.actorRole]);
 
-test('dental on Ascend: the manager sees Today, Chats, Visits, Services, Money, Patients, Team and Settings', async () => {
+test('dental on Ascend: the manager sees the six tabs with Visits as Work', async () => {
   const { manager } = await dentalClinic();
   const o = value(await manager('overview'));
   assert.equal(o.pack.id, 'dental');
   const map = dashboardMap(o, o.capabilities);
-  assert.deepEqual(map.sections, ['today', 'chats', 'orders', 'stock', 'money', 'customers', 'team', 'settings']);
-  assert.deepEqual(map.views.stock, ['services', 'products'], 'treatments first, then supplies');
-  assert.deepEqual(map.views.customers, ['contacts'], 'no mass messaging to patients');
+  assert.deepEqual(map.sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
+  assert.deepEqual(map.views.work, ['schedule', 'visits', 'services', 'followups']);
 });
 
-test('a receptionist sees no Money, Team, Settings or treatment editing, even before Hasib has loaded', async () => {
+test('a receptionist sees Chats, Visits and Customers only, even before Hasib has loaded', async () => {
   const { employee } = await dentalClinic();
   const o = value(await employee('overview'));
   assert.equal(o.workspaceRole, 'employee');
-  const map = dashboardMap(o, o.capabilities);
-  assert.deepEqual(map.sections, ['today', 'chats', 'orders', 'stock', 'customers']);
-  assert.deepEqual(map.views.stock, ['products'], 'treatments and their prices are the manager’s');
+  assert.deepEqual(dashboardMap(o, o.capabilities).sections, ['chats', 'work', 'customers']);
   const early = dashboardMap(null, capabilitiesFor('ascend', 'employee'), 'employee');
   assert.ok(!early.sections.includes('settings'), 'Settings never flashes for a receptionist');
 });

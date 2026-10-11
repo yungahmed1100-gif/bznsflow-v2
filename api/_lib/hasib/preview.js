@@ -52,6 +52,11 @@ export function hasibPreviewResponse(packId, operation) {
   if (operation === 'fitness_followups') return { items: [], counts: mediaQueue, actionable: 0 };
   if (operation === 'fitness_classes') return { items: [] };
   if (['fitness_members', 'fitness_plans', 'fitness_context', 'fitness_metric_records'].includes(operation)) return { items: [] };
+  if (operation === 'dental_overview') return { synthetic: true, today: { visits: 0, unconfirmed: 0, arrived: 0 }, attention: { requests: 0, attendanceUnrecorded: 0, rebook: 0, chargesUnrecorded: 0, balancesOverdue: 0, approvals: 0 },
+    setup: { providers: 0, chairs: 0, treatments: 0 }, followups: { counts: mediaQueue, actionable: 0 } };
+  if (operation === 'dental_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, coverage: { chargesWithoutVisit: 0, complete: true } };
+  if (operation === 'dental_followups') return { items: [], counts: mediaQueue, actionable: 0 };
+  if (['dental_visits', 'dental_resources', 'dental_context', 'dental_metric_records'].includes(operation)) return { items: [] };
   if (operation === 'today') return today(packId);
   if (operation === 'clinic_overview') return { synthetic:true, governance:{status:'review_required',permitStatus:'unknown',approved:false}, activationReady:false,
     metrics:[{id:'unconfirmed_48h',value:0},{id:'missed_today',value:0},{id:'outstanding_minor',value:0}], requests:[], bookings:[], tasks:[], workspaceRole:'manager' };

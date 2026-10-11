@@ -221,6 +221,19 @@ try {
       await context.close();
       continue;
     }
+    if (packId === 'dental') {
+      // Dental is six tabs too: an old Today link opens the Visits day schedule.
+      await page.locator('.hb-day-nav').waitFor();
+      assert.equal(await page.locator('.ld-section-tabs a').count(), 4, `dental ${lang} Visits views at ${width}`); count++;
+      assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr'); count++;
+      assert.equal(await noOverflow(page), true, `dental ${lang} no overflow at ${width}`); count++;
+      assert.deepEqual(await axe(page), [], `dental ${lang} axe at ${width}`); count++;
+      await page.getByRole('button', { name: lang === 'ar' ? 'إضافة زيارة' : 'Add visit' }).first().click();
+      await page.locator('.hb-action-fields').waitFor(); count++;
+      if (width === 320 || width === 1440) await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
+      await context.close();
+      continue;
+    }
     await page.locator('.hb-action-strip').first().waitFor();
     assert.equal(await page.locator('.hb-action-card').count(), 4, `${packId} ${lang} actions at ${width}`); count++;
     assert.equal(await page.locator('.hb-visual-metric').count(), packId === 'real-estate' ? 6 : 3, `${packId} ${lang} metrics at ${width}`); count++;

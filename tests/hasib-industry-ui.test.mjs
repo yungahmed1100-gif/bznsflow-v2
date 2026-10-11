@@ -43,7 +43,7 @@ test('every live dashboard exposes bilingual icon actions with valid destination
       assert.ok(actionId && en && ar && icon, `${id}:${actionId}`);
       // Six-tab packs (Real Estate's successors) point into their Work tab.
       assert.ok(['today', 'orders', 'stock', 'service', 'money', 'customers', 'work'].includes(go[0]), `${id}:${actionId}:${go[0]}`);
-      if (go[1]?.action) assert.ok(['product', 'import', 'repair', 'trade-in', 'warranty', 'setup', 'property', 'opportunity', 'viewing', 'offer', 'follow-up', 'project', 'progress', 'variation', 'commitment', 'appointment', 'vehicle', 'work-order', 'membership', 'class'].includes(go[1].action));
+      if (go[1]?.action) assert.ok(['product', 'import', 'repair', 'trade-in', 'warranty', 'setup', 'property', 'opportunity', 'viewing', 'offer', 'follow-up', 'project', 'progress', 'variation', 'commitment', 'appointment', 'vehicle', 'work-order', 'membership', 'class', 'visit'].includes(go[1].action));
     }
   }
 });

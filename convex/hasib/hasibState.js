@@ -6,7 +6,7 @@ import { executeMemberships } from './membershipsState.js';
 import { executeBookings } from './bookingsState.js';
 import { bakingSuggestions } from './industryMetrics.js';
 import { businessTimezone } from './expensesState.js';
-import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS } from '../../config/hasib-workflow-operations.js';
+import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS } from '../../config/hasib-workflow-operations.js';
 import { executeClinic } from './clinicState.js';
 import { executeConstruction } from './constructionState.js';
 import { executeAutomotive } from './automotiveState.js';
@@ -17,6 +17,9 @@ import { mediaFollowupQueue } from './mediaFollowups.js';
 import { fitnessSettings, mergeFitnessSettings } from './fitnessSettings.js';
 import { executeFitness } from './fitnessState.js';
 import { fitnessFollowupQueue } from './fitnessFollowups.js';
+import { dentalSettings, mergeDentalSettings } from './dentalSettings.js';
+import { executeDental } from './dentalState.js';
+import { dentalFollowupQueue } from './dentalFollowups.js';
 // Hasib entry point: gate, tenant, then one of the feature executors.
 // The tenant is always resolved from the verified session hash; ids in the
 // request are re-checked against it by `owned()` inside each executor.
@@ -46,7 +49,7 @@ import { actorWorkspace, executeTeam } from './workspaceState.js';
 import { capabilitiesFor, roleAllows } from './capabilities.js';
 import { staffArgs, staffResult, auditChange } from './staffPolicy.js';
 
-export const HASIB_OPERATIONS = [...Object.keys(BOOKING_OPERATIONS), ...JOB_OPERATIONS, ...REAL_ESTATE_OPERATIONS, ...TEAM_OPERATIONS, ...CLINIC_OPERATIONS, ...CONSTRUCTION_OPERATIONS, ...AUTOMOTIVE_OPERATIONS, ...MEDIA_OPERATIONS, ...FITNESS_OPERATIONS, 'overview', 'settings_update', 'items', 'item_save', 'item_archive', 'stock_move', 'stock_moves', 'low_stock',
+export const HASIB_OPERATIONS = [...Object.keys(BOOKING_OPERATIONS), ...JOB_OPERATIONS, ...REAL_ESTATE_OPERATIONS, ...TEAM_OPERATIONS, ...CLINIC_OPERATIONS, ...CONSTRUCTION_OPERATIONS, ...AUTOMOTIVE_OPERATIONS, ...MEDIA_OPERATIONS, ...FITNESS_OPERATIONS, ...DENTAL_OPERATIONS, 'overview', 'settings_update', 'items', 'item_save', 'item_archive', 'stock_move', 'stock_moves', 'low_stock',
   'order_create', 'order_status', 'orders', 'order', 'payment_record', 'contact_summary', 'conversation_orders', 'expense_create', 'expenses', 'expense_void', 'insights',
   'today', 'photo_upload_url', 'photo_register', 'item_photo', 'items_import', 'serials', 'serial_lookup', 'trade_in', 'repairs', 'repair', 'repair_create', 'repair_approval', 'repair_update', 'repair_status',
   'baking_suggestions', 'order_preparation', 'recipes', 'recipe_save', 'waste_create', 'stock_count', 'stock_receive', 'batch_create', 'restaurant_summary', 'stock_expiry', 'services_sync'];
@@ -58,7 +61,7 @@ const moduleOf = op => Object.keys(MODULE_OPS).find(m => MODULE_OPS[m].includes(
 
 export { hasibEnabled };
 
-const publicSettings = s => ({ currency: s.currency, vatRegistered: s.vatRegistered, vatRateBps: s.vatRateBps, pricesIncludeVat: s.pricesIncludeVat, vatin: s.vatin || '', stockPolicy: s.stockPolicy, unsoldDays: s.unsoldDays ?? 60, absenceDays: s.absenceDays ?? 14, listingFreshnessDays: s.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:s.constructionIncidentHoursDenominator ?? 200000, realEstate: realEstateSettings(s), media: mediaSettings(s), fitness: fitnessSettings(s) });
+const publicSettings = s => ({ currency: s.currency, vatRegistered: s.vatRegistered, vatRateBps: s.vatRateBps, pricesIncludeVat: s.pricesIncludeVat, vatin: s.vatin || '', stockPolicy: s.stockPolicy, unsoldDays: s.unsoldDays ?? 60, absenceDays: s.absenceDays ?? 14, listingFreshnessDays: s.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:s.constructionIncidentHoursDenominator ?? 200000, realEstate: realEstateSettings(s), media: mediaSettings(s), fitness: fitnessSettings(s), dental: dentalSettings(s) });
 
 /** What choosing an industry changes beyond the setting itself. */
 async function applyPackChoice(ctx, accountId, pack, now) {
@@ -114,13 +117,18 @@ export async function updateSettings(ctx, accountId, a, now) {
     if (!merged) return fail('invalid_settings');
     next.fitness = merged;
   }
+  if (a.dentalSettings !== undefined) {
+    const merged = mergeDentalSettings(next.dental, a.dentalSettings);
+    if (!merged) return fail('invalid_settings');
+    next.dental = merged;
+  }
   // The Hasib industry is the owner's explicit choice; Layla's own sector is never written here.
   if (a.packId !== undefined) {
     if (!isLivePack(a.packId) && !(ctx.hasibPreview === true && HASIB_PACKS[a.packId])) return fail('pack_not_live');
     next.packId = a.packId;
   }
   const row = { accountId, ...(next.packId ? { packId: next.packId } : {}), currency: next.currency, vatRegistered: next.vatRegistered, vatRateBps: next.vatRateBps, pricesIncludeVat: next.pricesIncludeVat,
-    ...(next.vatin ? { vatin: next.vatin } : {}), stockPolicy: next.stockPolicy, unsoldDays: next.unsoldDays ?? 60, absenceDays: next.absenceDays ?? 14, listingFreshnessDays: next.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:next.constructionIncidentHoursDenominator ?? 200000, ...(next.realEstate ? { realEstate: next.realEstate } : {}), ...(next.media ? { media: next.media } : {}), ...(next.fitness ? { fitness: next.fitness } : {}), updatedAt: now };
+    ...(next.vatin ? { vatin: next.vatin } : {}), stockPolicy: next.stockPolicy, unsoldDays: next.unsoldDays ?? 60, absenceDays: next.absenceDays ?? 14, listingFreshnessDays: next.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:next.constructionIncidentHoursDenominator ?? 200000, ...(next.realEstate ? { realEstate: next.realEstate } : {}), ...(next.media ? { media: next.media } : {}), ...(next.fitness ? { fitness: next.fitness } : {}), ...(next.dental ? { dental: next.dental } : {}), updatedAt: now };
   if (current) await ctx.db.replace(current._id, row); else await ctx.db.insert('hasibSettings', row);
   if (a.packId !== undefined) await applyPackChoice(ctx, accountId, hasibPack(a.packId), now);
   return ok({ settings: publicSettings(row) });
@@ -171,7 +179,8 @@ async function dispatchHasib(ctx, tenant, actor, plan, pack, a, now) {
         // Real Estate's Deals badge: follow-ups that need someone now (never unread messages).
         ...(pack.id === 'real-estate' ? { followupsActionable: (await followupQueue(ctx, tenant, actor, {}, now)).value.actionable } : {}),
         ...(pack.id === 'media' ? { followupsActionable: (await mediaFollowupQueue(ctx, tenant, actor, {}, now)).value.actionable } : {}),
-        ...(pack.id === 'fitness' ? { followupsActionable: (await fitnessFollowupQueue(ctx, tenant, actor, {}, now)).value.actionable } : {}) } });
+        ...(pack.id === 'fitness' ? { followupsActionable: (await fitnessFollowupQueue(ctx, tenant, actor, {}, now)).value.actionable } : {}),
+        ...(pack.id === 'dental' ? { followupsActionable: (await dentalFollowupQueue(ctx, tenant, actor, {}, now)).value.actionable } : {}) } });
   }
   // Photos go straight from the owner's browser to Convex storage; the id is checked when the product is saved.
   if (a.operation === 'photo_upload_url') {
@@ -201,6 +210,7 @@ async function dispatchHasib(ctx, tenant, actor, plan, pack, a, now) {
   if (AUTOMOTIVE_OPERATIONS.includes(op) && pack.id !== 'automotive') return fail('module_unavailable');
   if (MEDIA_OPERATIONS.includes(op) && pack.id !== 'media') return fail('module_unavailable');
   if (FITNESS_OPERATIONS.includes(op) && pack.id !== 'fitness') return fail('module_unavailable');
+  if (DENTAL_OPERATIONS.includes(op) && pack.id !== 'dental') return fail('module_unavailable');
   const teamResult = await executeTeam(ctx, tenant, actor, a, now);
   if (teamResult) return teamResult;
   const realEstateResult = await executeRealEstate(ctx, tenant, actor, a, now);
@@ -209,6 +219,8 @@ async function dispatchHasib(ctx, tenant, actor, plan, pack, a, now) {
   if (mediaResult) return mediaResult;
   const fitnessResult = await executeFitness(ctx, tenant, actor, a, now);
   if (fitnessResult) return fitnessResult;
+  const dentalResult = await executeDental(ctx, tenant, actor, a, now);
+  if (dentalResult) return dentalResult;
   const clinicResult = await executeClinic(ctx, tenant, actor, a, now);
   if (clinicResult) return clinicResult;
   const constructionResult = await executeConstruction(ctx, tenant, actor, a, now);
