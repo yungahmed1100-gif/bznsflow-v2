@@ -26,6 +26,10 @@ export const EMPLOYEE_DENIED = new Set([
   'clinic_insights', 'clinic_governance', 'clinic_governance_update', 'clinic_metric_snapshot',
   'construction_insights', 'construction_baseline_approve', 'construction_retention_release',
   'automotive_insights',
+  'media_quote', 'media_accept', 'media_payment_record', 'media_change_order_decide', 'media_resource_save', 'media_cost_save', 'media_cost_void', 'media_costs_final',
+  'media_draft_approve', 'media_insights', 'media_metric_records',
+  'fitness_plan_save', 'fitness_class_save', 'fitness_membership_save', 'fitness_payment_record', 'fitness_freeze', 'fitness_cancel', 'fitness_renew',
+  'fitness_draft_approve', 'fitness_insights', 'fitness_metric_records',
 ]);
 
 export function roleAllows(role, operation) {

@@ -102,7 +102,7 @@ for (const packId of INDUSTRIES) test(`${packId}: synthetic owner journey passes
     assert.equal(m.table('hasibSerials').filter(s => s.status === 'sold').length, 1);
     assert.equal((await hasib('repairs')).items.length, 1);
   }
-  if (!['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive'].includes(packId)) {
+  if (!['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness'].includes(packId)) {
     const live = await executeHasib({ ...m.ctx, hasibPreview: false }, { operation: 'today', sessionHash: tenant.sessionHash, hashSecret: SECRET }, m.now());
     assert.equal(live.reason, 'pack_not_live', 'synthetic preview never opens the live release gate');
   }

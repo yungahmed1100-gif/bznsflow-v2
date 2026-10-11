@@ -1,36 +1,17 @@
 import React from 'react';
-import { formatDate, formatDateTime } from '../../../lib/dashboard/format';
+import { formatDate } from '../../../lib/dashboard/format';
 import { Money } from '../Badges';
 import { EmptyState, HorizontalBars, PageHeader } from '../DashboardVisuals';
 import { label, LOST_REASONS } from './labels.js';
 import { METRICS, duration } from './metrics.js';
+import { PERIODS, KpiTrend, PeriodPicker, KpiCards, DiagnosticsTable } from '../workspace/kpi.jsx';
 
-export const PERIODS = [['7d', 'Last 7 days', 'آخر ٧ أيام'], ['30d', 'Last 30 days', 'آخر ٣٠ يوماً'], ['month', 'This month', 'هذا الشهر'], ['prev_month', 'Last month', 'الشهر الماضي']];
+export { PERIODS };
+
 const SEGMENTS = ['need', 'property_type', 'source', 'agent'];
 const SEGMENT_COLUMNS = ['qualified_to_viewing', 'viewing_attendance', 'qualified_to_close', 'unanswered_qualified', 'commission_overdue'];
 // Whether a higher value is better decides nothing here: no thresholds are invented. Tone only marks a backlog that is not empty.
 const BACKLOG = new Set(['unanswered_qualified', 'commission_overdue', 'offer_backlog']);
-
-/** A metric's headline value in its own unit; an empty population says so instead of showing 0%. */
-function Value({ m, h, ar }) {
-  const tr = (en, arabic) => (ar ? arabic : en);
-  if (m.value == null) return <span className="hb-kpi-empty">{tr('No eligible records', 'لا توجد سجلات مؤهلة')}</span>;
-  if (m.kind === 'rate') return <span className="ld-num">{m.value}%</span>;
-  if (m.kind === 'money') return <Money h={h} minor={m.value} />;
-  if (m.kind === 'duration') return <span>{duration(m.value, ar)}</span>;
-  return <span className="ld-num">{m.value}</span>;
-}
-
-/** "3 of 9", the as-of time or period, and any coverage warning. */
-function Basis({ m, ar, s, timezone }) {
-  const tr = (en, arabic) => (ar ? arabic : en);
-  const parts = [];
-  if (m.kind === 'rate') parts.push(tr(`${m.numerator} of ${m.denominator}`, `${m.numerator} من ${m.denominator}`));
-  if (m.kind === 'duration' && m.p90 != null) parts.push(`P90 ${duration(m.p90, ar)}`);
-  if (m.oldestMs) parts.push(tr(`oldest ${duration(m.oldestMs, ar)}`, `الأقدم ${duration(m.oldestMs, ar)}`));
-  parts.push(m.asOf ? tr(`as of ${formatDateTime(m.asOf, s.lang, timezone)}`, `حتى ${formatDateTime(m.asOf, s.lang, timezone)}`) : tr('selected period', 'الفترة المختارة'));
-  return <small>{parts.filter(Boolean).join(' · ')}{m.complete === false && <b className="hb-warn"> · {tr('Incomplete: older records not read', 'غير مكتمل: لم تُقرأ السجلات الأقدم')}</b>}</small>;
-}
 
 /** The notes a population carries: timely cancellations, missing due dates, deals with no viewing yet. */
 function Notes({ m, ar }) {
@@ -38,20 +19,6 @@ function Notes({ m, ar }) {
   if (!entries.length && m.openMedianMs == null) return null;
   return <ul className="hb-kpi-notes">{entries.map(([k, n]) => <li key={k}>{label('note', k, ar)}: <b className="ld-num">{n}</b></li>)}
     {m.openMedianMs != null && <li>{ar ? 'عمر الصفقات بلا معاينة (الوسيط)' : 'Age of deals without a viewing (median)'}: <b>{duration(m.openMedianMs, ar)}</b></li>}</ul>;
-}
-
-/** Eight weeks of matured cohorts as a compact column chart; each column says its own count. */
-function Trend({ m, ar, s, timezone }) {
-  const tr = (en, arabic) => (ar ? arabic : en);
-  if (!m.trend) return <p className="ld-help">{m.asOf ? tr('A live backlog: it has no history to chart until snapshots are kept.', 'رصيد لحظي: لا تاريخ له يُرسم حتى تُحفظ لقطات.') : tr('No weekly trend for this measure.', 'لا اتجاه أسبوعي لهذا المؤشر.')}</p>;
-  const day = ms => formatDate(ms, s.lang, timezone).replace(/[,،]?\s*\d{4}$/, '');
-  return <figure className="hb-trend">
-    <figcaption>{tr('Weekly cohorts (matured weeks only)', 'الأفواج الأسبوعية (الأسابيع المكتملة فقط)')}</figcaption>
-    <ol>{m.trend.map((w, i) => <li key={i} aria-label={`${day(w.from)}: ${w.value == null ? tr('no records', 'لا سجلات') : `${w.value}% (${w.numerator}/${w.denominator})`}`}>
-      <span className="hb-trend-bar" data-empty={w.value == null ? '' : undefined}><i style={{ blockSize: `${w.value ?? 0}%` }} /></span>
-      <b className="ld-num">{w.value == null ? '—' : `${w.value}%`}</b><small className="ld-num">{w.denominator ? `${w.numerator}/${w.denominator}` : ''}</small><small>{day(w.from)}</small>
-    </li>)}</ol>
-  </figure>;
 }
 
 export function InsightsView({ ar, h, s, timezone, data, busy, act, params, onParams, onRecords, agentNames }) {
@@ -67,18 +34,9 @@ export function InsightsView({ ar, h, s, timezone, data, busy, act, params, onPa
   if (i.synthetic) return <EmptyState icon="bar-chart" title={tr('Insights use your recorded deals', 'تعتمد المؤشرات على صفقاتك المسجلة')} description={tr('This preview has no records.', 'لا توجد سجلات في هذه المعاينة.')} />;
   return <>
     <PageHeader icon="trending-up" title={tr('Insights', 'المؤشرات')} description={tr('Each figure names its population and window. Open any of them to see the exact records behind it.', 'كل رقم يوضح مجتمعه ونافذته. افتح أياً منها لترى السجلات التي خلفه بالضبط.')} />
-    <div className="ld-segmented" role="radiogroup" aria-label={tr('Period', 'الفترة')}>
-      {PERIODS.map(([id, en, arabic]) => <label key={id}><input type="radio" name="re-period" checked={period === id} onChange={() => onParams({ period: id })} /><span>{ar ? arabic : en}</span></label>)}
-    </div>
+    <PeriodPicker ar={ar} period={period} name="re-period" onChange={id => onParams({ period: id })} />
 
-    <section className="hb-kpis" aria-label={tr('Headline measures', 'المؤشرات الرئيسية')}>
-      {(i.headline || []).map(m => <button key={m.id} type="button" className="hb-kpi" aria-pressed={selected?.id === m.id} data-backlog={BACKLOG.has(m.id) && m.value ? '' : undefined}
-        onClick={() => onParams({ metric: m.id })}>
-        <span>{ar ? METRICS[m.id].ar : METRICS[m.id].en}</span>
-        <strong><Value m={m} h={h} ar={ar} /></strong>
-        <Basis m={m} ar={ar} s={s} timezone={timezone} />
-      </button>)}
-    </section>
+    <KpiCards ar={ar} h={h} s={s} timezone={timezone} metrics={i.headline || []} defs={METRICS} selectedId={selected?.id} backlog={BACKLOG} onSelect={id => onParams({ metric: id })} />
 
     {selected && <section className="hb-panel hb-kpi-detail" aria-labelledby="re-kpi-title">
       <div className="hb-status-line"><h2 id="re-kpi-title">{ar ? METRICS[selected.id].ar : METRICS[selected.id].en}</h2>
@@ -86,21 +44,11 @@ export function InsightsView({ ar, h, s, timezone, data, busy, act, params, onPa
       <p>{METRICS[selected.id].def(settings, ar)}</p>
       <p className="ld-help">{tr('Owner and review', 'المسؤول والمراجعة')}: {METRICS[selected.id].owner[ar ? 1 : 0]}</p>
       <Notes m={selected} ar={ar} />
-      <Trend m={selected} ar={ar} s={s} timezone={timezone} />
+      <KpiTrend m={selected} ar={ar} s={s} timezone={timezone} />
     </section>}
 
-    <section aria-labelledby="re-diagnostics" className="hb-diagnostics">
-      <h2 id="re-diagnostics">{tr('Diagnostics', 'التشخيص')}</h2>
-      <div className="ld-table-wrap"><table className="ld-table">
-        <thead><tr><th>{tr('Measure', 'المؤشر')}</th><th>{tr('Value', 'القيمة')}</th><th>{tr('Basis', 'الأساس')}</th><th><span className="ld-visually-hidden">{tr('Records', 'السجلات')}</span></th></tr></thead>
-        <tbody>{(i.diagnostics || []).map(m => <tr key={m.id} aria-selected={selected?.id === m.id}>
-          <td data-label={tr('Measure', 'المؤشر')}><button type="button" className="ld-link" onClick={() => onParams({ metric: m.id })}>{ar ? METRICS[m.id].ar : METRICS[m.id].en}</button></td>
-          <td data-label={tr('Value', 'القيمة')}><Value m={m} h={h} ar={ar} />{m.id === 'offer_backlog' && m.valueMinor ? <> · <Money h={h} minor={m.valueMinor} /></> : null}</td>
-          <td data-label={tr('Basis', 'الأساس')}><Basis m={m} ar={ar} s={s} timezone={timezone} /></td>
-          <td data-label={tr('Records', 'السجلات')}><button type="button" className="ld-button ld-quiet" onClick={() => onRecords(m.id)}>{tr('Records', 'السجلات')}</button></td>
-        </tr>)}</tbody>
-      </table></div>
-    </section>
+    <DiagnosticsTable ar={ar} h={h} s={s} timezone={timezone} metrics={i.diagnostics || []} defs={METRICS} selectedId={selected?.id} onSelect={id => onParams({ metric: id })} onRecords={id => onRecords(id)}
+      valueExtra={m => m.id === 'offer_backlog' && m.valueMinor ? <> · <Money h={h} minor={m.valueMinor} /></> : null} />
 
     <section aria-labelledby="re-segments" className="hb-segments">
       <div className="hb-status-line"><h2 id="re-segments">{tr('Break down by', 'تقسيم حسب')}</h2>

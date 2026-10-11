@@ -16,8 +16,9 @@ const API_PORT = Number(process.env.INDUSTRY_BROWSER_API_PORT || 5399);
 const BASE = `http://127.0.0.1:${API_PORT}`;
 const journeysOnly = process.argv.includes('--journeys-only');
 const requested = process.argv.slice(2).filter(arg => !arg.startsWith('--'));
-// Real Estate has its own dashboard and suite (tests/real-estate-browser.mjs); its generic scenarios are retired.
-const packs = (requested.length ? requested : industryCatalog().map(p => p.id)).filter(id => id !== 'real-estate');
+// Real Estate and Fitness have their own dashboards and suites (tests/real-estate-browser.mjs,
+// tests/fitness-browser.mjs); their generic scenarios are retired.
+const packs = (requested.length ? requested : industryCatalog().map(p => p.id)).filter(id => !['real-estate', 'fitness'].includes(id));
 const results = [];
 await mkdir(OUT, { recursive: true });
 
@@ -228,14 +229,14 @@ try {
         const result = await response.json(); assert.ok(result.ok, `${action}: ${JSON.stringify(result)}`); return result;
       };
       const dateTime = days => new Date(Date.now() + (days * 24 + 4) * 3600000).toISOString().slice(0, 16);
-      if (['retail', 'retail-tech', 'fitness'].includes(packId)) for (const lang of ['en', 'ar']) await journey(`${packId}-threshold-${lang}`, async (page, owner) => {
+      if (['retail', 'retail-tech'].includes(packId)) for (const lang of ['en', 'ar']) await journey(`${packId}-threshold-${lang}`, async (page, owner) => {
         await owner.open('settings&view=business');
-        const dialog = page.locator('.hb-setup'), gym = packId === 'fitness';
-        const input = dialog.getByLabel(gym ? lang === 'en' ? 'Days a member is absent' : 'عدد أيام غياب العضو' : lang === 'en' ? 'Days stock remains unsold' : 'عدد أيام بقاء البضاعة دون بيع');
-        await input.fill(gym ? '15' : '61');
+        const dialog = page.locator('.hb-setup');
+        const input = dialog.getByLabel(lang === 'en' ? 'Days stock remains unsold' : 'عدد أيام بقاء البضاعة دون بيع');
+        await input.fill('61');
         await save(page, 'settings_update', () => dialog.getByRole('button', { name: owner.h.t('save'), exact: true }).click());
         const overview = await fetch(`http://127.0.0.1:${API_PORT}/api/layla-meta?surface=hasib`).then(r => r.json());
-        assert.equal(overview.settings[gym ? 'absenceDays' : 'unsoldDays'], gym ? 15 : 61);
+        assert.equal(overview.settings.unsoldDays, 61);
       }, lang);
       if (packId === 'retail-tech') for (const lang of ['en', 'ar']) await journey(`electronics-approval-quote-reset-${lang}`, async (page, owner) => {
         const repair = await api('repair_create', { requestId: crypto.randomUUID(), device: `Browser customer phone ${lang}`, fault: 'Charging issue', quoteMinor: 15000 });

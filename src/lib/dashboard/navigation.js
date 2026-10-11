@@ -37,19 +37,35 @@ const REAL_ESTATE_ALIASES = {
   money: ['insights'], expenses: ['insights'], team: ['settings', 'team'], broadcast: ['broadcasts'], contacts: ['customers'],
   channels: ['settings', 'channels'], business: ['settings', 'business'], brain: ['settings', 'brain'], accounts: ['settings', 'accounts'],
 };
+// Media & production is the same six tabs, with Productions as Work (ascend/media.md).
+const MEDIA_VIEWS = Object.freeze({
+  work: ['board', 'calendar', 'resources', 'followups'],
+  settings: ['brain', 'rules', 'team', 'business', 'channels', 'accounts'],
+});
+const MEDIA_ALIASES = { ...REAL_ESTATE_ALIASES, stock: ['work', 'resources'] };
+// Fitness & wellness: Memberships as Work, with Members · Classes · Plans · Follow-ups (ascend/fitness.md).
+const FITNESS_VIEWS = Object.freeze({
+  work: ['members', 'classes', 'plans', 'followups'],
+  settings: ['brain', 'rules', 'team', 'business', 'channels', 'accounts'],
+});
+const FITNESS_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'members'], orders: ['work', 'members'], stock: ['work', 'plans'] };
+// Packs whose Ascend workspace is the six tabs, with their Work views and old-link aliases.
+const SIX_TAB_PACKS = Object.freeze({ 'real-estate': { views: REAL_ESTATE_VIEWS, aliases: REAL_ESTATE_ALIASES }, media: { views: MEDIA_VIEWS, aliases: MEDIA_ALIASES },
+  fitness: { views: FITNESS_VIEWS, aliases: FITNESS_ALIASES } });
+export const isSixTabPack = id => !!SIX_TAB_PACKS[id];
 /** Which BznsBrain tab a URL opens: `part`, else the old Services & prices links open the catalog. */
 export function brainPart(params) {
   const part = params.get('part');
   if (['bzns', 'catalog'].includes(part)) return part;
   return params.get('view') === 'services' || params.get('tab') === 'stock' ? 'catalog' : 'bzns';
 }
-const TEAM_PACKS = ['retail', 'retail-tech', 'dental', 'real-estate', 'clinic', 'construction', 'automotive'];
+const TEAM_PACKS = ['retail', 'retail-tech', 'dental', 'real-estate', 'media', 'fitness', 'clinic', 'construction', 'automotive'];
 export const SECTION_ORDER = ['today', 'chats', 'broadcasts', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings'];
 
 /** Preserve caller-owned URL parameters while clearing record state when changing sections. */
 export function dashboardSearch(current, tab, extra = {}) {
   const params = new URLSearchParams(current);
-  for (const key of ['tab', 'view', 'part', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'stage', 'filter', 'metric', 'segment', 'period', 'from', 'quick']) params.delete(key);
+  for (const key of ['tab', 'view', 'part', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'production', 'member', 'stage', 'filter', 'metric', 'segment', 'period', 'from', 'quick']) params.delete(key);
   params.set('tab', tab);
   for (const [key, value] of Object.entries(extra)) params.set(key, value);
   return params;
@@ -77,10 +93,11 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
   const automotive = hasib?.pack?.id === 'automotive' && !hasib.setupRequired;
   // Real Estate's Properties is one listings screen, not products and services.
   const realEstate = hasib?.pack?.id === 'real-estate' && !hasib.setupRequired;
-  if (realEstate) {
+  const sixTab = !hasib?.setupRequired && SIX_TAB_PACKS[hasib?.pack?.id];
+  if (sixTab) {
     const has = { chats: true, work: true, customers: true, broadcasts: workspaceRole === 'manager' && capabilities.broadcasts !== false,
       insights: workspaceRole === 'manager' && capabilities.insights !== false, settings: workspaceRole !== 'employee' };
-    return { sections: ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings'].filter(id => has[id]), views: { ...REAL_ESTATE_VIEWS, customers: [] }, sixTab: true };
+    return { sections: ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings'].filter(id => has[id]), views: { ...sixTab.views, customers: [] }, sixTab: true, packId: hasib.pack.id };
   }
   // Services are edited in Business details, which is the manager's.
   const managerViews = list => list.filter(v => v !== 'services' || workspaceRole !== 'employee');
@@ -102,7 +119,7 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
 
 /** The section and view to show for a URL, falling back to the home section. */
 export function resolveTab(requestedTab, requestedView, map) {
-  const aliases = map.sixTab ? REAL_ESTATE_ALIASES : map.catalyst ? CATALYST_ALIASES : ALIASES;
+  const aliases = map.sixTab ? (SIX_TAB_PACKS[map.packId] || SIX_TAB_PACKS['real-estate']).aliases : map.catalyst ? CATALYST_ALIASES : ALIASES;
   // Catalyst's and Real Estate's Broadcasts used to be a view of Customers.
   const [aliasTab, aliasView] = (map.catalyst || map.sixTab) && requestedTab === 'customers' && requestedView === 'broadcast' ? ['broadcasts'] : aliases[requestedTab] || [];
   const tab = aliasTab || requestedTab;

@@ -93,11 +93,13 @@ const OWNER_PACKS = {
   cafe: ['Orders', 'الطلبات', 'Menu', 'القائمة', 'orders', [['drink_profit', 'Profit by drink', 'الربح حسب المشروب'], ['remake_waste', 'Milk and remake waste', 'هدر الحليب وإعادة التحضير'], ['low_ingredients', 'Ingredients running low', 'مكونات قاربت على النفاد']]],
   cakes: ['Orders', 'الطلبات', 'Products', 'المنتجات', 'orders', [['sold_baked', 'Sold versus baked', 'المباع مقارنة بالمخبوز'], ['unsold_cost', 'Unsold cost', 'تكلفة غير المباع'], ['cakes_due', 'Cakes due today', 'كيك مستحق اليوم']]],
   automotive: ['Workshop', 'الورشة', 'Parts & supplies', 'القطع والمستلزمات', 'automotive', [['approvals_waiting', 'Estimates awaiting approval', 'عروض أسعار تنتظر الموافقة'], ['past_promised', 'Vehicles past promised time', 'مركبات تجاوزت الموعد الموعود'], ['ready_for_collection', 'Ready for collection', 'جاهزة للاستلام']]],
-  fitness: ['Bookings', 'الحجوزات', 'Supplies', 'المستلزمات', 'memberships', [['active_members', 'Active members', 'أعضاء نشطون'], ['absent_members', 'Absent members', 'أعضاء غائبون'], ['renewals_due', 'Renewals due', 'تجديدات مستحقة']]],
+  // Fitness on Ascend is the six-tab Memberships workspace (ascend/fitness.md).
+  fitness: ['Memberships', 'العضويات', 'Plans', 'الخطط', 'fitness', [['active_members', 'Active members', 'أعضاء نشطون'], ['attendance_gap', 'Members with an attendance gap', 'أعضاء انقطعوا عن الحضور'], ['renewals_due', 'Renewals due', 'تجديدات مستحقة']]],
   education: ['Lessons', 'الدروس', 'Supplies', 'المستلزمات', 'lessons', [['lessons_remaining', 'Lessons remaining', 'دروس متبقية'], ['missed_lessons', 'Missed lessons', 'دروس فائتة'], ['unpaid_fees', 'Unpaid fees', 'رسوم غير مدفوعة']]],
   cleaning: ['Visits', 'الزيارات', 'Supplies', 'المستلزمات', 'jobs', [['visits_due', 'Visits due', 'زيارات مستحقة'], ['unfinished_checklists', 'Unfinished checklists', 'قوائم مهام غير مكتملة'], ['visit_profit', 'Profit per visit', 'الربح لكل زيارة']]],
   hvac: ['Jobs', 'الأعمال', 'Supplies', 'المستلزمات', 'jobs', [['services_due', 'Services due', 'صيانات مستحقة'], ['repeat_faults', 'Repeat faults', 'أعطال متكررة'], ['job_profit', 'Profit per job', 'الربح لكل عمل']]],
   construction: ['Projects', 'المشاريع', 'Procurement', 'المشتريات', 'construction', [['schedule_risk', 'Projects at schedule risk', 'مشاريع معرضة للتأخير'], ['variation_exposure', 'Submitted variation exposure', 'قيمة التغييرات المقدمة'], ['overdue_receivables', 'Overdue certified receivables', 'مستحقات معتمدة متأخرة']]],
+  media: ['Productions', 'الإنتاج', 'Resources', 'الموارد', 'media', [['cuts_awaiting', 'Cuts awaiting approval', 'نسخ تنتظر الموافقة'], ['deliveries_due', 'Deliveries due', 'تسليمات مستحقة'], ['balances_owed', 'Balances owed', 'أرصدة مستحقة']]],
   'real-estate': ['Deals', 'الصفقات', 'Properties', 'العقارات', 'property', [['enquiries_waiting', 'Enquiries awaiting reply', 'استفسارات تنتظر الرد'], ['viewings_due', 'Viewings due', 'معاينات مستحقة'], ['commission_owed', 'Commission owed', 'عمولات مستحقة']]],
 };
 const PRESENTATION = {
@@ -136,6 +138,17 @@ const PRESENTATION = {
     ['progress', 'Record progress', 'تسجيل التقدم', 'bar-chart', ['orders', { action: 'progress' }]],
     ['variation', 'Draft variation', 'مسودة تغيير', 'receipt', ['orders', { action: 'variation' }]],
     ['procurement', 'Add commitment', 'إضافة التزام شراء', 'box', ['stock', { action: 'commitment' }]],
+  ] },
+  fitness: { icon: 'dumbbell', actions: [
+    ['membership', 'Add membership', 'إضافة عضوية', 'users', ['work', { action: 'membership' }]],
+    ['class', 'Add class', 'إضافة حصة', 'calendar', ['work', { view: 'classes', action: 'class' }]],
+    ['checkin', 'Check in', 'تسجيل حضور', 'check', ['work', { view: 'classes' }]],
+    ['followups', 'Follow-ups', 'المتابعات', 'message-circle', ['work', { view: 'followups' }]],
+  ] },
+  media: { icon: 'film', actions: [
+    ['brief', 'New production brief', 'موجز إنتاج جديد', 'film', ['work', { action: 'brief' }]],
+    ['cut', 'Submit a cut', 'رفع نسخة للمراجعة', 'upload', ['work', { view: 'board' }]],
+    ['hold', 'Hold crew or equipment', 'حجز طاقم أو معدات', 'calendar', ['work', { view: 'resources' }]],
   ] },
   'real-estate': { icon: 'building-2', actions: [
     ['property', 'Add property', 'إضافة عقار', 'home', ['stock', { action: 'property' }]],
@@ -186,7 +199,7 @@ export const visibleModules = pack => Object.entries(pack.modules).filter(([, v]
 
 // Sectors ship one at a time. A pack opens Hasib only once its setup, tests and
 // acceptance evidence exist; the others stay hidden even though they are configured.
-export const HASIB_LIVE_PACKS = Object.freeze(['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive']);
+export const HASIB_LIVE_PACKS = Object.freeze(['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness']);
 export const HASIB_PREVIEW_PACKS = Object.freeze(Object.keys(OWNER_PACKS).filter(id => !HASIB_LIVE_PACKS.includes(id)));
 const labelFor = id => BUSINESS_INDUSTRIES.find(industry => industry.id === id);
 export const isLivePack = id => HASIB_LIVE_PACKS.includes(id);

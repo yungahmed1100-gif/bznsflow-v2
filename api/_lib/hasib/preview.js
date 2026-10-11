@@ -39,6 +39,19 @@ export function hasibPreviewResponse(packId, operation) {
   if (operation === 'real_estate_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, sourceConversion: [], lostReasons: [] };
   if (operation === 'real_estate_followups') return { items: [], counts: { today: 0, overdue: 0, scheduled: 0, approval: 0, blocked: 0, completed: 0 }, actionable: 0 };
   if (operation === 'real_estate_context' || operation === 'real_estate_metric_records') return { items: [] };
+  const mediaQueue = { today: 0, overdue: 0, scheduled: 0, waiting: 0, decision: 0, blocked: 0, completed: 0 };
+  if (operation === 'media_overview') return { synthetic: true, pipeline: {}, attention: { deliveryOverdue: 0, cutAwaitingApproval: 0, shootAtRisk: 0, extraScope: 0, holdsExpiring: 0, approvals: 0, briefIncomplete: 0 },
+    resources: { active: 0 }, followups: { counts: mediaQueue, actionable: 0 } };
+  if (operation === 'media_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, firstCut: { value: null, numerator: 0, denominator: 0 }, changeOrders: { proposed: 0, approved: 0, approvedMinor: 0 } };
+  if (operation === 'media_followups') return { items: [], counts: mediaQueue, actionable: 0 };
+  if (operation === 'media_calendar') return { holds: [], shoots: [] };
+  if (['media_productions', 'media_resources', 'media_context', 'media_metric_records'].includes(operation)) return { items: [] };
+  if (operation === 'fitness_overview') return { synthetic: true, members: { total: 0, active: 0, prospects: 0 }, attention: { trialFollowUp: 0, attendanceGap: 0, expiring: 0, frozen: 0, paymentsDue: 0, attendanceUnrecorded: 0, approvals: 0 },
+    classesToday: 0, plans: 0, followups: { counts: mediaQueue, actionable: 0 } };
+  if (operation === 'fitness_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, trials: { booked: 0, attended: 0, paid: 0, attendanceRate: null, attendedToPaid: null, bySource: [], costPerAttendedTrial: null } };
+  if (operation === 'fitness_followups') return { items: [], counts: mediaQueue, actionable: 0 };
+  if (operation === 'fitness_classes') return { items: [] };
+  if (['fitness_members', 'fitness_plans', 'fitness_context', 'fitness_metric_records'].includes(operation)) return { items: [] };
   if (operation === 'today') return today(packId);
   if (operation === 'clinic_overview') return { synthetic:true, governance:{status:'review_required',permitStatus:'unknown',approved:false}, activationReady:false,
     metrics:[{id:'unconfirmed_48h',value:0},{id:'missed_today',value:0},{id:'outstanding_minor',value:0}], requests:[], bookings:[], tasks:[], workspaceRole:'manager' };

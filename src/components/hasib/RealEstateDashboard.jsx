@@ -17,6 +17,8 @@ import { DealRecord } from './realestate/DealRecord.jsx';
 import { TeamView } from './realestate/TeamView.jsx';
 import { RecordForm } from './realestate/RecordForm.jsx';
 import { label } from './realestate/labels.js';
+import { AttentionStrip } from './workspace/AttentionStrip.jsx';
+import { useWorkspaceActions } from './workspace/useWorkspaceActions.jsx';
 
 const empty = { items: [] };
 const WIDE = '(min-width: 1100px)';
@@ -66,12 +68,8 @@ function NeedsAttention({ ar, summary, onGo }) {
     ['outcome', summary?.viewings?.outcomeMissing, tr('Viewings without an outcome', 'معاينات بلا نتيجة'), 'orange', { view: 'viewings' }],
     ['today', f.today, tr('Due today', 'مستحقة اليوم'), 'orange', { view: 'followups', filter: 'today' }],
     ['stale', summary?.counts?.staleListings, tr('Listings to verify', 'إعلانات تحتاج تحققاً'), 'yellow', { view: 'properties' }],
-  ].filter(([, n]) => n > 0);
-  return <section className="hb-attention" aria-label={tr('Needs attention', 'يحتاج انتباهك')}>
-    {items.length ? items.map(([id, n, text, tone, go]) => <button key={id} type="button" className="hb-attention-item" data-tone={tone} onClick={() => onGo('work', go)}>
-      <b className="ld-num">{n}</b><span>{text}</span></button>)
-      : <p className="hb-attention-clear">{tr('Nothing needs attention right now.', 'لا شيء يحتاج انتباهك الآن.')}</p>}
-  </section>;
+  ];
+  return <AttentionStrip ar={ar} items={items} onGo={onGo} />;
 }
 
 /**
@@ -83,12 +81,12 @@ export function RealEstateDashboard({ section, view, s, h, overview, timezone = 
   const manager = overview.workspaceRole === 'manager';
   const [params, setParams] = useSearchParams();
   const [form, setForm] = useState(null), [values, setValues] = useState({}), [photos, setPhotos] = useState([]), [lists, setLists] = useState(null);
-  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [confirm, setConfirm] = useState(null);
-  const [preview, setPreview] = useState(null), [changes, setChanges] = useState(0);
-  const busyRef = useRef(false), scroll = useRef(0);
+  const [preview, setPreview] = useState(null);
+  const scroll = useRef(0);
   const dealId = params.get('deal');
   const key = [section, view, params.get('metric'), params.get('period'), params.get('segment'), params.get('filter'), view === 'followups' ? dealId : ''].join('|');
   const state = usePolling(() => load(section, view, manager, params), [key, manager], { interval: 30000 });
+  const { busy, setError, perform, act, notices, changes, clear } = useWorkspaceActions({ ar, s, h, refresh: state.refresh, onChanged });
   const data = { ...(lists || {}), ...(state.data || {}) };
   const termsDays = overview.settings?.realEstate?.commissionTermsDays ?? 30;
   const agentNames = useMemo(() => new Map((data.team?.members || []).filter(m => m.accountId).map(m => [String(m.accountId), m.email])), [data.team]);
@@ -101,21 +99,8 @@ export function RealEstateDashboard({ section, view, s, h, overview, timezone = 
     window.requestAnimationFrame?.(() => document.querySelector('.hb-action-fields')?.scrollIntoView({ block: 'start' }));
   };
   const closeForm = () => { clearPhotos(); setForm(null); setValues({}); };
-  useEffect(() => { setConfirm(null); setError(''); if (ACTIONS[initialAction]) openForm(ACTIONS[initialAction]); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { clear(); if (ACTIONS[initialAction]) openForm(ACTIONS[initialAction]); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** Runs one change; refuses double-clicks, reloads, and explains any refusal in the owner's language. */
-  const perform = async (operation, body, after) => {
-    if (busyRef.current) return false;
-    busyRef.current = true; setBusy(true); setError(''); setConfirm(null);
-    try {
-      const result = await hasib(operation, body);
-      if (result?.invitationDelivery === 'failed') setError(tr('Invitation saved, but the email could not be sent. Use “Resend invitation”.', 'تم حفظ الدعوة، لكن تعذّر إرسال البريد. استخدم «إعادة إرسال الدعوة».'));
-      await state.refresh({ quiet: true }); setChanges(n => n + 1); after?.(); onChanged?.();
-      return true;
-    } catch (e) { setError(h.reason(e.reason) || s.reason(e.reason)); return false; }
-    finally { busyRef.current = false; setBusy(false); }
-  };
-  const act = (operation, body, after, question) => question ? setConfirm({ question, run: () => perform(operation, body, after) }) : perform(operation, body, after);
   const submit = async e => {
     e.preventDefault();
     const submission = buildRealEstateSubmission(form, values, { requestId: crypto.randomUUID(), propertyPhotos: photos, opportunities: data.opportunities?.items });
@@ -152,24 +137,18 @@ export function RealEstateDashboard({ section, view, s, h, overview, timezone = 
   const formPanel = form && <RecordForm form={form} values={values} setValues={setValues} ar={ar} h={h} s={s} busy={busy} data={data} manager={manager} actorAccountId={overview.teamSummary?.actorAccountId}
     photos={photos} onPickPhotos={pickPhotos} onRemovePhoto={photo => { if (photo.preview?.startsWith('blob:')) URL.revokeObjectURL(photo.preview); setPhotos(rows => rows.filter(r => r.id !== photo.id)); }}
     onSubmit={submit} onCancel={closeForm} />;
-  const notices = <>
-    {error && <p className="ld-inline-error" role="alert">{error}</p>}
-    {confirm && <div className="hb-confirm" role="alertdialog" aria-label={confirm.question}><p>{confirm.question}</p>
-      <button type="button" className="ld-button ld-primary" disabled={busy} onClick={confirm.run}>{tr('Yes, continue', 'نعم، متابعة')}</button>
-      <button type="button" className="ld-button ld-quiet" disabled={busy} onClick={() => setConfirm(null)}>{s.t('cancel')}</button></div>}
-  </>;
 
-  if (section === 'work' && dealId && view !== 'followups') return <div className="hb-real-estate">{notices}{formPanel}
+  if (section === 'work' && dealId && view !== 'followups') return <div className="hb-workspace hb-real-estate">{notices}{formPanel}
     <DealRecord dealId={dealId} ar={ar} h={h} s={s} timezone={timezone} manager={manager} busy={busy} termsDays={termsDays} version={changes} backLabel={backLabel}
       act={act} openForm={openForm} onGo={onGo} onClose={back} onFollowups={() => onGo('work', { view: 'followups', filter: 'today', deal: dealId })} /></div>;
   if (state.loading && !state.data) return <p className="ld-state" role="status">{s.t('loading')}</p>;
   if (state.error && !state.data) return <div className="ld-state" role="alert"><p>{h.reason(state.error.reason) || s.reason(state.error.reason)}</p><button type="button" className="ld-button" onClick={() => state.refresh()}>{h.t('retry')}</button></div>;
   const shared = { ar, h, s, data, busy, timezone };
 
-  if (section === 'insights') return <div className="hb-real-estate">{notices}
+  if (section === 'insights') return <div className="hb-workspace hb-real-estate">{notices}
     <InsightsView {...shared} act={act} params={params} agentNames={agentNames} onParams={patch => setParam(patch)}
       onRecords={(metric, segment) => onGo('work', metricSearch({ metric, period: params.get('period') || '30d', segment }))} /></div>;
-  if (section === 'settings') return <div className="hb-real-estate">{notices}{formPanel}
+  if (section === 'settings') return <div className="hb-workspace hb-real-estate">{notices}{formPanel}
     {view === 'team' ? <TeamView {...shared} act={act} openForm={openForm} />
       : <RulesView ar={ar} h={h} settings={overview.settings} busy={busy} onSave={body => perform('settings_update', body)} />}</div>;
 
@@ -215,5 +194,5 @@ export function RealEstateDashboard({ section, view, s, h, overview, timezone = 
       </div>
     </>;
   }
-  return <div className="hb-real-estate">{header}{strip}{tabs}{notices}{formPanel}{body}</div>;
+  return <div className="hb-workspace hb-real-estate">{header}{strip}{tabs}{notices}{formPanel}{body}</div>;
 }

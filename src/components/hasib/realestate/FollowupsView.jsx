@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { formatDateTime } from '../../../lib/dashboard/format';
 import { EmptyState, SectionHeader } from '../DashboardVisuals';
 import { label } from './labels.js';
+import { QueueFilters, SnoozeControl } from '../workspace/queue.jsx';
 
 export const FOLLOWUP_FILTERS = ['today', 'overdue', 'scheduled', 'approval', 'blocked', 'completed'];
-const SNOOZE = [['1h', 3600000, 'One hour', 'ساعة'], ['tomorrow', 86400000, 'Tomorrow', 'غداً'], ['week', 7 * 86400000, 'Next week', 'الأسبوع القادم']];
 const TONE = { overdue: 'coral', today: 'orange', approval: 'yellow', blocked: 'coral', scheduled: 'blue', completed: 'green' };
 
 /** What a row is: a rule's task, an automatic task, a message waiting for approval, or a dated follow-up. */
@@ -19,16 +19,12 @@ function title(row, ar) {
  */
 export function FollowupsView({ ar, s, timezone, data, manager, busy, filter, onFilter, act, onOpenDeal, onGo, dealFilter, onClearDeal }) {
   const tr = (en, arabic) => (ar ? arabic : en);
-  const [snoozing, setSnoozing] = useState(null);
   const queue = data.followups || { items: [], counts: {} };
   const rows = queue.items || [];
   return <>
     <SectionHeader title={tr('Follow-ups', 'المتابعات')} description={tr('Tasks the records call for, messages waiting for approval, and dated follow-ups, in one queue. Nothing is sent without the manager’s approval.', 'المهام التي تتطلبها السجلات والرسائل بانتظار الموافقة والمتابعات المؤرخة في قائمة واحدة. لا يُرسل شيء دون موافقة المدير.')} />
     {dealFilter && <p className="hb-filter-note" role="status">{tr('Showing one deal’s follow-ups.', 'تُعرض متابعات صفقة واحدة.')} <button type="button" className="ld-link" onClick={onClearDeal}>{tr('Show all', 'عرض الكل')}</button></p>}
-    <div className="ld-segmented hb-followup-filters" role="radiogroup" aria-label={tr('Show follow-ups', 'عرض المتابعات')}>
-      {FOLLOWUP_FILTERS.map(f => <label key={f} data-tone={TONE[f]}><input type="radio" name="re-followup-filter" checked={filter === f} onChange={() => onFilter(f)} />
-        <span>{label('bucket', f, ar)} <b className="ld-num">{queue.counts?.[f] ?? 0}</b></span></label>)}
-    </div>
+    <QueueFilters ar={ar} filters={FOLLOWUP_FILTERS} counts={queue.counts} filter={filter} tones={TONE} name="re-followup-filter" labelOf={f => label('bucket', f, ar)} onFilter={onFilter} />
     {rows.length ? <ul className="hb-re-tasks hb-followups">{rows.map(row => <li className="hb-panel" key={`${row.source}:${row.id}`} data-bucket={row.bucket}>
       <div>
         <b>{title(row, ar)}</b> <span className="ld-chip" data-tone={TONE[row.bucket]}>{label('bucket', row.bucket, ar)}</span>
@@ -44,9 +40,7 @@ export function FollowupsView({ ar, s, timezone, data, manager, busy, filter, on
           onClick={() => act('draft_approve', { draftId: row.id, version: row.version }, null, tr('Send this message to the customer? Outside the 24-hour window it needs an approved template.', 'إرسال هذه الرسالة إلى العميل؟ خارج نافذة ٢٤ ساعة تحتاج قالباً معتمداً.'))}>{tr('Approve and send', 'اعتماد وإرسال')}</button>}
         {row.source === 'task' && row.bucket !== 'completed' && <>
           <button type="button" className="ld-button" disabled={busy} onClick={() => act('real_estate_task_resolve', { taskId: row.id, reason: 'done' })}>{tr('Mark done', 'تم')}</button>
-          {snoozing === row.id ? <span className="hb-snooze" role="group" aria-label={tr('Snooze until', 'تأجيل حتى')}>{SNOOZE.map(([id, ms, en, arabic]) => <button key={id} type="button" className="ld-button ld-quiet" disabled={busy}
-            onClick={() => { setSnoozing(null); act('real_estate_task_snooze', { taskId: row.id, version: row.version, dueAt: Date.now() + ms }); }}>{ar ? arabic : en}</button>)}</span>
-            : <button type="button" className="ld-button ld-quiet" onClick={() => setSnoozing(row.id)}>{tr('Snooze', 'تأجيل')}</button>}
+          <SnoozeControl ar={ar} busy={busy} onSnooze={dueAt => act('real_estate_task_snooze', { taskId: row.id, version: row.version, dueAt })} />
         </>}
         {row.source === 'followup' && row.bucket !== 'completed' && <button type="button" className="ld-button" disabled={busy} onClick={() => act('followup_complete', { requestId: crypto.randomUUID(), followupId: row.id, version: row.version })}>{tr('Mark done', 'تم')}</button>}
         {row.opportunityId && <button type="button" className="ld-button ld-quiet" onClick={() => onOpenDeal(row.opportunityId)}>{tr('Open deal', 'فتح الصفقة')}</button>}

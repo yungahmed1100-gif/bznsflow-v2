@@ -19,7 +19,7 @@
 .ld-workspace > span { color: var(--ink-2); font-size: 12px; }
 .ld-nav-trigger { display: none; }
 .ld-main:not([data-tab=chats]) { padding: 24px clamp(16px, 2.5vw, 36px) 40px; }
-.ld-main > .hb-today, .ld-main > .hb-work, .ld-main > .hb-real-estate { max-inline-size: 1440px; margin-inline: auto; }
+.ld-main > .hb-today, .ld-main > .hb-work, .ld-main > .hb-workspace { max-inline-size: 1440px; margin-inline: auto; }
 .ld-button { min-block-size: 44px; font-size: 13px; }
 .ld :focus-visible, .ld-dialog :focus-visible { outline: 2px solid #2f6ea3; outline-offset: 3px; }
 .ld input, .ld select, .ld textarea { max-inline-size: 100%; }
@@ -54,7 +54,7 @@
 .hb-pipeline-stage strong, .hb-pipeline-stage span { display: block; }
 .hb-pipeline-stage strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
 .hb-figure-link { color: inherit; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 6px; }
-.hb-construction, .hb-automotive, .hb-real-estate { display: grid; gap: 20px; }
+.hb-construction, .hb-automotive, .hb-workspace { display: grid; gap: 20px; }
 .hb-construction-form input, .hb-construction-form select, .hb-automotive-form input, .hb-automotive-form select, .hb-automotive-form textarea { border-radius: var(--radius); border-color: var(--rule-strong); }
 .hb-today-date { font-size: 13px; font-weight: 400; }
 .ld-handoff-tabs { display: flex; gap: 4px; margin-block: 12px; }

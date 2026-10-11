@@ -21,8 +21,9 @@ export async function seedTenant(m, { name = 'a', sector = 'Real estate', phone 
   return { accountId, sessionHash, integration, rowId };
 }
 
-export function blueHarness() {
-  const m = convexMemory();
+/** @param {{ start?: number }} [options] the fake clock's start (ms) */
+export function blueHarness(options = {}) {
+  const m = convexMemory(options);
   const withSecret = args => ({ hashSecret: SECRET, workerFunction: 'dispatch', ...args });
   const messaging = (operation, args = {}) => executeMessaging(m.ctx, withSecret({ operation, ...args }), m.now());
   const dashboard = (operation, args = {}) => executeDashboard(m.ctx, withSecret({ operation, ...args }), m.now());

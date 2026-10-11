@@ -248,7 +248,7 @@
 .hb-work .hb-panel { margin-block: 1rem; overflow-wrap: anywhere; }
 .hb-work .ld-actions { flex-wrap: wrap; }
 .hb-work h2 { font-size: 1.1rem; }
-.hb-real-estate { display: grid; gap: 1rem; }
+.hb-workspace { display: grid; gap: 1rem; }
 .hb-clinic { display: grid; gap: 1rem; }
 .hb-governance-warning { margin: 0; padding: 12px 14px; border-inline-start: 5px solid var(--coral); background: var(--card); border-radius: var(--radius); }
 .hb-clinic-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -257,7 +257,7 @@
 .hb-clinic-governance div { padding: 12px; background: var(--card); }
 .hb-clinic-governance dt { color: var(--ink-2); font-size: 12px; font-weight: 700; }
 .hb-clinic-governance dd { margin: 4px 0 0; font-weight: 700; overflow-wrap: anywhere; }
-.hb-real-estate .ld-actions { flex-wrap: wrap; }
+.hb-workspace .ld-actions { flex-wrap: wrap; }
 .hb-real-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; align-items: start; }
 .hb-real-grid > section { min-inline-size: 0; }
 .hb-property-photo { inline-size: min(100%, 240px); block-size: 160px; object-fit: cover; border-radius: var(--radius); margin: 0 .5rem .5rem 0; }
@@ -330,7 +330,7 @@ button.hb-visual-metric:hover, button.hb-visual-metric:focus-visible { border-co
   .hb-work .ld-button { white-space: normal; min-block-size: 44px; }
   .hb-real-grid { grid-template-columns: minmax(0, 1fr); }
   .hb-clinic-governance { grid-template-columns: 1fr; }
-  .hb-real-estate .ld-page-head { align-items: stretch; flex-direction: column; }
+  .hb-workspace .ld-page-head { align-items: stretch; flex-direction: column; }
 }
 .hb-construction-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-block:1rem}.hb-construction-form h2,.hb-construction-form button{grid-column:1/-1}.hb-construction-form label{display:grid;gap:.4rem;font-weight:650}.hb-construction-form input,.hb-construction-form select{min-block-size:44px;border:1px solid var(--line,#d7dce2);border-radius:.65rem;padding:.65rem;background:var(--surface,#fff);color:inherit}.hb-construction-projects{display:grid;gap:1rem;margin-block:1rem}.hb-construction-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.hb-construction-heading h2{margin:0}.hb-construction-heading p{margin:.25rem 0 0;color:var(--muted,#667085)}
 .hb-automotive-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-block:1rem}.hb-automotive-form h2,.hb-automotive-form .ld-actions,.hb-automotive-form>button{grid-column:1/-1}.hb-automotive-form label{display:grid;gap:.4rem;font-weight:650}.hb-automotive-form input,.hb-automotive-form select,.hb-automotive-form textarea{min-block-size:44px;border:1px solid var(--line,#d7dce2);border-radius:.65rem;padding:.65rem;background:var(--surface,#fff);color:inherit}.hb-work-orders{display:grid;gap:.75rem;list-style:none;padding:0;margin:0}.hb-work-order{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem;border:1px solid var(--rule);border-radius:12px}.hb-work-order p{margin:.35rem 0}.hb-health-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;border-block-end:1px solid var(--rule);padding-block:.6rem}.hb-health-row span{text-align:end;color:var(--ink-muted)}
@@ -348,7 +348,7 @@ button.hb-visual-metric:hover, button.hb-visual-metric:focus-visible { border-co
 .hb-need-list .hb-link { background: none; border: 0; padding: 0; font: inherit; color: var(--blue); text-decoration: underline; cursor: pointer; min-block-size: 24px; }
 
 /* Real Estate: deal detail, lists, compliance and tasks (src/components/hasib/realestate/) */
-.hb-real-estate { display: grid; gap: 16px; }
+.hb-workspace { display: grid; gap: 16px; }
 .hb-deal-detail { display: grid; gap: 12px; }
 .hb-deal-detail h3 { margin: 12px 0 0; padding-block-start: 12px; border-block-start: 1px solid var(--rule); font-size: 1.05rem; }
 .hb-deal-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px 16px; margin: 0; }
@@ -367,7 +367,7 @@ button.hb-visual-metric:hover, button.hb-visual-metric:focus-visible { border-co
 .hb-re-tasks li p { margin: 4px 0 0; color: var(--ink-2); }
 .hb-re-history { color: var(--ink-2); font-size: .92rem; }
 .hb-warn { color: var(--coral); font-weight: 600; }
-.hb-real-estate .hb-confirm { position: sticky; inset-block-start: 8px; z-index: 2; }
+.hb-workspace .hb-confirm { position: sticky; inset-block-start: 8px; z-index: 2; }
 
 /* ============================================================
    Ledger and colour pass (2026-10-10): square corners, hard shadows, no

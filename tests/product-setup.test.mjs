@@ -42,7 +42,7 @@ test('duplicate submission does not repeat audit, changed payload and stale writ
 });
 test('invalid draft and unreleased sector cannot partially write settings', async () => {
   const f = await fixture(); assert.equal((await f.save({ draftHash: 'bad' })).reason, 'invalid_state'); assert.equal(f.m.table('hasibSettings').length, 0);
-  assert.equal((await f.save({ packId: 'fitness' })).reason, 'pack_not_live'); assert.equal(f.m.table('productSetupProgress').length, 0);
+  assert.equal((await f.save({ packId: 'beauty' })).reason, 'pack_not_live'); assert.equal(f.m.table('productSetupProgress').length, 0);
 });
 test('session identity cannot read foreign progress and revoked grants are immediate', async () => {
   const f = await fixture(); await f.save(); const other = await f.m.db.insert('accounts', { email: 'other@example.com' });

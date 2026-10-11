@@ -7,6 +7,8 @@ import { recordDemand } from './hasib/demandState.js';
 import { recordUndeliverable } from './blueAudienceState.js';
 import { commerceTurn } from './hasib/laylaOrders.js';
 import { realEstateTurn } from './hasib/realEstateTurn.js';
+import { mediaTurn } from './hasib/mediaTurn.js';
+import { fitnessTurn } from './hasib/fitnessTurn.js';
 import { phrase, langOf } from '../config/layla-tones.js';
 import { byteLength } from '../api/_lib/layla/reply-guard.js';
 import { INSTAGRAM_MAX_BYTES, conversationHistory, runawayChat } from './laylaReply.js';
@@ -75,6 +77,8 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     await ctx.db.patch(target._id,{status:e.status,providerId:e.id,updatedAt:now,...(e.status==='failed'&&Number.isSafeInteger(e.errorCode)?{errorCode:e.errorCode,reason:'provider_delivery_failed'}:{})});
     if(e.status==='failed') await recordUndeliverable(ctx,target,e.errorCode,now);
     if(target.realEstateDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.realEstateDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
+    if(target.mediaDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.mediaDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
+    if(target.fitnessDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.fitnessDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
   }
   async function rowForInstagram(integrationId) {
     const connection=await find('blueInstagramConnections','by_integration','integrationId',integrationId);
@@ -267,6 +271,8 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
           await ctx.db.patch(target._id,{status:e.status,providerId:e.id,...(e.status==='failed'&&Number.isSafeInteger(e.errorCode)?{errorCode:e.errorCode}:{})});
           if(target.realEstateOpportunityId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.realEstateOpportunityId,{deliveredAt:now,updatedAt:now});
           if(target.realEstateDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.realEstateDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
+          if(target.mediaDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.mediaDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
+          if(target.fitnessDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.fitnessDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
         }
         continue;
       }
@@ -319,6 +325,10 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         catch(err) { console.error('hasib_order_failed',err?.message); }
         try { realEstate=await realEstateTurn(ctx,{row,person,contact:applied.contact,text:e.text,now,secret:a.hashSecret}); }
         catch(err) { console.error('real_estate_turn_failed',err?.message); }
+        try { await mediaTurn(ctx,{row,person,contact:applied.contact,now,secret:a.hashSecret}); }
+        catch(err) { console.error('media_turn_failed',err?.message); }
+        try { await fitnessTurn(ctx,{row,contact:applied.contact,now,secret:a.hashSecret}); }
+        catch(err) { console.error('fitness_turn_failed',err?.message); }
       }
       if(e.intent==='optout') await stopQueued(a.integrationId,person._id,'contact_opted_out');
       const version=(person.version || 0)+(e.intent==='optout'?1:0);
@@ -453,6 +463,8 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       }
     }
     if(job.realEstateDraftId) await ctx.db.patch(job.realEstateDraftId,{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
+    if(job.mediaDraftId) await ctx.db.patch(job.mediaDraftId,{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
+    if(job.fitnessDraftId) await ctx.db.patch(job.fitnessDraftId,{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
     // One customer's problem (window closed, account gone, Meta throttling) is that chat's, never
     // the whole business's: the team sees the chat, and Layla keeps answering everyone else.
     if(a.status==='failed' && RECIPIENT_FAILURES.has(a.reason)) {

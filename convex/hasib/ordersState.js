@@ -335,6 +335,9 @@ export async function executeOrders(ctx, tenant, a, now) {
     // Only createRepair (server code) can make a repair order, always together with its ticket.
     const linked = await owned(ctx, a.orderId, accountId, 'hasibOrders');
     if (linked?.kind === 'repair') return fail('use_repair_status');
+    // A production's order moves only with the production (deposit, booking and handoff guards).
+    if (linked?.kind === 'media_production' || linked?.kind === 'media_change') return fail('use_production_status');
+    if (linked?.kind === 'fitness_membership') return fail('use_membership_status');
     return changeStatus(ctx, accountId, a, now, tenant.pack.modules.recipes === 'available', tenant.pack.modules.shelfLife === 'available');
   }
   if (a.operation === 'orders') return listOrders(ctx, accountId, a);

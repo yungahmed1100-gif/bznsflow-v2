@@ -7,8 +7,9 @@ import { audit } from './workspaceState.js';
 import { businessTimezone } from './expensesState.js';
 import { periodRange } from './period.js';
 import { OPEN_STAGES, canSeeDeal, publicRow, readable } from './realEstateBoard.js';
+import { dueBucket, sortQueue, validSnooze } from './workspace/queue.js';
 
-const SCAN = 500, DONE_SCAN = 50, MAX_SNOOZE_MS = 30 * 86400000;
+const SCAN = 500, DONE_SCAN = 50;
 export const FOLLOWUP_FILTERS = ['today', 'overdue', 'scheduled', 'approval', 'blocked', 'completed'];
 const BLOCKED_TASKS = new Set(['template_required', 'send_failed']);
 const DRAFT_BUCKET = {
@@ -17,8 +18,7 @@ const DRAFT_BUCKET = {
 };
 const ENTITY_TABLE = { opportunity: 'realEstateOpportunities', viewing: 'realEstateViewings', offer: 'realEstateOffers', draft: 'realEstateDrafts' };
 
-/** Where an open item sits: today, overdue (before today), or scheduled (later). */
-export const dueBucket = (dueAt, now, today) => dueAt > now ? 'scheduled' : dueAt < today.from ? 'overdue' : 'today';
+export { dueBucket };
 
 /** The deal a task, draft or follow-up belongs to, through its record. */
 async function dealOf(ctx, accountId, entityType, entityId, cache) {
@@ -90,7 +90,7 @@ export async function followupQueue(ctx, tenant, actor, a, now) {
   const { rows, cache } = await queueRows(ctx, tenant, actor, now);
   const counts = Object.fromEntries(FOLLOWUP_FILTERS.map(f => [f, rows.filter(r => r.bucket === f).length]));
   const chosen = rows.filter(r => (!filter || r.bucket === filter) && (!a.opportunityId || String(r.opportunityId) === String(a.opportunityId)));
-  chosen.sort((x, y) => ORDER[x.bucket] - ORDER[y.bucket] || (x.bucket === 'completed' ? y.dueAt - x.dueAt : x.dueAt - y.dueAt));
+  sortQueue(chosen, ORDER);
   return ok({ items: await describe(ctx, tenant.accountId, chosen.slice(0, 200), cache), counts, actionable: counts.today + counts.overdue + counts.approval + counts.blocked });
 }
 
@@ -101,7 +101,7 @@ export async function snoozeTask(ctx, tenant, actor, a, now) {
   const deal = await dealOf(ctx, tenant.accountId, task.entityType, task.entityId, new Map());
   if (task.entityType !== 'property' && (!deal || !canSeeDeal(actor, deal))) return fail('task_not_found');
   if (a.version !== task.updatedAt) return fail('task_conflict');
-  if (!Number.isSafeInteger(a.dueAt) || a.dueAt <= now || a.dueAt > now + MAX_SNOOZE_MS) return fail('invalid_snooze');
+  if (!validSnooze(a.dueAt, now)) return fail('invalid_snooze');
   await ctx.db.patch(task._id, { snoozedUntil: a.dueAt, updatedAt: now });
   await audit(ctx, tenant, actor, 'task_snoozed', 'task', task._id, now, String(a.dueAt));
   return ok(publicRow(await ctx.db.get(task._id)));

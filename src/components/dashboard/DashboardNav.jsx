@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { hasibPack, livePackSummaries } from '../../../config/hasib-packs';
+import { hasibPack, livePackSummaries, industryCatalog } from '../../../config/hasib-packs';
 import { Dialog } from './Dialog';
 import { dashboardSearch } from '../../lib/dashboard/navigation';
 
@@ -24,7 +24,8 @@ const HASIB_LABELS = new Set(['orders', 'stock', 'service']);
 export function DashboardNav({ s, h, sections, tab, onSelect, badges = {}, packId, business, preview, search = '' }) {
   const [open, setOpen] = useState(false);
   const pack = hasibPack(packId);
-  const sector = livePackSummaries().find(item => item.id === packId);
+  // A preview pack (Media in the local demo) names its sector too; it never reads "Catalyst" on Ascend.
+  const sector = livePackSummaries().find(item => item.id === packId) || industryCatalog().find(item => item.id === packId && item.built);
   const label = id => id === 'team' ? (s.ar ? 'الفريق' : 'Team') : packId && ['orders', 'stock', 'work'].includes(id) ? pack.ownerUi[id === 'stock' ? 'stock' : 'work'][s.ar ? 'ar' : 'en'] : (HASIB_LABELS.has(id) ? h.t(id) : s.t(id));
   // Deals counts follow-ups that need someone now; Orders counts what Layla is waiting on.
   const badgeLabel = id => id === 'work' ? (s.ar ? 'متابعات تحتاج إجراء' : 'Follow-ups needing action') : h.t('laylaWaitingTile');

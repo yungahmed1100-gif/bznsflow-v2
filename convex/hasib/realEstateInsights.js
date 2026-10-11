@@ -7,6 +7,7 @@ import { businessTimezone } from './expensesState.js';
 import { periodRange, PERIODS } from './period.js';
 import { DAY, OPEN_STAGES, insights as legacyInsights, readable } from './realEstateBoard.js';
 import { realEstateSettings } from './realEstateSettings.js';
+import { rate, quantile, noteCounts } from './workspace/metrics.js';
 
 const SCAN = 2000, EVENT_SCAN = 6000, WEEKS = 8, WEEK = 7 * DAY, MIN = 60000, HOUR = 3600000;
 const QUALIFIED_STAGES = new Set(['qualified', 'viewing', 'offer', 'won']);
@@ -17,12 +18,6 @@ export const DIAGNOSTIC = ['qualified_to_close', 'time_to_viewing', 'listing_fre
 export const SEGMENTS = ['need', 'property_type', 'source', 'agent'];
 const SEGMENTED = new Set(['qualified_to_viewing', 'viewing_attendance', 'unanswered_qualified', 'commission_overdue', 'qualified_to_close', 'time_to_viewing', 'offer_backlog']);
 
-const rate = (n, d) => d ? Math.round(n * 1000 / d) / 10 : null;
-const quantile = (values, q) => {
-  if (!values.length) return null;
-  const sorted = [...values].sort((x, y) => x - y), i = (sorted.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i);
-  return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo);
-};
 export const segmentOf = (dimension, o) => !o ? 'unknown'
   : dimension === 'need' ? (o.need === 'rent' ? 'rent' : 'sale')
   : dimension === 'property_type' ? (o.propertyTypes?.[0] || 'unknown')
@@ -125,7 +120,7 @@ const AS_OF_NOW = new Set(['unanswered_qualified', 'commission_overdue', 'listin
 /** One metric's value from its population. */
 function summarize(id, rows) {
   const counted = rows.filter(r => r.counts), hits = counted.filter(r => r.inNumerator);
-  const notes = rows.reduce((acc, r) => r.note ? { ...acc, [r.note]: (acc[r.note] || 0) + 1 } : acc, {});
+  const notes = noteCounts(rows);
   if (KIND[id] === 'rate') return { value: rate(hits.length, counted.length), numerator: hits.length, denominator: counted.length, notes };
   if (KIND[id] === 'money') return { value: hits.reduce((sum, r) => sum + r.amountMinor, 0), numerator: hits.length, denominator: counted.length, notes,
     totalOwedMinor: rows.reduce((sum, r) => sum + r.amountMinor, 0) };

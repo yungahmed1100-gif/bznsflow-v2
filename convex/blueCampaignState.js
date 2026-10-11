@@ -255,6 +255,8 @@ export async function executeCampaignWorker(ctx, a, now = Date.now()) {
       }
     } else if (a.providerId && !job.providerId) await ctx.db.patch(job._id, { providerId: a.providerId, updatedAt: now });
     if (job.realEstateDraftId) await ctx.db.patch(job.realEstateDraftId, { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
+    if (job.mediaDraftId) await ctx.db.patch(job.mediaDraftId, { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
+    if (job.fitnessDraftId) await ctx.db.patch(job.fitnessDraftId, { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
     if (campaign && typeof a.campaignBlock === 'string' && campaign.status === 'processing') await blockCampaign(ctx, campaign, a.campaignBlock.slice(0, 60), now);
     else if (campaign) await nextQueued(ctx, a, campaign._id, now);
     if (campaign) await finishIfDone(ctx, await ctx.db.get(campaign._id), now);

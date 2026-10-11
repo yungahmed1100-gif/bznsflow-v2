@@ -10,6 +10,7 @@ import { DAY, OPEN_STAGES, publicRow, canSeeDeal, visibleOpportunity, readable, 
 import { realEstateInsights, metricRecords } from './realEstateInsights.js';
 import { followupQueue, snoozeTask, dealContext, commissionRows } from './realEstateFollowups.js';
 import { realEstateSettings } from './realEstateSettings.js';
+import { sendApprovedDraft } from './workspace/drafts.js';
 
 const STAGES = [...OPEN_STAGES, 'won', 'lost'];
 const NEEDS = ['buy', 'rent', 'sell', 'invest'];
@@ -307,45 +308,15 @@ async function draftSave(ctx, tenant, actor, a, now) {
   return ok(await one(ctx, tenant.accountId, await ctx.db.get(id)));
 }
 
-/** Sends an approved follow-up: free text inside WhatsApp's 24-hour window, an approved utility template outside it. */
+/** Sends an approved follow-up through the shared send path (window, template and opt-out checks). */
 async function approveDraft(ctx, tenant, actor, a, now) {
   const row = await owned(ctx, a.draftId, tenant.accountId, 'realEstateDrafts');
   if (!row) return fail('draft_not_found');
   if (row.status !== 'draft' || row.version !== a.version) return fail(row.version !== a.version ? 'draft_conflict' : 'invalid_draft_transition');
-  const conversation = row.conversationId ? await owned(ctx, row.conversationId, tenant.accountId, 'blueConversations') : null;
   const opportunity = await owned(ctx, row.opportunityId, tenant.accountId, 'realEstateOpportunities');
-  const windowOpen = !!conversation?.lastInbound && conversation.lastInbound + DAY > now;
-  let status = 'template_required';
-  if (conversation?.optout) status = 'blocked';
-  else if (windowOpen && tenant.row?.integration?.id === conversation.integrationId) {
-    const pending = await ctx.db.query('blueMessages').withIndex('by_integration_status', q => q.eq('integrationId', conversation.integrationId).eq('status', 'queued')).take(100);
-    for (const job of pending) if (job.conversationId === conversation._id) await ctx.db.patch(job._id, { status: 'blocked', reason: 'manager_approved_follow_up' });
-    const version = (conversation.version || 0) + 1;
-    await ctx.db.patch(conversation._id, { takeover: true, handoffState: 'handling', handoffReason: conversation.handoffReason || 'opportunity_review', handoffOpenedAt: conversation.handoffOpenedAt || now, version, updatedAt: now });
-    const messageId = await ctx.db.insert('blueMessages', { key: `real-estate-draft:${row._id}`, integrationId: conversation.integrationId, accountId: tenant.accountId,
-      conversationId: conversation._id, conversationVersion: version, profileVersion: tenant.row.profileVersion || 1, realEstateOpportunityId: row.opportunityId,
-      realEstateDraftId: row._id, direction: 'out', text: row.text, at: now, expiresAt: now + 30 * DAY, textExpiresAt: now + 30 * DAY,
-      status: pending.length >= 100 ? 'blocked' : 'queued', manual: true, handoff: false, ...(pending.length >= 100 ? { reason: 'queue_limit' } : {}) });
-    if (pending.length < 100 && tenant.workerFunction) await ctx.scheduler.runAfter(0, tenant.workerFunction, { jobId: messageId });
-    status = pending.length >= 100 ? 'blocked' : 'queued';
-  } else if (row.templateId && conversation && opportunity) {
-    const template = await ctx.db.query('blueTemplates').withIndex('by_account_template', q => q.eq('accountId', tenant.accountId).eq('templateId', row.templateId)).unique();
-    const contact = await owned(ctx, opportunity.contactId, tenant.accountId, 'blueContacts');
-    if (template?.integrationId === conversation.integrationId && template.status === 'APPROVED' && template.category === 'UTILITY' && template.sendable && template.variables.length === 0
-      && contact?.state === 'active' && !contact.optout && contact.waId && contact.numberHash && tenant.row?.integration?.id === conversation.integrationId) {
-      const campaignId = await ctx.db.insert('blueCampaigns', { accountId: tenant.accountId, integrationId: conversation.integrationId, requestId: `real-estate-draft:${row._id}`,
-        name: template.name, origin: 'chat', template: { templateId: template.templateId, name: template.name, language: template.language, category: template.category,
-          parameterFormat: template.parameterFormat, body: template.body, ...(template.header ? { header: template.header } : {}), ...(template.footer ? { footer: template.footer } : {}) },
-        mapping: [], status: 'processing', scheduledAt: now, timezone: 'Asia/Muscat', recipientCount: 1, createdAt: now, updatedAt: now, startedAt: now });
-      const recipientId = await ctx.db.insert('blueCampaignRecipients', { campaignId, accountId: tenant.accountId, integrationId: conversation.integrationId,
-        contactId: contact._id, realEstateDraftId: row._id, numberHash: contact.numberHash, waId: contact.waId, name: contact.ownerName || contact.profileName || '', parameters: [],
-        status: 'queued', attempts: 0, nextAttemptAt: now, at: now, updatedAt: now, expiresAt: now + 30 * DAY });
-      if (tenant.workerFunction) await ctx.scheduler.runAfter(0, tenant.workerFunction, { campaignJobId: recipientId });
-      status = 'queued_template';
-    }
-  }
+  const status = await sendApprovedDraft(ctx, tenant, { draft: row, keyPrefix: 'real-estate-draft', handoffReason: 'opportunity_review', taskTable: 'realEstateTasks',
+    messageLinks: { realEstateOpportunityId: row.opportunityId, realEstateDraftId: row._id }, recipientLinks: { realEstateDraftId: row._id }, contactId: opportunity?.contactId || null }, now);
   await ctx.db.patch(row._id, { status, approvedBy: actor.actorAccountId, approvedAt: now, version: row.version + 1, updatedAt: now });
-  if (status === 'template_required') await ctx.db.insert('realEstateTasks', { accountId: tenant.accountId, kind: 'template_required', entityType: 'draft', entityId: String(row._id), status: 'open', reason: 'An approved utility template is needed outside the WhatsApp 24-hour window', createdAt: now, updatedAt: now });
   await audit(ctx, tenant, actor, 'draft_approved', 'draft', row._id, now, status);
   return ok(await one(ctx, tenant.accountId, await ctx.db.get(row._id)));
 }

@@ -1,4 +1,4 @@
-import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
+import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
 // Per-action argument allow-lists for the Hasib API. Unknown keys are dropped,
 // strings are length-bounded, numbers must already be integers (money is sent
 // in minor units and never coerced from a string). Convex re-validates all of it.
@@ -157,6 +157,60 @@ const automotiveWorkflow = w => w && typeof w === 'object' ? compact({
 }) : undefined;
 const automotiveShape = b => ({requestId:uuid(b.requestId),version:int(b.version),cursor:str(b.cursor,2048),limit:int(b.limit),status:str(b.status,40),reason:str(b.reason,50),vehicleId:id(b.vehicleId),bayId:id(b.bayId),serviceId:id(b.serviceId),appointmentRequestId:id(b.appointmentRequestId),appointmentId:id(b.appointmentId),workOrderId:id(b.workOrderId),estimateId:id(b.estimateId),laborEntryId:id(b.laborEntryId),partAllocationId:id(b.partAllocationId),assignedAccountId:id(b.assignedAccountId),firstResponseSubmittedAt:int(b.firstResponseSubmittedAt),evidenceSource:str(b.evidenceSource,30),approvedBy:str(b.approvedBy,100),rating:int(b.rating),experienceReason:str(b.experienceReason,40),workflow:automotiveWorkflow(b.workflow)});
 for(const operation of AUTOMOTIVE_OPERATIONS){SHAPES[operation]=automotiveShape;if(['automotive_vehicle_save','automotive_bay_save','automotive_service_save','automotive_request_save','automotive_request_status','automotive_appointment_save','automotive_appointment_status','automotive_work_order_save','automotive_work_order_status','automotive_inspection_save','automotive_estimate_save','automotive_estimate_status','automotive_approval_record','automotive_labor_start','automotive_labor_stop','automotive_part_save','automotive_part_status','automotive_quality_save','automotive_experience_save'].includes(operation))NEEDS_REQUEST.add(operation);}
+
+// Media & production: one typed payload. Free text keeps the length Convex stores.
+const mediaDeliverable = d => d && typeof d === 'object' ? compact({ format: str(d.format, 20) || '', aspectRatio: str(d.aspectRatio, 12), durationSeconds: int(d.durationSeconds), quantity: int(d.quantity) ?? 0, language: str(d.language, 20) }) : undefined;
+const flag = v => typeof v === 'boolean' ? v : undefined;
+const mediaPayload = m => m && typeof m === 'object' ? compact({
+  title: str(m.title, 120), productionType: str(m.productionType, 30), purpose: str(m.purpose, 240), budgetMinor: int(m.budgetMinor), dateNeeded: str(m.dateNeeded, 80),
+  deliverables: list(m.deliverables, 20, mediaDeliverable), shootStartsAt: int(m.shootStartsAt), shootEndsAt: int(m.shootEndsAt), location: str(m.location, 160),
+  deliveryDueAt: int(m.deliveryDueAt), firstCutDueAt: int(m.firstCutDueAt), producerId: typeof m.producerId === 'string' && m.producerId === '' ? '' : id(m.producerId), revisionAllowance: int(m.revisionAllowance),
+  usageRights: m.usageRights && typeof m.usageRights === 'object' ? compact({ territory: str(m.usageRights.territory, 80), channels: list(m.usageRights.channels, 6, c => str(c, 20) || ''), termEndsAt: int(m.usageRights.termEndsAt), clearance: str(m.usageRights.clearance, 20) }) : undefined,
+  nextAction: str(m.nextAction, 200), contactId: id(m.contactId), conversationId: id(m.conversationId), source: str(m.source, 40),
+  quoteMinor: int(m.quoteMinor), depositMinor: int(m.depositMinor), quoteVersion: int(m.quoteVersion), acceptedBy: str(m.acceptedBy, 120), evidenceSource: str(m.evidenceSource, 40),
+  key: str(m.key, 40), verified: flag(m.verified), note: str(m.note, 200), mediaReceived: flag(m.mediaReceived),
+  label: str(m.label, 40), assetRef: str(m.assetRef, 500), approverName: str(m.approverName, 120), decisionDueAt: int(m.decisionDueAt), decision: str(m.decision, 30), feedback: str(m.feedback, 2000),
+  kind: str(m.kind, 30), description: str(m.description, 500), priceMinor: int(m.priceMinor), deliverable: mediaDeliverable(m.deliverable), customerApproval: str(m.customerApproval, 120),
+  name: str(m.name, 80), category: str(m.category, 30), active: flag(m.active), internalRateMinor: int(m.internalRateMinor), startsAt: int(m.startsAt), endsAt: int(m.endsAt),
+  amountMinor: int(m.amountMinor), hours: int(m.hours), expenseId: id(m.expenseId), changeOrderId: id(m.changeOrderId), extraScope: flag(m.extraScope), costKind: str(m.costKind, 20), incurredAt: int(m.incurredAt),
+  link: str(m.link, 500), final: flag(m.final), text: str(m.text, 4000), templateId: str(m.templateId, 80),
+}) : undefined;
+const mediaShape = b => ({ requestId: uuid(b.requestId), version: int(b.version), productionId: id(b.productionId), cutId: id(b.cutId), changeOrderId: id(b.changeOrderId), mediaResourceId: id(b.mediaResourceId),
+  reservationId: id(b.reservationId), costId: id(b.costId), draftId: id(b.draftId), taskId: id(b.taskId), contactId: id(b.contactId), conversationId: id(b.conversationId),
+  status: str(b.status, 30), reason: str(b.reason, 200), amountMinor: int(b.amountMinor), method: str(b.method, 20), reference: str(b.reference, 80), dueAt: int(b.dueAt),
+  fromAt: int(b.fromAt), toAt: int(b.toAt), metric: str(b.metric, 40), segment: str(b.segment, 80), period: str(b.period, 12), filter: str(b.filter, 20), media: mediaPayload(b.media) });
+const MEDIA_REQUEST = { media_production_save: 'productionId', media_cut_submit: null, media_change_order_save: null, media_reservation_save: null, media_cost_save: null, media_payment_record: null, media_resource_save: 'mediaResourceId', media_draft_save: 'draftId' };
+for (const operation of MEDIA_OPERATIONS) {
+  SHAPES[operation] = mediaShape;
+  if (operation in MEDIA_REQUEST) { NEEDS_REQUEST.add(operation); if (MEDIA_REQUEST[operation]) UPDATED_BY[operation] = MEDIA_REQUEST[operation]; }
+}
+// Media's windows and follow-up rules arrive as `mediaSettings` on settings_update.
+const MEDIA_SETTING_KEYS = ['quoteWindowDays', 'revisionWindowDays', 'prepCutoffHours', 'reviewResponseHours', 'revisionAllowance', 'depositPercent', 'extraRoundPriceMinor', 'resourceHoursPerDay', 'holdHours'];
+const settingsShape = SHAPES.settings_update;
+SHAPES.settings_update = b => ({ ...settingsShape(b), mediaSettings: b.mediaSettings && typeof b.mediaSettings === 'object' ? compact({ ...Object.fromEntries(MEDIA_SETTING_KEYS.map(k => [k, int(b.mediaSettings[k])])),
+  rules: list(b.mediaSettings.rules, 3, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) }) : undefined });
+
+// Fitness: one typed payload; ids are checked as ids and Convex re-checks every value.
+const fitnessPayload = f => f && typeof f === 'object' ? compact({
+  name: str(f.name, 80), kind: str(f.kind, 20), termDays: int(f.termDays), billingMonths: int(f.billingMonths), priceMinor: int(f.priceMinor), credits: int(f.credits),
+  freezeMaxDays: int(f.freezeMaxDays), graceDays: int(f.graceDays), active: flag(f.active),
+  title: str(f.title, 80), classType: str(f.classType, 40), startsAt: int(f.startsAt), endsAt: int(f.endsAt), capacity: int(f.capacity), coachId: typeof f.coachId === 'string' && f.coachId === '' ? '' : id(f.coachId), coachName: str(f.coachName, 80), cancel: flag(f.cancel),
+  trial: flag(f.trial), source: str(f.source, 40), sourceEventId: str(f.sourceEventId, 80), assignedAccountId: id(f.assignedAccountId),
+  days: int(f.days), end: flag(f.end), text: str(f.text, 4000), templateId: str(f.templateId, 80),
+}) : undefined;
+const fitnessShape = b => ({ requestId: uuid(b.requestId), version: int(b.version), planId: id(b.planId), classId: id(b.classId), seatId: id(b.seatId), membershipId: id(b.membershipId),
+  contactId: id(b.contactId), conversationId: id(b.conversationId), draftId: id(b.draftId), taskId: id(b.taskId), status: str(b.status, 30), reason: str(b.reason, 200),
+  amountMinor: int(b.amountMinor), method: str(b.method, 20), reference: str(b.reference, 80), dueAt: int(b.dueAt), fromAt: int(b.fromAt), toAt: int(b.toAt),
+  metric: str(b.metric, 40), segment: str(b.segment, 80), period: str(b.period, 12), filter: str(b.filter, 20), fitness: fitnessPayload(b.fitness) });
+const FITNESS_REQUEST = { fitness_plan_save: 'planId', fitness_class_save: 'classId', fitness_seat_book: null, fitness_membership_save: null, fitness_payment_record: null, fitness_renew: null };
+for (const operation of FITNESS_OPERATIONS) {
+  SHAPES[operation] = fitnessShape;
+  if (operation in FITNESS_REQUEST) { NEEDS_REQUEST.add(operation); if (FITNESS_REQUEST[operation]) UPDATED_BY[operation] = FITNESS_REQUEST[operation]; }
+}
+const FITNESS_SETTING_KEYS = ['conversionWindowDays', 'gapDays', 'minObservationDays', 'renewalNoticeDays'];
+const mediaSettingsShape = SHAPES.settings_update;
+SHAPES.settings_update = b => ({ ...mediaSettingsShape(b), fitnessSettings: b.fitnessSettings && typeof b.fitnessSettings === 'object' ? compact({ ...Object.fromEntries(FITNESS_SETTING_KEYS.map(k => [k, int(b.fitnessSettings[k])])),
+  rules: list(b.fitnessSettings.rules, 3, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) }) : undefined });
 
 export const HASIB_ACTIONS = Object.keys(SHAPES);
 

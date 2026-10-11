@@ -34,12 +34,17 @@ import { AccountsSettings } from '../components/hasib/AccountsSettings';
 import { browserTimezone } from '../lib/dashboard/format';
 import { createStrings } from '../lib/dashboard/strings';
 import { RealEstateDashboard } from '../components/hasib/RealEstateDashboard';
+import { MediaDashboard } from '../components/hasib/MediaDashboard';
+import { FitnessDashboard } from '../components/hasib/FitnessDashboard';
 import { ClinicDashboard } from '../components/hasib/ClinicDashboard';
 import { ConstructionDashboard } from '../components/hasib/ConstructionDashboard';
 import { AutomotiveDashboard } from '../components/hasib/AutomotiveDashboard';
 import '../styles/layla-dashboard.css';
 import '../styles/hasib.css';
+import '../styles/workspace.css';
 import '../styles/real-estate.css';
+import '../styles/media.css';
+import '../styles/fitness.css';
 import '../styles/product.css';
 
 export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
@@ -119,6 +124,10 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                 : hasibOverview?.pack?.id === 'clinic' && ['today','orders','money','team'].includes(tab) ? <ClinicDashboard mode={({today:'today',orders:'visits',money:'money',team:'team'})[tab]} s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''} />
                 : hasibOverview?.pack?.id === 'automotive' && ['today','orders','stock','money','team','settings'].includes(tab) && !(tab === 'settings' && view === 'channels') ? <AutomotiveDashboard mode={({today:'today',orders:'workshop',stock:'parts',money:'money',team:'team',settings:'settings'})[tab]} s={s} h={h} overview={hasibOverview} timezone={data.timezone} connections={data} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''} />
                 : hasibOverview?.pack?.id === 'construction' && ['today','orders','stock','money','team','settings'].includes(tab) ? <ConstructionDashboard mode={({today:'today',orders:'projects',stock:'procurement',money:'money',team:'team',settings:'settings'})[tab]} s={s} overview={hasibOverview} timezone={data.timezone} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''} />
+                : map.sixTab && map.packId === 'fitness' && (tab === 'work' || tab === 'insights' || (tab === 'settings' && ['rules', 'team'].includes(view))) ? <FitnessDashboard section={tab} view={view} s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''}
+                    tabs={tab === 'work' ? <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} /> : null} />
+                : map.sixTab && map.packId === 'media' && (tab === 'work' || tab === 'insights' || (tab === 'settings' && ['rules', 'team'].includes(view))) ? <MediaDashboard section={tab} view={view} s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''}
+                    tabs={tab === 'work' ? <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} /> : null} />
                 : map.sixTab && (tab === 'work' || tab === 'insights' || (tab === 'settings' && ['rules', 'team'].includes(view))) ? <RealEstateDashboard section={tab} view={view} s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''}
                     tabs={tab === 'work' ? <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} /> : null} />
                 : tab === 'today' ? <TodayView s={s} h={h} hasibOverview={hasibOverview} connected={!!data.connected} onGo={go} />

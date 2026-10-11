@@ -1,6 +1,5 @@
 // What each Real Estate KPI is called and how it is calculated, in the owner's words.
 // The window, SLA and cancellation values come from Settings, so a definition always names them.
-const D = 86400000, H = 3600000;
 
 export const METRICS = {
   qualified_to_viewing: {
@@ -53,10 +52,4 @@ export const METRICS = {
   },
 };
 
-/** A duration in the largest unit that reads well. */
-export function duration(ms, ar) {
-  if (ms == null) return null;
-  if (ms >= 2 * D) return ar ? `${Math.round(ms / D * 10) / 10} يوم` : `${Math.round(ms / D * 10) / 10} days`;
-  if (ms >= H) return ar ? `${Math.round(ms / H * 10) / 10} ساعة` : `${Math.round(ms / H * 10) / 10} h`;
-  return ar ? `${Math.max(1, Math.round(ms / 60000))} دقيقة` : `${Math.max(1, Math.round(ms / 60000))} min`;
-}
+export { duration } from '../workspace/kpi.jsx';

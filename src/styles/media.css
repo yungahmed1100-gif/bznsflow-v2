@@ -1,0 +1,56 @@
+/* Media & production's own pieces; the shared workspace lives in workspace.css.
+   Colour keeps its meaning: blue the client (brief, quote), yellow in progress (booking, shoot,
+   edit), orange the record (review, acceptance), green done, coral a problem. No gradients. */
+
+/* Six columns fit a 1440px screen; narrower screens scroll the board, under 768px it is one list. */
+.hb-media-board { grid-template-columns: repeat(6, minmax(164px, 1fr)); }
+/* Board columns and cards take their tone from the stage they hold. */
+.hb-media-board .hb-board-column { border-block-start-color: var(--tone); }
+.hb-media-board .hb-board-column h2 .ld-num { color: var(--tone-ink); }
+.hb-production-card { border-inline-start: 4px solid var(--tone, var(--rule-strong)); }
+.hb-production-card .hb-deal-open small { font-size: 12px; color: var(--ink-2); letter-spacing: .02em; }
+.hb-production-card .hb-deal-open:hover b { text-decoration-color: var(--tone); }
+.hb-blocker { color: var(--coral); font-weight: 600; }
+.hb-blocker-line { margin: 0; padding: 8px 12px; font-size: 14px; background: var(--card); border: 1px solid var(--rule-strong); border-inline-start: 4px solid var(--coral-mark); border-radius: var(--radius); }
+
+/* Shoot calendar: one block per day; a confirmed hold is solid, a tentative one dashed, a clash coral. */
+.hb-calendar { display: grid; gap: 12px; }
+.hb-calendar-day { display: grid; gap: 6px; }
+.hb-calendar-day h3 { margin: 0; font-size: 15px; padding-block-end: 4px; border-block-end: 1px solid var(--rule-strong); }
+.hb-calendar-day ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.hb-calendar-item { display: grid; grid-template-columns: minmax(96px, auto) minmax(0, 1fr) minmax(0, 1.4fr); gap: 4px 12px; align-items: baseline; padding: 8px 12px; font-size: 14px;
+  background: var(--card); border: 1px solid var(--rule-strong); border-inline-start: 4px solid var(--rule-strong); border-radius: var(--radius); min-inline-size: 0; }
+.hb-calendar-item > * { min-inline-size: 0; overflow-wrap: anywhere; }
+.hb-calendar-item[data-kind="shoot"] { border-inline-start-color: var(--tone, var(--yellow)); font-weight: 600; }
+.hb-calendar-item[data-hold="confirmed"] { border-inline-start-color: var(--green-mark); }
+.hb-calendar-item[data-hold="held"] { border-style: dashed; border-inline-start-style: solid; border-inline-start-color: var(--yellow); }
+.hb-calendar-item[data-conflict] { border-inline-start-color: var(--coral-mark); }
+
+/* The production record. */
+.hb-production-record h3 { font-size: 16px; margin-block: 8px 0; scroll-margin-block-start: 16px; }
+.hb-production-record h4 { font-size: 14px; margin-block: 4px 0; }
+.hb-prep { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.hb-prep li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 6px 10px; border-inline-start: 4px solid var(--rule-strong); background: var(--card); border-radius: var(--radius); }
+.hb-prep li[data-critical]:not([data-done]) { border-inline-start-color: var(--coral-mark); }
+.hb-prep li[data-done] { border-inline-start-color: var(--green-mark); }
+.hb-critical { color: var(--coral); font-weight: 600; }
+.hb-cuts { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.hb-cuts li { display: grid; gap: 4px; padding: 8px 12px; background: var(--card); border: 1px solid var(--rule); border-inline-start: 4px solid var(--rule-strong); border-radius: var(--radius); }
+.hb-cuts li[data-cut="in_review"] { border-inline-start-color: var(--orange); }
+.hb-cuts li[data-cut="approved"] { border-inline-start-color: var(--green-mark); }
+.hb-cuts li[data-cut="changes_requested"] { border-inline-start-color: var(--yellow); }
+.hb-cuts li[data-cut="superseded"] { opacity: .75; }
+.hb-cuts p { margin: 0; }
+.hb-media tr[data-voided="yes"] td { color: var(--ink-2); }
+.hb-media .hb-re-list > li[data-hold="held"], .hb-media .hb-re-list > li[data-change="proposed"] { border-inline-start: 4px solid var(--yellow); padding-inline-start: 8px; }
+.hb-media .hb-re-list > li[data-hold="confirmed"], .hb-media .hb-re-list > li[data-change="approved"] { border-inline-start: 4px solid var(--green-mark); padding-inline-start: 8px; }
+
+/* Brief form groups. */
+.hb-fieldset { border: 1px solid var(--rule-strong); border-radius: var(--radius); padding: 10px 12px; margin: 0; min-inline-size: 0; }
+.hb-fieldset legend { font-weight: 700; padding-inline: 4px; }
+.hb-check-row { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-block-end: 8px; }
+
+@media (max-width: 767px) {
+  .hb-media-board { grid-template-columns: minmax(0, 1fr); }
+  .hb-calendar-item { grid-template-columns: minmax(0, 1fr); }
+}

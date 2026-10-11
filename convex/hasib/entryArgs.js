@@ -15,7 +15,7 @@ const bookingArgs = {
  resourceId:v.optional(v.id('hasibResources')),resourceIds:v.optional(v.array(v.id('hasibResources'))),serviceId:v.optional(v.id('hasibServices')),bookingId:v.optional(v.id('hasibBookings')),waitlistId:v.optional(v.id('hasibWaitlist')),
  membershipId:v.optional(v.id('hasibMemberships')),guardianId:v.optional(v.id('blueContacts')),creditId:v.optional(v.id('hasibCredits')),followupId:v.optional(v.id('hasibFollowups')),
  kind:v.optional(v.string()),name:v.optional(v.string()),capacity:v.optional(v.number()),availability:v.optional(v.array(v.object({startsAt:v.number(),endsAt:v.number()}))),durationMinutes:v.optional(v.number()),startsAt:v.optional(v.number()),endsAt:v.optional(v.number()),earliestAt:v.optional(v.number()),latestAt:v.optional(v.number()),credits:v.optional(v.number()),attendedAt:v.optional(v.number()),replacementForId:v.optional(v.id('hasibBookings')),
- linkedType:v.optional(v.union(v.literal('booking'),v.literal('membership'),v.literal('order'),v.literal('job'),v.literal('property'),v.literal('opportunity'))),linkedId:v.optional(v.string()),
+ linkedType:v.optional(v.union(v.literal('booking'),v.literal('membership'),v.literal('order'),v.literal('job'),v.literal('property'),v.literal('opportunity'),v.literal('production'))),linkedId:v.optional(v.string()),
 };
 
 const workflow = v.object({
@@ -69,6 +69,32 @@ const workflow = v.object({
   items:v.optional(v.array(v.object({category:v.string(),condition:v.string(),note:v.optional(v.string()),photoIds:v.optional(v.array(v.string()))}))),
 });
 
+// Media & production payload: typed fields only; Convex re-checks every value in mediaState.js.
+const mediaDeliverable = v.object({ format: v.string(), aspectRatio: v.optional(v.string()), durationSeconds: v.optional(v.number()), quantity: v.number(), language: v.optional(v.string()) });
+const media = v.object({
+  title: v.optional(v.string()), productionType: v.optional(v.string()), purpose: v.optional(v.string()), budgetMinor: v.optional(v.number()), dateNeeded: v.optional(v.string()),
+  deliverables: v.optional(v.array(mediaDeliverable)), shootStartsAt: v.optional(v.number()), shootEndsAt: v.optional(v.number()), location: v.optional(v.string()),
+  deliveryDueAt: v.optional(v.number()), firstCutDueAt: v.optional(v.number()), producerId: v.optional(v.string()), revisionAllowance: v.optional(v.number()),
+  usageRights: v.optional(v.object({ territory: v.optional(v.string()), channels: v.optional(v.array(v.string())), termEndsAt: v.optional(v.number()), clearance: v.optional(v.string()) })),
+  nextAction: v.optional(v.string()), contactId: v.optional(v.string()), conversationId: v.optional(v.string()), source: v.optional(v.string()),
+  quoteMinor: v.optional(v.number()), depositMinor: v.optional(v.number()), quoteVersion: v.optional(v.number()), acceptedBy: v.optional(v.string()), evidenceSource: v.optional(v.string()),
+  key: v.optional(v.string()), verified: v.optional(v.boolean()), note: v.optional(v.string()), mediaReceived: v.optional(v.boolean()),
+  label: v.optional(v.string()), assetRef: v.optional(v.string()), approverName: v.optional(v.string()), decisionDueAt: v.optional(v.number()), decision: v.optional(v.string()), feedback: v.optional(v.string()),
+  kind: v.optional(v.string()), description: v.optional(v.string()), priceMinor: v.optional(v.number()), deliverable: v.optional(mediaDeliverable), customerApproval: v.optional(v.string()),
+  name: v.optional(v.string()), category: v.optional(v.string()), active: v.optional(v.boolean()), internalRateMinor: v.optional(v.number()),
+  startsAt: v.optional(v.number()), endsAt: v.optional(v.number()),
+  amountMinor: v.optional(v.number()), hours: v.optional(v.number()), expenseId: v.optional(v.string()), changeOrderId: v.optional(v.string()), extraScope: v.optional(v.boolean()), costKind: v.optional(v.string()), incurredAt: v.optional(v.number()),
+  link: v.optional(v.string()), final: v.optional(v.boolean()), text: v.optional(v.string()), templateId: v.optional(v.string()),
+});
+const mediaRule = v.object({ id: v.string(), enabled: v.boolean(), mode: v.string(), offsetMinutes: v.number() });
+// Fitness payload: typed fields only; Convex re-checks every value in fitnessState.js.
+const fitness = v.object({
+  name: v.optional(v.string()), kind: v.optional(v.string()), termDays: v.optional(v.number()), billingMonths: v.optional(v.number()), priceMinor: v.optional(v.number()), credits: v.optional(v.number()),
+  freezeMaxDays: v.optional(v.number()), graceDays: v.optional(v.number()), active: v.optional(v.boolean()),
+  title: v.optional(v.string()), classType: v.optional(v.string()), startsAt: v.optional(v.number()), endsAt: v.optional(v.number()), capacity: v.optional(v.number()), coachId: v.optional(v.string()), coachName: v.optional(v.string()), cancel: v.optional(v.boolean()),
+  trial: v.optional(v.boolean()), source: v.optional(v.string()), sourceEventId: v.optional(v.string()), assignedAccountId: v.optional(v.string()),
+  days: v.optional(v.number()), end: v.optional(v.boolean()), text: v.optional(v.string()), templateId: v.optional(v.string()),
+});
 
 export const hasibEntryArgs = {
     ...bookingArgs,
@@ -93,6 +119,11 @@ export const hasibEntryArgs = {
     unsoldDays: v.optional(v.number()), absenceDays: v.optional(v.number()), listingFreshnessDays:v.optional(v.number()), constructionIncidentHoursDenominator:v.optional(v.number()),
     realEstate: v.optional(v.object({ viewingWindowDays:v.optional(v.number()), closeWindowDaysRent:v.optional(v.number()), closeWindowDaysSale:v.optional(v.number()), lateCancelHours:v.optional(v.number()), responseSlaMinutes:v.optional(v.number()), commissionTermsDays:v.optional(v.number()),
       rules:v.optional(v.array(v.object({ id:v.string(), enabled:v.boolean(), mode:v.string(), offsetMinutes:v.number() }))) })),
+    media: v.optional(media), productionId: v.optional(v.string()), cutId: v.optional(v.string()), changeOrderId: v.optional(v.string()), mediaResourceId: v.optional(v.string()), reservationId: v.optional(v.string()), costId: v.optional(v.string()),
+    mediaSettings: v.optional(v.object({ quoteWindowDays: v.optional(v.number()), revisionWindowDays: v.optional(v.number()), prepCutoffHours: v.optional(v.number()), reviewResponseHours: v.optional(v.number()),
+      revisionAllowance: v.optional(v.number()), depositPercent: v.optional(v.number()), extraRoundPriceMinor: v.optional(v.number()), resourceHoursPerDay: v.optional(v.number()), holdHours: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
+    fitness: v.optional(fitness), planId: v.optional(v.string()), classId: v.optional(v.string()), seatId: v.optional(v.string()),
+    fitnessSettings: v.optional(v.object({ conversionWindowDays: v.optional(v.number()), gapDays: v.optional(v.number()), minObservationDays: v.optional(v.number()), renewalNoticeDays: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     metric: v.optional(v.string()), segment: v.optional(v.string()), filter: v.optional(v.string()), channelCostMinor: v.optional(v.number()),
     stockPolicy: v.optional(v.string()), packId: v.optional(v.string()),
     products: v.optional(v.array(v.object({ requestId: v.string(), item: itemArg, variants: v.array(importVariant) }))),

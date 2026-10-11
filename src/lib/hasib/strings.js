@@ -371,6 +371,103 @@ const realEstateReasons = {
   task_not_found: ['That task is already closed.', 'هذه المهمة مغلقة بالفعل.'],
 };
 for (const [key, [english, arabic]] of Object.entries(realEstateReasons)) { reasons.en[key] = english; reasons.ar[key] = arabic; }
+// Media & production refusals: each names the missing fact or the next step.
+const mediaReasons = {
+  production_not_found: ['That production is no longer available.', 'هذا الإنتاج لم يعد متاحاً.'],
+  production_conflict: ['Someone changed this production. It has been reloaded; try again.', 'عدّل شخص آخر هذا الإنتاج. أعد المحاولة بعد التحديث.'],
+  production_closed: ['This production is finished, so it can’t be changed.', 'هذا الإنتاج منتهٍ ولا يمكن تعديله.'],
+  invalid_production: ['Check the brief: type, deliverables (1–20), dates in order and the revision allowance.', 'راجع الموجز: النوع والمخرجات (١–٢٠) وترتيب المواعيد وجولات التعديل.'],
+  brief_incomplete: ['Complete the brief first: production type, a deliverable, shoot dates, location and the delivery date.', 'أكمل الموجز أولاً: نوع الإنتاج ومُخرَج ومواعيد التصوير والموقع وموعد التسليم.'],
+  scope_locked: ['The scope is locked once the quote is accepted. Propose extra scope instead.', 'يُقفل النطاق بعد قبول العرض. اقترح نطاقاً إضافياً بدلاً من ذلك.'],
+  schedule_locked: ['Shoot dates are locked once the quote is accepted.', 'تُقفل مواعيد التصوير بعد قبول العرض.'],
+  quote_locked: ['This quote is already accepted. Extra work goes through a change order.', 'هذا العرض مقبول بالفعل. أي عمل إضافي يتم بأمر تغيير.'],
+  invalid_quote: ['Enter a quote above zero, with a deposit no larger than the quote.', 'أدخل عرضاً أكبر من صفر ودفعة مقدمة لا تتجاوزه.'],
+  stale_quote: ['The quote changed since this acceptance. Record acceptance of the current version.', 'تغيّر العرض بعد هذا القبول. سجّل قبول النسخة الحالية.'],
+  acceptance_evidence_required: ['Say who accepted and where.', 'اذكر من قبل وأين.'],
+  acceptance_required: ['Record the client’s acceptance of the quote first.', 'سجّل قبول العميل للعرض أولاً.'],
+  deposit_required: ['Record the deposit before booking.', 'سجّل الدفعة المقدمة قبل الحجز.'],
+  holds_required: ['Hold and confirm the crew or equipment before booking.', 'احجز الطاقم أو المعدات وأكّدها قبل الحجز.'],
+  holds_unconfirmed: ['Confirm every tentative hold before booking.', 'أكّد كل حجز مبدئي قبل الحجز.'],
+  prep_incomplete: ['Verify the critical preparation items before the shoot.', 'تحقق من بنود التحضير الحرجة قبل التصوير.'],
+  invalid_prep: ['Choose a preparation item.', 'اختر بند تحضير.'],
+  media_receipt_required: ['Confirm the footage has been received.', 'أكّد استلام المادة المصورة.'],
+  invalid_status_transition: ['That step isn’t possible for this production now.', 'لا يمكن تنفيذ هذه الخطوة على الإنتاج الآن.'],
+  cancel_reason_required: ['Give the reason for cancelling.', 'اذكر سبب الإلغاء.'],
+  invalid_cut: ['A cut needs an https review link and the name of who approves it.', 'تحتاج النسخة رابط مراجعة https واسم من يعتمدها.'],
+  cut_not_found: ['That cut is no longer available.', 'هذه النسخة لم تعد متاحة.'],
+  cut_conflict: ['Someone changed this cut. Try again.', 'عدّل شخص آخر هذه النسخة. أعد المحاولة.'],
+  cut_superseded: ['A newer cut replaced this one. Decide on the current cut.', 'استُبدلت هذه النسخة بأحدث. قرر على النسخة الحالية.'],
+  invalid_decision: ['Choose the decision.', 'اختر القرار.'],
+  approver_mismatch: ['The decision must come from the approver named on this cut.', 'يجب أن يأتي القرار من المعتمد المسمى على هذه النسخة.'],
+  decision_evidence_required: ['Say where the client decided, and add their feedback when changes are requested.', 'اذكر أين قرر العميل، وأضف ملاحظاته عند طلب التعديلات.'],
+  extra_scope_decision_pending: ['A revision beyond the included rounds is waiting for the manager’s decision.', 'جولة تعديل خارج المشمول بانتظار قرار المدير.'],
+  invalid_change_order: ['Describe the extra work and its price.', 'صف العمل الإضافي وسعره.'],
+  change_order_not_found: ['That change order is no longer available.', 'أمر التغيير هذا لم يعد متاحاً.'],
+  change_order_conflict: ['Someone changed this change order. Try again.', 'عدّل شخص آخر أمر التغيير. أعد المحاولة.'],
+  invalid_change_order_transition: ['This change order has already been decided.', 'تم البت في أمر التغيير هذا بالفعل.'],
+  customer_approval_required: ['Record who approved the extra charge for the client, and where.', 'سجّل من وافق على الرسوم الإضافية عن العميل وأين.'],
+  rights_not_cleared: ['Clear the usage rights before the final handoff.', 'أكّد حقوق الاستخدام قبل التسليم النهائي.'],
+  handoff_link_required: ['Add the final https delivery link.', 'أضف رابط التسليم النهائي https.'],
+  resource_conflict: ['That crew or equipment is already booked at that time.', 'هذا الطاقم أو المعدات محجوزة بالفعل في هذا الوقت.'],
+  resource_not_found: ['Choose active crew or equipment.', 'اختر طاقماً أو معدات نشطة.'],
+  resource_conflict_version: ['Someone changed this resource. Try again.', 'عدّل شخص آخر هذا المورد. أعد المحاولة.'],
+  invalid_resource: ['A resource needs a name and a category.', 'يحتاج المورد اسماً وفئة.'],
+  invalid_reservation: ['Check the hold: it must end after it starts, last 14 days at most and not be in the past.', 'راجع الحجز: يجب أن ينتهي بعد بدايته ولا يتجاوز ١٤ يوماً ولا يكون في الماضي.'],
+  reservation_not_found: ['That hold is no longer available.', 'هذا الحجز لم يعد متاحاً.'],
+  reservation_conflict: ['Someone changed this hold. Try again.', 'عدّل شخص آخر هذا الحجز. أعد المحاولة.'],
+  invalid_reservation_transition: ['That hold can’t be changed that way now.', 'لا يمكن تغيير هذا الحجز بهذه الطريقة الآن.'],
+  hold_expired: ['This tentative hold expired. Hold the time again.', 'انتهى هذا الحجز المبدئي. احجز الوقت مجدداً.'],
+  invalid_cost: ['A cost needs a category, a description and an amount above zero.', 'تحتاج التكلفة فئة ووصفاً ومبلغاً أكبر من صفر.'],
+  expense_mismatch: ['The linked expense must match this amount before VAT.', 'يجب أن يطابق المصروف المرتبط هذا المبلغ قبل الضريبة.'],
+  expense_already_linked: ['That expense is already counted on another cost.', 'هذا المصروف محتسب بالفعل في تكلفة أخرى.'],
+  cost_not_found: ['That cost is no longer available.', 'هذه التكلفة لم تعد متاحة.'],
+  use_production_status: ['This order belongs to a production. It moves with the production; payments can still be recorded.', 'هذا الطلب تابع لإنتاج ويتغير معه، ويمكن تسجيل الدفعات.'],
+  invalid_assignment: ['Choose a producer from your team.', 'اختر منتجاً من فريقك.'],
+};
+// Fitness refusals: each names the fact that is missing or the next step.
+const fitnessReasons = {
+  invalid_plan: ['Check the plan: a name, a term of 1–730 days, a billing period, a price, and the classes included for a class pack.', 'راجع الخطة: اسم ومدة من ١ إلى ٧٣٠ يوماً وفترة فوترة وسعر، وعدد الحصص لباقة الحصص.'],
+  plan_not_found: ['Choose a plan that is still offered.', 'اختر خطة ما زالت متاحة.'],
+  plan_conflict: ['Someone changed this plan. It has been reloaded; try again.', 'عدّل شخص آخر هذه الخطة. أعد المحاولة بعد التحديث.'],
+  invalid_class: ['Check the class: a name, a start and end up to 4 hours apart, and 1–200 places.', 'راجع الحصة: اسم وبداية ونهاية لا تتجاوز ٤ ساعات و١–٢٠٠ مكان.'],
+  class_not_found: ['That class is no longer available.', 'هذه الحصة لم تعد متاحة.'],
+  class_conflict: ['Someone changed this class. Try again.', 'عدّل شخص آخر هذه الحصة. أعد المحاولة.'],
+  class_cancelled: ['This class is cancelled.', 'هذه الحصة ملغاة.'],
+  class_started: ['This class has already started.', 'بدأت هذه الحصة بالفعل.'],
+  class_not_started: ['Check-in opens an hour before the class.', 'يبدأ تسجيل الحضور قبل الحصة بساعة.'],
+  class_not_finished: ['Record a no-show after the class ends.', 'سجّل عدم الحضور بعد انتهاء الحصة.'],
+  class_has_bookings: ['People are booked, so the time can’t change. Cancel the class and add a new one.', 'هناك حجوزات، فلا يمكن تغيير الموعد. ألغِ الحصة وأضف حصة جديدة.'],
+  capacity_below_bookings: ['More people are booked than that many places.', 'عدد المحجوزين أكبر من هذا العدد من الأماكن.'],
+  cancel_reason_required: ['Give the reason for cancelling.', 'اذكر سبب الإلغاء.'],
+  already_booked: ['They already have a place in this class.', 'لديه مكان في هذه الحصة بالفعل.'],
+  trial_used: ['They have had their trial, or are already a member. Book them as a member.', 'استخدم تجربته أو هو عضو بالفعل. احجز له كعضو.'],
+  membership_required: ['They need a membership (or book a first-time trial).', 'يحتاج عضوية (أو احجز له حصة تجريبية أولى).'],
+  membership_inactive: ['Their membership doesn’t cover that date: it isn’t paid yet, or it has ended.', 'عضويته لا تغطي هذا التاريخ: لم تُدفع بعد أو انتهت.'],
+  membership_frozen: ['Their membership is frozen on that date.', 'عضويته مجمّدة في هذا التاريخ.'],
+  no_credits_remaining: ['No classes left on their pack. Renew it first.', 'لا حصص متبقية في باقته. جدّدها أولاً.'],
+  class_pack_needs_class: ['A class pack is used by checking in to a class.', 'تُستخدم باقة الحصص بتسجيل الحضور في حصة.'],
+  membership_exists: ['They already have a membership. Renew it instead.', 'لديه عضوية بالفعل. جدّدها بدلاً من ذلك.'],
+  membership_not_found: ['That membership is no longer available.', 'هذه العضوية لم تعد متاحة.'],
+  membership_conflict: ['Someone changed this membership. It has been reloaded; try again.', 'عدّل شخص آخر هذه العضوية. أعد المحاولة بعد التحديث.'],
+  membership_cancelled: ['This membership is cancelled.', 'هذه العضوية ملغاة.'],
+  invalid_membership: ['Check the start date.', 'راجع تاريخ البدء.'],
+  invalid_freeze: ['Check the freeze: whole days, starting now or later, before the membership ends, not overlapping another freeze.', 'راجع التجميد: أيام كاملة تبدأ الآن أو لاحقاً، قبل انتهاء العضوية، دون تداخل مع تجميد آخر.'],
+  freeze_limit: ['That is more than the plan allows to freeze in one term.', 'هذا أكثر مما تسمح به الخطة من التجميد في المدة الواحدة.'],
+  not_frozen: ['This membership isn’t frozen now.', 'هذه العضوية ليست مجمّدة الآن.'],
+  already_renewed: ['This membership is already renewed.', 'هذه العضوية مُجدَّدة بالفعل.'],
+  membership_lapsed: ['This membership lapsed after its grace period. Add a new membership instead.', 'انتهت هذه العضوية بعد فترة السماح. أضف عضوية جديدة بدلاً من ذلك.'],
+  seat_not_found: ['That booking is no longer available.', 'هذا الحجز لم يعد متاحاً.'],
+  seat_conflict: ['Someone changed this booking. Try again.', 'عدّل شخص آخر هذا الحجز. أعد المحاولة.'],
+  invalid_seat_transition: ['That step isn’t possible for this booking now.', 'لا يمكن تنفيذ هذه الخطوة على الحجز الآن.'],
+  invalid_attendance: ['Check the check-in source.', 'راجع مصدر تسجيل الحضور.'],
+  task_closes_itself: ['This closes by itself once it is recorded.', 'تُغلق تلقائياً عند تسجيلها.'],
+  use_membership_status: ['This order belongs to a membership. It moves with the membership; payments can still be recorded.', 'هذا الطلب تابع لعضوية ويتغير معها، ويمكن تسجيل الدفعات.'],
+  invalid_assignment: ['Choose someone from your team.', 'اختر شخصاً من فريقك.'],
+  member_not_found: ['That member is no longer available.', 'هذا العضو لم يعد متاحاً.'],
+};
+// Each sector's words apply on its own pack only, so a shared code keeps each sector's own wording.
+const byLang = table => ({ en: Object.fromEntries(Object.entries(table).map(([k, [e]]) => [k, e])), ar: Object.fromEntries(Object.entries(table).map(([k, [, a]]) => [k, a])) });
+const PACK_REASONS = { media: byLang(mediaReasons), fitness: byLang(fitnessReasons) };
 
 const GROUPED = new Intl.NumberFormat('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 
@@ -378,7 +475,9 @@ const GROUPED = new Intl.NumberFormat('en-US', { minimumFractionDigits: 3, maxim
 export function createHasibStrings(lang, packId) {
   const isAr = lang === 'ar', words = PACK_WORDS[packId], table = { ...(isAr ? ar : en), ...(words ? words[isAr ? 'ar' : 'en'] : {}) };
   const t = (key, vars = {}) => String(table[key] ?? en[key] ?? key).replace(/\{(\w+)\}/g, (m, name) => (vars[name] ?? m));
-  const reason = code => (isAr ? reasons.ar : reasons.en)[code] || null;
+  // A refusal can carry details after a colon (brief_incomplete:deliverables,location); the message is the base code's.
+  const own = { ...(isAr ? reasons.ar : reasons.en), ...(PACK_REASONS[packId]?.[isAr ? 'ar' : 'en'] || {}) };
+  const reason = code => own[code] || own[String(code || '').split(':')[0]] || null;
   // Display figures are grouped (1,282.000); inputs and exports keep the plain form parseAmount reads.
   const amount = minor => GROUPED.format(minor / 1000);
   const money = minor => `${amount(minor)} ${table.currency}`;

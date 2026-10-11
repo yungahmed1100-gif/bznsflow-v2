@@ -6,6 +6,9 @@ import { businessTimezone } from './expensesState.js';
 import { periodRange } from './period.js';
 import { displayName } from '../blueContacts.js';
 import { ruleWanted, ruleDraftText, RULE_TASK_KINDS } from './realEstateRules.js';
+import { publicRow } from './workspace/rows.js';
+import { reconcileTasks } from './workspace/tasks.js';
+import { tally } from './workspace/metrics.js';
 
 export const DAY = 86400000;
 export const OPEN_STAGES = ['new', 'contacted', 'qualified', 'viewing', 'offer'];
@@ -16,7 +19,7 @@ const FIRST_RESPONSE_MS = 5 * 60000, SECOND_ATTEMPT_MS = 2 * 3600000, OFFER_ANSW
 const AUTO_TASKS = new Set(['first_response_overdue', 'second_attempt_overdue', 'stale_listing', 'viewing_outcome_missing', 'offer_unanswered', ...RULE_TASK_KINDS]);
 const ARABIC = /[\u0600-\u06FF]/;
 
-export const publicRow = row => { const { _id, _seq, table, accountId, requestId, ...rest } = row; return { id: _id, ...rest }; };
+export { publicRow };
 
 /** Agents work their own deals and unassigned ones; managers see the whole agency. */
 export const canSeeDeal = (actor, row) => actor.role !== 'employee' || !row.assignedAccountId || String(row.assignedAccountId) === String(actor.actorAccountId);
@@ -102,17 +105,8 @@ async function syncTasks(ctx, accountId, records, now, settings, timezone) {
   const wanted = currentTasks(records, now, ((settings.listingFreshnessDays ?? 30) * DAY));
   const rules = await ruleWanted(records, now, settings, inboundReader(ctx));
   for (const item of rules) if (item.rule.mode === 'task') wanted.push([item.kind, item.entityType, item.entityId, item.reason, item.dueAt, item.opportunity.assignedAccountId]);
-  // A rule task is keyed by when it fired, so a rescheduled viewing replaces its reminder.
-  const key = (kind, entityId, dueAt) => RULE_TASK_KINDS.has(kind) ? `${kind}:${entityId}:${dueAt}` : `${kind}:${entityId}`;
-  const wantedKeys = new Set(wanted.map(([kind, , entityId, , dueAt]) => key(kind, entityId, dueAt)));
-  const open = await ctx.db.query('realEstateTasks').withIndex('by_account_status', q => q.eq('accountId', accountId).eq('status', 'open')).take(SCAN);
-  const openKeys = new Set(open.map(t => key(t.kind, t.entityId, t.dueAt)));
-  for (const t of open) if (AUTO_TASKS.has(t.kind) && !wantedKeys.has(key(t.kind, t.entityId, t.dueAt))) await ctx.db.patch(t._id, { status: 'resolved', resolvedAt: now, resolution: 'cleared', updatedAt: now });
-  for (const [kind, entityType, entityId, reason, dueAt, assignedAccountId] of wanted) if (!openKeys.has(key(kind, entityId, dueAt))) {
-    // A rule fires once: a task someone resolved is not reopened for the same firing.
-    if (RULE_TASK_KINDS.has(kind) && (await ctx.db.query('realEstateTasks').withIndex('by_entity', q => q.eq('entityType', entityType).eq('entityId', String(entityId))).take(50)).some(t => t.kind === kind && t.dueAt === dueAt)) continue;
-    await ctx.db.insert('realEstateTasks', { accountId, kind, entityType, entityId: String(entityId), status: 'open', reason, ...(dueAt ? { dueAt } : {}), ...(assignedAccountId ? { assignedAccountId } : {}), createdAt: now, updatedAt: now });
-  }
+  await reconcileTasks(ctx, { table: 'realEstateTasks', accountId, now, autoKinds: AUTO_TASKS, ruleKinds: RULE_TASK_KINDS,
+    wanted: wanted.map(([kind, entityType, entityId, reason, dueAt, assignedAccountId]) => ({ kind, entityType, entityId: String(entityId), reason, dueAt, assignedAccountId })) });
   // Draft-mode rules: one draft per firing; an unsent one is cancelled once its cause is gone.
   const draftKeys = new Set(rules.filter(i => i.rule.mode === 'draft').map(i => i.key));
   const existing = new Map(records.drafts.filter(d => d.ruleKey).map(d => [d.ruleKey, d]));
@@ -177,8 +171,6 @@ export async function resolveTask(ctx, tenant, actor, a, now) {
 }
 
 const rate = (numerator, denominator) => denominator ? Math.round(numerator * 1000 / denominator) / 10 : 0;
-const tally = values => Object.entries(values.reduce((out, v) => ({ ...out, [v || 'unknown']: (out[v || 'unknown'] || 0) + 1 }), {}))
-  .map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 
 export async function insights(ctx, tenant) {
   const accountId = tenant.accountId, scan = table => ctx.db.query(table).withIndex(table === 'realEstateViewings' ? 'by_account_date' : 'by_account_created', q => q.eq('accountId', accountId)).take(2000);

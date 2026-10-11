@@ -66,7 +66,7 @@ try {
     const prefix = lang === 'en' ? '/en' : '';
     const home = await open(`${prefix}/owner`, 320);
     await home.page.locator('.owner-cards a').first().waitFor();
-    assert.equal(await home.page.locator('.owner-cards a').count(), 6);
+    assert.equal(await home.page.locator('.owner-cards a').count(), HASIB_LIVE_PACKS.length);
     assert.equal(await home.page.locator('a[href*="clinic"]').count(), 0);
     assert.equal(await home.page.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow');
     assert.deepEqual(home.errors, []); await home.context.close(); checked++;
