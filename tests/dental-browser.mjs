@@ -119,7 +119,8 @@ try {
     await f.locator('[name=providerId]').selectOption({ label: provider });
     await save(page, 'visit');
     const visits = value(await api(page, manager.base, 'dental_visits', {})).items;
-    const booked = visits.find(v => v.contactName === name && v.status === 'booked' && v.startsAt > Date.now());
+    // The visit just booked, by provider and minute: near midnight the patient's seeded next-morning visit is also booked and in the future.
+    const booked = visits.find(v => v.contactName === name && v.status === 'booked' && v.providerName === provider && Math.abs(v.startsAt - soon) < 60000);
     ok(!!booked, 'the visit is booked');
     const queue = value(await api(page, manager.base, 'dental_followups', { filter: 'today' })).items;
     eq(queue.some(r => r.kind === 'visit_request' && r.contactName === name), false, 'booking closed Layla’s request by itself');
@@ -217,7 +218,10 @@ try {
   // 7. Chat → visit → Back to chat; patient → visit card.
   {
     const { page, context } = await open(manager.base, 1280, 'en', '/layla/dashboard?tab=chats');
-    const next = value(await api(page, manager.base, 'dental_visits', {})).items.find(v => v.status === 'confirmed' && v.startsAt > Date.now());
+    // A confirmed visit that is its patient's next one (the card shows the earliest booked, confirmed or arrived visit not yet over).
+    const all = value(await api(page, manager.base, 'dental_visits', {})).items, now = Date.now();
+    const next = all.find(v => v.status === 'confirmed' && v.startsAt > now
+      && !all.some(o => o.contactId === v.contactId && o.id !== v.id && ['booked', 'confirmed', 'arrived'].includes(o.status) && o.endsAt > now && o.startsAt < v.startsAt));
     const full = value(await api(page, manager.base, 'dental_visit', { visitId: next.id }));
     await page.goto(`${manager.base}/en/layla/dashboard?tab=chats&chat=${full.conversationId}`);
     const card = page.locator('.hb-deal-context-card', { hasText: 'Next visit' });
