@@ -372,7 +372,13 @@ const realEstateReasons = {
 };
 for (const [key, [english, arabic]] of Object.entries(realEstateReasons)) { reasons.en[key] = english; reasons.ar[key] = arabic; }
 // Media & production refusals: each names the missing fact or the next step.
+// Words the six-tab sectors share; a sector's own table spreads in the ones it uses.
+const WORKSPACE_REASONS = {
+  task_closes_itself: ['This closes by itself once it is recorded.', 'تُغلق تلقائياً عند تسجيلها.'],
+  cancel_reason_required: ['Give the reason for cancelling.', 'اذكر سبب الإلغاء.'],
+};
 const mediaReasons = {
+  cancel_reason_required: WORKSPACE_REASONS.cancel_reason_required,
   production_not_found: ['That production is no longer available.', 'هذا الإنتاج لم يعد متاحاً.'],
   production_conflict: ['Someone changed this production. It has been reloaded; try again.', 'عدّل شخص آخر هذا الإنتاج. أعد المحاولة بعد التحديث.'],
   production_closed: ['This production is finished, so it can’t be changed.', 'هذا الإنتاج منتهٍ ولا يمكن تعديله.'],
@@ -392,7 +398,6 @@ const mediaReasons = {
   invalid_prep: ['Choose a preparation item.', 'اختر بند تحضير.'],
   media_receipt_required: ['Confirm the footage has been received.', 'أكّد استلام المادة المصورة.'],
   invalid_status_transition: ['That step isn’t possible for this production now.', 'لا يمكن تنفيذ هذه الخطوة على الإنتاج الآن.'],
-  cancel_reason_required: ['Give the reason for cancelling.', 'اذكر سبب الإلغاء.'],
   invalid_cut: ['A cut needs an https review link and the name of who approves it.', 'تحتاج النسخة رابط مراجعة https واسم من يعتمدها.'],
   cut_not_found: ['That cut is no longer available.', 'هذه النسخة لم تعد متاحة.'],
   cut_conflict: ['Someone changed this cut. Try again.', 'عدّل شخص آخر هذه النسخة. أعد المحاولة.'],
@@ -426,6 +431,7 @@ const mediaReasons = {
 };
 // Fitness refusals: each names the fact that is missing or the next step.
 const fitnessReasons = {
+  task_closes_itself: WORKSPACE_REASONS.task_closes_itself, cancel_reason_required: WORKSPACE_REASONS.cancel_reason_required,
   invalid_plan: ['Check the plan: a name, a term of 1–730 days, a billing period, a price, and the classes included for a class pack.', 'راجع الخطة: اسم ومدة من ١ إلى ٧٣٠ يوماً وفترة فوترة وسعر، وعدد الحصص لباقة الحصص.'],
   plan_not_found: ['Choose a plan that is still offered.', 'اختر خطة ما زالت متاحة.'],
   plan_conflict: ['Someone changed this plan. It has been reloaded; try again.', 'عدّل شخص آخر هذه الخطة. أعد المحاولة بعد التحديث.'],
@@ -438,7 +444,6 @@ const fitnessReasons = {
   class_not_finished: ['Record a no-show after the class ends.', 'سجّل عدم الحضور بعد انتهاء الحصة.'],
   class_has_bookings: ['People are booked, so the time can’t change. Cancel the class and add a new one.', 'هناك حجوزات، فلا يمكن تغيير الموعد. ألغِ الحصة وأضف حصة جديدة.'],
   capacity_below_bookings: ['More people are booked than that many places.', 'عدد المحجوزين أكبر من هذا العدد من الأماكن.'],
-  cancel_reason_required: ['Give the reason for cancelling.', 'اذكر سبب الإلغاء.'],
   already_booked: ['They already have a place in this class.', 'لديه مكان في هذه الحصة بالفعل.'],
   trial_used: ['They have had their trial, or are already a member. Book them as a member.', 'استخدم تجربته أو هو عضو بالفعل. احجز له كعضو.'],
   membership_required: ['They need a membership (or book a first-time trial).', 'يحتاج عضوية (أو احجز له حصة تجريبية أولى).'],
@@ -460,12 +465,12 @@ const fitnessReasons = {
   seat_conflict: ['Someone changed this booking. Try again.', 'عدّل شخص آخر هذا الحجز. أعد المحاولة.'],
   invalid_seat_transition: ['That step isn’t possible for this booking now.', 'لا يمكن تنفيذ هذه الخطوة على الحجز الآن.'],
   invalid_attendance: ['Check the check-in source.', 'راجع مصدر تسجيل الحضور.'],
-  task_closes_itself: ['This closes by itself once it is recorded.', 'تُغلق تلقائياً عند تسجيلها.'],
   use_membership_status: ['This order belongs to a membership. It moves with the membership; payments can still be recorded.', 'هذا الطلب تابع لعضوية ويتغير معها، ويمكن تسجيل الدفعات.'],
   invalid_assignment: ['Choose someone from your team.', 'اختر شخصاً من فريقك.'],
   member_not_found: ['That member is no longer available.', 'هذا العضو لم يعد متاحاً.'],
 };
 const dentalReasons = {
+  task_closes_itself: WORKSPACE_REASONS.task_closes_itself,
   invalid_resource: ['Give a name, and choose provider or chair.', 'أدخل اسماً واختر طبيباً أو كرسياً.'],
   resource_not_found: ['That provider or chair is no longer available.', 'هذا الطبيب أو الكرسي لم يعد متاحاً.'],
   resource_conflict: ['Someone changed this. Try again.', 'عدّل شخص آخر هذا. أعد المحاولة.'],
@@ -492,7 +497,6 @@ const dentalReasons = {
   invalid_charge: ['Choose at least one treatment.', 'اختر خدمة واحدة على الأقل.'],
   visit_not_completed: ['Set a recall date on a completed visit.', 'حدد موعد المراجعة على زيارة مكتملة.'],
   invalid_recall: ['Enter the future date the clinician gave (within 3 years).', 'أدخل التاريخ القادم الذي حدده الطبيب (خلال ٣ سنوات).'],
-  task_closes_itself: ['This closes by itself once it is recorded.', 'تُغلق تلقائياً عند تسجيلها.'],
 };
 // Each sector's words apply on its own pack only, so a shared code keeps each sector's own wording.
 const byLang = table => ({ en: Object.fromEntries(Object.entries(table).map(([k, [e]]) => [k, e])), ar: Object.fromEntries(Object.entries(table).map(([k, [, a]]) => [k, a])) });

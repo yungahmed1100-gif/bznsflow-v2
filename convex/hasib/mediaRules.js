@@ -3,7 +3,7 @@
 // media_draft_approve and its window, template and opt-out checks.
 import { mediaSettings } from './mediaSettings.js';
 import { DAY, MIN, prepMissing, latestCut } from './mediaDomain.js';
-import { formatLocal } from '../../src/lib/timezone.js';
+import { greeting, localWhen as when } from './workspace/text.js';
 
 // Switching a rule on never digs up last month's records.
 const STALE_MS = 30 * DAY;
@@ -71,12 +71,11 @@ const PREP_WORDS = {
   en: { client_assets: 'your logo, brand files and any footage you want used', talent_releases: 'signed release forms for everyone appearing' },
   ar: { client_assets: 'الشعار وملفات الهوية وأي مقاطع ترغب باستخدامها', talent_releases: 'نماذج الموافقة الموقعة لكل من سيظهر' },
 };
-const when = (ms, tz) => formatLocal(ms, tz).replace('T', ' ');
 const omr = (minor, arabic) => `${(minor / 1000).toFixed(3)} ${arabic ? 'ر.ع.' : 'OMR'}`;
 
 /** A rule's draft from recorded facts only: reference, cut label, dates and the order balance. */
 export function mediaDraftText(item, { name, timezone, arabic }) {
-  const hello = arabic ? `مرحباً${name ? ` ${name}` : ''}،` : `Hello${name ? ` ${name}` : ''},`;
+  const hello = greeting(name, arabic);
   const p = item.production, ref = `${p.ref} · ${p.title}`;
   if (item.rule.id === 'prep_request') {
     const words = item.gaps.map(g => PREP_WORDS[arabic ? 'ar' : 'en'][g]).filter(Boolean).join(arabic ? ' و' : ' and ');

@@ -47,5 +47,5 @@ export const forwardStages = stage => BOARD_STAGES.slice(BOARD_STAGES.indexOf(st
 export const requirementLine = (deal, typeLabel = x => x, sep = ' · ') => [deal.propertyTypes?.map(typeLabel).join('/') || null, deal.areas?.join('، ') || null].filter(Boolean).join(sep);
 
 /** The URL parameters that open Insights' source records in Deals and bring the owner back. */
-export const metricSearch = ({ metric, period, segment }) => ({ view: 'board', metric, from: 'insights', ...(period ? { period } : {}), ...(segment ? { segment } : {}) });
-export const insightsReturn = params => ({ ...(params.get('metric') ? { metric: params.get('metric') } : {}), ...(params.get('period') ? { period: params.get('period') } : {}), ...(params.get('segment') ? { segment: params.get('segment').split(':')[0] } : {}) });
+// Insights ↔ Work links are shared by every six-tab sector.
+export { metricSearch, insightsReturn } from './workspaceLinks.js';

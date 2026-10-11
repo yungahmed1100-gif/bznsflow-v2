@@ -1,7 +1,7 @@
 import React from 'react';
-import { Money } from '../Badges';
-import { EmptyState, PageHeader } from '../DashboardVisuals';
-import { KpiCards, KpiTrend, PeriodPicker, DiagnosticsTable } from '../workspace/kpi.jsx';
+import { EmptyState } from '../DashboardVisuals';
+import { KpiCards, DiagnosticsTable } from '../workspace/kpi.jsx';
+import { InsightsHeader, KpiDetail, NoteList, SegmentTable } from '../workspace/insights.jsx';
 import { label } from './labels.js';
 import { FITNESS_METRICS } from './metrics.js';
 
@@ -11,10 +11,7 @@ const segmentKey = (dimension, key, ar) => dimension === 'source' ? label('sourc
 const basisExtra = ar => m => m.id === 'attendance_gap' && m.coverage ? [ar ? `${m.coverage.withVisit} من ${m.coverage.eligible} لديهم زيارة مسجلة` : `${m.coverage.withVisit} of ${m.coverage.eligible} have a recorded visit`]
   : m.id === 'net_growth' && m.rateOfBase != null ? [ar ? `${m.rateOfBase}% من قاعدة البداية` : `${m.rateOfBase}% of the opening base`] : [];
 
-function Notes({ m, ar }) {
-  const entries = Object.entries(m.notes || {}).filter(([, n]) => n);
-  return entries.length ? <ul className="hb-kpi-notes">{entries.map(([k, n]) => <li key={k}>{label('note', k, ar)}: <b className="ld-num">{n}</b></li>)}</ul> : null;
-}
+const Notes = ({ m, ar }) => <NoteList m={m} noteLabel={k => label('note', k, ar)} />;
 
 /** The trial funnel: booked → attended → paid, by declared source. Spend is not captured, so cost per trial is unavailable. */
 function TrialFunnel({ t, ar }) {
@@ -43,36 +40,13 @@ export function InsightsView({ ar, h, s, timezone, data, params, onParams, onRec
   if (i.synthetic) return <EmptyState icon="bar-chart" title={tr('Insights use your recorded memberships and classes', 'تعتمد المؤشرات على عضوياتك وحصصك المسجلة')} description={tr('This preview has no records.', 'لا توجد سجلات في هذه المعاينة.')} />;
   const metricsBy = new Map(all.map(m => [m.id, m]));
   return <>
-    <PageHeader icon="trending-up" title={tr('Insights', 'المؤشرات')} description={tr('Each figure names its population and window. Open any of them to see the exact members behind it.', 'كل رقم يوضح مجتمعه ونافذته. افتح أياً منها لترى الأعضاء الذين خلفه بالضبط.')} />
-    <PeriodPicker ar={ar} period={period} name="ft-period" onChange={id => onParams({ period: id })} />
+    <InsightsHeader ar={ar} prefix="ft" period={period} onParams={onParams} description={['Each figure names its population and window. Open any of them to see the exact members behind it.', 'كل رقم يوضح مجتمعه ونافذته. افتح أياً منها لترى الأعضاء الذين خلفه بالضبط.']} />
     <KpiCards ar={ar} h={h} s={s} timezone={timezone} metrics={i.headline || []} defs={FITNESS_METRICS} selectedId={selected?.id} backlog={BACKLOG} onSelect={id => onParams({ metric: id })} basisExtra={basisExtra(ar)} />
-    {selected && <section className="hb-panel hb-kpi-detail" aria-labelledby="ft-kpi-title">
-      <div className="hb-status-line"><h2 id="ft-kpi-title">{ar ? FITNESS_METRICS[selected.id].ar : FITNESS_METRICS[selected.id].en}</h2>
-        <button type="button" className="ld-button ld-primary" onClick={() => onRecords(selected.id)}>{tr('View source records', 'عرض السجلات المصدرية')}</button></div>
-      <p>{FITNESS_METRICS[selected.id].def(settings, ar)}</p>
-      <p className="ld-help">{tr('Owner and review', 'المسؤول والمراجعة')}: {FITNESS_METRICS[selected.id].owner[ar ? 1 : 0]}</p>
-      <Notes m={selected} ar={ar} />
-      <KpiTrend m={selected} ar={ar} s={s} timezone={timezone} />
-    </section>}
+    {selected && <KpiDetail ar={ar} s={s} timezone={timezone} prefix="ft" defs={FITNESS_METRICS} m={selected} settings={settings} onRecords={onRecords} notes={<Notes m={selected} ar={ar} />} />}
     <DiagnosticsTable ar={ar} h={h} s={s} timezone={timezone} metrics={i.diagnostics || []} defs={FITNESS_METRICS} selectedId={selected?.id} onSelect={id => onParams({ metric: id })} onRecords={id => onRecords(id)} basisExtra={basisExtra(ar)} />
     <TrialFunnel t={i.trials} ar={ar} />
-    <section aria-labelledby="ft-segments" className="hb-segments">
-      <div className="hb-status-line"><h2 id="ft-segments">{tr('Break down by', 'تقسيم حسب')}</h2>
-        <select aria-label={tr('Break down by', 'تقسيم حسب')} value={segment} onChange={e => onParams({ segment: e.target.value })}>
-          <option value="">{tr('Choose…', 'اختر…')}</option>{SEGMENTS.map(id => <option key={id} value={id}>{label('segment', id, ar)}</option>)}
-        </select></div>
-      {i.segments?.rows?.length ? <div className="ld-table-wrap"><table className="ld-table">
-        <thead><tr><th>{label('segment', segment, ar)}</th>{i.segments.metrics.map(id => <th key={id}>{ar ? FITNESS_METRICS[id].ar : FITNESS_METRICS[id].en}</th>)}</tr></thead>
-        <tbody>{i.segments.rows.map(row => <tr key={row.key}>
-          <td data-label={label('segment', segment, ar)}><b><bdi>{segmentKey(segment, row.key, ar)}</bdi></b></td>
-          {i.segments.metrics.map(id => { const v = row.values[id], m = metricsBy.get(id);
-            return <td key={id} data-label={ar ? FITNESS_METRICS[id].ar : FITNESS_METRICS[id].en}>
-              {v?.denominator || (v?.value && m?.kind !== 'rate') ? <button type="button" className="ld-link" onClick={() => onRecords(id, `${segment}:${row.key}`)}>
-                {m?.kind === 'money' ? <Money h={h} minor={v.value || 0} /> : v.value == null ? '—' : m?.kind === 'rate' ? `${v.value}% (${v.numerator}/${v.denominator})` : v.value}</button> : '—'}
-            </td>; })}
-        </tr>)}</tbody>
-      </table></div> : segment ? <p className="ld-help">{tr('No records in this period for this breakdown.', 'لا سجلات في هذه الفترة لهذا التقسيم.')}</p>
-        : <p className="ld-help">{tr('Split the measures by plan, acquisition source, class type, or frozen versus active.', 'قسّم المؤشرات حسب الخطة أو مصدر الاكتساب أو نوع الحصة أو المجمّد مقابل النشط.')}</p>}
-    </section>
+    <SegmentTable ar={ar} h={h} prefix="ft" dimensions={SEGMENTS} segment={segment} columns={i.segments?.metrics || []} rows={i.segments?.rows} defs={FITNESS_METRICS} metricsBy={metricsBy}
+      dimensionLabel={id => label('segment', id, ar)} keyLabel={key => segmentKey(segment, key, ar)} onParams={onParams} onRecords={onRecords}
+      hint={['Split the measures by plan, acquisition source, class type, or frozen versus active.', 'قسّم المؤشرات حسب الخطة أو مصدر الاكتساب أو نوع الحصة أو المجمّد مقابل النشط.']} />
   </>;
 }

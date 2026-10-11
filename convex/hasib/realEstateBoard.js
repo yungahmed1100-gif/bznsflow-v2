@@ -1,5 +1,6 @@
 // Real Estate's shared reads: who may see a deal, readable rows, Today, tasks and insights.
 import { owned } from '../blueTenant.js';
+import { reconcileRuleDrafts } from './workspace/drafts.js';
 import { ok, fail, clampLimit, settingsFor } from './shared.js';
 import { audit } from './workspaceState.js';
 import { businessTimezone } from './expensesState.js';
@@ -107,11 +108,7 @@ async function syncTasks(ctx, accountId, records, now, settings, timezone) {
   for (const item of rules) if (item.rule.mode === 'task') wanted.push([item.kind, item.entityType, item.entityId, item.reason, item.dueAt, item.opportunity.assignedAccountId]);
   await reconcileTasks(ctx, { table: 'realEstateTasks', accountId, now, autoKinds: AUTO_TASKS, ruleKinds: RULE_TASK_KINDS,
     wanted: wanted.map(([kind, entityType, entityId, reason, dueAt, assignedAccountId]) => ({ kind, entityType, entityId: String(entityId), reason, dueAt, assignedAccountId })) });
-  // Draft-mode rules: one draft per firing; an unsent one is cancelled once its cause is gone.
-  const draftKeys = new Set(rules.filter(i => i.rule.mode === 'draft').map(i => i.key));
-  const existing = new Map(records.drafts.filter(d => d.ruleKey).map(d => [d.ruleKey, d]));
-  for (const d of existing.values()) if (d.status === 'draft' && !draftKeys.has(d.ruleKey)) await ctx.db.patch(d._id, { status: 'cancelled', version: d.version + 1, updatedAt: now });
-  for (const item of rules) if (item.rule.mode === 'draft' && !existing.has(item.key)) await insertRuleDraft(ctx, accountId, item, timezone, now);
+  await reconcileRuleDrafts(ctx, { rules, drafts: records.drafts, insert: item => insertRuleDraft(ctx, accountId, item, timezone, now), now });
 }
 
 /** A task belongs to the agent when its deal (directly or through a viewing or offer) does. */

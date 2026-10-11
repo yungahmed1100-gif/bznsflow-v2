@@ -13,12 +13,9 @@
 .hb-visit p { margin: 0; overflow-wrap: anywhere; }
 .hb-visit .hb-status-line { flex-wrap: wrap; gap: 6px 12px; }
 .hb-visit[data-status="cancelled"] { opacity: .75; }
-.hb-visit-open { font-weight: 600; }
 .hb-visits .ld-chip, .hb-visit .ld-chip { margin-inline-start: 4px; }
 
-/* The visit list: a row's tone is the visit's state. */
-.hb-visits tbody tr { box-shadow: inset calc(4px * var(--x-sign, 1)) 0 0 var(--tone, var(--rule-strong)); }
-.hb-visits tbody tr[aria-selected="true"] { background: var(--tone-tint, var(--card)); }
+/* The visit list (row tones are in sector-records.css): one-tap buttons sit beside the next action. */
 .hb-visits td .ld-button { margin-inline-start: 6px; }
 
 /* Services and the visit record. */
@@ -26,13 +23,7 @@
 .hb-resources > li, .hb-supplies > li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .hb-resources > li:not([data-active]) { opacity: .8; }
 .hb-supplies > li[data-tone] { border-inline-start: 4px solid var(--tone); padding-inline-start: 8px; }
-.hb-visit-record > header[data-tone] { border-inline-start: 4px solid var(--tone); }
-.hb-visit-record .hb-re-list > li[data-tone] { border-inline-start: 4px solid var(--tone); padding-inline-start: 8px; }
-.hb-visit-record .hb-deal-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px 16px; margin: 0; }
-.hb-visit-record .hb-deal-detail dt { font-size: 12px; color: var(--ink-2); letter-spacing: .02em; }
-.hb-visit-record .hb-deal-detail dd { margin: 0; font-weight: 600; }
 
 @media (max-width: 767px) {
-  .hb-visits tbody tr { box-shadow: none; border-inline-start: 4px solid var(--tone, var(--rule-strong)); }
   .hb-schedule { grid-template-columns: 1fr; }
 }

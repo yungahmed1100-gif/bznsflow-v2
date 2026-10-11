@@ -1,13 +1,13 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect, useMemo } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
-import { insightsReturn } from '../../lib/hasib/realEstateWork.js';
+import { insightsReturn } from '../../lib/hasib/workspaceLinks.js';
 import { buildFitnessSubmission } from '../../lib/hasib/fitnessWork.js';
 import { PageHeader } from './DashboardVisuals';
 import { AttentionStrip } from './workspace/AttentionStrip.jsx';
 import { useWorkspaceActions } from './workspace/useWorkspaceActions.jsx';
-import { TeamView } from './realestate/TeamView.jsx';
+import { useWorkspaceShell, backLabel as shellBack } from './workspace/useWorkspaceShell.jsx';
+import { TeamView } from './workspace/TeamView.jsx';
 import { MembersView, MemberPreview } from './fitness/MembersView.jsx';
 import { MemberRecord } from './fitness/MemberRecord.jsx';
 import { ClassesView, PlansView } from './fitness/ClassesView.jsx';
@@ -18,7 +18,7 @@ import { RulesView } from './fitness/RulesView.jsx';
 import { FitnessForm } from './fitness/FitnessForm.jsx';
 import { QUICK, FITNESS_FILTERS } from './fitness/labels.js';
 
-const WIDE = '(min-width: 1100px)', DAY = 86400000;
+const DAY = 86400000;
 const STAFF_WORDS = { invite: ['Invite a coach or front desk', 'دعوة مدرب أو موظف استقبال'], none: ['No team members yet', 'لا أعضاء فريق بعد'], hint: ['Invite your coaches and front desk by email.', 'ادعُ مدربيك وموظفي الاستقبال بالبريد الإلكتروني.'],
   scope: limit => [`One manager and up to ${limit} team members. They book classes and check people in; prices, payments, freezes, renewals and Insights stay with you.`, `مدير واحد وحتى ${limit} من الفريق. يحجزون الحصص ويسجلون الحضور، وتبقى الأسعار والمدفوعات والتجميد والتجديد والمؤشرات لك.`] };
 const metricSearch = ({ metric, period, segment }) => ({ view: 'members', metric, from: 'insights', ...(period ? { period } : {}), ...(segment ? { segment } : {}) });
@@ -60,29 +60,16 @@ function NeedsAttention({ ar, summary, onGo }) {
 export function FitnessDashboard({ section, view, s, h, overview, timezone = 'Asia/Muscat', onChanged, onGo, initialAction = '', tabs = null }) {
   const ar = s.ar, tr = (en, arabic) => (ar ? arabic : en);
   const manager = overview.workspaceRole === 'manager';
-  const [params, setParams] = useSearchParams();
-  const [form, setForm] = useState(null), [values, setValues] = useState({}), [lists, setLists] = useState(null), [preview, setPreview] = useState(null);
-  const scroll = useRef(0);
-  const memberId = params.get('member');
+  const { params, setParam, form, values, setValues, lists, setLists, preview, setPreview, openForm, closeForm, openRecord: openMember, openRow, back, recordId: memberId } =
+    useWorkspaceShell({ recordParam: 'member', loadLists: formLists, setError: message => setError(message), reasonOf: reason => h.reason(reason) || s.reason(reason), onGo });
   const key = [section, view, params.get('metric'), params.get('period'), params.get('segment'), params.get('filter'), params.get('past'), view === 'followups' ? memberId : ''].join('|');
   const state = usePolling(() => load(section, view, manager, params), [key, manager], { interval: 30000 });
   const { busy, setError, perform, act, notices, changes, clear } = useWorkspaceActions({ ar, s, h, refresh: state.refresh, onChanged });
   const data = { ...(lists || {}), ...(state.data || {}) };
   const actorAccountId = overview.teamSummary?.actorAccountId;
   const owners = useMemo(() => new Map([...(data.team?.members || []).filter(m => m.accountId).map(m => [String(m.accountId), m.email]), ...(manager ? [] : [[String(actorAccountId), tr('Me', 'أنا')]])]), [data.team, manager, actorAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
-  const setParam = patch => { const next = new URLSearchParams(params); for (const [k, v] of Object.entries(patch)) { if (v) next.set(k, v); else next.delete(k); } setParams(next); };
-
-  const openForm = (type, preset = {}) => {
-    setError(''); setValues(preset); setForm(type);
-    if (!lists) formLists().then(setLists).catch(e => setError(h.reason(e.reason) || s.reason(e.reason)));
-    window.requestAnimationFrame?.(() => document.querySelector('.hb-action-fields')?.scrollIntoView({ block: 'start' }));
-  };
-  const closeForm = () => { setForm(null); setValues({}); };
   useEffect(() => { clear(); if (initialAction === 'membership' && manager) openForm('membership'); else if (initialAction === 'class' && manager) openForm('class', { minutes: 60, capacity: 12, classType: 'class' }); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Opening a record remembers where the list was; Back returns there with its filters.
-  const openMember = id => { scroll.current = window.scrollY; setPreview(null); setParam({ member: id }); };
-  const openRow = id => (window.matchMedia?.(WIDE).matches ? setPreview(id) : openMember(id));
   const submit = async e => {
     e.preventDefault();
     let submission;
@@ -90,15 +77,7 @@ export function FitnessDashboard({ section, view, s, h, overview, timezone = 'As
     catch { setError(tr('Enter a valid date and time.', 'أدخل تاريخاً ووقتاً صالحين.')); return; }
     if (submission && await perform(submission.operation, submission.body)) { closeForm(); if (form === 'plan') setLists(null); }
   };
-  const back = () => {
-    const from = params.get('from');
-    if (from === 'chat' && params.get('chat')) return onGo('chats', { chat: params.get('chat') });
-    if (from === 'customers') return onGo('customers');
-    setParam({ member: null });
-  };
-  useLayoutEffect(() => { if (!memberId && scroll.current) { window.scrollTo(0, scroll.current); scroll.current = 0; } }, [memberId]);
-  const backLabel = params.get('from') === 'chat' ? tr('Back to chat', 'العودة إلى المحادثة') : params.get('from') === 'customers' ? tr('Back to customers', 'العودة إلى العملاء')
-    : params.get('metric') ? tr('Back to source records', 'العودة إلى السجلات المصدرية') : view === 'classes' ? tr('Back to classes', 'العودة إلى الحصص') : tr('Back to members', 'العودة إلى الأعضاء');
+  const backLabel = shellBack(params, ar, { fallback: view === 'classes' ? ['Back to classes', 'العودة إلى الحصص'] : ['Back to members', 'العودة إلى الأعضاء'] });
 
   const formPanel = form && <FitnessForm form={form} values={values} setValues={setValues} ar={ar} h={h} busy={busy} data={data} onSubmit={submit} onCancel={closeForm} />;
   if (section === 'work' && memberId && view !== 'followups') return <div className="hb-workspace hb-fitness">{notices}{formPanel}

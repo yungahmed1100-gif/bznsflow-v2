@@ -10,6 +10,7 @@ import { realEstateTurn } from './hasib/realEstateTurn.js';
 import { mediaTurn } from './hasib/mediaTurn.js';
 import { fitnessTurn } from './hasib/fitnessTurn.js';
 import { dentalTurn } from './hasib/dentalTurn.js';
+import { SECTOR_DRAFT_FIELDS, markDraftDelivered } from './hasib/workspace/sectors.js';
 import { phrase, langOf } from '../config/layla-tones.js';
 import { byteLength } from '../api/_lib/layla/reply-guard.js';
 import { INSTAGRAM_MAX_BYTES, conversationHistory, runawayChat } from './laylaReply.js';
@@ -77,10 +78,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     if((receiptRank[e.status] || 0)<=(receiptRank[target.status] || 0)) return;
     await ctx.db.patch(target._id,{status:e.status,providerId:e.id,updatedAt:now,...(e.status==='failed'&&Number.isSafeInteger(e.errorCode)?{errorCode:e.errorCode,reason:'provider_delivery_failed'}:{})});
     if(e.status==='failed') await recordUndeliverable(ctx,target,e.errorCode,now);
-    if(target.realEstateDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.realEstateDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
-    if(target.mediaDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.mediaDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
-    if(target.fitnessDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.fitnessDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
-    if(target.dentalDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.dentalDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
+    await markDraftDelivered(ctx,target,e.status,now);
   }
   async function rowForInstagram(integrationId) {
     const connection=await find('blueInstagramConnections','by_integration','integrationId',integrationId);
@@ -272,10 +270,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         if((receiptRank[e.status] || 0)>(receiptRank[target.status] || 0)) {
           await ctx.db.patch(target._id,{status:e.status,providerId:e.id,...(e.status==='failed'&&Number.isSafeInteger(e.errorCode)?{errorCode:e.errorCode}:{})});
           if(target.realEstateOpportunityId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.realEstateOpportunityId,{deliveredAt:now,updatedAt:now});
-          if(target.realEstateDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.realEstateDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
-          if(target.mediaDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.mediaDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
-          if(target.fitnessDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.fitnessDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
-    if(target.dentalDraftId && ['delivered','read'].includes(e.status)) await ctx.db.patch(target.dentalDraftId,{status:e.status,deliveredAt:now,updatedAt:now});
+          await markDraftDelivered(ctx,target,e.status,now);
         }
         continue;
       }
@@ -467,10 +462,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         if(!existing.some(task=>task.status==='open'&&task.kind==='send_failed')) await ctx.db.insert('realEstateTasks',{accountId:job.accountId,kind:'send_failed',entityType:'opportunity',entityId:String(job.realEstateOpportunityId),status:'open',reason:a.reason || a.status,createdAt:now,updatedAt:now});
       }
     }
-    if(job.realEstateDraftId) await ctx.db.patch(job.realEstateDraftId,{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
-    if(job.mediaDraftId) await ctx.db.patch(job.mediaDraftId,{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
-    if(job.fitnessDraftId) await ctx.db.patch(job.fitnessDraftId,{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
-    if(job.dentalDraftId) await ctx.db.patch(job.dentalDraftId,{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
+    for(const field of SECTOR_DRAFT_FIELDS) if(job[field]) await ctx.db.patch(job[field],{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
     // One customer's problem (window closed, account gone, Meta throttling) is that chat's, never
     // the whole business's: the team sees the chat, and Layla keeps answering everyone else.
     if(a.status==='failed' && RECIPIENT_FAILURES.has(a.reason)) {

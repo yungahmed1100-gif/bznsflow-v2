@@ -3,10 +3,7 @@
    payment, booked), orange the record (frozen, waitlist), green done (active, attended), coral a
    problem (attendance gap, ended without renewal, no-show). No gradients. */
 
-/* The member action list: a row's tone is the member's state; the gap flag stays coral. */
-.hb-members tbody tr { box-shadow: inset calc(4px * var(--x-sign, 1)) 0 0 var(--tone, var(--rule-strong)); }
-.hb-members tbody tr[aria-selected="true"] { background: var(--tone-tint, var(--card)); }
-.hb-member-open { font-weight: 600; }
+/* The member action list (row tones are in sector-records.css): chips sit beside the name. */
 .hb-members .ld-chip { margin-inline-start: 4px; }
 
 /* Classes: one panel per class, its roster below; a full class reads orange, a cancelled one is muted. */
@@ -18,16 +15,8 @@
   border-inline-start: 4px solid var(--tone, var(--rule-strong)); border-radius: var(--radius); min-inline-size: 0; }
 .hb-roster li > * { min-inline-size: 0; overflow-wrap: anywhere; }
 
-/* Plans and the member record. */
+/* Plans and the trial funnel. */
 .hb-plans > li { display: grid; gap: 4px; }
 .hb-plans > li:not([data-active]) { opacity: .8; }
-.hb-member-record > header[data-tone] { border-inline-start: 4px solid var(--tone); }
-.hb-member-record .hb-re-list > li[data-tone] { border-inline-start: 4px solid var(--tone); padding-inline-start: 8px; }
 .hb-funnel p { margin: 0; }
-.hb-member-record .hb-deal-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px 16px; margin: 0; }
-.hb-member-record .hb-deal-detail dt { font-size: 12px; color: var(--ink-2); letter-spacing: .02em; }
-.hb-member-record .hb-deal-detail dd { margin: 0; font-weight: 600; }
 
-@media (max-width: 767px) {
-  .hb-members tbody tr { box-shadow: none; border-inline-start: 4px solid var(--tone, var(--rule-strong)); }
-}

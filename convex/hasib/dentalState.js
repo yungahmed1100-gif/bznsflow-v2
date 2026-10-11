@@ -4,14 +4,15 @@
 // withdrawn, and Insights recalculates. Charges and payments stay on hasibOrders. Nothing here
 // sends a message, and nothing clinical is stored.
 import { owned } from '../blueTenant.js';
-import { ok, fail, bounded, REQUEST_ID, byRequest, settingsFor } from './shared.js';
+import { ok, fail, bounded, REQUEST_ID, settingsFor } from './shared.js';
 import { createOrder, recordPayment, PAYMENT_METHODS } from './ordersState.js';
 import { audit } from './workspaceState.js';
 import { businessTimezone } from './expensesState.js';
 import { publicRow } from './workspace/rows.js';
-import { sendApprovedDraft } from './workspace/drafts.js';
+import { approveDraft, draftRefusal } from './workspace/drafts.js';
+import { replayOr } from './workspace/records.js';
 import { findOverlaps } from './workspace/overlap.js';
-import { conversationOf } from './fitnessGym.js';
+import { conversationOf } from './workspace/conversation.js';
 import { formatLocal } from '../../src/lib/timezone.js';
 import { dentalSettings } from './dentalSettings.js';
 import { refreshClinic, describeVisits, dueTaskKeys, dentalOverview } from './dentalClinic.js';
@@ -24,12 +25,6 @@ const STAMP = { confirmed: 'confirmedAt', arrived: 'arrivedAt', completed: 'comp
 const MAX_HISTORY = 50, MAX_RECALL_MS = 3 * 365 * DAY, SOURCES = ['layla', 'phone', 'walk_in', 'staff', 'referral'];
 const time = v => Number.isSafeInteger(v) && v > 0 ? v : null;
 const historyWith = (v, entry) => [...(v.history || []), entry].slice(-MAX_HISTORY);
-
-async function replayOr(ctx, table, tenant, a) {
-  if (!REQUEST_ID.test(a.requestId || '')) return { error: 'invalid_request' };
-  const row = await byRequest(ctx, table, tenant.accountId, a.requestId);
-  return { replay: row ? ok(publicRow(row)) : null };
-}
 
 /** Providers and chairs: names only. A resource with visits still to come cannot be switched off. */
 async function resourceSave(ctx, tenant, actor, a, now) {
@@ -230,17 +225,14 @@ async function recallSet(ctx, tenant, actor, a, now) {
 }
 
 async function draftApprove(ctx, tenant, actor, a, now) {
-  const row = await owned(ctx, a.draftId, tenant.accountId, 'dentalDrafts');
-  if (!row) return fail('draft_not_found');
-  if (row.status !== 'draft' || row.version !== a.version) return fail(row.version !== a.version ? 'draft_conflict' : 'invalid_draft_transition');
+  const row = await owned(ctx, a.draftId, tenant.accountId, 'dentalDrafts'), refusal = draftRefusal(row, a);
+  if (refusal) return fail(refusal);
   const text = a.dental?.text !== undefined ? bounded(a.dental.text, 4000) : row.text;
   if (!text) return fail('invalid_draft');
-  const draft = { ...row, text, ...(a.dental?.templateId ? { templateId: bounded(a.dental.templateId, 80) } : {}) };
-  const status = await sendApprovedDraft(ctx, tenant, { draft, keyPrefix: 'dental-draft', handoffReason: 'visit_follow_up', taskTable: 'dentalTasks',
-    messageLinks: { dentalDraftId: row._id }, recipientLinks: { dentalDraftId: row._id }, contactId: row.contactId }, now);
-  await ctx.db.patch(row._id, { text, ...(draft.templateId ? { templateId: draft.templateId } : {}), status, approvedBy: actor.actorAccountId, approvedAt: now, version: row.version + 1, updatedAt: now });
-  await audit(ctx, tenant, actor, 'draft_approved', 'draft', row._id, now, status);
-  return ok(publicRow(await ctx.db.get(row._id)));
+  const saved = await approveDraft(ctx, tenant, actor, { row, edit: { text, ...(a.dental?.templateId ? { templateId: bounded(a.dental.templateId, 80) } : {}) },
+    keyPrefix: 'dental-draft', handoffReason: 'visit_follow_up', taskTable: 'dentalTasks',
+    links: async d => ({ messageLinks: { dentalDraftId: d._id }, recipientLinks: { dentalDraftId: d._id }, contactId: d.contactId }) }, now);
+  return ok(publicRow(saved));
 }
 
 export const VISIT_FILTERS = ['today', 'unconfirmed', 'missed', 'followupDue'];

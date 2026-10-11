@@ -1,10 +1,7 @@
 // Layla's intake for Media: a customer's project message becomes (or updates) one open brief.
 // Only facts the customer gave are copied; a shoot date in free text is kept as their words,
 // never turned into a booked time.
-import { isLivePack } from '../../config/hasib-packs.js';
-import { hasibEnabled } from './gate.js';
-import { HASIB_PLANS, planFor } from './plans.js';
-import { packFor } from './shared.js';
+import { sectorTurnPack } from './workspace/turn.js';
 import { workspaceForManager } from './workspaceState.js';
 import { executeMedia } from './mediaState.js';
 
@@ -17,11 +14,10 @@ const hash8 = value => { let h = 2166136261; for (const c of String(value || '')
 const requestId = (person, now) => { const s = now.toString(16).padStart(12, '0').slice(-12); return `${hash8(person._id)}-${hash8('media').slice(0, 4)}-4${s.slice(0, 3)}-8${s.slice(3, 6)}-${s.slice(6)}${hash8(person._id).slice(0, 6)}`; };
 
 export async function mediaTurn(ctx, { row, person, contact, now, secret }) {
-  if (!(await hasibEnabled(ctx)) || !HASIB_PLANS.includes(await planFor(ctx, row.accountId))) return null;
-  const tenant = { accountId: row.accountId, row, secret }, pack = await packFor(ctx, tenant);
   // Media is not a live pack yet: this runs only in the synthetic preview harness.
-  if (pack.id !== 'media' || !(isLivePack(pack.id) || ctx.hasibPreview === true)) return null;
-  tenant.pack = pack;
+  const pack = await sectorTurnPack(ctx, { row, secret, packId: 'media' });
+  if (!pack) return null;
+  const tenant = { accountId: row.accountId, row, secret, pack };
   const fields = new Map((contact.fields || []).map(field => [field.key, field.value]));
   if (!fields.get('need')) return null;
   const workspace = await workspaceForManager(ctx, row.accountId, now);

@@ -6,6 +6,10 @@ import { ok, settingsFor } from './shared.js';
 import { businessTimezone } from './expensesState.js';
 import { displayName } from '../blueContacts.js';
 import { reconcileTasks } from './workspace/tasks.js';
+import { reconcileRuleDrafts } from './workspace/drafts.js';
+import { conversationOf } from './workspace/conversation.js';
+
+export { conversationOf };
 import { fitnessSettings } from './fitnessSettings.js';
 import { fitnessRuleWanted, fitnessDraftText, FITNESS_RULE_TASK_KINDS } from './fitnessRules.js';
 import { DAY, effectiveEnd, memberState, inAttendanceGap, monthlyMinor } from './fitnessDomain.js';
@@ -110,13 +114,6 @@ function currentTasks(gym, openRequests, now, s) {
   return wanted;
 }
 
-/** The customer's most recent conversation, and whether they opted out of messages. */
-export async function conversationOf(ctx, accountId, contactId) {
-  const rows = (await ctx.db.query('blueConversations').withIndex('by_contact', q => q.eq('contactId', contactId)).take(20)).filter(c => c.accountId === accountId);
-  const latest = rows.sort((x, y) => (y.lastInbound || 0) - (x.lastInbound || 0))[0] || null;
-  return { conversation: latest, optedOut: rows.some(c => c.optout) };
-}
-
 /** Writes one draft in the customer's language from recorded facts; never for an opted-out customer. */
 export async function insertDraft(ctx, accountId, item, timezone, now) {
   const contact = await ctx.db.get(item.contactId), { conversation, optedOut } = await conversationOf(ctx, accountId, item.contactId);
@@ -138,11 +135,7 @@ export async function refreshGym(ctx, accountId, now) {
   for (const item of rules) if (item.rule.mode === 'task') wanted.push({ kind: item.kind, entityType: item.entityType, entityId: item.entityId, reason: item.reason, dueAt: item.dueAt,
     assignedAccountId: item.membership?.assignedAccountId });
   await reconcileTasks(ctx, { table: 'fitnessTasks', accountId, wanted, autoKinds: FITNESS_AUTO_TASKS, ruleKinds: ONCE_TASKS, now });
-  // Draft-mode rules: one draft per firing; an unsent one is cancelled once its cause is gone.
-  const draftKeys = new Set(rules.filter(i => i.rule.mode === 'draft').map(i => i.key));
-  const existing = new Map(gym.drafts.filter(d => d.ruleKey).map(d => [d.ruleKey, d]));
-  for (const d of existing.values()) if (d.status === 'draft' && !draftKeys.has(d.ruleKey)) await ctx.db.patch(d._id, { status: 'cancelled', version: d.version + 1, updatedAt: now });
-  for (const item of rules) if (item.rule.mode === 'draft' && !existing.has(item.key)) await insertDraft(ctx, accountId, item, timezone, now);
+  await reconcileRuleDrafts(ctx, { rules, drafts: gym.drafts, insert: item => insertDraft(ctx, accountId, item, timezone, now), now });
   return { gym: { ...gym, drafts: await scan(ctx, 'fitnessDrafts', accountId) }, settings: s, timezone };
 }
 

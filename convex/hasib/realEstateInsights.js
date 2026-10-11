@@ -4,8 +4,8 @@
 import { owned } from '../blueTenant.js';
 import { ok, fail, settingsFor } from './shared.js';
 import { businessTimezone } from './expensesState.js';
-import { periodRange, PERIODS } from './period.js';
-import { DAY, OPEN_STAGES, insights as legacyInsights, readable } from './realEstateBoard.js';
+import { insightsPeriod as periodOf, segmentRows } from './workspace/insights.js';
+import { DAY, insights as legacyInsights, readable } from './realEstateBoard.js';
 import { realEstateSettings } from './realEstateSettings.js';
 import { rate, quantile, noteCounts } from './workspace/metrics.js';
 
@@ -132,7 +132,6 @@ function summarize(id, rows) {
   return { value: hits.length, numerator: hits.length, denominator: counted.length, notes, oldestMs: hits.length ? Math.max(...hits.map(r => r.durationMs)) : null };
 }
 
-const periodOf = (a, now, tz) => periodRange(PERIODS.includes(a.period) && a.period !== 'today' ? a.period : '30d', now, tz);
 
 export async function realEstateInsights(ctx, tenant, a, now) {
   const accountId = tenant.accountId, tz = await businessTimezone(ctx, accountId), base = await settingsFor(ctx, accountId);
@@ -173,9 +172,7 @@ export async function realEstateInsights(ctx, tenant, a, now) {
 }
 
 function segmentTable(dimension, pops) {
-  const keys = new Set();
-  for (const id of SEGMENTED) for (const r of pops[id]) keys.add(segmentOf(dimension, r.opportunity));
-  return { dimension, rows: [...keys].sort().map(key => ({ key, values: Object.fromEntries([...SEGMENTED].map(id => [id, (({ value, numerator, denominator }) => ({ value, numerator, denominator }))(summarize(id, pops[id].filter(r => segmentOf(dimension, r.opportunity) === key)))])) })) };
+  return { dimension, rows: segmentRows([...SEGMENTED], pops, r => segmentOf(dimension, r.opportunity), summarize) };
 }
 
 /** The exact records behind a metric (optionally one segment), marking which ones the numerator counts. */

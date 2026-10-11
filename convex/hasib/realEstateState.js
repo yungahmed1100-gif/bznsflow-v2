@@ -10,7 +10,7 @@ import { DAY, OPEN_STAGES, publicRow, canSeeDeal, visibleOpportunity, readable, 
 import { realEstateInsights, metricRecords } from './realEstateInsights.js';
 import { followupQueue, snoozeTask, dealContext, commissionRows } from './realEstateFollowups.js';
 import { realEstateSettings } from './realEstateSettings.js';
-import { sendApprovedDraft } from './workspace/drafts.js';
+import { approveDraft as approveSharedDraft, draftRefusal } from './workspace/drafts.js';
 
 const STAGES = [...OPEN_STAGES, 'won', 'lost'];
 const NEEDS = ['buy', 'rent', 'sell', 'invest'];
@@ -310,15 +310,12 @@ async function draftSave(ctx, tenant, actor, a, now) {
 
 /** Sends an approved follow-up through the shared send path (window, template and opt-out checks). */
 async function approveDraft(ctx, tenant, actor, a, now) {
-  const row = await owned(ctx, a.draftId, tenant.accountId, 'realEstateDrafts');
-  if (!row) return fail('draft_not_found');
-  if (row.status !== 'draft' || row.version !== a.version) return fail(row.version !== a.version ? 'draft_conflict' : 'invalid_draft_transition');
-  const opportunity = await owned(ctx, row.opportunityId, tenant.accountId, 'realEstateOpportunities');
-  const status = await sendApprovedDraft(ctx, tenant, { draft: row, keyPrefix: 'real-estate-draft', handoffReason: 'opportunity_review', taskTable: 'realEstateTasks',
-    messageLinks: { realEstateOpportunityId: row.opportunityId, realEstateDraftId: row._id }, recipientLinks: { realEstateDraftId: row._id }, contactId: opportunity?.contactId || null }, now);
-  await ctx.db.patch(row._id, { status, approvedBy: actor.actorAccountId, approvedAt: now, version: row.version + 1, updatedAt: now });
-  await audit(ctx, tenant, actor, 'draft_approved', 'draft', row._id, now, status);
-  return ok(await one(ctx, tenant.accountId, await ctx.db.get(row._id)));
+  const row = await owned(ctx, a.draftId, tenant.accountId, 'realEstateDrafts'), refusal = draftRefusal(row, a);
+  if (refusal) return fail(refusal);
+  const saved = await approveSharedDraft(ctx, tenant, actor, { row, keyPrefix: 'real-estate-draft', handoffReason: 'opportunity_review', taskTable: 'realEstateTasks',
+    links: async d => ({ messageLinks: { realEstateOpportunityId: d.opportunityId, realEstateDraftId: d._id }, recipientLinks: { realEstateDraftId: d._id },
+      contactId: (await owned(ctx, d.opportunityId, tenant.accountId, 'realEstateOpportunities'))?.contactId || null }) }, now);
+  return ok(await one(ctx, tenant.accountId, saved));
 }
 
 async function compliance(ctx, tenant, actor, a) {

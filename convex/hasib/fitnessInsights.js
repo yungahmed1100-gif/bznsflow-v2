@@ -3,8 +3,7 @@
 // population is "no eligible records", never 0%. Drill-down returns the exact population.
 import { ok, fail, settingsFor } from './shared.js';
 import { businessTimezone } from './expensesState.js';
-import { periodRange, PERIODS } from './period.js';
-import { displayName } from '../blueContacts.js';
+import { insightsPeriod as periodOf, segmentRows, contactNames } from './workspace/insights.js';
 import { rate, summarizeRows, weeks } from './workspace/metrics.js';
 import { fitnessSettings } from './fitnessSettings.js';
 import { loadGym } from './fitnessGym.js';
@@ -118,7 +117,6 @@ export const segmentOf = (dimension, row, gym) => {
   return trial ? trial.source || 'unknown' : row.contactId ? 'direct' : 'not_applicable';
 };
 
-const periodOf = (a, now, tz) => periodRange(PERIODS.includes(a.period) && a.period !== 'today' ? a.period : '30d', now, tz);
 
 export async function fitnessInsights(ctx, tenant, a, now) {
   const accountId = tenant.accountId, tz = await businessTimezone(ctx, accountId), s = fitnessSettings(await settingsFor(ctx, accountId));
@@ -138,9 +136,7 @@ export async function fitnessInsights(ctx, tenant, a, now) {
 
 function segmentTable(dimension, pops, gym) {
   const ids = [...FITNESS_HEADLINE, ...FITNESS_DIAGNOSTIC].filter(id => id !== 'net_growth');
-  const keys = new Set();
-  for (const id of ids) for (const r of pops[id]) keys.add(segmentOf(dimension, r, gym));
-  return { dimension, metrics: ids, rows: [...keys].sort().map(key => ({ key, values: Object.fromEntries(ids.map(id => [id, (({ value, numerator, denominator }) => ({ value, numerator, denominator }))(summarize(id, pops[id].filter(r => segmentOf(dimension, r, gym) === key)))])) })) };
+  return { dimension, metrics: ids, rows: segmentRows(ids, pops, r => segmentOf(dimension, r, gym), summarize) };
 }
 
 /** The exact records behind a metric (optionally one segment), marking which ones the numerator counts. */
@@ -151,13 +147,12 @@ export async function fitnessMetricRecords(ctx, tenant, actor, a, now) {
   const accountId = tenant.accountId, tz = await businessTimezone(ctx, accountId), s = fitnessSettings(await settingsFor(ctx, accountId));
   const range = periodOf(a, now, tz), gym = await loadGym(ctx, accountId, now);
   const rows = populations(gym, s, range, now)[a.metric].filter(r => !a.segment || segmentOf(dimension, r, gym) === key).slice(0, 300);
-  const names = new Map(), items = [];
+  const nameOf = contactNames(ctx), items = [];
   for (const r of rows) {
-    if (r.contactId && !names.has(String(r.contactId))) { const c = await ctx.db.get(r.contactId); names.set(String(r.contactId), c?.state === 'active' ? displayName(c).name : null); }
     const klass = r.entityType === 'class' ? r.entity : r.entityType === 'seat' ? gym.classById.get(String(r.entity.classId)) : null;
     items.push({ id: r.entity._id, entityType: r.entityType, counts: r.counts, inNumerator: r.inNumerator, ...(r.note ? { note: r.note } : {}), ...(r.amountMinor !== undefined ? { amountMinor: r.amountMinor } : {}),
       ...(r.delta !== undefined ? { delta: r.delta } : {}), ...(r.capacity !== undefined ? { attended: r.attended, capacity: r.capacity } : {}),
-      contactId: r.contactId ? String(r.contactId) : null, contactName: r.contactId ? names.get(String(r.contactId)) : null, plan: r.plan || null,
+      contactId: r.contactId ? String(r.contactId) : null, contactName: await nameOf(r.contactId), plan: r.plan || null,
       ...(klass ? { classTitle: klass.title, classStartsAt: klass.startsAt } : {}) });
   }
   return ok({ metric: a.metric, complete: gym.complete, items });

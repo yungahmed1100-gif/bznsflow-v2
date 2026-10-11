@@ -5,8 +5,7 @@
 // exact population.
 import { ok, fail, settingsFor } from './shared.js';
 import { businessTimezone } from './expensesState.js';
-import { periodRange, PERIODS } from './period.js';
-import { displayName } from '../blueContacts.js';
+import { insightsPeriod as periodOf, segmentRows, contactNames } from './workspace/insights.js';
 import { rate, summarizeRows, weeks } from './workspace/metrics.js';
 import { dentalSettings } from './dentalSettings.js';
 import { loadClinic, refreshClinic, hourOf } from './dentalClinic.js';
@@ -84,7 +83,6 @@ export function segmentOf(dimension, row, clinic) {
   return row.timeOfDay || 'unknown';
 }
 
-const periodOf = (a, now, tz) => periodRange(PERIODS.includes(a.period) && a.period !== 'today' ? a.period : '30d', now, tz);
 const openTasksOf = async (ctx, accountId, manager) => (await ctx.db.query('dentalTasks').withIndex('by_account_status', q => q.eq('accountId', accountId).eq('status', 'open')).take(500))
   .filter(t => manager || !['charges_unrecorded', 'balance_overdue', 'template_required', 'rule_balance_due'].includes(t.kind));
 
@@ -110,9 +108,7 @@ export async function dentalInsights(ctx, tenant, a, now) {
 
 function segmentTable(dimension, pops, clinic) {
   const ids = [...DENTAL_HEADLINE, ...DENTAL_DIAGNOSTIC].filter(id => id !== 'chair_utilization' && id !== 'followups_due');
-  const keys = new Set();
-  for (const id of ids) for (const r of pops[id]) keys.add(segmentOf(dimension, r, clinic));
-  return { dimension, metrics: ids, rows: [...keys].sort().map(key => ({ key, values: Object.fromEntries(ids.map(id => [id, (({ value, numerator, denominator }) => ({ value, numerator, denominator }))(summarize(id, pops[id].filter(r => segmentOf(dimension, r, clinic) === key)))])) })) };
+  return { dimension, metrics: ids, rows: segmentRows(ids, pops, r => segmentOf(dimension, r, clinic), summarize) };
 }
 
 /** The exact records behind a metric (optionally one segment), marking which ones the numerator counts. */
@@ -123,13 +119,12 @@ export async function dentalMetricRecords(ctx, tenant, actor, a, now) {
   const accountId = tenant.accountId, tz = await businessTimezone(ctx, accountId), s = dentalSettings(await settingsFor(ctx, accountId));
   const range = periodOf(a, now, tz), clinic = await loadClinic(ctx, accountId, now), tasks = await openTasksOf(ctx, accountId, true);
   const rows = populations(clinic, s, range, now, tasks, tz)[a.metric].filter(r => !a.segment || segmentOf(dimension, r, clinic) === key).slice(0, 300);
-  const names = new Map(), items = [];
+  const nameOf = contactNames(ctx), items = [];
   for (const r of rows) {
-    if (r.contactId && !names.has(String(r.contactId))) { const c = await ctx.db.get(r.contactId); names.set(String(r.contactId), c?.state === 'active' ? displayName(c).name : null); }
     const v = r.visit;
     items.push({ id: r.entity._id, entityType: r.entityType, counts: r.counts, inNumerator: r.inNumerator, ...(r.note ? { note: r.note } : {}), ...(r.kind ? { taskKind: r.kind } : {}),
       ...(r.amountMinor !== undefined ? { amountMinor: r.amountMinor } : {}), ...(r.paidMinor !== undefined ? { paidMinor: r.paidMinor } : {}), ...(r.minutes !== undefined ? { minutes: r.minutes } : {}),
-      contactId: r.contactId ? String(r.contactId) : null, contactName: r.contactId ? names.get(String(r.contactId)) : null,
+      contactId: r.contactId ? String(r.contactId) : null, contactName: await nameOf(r.contactId),
       ...(v ? { visitId: v._id, startsAt: v.startsAt, status: outcomeUnknown(v, now) ? 'unknown' : v.status, providerName: clinic.resourceById.get(String(v.providerId))?.name || null } : {}) });
   }
   return ok({ metric: a.metric, complete: clinic.complete, items });

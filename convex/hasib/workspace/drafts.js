@@ -3,6 +3,7 @@
 // Sector tables are named by the caller, so every workspace shares one send path.
 import { owned } from '../../blueTenant.js';
 import { openTaskOnce } from './tasks.js';
+import { audit } from '../workspaceState.js';
 
 const DAY = 86400000;
 
@@ -53,3 +54,35 @@ export async function sendApprovedDraft(ctx, tenant, { draft, keyPrefix, message
     reason: 'An approved utility template is needed outside the WhatsApp 24-hour window' }, now);
   return status;
 }
+
+/**
+ * Draft-mode rules: one draft per firing. An unsent draft whose cause is gone is cancelled; a firing
+ * with no draft yet gets one from `insert(item)`.
+ * @param {{ rules: Array<{rule:{mode:string}, key:string}>, drafts: Array<object>, insert: (item:object) => Promise<unknown> }} o
+ */
+export async function reconcileRuleDrafts(ctx, { rules, drafts, insert, now }) {
+  const draftKeys = new Set(rules.filter(i => i.rule.mode === 'draft').map(i => i.key));
+  const existing = new Map(drafts.filter(d => d.ruleKey).map(d => [d.ruleKey, d]));
+  for (const d of existing.values()) if (d.status === 'draft' && !draftKeys.has(d.ruleKey)) await ctx.db.patch(d._id, { status: 'cancelled', version: d.version + 1, updatedAt: now });
+  for (const item of rules) if (item.rule.mode === 'draft' && !existing.has(item.key)) await insert(item);
+}
+
+/**
+ * A manager approves a draft: it goes through the shared send path and records who approved it.
+ * `edit` may replace the text or name a template (Fitness and Dental let the manager edit first).
+ * @param {object} o
+ * @param {object} o.row the draft row
+ * @param {object} [o.edit] { text?, templateId? } already bounded by the caller
+ * @param {(row:object) => Promise<{ messageLinks:object, recipientLinks:object, contactId:string|null }>} o.links the sector's message links
+ * @returns {Promise<object>} the patched row
+ */
+export async function approveDraft(ctx, tenant, actor, { row, edit = {}, keyPrefix, handoffReason, taskTable, links }, now) {
+  const draft = { ...row, ...(edit.text ? { text: edit.text } : {}), ...(edit.templateId ? { templateId: edit.templateId } : {}) };
+  const status = await sendApprovedDraft(ctx, tenant, { draft, keyPrefix, handoffReason, taskTable, ...(await links(row)) }, now);
+  await ctx.db.patch(row._id, { ...(edit.text ? { text: draft.text } : {}), ...(edit.templateId ? { templateId: draft.templateId } : {}), status, approvedBy: actor.actorAccountId, approvedAt: now, version: row.version + 1, updatedAt: now });
+  await audit(ctx, tenant, actor, 'draft_approved', 'draft', row._id, now, status);
+  return ctx.db.get(row._id);
+}
+
+/** The refusal for a draft that is not waiting, or whose screen is stale; null when it may be approved. */
+export const draftRefusal = (row, a) => !row ? 'draft_not_found' : row.status !== 'draft' || row.version !== a.version ? (row.version !== a.version ? 'draft_conflict' : 'invalid_draft_transition') : null;

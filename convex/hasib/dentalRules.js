@@ -4,7 +4,7 @@
 // window, template and opt-out checks. Wording is neutral: no treatment, symptom or clinical word.
 import { dentalSettings } from './dentalSettings.js';
 import { DAY, MIN, balanceOf, balanceOverdue } from './dentalDomain.js';
-import { formatLocal } from '../../src/lib/timezone.js';
+import { greeting, localWhen as when, localDay as day } from './workspace/text.js';
 
 // Switching a rule on never digs up last month's records.
 const STALE_MS = 30 * DAY;
@@ -59,13 +59,11 @@ export function dentalRuleWanted(clinic, now, settings) {
   return out;
 }
 
-const when = (ms, tz) => formatLocal(ms, tz).replace('T', ' ');
-const day = (ms, tz) => formatLocal(ms, tz).slice(0, 10);
 const money = (minor, currency) => `${(minor / 1000).toFixed(3)} ${currency || 'OMR'}`;
 
 /** A draft from recorded facts only: the appointment time, a date, a balance. Never a treatment or symptom. */
 export function dentalDraftText(item, { name, timezone, arabic, currency }) {
-  const hello = arabic ? `مرحباً${name ? ` ${name}` : ''}،` : `Hello${name ? ` ${name}` : ''},`;
+  const hello = greeting(name, arabic);
   const v = item.visit;
   if (item.rule.id === 'visit_confirmation') {
     return arabic ? `${hello} نذكّرك بالموعد المحجوز يوم ${when(v.startsAt, timezone)}. يرجى الرد للتأكيد، أو أخبرنا إن احتجت وقتاً آخر.`

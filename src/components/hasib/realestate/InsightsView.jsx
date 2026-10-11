@@ -1,10 +1,11 @@
 import React from 'react';
 import { formatDate } from '../../../lib/dashboard/format';
 import { Money } from '../Badges';
-import { EmptyState, HorizontalBars, PageHeader } from '../DashboardVisuals';
+import { EmptyState, HorizontalBars } from '../DashboardVisuals';
 import { label, LOST_REASONS } from './labels.js';
 import { METRICS, duration } from './metrics.js';
-import { PERIODS, KpiTrend, PeriodPicker, KpiCards, DiagnosticsTable } from '../workspace/kpi.jsx';
+import { PERIODS, KpiCards, DiagnosticsTable } from '../workspace/kpi.jsx';
+import { InsightsHeader, KpiDetail, NoteList, SegmentTable } from '../workspace/insights.jsx';
 
 export { PERIODS };
 
@@ -14,12 +15,9 @@ const SEGMENT_COLUMNS = ['qualified_to_viewing', 'viewing_attendance', 'qualifie
 const BACKLOG = new Set(['unanswered_qualified', 'commission_overdue', 'offer_backlog']);
 
 /** The notes a population carries: timely cancellations, missing due dates, deals with no viewing yet. */
-function Notes({ m, ar }) {
-  const entries = Object.entries(m.notes || {}).filter(([k]) => !['completed', 'missed'].includes(k));
-  if (!entries.length && m.openMedianMs == null) return null;
-  return <ul className="hb-kpi-notes">{entries.map(([k, n]) => <li key={k}>{label('note', k, ar)}: <b className="ld-num">{n}</b></li>)}
-    {m.openMedianMs != null && <li>{ar ? 'عمر الصفقات بلا معاينة (الوسيط)' : 'Age of deals without a viewing (median)'}: <b>{duration(m.openMedianMs, ar)}</b></li>}</ul>;
-}
+const Notes = ({ m, ar }) => <NoteList m={m} noteLabel={k => label('note', k, ar)} keep={k => !['completed', 'missed'].includes(k)}>
+  {m.openMedianMs != null && <li key="open">{ar ? 'عمر الصفقات بلا معاينة (الوسيط)' : 'Age of deals without a viewing (median)'}: <b>{duration(m.openMedianMs, ar)}</b></li>}
+</NoteList>;
 
 export function InsightsView({ ar, h, s, timezone, data, busy, act, params, onParams, onRecords, agentNames }) {
   const tr = (en, arabic) => (ar ? arabic : en);
@@ -33,40 +31,18 @@ export function InsightsView({ ar, h, s, timezone, data, busy, act, params, onPa
   const commissions = data.commissions?.items || [];
   if (i.synthetic) return <EmptyState icon="bar-chart" title={tr('Insights use your recorded deals', 'تعتمد المؤشرات على صفقاتك المسجلة')} description={tr('This preview has no records.', 'لا توجد سجلات في هذه المعاينة.')} />;
   return <>
-    <PageHeader icon="trending-up" title={tr('Insights', 'المؤشرات')} description={tr('Each figure names its population and window. Open any of them to see the exact records behind it.', 'كل رقم يوضح مجتمعه ونافذته. افتح أياً منها لترى السجلات التي خلفه بالضبط.')} />
-    <PeriodPicker ar={ar} period={period} name="re-period" onChange={id => onParams({ period: id })} />
+    <InsightsHeader ar={ar} prefix="re" period={period} onParams={onParams} description={['Each figure names its population and window. Open any of them to see the exact records behind it.', 'كل رقم يوضح مجتمعه ونافذته. افتح أياً منها لترى السجلات التي خلفه بالضبط.']} />
 
     <KpiCards ar={ar} h={h} s={s} timezone={timezone} metrics={i.headline || []} defs={METRICS} selectedId={selected?.id} backlog={BACKLOG} onSelect={id => onParams({ metric: id })} />
 
-    {selected && <section className="hb-panel hb-kpi-detail" aria-labelledby="re-kpi-title">
-      <div className="hb-status-line"><h2 id="re-kpi-title">{ar ? METRICS[selected.id].ar : METRICS[selected.id].en}</h2>
-        <button type="button" className="ld-button ld-primary" onClick={() => onRecords(selected.id)}>{tr('View source records', 'عرض السجلات المصدرية')}</button></div>
-      <p>{METRICS[selected.id].def(settings, ar)}</p>
-      <p className="ld-help">{tr('Owner and review', 'المسؤول والمراجعة')}: {METRICS[selected.id].owner[ar ? 1 : 0]}</p>
-      <Notes m={selected} ar={ar} />
-      <KpiTrend m={selected} ar={ar} s={s} timezone={timezone} />
-    </section>}
+    {selected && <KpiDetail ar={ar} s={s} timezone={timezone} prefix="re" defs={METRICS} m={selected} settings={settings} onRecords={onRecords} notes={<Notes m={selected} ar={ar} />} />}
 
     <DiagnosticsTable ar={ar} h={h} s={s} timezone={timezone} metrics={i.diagnostics || []} defs={METRICS} selectedId={selected?.id} onSelect={id => onParams({ metric: id })} onRecords={id => onRecords(id)}
       valueExtra={m => m.id === 'offer_backlog' && m.valueMinor ? <> · <Money h={h} minor={m.valueMinor} /></> : null} />
 
-    <section aria-labelledby="re-segments" className="hb-segments">
-      <div className="hb-status-line"><h2 id="re-segments">{tr('Break down by', 'تقسيم حسب')}</h2>
-        <select aria-label={tr('Break down by', 'تقسيم حسب')} value={segment} onChange={e => onParams({ segment: e.target.value })}>
-          <option value="">{tr('Choose…', 'اختر…')}</option>{SEGMENTS.map(id => <option key={id} value={id}>{label('segment', id, ar)}</option>)}
-        </select></div>
-      {i.segments?.rows?.length ? <div className="ld-table-wrap"><table className="ld-table">
-        <thead><tr><th>{label('segment', segment, ar)}</th>{SEGMENT_COLUMNS.map(id => <th key={id}>{ar ? METRICS[id].ar : METRICS[id].en}</th>)}</tr></thead>
-        <tbody>{i.segments.rows.map(row => <tr key={row.key}>
-          <td data-label={label('segment', segment, ar)}><b><bdi>{segmentLabel(row.key)}</bdi></b></td>
-          {SEGMENT_COLUMNS.map(id => { const v = row.values[id]; const m = all.find(x => x.id === id);
-            return <td key={id} data-label={ar ? METRICS[id].ar : METRICS[id].en}>
-              {v?.denominator || (v?.value && m?.kind !== 'rate') ? <button type="button" className="ld-link" onClick={() => onRecords(id, `${segment}:${row.key}`)}>
-                {m?.kind === 'money' ? <Money h={h} minor={v.value || 0} /> : v.value == null ? '—' : m?.kind === 'rate' ? `${v.value}% (${v.numerator}/${v.denominator})` : v.value}</button> : '—'}
-            </td>; })}
-        </tr>)}</tbody>
-      </table></div> : segment ? <p className="ld-help">{tr('No records in this period for this breakdown.', 'لا سجلات في هذه الفترة لهذا التقسيم.')}</p> : <p className="ld-help">{tr('Split the measures by rental or sale, property type, lead source or agent.', 'قسّم المؤشرات حسب الإيجار أو البيع، أو نوع العقار، أو مصدر العميل، أو الوكيل.')}</p>}
-    </section>
+    <SegmentTable ar={ar} h={h} prefix="re" dimensions={SEGMENTS} segment={segment} columns={SEGMENT_COLUMNS} rows={i.segments?.rows} defs={METRICS} metricsBy={new Map(all.map(m => [m.id, m]))}
+      dimensionLabel={id => label('segment', id, ar)} keyLabel={segmentLabel} onParams={onParams} onRecords={onRecords}
+      hint={['Split the measures by rental or sale, property type, lead source or agent.', 'قسّم المؤشرات حسب الإيجار أو البيع، أو نوع العقار، أو مصدر العميل، أو الوكيل.']} />
 
     {(i.sourceConversion?.length || i.lostReasons?.length) ? <div className="hb-real-grid">
       <HorizontalBars title={tr('Won deals by lead source', 'الصفقات الرابحة حسب المصدر')} rows={(i.sourceConversion || []).map(row => ({ id: row.source, label: label('segmentKey', row.source, ar), value: row.rate, detail: row }))} format={(value, row) => `${row.detail.won}/${row.detail.opportunities} · ${value}%`} />

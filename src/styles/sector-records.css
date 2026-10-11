@@ -1,0 +1,19 @@
+/* The record and list pieces the six-tab sectors share (Fitness members, Dental visits). Loaded
+   after the sector sheets so these rules keep the precedence they had there. Colour keeps its
+   meaning: a row's or record's edge is its state's tone. */
+
+/* Action lists: the row's edge is its state; a selected row is tinted. */
+.hb-members tbody tr, .hb-visits tbody tr { box-shadow: inset calc(4px * var(--x-sign, 1)) 0 0 var(--tone, var(--rule-strong)); }
+.hb-members tbody tr[aria-selected="true"], .hb-visits tbody tr[aria-selected="true"] { background: var(--tone-tint, var(--card)); }
+.hb-member-open, .hb-visit-open { font-weight: 600; }
+
+/* One record: the header's edge is its state; lists carry their own tone; details read as a grid. */
+.hb-member-record > header[data-tone], .hb-visit-record > header[data-tone] { border-inline-start: 4px solid var(--tone); }
+.hb-member-record .hb-re-list > li[data-tone], .hb-visit-record .hb-re-list > li[data-tone] { border-inline-start: 4px solid var(--tone); padding-inline-start: 8px; }
+.hb-member-record .hb-deal-detail, .hb-visit-record .hb-deal-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px 16px; margin: 0; }
+.hb-member-record .hb-deal-detail dt, .hb-visit-record .hb-deal-detail dt { font-size: 12px; color: var(--ink-2); letter-spacing: .02em; }
+.hb-member-record .hb-deal-detail dd, .hb-visit-record .hb-deal-detail dd { margin: 0; font-weight: 600; }
+
+@media (max-width: 767px) {
+  .hb-members tbody tr, .hb-visits tbody tr { box-shadow: none; border-inline-start: 4px solid var(--tone, var(--rule-strong)); }
+}

@@ -3,7 +3,7 @@
 // out only through fitness_draft_approve and its window, template and opt-out checks.
 import { fitnessSettings } from './fitnessSettings.js';
 import { DAY, MIN, effectiveEnd, lastPresence, inAttendanceGap } from './fitnessDomain.js';
-import { formatLocal } from '../../src/lib/timezone.js';
+import { greeting, localWhen as when, localDay as day } from './workspace/text.js';
 
 // Switching a rule on never digs up last month's records.
 const STALE_MS = 30 * DAY;
@@ -47,12 +47,10 @@ export function fitnessRuleWanted(gym, now, settings) {
   return out;
 }
 
-const when = (ms, tz) => formatLocal(ms, tz).replace('T', ' ');
-const day = (ms, tz) => formatLocal(ms, tz).slice(0, 10);
 
 /** A draft from recorded facts only: class title and time, plan name and end date. No health claims. */
 export function fitnessDraftText(item, { name, timezone, arabic, planName }) {
-  const hello = arabic ? `مرحباً${name ? ` ${name}` : ''}،` : `Hello${name ? ` ${name}` : ''},`;
+  const hello = greeting(name, arabic);
   if (item.kind === 'waitlist_promoted') {
     return arabic ? `${hello} توفر لك مكان في حصة ${item.klass.title} يوم ${when(item.klass.startsAt, timezone)}. حجزناه لك؛ أخبرنا إن لم تتمكن من الحضور.`
       : `${hello} a place opened in ${item.klass.title} on ${when(item.klass.startsAt, timezone)}. We have booked it for you; let us know if you can't make it.`;

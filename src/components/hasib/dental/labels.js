@@ -1,4 +1,6 @@
 // Dental clinic labels, EN and AR. Codes stay as stored; only the words change. No clinical words.
+import { labelsFrom, BUCKET_TONE } from '../workspace/labels.js';
+
 const L = {
   status: { booked: ['Booked', 'محجوز'], confirmed: ['Confirmed', 'مؤكد'], arrived: ['Arrived', 'حضر'], completed: ['Completed', 'مكتمل'], missed: ['Missed', 'فائت'], cancelled: ['Cancelled', 'ملغى'],
     unknown: ['Outcome not recorded', 'النتيجة غير مسجلة'] },
@@ -30,12 +32,11 @@ const L = {
     balance_disputed: ['Balance disputed', 'نُوزع في الرصيد'], dispute_cleared: ['Dispute cleared', 'انتهى النزاع'], recall_set: ['Recall date set', 'حُدد موعد المراجعة'], recall_cleared: ['Recall cleared', 'أُلغي موعد المراجعة'] },
 };
 
-export const label = (group, key, ar) => { const pair = L[group]?.[key]; return pair ? pair[ar ? 1 : 0] : String(key ?? '').replace(/_/g, ' '); };
-export const options = (group, ar) => Object.keys(L[group]).map(id => ({ id, label: label(group, id, ar) }));
+export const { label, options } = labelsFrom(L);
 
 // Colour keeps its meaning: blue the patient, yellow in progress, orange the record, green done, coral a problem.
 export const STATUS_TONE = { booked: 'yellow', confirmed: 'blue', arrived: 'orange', completed: 'green', missed: 'coral', cancelled: undefined, unknown: 'coral' };
-export const BUCKET_TONE = { today: 'orange', overdue: 'coral', scheduled: 'blue', waiting: 'blue', decision: 'yellow', blocked: 'coral', completed: 'green' };
+export { BUCKET_TONE };
 export const QUICK = ['all', 'today', 'unconfirmed', 'missed', 'followupDue'];
 export const DENTAL_FILTERS = ['today', 'overdue', 'scheduled', 'waiting', 'decision', 'blocked', 'completed'];
 // Closed by a recorded fact (attendance, charges, payment); marking them done would only hide the cause.

@@ -1,6 +1,7 @@
 // Media's shared reads: who may see a production, its linked records as one readable card,
 // the tasks the records call for, and the Productions overview.
 import { owned } from '../blueTenant.js';
+import { reconcileRuleDrafts } from './workspace/drafts.js';
 import { ok, settingsFor } from './shared.js';
 import { businessTimezone } from './expensesState.js';
 import { displayName } from '../blueContacts.js';
@@ -134,11 +135,7 @@ export async function refreshStudio(ctx, accountId, now) {
   const rules = mediaRuleWanted(studio, now, base);
   for (const item of rules) if (item.rule.mode === 'task') wanted.push({ kind: item.kind, entityType: item.entityType, entityId: item.entityId, reason: item.reason, dueAt: item.dueAt, assignedAccountId: item.production.producerId });
   await reconcileTasks(ctx, { table: 'mediaTasks', accountId, wanted, autoKinds: MEDIA_AUTO_TASKS, ruleKinds: MEDIA_RULE_TASK_KINDS, now });
-  // Draft-mode rules: one draft per firing; an unsent one is cancelled once its cause is gone.
-  const draftKeys = new Set(rules.filter(i => i.rule.mode === 'draft').map(i => i.key));
-  const existing = new Map(studio.drafts.filter(d => d.ruleKey).map(d => [d.ruleKey, d]));
-  for (const d of existing.values()) if (d.status === 'draft' && !draftKeys.has(d.ruleKey)) await ctx.db.patch(d._id, { status: 'cancelled', version: d.version + 1, updatedAt: now });
-  for (const item of rules) if (item.rule.mode === 'draft' && !existing.has(item.key)) await insertRuleDraft(ctx, accountId, item, timezone, now);
+  await reconcileRuleDrafts(ctx, { rules, drafts: studio.drafts, insert: item => insertRuleDraft(ctx, accountId, item, timezone, now), now });
   return { studio: { ...studio, drafts: await scan(ctx, 'mediaDrafts', accountId) }, settings: s, timezone };
 }
 

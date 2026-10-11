@@ -3,19 +3,15 @@
 // Chats and customer profiles read these same rows; nothing here keeps a second queue.
 import { owned } from '../blueTenant.js';
 import { ok, fail } from './shared.js';
-import { audit } from './workspaceState.js';
 import { businessTimezone } from './expensesState.js';
 import { periodRange } from './period.js';
 import { OPEN_STAGES, canSeeDeal, publicRow, readable } from './realEstateBoard.js';
-import { dueBucket, sortQueue, validSnooze } from './workspace/queue.js';
+import { dueBucket } from './workspace/queue.js';
+import { SCAN, draftBuckets, taskRows, taskTiming, taskBase, taskTail, draftRow, datedFollowups, datedBucket, queueSelection, snoozeTask as snoozeOwnTask, contextContact } from './workspace/followups.js';
 
-const SCAN = 500, DONE_SCAN = 50;
 export const FOLLOWUP_FILTERS = ['today', 'overdue', 'scheduled', 'approval', 'blocked', 'completed'];
-const BLOCKED_TASKS = new Set(['template_required', 'send_failed']);
-const DRAFT_BUCKET = {
-  draft: 'approval', blocked: 'blocked', template_required: 'blocked', failed: 'blocked',
-  queued: 'completed', queued_template: 'completed', provider_submitted: 'completed', delivered: 'completed', read: 'completed', cancelled: 'completed',
-};
+// Real Estate's drafts wait in "approval"; the other sectors call that bucket "decision".
+const DRAFT_BUCKET = draftBuckets('approval');
 const ENTITY_TABLE = { opportunity: 'realEstateOpportunities', viewing: 'realEstateViewings', offer: 'realEstateOffers', draft: 'realEstateDrafts' };
 
 export { dueBucket };
@@ -37,33 +33,24 @@ async function dealOf(ctx, accountId, entityType, entityId, cache) {
 async function queueRows(ctx, tenant, actor, now) {
   const accountId = tenant.accountId, today = periodRange('today', now, await businessTimezone(ctx, accountId)), cache = new Map(), rows = [];
   const visible = deal => !!deal && canSeeDeal(actor, deal);
-  const open = await ctx.db.query('realEstateTasks').withIndex('by_account_status', q => q.eq('accountId', accountId).eq('status', 'open')).take(SCAN);
-  const resolved = await ctx.db.query('realEstateTasks').withIndex('by_account_status', q => q.eq('accountId', accountId).eq('status', 'resolved')).order('desc').take(DONE_SCAN);
-  for (const t of [...open, ...resolved]) {
+  for (const t of await taskRows(ctx, 'realEstateTasks', accountId)) {
     const deal = await dealOf(ctx, accountId, t.entityType, t.entityId, cache);
     if (t.entityType !== 'property' && !visible(deal)) continue;
     if (t.entityType === 'property' && actor.role === 'employee' && t.assignedAccountId && String(t.assignedAccountId) !== String(actor.actorAccountId)) continue;
-    const due = t.snoozedUntil || t.dueAt || t.createdAt;
-    const bucket = t.status !== 'open' ? 'completed' : BLOCKED_TASKS.has(t.kind) ? 'blocked' : dueBucket(due, now, today);
-    rows.push({ id: t._id, source: 'task', kind: t.kind, reason: t.reason, bucket, dueAt: due, entityType: t.entityType, entityId: t.entityId,
-      opportunityId: deal?._id || null, assignedAccountId: t.assignedAccountId || deal?.assignedAccountId || null, version: t.updatedAt,
-      ...(t.snoozedUntil ? { snoozedUntil: t.snoozedUntil } : {}), ...(t.resolution ? { resolution: t.resolution, resolvedAt: t.resolvedAt } : {}) });
+    const { due, bucket } = taskTiming(t, now, today);
+    rows.push({ ...taskBase(t, due, bucket), opportunityId: deal?._id || null, assignedAccountId: t.assignedAccountId || deal?.assignedAccountId || null, version: t.updatedAt, ...taskTail(t) });
   }
   const drafts = await ctx.db.query('realEstateDrafts').withIndex('by_account_created', q => q.eq('accountId', accountId)).order('desc').take(SCAN);
   for (const d of drafts) {
     const deal = await dealOf(ctx, accountId, 'draft', d._id, cache);
     if (!visible(deal)) continue;
-    const bucket = DRAFT_BUCKET[d.status] || 'blocked';
-    if (bucket === 'completed' && rows.filter(r => r.bucket === 'completed').length >= DONE_SCAN) continue;
-    rows.push({ id: d._id, source: 'draft', kind: d.kind, reason: d.ruleId ? `rule:${d.ruleId}` : 'draft', bucket, dueAt: d.approvedAt || d.createdAt, entityType: 'draft', entityId: String(d._id),
-      opportunityId: deal._id, assignedAccountId: deal.assignedAccountId || null, version: d.version, sendStatus: d.status, text: d.text, ...(d.ruleId ? { ruleId: d.ruleId } : {}) });
+    const row = draftRow(d, rows, DRAFT_BUCKET, 'draft', { opportunityId: deal._id, assignedAccountId: deal.assignedAccountId || null });
+    if (row) rows.push(row);
   }
-  const dated = await ctx.db.query('hasibFollowups').withIndex('by_account_due', q => q.eq('accountId', accountId)).order('desc').take(SCAN);
-  for (const f of dated) {
-    if (f.linkedType !== 'opportunity') continue;
+  for (const f of await datedFollowups(ctx, accountId, 'opportunity')) {
     const deal = await dealOf(ctx, accountId, 'opportunity', f.linkedId, cache);
     if (!visible(deal)) continue;
-    rows.push({ id: f._id, source: 'followup', kind: 'followup', reason: f.reason, bucket: f.status === 'completed' ? 'completed' : dueBucket(f.dueAt, now, today), dueAt: f.dueAt,
+    rows.push({ id: f._id, source: 'followup', kind: 'followup', reason: f.reason, bucket: datedBucket(f, now, today), dueAt: f.dueAt,
       entityType: 'opportunity', entityId: String(deal._id), opportunityId: deal._id, assignedAccountId: deal.assignedAccountId || null, version: f.version });
   }
   return { rows, cache };
@@ -86,12 +73,10 @@ async function describe(ctx, accountId, rows, cache) {
 
 const ORDER = { overdue: 0, today: 1, approval: 2, blocked: 3, scheduled: 4, completed: 5 };
 export async function followupQueue(ctx, tenant, actor, a, now) {
-  const filter = a.filter && FOLLOWUP_FILTERS.includes(a.filter) ? a.filter : null;
   const { rows, cache } = await queueRows(ctx, tenant, actor, now);
-  const counts = Object.fromEntries(FOLLOWUP_FILTERS.map(f => [f, rows.filter(r => r.bucket === f).length]));
-  const chosen = rows.filter(r => (!filter || r.bucket === filter) && (!a.opportunityId || String(r.opportunityId) === String(a.opportunityId)));
-  sortQueue(chosen, ORDER);
-  return ok({ items: await describe(ctx, tenant.accountId, chosen.slice(0, 200), cache), counts, actionable: counts.today + counts.overdue + counts.approval + counts.blocked });
+  const { counts, chosen, actionable } = queueSelection(rows, { filters: FOLLOWUP_FILTERS, order: ORDER, filter: a.filter, match: r => !a.opportunityId || String(r.opportunityId) === String(a.opportunityId),
+    actionable: ['today', 'overdue', 'approval', 'blocked'] });
+  return ok({ items: await describe(ctx, tenant.accountId, chosen, cache), counts, actionable });
 }
 
 /** Moves an open task to a later time. The version is the task's last update, so a stale screen cannot snooze twice. */
@@ -100,18 +85,13 @@ export async function snoozeTask(ctx, tenant, actor, a, now) {
   if (!task || task.status !== 'open') return fail('task_not_found');
   const deal = await dealOf(ctx, tenant.accountId, task.entityType, task.entityId, new Map());
   if (task.entityType !== 'property' && (!deal || !canSeeDeal(actor, deal))) return fail('task_not_found');
-  if (a.version !== task.updatedAt) return fail('task_conflict');
-  if (!validSnooze(a.dueAt, now)) return fail('invalid_snooze');
-  await ctx.db.patch(task._id, { snoozedUntil: a.dueAt, updatedAt: now });
-  await audit(ctx, tenant, actor, 'task_snoozed', 'task', task._id, now, String(a.dueAt));
-  return ok(publicRow(await ctx.db.get(task._id)));
+  return snoozeOwnTask(ctx, tenant, actor, task, a, now);
 }
 
 /** A customer's deals with their next viewing, latest offer, latest message draft and open follow-ups. */
 export async function dealContext(ctx, tenant, actor, a, now) {
-  let contactId = a.contactId;
-  if (!contactId && a.conversationId) contactId = (await owned(ctx, a.conversationId, tenant.accountId, 'blueConversations'))?.contactId;
-  if (!contactId || !await owned(ctx, contactId, tenant.accountId, 'blueContacts')) return ok({ items: [] });
+  const contactId = await contextContact(ctx, tenant, a);
+  if (!contactId) return ok({ items: [] });
   const rows = (await ctx.db.query('realEstateOpportunities').withIndex('by_contact_stage', q => q.eq('contactId', contactId)).take(20))
     .filter(o => o.accountId === tenant.accountId && canSeeDeal(actor, o))
     .sort((x, y) => Number(OPEN_STAGES.includes(y.stage)) - Number(OPEN_STAGES.includes(x.stage)) || y.updatedAt - x.updatedAt);

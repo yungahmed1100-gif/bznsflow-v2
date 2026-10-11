@@ -1,13 +1,13 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect, useMemo } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
-import { metricSearch, insightsReturn } from '../../lib/hasib/realEstateWork.js';
+import { metricSearch, insightsReturn } from '../../lib/hasib/workspaceLinks.js';
 import { MEDIA_QUICK, CLOSED_FILTERS, mediaQuickFilter, buildMediaSubmission } from '../../lib/hasib/mediaWork.js';
 import { PageHeader } from './DashboardVisuals';
 import { AttentionStrip } from './workspace/AttentionStrip.jsx';
 import { useWorkspaceActions } from './workspace/useWorkspaceActions.jsx';
-import { TeamView } from './realestate/TeamView.jsx';
+import { useWorkspaceShell, backLabel as shellBack } from './workspace/useWorkspaceShell.jsx';
+import { TeamView } from './workspace/TeamView.jsx';
 import { ProductionBoard, ProductionPreview, ClosedList } from './media/BoardView.jsx';
 import { CalendarView } from './media/CalendarView.jsx';
 import { ResourcesView } from './media/ResourcesView.jsx';
@@ -19,7 +19,6 @@ import { ProductionRecord } from './media/ProductionRecord.jsx';
 import { MediaForm } from './media/MediaForm.jsx';
 import { label } from './media/labels.js';
 
-const WIDE = '(min-width: 1100px)';
 const PRODUCER_WORDS = { invite: ['Invite a producer', 'دعوة منتج'], none: ['No producers yet', 'لا يوجد منتجون بعد'], hint: ['Invite your producers by email.', 'ادعُ منتجيك بالبريد الإلكتروني.'],
   scope: limit => [`One manager and up to ${limit} producers. Producers see their own productions; quotes, money, costs and approvals stay with you.`, `مدير واحد وحتى ${limit} منتجين. يرى المنتجون إنتاجاتهم فقط، وتبقى العروض والمال والتكاليف والموافقات لك.`] };
 const BRIEF_DEFAULTS = { productionType: 'video', format: 'video', quantity: 1, language: 'ar', clearance: 'unknown', channels: [] };
@@ -62,45 +61,23 @@ function NeedsAttention({ ar, summary, onGo }) {
 export function MediaDashboard({ section, view, s, h, overview, timezone = 'Asia/Muscat', onChanged, onGo, initialAction = '', tabs = null }) {
   const ar = s.ar, tr = (en, arabic) => (ar ? arabic : en);
   const manager = overview.workspaceRole === 'manager';
-  const [params, setParams] = useSearchParams();
-  const [form, setForm] = useState(null), [values, setValues] = useState({}), [lists, setLists] = useState(null), [preview, setPreview] = useState(null);
-  const scroll = useRef(0);
-  const productionId = params.get('production');
+  const { params, setParam, form, values, setValues, lists, setLists, preview, setPreview, openForm, closeForm, openRecord: openProduction, openRow: openCard, back, recordId: productionId } =
+    useWorkspaceShell({ recordParam: 'production', loadLists: formLists, setError: message => setError(message), reasonOf: reason => h.reason(reason) || s.reason(reason), onGo });
   const key = [section, view, params.get('metric'), params.get('period'), params.get('segment'), params.get('filter'), view === 'followups' ? productionId : ''].join('|');
   const state = usePolling(() => load(section, view, manager, params), [key, manager], { interval: 30000 });
   const { busy, setError, perform, act, notices, changes, clear } = useWorkspaceActions({ ar, s, h, refresh: state.refresh, onChanged });
   const data = { ...(lists || {}), ...(state.data || {}) };
   const actorAccountId = overview.teamSummary?.actorAccountId;
   const producers = useMemo(() => new Map([...(data.team?.members || []).filter(m => m.accountId).map(m => [String(m.accountId), m.email]), ...(manager ? [] : [[String(actorAccountId), tr('Me', 'أنا')]])]), [data.team, manager, actorAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
-  const setParam = patch => { const next = new URLSearchParams(params); for (const [k, v] of Object.entries(patch)) { if (v) next.set(k, v); else next.delete(k); } setParams(next); };
-
-  const openForm = (type, preset = {}) => {
-    setError(''); setValues(preset); setForm(type);
-    if (!lists) formLists().then(setLists).catch(e => setError(h.reason(e.reason) || s.reason(e.reason)));
-    window.requestAnimationFrame?.(() => document.querySelector('.hb-action-fields')?.scrollIntoView({ block: 'start' }));
-  };
-  const closeForm = () => { setForm(null); setValues({}); };
   useEffect(() => { clear(); if (initialAction === 'brief') openForm('brief', BRIEF_DEFAULTS); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Opening a record remembers where the list was; Back returns there with its filters.
-  const openProduction = id => { scroll.current = window.scrollY; setPreview(null); setParam({ production: id }); };
-  const openCard = id => (window.matchMedia?.(WIDE).matches ? setPreview(id) : openProduction(id));
   const submit = async e => {
     e.preventDefault();
     const submission = buildMediaSubmission(form, values, { requestId: crypto.randomUUID(), timezone });
     const created = form === 'brief' && !values.productionId;
     if (submission && await perform(submission.operation, submission.body, result => { if (created && result?.id) openProduction(result.id); })) { closeForm(); if (form === 'resource') setLists(null); }
   };
-  const back = () => {
-    const from = params.get('from');
-    if (from === 'chat' && params.get('chat')) return onGo('chats', { chat: params.get('chat') });
-    if (from === 'customers') return onGo('customers');
-    setParam({ production: null });
-  };
-  useLayoutEffect(() => { if (!productionId && scroll.current) { window.scrollTo(0, scroll.current); scroll.current = 0; } }, [productionId]);
-  const backLabel = params.get('from') === 'chat' ? tr('Back to chat', 'العودة إلى المحادثة') : params.get('from') === 'customers' ? tr('Back to customers', 'العودة إلى العملاء')
-    : params.get('metric') ? tr('Back to source records', 'العودة إلى السجلات المصدرية') : view === 'followups' ? tr('Back to follow-ups', 'العودة إلى المتابعات')
-    : view === 'calendar' ? tr('Back to the calendar', 'العودة إلى الجدول') : tr('Back to the board', 'العودة إلى اللوحة');
+  const backLabel = shellBack(params, ar, { fallback: view === 'followups' ? ['Back to follow-ups', 'العودة إلى المتابعات'] : view === 'calendar' ? ['Back to the calendar', 'العودة إلى الجدول'] : ['Back to the board', 'العودة إلى اللوحة'] });
 
   const formPanel = form && <MediaForm form={form} values={values} setValues={setValues} ar={ar} h={h} s={s} busy={busy} data={data} manager={manager} actorAccountId={actorAccountId} onSubmit={submit} onCancel={closeForm} />;
   if (section === 'work' && productionId && view !== 'followups') return <div className="hb-workspace hb-media">{notices}{formPanel}

@@ -3,12 +3,11 @@
 // "no eligible records", never 0%. Drill-down returns the exact population behind the number.
 import { ok, fail, settingsFor } from './shared.js';
 import { businessTimezone } from './expensesState.js';
-import { periodRange, PERIODS } from './period.js';
+import { insightsPeriod as periodOf, segmentRows, contactNames } from './workspace/insights.js';
 import { rate, summarizeRows, weeks } from './workspace/metrics.js';
 import { mediaSettings } from './mediaSettings.js';
 import { loadStudio, factsOf, moneyOf, canSeeProduction } from './mediaBoard.js';
 import { DAY, HOUR } from './mediaDomain.js';
-import { displayName } from '../blueContacts.js';
 
 const EVENT_SCAN = 6000;
 export const MEDIA_HEADLINE = ['on_time_delivery', 'approval_wait', 'revision_overrun', 'project_contribution'];
@@ -117,7 +116,6 @@ function summarize(id, rows) {
   return base;
 }
 
-const periodOf = (a, now, tz) => periodRange(PERIODS.includes(a.period) && a.period !== 'today' ? a.period : '30d', now, tz);
 const settingsOf = async (ctx, accountId) => mediaSettings(await settingsFor(ctx, accountId));
 
 export async function mediaInsights(ctx, tenant, a, now) {
@@ -148,10 +146,8 @@ export async function mediaInsights(ctx, tenant, a, now) {
 
 function segmentTable(dimension, pops, data) {
   const ids = dimension === 'resource_category' ? ['committed_utilization'] : [...MEDIA_HEADLINE, ...MEDIA_DIAGNOSTIC].filter(id => id !== 'committed_utilization');
-  const keys = new Set();
-  for (const id of ids) for (const r of pops[id]) keys.add(segmentOf(dimension, r, data));
-  const slice = (id, key) => Object.assign(pops[id].filter(r => segmentOf(dimension, r, data) === key), id === 'committed_utilization' ? { availableHours: pops[id].availableHours } : {});
-  return { dimension, metrics: ids, rows: [...keys].sort().map(key => ({ key, values: Object.fromEntries(ids.map(id => [id, (({ value, numerator, denominator }) => ({ value, numerator, denominator }))(summarize(id, slice(id, key)))])) })) };
+  const slice = (id, rows) => Object.assign(rows, id === 'committed_utilization' ? { availableHours: pops[id].availableHours } : {});
+  return { dimension, metrics: ids, rows: segmentRows(ids, pops, r => segmentOf(dimension, r, data), summarize, slice) };
 }
 
 /** The exact records behind a metric (optionally one segment), marking which ones the numerator counts. */
@@ -162,16 +158,15 @@ export async function mediaMetricRecords(ctx, tenant, actor, a, now) {
   const accountId = tenant.accountId, tz = await businessTimezone(ctx, accountId), s = await settingsOf(ctx, accountId);
   const range = periodOf(a, now, tz), data = await load(ctx, accountId);
   const rows = populations(data, s, range, now, tz)[a.metric].filter(r => !a.segment || segmentOf(dimension, r, data) === key).filter(r => !r.production || canSeeProduction(actor, r.production)).slice(0, 300);
-  const contacts = new Map();
+  const nameOf = contactNames(ctx);
   const items = [];
   for (const r of rows) {
     const p = r.production;
-    if (p && !contacts.has(String(p.contactId))) { const c = await ctx.db.get(p.contactId); contacts.set(String(p.contactId), c?.state === 'active' ? displayName(c).name : null); }
     items.push({ id: r.entity._id, entityType: r.entityType, counts: r.counts, inNumerator: r.inNumerator, ...(r.note ? { note: r.note } : {}),
       ...(r.amountMinor !== undefined ? { amountMinor: r.amountMinor } : {}), ...(r.durationMs != null ? { durationMs: r.durationMs } : {}), ...(r.hours !== undefined ? { hours: Math.round(r.hours * 10) / 10 } : {}),
       ...(r.item ? { item: r.item } : {}), ...(r.entityType === 'cut' ? { label: r.entity.label } : {}), ...(r.entityType === 'cost' ? { label: r.entity.label, category: r.entity.category } : {}),
       ...(r.resource ? { resourceName: r.resource.name } : {}),
-      productionId: p?._id || null, ref: p?.ref || null, title: p?.title || null, status: p?.status || null, contactName: p ? contacts.get(String(p.contactId)) : null, conversationId: p?.conversationId || null });
+      productionId: p?._id || null, ref: p?.ref || null, title: p?.title || null, status: p?.status || null, contactName: p ? await nameOf(p.contactId) : null, conversationId: p?.conversationId || null });
   }
   return ok({ metric: a.metric, complete: data.complete, items });
 }

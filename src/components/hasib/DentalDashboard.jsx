@@ -1,14 +1,14 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
-import { insightsReturn } from '../../lib/hasib/realEstateWork.js';
+import { insightsReturn } from '../../lib/hasib/workspaceLinks.js';
 import { buildDentalSubmission } from '../../lib/hasib/dentalWork.js';
 import { formatLocal, zonedLocalToUtc } from '../../lib/timezone.js';
 import { PageHeader } from './DashboardVisuals';
 import { AttentionStrip } from './workspace/AttentionStrip.jsx';
 import { useWorkspaceActions } from './workspace/useWorkspaceActions.jsx';
-import { TeamView } from './realestate/TeamView.jsx';
+import { useWorkspaceShell, backLabel as shellBack } from './workspace/useWorkspaceShell.jsx';
+import { TeamView } from './workspace/TeamView.jsx';
 import { ScheduleView, VisitList, VisitPreview } from './dental/VisitsView.jsx';
 import { VisitRecord } from './dental/VisitRecord.jsx';
 import { ServicesView } from './dental/ServicesView.jsx';
@@ -66,26 +66,14 @@ function NeedsAttention({ ar, summary, onGo }) {
 export function DentalDashboard({ section, view, s, h, overview, timezone = 'Asia/Muscat', onChanged, onGo, initialAction = '', tabs = null }) {
   const ar = s.ar, tr = (en, arabic) => (ar ? arabic : en);
   const manager = overview.workspaceRole === 'manager';
-  const [params, setParams] = useSearchParams();
-  const [form, setForm] = useState(null), [values, setValues] = useState({}), [lists, setLists] = useState(null), [preview, setPreview] = useState(null);
-  const scroll = useRef(0);
-  const visitId = params.get('visit');
+  const shell = useWorkspaceShell({ recordParam: 'visit', loadLists: formLists, setError: message => setError(message), reasonOf: reason => h.reason(reason) || s.reason(reason), onGo });
+  const { params, setParam, form, values, setValues, lists, setLists, preview, setPreview, openForm, closeForm, openRecord: openVisit, back, recordId: visitId } = shell;
   const key = [section, view, params.get('metric'), params.get('period'), params.get('segment'), params.get('filter'), params.get('day'), params.get('patient')].join('|');
   const state = usePolling(() => load(section, view, manager, params, timezone), [key, manager], { interval: 30000 });
   const { busy, setError, perform, act, notices, changes, clear } = useWorkspaceActions({ ar, s, h, refresh: state.refresh, onChanged });
   const data = { ...(lists || {}), ...(state.data || {}), expenseCategories: overview.pack?.expenseCategories || [] };
-  const setParam = patch => { const next = new URLSearchParams(params); for (const [k, v] of Object.entries(patch)) { if (v) next.set(k, v); else next.delete(k); } setParams(next); };
-
-  const openForm = (type, preset = {}) => {
-    setError(''); setValues(preset); setForm(type);
-    if (!lists) formLists().then(setLists).catch(e => setError(h.reason(e.reason) || s.reason(e.reason)));
-    window.requestAnimationFrame?.(() => document.querySelector('.hb-action-fields')?.scrollIntoView({ block: 'start' }));
-  };
-  const closeForm = () => { setForm(null); setValues({}); };
   useEffect(() => { clear(); if (initialAction === 'visit') openForm('visit'); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Opening a record remembers where the list was; Back returns there with its filters.
-  const openVisit = id => { scroll.current = window.scrollY; setPreview(null); setParam({ visit: id }); };
   const openRow = id => (window.matchMedia?.(WIDE).matches && view === 'visits' ? setPreview(id) : openVisit(id));
   const submit = async e => {
     e.preventDefault();
@@ -94,16 +82,8 @@ export function DentalDashboard({ section, view, s, h, overview, timezone = 'Asi
     catch { setError(tr('Enter a valid date and time.', 'أدخل تاريخاً ووقتاً صالحين.')); return; }
     if (submission && await perform(submission.operation, submission.body)) { closeForm(); if (form === 'resource') setLists(null); }
   };
-  const back = () => {
-    const from = params.get('from');
-    if (from === 'chat' && params.get('chat')) return onGo('chats', { chat: params.get('chat') });
-    if (from === 'customers') return onGo('customers');
-    setParam({ visit: null });
-  };
-  useLayoutEffect(() => { if (!visitId && scroll.current) { window.scrollTo(0, scroll.current); scroll.current = 0; } }, [visitId]);
-  const backLabel = params.get('from') === 'chat' ? tr('Back to chat', 'العودة إلى المحادثة') : params.get('from') === 'customers' ? tr('Back to patients', 'العودة إلى المرضى')
-    : params.get('metric') ? tr('Back to source records', 'العودة إلى السجلات المصدرية') : view === 'schedule' ? tr('Back to schedule', 'العودة إلى الجدول')
-    : view === 'followups' ? tr('Back to follow-ups', 'العودة إلى المتابعات') : tr('Back to visits', 'العودة إلى الزيارات');
+  const backLabel = shellBack(params, ar, { customers: ['Back to patients', 'العودة إلى المرضى'],
+    fallback: view === 'schedule' ? ['Back to schedule', 'العودة إلى الجدول'] : view === 'followups' ? ['Back to follow-ups', 'العودة إلى المتابعات'] : ['Back to visits', 'العودة إلى الزيارات'] });
 
   const formPanel = form && <DentalForm form={form} values={values} setValues={setValues} ar={ar} h={h} busy={busy} data={data} onSubmit={submit} onCancel={closeForm} />;
   if (section === 'work' && visitId) return <div className="hb-workspace hb-dental">{notices}{formPanel}

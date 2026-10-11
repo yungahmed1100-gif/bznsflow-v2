@@ -6,7 +6,8 @@ import { ok, settingsFor } from './shared.js';
 import { businessTimezone } from './expensesState.js';
 import { displayName } from '../blueContacts.js';
 import { reconcileTasks } from './workspace/tasks.js';
-import { conversationOf } from './fitnessGym.js';
+import { conversationOf } from './workspace/conversation.js';
+import { reconcileRuleDrafts } from './workspace/drafts.js';
 import { formatLocal } from '../../src/lib/timezone.js';
 import { dentalSettings } from './dentalSettings.js';
 import { dentalRuleWanted, dentalDraftText, DENTAL_RULE_TASK_KINDS } from './dentalRules.js';
@@ -126,11 +127,7 @@ export async function refreshClinic(ctx, accountId, now) {
   const rules = dentalRuleWanted(clinic, now, base);
   for (const item of rules) if (item.rule.mode === 'task') wanted.push({ kind: item.kind, entityType: item.entityType, entityId: item.entityId, reason: item.reason, dueAt: item.dueAt });
   await reconcileTasks(ctx, { table: 'dentalTasks', accountId, wanted, autoKinds: DENTAL_AUTO_TASKS, ruleKinds: ONCE_TASKS, now });
-  // Draft-mode rules: one draft per firing; an unsent one is cancelled once its cause is gone.
-  const draftKeys = new Set(rules.filter(i => i.rule.mode === 'draft').map(i => i.key));
-  const existing = new Map(clinic.drafts.filter(d => d.ruleKey).map(d => [d.ruleKey, d]));
-  for (const d of existing.values()) if (d.status === 'draft' && !draftKeys.has(d.ruleKey)) await ctx.db.patch(d._id, { status: 'cancelled', version: d.version + 1, updatedAt: now });
-  for (const item of rules) if (item.rule.mode === 'draft' && !existing.has(item.key)) await insertDraft(ctx, accountId, item, { timezone, currency: base.currency }, now);
+  await reconcileRuleDrafts(ctx, { rules, drafts: clinic.drafts, insert: item => insertDraft(ctx, accountId, item, { timezone, currency: base.currency }, now), now });
   const drafts = await ctx.db.query('dentalDrafts').withIndex('by_account_created', q => q.eq('accountId', accountId)).order('desc').take(SCAN);
   return { clinic: { ...clinic, drafts }, settings: s, timezone };
 }

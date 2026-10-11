@@ -1,4 +1,5 @@
 import { rolloutAllows } from './greenRollout.js';
+import { SECTOR_DRAFT_FIELDS } from './hasib/workspace/sectors.js';
 // Broadcast campaigns: approved marketing templates sent to consented contacts.
 // Separate tables, rate counters and failure state from Layla's conversational
 // replies, so a broadcast can never pause or duplicate a chat response.
@@ -254,10 +255,7 @@ export async function executeCampaignWorker(ctx, a, now = Date.now()) {
         await ctx.db.patch(job._id, { status, ...(a.providerId ? { providerId: a.providerId } : {}), ...(a.reason ? { reason: String(a.reason).slice(0, 60) } : {}), ...code, updatedAt: now });
       }
     } else if (a.providerId && !job.providerId) await ctx.db.patch(job._id, { providerId: a.providerId, updatedAt: now });
-    if (job.realEstateDraftId) await ctx.db.patch(job.realEstateDraftId, { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
-    if (job.mediaDraftId) await ctx.db.patch(job.mediaDraftId, { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
-    if (job.fitnessDraftId) await ctx.db.patch(job.fitnessDraftId, { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
-    if (job.dentalDraftId) await ctx.db.patch(job.dentalDraftId, { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
+    for (const field of SECTOR_DRAFT_FIELDS) if (job[field]) await ctx.db.patch(job[field], { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
     if (campaign && typeof a.campaignBlock === 'string' && campaign.status === 'processing') await blockCampaign(ctx, campaign, a.campaignBlock.slice(0, 60), now);
     else if (campaign) await nextQueued(ctx, a, campaign._id, now);
     if (campaign) await finishIfDone(ctx, await ctx.db.get(campaign._id), now);

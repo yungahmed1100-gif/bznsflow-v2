@@ -2,7 +2,7 @@
 // A rule only ever opens an internal task or a draft waiting for the manager's approval;
 // sending stays with draft_approve and its window, template and opt-out checks.
 import { realEstateSettings } from './realEstateSettings.js';
-import { formatLocal } from '../../src/lib/timezone.js';
+import { greeting, localWhen as when } from './workspace/text.js';
 
 const MIN = 60000, DAY = 86400000;
 // Switching a rule on never digs up last year's records.
@@ -80,11 +80,10 @@ const GAP_WORDS = {
   en: { budget: 'your budget', area: 'the areas you prefer', property_type: 'the type of property', timing: 'when you plan to move', finance: 'how you plan to pay', decision_maker: 'who else decides' },
   ar: { budget: 'الميزانية', area: 'المناطق المفضلة', property_type: 'نوع العقار', timing: 'موعد الانتقال', finance: 'طريقة الدفع', decision_maker: 'من يشارك في القرار' },
 };
-const when = (ms, tz) => formatLocal(ms, tz).replace('T', ' ');
 
 /** A rule's draft, from approved records only. It never states availability or a price. */
 export function ruleDraftText(item, { name, propertyLabel, location, timezone, arabic }) {
-  const hello = arabic ? `مرحباً${name ? ` ${name}` : ''}،` : `Hello${name ? ` ${name}` : ''},`;
+  const hello = greeting(name, arabic);
   const place = [propertyLabel, location].filter(Boolean).join(arabic ? '، ' : ', ');
   if (item.rule.id === 'missing_requirements') {
     const words = item.gaps.slice(0, 3).map(g => GAP_WORDS[arabic ? 'ar' : 'en'][g]).join(arabic ? ' و' : ', ');

@@ -10,7 +10,8 @@ import { createOrder, recordPayment, PAYMENT_METHODS } from './ordersState.js';
 import { audit, workspaceContainsAccount } from './workspaceState.js';
 import { businessTimezone } from './expensesState.js';
 import { publicRow } from './workspace/rows.js';
-import { sendApprovedDraft } from './workspace/drafts.js';
+import { approveDraft, draftRefusal } from './workspace/drafts.js';
+import { replayOr, strip } from './workspace/records.js';
 import { displayName } from '../blueContacts.js';
 import { loadGym, refreshGym, describeMembers, memberContactIds, fitnessOverview, currentMembership, insertDraft, conversationOf } from './fitnessGym.js';
 import { fitnessFollowupQueue, resolveFitnessTask, snoozeFitnessTask, fitnessContext } from './fitnessFollowups.js';
@@ -22,14 +23,6 @@ const MANAGER_ONLY = new Set(['fitness_plan_save', 'fitness_class_save', 'fitnes
 const LIVE_SEATS = new Set(['confirmed', 'waitlisted', 'attended', 'no_show']);
 const SOURCE_EVENT = /^[A-Za-z0-9._:-]{1,80}$/;
 const time = v => Number.isSafeInteger(v) && v > 0 ? v : null;
-// The stored row without system fields and without the optional fields an edit may clear.
-const strip = (row, clearable = []) => Object.fromEntries(Object.entries(row).filter(([k]) => !['_id', '_creationTime', '_seq', 'table', ...clearable].includes(k)));
-
-async function replayOr(ctx, table, tenant, a) {
-  if (!REQUEST_ID.test(a.requestId || '')) return { error: 'invalid_request' };
-  const row = await byRequest(ctx, table, tenant.accountId, a.requestId);
-  return { replay: row ? ok(publicRow(row)) : null };
-}
 const plain = (row, actor) => { const { priceMinor, ...rest } = publicRow(row); return actor.role === 'manager' ? { ...rest, priceMinor } : rest; };
 
 /** Plans: what a membership or class pack is, its term, freeze allowance and grace. */
@@ -379,17 +372,14 @@ async function renew(ctx, tenant, actor, a, now) {
 }
 
 async function draftApprove(ctx, tenant, actor, a, now) {
-  const row = await owned(ctx, a.draftId, tenant.accountId, 'fitnessDrafts');
-  if (!row) return fail('draft_not_found');
-  if (row.status !== 'draft' || row.version !== a.version) return fail(row.version !== a.version ? 'draft_conflict' : 'invalid_draft_transition');
+  const row = await owned(ctx, a.draftId, tenant.accountId, 'fitnessDrafts'), refusal = draftRefusal(row, a);
+  if (refusal) return fail(refusal);
   const text = a.fitness?.text !== undefined ? bounded(a.fitness.text, 4000) : row.text;
   if (!text) return fail('invalid_draft');
-  const draft = { ...row, text, ...(a.fitness?.templateId ? { templateId: bounded(a.fitness.templateId, 80) } : {}) };
-  const status = await sendApprovedDraft(ctx, tenant, { draft, keyPrefix: 'fitness-draft', handoffReason: 'membership_follow_up', taskTable: 'fitnessTasks',
-    messageLinks: { fitnessDraftId: row._id }, recipientLinks: { fitnessDraftId: row._id }, contactId: row.contactId }, now);
-  await ctx.db.patch(row._id, { text, ...(draft.templateId ? { templateId: draft.templateId } : {}), status, approvedBy: actor.actorAccountId, approvedAt: now, version: row.version + 1, updatedAt: now });
-  await audit(ctx, tenant, actor, 'draft_approved', 'draft', row._id, now, status);
-  return ok(publicRow(await ctx.db.get(row._id)));
+  const saved = await approveDraft(ctx, tenant, actor, { row, edit: { text, ...(a.fitness?.templateId ? { templateId: bounded(a.fitness.templateId, 80) } : {}) },
+    keyPrefix: 'fitness-draft', handoffReason: 'membership_follow_up', taskTable: 'fitnessTasks',
+    links: async d => ({ messageLinks: { fitnessDraftId: d._id }, recipientLinks: { fitnessDraftId: d._id }, contactId: d.contactId }) }, now);
+  return ok(publicRow(saved));
 }
 
 /** The member list, with the four quick filters and an Insights drill-down population. */

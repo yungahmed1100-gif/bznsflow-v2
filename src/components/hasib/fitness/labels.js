@@ -1,4 +1,6 @@
 // Fitness & wellness labels, EN and AR. Codes stay as stored; only the words change.
+import { labelsFrom, BUCKET_TONE } from '../workspace/labels.js';
+
 const L = {
   state: { prospect: ['Trial / enquiry', 'تجربة / استفسار'], pending: ['Awaiting payment', 'بانتظار الدفع'], upcoming: ['Starts soon', 'يبدأ قريباً'], active: ['Active', 'نشط'], frozen: ['Frozen', 'مجمّد'],
     grace: ['Ended, not renewed', 'انتهى ولم يُجدَّد'], renewed: ['Renewed', 'مُجدَّد'], expired: ['Lapsed', 'منتهٍ'], cancelled: ['Cancelled', 'ملغى'] },
@@ -28,13 +30,12 @@ const L = {
     cancelled: ['Cancelled', 'أُلغي'], trial_booked: ['Trial booked', 'حُجزت التجربة'], class_booked: ['Class booked', 'حُجزت حصة'], attended: ['Attended', 'حضر'], no_show: ['No-show', 'لم يحضر'] },
 };
 
-export const label = (group, key, ar) => { const pair = L[group]?.[key]; return pair ? pair[ar ? 1 : 0] : String(key ?? '').replace(/_/g, ' '); };
-export const options = (group, ar) => Object.keys(L[group]).map(id => ({ id, label: label(group, id, ar) }));
+export const { label, options } = labelsFrom(L);
 
 // Colour keeps its meaning: blue the customer, yellow in progress, orange the record, green done, coral a problem.
 export const STATE_TONE = { prospect: 'blue', pending: 'yellow', upcoming: 'yellow', active: 'green', frozen: 'orange', grace: 'coral', renewed: 'green', expired: 'coral', cancelled: undefined };
 export const SEAT_TONE = { confirmed: 'yellow', waitlisted: 'orange', attended: 'green', no_show: 'coral', cancelled: undefined };
-export const BUCKET_TONE = { today: 'orange', overdue: 'coral', scheduled: 'blue', waiting: 'blue', decision: 'yellow', blocked: 'coral', completed: 'green' };
+export { BUCKET_TONE };
 export const QUICK = ['all', 'trialFollowUp', 'attendanceGap', 'expiring', 'frozen'];
 export const FITNESS_FILTERS = ['today', 'overdue', 'scheduled', 'waiting', 'decision', 'blocked', 'completed'];
 // Closed by a recorded fact (payment, attendance, renewal); marking them done would only hide the cause.

@@ -91,10 +91,16 @@ const SHAPES = {
 };
 // Real Estate's windows and follow-up rules; Convex checks every range.
 const RE_SETTING_KEYS = ['viewingWindowDays', 'closeWindowDaysRent', 'closeWindowDaysSale', 'lateCancelHours', 'responseSlaMinutes', 'commissionTermsDays'];
-function realEstateSettings(r) {
-  if (!r || typeof r !== 'object') return undefined;
-  return compact({ ...Object.fromEntries(RE_SETTING_KEYS.map(k => [k, int(r[k])])),
-    rules: list(r.rules, 3, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) });
+/** A six-tab sector's windows (whole numbers) and its follow-up rules, as settings_update carries them. */
+const sectorSettings = (keys, maxRules) => v => v && typeof v === 'object' ? compact({ ...Object.fromEntries(keys.map(k => [k, int(v[k])])),
+  rules: list(v.rules, maxRules, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) }) : undefined;
+const realEstateSettings = sectorSettings(RE_SETTING_KEYS, 3);
+/** A sector's operations share one shape; creates need a request id unless an edit names its record. */
+function registerSector(operations, shape, requestMap) {
+  for (const operation of operations) {
+    SHAPES[operation] = shape;
+    if (operation in requestMap) { NEEDS_REQUEST.add(operation); if (requestMap[operation]) UPDATED_BY[operation] = requestMap[operation]; }
+  }
 }
 const bookingFields = new Set(Object.values(BOOKING_OPERATIONS).flat());
 const workflowStrings = new Set('title kind label identifier location availability status viewingOutcome approvedBy reference transactionType propertyType area pricePeriod description authorityStatus source need financeReadiness decisionMakerReadiness timeline nextAction lostReason outcome terms text templateId contractType reason supplier package category severity mitigation'.split(' '));
@@ -180,15 +186,8 @@ const mediaShape = b => ({ requestId: uuid(b.requestId), version: int(b.version)
   status: str(b.status, 30), reason: str(b.reason, 200), amountMinor: int(b.amountMinor), method: str(b.method, 20), reference: str(b.reference, 80), dueAt: int(b.dueAt),
   fromAt: int(b.fromAt), toAt: int(b.toAt), metric: str(b.metric, 40), segment: str(b.segment, 80), period: str(b.period, 12), filter: str(b.filter, 20), media: mediaPayload(b.media) });
 const MEDIA_REQUEST = { media_production_save: 'productionId', media_cut_submit: null, media_change_order_save: null, media_reservation_save: null, media_cost_save: null, media_payment_record: null, media_resource_save: 'mediaResourceId', media_draft_save: 'draftId' };
-for (const operation of MEDIA_OPERATIONS) {
-  SHAPES[operation] = mediaShape;
-  if (operation in MEDIA_REQUEST) { NEEDS_REQUEST.add(operation); if (MEDIA_REQUEST[operation]) UPDATED_BY[operation] = MEDIA_REQUEST[operation]; }
-}
-// Media's windows and follow-up rules arrive as `mediaSettings` on settings_update.
+registerSector(MEDIA_OPERATIONS, mediaShape, MEDIA_REQUEST);
 const MEDIA_SETTING_KEYS = ['quoteWindowDays', 'revisionWindowDays', 'prepCutoffHours', 'reviewResponseHours', 'revisionAllowance', 'depositPercent', 'extraRoundPriceMinor', 'resourceHoursPerDay', 'holdHours'];
-const settingsShape = SHAPES.settings_update;
-SHAPES.settings_update = b => ({ ...settingsShape(b), mediaSettings: b.mediaSettings && typeof b.mediaSettings === 'object' ? compact({ ...Object.fromEntries(MEDIA_SETTING_KEYS.map(k => [k, int(b.mediaSettings[k])])),
-  rules: list(b.mediaSettings.rules, 3, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) }) : undefined });
 
 // Fitness: one typed payload; ids are checked as ids and Convex re-checks every value.
 const fitnessPayload = f => f && typeof f === 'object' ? compact({
@@ -203,14 +202,8 @@ const fitnessShape = b => ({ requestId: uuid(b.requestId), version: int(b.versio
   amountMinor: int(b.amountMinor), method: str(b.method, 20), reference: str(b.reference, 80), dueAt: int(b.dueAt), fromAt: int(b.fromAt), toAt: int(b.toAt),
   metric: str(b.metric, 40), segment: str(b.segment, 80), period: str(b.period, 12), filter: str(b.filter, 20), fitness: fitnessPayload(b.fitness) });
 const FITNESS_REQUEST = { fitness_plan_save: 'planId', fitness_class_save: 'classId', fitness_seat_book: null, fitness_membership_save: null, fitness_payment_record: null, fitness_renew: null };
-for (const operation of FITNESS_OPERATIONS) {
-  SHAPES[operation] = fitnessShape;
-  if (operation in FITNESS_REQUEST) { NEEDS_REQUEST.add(operation); if (FITNESS_REQUEST[operation]) UPDATED_BY[operation] = FITNESS_REQUEST[operation]; }
-}
+registerSector(FITNESS_OPERATIONS, fitnessShape, FITNESS_REQUEST);
 const FITNESS_SETTING_KEYS = ['conversionWindowDays', 'gapDays', 'minObservationDays', 'renewalNoticeDays'];
-const mediaSettingsShape = SHAPES.settings_update;
-SHAPES.settings_update = b => ({ ...mediaSettingsShape(b), fitnessSettings: b.fitnessSettings && typeof b.fitnessSettings === 'object' ? compact({ ...Object.fromEntries(FITNESS_SETTING_KEYS.map(k => [k, int(b.fitnessSettings[k])])),
-  rules: list(b.fitnessSettings.rules, 3, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) }) : undefined });
 
 // Dental: one typed payload; ids are checked as ids and Convex re-checks every value.
 const dentalPayload = d => d && typeof d === 'object' ? compact({
@@ -224,14 +217,12 @@ const dentalShape = b => ({ requestId: uuid(b.requestId), version: int(b.version
   dueAt: int(b.dueAt), fromAt: int(b.fromAt), toAt: int(b.toAt), metric: str(b.metric, 40), segment: str(b.segment, 80), period: str(b.period, 12), filter: str(b.filter, 20),
   lines: list(b.lines, 20, x => compact({ variantId: id(x?.variantId), qty: int(x?.qty), unitPriceMinor: int(x?.unitPriceMinor) })), dental: dentalPayload(b.dental) });
 const DENTAL_REQUEST = { dental_resource_save: null, dental_visit_book: null, dental_charge: null, dental_payment_record: null };
-for (const operation of DENTAL_OPERATIONS) {
-  SHAPES[operation] = dentalShape;
-  if (operation in DENTAL_REQUEST) NEEDS_REQUEST.add(operation);
-}
+registerSector(DENTAL_OPERATIONS, dentalShape, DENTAL_REQUEST);
 const DENTAL_SETTING_KEYS = ['visitMinutes', 'lateCancelHours', 'balanceDueDays', 'recallWindowDays', 'chairDayMinutes', 'openDaysPerWeek'];
-const fitnessSettingsShape = SHAPES.settings_update;
-SHAPES.settings_update = b => ({ ...fitnessSettingsShape(b), dentalSettings: b.dentalSettings && typeof b.dentalSettings === 'object' ? compact({ ...Object.fromEntries(DENTAL_SETTING_KEYS.map(k => [k, int(b.dentalSettings[k])])),
-  rules: list(b.dentalSettings.rules, 4, x => compact({ id: str(x?.id, 40), enabled: typeof x?.enabled === 'boolean' ? x.enabled : undefined, mode: str(x?.mode, 10), offsetMinutes: int(x?.offsetMinutes) })) }) : undefined });
+// Media, Fitness and Dental windows and rules arrive under their own settings_update argument.
+const baseSettings = SHAPES.settings_update;
+const SECTOR_SETTINGS = { mediaSettings: sectorSettings(MEDIA_SETTING_KEYS, 3), fitnessSettings: sectorSettings(FITNESS_SETTING_KEYS, 3), dentalSettings: sectorSettings(DENTAL_SETTING_KEYS, 4) };
+SHAPES.settings_update = b => ({ ...baseSettings(b), ...Object.fromEntries(Object.entries(SECTOR_SETTINGS).map(([arg, shape]) => [arg, shape(b[arg])])) });
 
 export const HASIB_ACTIONS = Object.keys(SHAPES);
 

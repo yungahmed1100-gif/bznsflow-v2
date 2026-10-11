@@ -1,4 +1,6 @@
 // Media & production labels, EN and AR. Codes stay as stored; only the words change.
+import { BUCKET_TONE } from '../workspace/labels.js';
+
 const L = {
   status: { brief_incomplete: ['Brief', 'الموجز'], quoted: ['Quoted', 'مُسعّر'], awaiting_acceptance: ['Awaiting acceptance', 'بانتظار القبول'], booked: ['Booked', 'محجوز'],
     preproduction: ['Preproduction', 'ما قبل الإنتاج'], shooting: ['Shooting', 'التصوير'], editing: ['Editing', 'المونتاج'], review: ['Client review', 'مراجعة العميل'],
@@ -51,4 +53,4 @@ export const options = (group, ar) => Object.entries(L[group] || {}).map(([id, p
 /** Tones by meaning: blue the customer, yellow in progress, orange the record, green done, coral a problem. */
 export const STATUS_TONE = { brief_incomplete: 'blue', quoted: 'blue', awaiting_acceptance: 'blue', booked: 'yellow', preproduction: 'yellow', shooting: 'yellow', editing: 'yellow',
   review: 'orange', accepted: 'orange', delivered: 'green', closed: 'green', on_hold: 'coral', cancelled: 'coral' };
-export const BUCKET_TONE = { overdue: 'coral', today: 'orange', scheduled: 'blue', waiting: 'blue', decision: 'yellow', blocked: 'coral', completed: 'green' };
+export { BUCKET_TONE };

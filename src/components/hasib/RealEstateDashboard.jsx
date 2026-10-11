@@ -1,5 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
 import { photoProblem, uploadProductPhoto } from '../../lib/hasib/photo.js';
@@ -14,14 +13,14 @@ import { InsightsView } from './realestate/InsightsView.jsx';
 import { MetricRecords } from './realestate/MetricRecords.jsx';
 import { RulesView } from './realestate/RulesView.jsx';
 import { DealRecord } from './realestate/DealRecord.jsx';
-import { TeamView } from './realestate/TeamView.jsx';
+import { TeamView } from './workspace/TeamView.jsx';
 import { RecordForm } from './realestate/RecordForm.jsx';
 import { label } from './realestate/labels.js';
 import { AttentionStrip } from './workspace/AttentionStrip.jsx';
 import { useWorkspaceActions } from './workspace/useWorkspaceActions.jsx';
+import { useWorkspaceShell, backLabel as shellBack } from './workspace/useWorkspaceShell.jsx';
 
 const empty = { items: [] };
-const WIDE = '(min-width: 1100px)';
 // Quick actions that deep-link to a form (older Today links and the Deals header use these).
 const ACTIONS = { property: 'property', opportunity: 'opportunity', viewing: 'viewing', offer: 'offer', 'follow-up': 'draft' };
 
@@ -79,26 +78,17 @@ function NeedsAttention({ ar, summary, onGo }) {
 export function RealEstateDashboard({ section, view, s, h, overview, timezone = 'Asia/Muscat', onChanged, onGo, initialAction = '', tabs = null }) {
   const ar = s.ar, tr = (en, arabic) => (ar ? arabic : en);
   const manager = overview.workspaceRole === 'manager';
-  const [params, setParams] = useSearchParams();
-  const [form, setForm] = useState(null), [values, setValues] = useState({}), [photos, setPhotos] = useState([]), [lists, setLists] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const scroll = useRef(0);
-  const dealId = params.get('deal');
+  const [photos, setPhotos] = useState([]);
+  const clearPhotos = () => { for (const p of photos) if (p.preview?.startsWith('blob:')) URL.revokeObjectURL(p.preview); setPhotos([]); };
+  const { params, setParam, form, values, setValues, lists, setLists, preview, setPreview, openForm, closeForm, openRecord: openDeal, openRow: openCard, back, recordId: dealId } =
+    useWorkspaceShell({ recordParam: 'deal', loadLists: formLists, setError: message => setError(message), reasonOf: reason => h.reason(reason) || s.reason(reason), onGo,
+      onOpenForm: type => { if (type !== 'property') clearPhotos(); }, onCloseForm: clearPhotos });
   const key = [section, view, params.get('metric'), params.get('period'), params.get('segment'), params.get('filter'), view === 'followups' ? dealId : ''].join('|');
   const state = usePolling(() => load(section, view, manager, params), [key, manager], { interval: 30000 });
   const { busy, setError, perform, act, notices, changes, clear } = useWorkspaceActions({ ar, s, h, refresh: state.refresh, onChanged });
   const data = { ...(lists || {}), ...(state.data || {}) };
   const termsDays = overview.settings?.realEstate?.commissionTermsDays ?? 30;
   const agentNames = useMemo(() => new Map((data.team?.members || []).filter(m => m.accountId).map(m => [String(m.accountId), m.email])), [data.team]);
-  const setParam = patch => { const next = new URLSearchParams(params); for (const [k, v] of Object.entries(patch)) { if (v) next.set(k, v); else next.delete(k); } setParams(next); };
-
-  const clearPhotos = () => { for (const p of photos) if (p.preview?.startsWith('blob:')) URL.revokeObjectURL(p.preview); setPhotos([]); };
-  const openForm = (type, preset = {}) => {
-    setError(''); setValues(preset); if (type !== 'property') clearPhotos(); setForm(type);
-    if (!lists) formLists().then(setLists).catch(e => setError(h.reason(e.reason) || s.reason(e.reason)));
-    window.requestAnimationFrame?.(() => document.querySelector('.hb-action-fields')?.scrollIntoView({ block: 'start' }));
-  };
-  const closeForm = () => { clearPhotos(); setForm(null); setValues({}); };
   useEffect(() => { clear(); if (ACTIONS[initialAction]) openForm(ACTIONS[initialAction]); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async e => {
@@ -121,18 +111,7 @@ export function RealEstateDashboard({ section, view, s, h, overview, timezone = 
     setPhotos((row.photoIds || []).map((id, index) => ({ id, preview: row.photoUrls?.[index] || '' })));
   };
 
-  // Opening a record remembers where the list was; Back returns there with its filters.
-  const openDeal = id => { scroll.current = window.scrollY; setPreview(null); setParam({ deal: id }); };
-  const openCard = id => (window.matchMedia?.(WIDE).matches ? setPreview(id) : openDeal(id));
-  const back = () => {
-    const from = params.get('from');
-    if (from === 'chat' && params.get('chat')) return onGo('chats', { chat: params.get('chat') });
-    if (from === 'customers') return onGo('customers');
-    setParam({ deal: null });
-  };
-  useLayoutEffect(() => { if (!dealId && scroll.current) { window.scrollTo(0, scroll.current); scroll.current = 0; } }, [dealId]);
-  const backLabel = params.get('from') === 'chat' ? tr('Back to chat', 'العودة إلى المحادثة') : params.get('from') === 'customers' ? tr('Back to customers', 'العودة إلى العملاء')
-    : params.get('metric') ? tr('Back to source records', 'العودة إلى السجلات المصدرية') : view === 'followups' ? tr('Back to follow-ups', 'العودة إلى المتابعات') : view === 'viewings' ? tr('Back to viewings', 'العودة إلى المعاينات') : tr('Back to the board', 'العودة إلى اللوحة');
+  const backLabel = shellBack(params, ar, { fallback: view === 'followups' ? ['Back to follow-ups', 'العودة إلى المتابعات'] : view === 'viewings' ? ['Back to viewings', 'العودة إلى المعاينات'] : ['Back to the board', 'العودة إلى اللوحة'] });
 
   const formPanel = form && <RecordForm form={form} values={values} setValues={setValues} ar={ar} h={h} s={s} busy={busy} data={data} manager={manager} actorAccountId={overview.teamSummary?.actorAccountId}
     photos={photos} onPickPhotos={pickPhotos} onRemovePhoto={photo => { if (photo.preview?.startsWith('blob:')) URL.revokeObjectURL(photo.preview); setPhotos(rows => rows.filter(r => r.id !== photo.id)); }}

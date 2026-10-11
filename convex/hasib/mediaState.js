@@ -7,13 +7,13 @@ import { isMinor } from './money.js';
 import { createOrder, recordPayment, PAYMENT_METHODS } from './ordersState.js';
 import { audit, workspaceContainsAccount } from './workspaceState.js';
 import { publicRow } from './workspace/rows.js';
-import { sendApprovedDraft } from './workspace/drafts.js';
+import { approveDraft, draftRefusal } from './workspace/drafts.js';
 import { mediaSettings } from './mediaSettings.js';
 import { canSeeProduction, visibleProduction, studioFor, describe, factsOf, refreshStudio, mediaOverview, loadStudio } from './mediaBoard.js';
 import { mediaFollowupQueue, resolveMediaTask, snoozeMediaTask, mediaContext } from './mediaFollowups.js';
 import { resourceSave, reservationSave, reservationStatus, calendar, resourceList, costSave, costVoid } from './mediaResources.js';
 import { mediaInsights, mediaMetricRecords } from './mediaInsights.js';
-import { HOUR, ACTIVE, DONE, PRODUCTION_TYPES, PREP_ITEMS, briefGaps, depositFor, latestCut, manualMoveRefusal, cleanDeliverables, cleanRights, needsClearance, validLink } from './mediaDomain.js';
+import { HOUR, DONE, PRODUCTION_TYPES, PREP_ITEMS, briefGaps, depositFor, latestCut, manualMoveRefusal, cleanDeliverables, cleanRights, needsClearance, validLink } from './mediaDomain.js';
 
 const MANAGER_ONLY = new Set(['media_quote', 'media_accept', 'media_payment_record', 'media_change_order_decide', 'media_resource_save', 'media_cost_save', 'media_cost_void',
   'media_costs_final', 'media_draft_approve', 'media_insights', 'media_metric_records']);
@@ -350,15 +350,12 @@ async function draftSave(ctx, tenant, actor, a, now) {
 }
 
 async function draftApprove(ctx, tenant, actor, a, now) {
-  const row = await owned(ctx, a.draftId, tenant.accountId, 'mediaDrafts');
-  if (!row) return fail('draft_not_found');
-  if (row.status !== 'draft' || row.version !== a.version) return fail(row.version !== a.version ? 'draft_conflict' : 'invalid_draft_transition');
-  const p = await owned(ctx, row.productionId, tenant.accountId, 'mediaProductions');
-  const status = await sendApprovedDraft(ctx, tenant, { draft: row, keyPrefix: 'media-draft', handoffReason: 'production_follow_up', taskTable: 'mediaTasks',
-    messageLinks: { mediaProductionId: row.productionId, mediaDraftId: row._id }, recipientLinks: { mediaDraftId: row._id }, contactId: p?.contactId || null }, now);
-  await ctx.db.patch(row._id, { status, approvedBy: actor.actorAccountId, approvedAt: now, version: row.version + 1, updatedAt: now });
-  await audit(ctx, tenant, actor, 'draft_approved', 'draft', row._id, now, status);
-  return ok(publicRow(await ctx.db.get(row._id)));
+  const row = await owned(ctx, a.draftId, tenant.accountId, 'mediaDrafts'), refusal = draftRefusal(row, a);
+  if (refusal) return fail(refusal);
+  const saved = await approveDraft(ctx, tenant, actor, { row, keyPrefix: 'media-draft', handoffReason: 'production_follow_up', taskTable: 'mediaTasks',
+    links: async d => ({ messageLinks: { mediaProductionId: d.productionId, mediaDraftId: d._id }, recipientLinks: { mediaDraftId: d._id },
+      contactId: (await owned(ctx, d.productionId, tenant.accountId, 'mediaProductions'))?.contactId || null }) }, now);
+  return ok(publicRow(saved));
 }
 
 /** The production's full record: cuts, holds, change orders, costs (managers), drafts and history. */

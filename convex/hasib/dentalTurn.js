@@ -2,16 +2,11 @@
 // Visits → Follow-ups. Only the already validated service and preferred-time fields count as
 // intent; nothing the patient wrote is copied, so no clinical detail is stored. The request
 // closes itself once the patient has a visit booked after it.
-import { isLivePack } from '../../config/hasib-packs.js';
-import { hasibEnabled } from './gate.js';
-import { HASIB_PLANS, planFor } from './plans.js';
-import { packFor } from './shared.js';
+import { sectorTurnPack } from './workspace/turn.js';
 import { openTaskOnce } from './workspace/tasks.js';
 
 export async function dentalTurn(ctx, { row, contact, now, secret }) {
-  if (!(await hasibEnabled(ctx)) || !HASIB_PLANS.includes(await planFor(ctx, row.accountId))) return null;
-  const pack = await packFor(ctx, { accountId: row.accountId, row, secret });
-  if (pack.id !== 'dental' || !(isLivePack(pack.id) || ctx.hasibPreview === true)) return null;
+  if (!await sectorTurnPack(ctx, { row, secret, packId: 'dental' })) return null;
   const fields = new Map((contact.fields || []).map(field => [field.key, field.value]));
   if (!fields.get('service') && !fields.get('preferred_time')) return null;
   const visits = await ctx.db.query('dentalVisits').withIndex('by_contact', q => q.eq('contactId', contact._id)).take(50);
