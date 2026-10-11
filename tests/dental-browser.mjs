@@ -52,7 +52,11 @@ const sections = page => page.locator('.ld-desktop-nav a').allInnerTexts().then(
 const yes = page => page.getByRole('alertdialog').getByRole('button', { name: /Yes, continue|نعم، متابعة/ }).click();
 const param = (page, key) => new URL(page.url()).searchParams.get(key);
 const form = (page, name) => page.locator(`form[data-form="${name}"]`);
-const save = async (page, name) => { await form(page, name).getByRole('button', { name: /^Save$|^حفظ$/ }).click(); await form(page, name).waitFor({ state: 'detached' }); };
+const save = async (page, name) => {
+  await form(page, name).getByRole('button', { name: /^Save$|^حفظ$/ }).click();
+  try { await form(page, name).waitFor({ state: 'detached', timeout: 10000 }); }
+  catch { throw new Error(`${name} was not saved: ${(await page.getByRole('alert').allInnerTexts()).join(' | ') || 'no message shown'}`); }
+};
 const record = page => page.locator('.hb-visit-record');
 const value = r => { assert.equal(r.ok, true, JSON.stringify(r)); return r.value ?? r; };
 const chip = (page, text) => record(page).locator('header .ld-chip', { hasText: text }).first().waitFor();
@@ -108,8 +112,11 @@ try {
     const f = form(page, 'visit');
     await f.waitFor();
     eq(await f.locator('[name=contactId] option:checked').innerText(), name, 'the request’s patient is already chosen');
-    await f.locator('[name=startsAt]').fill(localInput(Date.now() + 25 * 60000));
-    await f.locator('[name=providerId]').selectOption({ label: 'Hygienist Noor' });
+    // A provider with nothing booked around the next hour, so the visit can start now (the demo's day is seeded around the current hour).
+    const soon = Date.now() + 25 * 60000, busy = value(await api(page, manager.base, 'dental_visits', { fromAt: soon - 8 * 3600000, toAt: soon + 3600000 })).items.filter(v => ['booked', 'confirmed', 'arrived'].includes(v.status) && v.startsAt < soon + 1800000 && v.endsAt > soon);
+    const provider = ['Hygienist Noor', 'Dr Khalid Al Rawahi', 'Dr Salma Al Busaidi'].find(n => !busy.some(v => v.providerName === n));
+    await f.locator('[name=startsAt]').fill(localInput(soon));
+    await f.locator('[name=providerId]').selectOption({ label: provider });
     await save(page, 'visit');
     const visits = value(await api(page, manager.base, 'dental_visits', {})).items;
     const booked = visits.find(v => v.contactName === name && v.status === 'booked' && v.startsAt > Date.now());
@@ -153,7 +160,7 @@ try {
     await page.goto(`${manager.base}/en/layla/dashboard?tab=work&view=visits&visit=${missed.id}`);
     await record(page).waitFor();
     await record(page).getByRole('button', { name: 'Book another time' }).click();
-    await form(page, 'visit').locator('[name=startsAt]').fill(localInput(Date.now() + 3 * 86400000 + 7 * 3600000));
+    await form(page, 'visit').locator('[name=startsAt]').fill(localInput(Date.now() + 5 * 86400000)); // past every seeded visit, so it never clashes
     await save(page, 'visit');
     const after = value(await api(page, manager.base, 'dental_followups', { filter: 'decision' })).items;
     eq(after.some(r => r.kind === 'missed_recovery' && String(r.visitId) === String(missed.id)), false, 'rebooking withdrew the unsent recovery message');
