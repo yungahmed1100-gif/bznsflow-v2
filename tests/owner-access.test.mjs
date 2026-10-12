@@ -86,3 +86,29 @@ test('the access list shows whether each address has signed up, and keeps revoke
   assert.deepEqual(grants.map(g => [g.email, g.hasAccount]), [['owner1100@example.com', false]]);
   assert.deepEqual(revoked.map(g => [g.email, g.hasAccount, g.plan]), [['owner@example.com', true, 'catalyst']]);
 });
+test('a sector granted before the account exists reaches it at sign-in, and never replaces a sector the owner chose', async () => {
+ const { executeBlueAuth } = await import('../convex/blueAuthState.js');
+ const { grantPlan } = await import('../convex/hasib/plans.js');
+ const m=convexMemory();const now=m.now();const actor=await m.db.insert('accounts',{email:'ahmed@bznsflowai.com'});
+ await m.db.insert('sessions',{accountId:actor,tokenHash:token,expiresAt:now+100000});
+ assert.equal((await executeAccess(m.ctx,{sessionHash:token,email:'studio@example.com',operation:'grant',plan:'ascend',packId:'media'},now)).ok,true);
+ assert.equal((await m.db.query('hasibSettings').collect()).length,0,'no account yet, so nothing to set');
+ const sign=async (email,tokenHash)=>{
+  const a={email,codeHash:'a'.repeat(64),ipHash:'b'.repeat(64),challengeId:'challenge'};
+  for (const op of ['request_code','code_sent']) assert.equal((await executeBlueAuth(m.ctx,{operation:op,...a},now)).ok,true);
+  const r=await executeBlueAuth(m.ctx,{operation:'verify_code',...a,tokenHash},now);assert.equal(r.ok,true);return r.value;
+ };
+ const first=await sign('studio@example.com','c'.repeat(64));
+ assert.equal(first.accessPlan,'ascend');
+ const settings=()=>m.db.query('hasibSettings').collect();
+ assert.deepEqual((await settings()).map(s=>[String(s.accountId),s.packId]),[[String(first.id),'media']]);
+ assert.equal((await m.db.query('hasibAutomation').collect())[0]?.enabled,true,'a new studio is on Hasib’s schedule');
+ const [row]=await settings();await m.db.patch(row._id,{packId:'fitness'});
+ await sign('studio@example.com','d'.repeat(64));
+ assert.equal((await settings())[0].packId,'fitness','the owner’s own choice stays');
+ // The operator command keeps the sector on the grant too.
+ assert.equal((await grantPlan(m.ctx,{email:'clinic@example.com',plan:'ascend',packId:'dental'},now)).ok,true);
+ assert.equal((await m.db.query('blueAccessGrants').collect()).find(g=>g.email==='clinic@example.com').packId,'dental');
+ await sign('clinic@example.com','e'.repeat(64));
+ assert.equal((await settings()).find(s=>s.packId==='dental')?.packId,'dental');
+});

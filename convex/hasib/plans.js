@@ -1,7 +1,8 @@
 // Plan entitlements. Hasib is part of Ascend and Apex; a Catalyst (Layla-only)
 // account has no grant and never sees it. Grants are operator actions, keyed by
 // the account's verified email, and never delete business records.
-import { ok, fail, DEFAULT_SETTINGS } from './shared.js';
+import { ok, fail } from './shared.js';
+import { setAccountPack } from './packChoice.js';
 import { isLivePack } from '../../config/hasib-packs.js';
 
 export const HASIB_PLANS = Object.freeze(['ascend']);
@@ -31,14 +32,10 @@ export async function grantPlan(ctx, { email, plan, packId, note }, now) {
   const normalized = normEmail(email);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) return fail('invalid_email');
   const current = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', normalized)).unique();
-  const row = { email: normalized, plan, status: 'active', grantedAt: now, grantedBy: 'ahmed@bznsflowai.com', ...(note ? { note: String(note).slice(0, 200) } : {}) };
+  const row = { email: normalized, plan, status: 'active', grantedAt: now, grantedBy: 'ahmed@bznsflowai.com', ...(packId ? { packId } : {}), ...(note ? { note: String(note).slice(0, 200) } : {}) };
   if (current) await ctx.db.replace(current._id, row); else await ctx.db.insert('blueAccessGrants', row);
-  if (account && packId) {
-    const settings = await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', account._id)).unique();
-    if (settings) await ctx.db.patch(settings._id, { packId, updatedAt: now });
-    else await ctx.db.insert('hasibSettings', { accountId: account._id, packId, currency: DEFAULT_SETTINGS.currency, vatRegistered: DEFAULT_SETTINGS.vatRegistered,
-      vatRateBps: DEFAULT_SETTINGS.vatRateBps, pricesIncludeVat: DEFAULT_SETTINGS.pricesIncludeVat, stockPolicy: DEFAULT_SETTINGS.stockPolicy, updatedAt: now });
-  }
+  // An account that doesn't exist yet gets the sector at sign-in (applyGrantedPack).
+  if (account && packId) await setAccountPack(ctx, account._id, packId, now);
   return ok({ accountId: account?._id || null, email: normalized, plan, packId: packId || null });
 }
 
