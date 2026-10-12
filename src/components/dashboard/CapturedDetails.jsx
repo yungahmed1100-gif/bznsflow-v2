@@ -51,9 +51,17 @@ export function CapturedDetails({ s, contact, qualification, conversationId, cha
     setBusy(false);
   };
 
+  // Qualified = every detail the sector requires is captured (config/layla-qualification.js), counted, not judged.
+  const required = (qualification?.fields || []).filter(f => f.required);
+  const have = required.filter(f => contact.fields.some(x => x.key === f.key && x.value));
+  const missing = required.filter(f => !have.includes(f)).map(f => (s.ar ? f.ar : f.en));
   return (
     <section className="ld-captured" aria-labelledby="ld-captured-title">
       <h3 id="ld-captured-title">{s.t('captured')}</h3>
+      {required.length > 0 && <p className="ld-captured-score" data-qualified={missing.length ? undefined : ''}>
+        {s.ar ? `مؤهل: ${have.length} من ${required.length}` : `Qualified: ${have.length} of ${required.length}`}
+        {missing.length > 0 && <small> · {s.ar ? 'ينقص' : 'missing'}: {missing.join(s.ar ? '، ' : ', ')}</small>}
+      </p>}
       {fields.length ? (
         <dl className="ld-captured-list">
           {fields.map(({ f, captured }) => <div key={f.key}><dt>{s.ar ? f.ar : f.en}</dt><dd><bdi>{label(f, captured.value)}</bdi>{captured.source === 'owner' && <small> · {s.t('fromOwner')}</small>}</dd></div>)}

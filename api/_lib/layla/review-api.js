@@ -15,7 +15,7 @@ import { previewOutcome } from '../../../config/brain-preview.js';
 import { extractJson } from '../../../config/layla-ai.js';
 import { teamContactOf, langOf } from '../../../config/layla-tones.js';
 import { sectorIdFor } from '../../../config/layla-qualification.js';
-import { BZNS_MAX_CHARS, parseBzns, validateBzns } from '../../../src/lib/bzns-doc.js';
+import { BZNS_MAX_CHARS, parseBzns, prepareForPublish, validateBzns } from '../../../src/lib/bzns-doc.js';
 import { credentialContext, exchangeAndVerify, metaRequest, openToken, sealToken } from './customer-meta.js';
 import { verifySignupConfiguration } from './eligibility.js';
 
@@ -265,12 +265,14 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
       } else if (body.action === 'bzns_save' || body.action === 'bzns_publish') {
         if (typeof body.markdown !== 'string' || !Number.isSafeInteger(body.version) || body.version < 0) throw new PilotError('invalid_state');
         if (body.markdown.length > BZNS_MAX_CHARS) throw new PilotError('bzns_too_long',413);
+        // Publishing leaves out template hints the owner never replaced; what a customer needs still blocks.
+        const markdown = body.action === 'bzns_publish' ? prepareForPublish(body.markdown).markdown : body.markdown;
         if (body.action === 'bzns_publish') {
           // Section-level errors go back to the editor; Convex validates again before writing.
-          const checked = validateBzns(body.markdown);
+          const checked = validateBzns(markdown);
           if (!checked.ok) return send(res,400,{ok:false,reason:'bzns_invalid',errors:checked.errors.map(({code,section,heading})=>({code,section,...(heading ? {heading} : {})}))},{vary:'Cookie'});
         }
-        await write(body.action, { markdown: body.markdown, version: body.version });
+        await write(body.action, { markdown, version: body.version });
       } else if (body.action === 'preview') {
         if (!row.profile?.reviewed) throw new PilotError('profile_unreviewed',409);
         if (typeof body.text !== 'string' || !body.text.trim() || body.text.length > 1000) throw new PilotError('invalid_text');
@@ -351,9 +353,10 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         // One Publish: bzns.md (checked here and again in Convex) and the catalog's drafts and staged edits.
         const draft = row.bznsDraft, unpublished = !!draft && draft.markdown !== row.bznsPublished?.markdown;
         if (unpublished) {
-          const checked = validateBzns(draft.markdown);
+          const markdown = prepareForPublish(draft.markdown).markdown;
+          const checked = validateBzns(markdown);
           if (!checked.ok) return send(res,400,{ok:false,reason:'bzns_invalid',errors:checked.errors.map(({code,section,heading})=>({code,section,...(heading ? {heading} : {})}))},{vary:'Cookie'});
-          await write('bzns_publish',{ markdown:draft.markdown, version:draft.version || 0 });
+          await write('bzns_publish',{ markdown, version:draft.version || 0 });
         }
         if (body.catalog !== false) await catalog('publish',{ownerKey});
         await brain('settle_publish',{sessionHash});

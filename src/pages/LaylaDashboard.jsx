@@ -155,7 +155,11 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                 : tab === 'settings' ? <ChannelConnections s={s} data={data} onChange={() => overview.refresh({ quiet: true })} />
                 : <ChatsView s={s} overview={data} reminder={map.catalyst && data.workspaceRole !== 'employee' ? <SetupReminder s={s} setup={data.setup} onGo={go} /> : null} selected={params.get('chat')} onSelect={id => go('chats', id ? { chat: id } : {})} />}
             </>
-          ) : <p className="ld-state" role="status">{s.t('loading')}</p>}
+          ) : data ? <div className="ld-state ld-empty-channel">
+            {/* Loaded, but no channel yet (a Catalyst workspace has nothing to show without one). */}
+            <p>{s.ar ? 'اربط واتساب أو إنستغرام لتبدأ ليلى بالرد على عملائك.' : 'Connect WhatsApp or Instagram and Layla starts answering your customers.'}</p>
+            <a className="ld-button ld-primary" href={setupPath(lang)}>{s.ar ? 'اربط قناة' : 'Connect a channel'}</a>
+          </div> : <p className="ld-state" role="status">{s.t('loading')}</p>}
       </main>
       </HasibProvider>
     </div>

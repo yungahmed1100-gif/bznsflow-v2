@@ -12,11 +12,16 @@ export const READY_ITEMS = [
   ['billing', 'Billing details, if Meta asks for them', 'بيانات الفوترة إذا طلبتها Meta', 'Meta shows its own billing and any charges in its setup. BznsFlow does not set Meta’s prices.', 'تعرض Meta إعدادات الفوترة وأي رسوم ضمن خطواتها. لا تحدد BznsFlow أسعار Meta.'],
   ['details', 'Your shop’s details', 'معلومات متجرك', 'Name, what you sell, prices, opening hours and location.', 'الاسم، وما تبيعه، والأسعار، وساعات العمل، والموقع.'],
   ['human', 'A second WhatsApp number for when Layla needs a human', 'رقم واتساب ثانٍ عندما تحتاج ليلى إلى موظف', 'Your personal number or a staff member’s — not the shop number.', 'رقمك الشخصي أو رقم أحد الموظفين، وليس رقم المتجر.'],
-  ['time', 'About 10 minutes', 'نحو ١٠ دقائق', 'You can stop and continue later.', 'يمكنك التوقف والمتابعة لاحقاً.'],
+  ['time', 'About 10 minutes in Meta’s window', 'نحو ١٠ دقائق في نافذة Meta', 'You can stop and continue later.', 'يمكنك التوقف والمتابعة لاحقاً.'],
 ];
-/** The "before you start" list. Acknowledgements stay in page state, not shared browser storage. */
-export function ReadyChecklist({ tr, onReady }) {
-  const [ticked, setTicked] = useState(() => new Set());
+/**
+ * The "before you start" list. Acknowledgements stay in page state, not shared browser storage.
+ * `known` names items the account already proves (published details, team contact, a signed-in
+ * email); they start ticked so the owner only confirms what we cannot check.
+ * @param {{ tr: Function, onReady: () => void, known?: string[] }} props
+ */
+export function ReadyChecklist({ tr, onReady, known = [] }) {
+  const [ticked, setTicked] = useState(() => new Set(known.filter(id => READY_ITEMS.some(([item]) => item === id))));
   const all = ticked.size === READY_ITEMS.length;
   const toggle = id => setTicked(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   const start = () => onReady();

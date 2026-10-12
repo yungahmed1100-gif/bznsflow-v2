@@ -42,6 +42,8 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
     meta: tr('WhatsApp connection available', 'ربط واتساب متاح'),
   };
   const integration = data?.integration;
+  // Meta's connection is switched off on our side: say so first, before any choice or checklist.
+  const paused = !!data && !available && !integration && !data?.selection;
   const live = ['connected', 'paused'].includes(integration?.status);
   const checksOk = !!(data?.connectionChecks?.path && data.connectionChecks.registered && data.connectionChecks.routing);
   const ownPrepared = prepared && prepared.path === path;
@@ -81,12 +83,13 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
       <p>{tr('This number was added directly in Meta, so Meta’s signup window cannot list it. Connect it with BznsFlow’s approved server credential instead.', 'أُضيف هذا الرقم مباشرة في Meta، لذلك لا تعرضه نافذة التسجيل. اربطه باستخدام بيانات الاعتماد المعتمدة لدى BznsFlow.')}</p>
       <button className="layla-primary" disabled={busy} onClick={() => run({ action: 'connect_owner_number' })}>{busy ? tr('Connecting…', 'جارٍ الربط…') : tr('Connect +968 7113 4025 directly', 'ربط ‎+968 7113 4025 مباشرة')}</button>
     </section>}
-    {!integration && !data?.selection && !open && <>
+    {paused && <p className="layla-notice" role="status">{tr('WhatsApp connection is paused on our side. Your setup is saved; we’ll message you when it’s back.', 'ربط واتساب متوقف مؤقتاً من جهتنا. إعدادك محفوظ، وسنراسلك عند عودته.')}</p>}
+    {!paused && !integration && !data?.selection && !open && <>
       <p>{tr('Let Layla answer your WhatsApp customers. You choose the number next.', 'دع ليلى تردّ على عملائك في واتساب. ستختار الرقم في الخطوة التالية.')}</p>
       {errorNote}
       <button className="layla-primary" disabled={busy} onClick={onOpen}>{tr('Connect WhatsApp', 'ربط واتساب')}</button>
     </>}
-    {!integration && !data?.selection && open && <>
+    {!paused && !integration && !data?.selection && open && <>
       <fieldset disabled={busy}><legend>{tr('Which WhatsApp number should Layla answer?', 'ما رقم واتساب الذي ستردّ عليه ليلى؟')}</legend>
         <PathChoice tr={tr} path={path} value={PATHS[0]} onChange={changePath}><strong>{tr('Keep my WhatsApp Business app', 'الاستمرار باستخدام تطبيق واتساب للأعمال')} <span className="layla-chip layla-chip--recommended">{tr('Recommended', 'موصى به')}</span></strong><small>{tr('Keep using your app on your phone. Meta checks whether your number is eligible.', 'استمر باستخدام التطبيق على هاتفك. تتحقق Meta من أهلية رقمك.')}</small></PathChoice>
         <PathChoice tr={tr} path={path} value={PATHS[1]} onChange={changePath}><strong>{tr('My number already uses an API or another provider', 'رقمي مرتبط بواجهة API أو مزوّد آخر')}</strong><small>{tr('Select your existing account and registered number in Meta. A connection with conflicting routing needs assisted setup.', 'اختر الحساب والرقم المسجّل في Meta. إذا كان الربط الحالي يتعارض مع هذا الإعداد فسنساعدك على إكماله.')}</small></PathChoice>
@@ -94,7 +97,11 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
       </fieldset>
       {path === 'coexistence' && !appReady && <>
         {!businessApp && <WhichWhatsApp tr={tr} onBusiness={() => setBusinessApp(true)} />}
-        {businessApp && <ReadyChecklist tr={tr} onReady={() => setAppReady(true)} />}
+        {businessApp && <ReadyChecklist tr={tr} onReady={() => setAppReady(true)} known={[
+          ...(data?.profile?.reviewed || data?.bzns?.publishedRevision ? ['details'] : []),
+          ...(requirements.find(([key]) => key === 'contact')?.[1] ? ['human'] : []),
+          ...(data?.savedToAccount || data?.account ? ['email'] : []),
+        ]} />}
       </>}
       {(path !== 'coexistence' || appReady) && <>
       {path !== 'coexistence' && <details className="layla-preselect"><summary>{tr('My number is in a different Meta business portfolio (optional)', 'رقمي في محفظة أعمال مختلفة في Meta (اختياري)')}</summary>

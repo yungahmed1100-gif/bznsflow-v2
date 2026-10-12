@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { validateBzns, deriveProfile, upsertSection, parseBzns } from '../src/lib/bzns-doc.js';
+import { validateBzns, deriveProfile, upsertSection, parseBzns, prepareForPublish } from '../src/lib/bzns-doc.js';
 import { capabilitiesFor } from '../convex/hasib/capabilities.js';
 import { BUSINESS_INDUSTRIES } from '../src/lib/industries.js';
 import { brainTemplate } from '../config/bzns-templates.js';
@@ -49,7 +49,8 @@ function surface({ markdown = null, published = false, brainStep = 0, savedToAcc
     }
     if (a === 'brain_behaviour') { s.behaviour = { ...body.behaviour, version: (s.behaviour?.version || 0) + 1, legacy: false }; return { ...state(), brain: brain() }; }
     if (a === 'brain_publish') {
-      const md = state().bzns.markdown, checked = validateBzns(md);
+      // As review-api: unreplaced template hints are left out before the checks.
+      const md = prepareForPublish(state().bzns.markdown).markdown, checked = validateBzns(md);
       if (!checked.ok) return { httpStatus: 400, json: { ok: false, reason: 'bzns_invalid' } };
       const { businessName, profile } = deriveProfile(checked.parsed);
       s.row = { ...s.row, profile: { ...profile, businessName }, journeyStep: 4, bznsPublished: { markdown: md, revision: (s.row.bznsPublished?.revision || 0) + 1 }, bznsDraft: { markdown: md, version: s.row.bznsDraft?.version || 1 } };
@@ -183,7 +184,20 @@ try {
     await page.getByRole('button', { name: t('Publish', 'انشر'), exact: true }).click();
     await page.locator('.brain-problems').waitFor();
     assert.equal(s.writes.includes('brain_publish'), false, 'an incomplete bzns.md is never sent to publish'); count++;
-    s.row.bznsDraft = { markdown: upsertSection(VALID, 'policies', 'We accept Dhofar Insurance.'), version: 9 };
+    assert.ok(await page.locator('.brain-problems li').count() <= 3, 'only the three essentials are asked for'); count++;
+    assert.doesNotMatch(await page.locator('.brain-problems').innerText(), ar ? /التأمين|ساعات/ : /Insurance|Hours/, 'optional template sections are never listed as blockers'); count++;
+    // The owner fills the three essentials (name, what you offer, team contact) and publishes.
+    await page.getByRole('button', { name: t('Fill in the essentials', 'أكمل الأساسيات') }).click();
+    await page.getByRole('heading', { name: t('Add your information', 'أضف معلوماتك') }).waitFor();
+    const essentials = page.locator('.brain-essentials');
+    await essentials.getByLabel(t('Business name', 'اسم النشاط')).fill('Bright Smile Dental');
+    await essentials.getByLabel(t('What you offer', 'ما تقدمه')).fill('- Check-ups and cleaning\n- Whitening');
+    await essentials.getByLabel(t('Team contact', 'جهة اتصال الفريق')).fill('WhatsApp +968 9100 2000 (Sara)');
+    await essentials.getByRole('button', { name: t('Save', 'حفظ'), exact: true }).click();
+    await essentials.getByText(t('Saved. Layla has what she needs to go live.', 'تم الحفظ. لدى ليلى ما تحتاجه لتبدأ.')).waitFor(); count++;
+    assert.match(s.row.bznsDraft.markdown, /^name: Bright Smile Dental$/m, 'the name is written into bzns.md'); count++;
+    for (let i = 0; i < 3; i++) await page.getByRole('button', { name: t('Continue', 'متابعة') }).click();
+    await page.getByRole('heading', { name: t('Test and publish', 'جرّب وانشر') }).waitFor();
     await page.reload(); await page.getByRole('heading', { name: t('Test and publish', 'جرّب وانشر') }).waitFor();
     assert.ok(s.brainStep >= 4, 'progress resumes on the saved step'); count++;
     await page.getByRole('button', { name: t('Test Layla', 'جرّب ليلى') }).click();
@@ -193,6 +207,7 @@ try {
     await page.getByRole('button', { name: t('Publish', 'انشر'), exact: true }).click();
     await page.getByRole('heading', { name: t('Connect a channel', 'اربط قناة') }).waitFor(); count++;
     assert.equal(s.catalog.every(e => e.status === 'approved'), true, 'one Publish publishes bzns.md and the catalog'); count++;
+    assert.doesNotMatch(s.row.bznsPublished.markdown, /\[[^\]\n]+\](?!\()/, 'no template hint is published'); count++;
     assert.deepEqual(errors, [], `${lang} ${width} setup page errors`); count++;
     await context.close();
   }

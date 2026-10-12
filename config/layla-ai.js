@@ -8,6 +8,7 @@
 
 import { phrase, toneOf, TONES, withTeamPointer, langOf, hasEmoji, stripEmoji } from './layla-tones.js';
 import { safeReply, byteLength } from '../api/_lib/layla/reply-guard.js';
+import { untracedAmount } from './layla-prices.js';
 
 export const INTENTS = Object.freeze(['answer', 'prices', 'services', 'hours', 'location', 'booking', 'human', 'negotiation',
   'greeting', 'thanks', 'ack', 'abuse', 'unknown']);
@@ -187,8 +188,6 @@ export function parseModelOutput(text) {
 // Arabic-Indic (٠-٩) and Persian (۰-۹) digits compare as Latin ones.
 const toLatinDigits = s => String(s || '').replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x6f0));
 const squash = s => toLatinDigits(s).toLowerCase().replace(/(\d)[\s,\-–]+(?=\d)/g, '$1');
-const CURRENCY = /(omr|r\.?o\.?|rial|riyal|baisa|aed|sar|usd|\$|€|£|ر\.?\s?ع|ريال|بيسة|درهم|%)/i;
-const MONEY = new RegExp(`(\\d[\\d.,]*)\\s*${CURRENCY.source}|${CURRENCY.source}\\s*(\\d[\\d.,]*)`, 'gi');
 const ORDER_CLAIM = /\border\s*#\s*\d|\b(order|booking|appointment|reservation)\b[^.!?\n]{0,40}\b(confirmed|booked|placed)\b|\b(confirmed|booked)\b[^.!?\n]{0,30}\b(order|booking|appointment|reservation)\b|تم\s+(تأكيد|حجز)|(طلبك|حجزك|موعدك)\s+(مؤكد|تأكد|محجوز)/i;
 const LEAK = /BUSINESS DATA|system prompt|asked_field|needs_team|=== /i;
 // BznsBrain: the source labels never reach a customer, and appointment wording that implies a booking is refused.
@@ -206,7 +205,6 @@ function sourceText(ctx) {
     ...(ctx.history || []).map(h => h.text),
   ].join('\n');
 }
-const priceText = ctx => [catalogLines(ctx.catalog), ...(ctx.facts || []), ...(ctx.acks || [])].join('\n');
 
 /**
  * The deterministic gate between the model and a customer.
@@ -228,12 +226,10 @@ export function validateReply(out, ctx) {
   if (!reply) return { ok: false, problem: 'empty_reply' };
   if (LEAK.test(reply) || (brain && LABEL_LEAK.test(reply))) return { ok: false, problem: 'prompt_leak' };
   if (lang === 'ar' && !/[؀-ۿ]/.test(reply)) return { ok: false, problem: 'wrong_language' };
-  // Money: every amount next to a currency must come from the catalog, live facts or order lines.
-  const prices = squash(priceText(ctx));
-  for (const m of toLatinDigits(reply).matchAll(MONEY)) {
-    const amount = squash(m[1] || m[3] || '').replace(/[.,]+$/, '');
-    if (amount && !prices.includes(amount)) return { ok: false, problem: 'untraced_price' };
-  }
+  // Money: every amount must be the price of the item it is said about (qualifier kept), a live fact or an order line.
+  const namedRows = (ctx.catalog || []).filter(r => r.nameEn || r.nameAr);
+  const citedRows = brain ? [...new Set(out.sources || [])].map(id => /^C(\d+)$/.exec(id)).filter(Boolean).map(m => namedRows[Number(m[1]) - 1]).filter(Boolean) : [];
+  if (untracedAmount(reply, { ...ctx, cited: citedRows })) return { ok: false, problem: 'untraced_price' };
   // Longer numbers (phone numbers, amounts, references) must appear in a source.
   const sources = squash(sourceText(ctx));
   for (const n of squash(reply).match(/\d[\d.]*\d|\d/g) || []) {

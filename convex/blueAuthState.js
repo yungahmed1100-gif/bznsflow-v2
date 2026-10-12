@@ -65,7 +65,7 @@ export async function executeBlueAuth(ctx,a,now = Date.now()) {
     if (!account) account = await ctx.db.get(await ctx.db.insert('accounts',{email:a.email,role:'customer',createdAt:now,profileComplete:false}));
     await activatePendingInvitation(ctx, account, now);
     await ctx.db.insert('sessions',{accountId:account._id,tokenHash:a.tokenHash,createdAt:now,expiresAt:now+2592000000});
-    return ok({id:account._id,email:account.email,name:account.name || '',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email)});
+    return ok({id:account._id,email:account.email,name:account.name || '',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email),hasWorkspace:!!account.draftHash});
   }
   if (a.operation === 'oauth_login') {
     if (!['google','microsoft','linkedin'].includes(a.provider) || typeof a.subject !== 'string' || !a.subject || a.subject.length > 255 ||
@@ -76,7 +76,7 @@ export async function executeBlueAuth(ctx,a,now = Date.now()) {
     if (!account) account = await ctx.db.get(await ctx.db.insert('accounts',{email:a.email.toLowerCase().trim(),name:typeof a.name === 'string' ? a.name.slice(0,100) : undefined,role:'customer',createdAt:now,profileComplete:false}));
     if (!identity) await ctx.db.insert('blueOAuthIdentities',{provider:a.provider,subject:a.subject,accountId:account._id,createdAt:now});
     await ctx.db.insert('sessions',{accountId:account._id,tokenHash:a.tokenHash,createdAt:now,expiresAt:now+2592000000});
-    return ok({id:account._id,email:account.email,name:account.name || '',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email)});
+    return ok({id:account._id,email:account.email,name:account.name || '',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email),hasWorkspace:!!account.draftHash});
   }
   if (['session','signout','claim_draft','complete_profile'].includes(a.operation)) {
     if (!hash(a.tokenHash)) return fail('invalid_state');
@@ -89,7 +89,7 @@ export async function executeBlueAuth(ctx,a,now = Date.now()) {
       const p = a.profile;
       if (!p || p.name.trim().length < 2 || p.phone.trim().length < 6 || !p.country.trim() || !p.industry.trim()) return fail('invalid_profile');
       await ctx.db.patch(account._id,{name:p.name.trim(),phone:p.phone.trim(),country:p.country.trim(),industry:p.industry.trim(),lang:p.lang,profileComplete:true});
-      return ok({id:account._id,email:account.email,name:p.name.trim(),phone:p.phone.trim(),country:p.country.trim(),industry:p.industry.trim(),lang:p.lang,profileComplete:true,accessPlan:await accessFor(account.email)});
+      return ok({id:account._id,email:account.email,name:p.name.trim(),phone:p.phone.trim(),country:p.country.trim(),industry:p.industry.trim(),lang:p.lang,profileComplete:true,accessPlan:await accessFor(account.email),hasWorkspace:!!account.draftHash});
     }
     if (a.operation === 'claim_draft') {
       if (!hash(a.sessionHash) || !hash(a.draftHash)) return fail('invalid_state');
@@ -128,7 +128,7 @@ export async function executeBlueAuth(ctx,a,now = Date.now()) {
       workspaceDraftHash = manager?.draftHash || null;
       workspaceRole = 'employee';
     }
-    return ok({id:account._id,email:account.email,name:account.name || '',phone:account.phone || '',country:account.country || '',industry:account.industry || '',lang:account.lang || 'en',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email),draftHash:account.draftHash || null,workspaceDraftHash,workspaceRole});
+    return ok({id:account._id,email:account.email,name:account.name || '',phone:account.phone || '',country:account.country || '',industry:account.industry || '',lang:account.lang || 'en',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email),hasWorkspace:!!account.draftHash,draftHash:account.draftHash || null,workspaceDraftHash,workspaceRole});
   }
   return fail('invalid_state');
 }

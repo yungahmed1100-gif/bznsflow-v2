@@ -46,5 +46,18 @@ try {
     assert.equal(await page.getByText(/Live sector|القطاع المتاح/).count(), 0, `${path} still shows the Ascend wizard`);
     checks++; await page.close();
   }
-  console.log(`${checks} setup locale/viewport cases passed, including noindex, focus, overflow, accessibility, and no Ascend setup page.`);
+  // A signed-in account without a grant: the work is saved and the next step is the free audit, never "Sign in" again.
+  for (const lang of ['en', 'ar']) {
+    const page = await browser.newPage();
+    await page.route('**/api/**', route => route.fulfill(new URL(route.request().url()).pathname === '/api/product-setup'
+      ? { status: 403, json: { ok: false, reason: 'access_required' } } : { json: { ok: true, csrfToken: 'a'.repeat(64), account: { email: 'owner@example.test' } } }));
+    await page.goto(`${base}${lang === 'en' ? '/en' : ''}/catalyst/setup`);
+    const box = page.locator('.setup-error');
+    await box.waitFor();
+    assert.match(await box.innerText(), lang === 'en' ? /Your setup is saved\. Catalyst is switched on with you after a free audit\./ : /تم حفظ إعدادك/, `${lang}: the saved-work message`);
+    assert.equal(await box.getByRole('link', { name: lang === 'en' ? 'Book the free audit' : 'احجز التدقيق المجاني' }).count(), 1, `${lang}: one next action, the free audit`);
+    assert.equal(await box.getByRole('link', { name: /^(Sign in|تسجيل الدخول)$/ }).count(), 0, `${lang}: no Sign in link for someone already signed in`);
+    checks++; await page.close();
+  }
+  console.log(`${checks} setup locale/viewport cases passed, including noindex, focus, overflow, accessibility, no Ascend setup page and the no-grant next step.`);
 } finally { await browser.close(); }

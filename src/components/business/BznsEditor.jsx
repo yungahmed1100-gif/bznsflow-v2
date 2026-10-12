@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BZNS_MAX_CHARS, applySections, profileToBzns, setMeta, validateBzns } from '../../lib/bzns-doc.js';
+import { BZNS_MAX_CHARS, applySections, prepareForPublish, profileToBzns, setMeta, validateBzns } from '../../lib/bzns-doc.js';
 import { TONES, phrase, toneOf } from '../../../config/layla-tones.js';
 import { bznsMessage, bznsMessages, sectionLabel } from '../../lib/bzns-messages.js';
 import { bznsTemplate } from '../../../config/bzns-templates.js';
@@ -47,7 +47,8 @@ export function BznsEditor({ lang = 'en', data, request, onState, disabled = fal
     setText(current => (current === lastSaved.current ? saved : current));
     lastSaved.current = saved;
   }, [saved]);
-  const check = useMemo(() => validateBzns(text), [text]);
+  // Publish leaves out unreplaced template hints (see prepareForPublish), so they are not shown as errors.
+  const check = useMemo(() => validateBzns(prepareForPublish(text).markdown), [text]);
   const dirty = text !== saved;
   const version = data?.bzns?.version || 0;
   const published = data?.bzns?.publishedRevision > 0;

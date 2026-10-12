@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { WHATSAPP_URL } from '../../lib/constants';
 
 /** True on a phone-sized or touch-first screen, where scanning a code on the same screen isn't possible. */
 export function usePhoneOnly() {
@@ -13,12 +14,12 @@ export function usePhoneOnly() {
   return phone;
 }
 
-/** "Stuck?" — ask Layla, or email yourself this page for a computer. */
+/** "Stuck?" — message the BznsFlow team on WhatsApp, or email yourself this page for a computer. */
 export function SetupHelpLinks({ tr, email, phoneOnly }) {
   const page = typeof window === 'undefined' ? '' : window.location.href.split('#')[0];
   const mail = `mailto:${encodeURIComponent(email || '')}?subject=${encodeURIComponent(tr('Finish setting up Layla', 'أكمل إعداد ليلى'))}&body=${encodeURIComponent(`${tr('Open this on a computer and keep your phone with you:', 'افتح هذا الرابط على كمبيوتر وأبقِ هاتفك معك:')}\n${page}`)}`;
   return <aside className="layla-help-links" aria-label={tr('Help with connecting', 'مساعدة في الربط')}>
-    <p><strong>{tr('Stuck?', 'تحتاج مساعدة؟')}</strong> {tr('Ask Layla in the chat at the bottom of the page.', 'اسأل ليلى في المحادثة أسفل الصفحة.')}</p>
+    <p><strong>{tr('Stuck?', 'تحتاج مساعدة؟')}</strong> <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">{tr('Message us on WhatsApp', 'راسلنا على واتساب')}</a></p>
     {phoneOnly && email && <div className="layla-help-actions">
       <a className="layla-secondary" href={mail}>{tr('Easier on a computer? Email me this link', 'أسهل على الكمبيوتر؟ أرسل لي الرابط بالبريد')}</a>
     </div>}

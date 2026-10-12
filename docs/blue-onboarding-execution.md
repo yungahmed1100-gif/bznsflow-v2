@@ -15,6 +15,9 @@ features until the review journey can be demonstrated end to end.
 - Any valid email can register; no email or customer WABA allowlist. Blue uses
   its own user-supplied Resend API key and sender
   `BznsFlow <onboarding@bznsflowai.com>`. Secrets remain server-only.
+  *(Note 2026-10-12: this describes Blue. Green, this repository, sends sign-in
+  codes through the shared-secret Apps Script mailer, `api/_lib/mailer.js`
+  `sendOtpEmail`, not Resend.)*
 - Single-use six-digit email codes expire in ten minutes. Atomic attempt,
   resend, email/IP and global limits protect signup. Verified sessions last
   thirty days. Account saving rotates anonymous draft authority and rewraps

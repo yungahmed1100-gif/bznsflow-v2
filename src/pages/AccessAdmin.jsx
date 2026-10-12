@@ -73,7 +73,7 @@ export default function AccessAdmin({ lang = 'en' }) {
         <div className="owner-form-wide"><button className="owner-primary" disabled={busy || !csrf} type="submit">{tr('Grant access', 'امنح الصلاحية')}</button></div>
       </form>
       <section><h2>{tr('Active grants', 'الصلاحيات الفعّالة')}</h2>
-        {grants.length ? <GrantTable rows={grants} action={tr('Revoke', 'ألغِ')} busy={busy} tr={tr} ar={ar} onAction={grant => changeAccess('DELETE', { email: grant.email })} /> : <p>{tr('No active access grants.', 'لا توجد صلاحيات فعّالة.')}</p>}
+        {grants.length ? <GrantTable rows={grants} invite action={tr('Revoke', 'ألغِ')} busy={busy} tr={tr} ar={ar} onAction={grant => changeAccess('DELETE', { email: grant.email })} /> : <p>{tr('No active access grants.', 'لا توجد صلاحيات فعّالة.')}</p>}
       </section>
       {revoked.length > 0 && <section><h2>{tr('Revoked', 'الملغاة')}</h2>
         <GrantTable rows={revoked} action={tr('Grant again', 'امنح من جديد')} busy={busy} tr={tr} ar={ar} onAction={grant => changeAccess('POST', { email: grant.email, plan: grant.plan, ...(grant.packId ? { packId: grant.packId } : {}) })} /></section>}
@@ -83,17 +83,34 @@ export default function AccessAdmin({ lang = 'en' }) {
   </main>;
 }
 
+/** A WhatsApp message (EN + AR) with the sign-in link that resumes setup. Ahmed sends it himself. */
+function inviteLink(grant) {
+  const site = typeof window === 'undefined' ? 'https://www.bznsflowai.com' : window.location.origin;
+  const digits = String(grant.phone || '').replace(/\D/g, '');
+  const text = `Your BznsFlow workspace is ready. Sign in with ${grant.email} to set it up: ${site}/en/signin?next=/en/catalyst/setup`
+    + `\n\nمساحة عملك في BznsFlow جاهزة. سجّل الدخول بـ ${grant.email} لإعدادها: ${site}/signin?next=/catalyst/setup`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+
+// The furthest recorded stage for each grant (convex/activationStage.js), so a stalled owner shows.
+const STAGE = { granted: ['Granted, not signed up', 'ممنوح، لم يسجّل'], signed_up: ['Signed up', 'سجّل'], published: ['Business published', 'نُشر النشاط'],
+  live: ['Layla is live', 'ليلى تعمل'], first_reply: ['First reply sent', 'أُرسل أول رد'], qualified: ['First qualified inquiry', 'أول استفسار مؤهل'] };
+
 // "Signed up" matters: a grant does nothing until someone signs in with exactly that address.
-function GrantTable({ rows, action, busy, onAction, tr, ar }) {
+function GrantTable({ rows, action, busy, onAction, tr, ar, invite = false }) {
   return <div className="owner-table-scroll"><table className="owner-table">
-    <thead><tr>{[tr('Email', 'البريد'), tr('Access', 'الصلاحية'), tr('Signed up', 'مسجّل'), tr('Date', 'التاريخ'), tr('Note', 'ملاحظة'), tr('Action', 'إجراء')].map(h => <th key={h} scope="col">{h}</th>)}</tr></thead>
+    <thead><tr>{[tr('Email', 'البريد'), tr('Access', 'الصلاحية'), tr('Signed up', 'مسجّل'), tr('Stage', 'المرحلة'), tr('Date', 'التاريخ'), tr('Note', 'ملاحظة'), tr('Action', 'إجراء')].map(h => <th key={h} scope="col">{h}</th>)}</tr></thead>
     <tbody>{rows.map(grant => <tr key={grant.email}>
       <td dir="ltr">{grant.email}</td>
       <td>{labels[grant.plan]?.[ar ? 1 : 0] || grant.plan}</td>
       <td className={grant.hasAccount ? undefined : 'is-warning'}>{grant.hasAccount ? tr('Yes', 'نعم') : tr('No account with this email yet', 'لا يوجد حساب بهذا البريد بعد')}</td>
+      <td data-stage={grant.progress?.stage}>{STAGE[grant.progress?.stage]?.[ar ? 1 : 0] || '—'}{grant.progress?.at ? <small> · {new Date(grant.progress.at).toLocaleDateString(ar ? 'ar-OM' : 'en-GB')}</small> : null}</td>
       <td>{new Date(grant.status === 'revoked' && grant.revokedAt ? grant.revokedAt : grant.grantedAt).toLocaleDateString(ar ? 'ar-OM' : 'en-GB')}</td>
       <td>{grant.note}</td>
-      <td><button type="button" className="owner-secondary" disabled={busy} onClick={() => onAction(grant)}>{action}</button></td>
+      <td><div className="owner-actions">
+        {invite && <a className="owner-secondary" href={inviteLink(grant)} target="_blank" rel="noopener noreferrer">{tr('Send setup link on WhatsApp', 'أرسل رابط الإعداد على واتساب')}</a>}
+        <button type="button" className="owner-secondary" disabled={busy} onClick={() => onAction(grant)}>{action}</button>
+      </div></td>
     </tr>)}</tbody>
   </table></div>;
 }

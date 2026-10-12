@@ -36,9 +36,9 @@ function fixture() {
   return { contacts, messages, campaigns: [], calls: [], bodies: [], takeover: {}, imported: new Map() };
 }
 
-function api(state, { overviewStatus = 200, overviewReason, founderPreview = false, broadcastEnabled = true } = {}) {
-  // The real overview always carries the plan's capabilities (convex/blueDashboardState.js); this owner is on Ascend.
-  const overview = { ok: true, csrfToken: 'a'.repeat(64), account: { email: 'owner@example.test' }, plan: 'ascend', workspaceRole: 'manager', capabilities: capabilitiesFor('ascend'), dashboardAvailable: true, broadcastEnabled, connected: true,
+function api(state, { overviewStatus = 200, overviewReason, founderPreview = false, broadcastEnabled = true, plan = 'ascend', connected = true } = {}) {
+  // The real overview always carries the plan's capabilities (convex/blueDashboardState.js); this owner is on Ascend unless a test says otherwise.
+  const overview = { ok: true, csrfToken: 'a'.repeat(64), account: { email: 'owner@example.test' }, plan, workspaceRole: 'manager', capabilities: capabilitiesFor(plan), dashboardAvailable: true, broadcastEnabled, connected,
     founderPreview,
     business: { name: 'Blue Studio Properties', sector: 'Real estate', sectorId: 'real-estate' }, integration: { sender: '96890000000', path: 'new_number', status: 'connected', checks: { routing: true, registered: true, path: true }, checkedAt: now },
     messaging: { available: true, active: true, reason: '', broadcastAvailable: true, limits: { perMinute: 10, perDay: 100, usedToday: 7 } }, timezone: 'Asia/Muscat', migrationPending: false, qualification: pack };
@@ -136,6 +136,22 @@ const axe = async page => (await new AxeBuilder({ page }).include('.ld').analyze
 const browser = await chromium.launch();
 let count = 0;
 try {
+  // A Catalyst workspace with no channel yet says what to do instead of loading forever.
+  for (const lang of ['en', 'ar']) {
+    const { page, context } = await openPage(browser, { width: 1280, lang, path: '/layla/dashboard', handler: api(fixture(), { plan: 'catalyst', connected: false }) });
+    const empty = page.locator('.ld-empty-channel');
+    await empty.waitFor();
+    assert.equal(await empty.getByRole('link', { name: lang === 'en' ? 'Connect a channel' : 'اربط قناة' }).getAttribute('href'), lang === 'en' ? '/en/catalyst/setup' : '/catalyst/setup'); count++;
+    assert.equal(await page.locator('.ld-main [role=status]', { hasText: /^(Loading…|جارٍ التحميل…)$/ }).count(), 0, `${lang}: no endless loading line`); count++;
+    await context.close();
+  }
+  // An empty inbox shows the one thing to try now.
+  {
+    const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard', handler: api({ ...fixture(), contacts: [], messages: {} }, { plan: 'catalyst' }) });
+    await page.getByText('Try it now: send your number a message from another phone to see Layla answer.', { exact: false }).waitFor(); count++;
+    await context.close();
+  }
+
   // Direct visits: unsigned owners go through sign-in, accounts without a number go to setup.
   for (const [reason, expected] of [['sign_in_required', /\/en\/catalyst\/setup\?next=dashboard$/], ['setup_required', /\/en\/catalyst\/setup$/]]) {
     const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard', handler: api(fixture(), { overviewStatus: reason === 'sign_in_required' ? 401 : 409, overviewReason: reason }) });

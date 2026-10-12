@@ -31,7 +31,7 @@ export async function executeReview(ctx, a, now = Date.now()) {
   const patch = async value => { await ctx.db.patch(row._id, { ...value, updatedAt: now }); row = await ctx.db.get(row._id); };
   if (a.operation === 'profile') {
     if (row.operation || (row.attempt && !row.attempt.claimed && row.attempt.expiresAt > now && ['prepared','awaiting_meta'].includes(row.status))) return fail('operation_conflict');
-    await patch({ profile: a.profile, metrics:{...row.metrics,draftSavedAt:row.metrics?.draftSavedAt || now}, profileVersion: (row.profileVersion || (row.profile ? 1 : 0)) + 1, lastPreview: undefined, previewIntents: [], journeyStep: [undefined, 0, 2].includes(row.journeyStep) ? 4 : row.journeyStep, status: row.integration || row.pendingSelection || row.attempt ? row.status : 'business_saved' });
+    await patch({ profile: a.profile, metrics:{...row.metrics,draftSavedAt:row.metrics?.draftSavedAt || now,firstPublishedAt:row.metrics?.firstPublishedAt || now}, profileVersion: (row.profileVersion || (row.profile ? 1 : 0)) + 1, lastPreview: undefined, previewIntents: [], journeyStep: [undefined, 0, 2].includes(row.journeyStep) ? 4 : row.journeyStep, status: row.integration || row.pendingSelection || row.attempt ? row.status : 'business_saved' });
   } else if (a.operation === 'bzns_save') {
     if ((row.bznsDraft?.version || 0) !== a.version) return fail('bzns_conflict');
     await patch({ bznsDraft: { markdown: a.markdown, version: a.version + 1, savedAt: now } });

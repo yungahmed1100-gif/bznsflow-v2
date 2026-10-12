@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { parseBzns, setMeta, validateBzns } from '../../lib/bzns-doc.js';
+import { parseBzns, prepareForPublish, setMeta, validateBzns } from '../../lib/bzns-doc.js';
 import { bznsMessages } from '../../lib/bzns-messages.js';
 import { BUSINESS_INDUSTRIES } from '../../lib/industries.js';
 import { brainTemplate } from '../../../config/bzns-templates.js';
@@ -8,6 +8,7 @@ import { useBrain } from './useBrain.js';
 import { BznsTab } from './BznsTab.jsx';
 import { CatalogTab } from './CatalogTab.jsx';
 import { AddSource } from './AddSource.jsx';
+import { EssentialsCard } from './EssentialsCard.jsx';
 import { ReviewCard } from './ReviewCard.jsx';
 import { BehaviourCard } from './BehaviourCard.jsx';
 import { TestLaylaPanel } from './TestLaylaPanel.jsx';
@@ -51,7 +52,8 @@ export function BrainSetup({ lang, onPublished }) {
     setStep(1);
   });
   const publish = () => act('publish', async () => {
-    const check = validateBzns(markdown);
+    // Unreplaced template hints are left out at publish, so only what a customer needs can block.
+    const check = validateBzns(prepareForPublish(markdown).markdown);
     if (!check.ok) { setProblems(bznsMessages(check.errors, lang)); setPart('bzns'); return; }
     take(await request({ action: 'brain_publish' }));
     await onPublished?.();
@@ -67,7 +69,8 @@ export function BrainSetup({ lang, onPublished }) {
         <h3 ref={heading} tabIndex={-1}>{title}</h3>
         <p className="ld-help">{intro}</p>
       </header>
-      {(error || problems.length > 0) && <div className="brain-problems" role="alert">{problems.length ? <><p>{b.t('beforePublish')}</p><ul>{problems.map((line, i) => <li key={i}>{line}</li>)}</ul></> : <p>{b.reason(error)}</p>}</div>}
+      {(error || problems.length > 0) && <div className="brain-problems" role="alert">{problems.length ? <><p>{b.t('beforePublish')}</p><ul>{problems.map((line, i) => <li key={i}>{line}</li>)}</ul>
+        {id === 'publish' && <button type="button" className="ld-button" disabled={!!busy} onClick={() => go(1)}>{b.ar ? 'أكمل الأساسيات' : 'Fill in the essentials'}</button>}</> : <p>{b.reason(error)}</p>}</div>}
 
       {id === 'industry' && <form className="brain-setup-industry" onSubmit={e => { e.preventDefault(); if (sector) chooseIndustry(); }}>
         <label>{b.t('industry')}<select value={sector} onChange={e => setSector(e.target.value)} disabled={!!busy} required>
@@ -78,6 +81,7 @@ export function BrainSetup({ lang, onPublished }) {
       </form>}
 
       {id === 'information' && <>
+        <EssentialsCard lang={lang} markdown={markdown} version={setup.bzns?.version || 0} request={request} take={take} act={act} busy={busy} />
         <AddSource b={b} request={request} take={take} act={act} busy={busy} websiteAvailable={!!setup.websiteImportAvailable} onDone={() => loadCatalog()} open />
         <details className="brain-card"><summary><span className="brain-card-title">{b.ar ? 'أو اكتب ' : 'Or write your '}<BznsWord />{b.ar ? ' بنفسك' : ' yourself'}</span></summary>
           <BznsTab b={b} lang={lang} setup={setup} request={request} take={take} act={act} busy={busy} industry={chosen} /></details>

@@ -67,6 +67,15 @@ function resumeNext() {
   return true;
 }
 
+// A granted account goes straight to its workspace: setup while it has none yet, else the
+// dashboard. Everyone else keeps the free-audit screen (Catalyst is set up with them after it).
+function openWorkspace(account, lang) {
+  if (!account?.accessPlan) return false;
+  const prefix = lang === 'ar' ? '' : '/en';
+  window.location.replace(`${prefix}/${account.hasWorkspace === false ? 'catalyst/setup' : 'layla/dashboard'}`);
+  return true;
+}
+
 export default function SignIn({ lang = 'ar' }) {
   const t = getStrings(lang);
   const ar = lang === 'ar';
@@ -156,10 +165,10 @@ export default function SignIn({ lang = 'ar' }) {
       setStep('profile');
       return;
     }
-    if (resumeNext()) return;
+    if (resumeNext() || openWorkspace(data.account, lang)) return;
     setReturning(true);
     setStep('done');
-  }, []);
+  }, [lang]);
 
   /** Curried field setter using the updater form, so it cannot read stale state. */
   const field = useCallback(
@@ -266,7 +275,7 @@ export default function SignIn({ lang = 'ar' }) {
       });
       if (status === 200 && data?.ok) {
         setAccount(data.account);
-        if (resumeNext()) return;
+        if (resumeNext() || openWorkspace(data.account, lang)) return;
         setReturning(false);
         setStep('done');
       } else {

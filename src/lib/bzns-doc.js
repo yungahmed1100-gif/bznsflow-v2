@@ -217,6 +217,39 @@ function splitBlocks(markdown) {
 const joinBlocks = ({ preamble, sections }) => [preamble.join('\n').trimEnd(), ...sections.map(s => `${s.heading}\n${s.lines.join('\n').trim()}`)]
   .filter(Boolean).join('\n\n') + '\n';
 
+// A template hint the owner never replaced: a whole line that is only "[…]" (optionally a list item).
+const HINT_LINE = /^(?:[-*•]\s+|\d+[.)]\s+)?\[[^\]\n]{1,200}\]\s*$/;
+const withoutHints = lines => lines.filter(line => !HINT_LINE.test(line.trim()));
+
+/**
+ * The document as it is published: template hint lines are left out, and a section that held
+ * only hints is dropped. What a customer needs (name, sector, what you offer, team contact) still
+ * has to be written, so validateBzns keeps blocking on those. Returns the removed headings.
+ * @param {string} markdown
+ * @returns {{ markdown: string, removed: string[] }}
+ */
+export function prepareForPublish(markdown) {
+  const source = String(markdown || '');
+  const blocks = splitBlocks(source), removed = [];
+  const sections = blocks.sections.flatMap(s => {
+    const lines = withoutHints(s.lines);
+    if (lines.join('\n').trim()) return [{ ...s, lines }];
+    removed.push(s.heading.replace(/^##\s+/, '').trim());
+    return [];
+  });
+  const name = parseBzns(source).meta.name;
+  const realName = name && !PLACEHOLDER.test(name) ? name : '';
+  // Front matter (between the first two --- lines) is kept as written: its name and sector are required.
+  const fence = blocks.preamble[0]?.trim() === '---' ? blocks.preamble.findIndex((l, i) => i > 0 && l.trim() === '---') : -1;
+  const preamble = blocks.preamble.flatMap((line, i) => {
+    if (i <= fence) return [line];
+    if (/^#\s+\[[^\]\n]*\]\s*$/.test(line)) return realName ? [`# ${realName}`] : [line];
+    return HINT_LINE.test(line.trim()) ? [] : [line];
+  });
+  const next = joinBlocks({ preamble, sections });
+  return { markdown: next === joinBlocks(blocks) ? source : next, removed };
+}
+
 /**
  * Writes guided-setup answers into the matching sections, replacing their text or adding
  * the section. Prices are ignored on purpose: they belong in Hasib or Services & Prices.
@@ -294,7 +327,8 @@ export function upsertSection(markdown, target, text, { replace = false, lang = 
   const found = target in ALIASES ? sections.find(s => s.key === target)
     : sections.find(s => [names.en, names.ar].some(n => normalizeText(s.heading.replace(/^##\s+/, '')) === normalizeText(n)));
   if (found) {
-    const current = found.lines.join('\n').trim();
+    // A template hint is replaced by the first real text, never kept above it.
+    const current = withoutHints(found.lines).join('\n').trim();
     found.lines = [replace || !current ? body : normalizeText(current).includes(normalizeText(body)) ? current : `${current}\n${body}`];
   } else sections.push({ heading: `## ${names[lang === 'ar' ? 'ar' : 'en']}`, key: target, lines: [body] });
   return joinBlocks({ preamble: blocks.preamble, sections });

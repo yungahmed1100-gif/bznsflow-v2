@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { parseBzns, setMeta, validateBzns } from '../../lib/bzns-doc.js';
+import { parseBzns, prepareForPublish, setMeta, validateBzns } from '../../lib/bzns-doc.js';
 import { bznsMessages } from '../../lib/bzns-messages.js';
 import { BUSINESS_INDUSTRIES } from '../../lib/industries.js';
 import { brainStrings } from '../../lib/brain/strings.js';
@@ -63,7 +63,7 @@ export function BrainPage({ lang, part = 'bzns', onPart, channel = false, active
   const publish = () => act('publish', async () => {
     setPublished(''); setProblems([]);
     if (bznsChanges) {
-      const check = validateBzns(markdown);
+      const check = validateBzns(prepareForPublish(markdown).markdown);
       if (!check.ok) { setProblems(bznsMessages(check.errors, lang)); select('bzns'); return; }
     }
     take(await request({ action: 'brain_publish' }));

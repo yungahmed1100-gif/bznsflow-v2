@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BRAIN_SECTIONS, BZNS_MAX_CHARS, validateBzns } from '../../lib/bzns-doc.js';
+import { BRAIN_SECTIONS, BZNS_MAX_CHARS, prepareForPublish, validateBzns } from '../../lib/bzns-doc.js';
 import { bznsMessages } from '../../lib/bzns-messages.js';
 import { brainTemplate } from '../../../config/bzns-templates.js';
 import { BUSINESS_INDUSTRIES } from '../../lib/industries.js';
@@ -22,7 +22,8 @@ export function BznsTab({ b, lang, setup, request, take, act, busy, industry }) 
   const lastSaved = useRef(saved);
   // Adopt the server's text when it changes (a load, an accepted suggestion) unless the owner has unsaved edits.
   useEffect(() => { setText(current => (current === lastSaved.current ? saved : current)); lastSaved.current = saved; }, [saved]);
-  const check = useMemo(() => validateBzns(text), [text]);
+  // The checks shown are the ones Publish applies: unreplaced template hints are left out, not errors.
+  const check = useMemo(() => validateBzns(prepareForPublish(text).markdown), [text]);
   const dirty = text !== saved;
   const sectors = new Set(check.parsed.sections.filter(s => String(s.body || '').trim()).map(s => s.key));
   const industryName = (BUSINESS_INDUSTRIES.find(row => row.id === industry) || {})[lang === 'ar' ? 'ar' : 'en'] || (lang === 'ar' ? 'نشاطك' : 'your business');

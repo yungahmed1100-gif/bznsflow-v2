@@ -134,6 +134,23 @@ for (const [lang, path, width] of [['ar', '/signin', 390], ['en', '/en/signin', 
   await ctx.close();
 }
 
+// A granted owner goes straight to their workspace: setup while there is none yet, else the dashboard.
+for (const [hasWorkspace, target] of [[false, '/en/catalyst/setup'], [true, '/en/layla/dashboard']]) {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.route('**/api/auth-code', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) }));
+  await page.route('**/api/auth-session', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(r.request().method() === 'GET'
+    ? { ok: true, csrfToken: 'a'.repeat(64), providers: [], account: null }
+    : { ok: true, needsProfile: false, account: { email: 'owner@example.test', accessPlan: 'catalyst', hasWorkspace } }) }));
+  await page.route(/\/(en\/)?(catalyst\/setup|layla\/dashboard)$/, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<p>workspace</p>' }));
+  await page.goto(`${BASE}/en/signin`, { waitUntil: 'networkidle' });
+  await page.fill('#auth-email', 'owner@example.test'); await page.click('button[type=submit]');
+  await page.waitForSelector('#auth-code'); await page.fill('#auth-code', '123456'); await page.click('button[type=submit]');
+  await page.waitForURL(`**${target}`, { timeout: 5000 }).catch(() => {});
+  chk(`a granted owner ${hasWorkspace ? 'with' : 'without'} a workspace lands on ${target}`, new URL(page.url()).pathname === target, page.url());
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fail ? '✗' : '✓'} auth-browser: ${pass} passed, ${fail} failed`);
 console.log(`screenshots in ${OUT}/`);

@@ -64,7 +64,7 @@ export async function executeProductSetup(ctx, a, now = Date.now()) {
     }
     const next = { accountId: account._id, product: a.product, step: a.step, completed: a.completed ?? progress?.completed === true, version: (progress?.version || 0) + 1, requestId: a.requestId, requestSignature, updatedAt: now };
     if (progress) await ctx.db.replace(progress._id, next); else await ctx.db.insert('productSetupProgress', next);
-    await ctx.db.insert('productSetupAudit', { accountId: account._id, product: a.product, version: next.version, action: next.completed ? 'completed' : 'saved', at: now });
+    await ctx.db.insert('productSetupAudit', { accountId: account._id, product: a.product, version: next.version, action: next.completed && !progress?.completed ? 'completed' : 'saved', at: now });
     progress = next;
   }
   return { ok: true, value: await view(progress || { product: a.product, step: 0, completed: false, version: 0 }, await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', account._id)).unique()) };

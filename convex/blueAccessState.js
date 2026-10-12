@@ -1,3 +1,4 @@
+import { activationStage } from './activationStage.js';
 import { isLivePack } from '../config/hasib-packs.js';
 import { DEFAULT_SETTINGS } from './hasib/shared.js';
 const ADMIN_EMAIL = 'ahmed@bznsflowai.com';
@@ -14,9 +15,13 @@ export async function executeAccess(ctx, args, now = Date.now()) {
     if (args.operation === 'list') {
       // A grant only works once someone signs up with exactly that address, so each row says
       // whether an account exists. Revoked grants stay listed, so a revoked address never just vanishes.
-      const signedUp = async email => !!await ctx.db.query('accounts').withIndex('by_email', q => q.eq('email', email)).unique();
-      const view = async ({ email, plan, status, grantedAt, grantedBy, note, packId, revokedAt }) =>
-        ({ email, plan, status, grantedAt, grantedBy, packId, revokedAt, note: note || '', hasAccount: await signedUp(email) });
+      const accountOf = email => ctx.db.query('accounts').withIndex('by_email', q => q.eq('email', email)).unique();
+      // The phone (from the owner's sign-up profile) lets Ahmed send the setup link on WhatsApp.
+      const view = async ({ email, plan, status, grantedAt, grantedBy, note, packId, revokedAt }) => {
+        const account = await accountOf(email);
+        const row = account?.draftHash ? await ctx.db.query('blueReviewSessions').withIndex('by_hash', q => q.eq('sessionHash', account.draftHash)).unique() : null;
+        return { email, plan, status, grantedAt, grantedBy, packId, revokedAt, note: note || '', hasAccount: !!account, phone: account?.phone || '', progress: activationStage({ account, row, grantedAt }) };
+      };
       const active = await ctx.db.query('blueAccessGrants').withIndex('by_status', q => q.eq('status', 'active')).take(200);
       const revoked = await ctx.db.query('blueAccessGrants').withIndex('by_status', q => q.eq('status', 'revoked')).take(200);
       return { ok: true, value: { grants: await Promise.all(active.map(view)), revoked: await Promise.all(revoked.map(view)) } };

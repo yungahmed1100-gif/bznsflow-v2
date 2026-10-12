@@ -60,6 +60,8 @@ try {
     await page.screenshot({ path: `${OUT}/${lang}-${width}-checklist.png`, fullPage: true });
     const start = card.getByRole('button', { name: t('I have everything — start', 'جهّزت كل شيء، ابدأ'), exact: true });
     assert.equal(await start.isDisabled(), true, 'readiness must be acknowledged before continuing'); checks++;
+    // Published details, the team contact and the signed-in email are already proven by the account.
+    assert.equal(await card.getByRole('checkbox', { checked: true }).count(), 3, 'what the account proves starts ticked'); checks++;
     for (const checkbox of await card.getByRole('checkbox').all()) await checkbox.check();
     await start.click();
     assert.equal(await page.evaluate(() => localStorage.getItem('layla-ready-v1')), null, 'readiness checks are not remembered across people sharing this browser'); checks++;
@@ -134,6 +136,28 @@ try {
     assert.equal(calls.filter(c => c === 'claim_draft').length, 2, 'one press saves the setup'); checks++;
     assert.equal(await page.getByRole('heading', { name: 'احفظ إعدادك لربط القنوات' }).count(), 0, 'no hidden save prompt for a signed-in owner'); checks++;
     await context.close();
+  }
+  // Meta's connection switched off on our side: the card says so first, with no choices or checklist to work through.
+  for (const lang of ['en', 'ar']) {
+    const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
+    const page = await browser.newPage();
+    const state = { ok: true, available: false, account: { email: 'owner@example.test' }, accountSaveAvailable: true, savedToAccount: true, journeyStep: 1, profileVersion: 1, csrfToken: 'c',
+      profile: { businessName: 'Noor Abayas', sector: 'Retail', services: 'Abayas', humanContact: 'team@example.test', reviewed: true, faqs: [] }, integration: null };
+    await page.route('**/*', async route => {
+      const u = new URL(route.request().url());
+      if (u.origin !== BASE) return route.abort();
+      if (u.pathname === '/api/layla-meta') return route.fulfill({ json: u.searchParams.get('surface') === 'customer' ? state : { ok: true, connected: false, available: false } });
+      if (u.pathname.startsWith('/api/product-setup')) return route.fulfill({ status: 401, json: { ok: false, reason: 'sign_in_required' } });
+      if (u.pathname.startsWith('/api/')) return route.fulfill({ status: 404, json: { ok: false } });
+      return route.continue();
+    });
+    await page.goto(`${BASE}/${ar ? '' : 'en/'}catalyst/setup`);
+    await page.getByRole('heading', { name: t('Connect a channel', 'اربط قناة'), exact: true }).waitFor();
+    const card = page.getByRole('region', { name: 'WhatsApp', exact: true });
+    await card.getByText(t('WhatsApp connection is paused on our side.', 'ربط واتساب متوقف مؤقتاً من جهتنا.'), { exact: false }).waitFor(); checks++;
+    assert.equal(await card.getByRole('button', { name: t('Connect WhatsApp', 'ربط واتساب'), exact: true }).count(), 0, `${lang}: nothing to start while it is paused`); checks++;
+    assert.equal(await page.getByText(t('Instagram connection isn’t available yet.', 'ربط إنستغرام غير متاح بعد.')).count(), 1, `${lang}: Instagram says it is off instead of vanishing`); checks++;
+    await page.close();
   }
   console.log(`${checks} WhatsApp connect checks passed. Synthetic rehearsal; no Meta consent or delivery evidence.`);
 } finally { await browser.close(); }

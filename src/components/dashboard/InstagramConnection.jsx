@@ -25,7 +25,11 @@ export function InstagramConnection({lang='en',onChange=()=>{},replyState=null,a
   const ar=lang==='ar', t=(en,arabic)=>ar?arabic:en, s=createStrings(lang);
   const state=usePolling(load,[],{interval:30000});
   const [busy,setBusy]=useState(''),[notice,setNotice]=useState(''),[failed,setFailed]=useState(false),[confirm,setConfirm]=useState(false);
-  if (state.data?.available === false) return null;
+  // Switched off on our side: the card still shows, so "Connect Instagram, WhatsApp or both" stays true.
+  if (state.data?.available === false) return <section className={`ld-channel-card${inSetup?' layla-channel-card layla-channel-card--instagram':''}`} aria-label="Instagram">
+    <h3><BrandMark name="instagram" size={26} className="layla-channel-logo" />Instagram</h3>
+    <p className="ld-help" role="status">{t('Instagram connection isn’t available yet.','ربط إنستغرام غير متاح بعد.')}</p>
+  </section>;
   const connection=state.data?.connection;
   const connected=connection?.status==='connected';
   // The server knows a sign-in began and Instagram never sent the person back

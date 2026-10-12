@@ -1,3 +1,4 @@
+import { recordOutcome } from './laylaOutcomes.js';
 import { rolloutAllows } from './greenRollout.js';
 import { instagramConnection, instagramRow, rowForIntegration } from './blueInstagramState.js';
 // Atomic tenant messaging transitions. Network requests happen only after a
@@ -176,6 +177,16 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       if(!ready(row) || now-(row.checkedAt || 0)>60000 || !row.connectionChecks?.routing || !row.connectionChecks?.registered || !row.connectionChecks?.path) return fail('activation_not_ready');
       const value={integrationId:row.integration.id,sessionHash:row.sessionHash,accountId:row.accountId,active:true,reason:'',activatedAt:now,healthAt:now,profileVersion:row.profileVersion || 1};
       if(control) await ctx.db.patch(control._id,value); else await ctx.db.insert('blueMessagingControls',value);
+      if(!row.metrics?.firstActivatedAt) {
+        await ctx.db.patch(row._id,{metrics:{...row.metrics,firstActivatedAt:now}});
+        // The first live channel completes Catalyst setup: the audit records it once.
+        const progress=row.accountId ? await ctx.db.query('productSetupProgress').withIndex('by_account_product',q=>q.eq('accountId',row.accountId).eq('product','catalyst')).unique() : null;
+        if(progress && !progress.completed) {
+          // The version is left alone: the owner's open setup page keeps saving its steps without a conflict.
+          await ctx.db.patch(progress._id,{completed:true,updatedAt:now});
+          await ctx.db.insert('productSetupAudit',{accountId:row.accountId,product:'catalyst',version:progress.version,action:'completed',at:now});
+        }
+      }
     } else if(a.operation==='pause' && control) {
       await ctx.db.patch(control._id,{active:false,reason:'owner_paused'});
       await stopQueued(row.integration.id,null,'owner_paused');
@@ -402,6 +413,8 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       try { await recordGap(ctx,row,{question:inbound.text,sectorId,now}); } catch(err) { console.error('brain_gap_failed',err?.message); }
     }
     if(inbound && TOPIC_FOR_INTENT[a.intent] && !inbound.topic) await ctx.db.patch(inbound._id,{topic:TOPIC_FOR_INTENT[a.intent]});
+    // Facts the owner can count: first qualified, and when Layla gave the team contact. Layla stays on the chat.
+    if(!a.noReply) await recordOutcome(ctx,{person,contact,row,sectorId,needsTeam:!!a.needsTeam,intent:a.intent,now});
     const owner={...person,version:pending.version};
     let jobId=null;
     if(!a.noReply && a.text) {
@@ -463,6 +476,11 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       }
     }
     for(const field of SECTOR_DRAFT_FIELDS) if(job[field]) await ctx.db.patch(job[field],{status:a.status==='submitted'?'provider_submitted':a.status,updatedAt:now,...(a.status==='submitted'?{providerSubmittedAt:now}:{})});
+    // The first reply Layla actually got out, once per business: the activation moment.
+    if(a.status==='submitted' && !job.manual && !terminal.has(job.status)) {
+      const owner=await rowForControl(await controls(job.integrationId));
+      if(owner && !owner.metrics?.firstReplySentAt) await ctx.db.patch(owner._id,{metrics:{...owner.metrics,firstReplySentAt:now}});
+    }
     // One customer's problem (window closed, account gone, Meta throttling) is that chat's, never
     // the whole business's: the team sees the chat, and Layla keeps answering everyone else.
     if(a.status==='failed' && RECIPIENT_FAILURES.has(a.reason)) {

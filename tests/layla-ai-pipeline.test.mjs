@@ -73,7 +73,14 @@ test('what needs a person gets the team contact and Layla stays on the chat', as
   const [first] = await b.say('96891110008', 'I want to talk to a person');
   assert.equal(first, `Of course. Please contact our team directly: ${CONTACT}`);
   assert.equal(b.conversation('96891110008').takeover, false);
+  // The referral is recorded as a fact, with the required details known and missing; no queue, no hand-over state.
+  const outcome = b.conversation('96891110008').outcome;
+  assert.equal(outcome.referral.reason, 'human');
+  assert.ok(Array.isArray(outcome.missing) && outcome.required.length >= outcome.missing.length);
+  assert.equal(b.conversation('96891110008').handoffState, undefined, 'giving the contact opens no hand-over');
   assert.deepEqual(await b.say('96891110008', 'do you rent villas?'), ['We rent villas.']);
+  const setup = b.h.m.table('blueReviewSessions')[0].metrics;
+  assert.ok(setup.firstTeamReferralAt && setup.firstReplySentAt, 'the first referral and the first reply sent are stamped once');
 });
 
 test('the flood guard stays deterministic: after ten automated replies an hour, one notice and Layla stops', async () => {

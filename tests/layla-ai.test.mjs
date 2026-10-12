@@ -154,3 +154,28 @@ test('one question per reply at most, and the team contact is never given twice'
   const own = validateReply(out('Please message Sara on WhatsApp 9100 2000.', { needsTeam: true }), ctx());
   assert.equal(own.reply, 'Please message Sara on WhatsApp 9100 2000.', 'the model already gave the number in its own words');
 });
+
+test('a price is the price of the item it is said about, with its qualifier', () => {
+  const catalog = [
+    { nameEn: 'Cleaning', prices: [{ type: 'range', minimum: 10, maximum: 20, currency: 'OMR', label: '10–20 OMR' }], descriptionEn: 'Takes 45 minutes' },
+    { nameEn: 'Whitening', prices: [{ type: 'from', minimum: 60, currency: 'OMR', label: 'From 60 OMR' }] },
+    { nameEn: 'Check-up', prices: [{ type: 'fixed', amount: 15, currency: 'OMR', label: '15 OMR' }] },
+    { nameEn: 'Implants', prices: [{ type: 'quote', label: 'Price on request (quote)' }] },
+  ];
+  const c = (extra = {}) => ctx({ catalog, history: [{ role: 'customer', text: 'prices?' }], ...extra });
+  const ok = text => validateReply(out(text), c()).ok;
+  assert.equal(ok('A check-up is 15 OMR.'), true);
+  assert.equal(ok('Cleaning is 10–20 OMR depending on the case.'), true, 'a range stated as a range');
+  assert.equal(ok('Cleaning starts from 10 OMR.'), true, 'the low end with "from"');
+  assert.equal(ok('Whitening is from 60 OMR.'), true);
+  assert.equal(ok('Cleaning is 10 OMR.'), false, 'one end of a range is not the price');
+  assert.equal(ok('Cleaning is 20 OMR.'), false);
+  assert.equal(ok('Whitening is 60 OMR.'), false, 'dropping "from" turns a minimum into a promise');
+  assert.equal(ok('A check-up is 60 OMR.'), false, 'another item’s price');
+  assert.equal(ok('Cleaning is 45 OMR.'), false, 'a number from the description is not a price');
+  assert.equal(ok('Implants are 300 OMR.'), false, 'a price-on-request item has no amount to quote');
+  assert.equal(ok('It is 15 OMR.'), false, 'an amount tied to no item is refused');
+  assert.equal(validateReply(out('It is 15 OMR.'), c({ history: [{ role: 'customer', text: 'how much is a check-up?' }] })).ok, true, 'the customer’s question names the item');
+  assert.equal(validateReply(out('Sure. The check-up is popular. It is 15 OMR.'), c()).ok, true, 'the item may be named in the sentence before');
+  assert.equal(validateReply(out('الفحص بـ ١٥ ر.ع'), c({ catalog: [{ nameEn: 'Check-up', nameAr: 'الفحص', prices: [{ type: 'fixed', amount: 15, label: '15 OMR' }] }], history: [{ role: 'customer', text: 'كم سعر الفحص؟' }] })).ok, true, 'Arabic digits and names');
+});

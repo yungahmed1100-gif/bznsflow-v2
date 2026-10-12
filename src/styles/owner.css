@@ -50,4 +50,5 @@
 .owner-table td { padding: 12px 8px; border-block-end: 1px solid #d4cebf; vertical-align: middle; }
 .owner-table td.is-warning { color: #9c2e35; font-weight: 600; }
 .owner-table .owner-secondary { min-height: 36px; padding: 6px 12px; gap: 6px; }
+.owner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .owner-status { margin-top: 16px; }

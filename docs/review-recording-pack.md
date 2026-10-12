@@ -32,11 +32,11 @@ Already fine: WhatsApp messaging and management approved (advanced), compliance 
 
 ### C. WhatsApp run
 1. ☐ Reviewer `#access=` link in a clean browser → lands on setup, signed in.
-2. ☐ Your business (3 chapters) → tick "I checked these business facts" → **Save and continue** → save to account. That tick is the only review; there is no preview approval.
-3. ☐ Connect your channels → Prepare secure connection → Facebook popup → WABA + number → checklist all ✓.
+2. ☐ Your business: choose the industry → **The essentials** (business name, what you offer, team contact) → optionally add a file, page or text and review the suggestions → **Publish**. Publishing is the one review: there is no tick-box and no preview approval, and unreplaced template hints are left out.
+3. ☐ Connect a channel → WhatsApp → number type → (Business app) the ready checklist, with the items the account already proves pre-ticked → Facebook popup → WABA + number → connection details all ✓.
 4. ☐ **Check that Layla is on.** Since 2026-10-07 she switches on by herself when a channel connects; the Instagram card shows "Layla is replying on Instagram". Messages that arrive while she is off are stored, not answered.
 5. ☐ From another phone: "What are your prices?" → message in the dashboard → Layla's reply delivered (receipt).
-6. ☐ Take over → manual reply → resume.
+6. ☐ In the chat, switch **Layla is live in this chat** to stopped → manual reply → switch back on.
 7. ☐ Pause → new message → no auto-reply.
 
 ### D. Instagram run
@@ -44,7 +44,7 @@ Already fine: WhatsApp messaging and management approved (advanced), compliance 
 2. ☐ Check connection ✓.
 3. ☐ DM from the test customer → appears in the inbox.
 4. ☐ Put that sender's scoped ID in `BLUE_INSTAGRAM_TEST_SENDERS`, set `BLUE_INSTAGRAM_SEND_ENABLED=true`, redeploy Blue.
-5. ☐ Activate → DM again → Layla replies.
+5. ☐ Check the Instagram switch reads "Layla is replying on Instagram" (she switches on when the channel connects) → DM again → Layla replies.
 6. ☐ Pause, then Disconnect. **Confirm it ends "disconnected"** (never tested live; a Meta error other than 190/102 leaves it stuck "disconnecting").
 
 ### E. Recording
@@ -101,7 +101,7 @@ Read-only checks on 2026-09-23:
 5. Use your own isolated Blue business account for the recording. Use the separate reviewer link/account to check that a reviewer can repeat the flow. Avoid connecting `@bznsflow` to both Blue accounts: one Instagram identity belongs to one BznsFlow account.
 6. Open Blue setup in English: `https://bznsflow-blue.vercel.app/en/layla/setup`.
 7. Enter accurate facts you are willing to approve. Suggested service summary, **only if accurate**: “We help businesses answer customer questions on Instagram and WhatsApp using information approved by the business owner.” Use your real team email; leave unknown hours/prices blank. Do not import a whole website during the recording.
-8. Click **Save and continue** after ticking "I checked these business facts" (the one review). The optional **Test Layla with a question** on the Go live step is a private preview; label it as such, not a live Instagram message. Later edits go in **Dashboard → Business** and apply from the next message.
+8. Fill in **The essentials** and click **Publish** on the Test and publish step (publishing is the one review). The optional **Test Layla** panel there is a private preview that sends nothing; label it as such, not a live Instagram message. Later edits go in **Settings → BznsBrain** and apply from the next message.
 9. Save/sign in, connect Instagram, verify the username and check connection. Confirm the customer test DM appears while replies are paused.
 10. Allowlist that test customer's Instagram-scoped ID, separately authorize the real test, enable Instagram sending, and check the Instagram switch is on. Rehearse a fresh inbound DM and verify the reply in the customer's real Instagram app.
 11. Check manual takeover and pause. Check the reviewer sender is also allowed for their later test. Keep credentials/passwords out of recordings and public documents.
@@ -123,11 +123,11 @@ Suggested filename: `instagram-business-basic.mp4`.
 | Order | What you do | Caption/narration |
 | --- | --- | --- |
 | 1 | Show BznsFlow sign-in/setup. If using email login, conceal only the private code/password. | “The business owner signs in to BznsFlow.” |
-| 2 | Show the reviewed business facts and choose **Save and connect your channels**. | “The owner approves the information used for customer replies.” |
+| 2 | Show the business facts and click **Publish**; the page moves to **Connect a channel**. | “The owner approves the information used for customer replies.” |
 | 3 | Click **Connect Instagram**. | “This connects the owner's Instagram professional account.” |
 | 4 | Complete real Instagram login and grant the requested access. | “The owner chooses and authorizes their account through Instagram.” |
 | 5 | Show the return to Blue, `@bznsflow`, and connected status. | “BznsFlow displays the authorized account so the owner can identify their connection.” |
-| 6 | Click **Check connection** and show success. | “This confirms the account connection is ready. Automatic replies are controlled separately.” |
+| 6 | Open **Connection details** and show the checks passed. | “This confirms the account connection is ready. Automatic replies are controlled separately.” |
 
 The username must refer to the same account throughout. Keep the real login and consent flow visible even if you already demonstrated it in another video.
 
@@ -142,7 +142,7 @@ Suggested filename: `instagram-business-manage-messages.mp4`.
 | 3 | In @yungramsis21's Instagram, send “What services do you offer?” to `@bznsflow`. | “The customer starts the conversation.” |
 | 4 | Open Blue's inbox, filter Instagram, and open that customer's conversation. | “The customer's message appears in the business's inbox.” |
 | 5 | Show the reply in Blue and then in the customer's real Instagram app. | “The customer receives an answer based on the owner's approved facts.” |
-| 6 | Turn on **Leave this chat for me**. Send a new customer DM, then manually answer it in Blue. Show receipt in Instagram. | “The owner takes over this conversation and replies personally.” |
+| 6 | Switch **Layla is live in this chat** to stopped. Send a new customer DM, then manually answer it in Blue. Show receipt in Instagram. | “The owner takes over this conversation and replies personally.” |
 | 7 | Open Channels and turn the Instagram **Layla switch** off. | “The owner can stop automatic Instagram replies at any time.” |
 
 Wait for actual receipt; a queued or submitted badge alone is insufficient evidence of delivery. Manual replies must be within the open customer messaging window. Avoid recording unrelated ads, publishing, comments, or WhatsApp campaign screens.
@@ -151,7 +151,7 @@ Wait for actual receipt; a queued or submitted badge alone is insufficient evide
 
 Complete the bracketed details immediately before submission; do not submit placeholders.
 
-“Open [PRIVATE BLUE REVIEWER ACCESS LINK] in a fresh browser. It signs you into an isolated BznsFlow account and redirects to the English setup page. On Your business (step 1 of 3), enter the business facts, tick I checked these business facts and click Save and continue; you land on Connect your channels. Click Connect Instagram and authorize [PROFESSIONAL TEST ACCOUNT / META-APPROVED TEST ACCESS INSTRUCTIONS]. Verify its username, click Check connection, and Activate replies. From [REVIEWER CUSTOMER TEST ACCOUNT], send What services do you offer? Open the inbox, filter Instagram, and view the message and response. Confirm the response in the customer's Instagram app. Use Leave this chat for me for manual takeover. Use Channels → Instagram → Pause replies to stop automation.”
+“Open [PRIVATE BLUE REVIEWER ACCESS LINK] in a fresh browser. It signs you into an isolated BznsFlow account and redirects to the English setup page. On Your business (step 1 of 3), choose the industry, fill in The essentials (business name, what you offer, team contact), then go to Test and publish and click Publish; you land on Connect a channel. Click Connect Instagram and authorize [PROFESSIONAL TEST ACCOUNT / META-APPROVED TEST ACCESS INSTRUCTIONS]. Verify its username and open Connection details; Layla switches on by herself once the channel connects. From [REVIEWER CUSTOMER TEST ACCOUNT], send What services do you offer? Open the inbox, filter Instagram, and view the message and response. Confirm the response in the customer's Instagram app. Switch Layla is live in this chat to stopped for manual takeover. Use Settings → Channels → the Instagram switch to stop automation.”
 
 The recording uses @yungramsis21; do not give reviewers the password to a personal account. Provide dedicated reviewer test access or instructions compatible with Meta's review process. Test those exact steps on the reviewer account. The Instagram account used for that test must not already be bound to a different BznsFlow account. Prepare a separate professional reviewer test account or use an agreed recording/reviewer account arrangement; do not erase or switch an established binding just to make the video easier. A public anonymous preview does not provide connected-account review access.
 

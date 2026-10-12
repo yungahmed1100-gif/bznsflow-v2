@@ -184,3 +184,47 @@ test('every sector template asks for what customers ask Layla: offer, how to ord
     if (sector !== 'real-estate' && sector !== 'construction') assert.match(headings, topics.payment, `${sector}/${lang}: payment methods`);
   }
 });
+
+// Publishing a starter template: unreplaced hints are left out; only what a customer needs blocks.
+test('publishing leaves out unreplaced template hints and keeps only the essentials blocking', async () => {
+  const { prepareForPublish, upsertSection, setMeta } = await import('../src/lib/bzns-doc.js');
+  const { brainTemplate, BRAIN_TEMPLATE_SECTORS } = await import('../config/bzns-templates.js');
+  for (const sector of BRAIN_TEMPLATE_SECTORS || ['dental', 'real-estate', 'retail', 'restaurant']) {
+    const raw = brainTemplate(sector, 'en');
+    const { markdown, removed } = prepareForPublish(raw);
+    const blocking = new Set(validateBzns(markdown).errors.map(e => e.section || 'meta'));
+    assert.deepEqual([...blocking].filter(x => !['meta', 'offer', 'contact'].includes(x)), [], `${sector}: an untouched template blocks only on name, offer and team contact`);
+    assert.ok(blocking.has('contact') && blocking.has('meta'), `${sector}: the name and team contact must be written`);
+    assert.ok(removed.length > 0, `${sector}: hint-only sections are reported`);
+    let filled = setMeta(raw, 'name', 'Bright Smile');
+    filled = upsertSection(filled, 'offer', '- Check-ups and cleaning', { replace: true });
+    filled = upsertSection(filled, 'contact', 'WhatsApp +968 9100 2000 (Sara)', { replace: true });
+    const ready = prepareForPublish(filled);
+    assert.equal(validateBzns(ready.markdown).ok, true, `${sector}: name, offer and team contact are enough to publish`);
+    assert.doesNotMatch(ready.markdown, /\[[^\]\n]+\](?!\()/, `${sector}: no bracket hint is published`);
+    assert.equal(prepareForPublish(ready.markdown).markdown, ready.markdown, `${sector}: preparing twice changes nothing`);
+  }
+});
+
+test('preparing for publish keeps what the owner wrote, links and front matter', async () => {
+  const { prepareForPublish } = await import('../src/lib/bzns-doc.js');
+  assert.equal(prepareForPublish(doc).markdown, doc, 'a complete document is returned unchanged');
+  const mixed = `---\nname: Noor\nsector: retail\n---\n# [Your business name]\n\n## What we offer\n- [Abayas]\n- Tailoring\n\n## Location\nSee [our map](https://maps.example/x)\n\n## Hours\n[Your hours]\n\n## Team contact\nWhatsApp +968 9000 0000\n`;
+  const { markdown, removed } = prepareForPublish(mixed);
+  assert.deepEqual(removed, ['Hours']);
+  assert.match(markdown, /^# Noor$/m, 'a bracket title takes the name from the front matter');
+  assert.match(markdown, /- Tailoring/); assert.doesNotMatch(markdown, /\[Abayas\]/);
+  assert.match(markdown, /\[our map\]\(https:\/\/maps\.example\/x\)/, 'markdown links are not hints');
+  assert.equal(validateBzns(markdown).ok, true);
+});
+
+test('accepting text into a template section replaces its hint instead of appending below it', async () => {
+  const { upsertSection, sectionText } = await import('../src/lib/bzns-doc.js');
+  const contact = upsertSection(`# X\n\n## Team contact\n[A WhatsApp number or email]\n`, 'contact', 'WhatsApp +968 9100 2000');
+  assert.equal(sectionText(contact, 'contact'), 'WhatsApp +968 9100 2000');
+  const offer = upsertSection(`# X\n\n## What we offer\n- [General check-ups]\n`, 'offer', '- Whitening');
+  assert.doesNotMatch(offer, /\[General check-ups\]/);
+  assert.match(offer, /- Whitening/);
+  const kept = upsertSection(`# X\n\n## What we offer\n- Cleaning\n`, 'offer', '- Whitening');
+  assert.match(kept, /- Cleaning\n- Whitening/, 'real text is kept and the new text added');
+});
