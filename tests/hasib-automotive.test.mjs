@@ -168,3 +168,10 @@ test('technician lists expose only assigned jobs and never customer directories'
   assert.equal(vehicles.value.items.length, 1);
   assert.equal('contactId' in vehicles.value.items[0], false);
 });
+
+test('every list the Workshop screen loads reads an index the production schema has', async () => {
+  const { run, technician } = await setup();
+  for (const op of ['automotive_overview', 'automotive_contacts', 'automotive_vehicles', 'automotive_services', 'automotive_bays', 'automotive_requests', 'automotive_appointments',
+    'automotive_work_orders', 'automotive_estimates', 'automotive_labor_entries', 'automotive_parts']) assert.equal((await run(op)).ok, true, `${op} as the manager`);
+  for (const op of ['automotive_vehicles', 'automotive_work_orders', 'automotive_labor_entries', 'automotive_parts']) assert.equal((await run(op, {}, technician)).ok, true, `${op} as a technician`);
+});

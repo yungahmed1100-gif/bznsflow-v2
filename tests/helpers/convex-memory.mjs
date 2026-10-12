@@ -2,6 +2,13 @@
 // It honours index equality/range filters, ordering by the index's last field,
 // search-index token matching, and structured-clone isolation like Convex.
 import assert from 'node:assert/strict';
+import { registerHooks } from 'node:module';
+
+// The production schema's indexes: a query on an index Convex does not have fails here as it would there.
+registerHooks({ resolve(specifier, context, nextResolve) { try { return nextResolve(specifier, context); } catch (error) { if (specifier.startsWith('.') && !/\.[jt]s$/.test(specifier)) return nextResolve(`${specifier}.ts`, context); throw error; } } });
+const { default: schema } = await import('../../convex/schema.ts');
+const INDEXES = new Map(Object.entries(schema.tables).map(([table, t]) => [table, new Set([...(t.indexes || []), ...(t.searchIndexes || [])].map(i => i.indexDescriptor))]));
+const checkIndex = (table, index) => { if (INDEXES.has(table) && !INDEXES.get(table).has(index)) throw new Error(`Index ${table}.${index} not found.`); };
 
 const ORDER_FIELD = {
   by_account_start: 'startsAt', by_account_resource_start: 'startsAt', by_account_due: 'dueAt', by_membership_created: 'createdAt',
@@ -36,8 +43,8 @@ export function convexMemory({ start = 1_800_000_000_000 } = {}) {
         return structuredClone(out);
       };
       const api = {
-        withIndex(index, fn) { if (ORDER_FIELD[index]) orderField = ORDER_FIELD[index]; fn?.(range); return api; },
-        withSearchIndex(_index, fn) { fn(range); return api; },
+        withIndex(index, fn) { checkIndex(table, index); if (ORDER_FIELD[index]) orderField = ORDER_FIELD[index]; fn?.(range); return api; },
+        withSearchIndex(index, fn) { checkIndex(table, index); fn(range); return api; },
         order(direction) { descending = direction === 'desc'; return api; },
         async take(n) { return run().slice(0, n); },
         async collect() { return run(); },
