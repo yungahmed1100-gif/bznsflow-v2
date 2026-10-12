@@ -11,9 +11,9 @@ test('one catalog covers Setup plus electronics and labels live, preview and pen
   assert.equal(catalog.length, 25);
   assert.deepEqual(new Set(catalog.filter(row => row.status === 'live').map(row => row.id)), new Set(HASIB_LIVE_PACKS));
   assert.deepEqual(new Set(catalog.filter(row => row.status === 'preview').map(row => row.id)), new Set(HASIB_PREVIEW_PACKS));
-  // Media has its own owner configuration (Productions) and is a preview pack, still not live.
+  // Media has its own owner configuration (Productions) and is live since 2026-10-12.
   assert.equal(catalog.filter(row => row.status === 'pending').length, 9);
-  assert.equal(catalog.find(row => row.id === 'media').status, 'preview');
+  assert.equal(catalog.find(row => row.id === 'media').status, 'live');
   for (const row of catalog) assert.ok(row.id && row.en && row.ar && ['live', 'preview', 'pending'].includes(row.status));
 });
 
@@ -30,7 +30,7 @@ test('all 16 built owner packs specify exactly three distinct bilingual measures
     assert.ok(!pack.orderFields.some(f => f.key === 'pickup_at'), 'fulfilment.dueAt owns pickup time');
   }
   assert.equal(HASIB_LIVE_PACKS.length + HASIB_PREVIEW_PACKS.length, 16);
-  assert.deepEqual(HASIB_LIVE_PACKS, ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness']);
+  assert.deepEqual(HASIB_LIVE_PACKS, ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness', 'media']);
 });
 
 test('every live dashboard exposes bilingual icon actions with valid destinations', () => {
@@ -43,7 +43,7 @@ test('every live dashboard exposes bilingual icon actions with valid destination
       assert.ok(actionId && en && ar && icon, `${id}:${actionId}`);
       // Six-tab packs (Real Estate's successors) point into their Work tab.
       assert.ok(['today', 'orders', 'stock', 'service', 'money', 'customers', 'work'].includes(go[0]), `${id}:${actionId}:${go[0]}`);
-      if (go[1]?.action) assert.ok(['product', 'import', 'repair', 'trade-in', 'warranty', 'setup', 'property', 'opportunity', 'viewing', 'offer', 'follow-up', 'project', 'progress', 'variation', 'commitment', 'appointment', 'vehicle', 'work-order', 'membership', 'class', 'visit'].includes(go[1].action));
+      if (go[1]?.action) assert.ok(['product', 'import', 'repair', 'trade-in', 'warranty', 'setup', 'property', 'opportunity', 'viewing', 'offer', 'follow-up', 'project', 'progress', 'variation', 'commitment', 'appointment', 'vehicle', 'work-order', 'membership', 'class', 'visit', 'brief'].includes(go[1].action));
     }
   }
 });

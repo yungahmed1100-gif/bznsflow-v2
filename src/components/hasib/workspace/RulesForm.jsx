@@ -3,7 +3,8 @@ import { PageHeader } from '../DashboardVisuals';
 
 const UNITS = [[1, 'minutes', 'دقائق'], [60, 'hours', 'ساعات'], [1440, 'days', 'أيام']];
 const unitFor = minutes => minutes % 1440 === 0 ? 1440 : minutes % 60 === 0 ? 60 : 1;
-const MODES = { draft: ['Writes a message for the manager to approve', 'تكتب رسالة يعتمدها المدير'] };
+const MODES = { draft: ['Writes a message for the manager to approve', 'تكتب رسالة يعتمدها المدير'],
+  auto: ['Sends the message by itself (built only from the records)', 'تُرسل الرسالة تلقائياً (من السجلات فقط)'] };
 
 /**
  * Settings → Follow-up rules for a six-tab sector: each rule's switch, timing and mode, then the

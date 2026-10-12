@@ -206,6 +206,22 @@ try {
     await context.close();
   }
 
+  // 6b. Adiba's offer waits beside the follow-ups: no price until the owner gives one, then it is ready to approve.
+  {
+    const { page, context } = await open(manager.base, 1280, 'en', '/layla/dashboard?tab=work&view=followups');
+    const offer = page.locator('.hb-offers .hb-offer', { hasText: 'Drone footage' }).first();
+    await offer.waitFor();
+    ok(await offer.getByText('Needs your price').isVisible(), 'the offer waits for the owner’s price');
+    ok(await offer.getByText('The catalog says "price on request"', { exact: false }).isVisible(), 'it says why it needs the owner');
+    ok(await offer.getByRole('button', { name: 'Approve and send' }).count() === 0, 'nothing unpriced can be approved');
+    await offer.getByLabel('Price for Drone footage (OMR)').fill('180');
+    await offer.getByRole('button', { name: 'Save prices' }).click();
+    await offer.getByText('Ready to approve').waitFor();
+    ok(/Drone footage: 180\.000 OMR/.test(await offer.locator('.hb-offer-text pre').innerText()), 'the exact text the customer will read');
+    ok(await noOverflow(page), 'offers fit the page');
+    await context.close();
+  }
+
   // 7. Insights → source records → Back to Insights, restored after a reload.
   {
     const { page, context } = await open(manager.base, 1280, 'en', '/layla/dashboard?tab=insights');

@@ -1,5 +1,6 @@
 // Media's shared reads: who may see a production, its linked records as one readable card,
 // the tasks the records call for, and the Productions overview.
+import { ensureAutomation } from './workspace/schedule.js';
 import { owned } from '../blueTenant.js';
 import { reconcileRuleDrafts } from './workspace/drafts.js';
 import { ok, settingsFor } from './shared.js';
@@ -8,7 +9,7 @@ import { displayName } from '../blueContacts.js';
 import { publicRow } from './workspace/rows.js';
 import { orderProfit } from './profit.js';
 import { reconcileTasks } from './workspace/tasks.js';
-import { mediaSettings } from './mediaSettings.js';
+import { mediaSettings, mediaNeedsAutomation } from './mediaSettings.js';
 import { mediaRuleWanted, mediaDraftText, MEDIA_RULE_TASK_KINDS } from './mediaRules.js';
 import { DAY, HOUR, ACTIVE, blocker, latestCut, prepMissing } from './mediaDomain.js';
 
@@ -142,6 +143,7 @@ export async function refreshStudio(ctx, accountId, now) {
 /** Counts the Needs attention strip and the board header read. */
 export async function mediaOverview(ctx, tenant, actor, now) {
   const { studio, settings } = await refreshStudio(ctx, tenant.accountId, now);
+  await ensureAutomation(ctx, tenant.accountId, 'media', mediaNeedsAutomation(settings), now);
   const mine = studio.productions.filter(p => canSeeProduction(actor, p));
   const blockers = mine.map(p => [p, blocker(p, factsOf(studio, p, now))]);
   const count = b => blockers.filter(([, x]) => x === b).length;

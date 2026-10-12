@@ -29,3 +29,6 @@ export const MEDIA_OPERATIONS = ['media_overview','media_productions','media_pro
 // Dental clinics (ascend/dental.md): providers and chairs, visits with attendance, charges and recalls, follow-ups and Insights.
 export const DENTAL_OPERATIONS = ['dental_overview','dental_visits','dental_visit','dental_resources','dental_resource_save','dental_visit_book','dental_visit_reschedule','dental_visit_status','dental_charge','dental_charge_dispute','dental_payment_record','dental_recall_set','dental_followups','dental_task_resolve','dental_task_snooze','dental_draft_approve','dental_context','dental_insights','dental_metric_records'];
 export const FITNESS_OPERATIONS = ['fitness_overview','fitness_members','fitness_member','fitness_plans','fitness_plan_save','fitness_classes','fitness_class_save','fitness_seat_book','fitness_seat_status','fitness_checkin','fitness_membership_save','fitness_payment_record','fitness_freeze','fitness_cancel','fitness_renew','fitness_followups','fitness_task_resolve','fitness_task_snooze','fitness_draft_approve','fitness_context','fitness_insights','fitness_metric_records'];
+
+// Adiba (every sector): the quotes and offers she drafts for the owner's approval.
+export const ADIBA_OPERATIONS = ['adiba_offers', 'adiba_offer', 'adiba_offer_price', 'adiba_offer_approve', 'adiba_offer_withdraw', 'adiba_offer_accept_record'];

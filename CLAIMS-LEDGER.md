@@ -222,6 +222,25 @@ business, and re-approve any edit.
 
 ---
 
+## 9. Ascend's card (2026-10-12)
+
+Ascend became available on 2026-10-12 (Ahmed), shown without a price, by his grant only. Each sentence on the card is a statement of what the code does; none is an outcome number.
+
+| Claim on the card | Evidence in code |
+|---|---|
+| Layla answers from your approved facts | `config/layla-ai.js` `validateReply`; prices tied to items in `config/layla-prices.js` |
+| …asks your qualifying questions and records whether each inquiry is qualified | `config/layla-qualification.js` `qualificationStatus`; `convex/laylaOutcomes.js` (`qualifiedAt`, captured/missing) |
+| Hasib tracks each job from inquiry to payment | each live pack's records and orders (`convex/hasib/*State.js`, `recordPayment` in `ordersState.js`) |
+| …flags what is stuck | follow-up queues and blockers (`convex/hasib/workspace/followups.js`, `mediaDomain.js` `blocker`) |
+| …sends the reminders you set to automatic | Media only today: `convex/hasib/mediaAutomation.js`, fenced by `workspace/autoSend.js` (24-hour window, takeover, opt-out, 3 a day). Other sectors' rules are draft or task; the card says "the reminders you set to automatic", which is true only where Auto exists |
+| Adiba drafts the quotes and offers that need you | `convex/hasib/adiba.js`, `adibaTurn.js`, `mediaAutomation.js` |
+| A price reaches a customer only from your catalog or your approval | `config/adiba-pricing.js` (`fixedPriceMinor` only for fixed prices), `approveAutomatically` refuses any offer with a reason |
+| Sectors listed | `HASIB_LIVE_PACKS` in `config/hasib-packs.js` |
+
+**Watch:** "sends the reminders you set to automatic" holds for Media now; extend Auto to the other six-tab sectors before relying on it there.
+
+---
+
 ## What was NOT changed, and why
 
 Every item above is still live exactly as it was. On 2026-09-10 the instruction

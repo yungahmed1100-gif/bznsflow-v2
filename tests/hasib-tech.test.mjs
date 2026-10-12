@@ -40,7 +40,7 @@ const onHand = (h, id) => h.m.table('hasibVariants').find(v => v._id === id).onH
 const sell = (hasib, variantId, serials, extra = {}) => hasib('order_create', { requestId: randomUUID(), channel: 'walk_in', fulfilment: { type: 'in_store' }, lines: [{ variantId, qty: serials.length, serials }], ...extra });
 
 test('the tech-store pack is live, with its own variants and modules', () => {
-  assert.deepEqual(HASIB_LIVE_PACKS, ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness']);
+  assert.deepEqual(HASIB_LIVE_PACKS, ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness', 'media']);
   const p = hasibPack('retail-tech');
   assert.equal(p.id, 'retail-tech');
   assert.deepEqual(p.variantOptions.map(o => o.key), ['model', 'storage', 'colour', 'condition']);

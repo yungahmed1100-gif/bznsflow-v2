@@ -1,6 +1,8 @@
 import { ChatOrders } from '../hasib/ChatOrders';
 import { WorkContext } from '../hasib/workspace/WorkContext';
 import { CapturedDetails } from './CapturedDetails';
+import { useHasib } from '../hasib/HasibContext';
+import { OffersPanel } from '../hasib/workspace/OffersPanel.jsx';
 import { LaylaSwitch } from './LaylaSwitch';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
@@ -18,6 +20,7 @@ import { handoffReason } from '../../lib/dashboard/handoff';
 const newRequestId = () => crypto.randomUUID();
 
 export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
+  const hb = useHasib();
   const thread = usePolling(() => dashboard('thread', { conversationId }), [conversationId]);
   const [draft, setDraft] = useState({ text: '', id: newRequestId() });
   const [busy, setBusy] = useState(''), [error, setError] = useState(''), [templateOpen, setTemplateOpen] = useState(false);
@@ -94,6 +97,7 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
             }} />
         </section>
         <CapturedDetails s={s} contact={contact} qualification={data.qualification} conversationId={conversationId} channel={conversation.channel} />
+        {hb?.overview && !hb.overview.readOnly && hb.overview.workspaceRole !== 'employee' && <OffersPanel s={s} conversationId={conversationId} compact />}
         <ChatOrders s={s} conversationId={conversationId} />
         <WorkContext s={s} conversationId={conversationId} />
       </header>

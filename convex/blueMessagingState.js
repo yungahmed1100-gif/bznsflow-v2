@@ -1,3 +1,4 @@
+import { adibaTurn } from './hasib/adibaTurn.js';
 import { recordOutcome } from './laylaOutcomes.js';
 import { rolloutAllows } from './greenRollout.js';
 import { instagramConnection, instagramRow, rowForIntegration } from './blueInstagramState.js';
@@ -323,7 +324,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       }
       // Paused ingress keeps messages, contacts and opt-outs without creating work to replay.
       const automate=!a.suppressAutomation && rolloutAllows(global,row.accountId,person.number,now) && !!control?.active;
-      let commerce=null, realEstate=null;
+      let commerce=null, realEstate=null, adiba=null;
       if(automate && applied) {
         // Hasib's lost-demand report: a product question becomes a PII-free signal (no-op while Hasib is off).
         // Hasib must never stop Layla replying: a failed signal is logged and the message carries on.
@@ -334,12 +335,14 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         catch(err) { console.error('hasib_order_failed',err?.message); }
         try { realEstate=await realEstateTurn(ctx,{row,person,contact:applied.contact,text:e.text,now,secret:a.hashSecret}); }
         catch(err) { console.error('real_estate_turn_failed',err?.message); }
-        try { await mediaTurn(ctx,{row,person,contact:applied.contact,now,secret:a.hashSecret}); }
+        try { await mediaTurn(ctx,{row,person,contact:applied.contact,now,secret:a.hashSecret,text:e.text,catalog:catalog || []}); }
         catch(err) { console.error('media_turn_failed',err?.message); }
         try { await fitnessTurn(ctx,{row,contact:applied.contact,now,secret:a.hashSecret}); }
         catch(err) { console.error('fitness_turn_failed',err?.message); }
         try { await dentalTurn(ctx,{row,contact:applied.contact,now,secret:a.hashSecret}); }
         catch(err) { console.error('dental_turn_failed',err?.message); }
+        try { adiba=await adibaTurn(ctx,{row,person,contact:applied.contact,text:e.text,messageKey:msgKey,catalog:catalog || [],now,secret:a.hashSecret}); }
+        catch(err) { console.error('adiba_turn_failed',err?.message); }
       }
       if(e.intent==='optout') await stopQueued(a.integrationId,person._id,'contact_opted_out');
       const version=(person.version || 0)+(e.intent==='optout'?1:0);
@@ -360,11 +363,11 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       if(capped.some(Boolean)) continue;
       // One pending reply per chat: a quick run of messages is answered once, with every fact it produced.
       const prev=person.pendingReply?.version===version ? person.pendingReply : null;
-      const liveFacts=realEstate?.facts || commerce?.facts;
+      const liveFacts=[realEstate?.facts || commerce?.facts, ...(adiba?.facts || [])].filter(Boolean).join('\n');
       const pending={key:`reply:${a.integrationId}:${e.id}`,inboundKey:msgKey,version,profileVersion:row.profileVersion || 1,inboundAt:e.at,
         firstReply:prev ? prev.firstReply : history.firstReply,
         facts:[...(prev?.facts || []),...(liveFacts?[liveFacts]:[])].slice(-4),
-        acks:[...(prev?.acks || []),...(commerce?.ack?[commerce.ack]:[])].slice(-3),
+        acks:[...(prev?.acks || []),...(commerce?.ack?[commerce.ack]:[]),...(adiba?.ack?[adiba.ack]:[])].slice(-3),
         photos:[...(prev?.photos || []),...(commerce?.photo?[commerce.photo]:[])].slice(-2),
         realEstate:realEstate?.opportunityId || realEstate?.handoff ? {opportunityId:realEstate.opportunityId,handoff:!!realEstate.handoff} : prev?.realEstate,
         askKey:applied?.plan?.keys?.[0] || null,

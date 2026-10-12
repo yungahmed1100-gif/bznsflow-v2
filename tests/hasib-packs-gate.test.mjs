@@ -22,7 +22,7 @@ async function setup(sector) {
 const layllaSector = (h, t) => h.m.table('blueReviewSessions').find(r => r._id === t.rowId).profile.sector;
 
 test('only the finished packs are live', () => {
-  assert.deepEqual(HASIB_LIVE_PACKS, ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness']);
+  assert.deepEqual(HASIB_LIVE_PACKS, ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness', 'media']);
   assert.equal(isLivePack('retail'), true);
   assert.equal(isLivePack('cafe'), false);
   assert.equal(isLivePack('dental'), true);
@@ -34,7 +34,7 @@ test('a business whose Layla sector is not live sees setup, and nothing else wor
   const o = (await hasib('overview')).value;
   assert.equal(o.setupRequired, true);
   assert.deepEqual(o.modules, []);
-  assert.deepEqual(o.livePacks.map(p => p.id), ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness']);
+  assert.deepEqual(o.livePacks.map(p => p.id), ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness', 'media']);
   assert.ok(o.livePacks[0].en && o.livePacks[0].ar);
   for (const [op, args] of [['items', {}], ['orders', {}], ['insights', { period: 'today' }], ['expenses', { period: 'month' }],
     ['order_create', { requestId: randomUUID(), channel: 'walk_in', fulfilment: { type: 'in_store' }, lines: [{ name: 'x', qty: 1, unitPriceMinor: 1 }] }]]) {
@@ -123,7 +123,7 @@ test('Automotive selected in Business Setup opens the dedicated empty live dashb
 
 test('the industry list shows finished packs first and the rest as coming soon', async () => {
   const list = industryCatalog();
-  assert.deepEqual(list.filter(i => i.live).map(i => i.id), ['real-estate', 'dental', 'construction', 'retail', 'fitness', 'automotive', 'retail-tech']);
+  assert.deepEqual(list.filter(i => i.live).map(i => i.id), ['real-estate', 'dental', 'construction', 'retail', 'fitness', 'automotive', 'media', 'retail-tech']);
   assert.ok(list.length > 8, 'the roadmap is visible');
   for (const i of list) assert.ok(i.id && i.en && i.ar && typeof i.live === 'boolean', i.id);
   assert.equal(list.findIndex(i => !i.live), list.filter(i => i.live).length, 'live industries come first');

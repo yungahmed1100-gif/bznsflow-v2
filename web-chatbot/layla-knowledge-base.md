@@ -4,7 +4,7 @@
 > **KB usage rules (system-facing, do not read to customer):**
 > - Answer in the customer's language (Arabic or English). Arabic replies are always RTL.
 > - Never quote a price. Pricing is shared on the free audit, with the agreed scope.
-> - Catalyst is the only plan available today. Ascend and Apex are in preparation; never describe their contents.
+> - Catalyst and Ascend are available today (Ascend is set up with the team; there is no self-serve sign-up). Apex is in preparation; never describe its contents.
 > - Never promise bookings, sales, response times, refunds or guarantees. No voice calls.
 > - If a question is not covered here → escalate to the human team. Never invent capabilities, prices, or statistics.
 > - Contacts: WhatsApp **+20 103 675 5930** · Email **ahmed@bznsflowai.com** · Free audit: https://calendar.app.google/fUA7FtAyRHJ9okdk7
@@ -42,9 +42,9 @@
 ## 03 — Plans / الباقات
 **Keywords:** plans, باقات, ascend, أسيند, apex, أبيكس, packages, tiers, مستويات, upgrade, ترقية
 
-**EN:** Three plans. Catalyst is available now. Ascend (for answered inquiries that still need follow-up) and Apex (for inquiries spread across staff and branches) are in preparation, and we are defining them with the businesses that need them. If a visitor is interested in Ascend or Apex, take their details and connect them with the team.
+**EN:** Three plans. Catalyst and Ascend are available now; Apex (for inquiries spread across staff and branches) is in preparation. Ascend is for answered inquiries that still need follow-up: three agents on one record. Layla answers from the business's approved facts and records whether each inquiry is qualified; Hasib tracks each job from inquiry to payment in the sector's workspace and sends the reminders the owner sets to automatic; Adiba drafts the quotes and offers that need the owner, and a price reaches a customer only from the owner's catalog or approval. Sectors: retail, phones and electronics, dental, real estate, construction, automotive, fitness and media. Ascend is set up with the team: take the visitor's details and connect them with the team on WhatsApp. Never quote its price.
 
-**AR:** ثلاث باقات. كاتاليست متاح الآن. أسيند (للاستفسارات المُجابة التي ما زالت تحتاج متابعة) وأبيكس (للاستفسارات الموزّعة بين الموظفين والفروع) قيد الإعداد، ونحدّدهما مع الأعمال التي تحتاجهما. إن كان الزائر مهتماً بأسيند أو أبيكس، خذ تفاصيله ووصّله بالفريق.
+**AR:** ثلاث باقات. كاتاليست وأسيند متاحان الآن، وأبيكس (للاستفسارات الموزّعة بين الموظفين والفروع) قيد الإعداد. أسيند للاستفسارات المُجابة التي ما زالت تحتاج متابعة: ثلاثة وكلاء على سجل واحد. ليلى ترد من معلومات النشاط المعتمدة وتسجّل هل الاستفسار مؤهل، وحاسب يتابع كل عمل من الاستفسار حتى الدفع في مساحة القطاع ويرسل التذكيرات التي يجعلها المالك تلقائية، وأديبة تُعدّ العروض والأسعار التي تحتاج قرار المالك، ولا يصل سعر إلى العميل إلا من كتالوجه أو باعتماده. القطاعات: التجزئة، والهواتف والإلكترونيات، وعيادات الأسنان، والعقارات، والمقاولات، والسيارات، واللياقة، والإنتاج الإعلامي. يُفعَّل أسيند مع الفريق: خذ تفاصيل الزائر ووصّله بالفريق على واتساب. لا تذكر سعره أبداً.
 
 ---
 

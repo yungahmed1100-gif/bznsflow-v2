@@ -6,6 +6,7 @@ import { executeHasib } from './hasib/hasibState.js';
 import { grantPlan as grant, revokePlan as revoke, accountByEmail } from './hasib/plans.js';
 import { shortenClinicalText } from './blueContacts.js';
 import { sweepOrphanPhotos } from './hasib/catalogState.js';
+import { automationSweep as sweep, automationRun as runOne } from './hasib/automationRun.js';
 
 type Result = Promise<{ ok: boolean; value?: Value; reason?: string }>;
 // Every call is resolved to one tenant from sessionHash inside executeHasib.
@@ -44,3 +45,10 @@ export const shortenDentalText = internalMutation({ args: { email: v.string(), b
     const now = Date.now();
     return { ok: true, value: await shortenClinicalText(ctx, account._id, now, args.before ?? now + 1) };
   } });
+
+/** Every five minutes: schedule one bounded automation run per due account (convex/hasib/automationRun.js). */
+export const automationSweep = internalMutation({ args: {}, handler: (ctx): Promise<{ scheduled: number; off?: boolean }> => sweep(ctx, internal.blueHasib.automationRun, Date.now()) });
+
+/** One account's run: refresh its records, then send what its Auto rules allow. */
+export const automationRun = internalMutation({ args: { accountId: v.id('accounts') },
+  handler: (ctx, args): Promise<string> => runOne(ctx, { accountId: args.accountId, workerFunction: internal.blueMessaging.dispatch, secret: process.env.CONVEX_SERVICE_SECRET }, Date.now()) });

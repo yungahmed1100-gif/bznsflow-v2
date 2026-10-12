@@ -384,3 +384,12 @@ button.hb-visual-metric:hover { border-color: var(--ink); outline: none; }
 .hb-visual-metric:has(.hb-metric-icon.is-coral) { --metric-mark: var(--coral-mark); }
 .hb-chart-track > span { background: var(--blue-mark, #5c95c6); }
 .hb-property-cover { background: var(--paper-ruled); }
+
+/* Adiba's offers: one panel per offer, the exact customer text under a disclosure. */
+.hb-offers { display: grid; gap: 8px; margin-block: 12px; }
+.hb-offers > h3 { margin: 0; font-size: 1rem; }
+.hb-offers-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.hb-offer .hb-offer-lines { margin-block: 8px; }
+.hb-offer .hb-offer-lines input, .hb-offer-deposit input { inline-size: 9rem; max-inline-size: 100%; }
+.hb-offer-deposit { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-block: 6px; }
+.hb-offer-text pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; margin: 6px 0 0; padding: 10px 12px; background: var(--surface, var(--card)); border: 1px solid var(--rule-strong); border-radius: var(--radius); }

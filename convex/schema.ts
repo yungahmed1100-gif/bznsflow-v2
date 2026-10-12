@@ -1,6 +1,7 @@
 import { workflowTables } from './hasib/workflowSchema';
 import { automotiveTables } from './hasib/automotiveSchema';
 import { mediaTables } from './hasib/mediaSchema';
+import { adibaTables } from './hasib/adibaSchema';
 import { fitnessTables } from './hasib/fitnessSchema';
 import { dentalTables } from './hasib/dentalSchema';
 import { defineSchema, defineTable } from "convex/server";
@@ -22,10 +23,13 @@ export default defineSchema({
   ...workflowTables,
   ...automotiveTables,
   ...mediaTables,
+  ...adibaTables,
   ...fitnessTables,
   ...dentalTables,
   // ── Hasib: orders, stock and payments (docs/hasib-engineering.md). Money is integer baisa. ──
   hasibSettings: defineTable({accountId:v.id('accounts'),packId:v.optional(v.string()),currency:v.string(),vatRegistered:v.boolean(),vatRateBps:v.number(),pricesIncludeVat:v.boolean(),vatin:v.optional(v.string()),stockPolicy:v.union(v.literal('warn'),v.literal('block')),unsoldDays:v.optional(v.number()),absenceDays:v.optional(v.number()),listingFreshnessDays:v.optional(v.number()),constructionIncidentHoursDenominator:v.optional(v.number()),realEstate:v.optional(v.object({viewingWindowDays:v.number(),closeWindowDaysRent:v.number(),closeWindowDaysSale:v.number(),lateCancelHours:v.number(),responseSlaMinutes:v.number(),commissionTermsDays:v.number(),rules:v.array(v.object({id:v.string(),enabled:v.boolean(),mode:v.string(),offsetMinutes:v.number()}))})),media:v.optional(v.object({quoteWindowDays:v.number(),revisionWindowDays:v.number(),prepCutoffHours:v.number(),reviewResponseHours:v.number(),revisionAllowance:v.number(),depositPercent:v.number(),extraRoundPriceMinor:v.number(),resourceHoursPerDay:v.number(),holdHours:v.number(),rules:v.array(v.object({id:v.string(),enabled:v.boolean(),mode:v.string(),offsetMinutes:v.number()}))})),fitness:v.optional(v.object({conversionWindowDays:v.number(),gapDays:v.number(),minObservationDays:v.number(),renewalNoticeDays:v.number(),rules:v.array(v.object({id:v.string(),enabled:v.boolean(),mode:v.string(),offsetMinutes:v.number()}))})),dental:v.optional(v.object({visitMinutes:v.number(),lateCancelHours:v.number(),balanceDueDays:v.number(),recallWindowDays:v.number(),chairDayMinutes:v.number(),openDaysPerWeek:v.number(),rules:v.array(v.object({id:v.string(),enabled:v.boolean(),mode:v.string(),offsetMinutes:v.number()}))})),updatedAt:v.number()}).index('by_account',['accountId']),
+  // Hasib's schedule: accounts whose sector sends rule messages or quotes by itself (convex/hasib/automationRun.js).
+  hasibAutomation: defineTable({accountId:v.id('accounts'),packId:v.string(),enabled:v.boolean(),nextRunAt:v.number(),lastRunAt:v.optional(v.number()),lastResult:v.optional(v.string()),updatedAt:v.number()}).index('by_account',['accountId']).index('by_enabled_next',['enabled','nextRunAt']),
   productSetupProgress: defineTable({accountId:v.id('accounts'),product:v.union(v.literal('catalyst'),v.literal('ascend')),step:v.number(),completed:v.boolean(),version:v.number(),requestId:v.string(),requestSignature:v.string(),updatedAt:v.number()}).index('by_account_product',['accountId','product']),
   productSetupAudit: defineTable({accountId:v.id('accounts'),product:v.string(),version:v.number(),action:v.string(),at:v.number()}).index('by_account',['accountId']),
   knowledgeSources: defineTable({accountId:v.id('accounts'),sourceKey:v.string(),title:v.string(),approvedAnswers:v.optional(v.array(v.object({question:v.string(),answer:v.string(),label:v.string(),retiredAt:v.optional(v.number())}))),kind:v.string(),contentHash:v.string(),status:v.string(),revision:v.number(),updatedAt:v.number(),createdAt:v.number()}).index('by_account',['accountId']).index('by_account_key',['accountId','sourceKey']),

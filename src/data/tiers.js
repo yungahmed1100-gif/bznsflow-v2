@@ -1,6 +1,6 @@
-// The three plans, shown without prices (Ahmed, 2026-10-09). Catalyst is the one on offer today;
-// Ascend and Apex are in preparation, so their cards name the problem they will solve and nothing
-// more: no inclusions, agents, voice or prices (vault: Pricing, Decisions/2026-10-09-Show-All-Plans-Without-Prices).
+// The three plans, shown without prices (Ahmed, 2026-10-09). Catalyst and Ascend are available
+// (Ascend from 2026-10-12, by Ahmed's grant only: its CTA is a WhatsApp conversation, not self-serve).
+// Ascend's card says what each agent does, stated only as the code does it. Apex is in preparation.
 // EN and AR side by side; consumed by TiersSection via pages/Home.jsx.
 
 export const TIERS = [
@@ -26,10 +26,18 @@ export const TIERS = [
     key: 'ascend',
     name: 'Ascend',
     stage: 'Convert',
-    available: false,
+    available: true,
     problem: 'Answered inquiries still need follow-up',
-    intro: 'For businesses whose next problem is what happens after the first answer. In preparation: we will define it with the businesses that need it.',
-    cta: 'Ask about Ascend',
+    intro: 'Three agents on one record: Layla answers, Hasib runs the work in your sector’s workspace, and Adiba prepares the offers you approve. Every inquiry is followed to a recorded result.',
+    insideLabel: 'What each agent does',
+    inside: [
+      'Everything in Catalyst',
+      'Layla: answers from your approved facts, asks your qualifying questions and records whether each inquiry is qualified',
+      'Hasib: tracks each job from inquiry to payment, flags what is stuck and sends the reminders you set to automatic',
+      'Adiba: drafts the quotes and offers that need you; a price reaches a customer only from your catalog or your approval',
+      'For retail, phones and electronics, dental, real estate, construction, automotive, fitness and media',
+    ],
+    cta: 'Contact us on WhatsApp',
   },
   {
     key: 'apex',
@@ -65,10 +73,18 @@ export const TIERS_AR = [
     key: 'ascend',
     name: 'أسيند',
     stage: 'التحويل',
-    available: false,
+    available: true,
     problem: 'استفسارات مُجابة ما زالت تحتاج متابعة',
-    intro: 'للأعمال التي تبدأ مشكلتها بعد الرد الأول. قيد الإعداد: نحدّدها مع الأعمال التي تحتاجها.',
-    cta: 'اسأل عن أسيند',
+    intro: 'ثلاثة وكلاء على سجل واحد: ليلى ترد، وحاسب يدير العمل في مساحة قطاعك، وأديبة تُعدّ العروض التي تعتمدها. كل استفسار يُتابَع حتى نتيجة مسجّلة.',
+    insideLabel: 'ما يفعله كل وكيل',
+    inside: [
+      'كل ما في كاتاليست',
+      'ليلى: ترد من معلوماتك المعتمدة، وتسأل أسئلة التأهيل الخاصة بك، وتسجّل هل الاستفسار مؤهل',
+      'حاسب: يتابع كل عمل من الاستفسار حتى الدفع، وينبّه لما تعطّل، ويرسل التذكيرات التي جعلتها تلقائية',
+      'أديبة: تُعدّ العروض والأسعار التي تحتاج قرارك؛ لا يصل سعر إلى العميل إلا من كتالوجك أو باعتمادك',
+      'للتجزئة، والهواتف والإلكترونيات، وعيادات الأسنان، والعقارات، والمقاولات، والسيارات، واللياقة، والإنتاج الإعلامي',
+    ],
+    cta: 'تواصل معنا على واتساب',
   },
   {
     key: 'apex',

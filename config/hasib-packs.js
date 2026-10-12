@@ -149,6 +149,7 @@ const PRESENTATION = {
     ['brief', 'New production brief', 'موجز إنتاج جديد', 'film', ['work', { action: 'brief' }]],
     ['cut', 'Submit a cut', 'رفع نسخة للمراجعة', 'upload', ['work', { view: 'board' }]],
     ['hold', 'Hold crew or equipment', 'حجز طاقم أو معدات', 'calendar', ['work', { view: 'resources' }]],
+    ['followups', 'Follow-ups and offers', 'المتابعات والعروض', 'message-circle', ['work', { view: 'followups' }]],
   ] },
   'real-estate': { icon: 'building-2', actions: [
     ['property', 'Add property', 'إضافة عقار', 'home', ['stock', { action: 'property' }]],
@@ -199,7 +200,8 @@ export const visibleModules = pack => Object.entries(pack.modules).filter(([, v]
 
 // Sectors ship one at a time. A pack opens Hasib only once its setup, tests and
 // acceptance evidence exist; the others stay hidden even though they are configured.
-export const HASIB_LIVE_PACKS = Object.freeze(['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness']);
+// Media went live 2026-10-12 (Ahmed): Layla's brief, Hasib's schedule and automatic quotes, Adiba's offers.
+export const HASIB_LIVE_PACKS = Object.freeze(['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness', 'media']);
 export const HASIB_PREVIEW_PACKS = Object.freeze(Object.keys(OWNER_PACKS).filter(id => !HASIB_LIVE_PACKS.includes(id)));
 const labelFor = id => BUSINESS_INDUSTRIES.find(industry => industry.id === id);
 export const isLivePack = id => HASIB_LIVE_PACKS.includes(id);

@@ -1,6 +1,7 @@
 // Media & production (ascend/media.md): brief → quote → acceptance and deposit → booked holds →
 // preproduction → shoot → cuts with exact-version client decisions → handoff. Every move is
 // checked against its guards and recorded with who made it. Orders are the one record of money.
+import { automationRefusal, isAutomation } from './workspace/automation.js';
 import { owned } from '../blueTenant.js';
 import { ok, fail, bounded, REQUEST_ID, byRequest, settingsFor, nextNumber } from './shared.js';
 import { isMinor } from './money.js';
@@ -379,9 +380,15 @@ async function list(ctx, tenant, actor, a, now) {
   return ok({ items: await describe(ctx, tenant.accountId, actor, studio, rows.slice(0, 1000), now), complete: studio.complete && rows.length <= 1000 });
 }
 
+// What Layla, Hasib or Adiba may do in Media by themselves: briefs, quotes priced from fixed packages,
+// a customer's recorded acceptance of a quote or change. Never payments, confirmed holds, costs or rights.
+export const MEDIA_AUTOMATION_ALLOWED = new Set(['media_production_save', 'media_production', 'media_productions', 'media_quote', 'media_production_status', 'media_accept', 'media_change_order_decide']);
+
 export async function executeMedia(ctx, tenant, actor, a, now) {
   if (!a.operation?.startsWith('media_')) return null;
-  if (MANAGER_ONLY.has(a.operation) && actor.role !== 'manager') return fail('manager_required');
+  const automated = automationRefusal(actor, a.operation, MEDIA_AUTOMATION_ALLOWED);
+  if (automated) return fail(automated);
+  if (MANAGER_ONLY.has(a.operation) && actor.role !== 'manager' && !isAutomation(actor)) return fail('manager_required');
   switch (a.operation) {
     case 'media_overview': {
       const result = await mediaOverview(ctx, tenant, actor, now);

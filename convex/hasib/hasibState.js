@@ -1,3 +1,6 @@
+import { executeAdiba } from './adiba.js';
+import { ensureAutomation } from './workspace/schedule.js';
+import { mediaNeedsAutomation } from './mediaSettings.js';
 import { executeRequests } from './requestsState.js';
 import { executeProperty } from './propertyState.js';
 import { executeJobs } from './jobsState.js';
@@ -6,7 +9,7 @@ import { executeMemberships } from './membershipsState.js';
 import { executeBookings } from './bookingsState.js';
 import { bakingSuggestions } from './industryMetrics.js';
 import { businessTimezone } from './expensesState.js';
-import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS } from '../../config/hasib-workflow-operations.js';
+import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS, ADIBA_OPERATIONS } from '../../config/hasib-workflow-operations.js';
 import { executeClinic } from './clinicState.js';
 import { executeConstruction } from './constructionState.js';
 import { executeAutomotive } from './automotiveState.js';
@@ -57,7 +60,7 @@ const SECTOR_CODE = {
   fitness: { read: fitnessSettings, merge: mergeFitnessSettings, queue: fitnessFollowupQueue, execute: executeFitness },
   dental: { read: dentalSettings, merge: mergeDentalSettings, queue: dentalFollowupQueue, execute: executeDental },
 };
-export const HASIB_OPERATIONS = [...Object.keys(BOOKING_OPERATIONS), ...JOB_OPERATIONS, ...REAL_ESTATE_OPERATIONS, ...TEAM_OPERATIONS, ...CLINIC_OPERATIONS, ...CONSTRUCTION_OPERATIONS, ...AUTOMOTIVE_OPERATIONS, ...MEDIA_OPERATIONS, ...FITNESS_OPERATIONS, ...DENTAL_OPERATIONS, 'overview', 'settings_update', 'items', 'item_save', 'item_archive', 'stock_move', 'stock_moves', 'low_stock',
+export const HASIB_OPERATIONS = [...Object.keys(BOOKING_OPERATIONS), ...ADIBA_OPERATIONS, ...JOB_OPERATIONS, ...REAL_ESTATE_OPERATIONS, ...TEAM_OPERATIONS, ...CLINIC_OPERATIONS, ...CONSTRUCTION_OPERATIONS, ...AUTOMOTIVE_OPERATIONS, ...MEDIA_OPERATIONS, ...FITNESS_OPERATIONS, ...DENTAL_OPERATIONS, 'overview', 'settings_update', 'items', 'item_save', 'item_archive', 'stock_move', 'stock_moves', 'low_stock',
   'order_create', 'order_status', 'orders', 'order', 'payment_record', 'contact_summary', 'conversation_orders', 'expense_create', 'expenses', 'expense_void', 'insights',
   'today', 'photo_upload_url', 'photo_register', 'item_photo', 'items_import', 'serials', 'serial_lookup', 'trade_in', 'repairs', 'repair', 'repair_create', 'repair_approval', 'repair_update', 'repair_status',
   'baking_suggestions', 'order_preparation', 'recipes', 'recipe_save', 'waste_create', 'stock_count', 'stock_receive', 'batch_create', 'restaurant_summary', 'stock_expiry', 'services_sync'];
@@ -126,6 +129,8 @@ export async function updateSettings(ctx, accountId, a, now) {
     ...(next.vatin ? { vatin: next.vatin } : {}), stockPolicy: next.stockPolicy, unsoldDays: next.unsoldDays ?? 60, absenceDays: next.absenceDays ?? 14, listingFreshnessDays: next.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:next.constructionIncidentHoursDenominator ?? 200000, ...Object.fromEntries(SIX_TAB_SECTORS.filter(x => next[x.settingsKey]).map(x => [x.settingsKey, next[x.settingsKey]])), updatedAt: now };
   if (current) await ctx.db.replace(current._id, row); else await ctx.db.insert('hasibSettings', row);
   if (a.packId !== undefined) await applyPackChoice(ctx, accountId, hasibPack(a.packId), now);
+  // Rules switched to Auto (or off) put the studio on Hasib's schedule (or take it off).
+  if (a.mediaSettings !== undefined) await ensureAutomation(ctx, accountId, 'media', mediaNeedsAutomation(row.media), now);
   return ok({ settings: publicSettings(row) });
 }
 
@@ -202,6 +207,8 @@ async function dispatchHasib(ctx, tenant, actor, plan, pack, a, now) {
   if (AUTOMOTIVE_OPERATIONS.includes(op) && pack.id !== 'automotive') return fail('module_unavailable');
   const teamResult = await executeTeam(ctx, tenant, actor, a, now);
   if (teamResult) return teamResult;
+  const adibaResult = await executeAdiba(ctx, tenant, actor, a, now);
+  if (adibaResult) return adibaResult;
   for (const { packId } of SIX_TAB_SECTORS) {
     const sectorResult = await SECTOR_CODE[packId].execute(ctx, tenant, actor, a, now);
     if (sectorResult) return sectorResult;

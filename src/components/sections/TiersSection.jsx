@@ -3,9 +3,9 @@ import { useAccount } from '../../hooks/useAccount';
 import { Icon } from '../ui/Icon';
 import { waLink } from '../../lib/whatsapp';
 
-// The three plans without prices. Catalyst is available and its CTA is the free audit (or setup, for
-// granted accounts); Ascend and Apex are in preparation and only invite a question on WhatsApp.
-// Prices are shared on the free audit (Ahmed, 2026-10-09).
+// The three plans without prices. Catalyst's CTA is the free audit (or setup, for granted accounts).
+// Ascend is available by Ahmed's grant only: a WhatsApp conversation, or the workspace for an account
+// already granted Ascend. Apex is in preparation. Prices are shared on the free audit (Ahmed, 2026-10-09).
 export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
   const account = useAccount();
   const owner = String(account?.email || '').trim().toLowerCase() === 'ahmed@bznsflowai.com';
@@ -14,6 +14,8 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
   const planMsg = name => (t.wa_msg_plan || 'Hi BznsFlow, I am interested in {plan}.').replace('{plan}', name);
   const link = tier => {
     if (canSetup(tier.key)) return { href: setupHref, icon: 'arrow-right', label: t.tier_setup, event: 'SetupClick' };
+    if (tier.key === 'ascend' && (owner || account?.accessPlan === 'ascend')) return { href: `${lang === 'ar' ? '' : '/en'}/layla/dashboard`, icon: 'arrow-right', label: t.tier_workspace, event: 'WorkspaceClick' };
+    if (tier.key === 'ascend') return { href: waLink(planMsg(tier.name)), icon: 'whatsapp', label: tier.cta, event: 'WhatsAppClick', external: true };
     return { href: waLink(tier.available ? t.wa_msg_hero : planMsg(tier.name)), icon: 'whatsapp', label: tier.cta, event: 'WhatsAppClick', external: true };
   };
 

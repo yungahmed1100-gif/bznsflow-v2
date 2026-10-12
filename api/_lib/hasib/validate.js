@@ -1,4 +1,4 @@
-import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
+import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS, ADIBA_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
 // Per-action argument allow-lists for the Hasib API. Unknown keys are dropped,
 // strings are length-bounded, numbers must already be integers (money is sent
 // in minor units and never coerced from a string). Convex re-validates all of it.
@@ -187,7 +187,7 @@ const mediaShape = b => ({ requestId: uuid(b.requestId), version: int(b.version)
   fromAt: int(b.fromAt), toAt: int(b.toAt), metric: str(b.metric, 40), segment: str(b.segment, 80), period: str(b.period, 12), filter: str(b.filter, 20), media: mediaPayload(b.media) });
 const MEDIA_REQUEST = { media_production_save: 'productionId', media_cut_submit: null, media_change_order_save: null, media_reservation_save: null, media_cost_save: null, media_payment_record: null, media_resource_save: 'mediaResourceId', media_draft_save: 'draftId' };
 registerSector(MEDIA_OPERATIONS, mediaShape, MEDIA_REQUEST);
-const MEDIA_SETTING_KEYS = ['quoteWindowDays', 'revisionWindowDays', 'prepCutoffHours', 'reviewResponseHours', 'revisionAllowance', 'depositPercent', 'extraRoundPriceMinor', 'resourceHoursPerDay', 'holdHours'];
+const MEDIA_SETTING_KEYS = ['quoteWindowDays', 'revisionWindowDays', 'prepCutoffHours', 'reviewResponseHours', 'revisionAllowance', 'depositPercent', 'extraRoundPriceMinor', 'resourceHoursPerDay', 'holdHours', 'autoQuoteLimitMinor'];
 
 // Fitness: one typed payload; ids are checked as ids and Convex re-checks every value.
 const fitnessPayload = f => f && typeof f === 'object' ? compact({
@@ -218,6 +218,11 @@ const dentalShape = b => ({ requestId: uuid(b.requestId), version: int(b.version
   lines: list(b.lines, 20, x => compact({ variantId: id(x?.variantId), qty: int(x?.qty), unitPriceMinor: int(x?.unitPriceMinor) })), dental: dentalPayload(b.dental) });
 const DENTAL_REQUEST = { dental_resource_save: null, dental_visit_book: null, dental_charge: null, dental_payment_record: null };
 registerSector(DENTAL_OPERATIONS, dentalShape, DENTAL_REQUEST);
+// Adiba's offers: the owner fills prices and approves; staff may record a customer's acceptance.
+const adibaShape = b => ({ version: int(b.version), offerId: id(b.offerId), status: str(b.status, 30), contactId: id(b.contactId), conversationId: id(b.conversationId),
+  adiba: b.adiba && typeof b.adiba === 'object' ? compact({ lines: list(b.adiba.lines, 20, x => compact({ key: str(x?.key, 20), unitPriceMinor: int(x?.unitPriceMinor), qty: int(x?.qty), name: str(x?.name, 120) })),
+    text: str(b.adiba.text, 4000), depositMinor: int(b.adiba.depositMinor), validUntil: int(b.adiba.validUntil), acceptedBy: str(b.adiba.acceptedBy, 120), evidenceSource: str(b.adiba.evidenceSource, 40) }) : undefined });
+registerSector(ADIBA_OPERATIONS, adibaShape, {});
 const DENTAL_SETTING_KEYS = ['visitMinutes', 'lateCancelHours', 'balanceDueDays', 'recallWindowDays', 'chairDayMinutes', 'openDaysPerWeek'];
 // Media, Fitness and Dental windows and rules arrive under their own settings_update argument.
 const baseSettings = SHAPES.settings_update;

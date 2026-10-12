@@ -31,6 +31,8 @@ export const EMPLOYEE_DENIED = new Set([
   'fitness_plan_save', 'fitness_class_save', 'fitness_membership_save', 'fitness_payment_record', 'fitness_freeze', 'fitness_cancel', 'fitness_renew',
   'fitness_draft_approve', 'fitness_insights', 'fitness_metric_records',
   'dental_resource_save', 'dental_charge', 'dental_charge_dispute', 'dental_payment_record', 'dental_draft_approve', 'dental_insights', 'dental_metric_records',
+  // Offers carry prices: staff may record a customer's acceptance (with evidence), never price or approve one.
+  'adiba_offers', 'adiba_offer', 'adiba_offer_price', 'adiba_offer_approve', 'adiba_offer_withdraw',
 ]);
 
 export function roleAllows(role, operation) {

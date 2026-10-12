@@ -29,11 +29,11 @@ test('six tabs with Productions as Work; a producer sees no Insights or Settings
     assert.deepEqual(Object.values(resolveTab(tab, view, map)), expected, `${tab} → ${expected}`);
 });
 
-test('Media stays off for real accounts: outside the preview harness every Media operation is refused', async () => {
+test('Media is live: outside the preview harness a real studio opens its workspace', async () => {
   const s = await studio();
   s.h.m.ctx.hasibPreview = false;
-  refused(await s.manager('media_overview'), 'pack_not_live');
-  assert.equal(value(await s.manager('overview')).setupRequired, true);
+  assert.equal(value(await s.manager('media_overview')).workspaceRole, 'manager');
+  assert.notEqual(value(await s.manager('overview')).setupRequired, true);
 });
 
 test('brief: a quote needs the full brief; replay returns the same production; a stale version is refused; foreign ids are refused', async () => {

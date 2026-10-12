@@ -1,3 +1,4 @@
+import { agentDetails } from './workspace/automation.js';
 import { ok, fail } from './shared.js';
 
 const norm = value => String(value || '').trim().toLowerCase();
@@ -78,6 +79,8 @@ export async function executeTeam(ctx, tenant, actor, a, now) {
 }
 
 export async function audit(ctx, tenant, actor, action, entityType, entityId, now, details) {
+  // An automated act names its agent (Layla, Hasib, Adiba) in the details; a person's act is unchanged.
+  const written = agentDetails(actor, details);
   await ctx.db.insert('ascendActivity', { accountId: tenant.accountId, workspaceId: actor.workspace._id, actorAccountId: actor.actorAccountId,
-    actorRole: actor.role, action, entityType, entityId: String(entityId), ...(details ? { details } : {}), at: now });
+    actorRole: actor.role, action, entityType, entityId: String(entityId), ...(written ? { details: written } : {}), at: now });
 }

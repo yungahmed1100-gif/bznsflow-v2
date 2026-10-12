@@ -5,9 +5,9 @@ import { hasibEnabled } from '../gate.js';
 import { HASIB_PLANS, planFor } from '../plans.js';
 import { packFor } from '../shared.js';
 
-/** The account's pack when the intake may run, else null. */
+/** The account's pack when the intake may run, else null. Without `packId`, any live pack (Adiba works in every sector). */
 export async function sectorTurnPack(ctx, { row, secret, packId }) {
   if (!(await hasibEnabled(ctx)) || !HASIB_PLANS.includes(await planFor(ctx, row.accountId))) return null;
   const pack = await packFor(ctx, { accountId: row.accountId, row, secret });
-  return pack.id === packId && (isLivePack(pack.id) || ctx.hasibPreview === true) ? pack : null;
+  return (!packId || pack.id === packId) && (isLivePack(pack.id) || ctx.hasibPreview === true) ? pack : null;
 }

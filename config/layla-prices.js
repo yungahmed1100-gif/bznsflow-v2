@@ -85,3 +85,8 @@ export function untracedAmount(reply, ctx) {
   }
   return null;
 }
+
+/** The catalog rows a text names (full name, or its last distinctive word), in catalog order. */
+export function namedItems(catalog = [], text = '') {
+  return catalog.filter(row => mentions(priced(row), text));
+}

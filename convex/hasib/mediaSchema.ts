@@ -12,6 +12,8 @@ export const mediaTables = {
     accountId: v.id('accounts'), requestId: v.string(), ref: v.string(),
     contactId: v.id('blueContacts'), conversationId: v.optional(v.id('blueConversations')),
     title: v.string(), productionType: v.string(), purpose: v.optional(v.string()), budgetMinor: v.optional(v.number()), dateNeeded: v.optional(v.string()), deliverables: v.array(deliverable),
+    // Catalog services the customer named in the chat (Layla); Hasib quotes from them only when each has a fixed price.
+    catalogEntryKeys: v.optional(v.array(v.string())),
     status: v.string(), holdFrom: v.optional(v.string()), statusAt: v.number(), producerId: v.optional(v.id('accounts')), source: v.string(),
     shootStartsAt: v.optional(v.number()), shootEndsAt: v.optional(v.number()), location: v.optional(v.string()),
     deliveryDueAt: v.optional(v.number()), originalDueAt: v.optional(v.number()), firstCutDueAt: v.optional(v.number()),
@@ -59,6 +61,7 @@ export const mediaTables = {
   mediaDrafts: defineTable({
     accountId: v.id('accounts'), requestId: v.string(), productionId: v.id('mediaProductions'), conversationId: v.optional(v.id('blueConversations')), kind: v.string(), text: v.string(),
     templateId: v.optional(v.string()), ruleId: v.optional(v.string()), ruleKey: v.optional(v.string()), status: v.string(), approvedBy: v.optional(v.id('accounts')), approvedAt: v.optional(v.number()),
+    sentBy: v.optional(v.string()), autoSkip: v.optional(v.string()),
     providerSubmittedAt: v.optional(v.number()), deliveredAt: v.optional(v.number()), ...stamps,
   }).index('by_account_created', ['accountId', 'createdAt']).index('by_production', ['productionId']).index('by_account_request', ['accountId', 'requestId']),
 };

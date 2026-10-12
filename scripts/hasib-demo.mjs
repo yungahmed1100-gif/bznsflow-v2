@@ -41,7 +41,7 @@ const DAY = 86400000, HOUR = 3600000, CSRF = 'd'.repeat(64);
 const m = convexMemory({ start: Date.now() - 30 * DAY });
 // Server-owned context flag, never accepted from an HTTP argument or live Convex.
 // Retail runs as production does (live pack checks on); other packs are previews.
-m.ctx.hasibPreview = !['retail', 'retail-tech', 'fitness', 'dental'].includes(PACK);
+m.ctx.hasibPreview = !['retail', 'retail-tech', 'fitness', 'dental', 'media'].includes(PACK);
 // Photos upload to this server and are served back from it, like Convex storage.
 m.ctx.storage.generateUploadUrl = async () => `http://localhost:${PORT}/demo/upload`;
 m.ctx.storage.getUrl = async id => `http://localhost:${PORT}/demo/file/${encodeURIComponent(id)}`;
@@ -194,7 +194,14 @@ else if (PACK === 'dental') dental = await (await import('./hasib-demo-dental.mj
 else if (PACK === 'retail-tech') await (await import('./hasib-demo-tech.mjs')).seedTech({ m, tenant, call, hasib, executeMessaging, DAY, HOUR });
 else if (PACK === 'retail') await seedFashion();
 else if (PACK === 'real-estate') realEstate = await (await import('./hasib-demo-real-estate.mjs')).seedRealEstate({ m, tenant, hasib, DAY, HOUR });
-else if (PACK === 'media') media = await (await import('./hasib-demo-media.mjs')).seedMedia({ m, tenant, hasib, DAY, HOUR });
+else if (PACK === 'media') {
+  media = await (await import('./hasib-demo-media.mjs')).seedMedia({ m, tenant, hasib, DAY, HOUR });
+  // One of Adiba's offers waiting for a price, as a customer's "price on request" question leaves it.
+  const { draftOffer } = await import('../convex/hasib/adiba.js');
+  const conversation = m.table('blueConversations').find(c => c.contactId);
+  if (conversation) await draftOffer(m.ctx, { accountId: tenant.accountId, row: await m.db.get(tenant.rowId) }, { requestId: 'demo-adiba-1', packId: 'media', kind: 'quote', subjectType: 'conversation',
+    subjectId: `${conversation._id}:drone`, contactId: conversation.contactId, conversationId: conversation._id, lang: 'en', lines: [{ key: 'l1', name: 'Drone footage', catalogPrices: [{ type: 'quote', label: 'Price on request (quote)' }] }] }, m.now());
+}
 else if (PACK === 'fitness') fitness = await (await import('./hasib-demo-fitness.mjs')).seedFitness({ m, tenant, hasib, DAY, HOUR });
 else {
   await hasib('settings_update', { packId: PACK });

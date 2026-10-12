@@ -2,6 +2,7 @@ import React from 'react';
 import { formatDateTime } from '../../../lib/dashboard/format';
 import { EmptyState, SectionHeader } from '../DashboardVisuals';
 import { QueueFilters, SnoozeControl } from './queue.jsx';
+import { OffersPanel } from './OffersPanel.jsx';
 
 const NONE = new Set();
 const defaultNotes = row => row.source === 'followup' && row.reason ? <p className="ld-help">{row.reason}</p> : null;
@@ -31,6 +32,8 @@ export function QueueList({ ar, s, timezone, data, manager, busy, filter, onFilt
   const emptyText = typeof empty === 'function' ? empty(filter) : empty;
   return <>
     <SectionHeader title={tr('Follow-ups', 'المتابعات')} description={pick(description)} />
+    {/* Adiba's offers wait here for the manager, beside the follow-ups they come from. */}
+    {manager && <OffersPanel s={s} />}
     {scope && <p className="hb-filter-note" role="status">{pick(scope.text)} <button type="button" className="ld-link" onClick={scope.onClear}>{tr('Show all', 'عرض الكل')}</button></p>}
     <QueueFilters ar={ar} filters={filters} counts={queue.counts} filter={filter} tones={tones} name={radioName} labelOf={bucketLabel} onFilter={onFilter} />
     {rows.length ? <ul className="hb-re-tasks hb-followups">{rows.map(row => <li className="hb-panel" key={`${row.source}:${row.id}`} data-bucket={row.bucket} data-kind={kindAttr ? row.kind : undefined}>

@@ -55,16 +55,19 @@ export async function sendApprovedDraft(ctx, tenant, { draft, keyPrefix, message
   return status;
 }
 
+// Rules that write a message: 'draft' waits for the manager; 'auto' is sent by Hasib's scheduled run.
+const MESSAGE_MODES = new Set(['draft', 'auto']);
+
 /**
- * Draft-mode rules: one draft per firing. An unsent draft whose cause is gone is cancelled; a firing
+ * Message rules: one draft per firing. An unsent draft whose cause is gone is cancelled; a firing
  * with no draft yet gets one from `insert(item)`.
  * @param {{ rules: Array<{rule:{mode:string}, key:string}>, drafts: Array<object>, insert: (item:object) => Promise<unknown> }} o
  */
 export async function reconcileRuleDrafts(ctx, { rules, drafts, insert, now }) {
-  const draftKeys = new Set(rules.filter(i => i.rule.mode === 'draft').map(i => i.key));
+  const draftKeys = new Set(rules.filter(i => MESSAGE_MODES.has(i.rule.mode)).map(i => i.key));
   const existing = new Map(drafts.filter(d => d.ruleKey).map(d => [d.ruleKey, d]));
   for (const d of existing.values()) if (d.status === 'draft' && !draftKeys.has(d.ruleKey)) await ctx.db.patch(d._id, { status: 'cancelled', version: d.version + 1, updatedAt: now });
-  for (const item of rules) if (item.rule.mode === 'draft' && !existing.has(item.key)) await insert(item);
+  for (const item of rules) if (MESSAGE_MODES.has(item.rule.mode) && !existing.has(item.key)) await insert(item);
 }
 
 /**
