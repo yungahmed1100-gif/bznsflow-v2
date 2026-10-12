@@ -28,7 +28,7 @@ export function assertValidator(value, validator, path = 'args') {
 export const assertEntry = args => assertValidator(args, v.object(hasibEntryArgs).json);
 export function assertHasibRows(memory) {
   for (const row of memory.rows.values()) {
-    if (!row.table.startsWith('hasib') && !row.table.startsWith('automotive')) continue;
+    if (!/^(hasib|automotive|construction|media|fitness|dental|realEstate|adiba)/.test(row.table)) continue;
     const { _id, _seq, table, ...data } = row;
     // Undefined object keys are omitted by Convex serialization.
     assertValidator(JSON.parse(JSON.stringify(data)), schema.tables[table].validator.json, table);

@@ -2,6 +2,7 @@
 // the same fences as Layla's replies (window, takeover, opt-out, owner pause, a daily cap), never twice,
 // and the activity names the agent. A dashboard read never sends. Fake clock, in-memory Convex.
 import test from 'node:test';
+import { assertHasibRows } from './helpers/hasib-contract.mjs';
 import assert from 'node:assert/strict';
 import { studio, customer, resource, brief, accepted, hold, move, value, HOUR, DAY } from './fixtures/ascend/media.mjs';
 import { automationRun, automationSweep } from '../convex/hasib/automationRun.js';
@@ -41,6 +42,7 @@ test('a new studio sends its prep request by itself, once, named as Hasib; a das
   assert.match(act.details, /^agent:hasib\|rule:prep_request$/);
   assert.match(await runOnce(s), /^sent:0 skipped:0/);
   assert.equal(autoMessages(s).length, 1, 'never sent twice');
+  assertHasibRows(s.h.m);
 });
 
 test('fences: a closed window, a team takeover, an opt-out or a paused Layla keep the draft, with the reason', async () => {
@@ -57,6 +59,7 @@ test('fences: a closed window, a team takeover, an opt-out or a paused Layla kee
     assert.equal(autoMessages(s).length, 0, reason);
     const draft = prepDrafts(s)[0];
     assert.deepEqual([draft?.status, draft?.autoSkip], ['draft', reason], `${reason}: the draft waits with its reason`);
+    assertHasibRows(s.h.m);
   }
 });
 
@@ -67,6 +70,7 @@ test('at most three automatic messages per customer a day', async () => {
     conversationId: conversation._id, direction: 'out', text: 'x', at: s.h.m.now(), status: 'sent', manual: false });
   await runOnce(s);
   assert.equal(prepDrafts(s)[0].autoSkip, 'daily_cap');
+  assertHasibRows(s.h.m);
 });
 
 test('the kill switch and the schedule: off stops every run; the sweep schedules due accounts only', async () => {
@@ -85,6 +89,7 @@ test('the kill switch and the schedule: off stops every run; the sweep schedules
   assert.equal(s.h.m.table('hasibAutomation')[0].enabled, true);
   assert.match(await runOnce(s), /^sent:0 skipped:0/);
   assert.equal(autoMessages(s).length, 0);
+  assertHasibRows(s.h.m);
 });
 
 test('automated actors may only run the operations their sector allows, and name themselves', () => {

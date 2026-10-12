@@ -2,6 +2,7 @@
 // owner fills and approves, Layla sends without taking the chat over, and only the right customer's
 // clear yes to the one open offer is recorded, with the message as evidence. Fake clock, no provider.
 import test from 'node:test';
+import { assertHasibRows } from './helpers/hasib-contract.mjs';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { studio, customer, value, refused, DAY } from './fixtures/ascend/media.mjs';
@@ -29,6 +30,7 @@ test('a price question about an item with no fixed price becomes an offer the ow
   refused(await s.producer('adiba_offer_price', { offerId: o._id, version: o.version, adiba: { lines: [{ key: 'l1', unitPriceMinor: 1 }] } }), 'manager_required');
   await ask(s, '96895550001', 'how much again for drone footage?');
   assert.equal(offers(s).length, 1, 'one open offer per item per chat');
+  assertHasibRows(s.h.m);
 });
 
 test('the owner prices and approves; Layla sends it in the chat without taking it over; a clear YES is accepted with evidence', async () => {
@@ -55,6 +57,7 @@ test('the owner prices and approves; Layla sends it in the chat without taking i
   const act = s.h.m.table('ascendActivity').find(a => a.action === 'offer_accepted');
   assert.equal(act.actorRole, 'automation');
   assert.match(act.details, /^agent:layla\|OFR-\d{3}\|chat_reply$/);
+  assertHasibRows(s.h.m);
 });
 
 test('acceptance is never guessed: another customer, two open offers, an expired offer or a vague reply record nothing', async () => {
@@ -82,6 +85,7 @@ test('acceptance is never guessed: another customer, two open offers, an expired
   assert.notEqual(offers(s).find(o => o._id === other._id).status, 'accepted', 'an expired offer cannot be accepted');
   value(await s.manager('adiba_offers'));
   assert.equal(offers(s).find(o => o._id === other._id).status, 'expired', 'and reads as expired');
+  assertHasibRows(s.h.m);
 });
 
 test('withdraw, staff acceptance with evidence, and stale screens', async () => {
@@ -99,4 +103,5 @@ test('withdraw, staff acceptance with evidence, and stale screens', async () => 
   const list = value(await s.manager('adiba_offers', { status: 'accepted' }));
   assert.equal(list.items.length, 1);
   refused(await s.producer('adiba_offers'), 'manager_required');
+  assertHasibRows(s.h.m);
 });

@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { studio, customer, brief, value, refused, accepted, hold, resource, record, move, prepare, submitCut, decide } from './fixtures/ascend/media.mjs';
 import { automationRun } from '../convex/hasib/automationRun.js';
+import { assertHasibRows } from './helpers/hasib-contract.mjs';
 
 const run = s => automationRun(s.h.m.ctx, { accountId: s.t.accountId, workerFunction: null, secret: 'x' }, s.h.m.now());
 const offers = s => s.h.m.table('adibaOffers');
@@ -44,6 +45,7 @@ test('within the limit and fully fixed: Hasib quotes by himself, and the custome
   assert.equal(accepted.acceptedQuoteVersion, accepted.quoteVersion, 'the current quote version is accepted');
   assert.ok(accepted.orderId, 'its order is opened');
   assert.equal(offers(s)[0].status, 'accepted');
+  assertHasibRows(s.h.m);
 });
 
 test('the owner decides when the quote is not a fact: automatic quoting off, a "from" price, or nothing in the catalog', async () => {
@@ -59,6 +61,7 @@ test('the owner decides when the quote is not a fact: automatic quoting off, a "
   assert.deepEqual([byName('B').status, byName('B').reasons], ['needs_price', ['price_from']]);
   assert.deepEqual([byName('C').status, byName('C').reasons], ['needs_price', ['custom_deliverable']]);
   assert.equal(s.h.m.table('blueMessages').filter(m => String(m.key).startsWith('offer:')).length, 0, 'nothing reaches a customer without the owner');
+  assertHasibRows(s.h.m);
 });
 
 test('a quote made by hand cancels Adiba’s unsent draft for that brief', async () => {
@@ -70,12 +73,15 @@ test('a quote made by hand cancels Adiba’s unsent draft for that brief', async
   value(await s.manager('media_quote', { productionId: p.id, version: fresh.version, media: { quoteMinor: 300000 } }));
   await run(s);
   assert.equal(offers(s)[0].status, 'cancelled');
+  assertHasibRows(s.h.m);
 });
 
 test('the limit is the studio’s to set, within range', async () => {
   const s = await studio();
   refused(await setLimit(s, -1), 'invalid_settings');
   assert.equal(value(await setLimit(s, 250000)).settings.media.autoQuoteLimitMinor, 250000);
+  assertHasibRows(s.h.m); // the saved settings fit the production schema
+  assertHasibRows(s.h.m);
 });
 
 test('a third revision round becomes an extra-scope offer priced from the studio’s setting; the customer’s YES approves it', async () => {
@@ -100,4 +106,5 @@ test('a third revision round becomes an extra-scope offer priced from the studio
   const decided = s.h.m.table('mediaChangeOrders').find(c => c._id === change.id);
   assert.equal(decided.status, 'approved', 'the customer’s yes approved the extra scope');
   assert.match(decided.customerApproval || '', /^chat_reply:OFR-\d{3}$/);
+  assertHasibRows(s.h.m);
 });
