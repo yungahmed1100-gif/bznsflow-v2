@@ -35,9 +35,8 @@ import { visibleModules, isLivePack, livePackSummaries, industryCatalog, HASIB_P
 import { STOCK_POLICIES } from './stock.js';
 import { hasibEnabled } from './gate.js';
 import { ok, fail, settingsFor, packFor, trackedLow } from './shared.js';
-import { shortenClinicalText, textRetentionFor, CLINICAL_TEXT_RETENTION_MS } from '../blueContacts.js';
 import { syncServiceItems } from './serviceSync.js';
-import { STOCK_SOURCE } from './stockSync.js';
+import { applyPackChoice } from './packChoice.js';
 import { hasibPack } from '../../config/hasib-packs.js';
 import { executeCatalog } from './catalogState.js';
 import { executeOrders } from './ordersState.js';
@@ -73,22 +72,6 @@ const moduleOf = op => Object.keys(MODULE_OPS).find(m => MODULE_OPS[m].includes(
 export { hasibEnabled };
 
 const publicSettings = s => ({ currency: s.currency, vatRegistered: s.vatRegistered, vatRateBps: s.vatRateBps, pricesIncludeVat: s.pricesIncludeVat, vatin: s.vatin || '', stockPolicy: s.stockPolicy, unsoldDays: s.unsoldDays ?? 60, absenceDays: s.absenceDays ?? 14, listingFreshnessDays: s.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:s.constructionIncidentHoursDenominator ?? 200000, ...Object.fromEntries(SIX_TAB_SECTORS.map(x => [x.settingsKey, SECTOR_CODE[x.packId].read(s)])) });
-
-/** What choosing an industry changes beyond the setting itself. */
-async function applyPackChoice(ctx, accountId, pack, now) {
-  // A clinical industry's 24-hour chat-text rule applies to recent messages at once.
-  if (textRetentionFor(null, pack.id) === CLINICAL_TEXT_RETENTION_MS) {
-    // Newest first, up to 2,000 messages in this change; a busier account finishes with blueHasib:shortenDentalText.
-    let next = now + 1;
-    for (let page = 0; page < 4 && next !== null; page++) next = (await shortenClinicalText(ctx, accountId, now, next)).next;
-  }
-  // Internal stock (a clinic's supplies) leaves Layla's catalog; treatments become chargeable.
-  if (pack.internalStock) {
-    const published = await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved')).take(500);
-    for (const entry of published.filter(e => e.source === STOCK_SOURCE)) await ctx.db.patch(entry._id, { status: 'archived', updatedAt: now });
-  }
-  if (pack.serviceItems) await syncServiceItems(ctx, accountId, now);
-}
 
 export async function updateSettings(ctx, accountId, a, now) {
   const current = await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();

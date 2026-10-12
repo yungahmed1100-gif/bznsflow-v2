@@ -134,7 +134,6 @@ export const hasibEntryArgs = {
     dentalSettings: v.optional(v.object({ visitMinutes: v.optional(v.number()), lateCancelHours: v.optional(v.number()), balanceDueDays: v.optional(v.number()), recallWindowDays: v.optional(v.number()), chairDayMinutes: v.optional(v.number()), openDaysPerWeek: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     fitnessSettings: v.optional(v.object({ conversionWindowDays: v.optional(v.number()), gapDays: v.optional(v.number()), minObservationDays: v.optional(v.number()), renewalNoticeDays: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     metric: v.optional(v.string()), segment: v.optional(v.string()), filter: v.optional(v.string()), channelCostMinor: v.optional(v.number()),
-    offerId: v.optional(v.string()),
     adiba: v.optional(v.object({ lines: v.optional(v.array(v.object({ key: v.string(), unitPriceMinor: v.optional(v.number()), qty: v.optional(v.number()), name: v.optional(v.string()) }))),
       text: v.optional(v.string()), depositMinor: v.optional(v.number()), validUntil: v.optional(v.number()), acceptedBy: v.optional(v.string()), evidenceSource: v.optional(v.string()) })),
     stockPolicy: v.optional(v.string()), packId: v.optional(v.string()),

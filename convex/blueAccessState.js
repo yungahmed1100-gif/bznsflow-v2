@@ -1,6 +1,6 @@
 import { activationStage } from './activationStage.js';
 import { isLivePack } from '../config/hasib-packs.js';
-import { DEFAULT_SETTINGS } from './hasib/shared.js';
+import { setAccountPack } from './hasib/packChoice.js';
 const ADMIN_EMAIL = 'ahmed@bznsflowai.com';
 const normalize = value => value.trim().toLowerCase();
 const hash = value => /^[a-f0-9]{64}$/.test(value);
@@ -46,11 +46,8 @@ export async function executeAccess(ctx, args, now = Date.now()) {
         if (entitlement) await ctx.db.replace(entitlement._id, legacy);
         else await ctx.db.insert('blueEntitlements', legacy);
       }
-      if (account && args.packId) {
-        const settings = await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', account._id)).unique();
-        if (settings) await ctx.db.patch(settings._id, { packId: args.packId, updatedAt: now });
-        else await ctx.db.insert('hasibSettings', { accountId: account._id, ...DEFAULT_SETTINGS, packId: args.packId, updatedAt: now });
-      }
+      // An account that doesn't exist yet gets the sector at sign-in (applyGrantedPack).
+      if (account && args.packId) await setAccountPack(ctx, account._id, args.packId, now);
       await ctx.db.insert('blueAccessAudit', { ...sector, email, action: 'grant', plan: args.plan, actorEmail: ADMIN_EMAIL, ...(note ? { note } : {}), at: now });
       return { ok: true, value: { email, plan: args.plan, status: 'active', hasAccount: !!account } };
     }

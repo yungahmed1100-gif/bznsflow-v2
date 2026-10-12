@@ -1,4 +1,5 @@
 import { activatePendingInvitation } from './hasib/workspaceState.js';
+import { applyGrantedPack } from './hasib/packChoice.js';
 
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 export async function executeBlueAuth(ctx,a,now = Date.now()) {
@@ -64,6 +65,7 @@ export async function executeBlueAuth(ctx,a,now = Date.now()) {
     let account = await lookup('accounts','by_email','email',a.email);
     if (!account) account = await ctx.db.get(await ctx.db.insert('accounts',{email:a.email,role:'customer',createdAt:now,profileComplete:false}));
     await activatePendingInvitation(ctx, account, now);
+    await applyGrantedPack(ctx, account, now);
     await ctx.db.insert('sessions',{accountId:account._id,tokenHash:a.tokenHash,createdAt:now,expiresAt:now+2592000000});
     return ok({id:account._id,email:account.email,name:account.name || '',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email),hasWorkspace:!!account.draftHash});
   }
@@ -75,6 +77,7 @@ export async function executeBlueAuth(ctx,a,now = Date.now()) {
     let account = identity ? await ctx.db.get(identity.accountId) : await lookup('accounts','by_email','email',a.email.toLowerCase().trim());
     if (!account) account = await ctx.db.get(await ctx.db.insert('accounts',{email:a.email.toLowerCase().trim(),name:typeof a.name === 'string' ? a.name.slice(0,100) : undefined,role:'customer',createdAt:now,profileComplete:false}));
     if (!identity) await ctx.db.insert('blueOAuthIdentities',{provider:a.provider,subject:a.subject,accountId:account._id,createdAt:now});
+    await applyGrantedPack(ctx, account, now);
     await ctx.db.insert('sessions',{accountId:account._id,tokenHash:a.tokenHash,createdAt:now,expiresAt:now+2592000000});
     return ok({id:account._id,email:account.email,name:account.name || '',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email),hasWorkspace:!!account.draftHash});
   }
