@@ -88,19 +88,23 @@ export function NavBar({
               </button>
               <div className="lang-menu" role="menu">
                 {LANGUAGES.map(l => (
-                  <button
+                  <a
                     key={l.code}
-                    type="button"
+                    href={l.code === 'en' ? '/en' : '/'}
+                    hrefLang={l.code}
                     role="menuitemradio"
                     aria-checked={lang === l.code}
                     className={`lang-item ${lang === l.code ? 'active' : ''}`}
-                    onClick={() => handleLangSelect(l.code)}
+                    onClick={(e) => {
+                      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      handleLangSelect(l.code);
+                    }}
                     title={l.label}
                     aria-label={l.label}
                   >
                     <span className="lang-code" aria-hidden="true">{l.code2}</span>
                     <span className="label">{l.label}</span>
-                  </button>
+                  </a>
                 ))}
               </div>
             </li>

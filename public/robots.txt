@@ -1,7 +1,17 @@
 User-agent: *
 Allow: /
 
-# AI crawlers — explicitly permitted for citation discovery
+# Search and user-requested retrieval crawlers
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+# Existing training permissions are retained; these are separate from search.
 User-agent: GPTBot
 Allow: /
 

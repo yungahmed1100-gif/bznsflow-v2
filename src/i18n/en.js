@@ -42,7 +42,7 @@ export default {
   "trackB_v3": "Restaurants",
   "tiers_label": "Plans",
   "tiers_title": "Start with <span class=\"mark\">Catalyst</span>",
-  "tiers_sub": "Catalyst is available today. Ascend and Apex are in preparation, built around the next problems our clients name.",
+  "tiers_sub": "Catalyst and Ascend are available today. Apex is in preparation, built around the next problem our clients name.",
   "about_title": "Built with you, <span class=\"mark\">run by us</span>",
   "about_location": "Oman first · across the GCC",
   "about_role": "Done-for-you AI and automation",
@@ -209,6 +209,7 @@ export default {
   "tier_soon": "In preparation",
   "tier_problem": "Solves",
   "tier_setup": "Set up Catalyst",
+  "tier_workspace": "Open my workspace",
   "hero_pipeline_label": "How Catalyst handles an inquiry",
   "footer_privacy": "Privacy Policy",
 

@@ -3,14 +3,14 @@ import { Icon } from './Icon';
 import { getStrings } from '../../i18n';
 import '../../styles/legal.css';
 
-// Shared shell for the legal pages (privacy, terms, data deletion).
+// Shared shell for public information and legal pages.
 //
 // A standalone page with its own small header, for the same reason SignIn.jsx
 // has one: NavBar takes eleven props of scroll and menu state owned by Home,
 // and all of its links are hash anchors that only resolve on the home page.
 //
 // `doc` is { title, updated, lead, sections }. A section may carry p, list,
-// table (a key into `tables`), p2 and nested sub-sections.
+// table (a key into `tables`), p2, links and nested sub-sections.
 
 /** One section, plus any nested sub-sections. Used for both levels. */
 function Block({ node, tables, headHtml: Head = 'h2' }) {
@@ -29,6 +29,12 @@ function Block({ node, tables, headHtml: Head = 'h2' }) {
       {node.table && <DataTable rows={tables[node.table]} head={tables[`${node.table}Head`]} />}
 
       {node.p2?.map((text) => <p key={text}>{text}</p>)}
+
+      {node.links && (
+        <ul className="legal-actions">
+          {node.links.map(({ href, label }) => <li key={href}><a href={href}>{label}</a></li>)}
+        </ul>
+      )}
 
       {node.sub?.map((child) => (
         <Block key={child.h} node={child} tables={tables} headHtml="h3" />
@@ -97,6 +103,16 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
           {doc.sections.map((section) => (
             <Block key={section.h} node={section} tables={tables} />
           ))}
+
+          <nav className="legal-back legal-actions" aria-label={ar ? 'الخدمات والدعم' : 'Services and support'}>
+            {[
+              ['/contact', ar ? 'عن الشركة والتواصل' : 'Company & Contact'],
+              ['/services', ar ? 'نطاق الخدمات' : 'Service Scope'],
+              ['/support', ar ? 'المساعدة والدعم' : 'Help & Support'],
+            ].filter(([href]) => href !== path).map(([href, label]) => (
+              <a key={href} href={ar ? href : `/en${href}`}>{label}</a>
+            ))}
+          </nav>
 
           <nav className="legal-back" aria-label={ar ? 'السياسات' : 'Policies'}>
             {[

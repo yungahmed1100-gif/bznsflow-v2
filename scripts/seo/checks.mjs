@@ -183,10 +183,18 @@ export function checkPage(page) {
 // ── Cross-page ──────────────────────────────────────────────────────────────
 // Uniqueness, hreflang reciprocity and internal-link integrity can only be
 // judged once every page is in hand.
-export function checkSite(pages, { sitemapUrls }) {
+export function checkSite(pages, { sitemapUrls, canonicalOrigin }) {
   const out = [];
   const live = pages.filter((p) => !p.error);
   const known = new Set(live.map((p) => norm(p.finalUrl)));
+  // Local previews keep production canonicals. Rebase only the explicitly
+  // expected origin so wrong-domain or wrong-path alternates still fail.
+  const crawlOrigin = live[0] ? new URL(live[0].finalUrl).origin : null;
+  const crawlUrl = (href) => {
+    if (!href || !canonicalOrigin || !crawlOrigin) return norm(href);
+    const url = new URL(href);
+    return norm(url.origin === canonicalOrigin ? `${crawlOrigin}${url.pathname}${url.search}` : href);
+  };
 
   for (const field of ['title', 'description']) {
     const seen = new Map();
@@ -211,15 +219,15 @@ export function checkSite(pages, { sitemapUrls }) {
     if (!langs.includes('x-default')) {
       out.push(finding(WARN, 'hreflang-no-xdefault', `${p.finalUrl} declares hreflang but no x-default`));
     }
-    const selfDeclared = p.hreflang.some((h) => norm(h.href) === norm(p.finalUrl));
+    const selfDeclared = p.hreflang.some((h) => crawlUrl(h.href) === norm(p.finalUrl));
     if (!selfDeclared) {
       out.push(finding(ERROR, 'hreflang-no-self', `${p.finalUrl} does not list itself in its own hreflang set`));
     }
     for (const alt of p.hreflang) {
       if (alt.lang === 'x-default') continue;
-      const target = live.find((q) => norm(q.finalUrl) === norm(alt.href));
+      const target = live.find((q) => norm(q.finalUrl) === crawlUrl(alt.href));
       if (!target) continue; // outside the crawl — reported by the link check
-      const reciprocal = target.hreflang.some((h) => norm(h.href) === norm(p.finalUrl));
+      const reciprocal = target.hreflang.some((h) => crawlUrl(h.href) === norm(p.finalUrl));
       if (!reciprocal) {
         out.push(finding(ERROR, 'hreflang-not-reciprocal',
           `${p.finalUrl} → ${alt.href} (${alt.lang}) is not returned by the target`));

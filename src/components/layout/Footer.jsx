@@ -28,6 +28,9 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
                 <li><a href="#tiers" onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.tiers_label}</a></li>
                 <li><a href="#about" onClick={(e) => onSmoothScroll(e, '#about')}>{t.footer_nav_5}</a></li>
                 <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_nav_2}</a></li>
+                <li><a href={lang === 'en' ? '/en/services' : '/services'}>{lang === 'en' ? 'Service Scope' : 'نطاق الخدمات'}</a></li>
+                <li><a href={lang === 'en' ? '/en/contact' : '/contact'}>{lang === 'en' ? 'Company & Contact' : 'عن الشركة والتواصل'}</a></li>
+                <li><a href={lang === 'en' ? '/en/support' : '/support'}>{lang === 'en' ? 'Help & Support' : 'المساعدة والدعم'}</a></li>
               </ul>
             </div>
 

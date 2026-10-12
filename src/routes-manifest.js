@@ -11,14 +11,18 @@ export const LOCALES = ['ar', 'en'];
 // Each page lists its canonical (Arabic, unprefixed) path. /en is derived.
 // lastmod is explicit + deterministic so rebuilds don't churn the sitemap.
 export const PAGES = [
+  { path: '/contact', changefreq: 'monthly', priority: 0.5, lastmod: '2026-10-12' },
+  { path: '/services', changefreq: 'monthly', priority: 0.8, lastmod: '2026-10-12' },
+  { path: '/support', changefreq: 'monthly', priority: 0.5, lastmod: '2026-10-12' },
+
   { path: '/refund', changefreq: 'yearly', priority: 0.3, lastmod: '2026-10-12' },
-  { path: '/', changefreq: 'weekly', priority: 1.0, lastmod: '2026-09-16' },
+  { path: '/', changefreq: 'weekly', priority: 1.0, lastmod: '2026-10-12' },
   // Low priority, rarely changes — but indexable and in the sitemap on
   // purpose: it is linked from Google's and LinkedIn's consent screens, and a
   // privacy policy that hides from search looks like it has something to hide.
   { path: '/privacy', changefreq: 'yearly', priority: 0.3, lastmod: '2026-09-10' },
   // Linked from Meta's consent and app settings, like the privacy policy.
-  { path: '/terms', changefreq: 'yearly', priority: 0.3, lastmod: '2026-09-23' },
+  { path: '/terms', changefreq: 'yearly', priority: 0.3, lastmod: '2026-10-12' },
   { path: '/data-deletion', changefreq: 'yearly', priority: 0.3, lastmod: '2026-09-23' },
   // The lead magnet's own page — where the ad campaign lands, and the only
   // URL that offers the playbook. Ranks second only to the home page because

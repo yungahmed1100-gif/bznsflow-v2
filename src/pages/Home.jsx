@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getStrings } from '../i18n';
 import { initReveals } from '../lib/reveal';
 import { trackEvent } from '../lib/analytics';
@@ -27,7 +26,6 @@ import { PlaybookModal }      from '../components/ui/PlaybookModal';
 // ─── Home page ───────────────────────────────────────────────────────────────
 // `lang` is the locale of THIS prerendered route ('ar' at /, 'en' at /en).
 export default function Home({ lang: routeLang = 'ar' }) {
-  const navigate = useNavigate();
 
   const lang = routeLang;
 
@@ -89,7 +87,7 @@ export default function Home({ lang: routeLang = 'ar' }) {
   // read once accounts exist; the public routes stay deterministic.
   const setLanguage = (code) => {
     setCookie(COOKIE.LOCALE, code);
-    navigate(code === 'en' ? '/en' : '/');
+    // The crawlable anchor performs native navigation to the prerendered page.
   };
 
   const closeMenu = () => { setIsMenuOpen(false); document.body.style.overflow = ''; };
