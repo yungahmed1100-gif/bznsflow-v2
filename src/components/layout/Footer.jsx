@@ -72,6 +72,7 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
                 LinkedIn both expect a findable privacy policy. */}
             <p className="footer-legal">
               <a href={lang === 'en' ? '/en/privacy' : '/privacy'}>{t.footer_privacy}</a>
+              <a href={lang === 'en' ? '/en/refund' : '/refund'}>{lang === 'en' ? 'Refund Policy' : 'سياسة الاسترداد'}</a>
             </p>
           </div>
         </div>
