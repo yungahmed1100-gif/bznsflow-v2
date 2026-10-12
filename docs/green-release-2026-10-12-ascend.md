@@ -110,3 +110,22 @@ Release 1's record is corrected to match.
 | Production | statuses as before, 403 `origin`, `home-browser` 36/36, Convex logs 0 errors over five minutes, sweep every 5 minutes |
 
 **Rollback:** `vercel promote dpl_Bu7XFYDjYxV9udS8o7BEdS4TwPzg --yes`. To switch Hasib off: `npx convex run blueHasib:setEnabled '{"enabled":false}' --prod`.
+
+## Addendum: Hotfix 3.1 (`6dc4992`, `bfb0a4c`, Convex only)
+
+Two production faults found while moving the remaining sectors to the six-tab kit. Neither had reached a customer: no Media studio and no manager Workshop screen had been used.
+
+- **Media settings save:** `hasibSettings.media` had no `autoQuoteLimitMinor`, but Media settings always store it (default 0). So a studio's first settings save would have been refused by Convex. The field is now in the schema.
+- **Manager's parts list:** `automotive_parts` listed part allocations by `by_account_created`, an index the table never declared. So the manager's Workshop screen would have been refused. The index is added.
+
+**Why the tests missed them:** the in-memory test store checked neither the schema nor index names.
+- It now refuses an index the production schema doesn't have.
+- The schema contract check now covers the sector and Adiba tables.
+- New tests load every Workshop list as manager and technician, and check saved Media and Adiba rows against the schema.
+
+| Step | Result |
+|---|---|
+| Verified on the commit alone (`work/release/r2`) | 967/967 unit tests and every suite, `EXIT 0` |
+| Convex | deployed; `[+] automotivePartAllocations.by_account_created`; no indexes deleted |
+| Website | unchanged (`dpl_Fnc2SkjGZZg6o2uLkkX7boVWy3Ta`) |
+| Convex logs after the deploy | not read: the classifier blocked the production log read this time; Ahmed to check with `npx convex logs --prod` |
