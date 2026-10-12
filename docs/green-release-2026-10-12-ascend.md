@@ -54,7 +54,7 @@ Ahmed authorised the release on 2026-10-12 ("build then verify and release to pr
 - **Live bundle:** the Home bundle has the Ascend card ("Three agents on one record") and the Arabic CTA; the dashboard bundle has the Offers panel.
 - **API:** `/api/layla-meta?surface=hasib` refuses a cross-origin call with 403 `origin`.
 - **Home page:** `node tests/home-browser.mjs https://www.bznsflowai.com` passed 36/36.
-- **Convex logs:** see the logs note below.
+- **Convex logs:** 605 events over the six minutes after the deploy, 0 errors. The scheduled sweep (`blueHasib:automationSweep`) ran every 5 minutes (9:01, 9:06 and 9:11 PM); no studio was due, so it scheduled nothing.
 
 ## A correction to Release 1's record
 
@@ -92,3 +92,21 @@ Release 1's record is corrected to match.
 - **Stop automation without a deploy:** `npx convex env set HASIB_AUTOMATION off --prod`.
 - **Website:** `vercel promote dpl_EJmNLsdAkJU2kD5BfPC4ik7XSZ5S --yes`, which is Release 1 plus the refund page. Promoting `dpl_9bMj3hLBaJcHU8dGsf1NHZfHV95j` (Release 1 alone) would remove `/refund`.
 - **Convex:** the schema additions are new tables and optional fields, so the previous website runs against these functions unchanged.
+
+## Addendum: Hasib switched on, and Release 3 (same evening)
+
+**Hasib switched on.** Green's `blueMessagingSettings` had no `hasib` row, so every Ascend workspace answered "not switched on for this account yet". That included Real Estate, Fitness, Dental and Media. Ahmed ran `npx convex run blueHasib:setEnabled '{"enabled":true}' --prod` himself; the classifier reserved that production feature-flag write for him. A read afterwards shows `hasib: true`.
+
+**Release 3 (`5b85ad9`).**
+- **Granted sector at sign-in:** a sector granted before the customer signed up now reaches the account at sign-in, by code or OAuth, unless the owner has already chosen one. Before this, it stayed on the grant row, and the operator command dropped it entirely.
+- **Grants run the pack choice:** every grant path now goes through the same pack choice as Settings (`convex/hasib/packChoice.js`): the clinic text rule, internal stock, service items and Hasib's schedule.
+- **Housekeeping:** the duplicate `offerId` key is gone.
+
+| Step | Result |
+|---|---|
+| Verified on the commit alone (`work/release/r2`) | 966/966 unit tests and all suites. The first run stalled once at the setup page's load event (a timeout, not an assertion). That suite then passed 3/3 alone, and a clean full re-run passed |
+| Convex | deployed; no indexes deleted |
+| Vercel | `dpl_Fnc2SkjGZZg6o2uLkkX7boVWy3Ta`, promoted. Entry and root bundles match the local build |
+| Production | statuses as before, 403 `origin`, `home-browser` 36/36, Convex logs 0 errors over five minutes, sweep every 5 minutes |
+
+**Rollback:** `vercel promote dpl_Bu7XFYDjYxV9udS8o7BEdS4TwPzg --yes`. To switch Hasib off: `npx convex run blueHasib:setEnabled '{"enabled":false}' --prod`.
