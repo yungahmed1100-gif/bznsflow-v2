@@ -28,7 +28,7 @@ Ahmed authorised the release on 2026-10-12 ("build then verify and release to pr
 | Step | Result |
 |---|---|
 | Commit | `e216661` on `master`, pushed (`751e451..e216661`). The other session's files (`src/routes.ts`, `ascend/`, `design/`, `docs/ascend-*`, `docs/seo-audit-*`, `src/components/ascend-draft/`) were left out |
-| Verified on the commit alone (`work/release/e216661`) | 947/947 unit tests, `npm test`, Convex type-check, build, audit 0, all 10 shared browser suites (BznsBrain 1433, WhatsApp 62, dashboard 347, auth 36, setup 10), Catalyst 297, Retail 441, Retail-tech 490, Real Estate 328, Media 314, Fitness 312, Dental 315, Construction/Automotive 12/12 |
+| Verified on the commit alone (`work/release/e216661`) | 947/947 unit tests, `npm test`, Convex type-check, build, audit 0, all 10 shared browser suites (BznsBrain 1433, WhatsApp 62, dashboard 347, auth 36, setup 10; see the correction below), Catalyst 297, Retail 441, Retail-tech 490, Real Estate 328, Media 314, Fitness 312, Dental 315, Construction/Automotive 12/12 |
 | Local smoke | `work/onboarding-audit/walk-after.mjs` on the build: Publish now blocks only on the 3 essentials (was 13 bracket sections); paused WhatsApp, Instagram off, no-grant, no-channel and empty-inbox states all show |
 | Convex (Green, `rare-fish-465`) | `npx convex deploy` run by Claude from the release folder. Schema validated, no indexes deleted |
 | Vercel | `vercel deploy --prod --skip-domain` → `dpl_9bMj3hLBaJcHU8dGsf1NHZfHV95j`. Bundle names match the local build (`LaylaDashboard-BCRJcq2n`, `SignIn-Cmz_Ird4`, `AccessAdmin-Dpn4h1BR`). Promoted to www.bznsflowai.com |
@@ -41,6 +41,12 @@ Ahmed authorised the release on 2026-10-12 ("build then verify and release to pr
 - **Home page:** `node tests/home-browser.mjs https://www.bznsflowai.com` passed 36/36.
 - **Convex logs:** 300 events after the deploy, 0 errors.
 - **Name resolution on this machine:** curl intermittently could not resolve www.bznsflowai.com (exit code 6), while `dig` and public DNS resolved it. The checks were run pinned to Vercel's anycast address (`--resolve …:76.76.21.21`); the site answered normally.
+
+## Correction (later on 2026-10-12)
+
+The first run of the 10 shared browser suites did not test this commit's build. `scripts/run-browser-tests.mjs` starts its own preview on port 5199 and ignores its output. A preview started by hand from the main checkout already held 5199, so the suites ran against that build: the same Release 1 code plus another session's uncommitted files. The unit tests, the sector suites and the production checks were not affected.
+
+With that server stopped, the 10 suites were re-run on `e216661`'s own build and all passed with the same counts. Details: [green-release-2026-10-12-ascend.md](green-release-2026-10-12-ascend.md).
 
 ## Not verified in production
 
