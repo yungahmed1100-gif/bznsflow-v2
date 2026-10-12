@@ -104,8 +104,28 @@ export async function seedIndustry({ m, tenant, hasib, pack }) {
     await followup('order', work.orderId);
     refs.workOrderId = work.id;
     refs.orderId = work.orderId;
-  } else if (['cleaning', 'hvac', 'construction'].includes(pack.id)) {
-    const kind = { cleaning: 'cleaning', hvac: 'maintenance', construction: 'construction' }[pack.id];
+  } else if (pack.id === 'construction') {
+    // A real contracting record (not the generic jobs path): baseline, an active project, a variation, an order and a certified claim.
+    const DAY = 24 * HOUR;
+    let project = await create('construction_project_save', { workflow: { reference: 'P-001', title: 'Villa fit-out / تشطيب فيلا', location: 'Al Mouj, Muscat', contractType: 'lump_sum',
+      originalContractMinor: 120000000, originalBudgetMinor: 90000000, startAt: now - 20 * DAY, contractFinishAt: now + 70 * DAY, contactId: refs.contactId } });
+    await create('construction_milestone_save', { projectId: project.id, workflow: { projectId: project.id, label: 'Structure / الهيكل', weightBps: 6000, budgetMinor: 54000000, plannedStartAt: now - 20 * DAY, plannedFinishAt: now + 2 * DAY } });
+    await create('construction_milestone_save', { projectId: project.id, workflow: { projectId: project.id, label: 'Finishes / التشطيبات', weightBps: 4000, budgetMinor: 36000000, plannedStartAt: now + 2 * DAY, plannedFinishAt: now + 60 * DAY } });
+    project = await run('construction_baseline_approve', { projectId: project.id, version: project.version });
+    for (const status of ['quoted', 'awarded', 'active']) project = await create('construction_project_status', { projectId: project.id, version: project.version, status });
+    await create('construction_variation_save', { projectId: project.id, workflow: { projectId: project.id, reference: 'VO-01', title: 'Extra power points / نقاط كهرباء إضافية', reason: 'Client request',
+      contractDeltaMinor: 5000000, budgetDeltaMinor: 3000000, scheduleDeltaDays: 2 } });
+    await create('construction_commitment_save', { projectId: project.id, workflow: { projectId: project.id, kind: 'purchase_order', supplier: 'Sample supplier', package: 'Electrical', label: 'Cabling', amountMinor: 4000000, requiredAt: now + DAY } });
+    let claim = await create('construction_claim_save', { projectId: project.id, workflow: { projectId: project.id, reference: 'IPC-01', grossMinor: 30000000, retentionMinor: 1500000, dueAt: now - DAY } });
+    claim = await create('construction_claim_status', { claimId: claim.id, version: claim.version, status: 'submitted' });
+    claim = await create('construction_claim_status', { claimId: claim.id, version: claim.version, status: 'certified' });
+    refs.projectId = project.id;
+    refs.orderId = claim.orderId;
+    // Part of the certificate is paid (5.000 OMR), so a balance stays outstanding past its due date.
+    await pay(await run('order', { orderId: claim.orderId }));
+    await followup('order', claim.orderId);
+  } else if (['cleaning', 'hvac'].includes(pack.id)) {
+    const kind = { cleaning: 'cleaning', hvac: 'maintenance' }[pack.id];
     let equipment;
     if (['automotive', 'hvac'].includes(pack.id)) equipment = await create('equipment_save', { workflow: { contactId: refs.contactId, label: pack.id === 'hvac' ? 'Sample air conditioner' : 'Sample vehicle', identifier: 'SYNTHETIC-01', nextServiceAt: now, visitsRemaining: 3 } });
     let job = await create('job_create', { workflow: { title: 'Sample agreed work / عمل متفق عليه', kind, contactId: refs.contactId, dueAt: now + HOUR,

@@ -31,6 +31,11 @@ export const automotiveTables = {
     .index('by_work_order', ['workOrderId']).index('by_account_request', ['accountId', 'requestId']),
   automotiveExperience: defineTable({ accountId: v.id('accounts'), requestId: v.string(), workOrderId: v.id('automotiveWorkOrders'), rating: v.number(), reason: v.optional(v.string()), submittedAt: v.number() })
     .index('by_account_submitted', ['accountId', 'submittedAt']).index('by_work_order', ['workOrderId']).index('by_account_request', ['accountId', 'requestId']),
-  automotiveTasks: defineTable({ accountId: v.id('accounts'), kind: v.string(), entityType: v.string(), entityId: v.string(), status: v.string(), reason: v.string(), assignedAccountId: v.optional(v.id('accounts')), dueAt: v.optional(v.number()), createdAt: v.number(), updatedAt: v.number() })
+  automotiveTasks: defineTable({ accountId: v.id('accounts'), kind: v.string(), entityType: v.string(), entityId: v.string(), status: v.string(), reason: v.string(), assignedAccountId: v.optional(v.id('accounts')), dueAt: v.optional(v.number()), snoozedUntil: v.optional(v.number()), resolvedAt: v.optional(v.number()), resolvedBy: v.optional(v.string()), resolution: v.optional(v.string()), createdAt: v.number(), updatedAt: v.number() })
     .index('by_account_status', ['accountId', 'status']).index('by_account_status_due', ['accountId', 'status', 'dueAt']).index('by_entity', ['entityType', 'entityId']),
+  // Rule messages (Settings → Rules): a draft per firing, sent by Hasib when its rule is Auto, else approved by the manager.
+  automotiveDrafts: defineTable({ accountId: v.id('accounts'), requestId: v.string(), workOrderId: v.optional(v.id('automotiveWorkOrders')), vehicleId: v.optional(v.id('automotiveVehicles')),
+    contactId: v.id('blueContacts'), conversationId: v.optional(v.id('blueConversations')), kind: v.string(), text: v.string(), templateId: v.optional(v.string()), ruleId: v.optional(v.string()), ruleKey: v.optional(v.string()),
+    status: v.string(), approvedBy: v.optional(v.id('accounts')), approvedAt: v.optional(v.number()), sentBy: v.optional(v.string()), autoSkip: v.optional(v.string()), deliveredAt: v.optional(v.number()),
+    version: v.number(), createdAt: v.number(), updatedAt: v.number() }).index('by_account_created', ['accountId', 'createdAt']).index('by_work_order', ['workOrderId']).index('by_account_request', ['accountId', 'requestId']),
 };

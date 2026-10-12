@@ -6,34 +6,17 @@
 // Each send passes the shared fences; anything that may not go out waits, with its reason. Bounded per run.
 import { refreshStudio } from './mediaBoard.js';
 import { briefGaps } from './mediaDomain.js';
-import { sendAutomatedDraft } from './workspace/autoSend.js';
+import { sendAutoRuleDrafts, MAX_SENDS_PER_RUN } from './workspace/autoRun.js';
 import { automationActor } from './workspace/automation.js';
-import { workspaceForManager, audit } from './workspaceState.js';
+import { workspaceForManager } from './workspaceState.js';
 import { draftOffer, approveAutomatically, cancelStaleOffer, OPEN_STATUSES } from './adiba.js';
 
-export const MAX_SENDS_PER_RUN = 10;
+export { MAX_SENDS_PER_RUN };
 export const MAX_QUOTES_PER_RUN = 5;
 const ARABIC = /[؀-ۿ]/;
 
-async function sendRuleMessages(ctx, tenant, studio, settings, actor, now) {
-  const auto = new Set(settings.rules.filter(r => r.enabled && r.mode === 'auto').map(r => r.id));
-  let sent = 0, skipped = 0;
-  if (!auto.size) return { sent, skipped };
-  const waiting = studio.drafts.filter(d => d.status === 'draft' && auto.has(d.ruleId)).sort((a, b) => a.createdAt - b.createdAt);
-  for (const draft of waiting) {
-    if (sent >= MAX_SENDS_PER_RUN) break;
-    const result = await sendAutomatedDraft(ctx, tenant, { draft, keyPrefix: 'media-draft', messageLinks: { mediaProductionId: draft.productionId, mediaDraftId: draft._id } }, now);
-    if (result.skip) {
-      skipped++;
-      if (draft.autoSkip !== result.skip) await ctx.db.patch(draft._id, { autoSkip: result.skip, updatedAt: now });
-      continue;
-    }
-    await ctx.db.patch(draft._id, { status: 'queued', sentBy: 'automation', autoSkip: undefined, version: draft.version + 1, updatedAt: now });
-    await audit(ctx, tenant, actor, 'draft_auto_sent', 'draft', draft._id, now, `rule:${draft.ruleId}`);
-    sent++;
-  }
-  return { sent, skipped };
-}
+const sendRuleMessages = (ctx, tenant, studio, settings, actor, now) => sendAutoRuleDrafts(ctx, tenant, { drafts: studio.drafts, rules: settings.rules, keyPrefix: 'media-draft', actor,
+  links: draft => ({ mediaProductionId: draft.productionId, mediaDraftId: draft._id }) }, now);
 
 async function langOf(ctx, conversationId) {
   const last = conversationId ? await ctx.db.query('blueMessages').withIndex('by_conversation_direction_at', q => q.eq('conversationId', conversationId).eq('direction', 'in')).order('desc').first() : null;

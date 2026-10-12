@@ -15,6 +15,8 @@ import {
 } from './automotiveDomain.js';
 import { automotiveInsights, automotiveOverview } from './automotiveMetrics.js';
 import { workflowBegin, workflowFinish } from './followupsState.js';
+import { automationRefusal } from './workspace/automation.js';
+import { executeAutomotiveWorkspace, workshopOverview, AUTOMOTIVE_AUTOMATION_ALLOWED } from './automotiveWorkspace.js';
 
 const request = a => REQUEST_ID.test(a.requestId || '');
 const list = async (ctx, table, accountId, a, index = 'by_account_created') => {
@@ -350,8 +352,13 @@ async function experienceSave(ctx, tenant, actor, a, now) {
 export async function executeAutomotive(ctx, tenant, actor, a, now) {
   if (!String(a.operation || '').startsWith('automotive_')) return null;
   const op = a.operation;
+  const automated = automationRefusal(actor, op, AUTOMOTIVE_AUTOMATION_ALLOWED);
+  if (automated) return fail(automated);
+  const workspace = await executeAutomotiveWorkspace(ctx, tenant, actor, a, now);
+  if (workspace) return workspace;
   if (op === 'automotive_overview') {
-    const result = await automotiveOverview(ctx, tenant.accountId, now);
+    const base = await automotiveOverview(ctx, tenant.accountId, now);
+    const result = await workshopOverview(ctx, tenant, actor, base.value, now);
     if (!technician(actor)) return result;
     return ok({ ...result.value, workOrders: result.value.workOrders.filter(row => String(row.technicianAccountId) === String(actor.actorAccountId)).map(row => { const { contactId, assignedAdvisorAccountId, ...value } = row; return value; }), tasks: result.value.tasks.filter(row => String(row.assignedAccountId) === String(actor.actorAccountId)), metrics: result.value.metrics.map(metric => ({ ...metric, value: null })) });
   }

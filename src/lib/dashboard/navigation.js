@@ -55,9 +55,23 @@ const DENTAL_VIEWS = Object.freeze({
   settings: ['brain', 'rules', 'team', 'business', 'channels', 'accounts'],
 });
 const DENTAL_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'schedule'], orders: ['work', 'visits'], stock: ['work', 'services'] };
+// Automotive workshops: Workshop as Work, with Board · Schedule · Parts · Follow-ups (ascend/automotive.md).
+const AUTOMOTIVE_VIEWS = Object.freeze({
+  work: ['board', 'schedule', 'parts', 'followups'],
+  settings: ['brain', 'rules', 'team', 'workshop', 'business', 'channels', 'accounts'],
+});
+const AUTOMOTIVE_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'board'], orders: ['work', 'board'], stock: ['work', 'parts'] };
+// Contractors: Projects as Work, with Projects · Procurement & site · Follow-ups (ascend/construction.md);
+// milestones, variations, claims and retention live on each project.
+const CONSTRUCTION_VIEWS = Object.freeze({
+  work: ['projects', 'procurement', 'followups'],
+  settings: ['brain', 'rules', 'team', 'site', 'business', 'channels', 'accounts'],
+});
+const CONSTRUCTION_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'projects'], orders: ['work', 'projects'], stock: ['work', 'procurement'] };
 // Packs whose Ascend workspace is the six tabs, with their Work views and old-link aliases.
 const SIX_TAB_PACKS = Object.freeze({ 'real-estate': { views: REAL_ESTATE_VIEWS, aliases: REAL_ESTATE_ALIASES }, media: { views: MEDIA_VIEWS, aliases: MEDIA_ALIASES },
-  fitness: { views: FITNESS_VIEWS, aliases: FITNESS_ALIASES }, dental: { views: DENTAL_VIEWS, aliases: DENTAL_ALIASES } });
+  fitness: { views: FITNESS_VIEWS, aliases: FITNESS_ALIASES }, dental: { views: DENTAL_VIEWS, aliases: DENTAL_ALIASES },
+  automotive: { views: AUTOMOTIVE_VIEWS, aliases: AUTOMOTIVE_ALIASES }, construction: { views: CONSTRUCTION_VIEWS, aliases: CONSTRUCTION_ALIASES } });
 export const isSixTabPack = id => !!SIX_TAB_PACKS[id];
 /** Which BznsBrain tab a URL opens: `part`, else the old Services & prices links open the catalog. */
 export function brainPart(params) {

@@ -10,6 +10,7 @@ import { recordUndeliverable } from './blueAudienceState.js';
 import { commerceTurn } from './hasib/laylaOrders.js';
 import { realEstateTurn } from './hasib/realEstateTurn.js';
 import { mediaTurn } from './hasib/mediaTurn.js';
+import { industryTurns } from './hasib/industryTurns.js';
 import { fitnessTurn } from './hasib/fitnessTurn.js';
 import { dentalTurn } from './hasib/dentalTurn.js';
 import { SECTOR_DRAFT_FIELDS, markDraftDelivered } from './hasib/workspace/sectors.js';
@@ -341,6 +342,8 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         catch(err) { console.error('fitness_turn_failed',err?.message); }
         try { await dentalTurn(ctx,{row,contact:applied.contact,now,secret:a.hashSecret}); }
         catch(err) { console.error('dental_turn_failed',err?.message); }
+        try { await industryTurns(ctx,{row,contact:applied.contact,now,secret:a.hashSecret}); }
+        catch(err) { console.error('industry_turn_failed',err?.message); }
         try { adiba=await adibaTurn(ctx,{row,person,contact:applied.contact,text:e.text,messageKey:msgKey,catalog:catalog || [],now,secret:a.hashSecret}); }
         catch(err) { console.error('adiba_turn_failed',err?.message); }
       }

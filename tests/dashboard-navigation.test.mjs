@@ -73,22 +73,26 @@ test('before an industry is chosen, Today holds the setup and Stock keeps only s
   assert.deepEqual(resolveTab('insights', null, map), { tab: 'today', view: null });
 });
 
-test('construction owns its dedicated sections without generic product, expense, or channel sub-tabs', () => {
+test('a contractor: the six Ascend tabs with Projects as Work; Channels and BznsBrain are reachable again', () => {
   const map = dashboardMap(construction);
-  assert.deepEqual(map.views.stock, []);
-  assert.deepEqual(map.views.money, []);
-  assert.deepEqual(map.views.settings, []);
-  assert.ok(map.sections.includes('money'));
-  assert.deepEqual(resolveTab('stock', 'products', map), { tab: 'stock', view: null });
+  assert.deepEqual(map.sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
+  assert.deepEqual(map.views.work, ['projects', 'procurement', 'followups']);
+  assert.deepEqual(map.views.settings, ['brain', 'rules', 'team', 'site', 'business', 'channels', 'accounts']);
+  assert.deepEqual(resolveTab('stock', 'products', map), { tab: 'work', view: 'procurement' });
+  assert.deepEqual(resolveTab('orders', null, map), { tab: 'work', view: 'projects' });
+  assert.deepEqual(resolveTab('money', null, map), { tab: 'insights', view: null });
+  assert.deepEqual(resolveTab('settings', 'channels', map), { tab: 'settings', view: 'channels' });
 });
 
-test('automotive keeps the legacy stock URL and exposes its dedicated Money section', () => {
+test('an automotive workshop: the six Ascend tabs with Workshop as Work, and old links land in it', () => {
   const map = dashboardMap(automotive);
-  assert.deepEqual(map.views.stock, []);
-  assert.deepEqual(map.views.money, []);
-  assert.ok(map.sections.includes('money'));
-  assert.deepEqual(resolveTab('stock', 'products', map), { tab: 'stock', view: null });
-  assert.deepEqual(resolveTab('money', null, map), { tab: 'money', view: null });
+  assert.deepEqual(map.sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
+  assert.deepEqual(map.views.work, ['board', 'schedule', 'parts', 'followups']);
+  assert.deepEqual(map.views.settings, ['brain', 'rules', 'team', 'workshop', 'business', 'channels', 'accounts'], 'Channels and BznsBrain are reachable again');
+  assert.deepEqual(resolveTab('stock', 'products', map), { tab: 'work', view: 'parts' });
+  assert.deepEqual(resolveTab('orders', null, map), { tab: 'work', view: 'board' });
+  assert.deepEqual(resolveTab('money', null, map), { tab: 'insights', view: null });
+  assert.deepEqual(resolveTab('today', null, map), { tab: 'work', view: 'board' });
 });
 
 test('a dental clinic: the six Ascend tabs with Visits as Work, and old links land in Visits', () => {

@@ -39,10 +39,10 @@ import { FitnessDashboard } from '../components/hasib/FitnessDashboard';
 import { DentalDashboard } from '../components/hasib/DentalDashboard';
 
 // The six-tab sectors' Work, Insights and rules/team screens, by pack (Real Estate is the default).
-const SIX_TAB_DASHBOARDS = { 'real-estate': RealEstateDashboard, media: MediaDashboard, fitness: FitnessDashboard, dental: DentalDashboard };
+const SIX_TAB_DASHBOARDS = { 'real-estate': RealEstateDashboard, media: MediaDashboard, fitness: FitnessDashboard, dental: DentalDashboard, automotive: AutomotiveWorkspace, construction: ConstructionWorkspace };
 import { ClinicDashboard } from '../components/hasib/ClinicDashboard';
-import { ConstructionDashboard } from '../components/hasib/ConstructionDashboard';
-import { AutomotiveDashboard } from '../components/hasib/AutomotiveDashboard';
+import { ConstructionWorkspace } from '../components/hasib/ConstructionWorkspace';
+import { AutomotiveWorkspace } from '../components/hasib/AutomotiveWorkspace';
 import '../styles/layla-dashboard.css';
 import '../styles/hasib.css';
 import '../styles/workspace.css';
@@ -129,9 +129,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
               {!(map.sixTab && tab === 'work') && <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} />}
               {hasibOverview?.readOnly && (tab === 'settings' || (tab === 'stock' && view === 'services')) ? <p className="ld-state">{s.ar ? 'إعدادات تجريبية للقراءة فقط. لا توجد قناة مراسلة مرتبطة بهذه المعاينة.' : 'Read-only sample settings. This preview has no connected messaging channel.'}</p>
                 : hasibOverview?.pack?.id === 'clinic' && ['today','orders','money','team'].includes(tab) ? <ClinicDashboard mode={({today:'today',orders:'visits',money:'money',team:'team'})[tab]} s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''} />
-                : hasibOverview?.pack?.id === 'automotive' && ['today','orders','stock','money','team','settings'].includes(tab) && !(tab === 'settings' && view === 'channels') ? <AutomotiveDashboard mode={({today:'today',orders:'workshop',stock:'parts',money:'money',team:'team',settings:'settings'})[tab]} s={s} h={h} overview={hasibOverview} timezone={data.timezone} connections={data} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''} />
-                : hasibOverview?.pack?.id === 'construction' && ['today','orders','stock','money','team','settings'].includes(tab) ? <ConstructionDashboard mode={({today:'today',orders:'projects',stock:'procurement',money:'money',team:'team',settings:'settings'})[tab]} s={s} overview={hasibOverview} timezone={data.timezone} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''} />
-                : map.sixTab && (tab === 'work' || tab === 'insights' || (tab === 'settings' && ['rules', 'team'].includes(view))) ? <SixTabWorkspace section={tab} view={view} s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''}
+                : map.sixTab && (tab === 'work' || tab === 'insights' || (tab === 'settings' && ['rules', 'team', 'workshop', 'site'].includes(view))) ? <SixTabWorkspace section={tab} view={view} s={s} h={h} overview={hasibOverview} timezone={data.timezone} connections={data} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''}
                     tabs={tab === 'work' ? <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} /> : null} />
                 : tab === 'today' ? <TodayView s={s} h={h} hasibOverview={hasibOverview} connected={!!data.connected} onGo={go} />
                 : tab === 'orders' && (params.get('order') || params.get('ledger')) ? <OrdersView s={s} h={h} overview={hasibOverview} business={data.business.name} timezone={data.timezone} initialOrderId={params.get('order')} initialCreate={params.get('create') === '1'} onChanged={refreshHasib} />

@@ -1,5 +1,5 @@
 import { executeAdiba } from './adiba.js';
-import { ensureAutomation } from './workspace/schedule.js';
+import { ensureAutomation, AUTOMATION_PACKS } from './workspace/schedule.js';
 import { mediaNeedsAutomation } from './mediaSettings.js';
 import { executeRequests } from './requestsState.js';
 import { executeProperty } from './propertyState.js';
@@ -12,7 +12,11 @@ import { businessTimezone } from './expensesState.js';
 import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS, ADIBA_OPERATIONS } from '../../config/hasib-workflow-operations.js';
 import { executeClinic } from './clinicState.js';
 import { executeConstruction } from './constructionState.js';
+import { constructionSettings, mergeConstructionSettings } from './constructionSettings.js';
+import { constructionFollowupQueue } from './constructionWorkspace.js';
 import { executeAutomotive } from './automotiveState.js';
+import { automotiveSettings, mergeAutomotiveSettings } from './automotiveSettings.js';
+import { automotiveFollowupQueue } from './automotiveFollowups.js';
 import { realEstateSettings, mergeRealEstateSettings } from './realEstateSettings.js';
 import { mediaSettings, mergeMediaSettings } from './mediaSettings.js';
 import { executeMedia } from './mediaState.js';
@@ -55,9 +59,11 @@ import { staffArgs, staffResult, auditChange } from './staffPolicy.js';
 // The six-tab sectors' own code, in the order their executors run (see workspace/sectors.js).
 const SECTOR_CODE = {
   'real-estate': { read: realEstateSettings, merge: mergeRealEstateSettings, queue: followupQueue, execute: executeRealEstate },
-  media: { read: mediaSettings, merge: mergeMediaSettings, queue: mediaFollowupQueue, execute: executeMedia },
+  media: { read: mediaSettings, merge: mergeMediaSettings, queue: mediaFollowupQueue, execute: executeMedia, needsAutomation: mediaNeedsAutomation },
   fitness: { read: fitnessSettings, merge: mergeFitnessSettings, queue: fitnessFollowupQueue, execute: executeFitness },
   dental: { read: dentalSettings, merge: mergeDentalSettings, queue: dentalFollowupQueue, execute: executeDental },
+  automotive: { read: automotiveSettings, merge: mergeAutomotiveSettings, queue: automotiveFollowupQueue, execute: executeAutomotive },
+  construction: { read: constructionSettings, merge: mergeConstructionSettings, queue: constructionFollowupQueue, execute: executeConstruction },
 };
 export const HASIB_OPERATIONS = [...Object.keys(BOOKING_OPERATIONS), ...ADIBA_OPERATIONS, ...JOB_OPERATIONS, ...REAL_ESTATE_OPERATIONS, ...TEAM_OPERATIONS, ...CLINIC_OPERATIONS, ...CONSTRUCTION_OPERATIONS, ...AUTOMOTIVE_OPERATIONS, ...MEDIA_OPERATIONS, ...FITNESS_OPERATIONS, ...DENTAL_OPERATIONS, 'overview', 'settings_update', 'items', 'item_save', 'item_archive', 'stock_move', 'stock_moves', 'low_stock',
   'order_create', 'order_status', 'orders', 'order', 'payment_record', 'contact_summary', 'conversation_orders', 'expense_create', 'expenses', 'expense_void', 'insights',
@@ -111,9 +117,14 @@ export async function updateSettings(ctx, accountId, a, now) {
   const row = { accountId, ...(next.packId ? { packId: next.packId } : {}), currency: next.currency, vatRegistered: next.vatRegistered, vatRateBps: next.vatRateBps, pricesIncludeVat: next.pricesIncludeVat,
     ...(next.vatin ? { vatin: next.vatin } : {}), stockPolicy: next.stockPolicy, unsoldDays: next.unsoldDays ?? 60, absenceDays: next.absenceDays ?? 14, listingFreshnessDays: next.listingFreshnessDays ?? 30, constructionIncidentHoursDenominator:next.constructionIncidentHoursDenominator ?? 200000, ...Object.fromEntries(SIX_TAB_SECTORS.filter(x => next[x.settingsKey]).map(x => [x.settingsKey, next[x.settingsKey]])), updatedAt: now };
   if (current) await ctx.db.replace(current._id, row); else await ctx.db.insert('hasibSettings', row);
-  if (a.packId !== undefined) await applyPackChoice(ctx, accountId, hasibPack(a.packId), now);
-  // Rules switched to Auto (or off) put the studio on Hasib's schedule (or take it off).
-  if (a.mediaSettings !== undefined) await ensureAutomation(ctx, accountId, 'media', mediaNeedsAutomation(row.media), now);
+  if (a.packId !== undefined) {
+    await applyPackChoice(ctx, accountId, hasibPack(a.packId), now);
+    // A sector Hasib automates goes on his schedule as soon as it is chosen.
+    if (AUTOMATION_PACKS.has(a.packId)) await ensureAutomation(ctx, accountId, a.packId, true, now);
+  }
+  // Rules switched to Auto (or off) put the workspace on Hasib's schedule (or take it off).
+  for (const { packId, settingsArg, settingsKey } of SIX_TAB_SECTORS)
+    if (a[settingsArg] !== undefined && AUTOMATION_PACKS.has(packId)) await ensureAutomation(ctx, accountId, packId, SECTOR_CODE[packId].needsAutomation?.(row[settingsKey]) ?? true, now);
   return ok({ settings: publicSettings(row) });
 }
 
@@ -186,8 +197,6 @@ async function dispatchHasib(ctx, tenant, actor, plan, pack, a, now) {
   if (allowed && !allowed.includes(pack.id)) return fail('module_unavailable');
   for (const sector of SIX_TAB_SECTORS) if (sector.operations.includes(op) && pack.id !== sector.packId) return fail('module_unavailable');
   if (CLINIC_OPERATIONS.includes(op) && pack.id !== 'clinic') return fail('module_unavailable');
-  if (CONSTRUCTION_OPERATIONS.includes(op) && pack.id !== 'construction') return fail('module_unavailable');
-  if (AUTOMOTIVE_OPERATIONS.includes(op) && pack.id !== 'automotive') return fail('module_unavailable');
   const teamResult = await executeTeam(ctx, tenant, actor, a, now);
   if (teamResult) return teamResult;
   const adibaResult = await executeAdiba(ctx, tenant, actor, a, now);
@@ -198,10 +207,6 @@ async function dispatchHasib(ctx, tenant, actor, plan, pack, a, now) {
   }
   const clinicResult = await executeClinic(ctx, tenant, actor, a, now);
   if (clinicResult) return clinicResult;
-  const constructionResult = await executeConstruction(ctx, tenant, actor, a, now);
-  if (constructionResult) return constructionResult;
-  const automotiveResult = await executeAutomotive(ctx, tenant, actor, a, now);
-  if (automotiveResult) return automotiveResult;
   const workflowResult = await executeBookings(ctx, tenant, a, now) || await executeMemberships(ctx, tenant, a, now) || await executeFollowups(ctx, tenant, a, now)
     || await executeJobs(ctx, tenant, a, now) || await executeProperty(ctx, tenant, a, now) || await executeRequests(ctx, tenant, a, now);
   if (workflowResult) return workflowResult;

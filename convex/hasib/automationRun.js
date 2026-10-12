@@ -6,10 +6,12 @@ import { planFor, HASIB_PLANS } from './plans.js';
 import { hasibEnabled } from './gate.js';
 import { isLivePack } from '../../config/hasib-packs.js';
 import { runMediaAutomation } from './mediaAutomation.js';
+import { runAutomotiveAutomation } from './automotiveAutomation.js';
+import { runConstructionAutomation } from './constructionAutomation.js';
 
 export const RUN_EVERY_MS = 5 * 60000;
 export const SWEEP_LIMIT = 20;
-const RUNNERS = { media: runMediaAutomation };
+const RUNNERS = { media: runMediaAutomation, automotive: runAutomotiveAutomation, construction: runConstructionAutomation };
 export { ensureAutomation } from './workspace/schedule.js';
 
 /** The cron: claims up to SWEEP_LIMIT due accounts (oldest first) and schedules one run for each. */

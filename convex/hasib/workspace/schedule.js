@@ -1,6 +1,6 @@
 // Which accounts Hasib's scheduled run visits (convex/hasib/automationRun.js). Kept free of sector
 // imports so any sector's workspace can put itself on the schedule.
-export const AUTOMATION_PACKS = new Set(['media']);
+export const AUTOMATION_PACKS = new Set(['media', 'automotive', 'construction']);
 
 /** Puts an account on (or off) the schedule. Cheap and idempotent: called when a workspace opens or its rules change. */
 export async function ensureAutomation(ctx, accountId, packId, enabled, now) {

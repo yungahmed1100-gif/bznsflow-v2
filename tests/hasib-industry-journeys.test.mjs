@@ -75,7 +75,18 @@ for (const packId of INDUSTRIES) test(`${packId}: synthetic owner journey passes
     if (packId === 'cafe') assert.equal(order.lines[0].unitPriceMinor, 12500, 'extra shot changes price and recipe cost');
     if (packId === 'cakes') assert.equal(m.table('hasibPrepBatches')[0].inputs.length, 3);
   }
-  if (['cleaning', 'hvac', 'construction'].includes(packId)) {
+  if (packId === 'construction') {
+    // Construction runs on its own contracting records, not the generic jobs path.
+    const project = await hasib('construction_project', { projectId: refs.projectId });
+    assert.equal(project.status, 'active');
+    const claims = (await hasib('construction_claims')).items;
+    assert.deepEqual(claims.map(c => [c.reference, c.status]), [['IPC-01', 'certified']]);
+    assert.equal(claims[0].orderId, refs.orderId);
+    assert.equal(m.table('hasibOrders').length, 1, 'certifying creates exactly one receivable');
+    const insights = await hasib('construction_insights');
+    assert.equal(insights.metrics.revisedContractMinor, 120000000, 'a draft variation does not change the contract');
+  }
+  if (['cleaning', 'hvac'].includes(packId)) {
     const job = await hasib('job', { jobId: refs.jobId });
     assert.equal(job.status, 'completed');
     assert.equal(job.recordedProfitMinor, 12000);
