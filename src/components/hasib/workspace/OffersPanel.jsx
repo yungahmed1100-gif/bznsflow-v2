@@ -37,7 +37,7 @@ export function OffersPanel({ s, conversationId, compact = false, onChanged }) {
   };
   const savePrices = o => run(o, 'adiba_offer_price', { adiba: { lines: o.lines.map(l => ({ key: l.key, ...(toMinor(prices[`${o.id}:${l.key}`] ?? omr(l.unitPriceMinor)) !== null ? { unitPriceMinor: toMinor(prices[`${o.id}:${l.key}`] ?? omr(l.unitPriceMinor)) } : {}) })),
     ...(toMinor(prices[`${o.id}:deposit`] ?? '') !== null ? { depositMinor: toMinor(prices[`${o.id}:deposit`]) } : {}) } });
-  if (error === 'manager_required' || error === 'plan_required') return null;
+  if (['manager_required', 'plan_required', 'preview_read_only', 'module_unavailable'].includes(error)) return null;
   if (!items) return compact ? null : <p className="ld-help" role="status">{tr('Loading offers…', 'جارٍ تحميل العروض…')}</p>;
   const shown = items.filter(o => o.status !== 'accepted' || conversationId);
   if (!shown.length) return null;

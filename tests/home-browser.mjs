@@ -44,7 +44,7 @@ try {
     const markColour = id => page.locator(`#${id} .mark`).first().evaluate(el => getComputedStyle(el).textDecorationColor);
     assert.equal(await markColour('tiers'), 'rgb(81, 164, 123)'); count++;
     assert.equal(await markColour('about'), 'rgb(92, 149, 198)'); count++;
-    assert.notEqual(await page.locator('.tier-status.is-available').evaluate(el => getComputedStyle(el).backgroundColor), await page.locator('.tier-status.is-soon').first().evaluate(el => getComputedStyle(el).backgroundColor)); count++;
+    assert.notEqual(await page.locator('.tier-status.is-available').first().evaluate(el => getComputedStyle(el).backgroundColor), await page.locator('.tier-status.is-soon').first().evaluate(el => getComputedStyle(el).backgroundColor)); count++;
     assert.deepEqual(await serious(page), [], `${lang} 1440 accessibility`); count++;
     assert.deepEqual(errors, []); count++;
     await context.close();

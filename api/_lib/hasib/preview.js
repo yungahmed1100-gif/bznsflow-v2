@@ -40,6 +40,8 @@ export function hasibPreviewResponse(packId, operation) {
   if (operation === 'real_estate_followups') return { items: [], counts: { today: 0, overdue: 0, scheduled: 0, approval: 0, blocked: 0, completed: 0 }, actionable: 0 };
   if (operation === 'real_estate_context' || operation === 'real_estate_metric_records') return { items: [] };
   const EMPTY_QUEUE = { today: 0, overdue: 0, scheduled: 0, waiting: 0, decision: 0, blocked: 0, completed: 0 };
+  // Adiba's offers: a preview has none, and nothing to approve.
+  if (operation === 'adiba_offers') return { items: [], counts: {} };
   if (operation === 'media_overview') return { synthetic: true, pipeline: {}, attention: { deliveryOverdue: 0, cutAwaitingApproval: 0, shootAtRisk: 0, extraScope: 0, holdsExpiring: 0, approvals: 0, briefIncomplete: 0 },
     resources: { active: 0 }, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
   if (operation === 'media_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, firstCut: { value: null, numerator: 0, denominator: 0 }, changeOrders: { proposed: 0, approved: 0, approvedMinor: 0 } };
