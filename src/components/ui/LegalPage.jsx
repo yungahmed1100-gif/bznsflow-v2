@@ -98,6 +98,19 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
             <Block key={section.h} node={section} tables={tables} />
           ))}
 
+          <nav className="legal-back" aria-label={ar ? 'السياسات' : 'Policies'}>
+            {[
+              ['/refund', ar ? 'سياسة الاسترداد' : 'Refund Policy'],
+              ['/terms', ar ? 'شروط الخدمة' : 'Terms of Service'],
+              ['/privacy', ar ? 'سياسة الخصوصية' : 'Privacy Policy'],
+            ].filter(([href]) => href !== path).map(([href, label], index) => (
+              <React.Fragment key={href}>
+                {index > 0 && ' · '}
+                <a href={ar ? href : `/en${href}`}>{label}</a>
+              </React.Fragment>
+            ))}
+          </nav>
+
           <p className="legal-back">
             <a href={ar ? '/' : '/en'}>{t.auth_back}</a>
           </p>

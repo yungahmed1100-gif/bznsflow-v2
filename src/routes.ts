@@ -1,5 +1,7 @@
 import type { RouteConfig } from "@react-router/dev/routes";
 export default [
+  { file: "route-modules/refund.jsx", path: "refund" },
+  { file: "route-modules/en-refund.jsx", path: "en/refund" },
   {"file": "route-modules/catalyst-setup.jsx", "path": "catalyst/setup"},
   {"file": "route-modules/en-catalyst-setup.jsx", "path": "en/catalyst/setup"},
   {

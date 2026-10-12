@@ -2,6 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://www.bznsflowai.com/refund</loc>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/refund" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/refund" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/refund" />
+  </url>
+  <url>
+    <loc>https://www.bznsflowai.com/en/refund</loc>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/refund" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/refund" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/refund" />
+  </url>
+  <url>
     <loc>https://www.bznsflowai.com/</loc>
     <lastmod>2026-09-16T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
