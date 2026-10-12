@@ -42,8 +42,7 @@
   .sticky-mobile-cta { display: flex; }
   /* Hide the floating WA bubble — the bar replaces it on mobile */
   .whatsapp-float { display: none !important; }
-  /* Lift the footer above the bar */
-  .footer { padding-bottom: 96px; }
+  /* Footer clearance for this bar and the chat launcher lives in footer.css. */
 }
 
 /* ---- FAQ SECTION ---- */

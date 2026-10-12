@@ -13,7 +13,21 @@ assert '--dangerously-enable-production-deployments' not in servers['convex-gree
 assert Path(servers['convex-green']['command']).is_file(), 'Install locked npm dependencies first'
 assert Path(servers['convex-green']['args'][3]).resolve() == root, 'Update Convex project path after moving checkout'
 for name, server in servers.items():
-    assert 'env' not in server and 'http_headers' not in server, f'Inspect inline credentials in {name}'
+    assert 'http_headers' not in server, f'Inspect inline credentials in {name}'
+    if name == 'gsc':
+        env = server.get('env', {})
+        paths = {'GSC_CONFIG_DIR', 'GSC_OAUTH_CLIENT_SECRETS_FILE', 'GSC_CREDENTIALS_PATH'}
+        flags = {'GSC_ALLOW_DESTRUCTIVE', 'GSC_DATA_STATE', 'GSC_SKIP_OAUTH'}
+        assert set(env) <= paths | flags, 'GSC config must contain only file paths and safe flags'
+        for key in paths & env.keys():
+            assert Path(env[key]).is_absolute(), f'{key} must be an absolute file path, not a secret'
+        assert env.get('GSC_ALLOW_DESTRUCTIVE') == 'false'
+        assert env.get('GSC_DATA_STATE') in {'all', 'final'}
+        assert env.get('GSC_SKIP_OAUTH', 'false') in {'true', 'false'}
+        assert Path(server['command']).is_file(), 'Install pinned SEO tools first'
+        assert not {'add_site', 'delete_site', 'submit_sitemap', 'delete_sitemap', 'manage_sitemaps'} & set(server['enabled_tools'])
+    else:
+        assert 'env' not in server, f'Inspect inline credentials in {name}'
     assert 'bearer_token' not in server
 skills = sorted((root / '.agents/skills').glob('bznsflow-*/SKILL.md'))
 assert len(skills) == 6

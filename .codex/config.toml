@@ -33,6 +33,21 @@ tool_timeout_sec = 60
 
 # Impeccable roles ported from .claude/agents (model inherited).
 
+# Pinned upstream GSC server; adapter exposes only read-only scopes and tools.
+# Transport can start without credentials. Property access still needs Google setup.
+[mcp_servers.gsc]
+command = "/Users/ramsis21/Desktop/bznsflow web/.codex/tools/seo/.venv/bin/python"
+args = ["/Users/ramsis21/Desktop/bznsflow web/.codex/scripts/gsc_readonly.py"]
+enabled_tools = ["get_capabilities", "list_properties", "get_site_details", "get_search_analytics", "get_performance_overview", "compare_search_periods", "get_search_by_page_query", "get_advanced_search_analytics", "inspect_url_enhanced", "batch_url_inspection", "check_indexing_issues", "get_sitemaps", "list_sitemaps_enhanced", "get_sitemap_details"]
+startup_timeout_sec = 30
+tool_timeout_sec = 90
+
+[mcp_servers.gsc.env]
+GSC_CONFIG_DIR = "/Users/ramsis21/.config/bznsflow/gsc"
+GSC_OAUTH_CLIENT_SECRETS_FILE = "/Users/ramsis21/.config/bznsflow/gsc/client-secrets.json"
+GSC_ALLOW_DESTRUCTIVE = "false"
+GSC_DATA_STATE = "final"
+
 [agents.impeccable_asset_producer]
 description = "Produces clean reusable raster assets from approved Impeccable mock references without redesigning the direction."
 config_file = "/Users/ramsis21/Desktop/bznsflow web/.codex/agents/impeccable_asset_producer.toml"

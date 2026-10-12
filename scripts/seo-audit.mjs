@@ -14,6 +14,7 @@ import { dirname } from 'node:path';
 import { chromium } from 'playwright';
 import { collectPage } from './seo/collect.mjs';
 import { checkPage, checkSite } from './seo/checks.mjs';
+import { checkSocialImages } from './seo/social-images.mjs';
 import { SEVERITY } from './seo/rules.mjs';
 
 const DEFAULT_BASE = 'https://www.bznsflowai.com';
@@ -99,7 +100,8 @@ async function main() {
 
   const groups = [['robots.txt', await checkRobots(base)]];
   for (const page of pages) groups.push([page.finalUrl || page.url, checkPage(page)]);
-  groups.push(['site-wide', checkSite(pages, { sitemapUrls: new Set(urls) })]);
+  groups.push(['site-wide', checkSite(pages, { sitemapUrls: new Set(urls), canonicalOrigin: DEFAULT_BASE })]);
+  groups.push(['social images', await checkSocialImages(pages, base, DEFAULT_BASE)]);
 
   const { errors, warns, infos } = report(groups);
 

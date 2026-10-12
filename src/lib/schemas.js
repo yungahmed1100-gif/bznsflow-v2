@@ -1,4 +1,4 @@
-import { SITE } from '../routes-manifest';
+import { SITE, urlFor } from '../routes-manifest';
 
 // Per-locale homepage SEO copy (en/ar are the prerendered locales).
 export const HOME_SEO = {
@@ -21,12 +21,13 @@ export function buildSchemas(t, lang) {
   const organization = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${SITE}/#organization`,
     name: 'BznsFlow',
     url: SITE,
     logo: `${SITE}/logo.png`,
     description: isAr
-      ? 'BznsFlow يبني ويشغّل الذكاء الاصطناعي والأتمتة للأعمال الصغيرة والمتوسطة في الخليج، بدءاً من عُمان. المتاح اليوم: كاتاليست، ليلى على واتساب وإنستغرام، بالعربية والإنجليزية.'
-      : 'BznsFlow builds and runs AI and automation for small and medium businesses in the GCC, starting in Oman. Available today: Catalyst, Layla on WhatsApp and Instagram, in Arabic and English.',
+      ? 'BznsFlow يبني ويشغّل الذكاء الاصطناعي والأتمتة للأعمال في عُمان والخليج. كاتاليست للاستفسارات وأسيند للعمليات القطاعية متاحان بالاتفاق مع الفريق. أبيكس قيد الإعداد.'
+      : 'BznsFlow builds and runs AI and automation for businesses in Oman and the GCC. Catalyst handles inquiries; Ascend adds sector operations. Access is arranged with the team. Apex is in preparation.',
     founder: {
       '@type': 'Person',
       name: 'Ahmed Darwish',
@@ -42,6 +43,8 @@ export function buildSchemas(t, lang) {
       '@type': 'ContactPoint',
       contactType: 'customer service',
       availableLanguage: ['English', 'Arabic'],
+      email: 'ahmed@bznsflowai.com',
+      telephone: '+201036755930',
       url: 'https://wa.me/201036755930',
     },
     // Profiles that confirm this is the same business. Public URLs only: the
@@ -63,9 +66,11 @@ export function buildSchemas(t, lang) {
   const website = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': `${SITE}/#website`,
     name: 'BznsFlow',
     url: SITE,
-    inLanguage: lang,
+    inLanguage: ['ar', 'en'],
+    publisher: { '@id': `${SITE}/#organization` },
     description: isAr
       ? 'استفسارات مؤهلة على واتساب وإنستغرام لأعمال عُمان والخليج، بالعربية والإنجليزية.'
       : 'Qualified inquiries on WhatsApp and Instagram for businesses in Oman and the GCC, in Arabic and English.',
@@ -96,20 +101,61 @@ export function buildSchemas(t, lang) {
     ? { '@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: lang, mainEntity: faqItems }
     : null;
 
-  // The one plan on offer today, as a Service (no price: pricing is shared on the free audit).
+  // Available services have no invented price or self-serve purchase action.
   const catalyst = {
     '@context': 'https://schema.org',
     '@type': 'Service',
+    '@id': `${SITE}/#catalyst`,
     name: isAr ? 'كاتاليست' : 'Catalyst',
     serviceType: isAr ? 'تأهيل الاستفسارات على واتساب وإنستغرام' : 'Inquiry answering and qualification on WhatsApp and Instagram',
     description: isAr
       ? 'ليلى ترد على الاستفسارات من معلومات النشاط المعتمدة، وتسأل أسئلة التأهيل المحددة، وتسلّم صاحب العمل المحادثة وسجل العميل.'
       : 'Layla answers inquiries from approved business facts, asks configured qualifying questions and hands the owner the conversation and customer record.',
-    provider: { '@type': 'Organization', name: 'BznsFlow', url: SITE },
+    provider: { '@id': `${SITE}/#organization` },
     areaServed: ['Oman', 'GCC'],
     availableChannel: { '@type': 'ServiceChannel', serviceUrl: SITE, availableLanguage: ['Arabic', 'English'] },
   };
 
-  return [organization, website, software, catalyst, ...(faq ? [faq] : [])];
+  const ascend = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': `${SITE}/#ascend`,
+    name: isAr ? 'أسيند' : 'Ascend',
+    serviceType: isAr ? 'عمليات الأعمال حسب القطاع' : 'Sector-specific business operations',
+    description: isAr
+      ? 'ليلى للاستفسارات، وحسيب لتتبّع العمل والتنبيهات والتذكيرات المفعّلة، وأديبة لصياغة العروض التي تحتاج موافقة صاحب العمل. الوصول يمنحه الفريق، والأتمتة تعتمد على القطاع والإعداد المتفق عليه.'
+      : 'Layla handles inquiries; Hasib tracks work, flags stalled steps and runs enabled automatic reminders; Adiba drafts offers requiring owner approval. Access is granted by the team. Automation depends on the sector and agreed setup.',
+    provider: { '@id': `${SITE}/#organization` },
+    areaServed: ['Oman', 'GCC'],
+    url: `${urlFor('/', lang)}#tiers`,
+  };
+  const page = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `${urlFor('/', lang)}#webpage`,
+    url: urlFor('/', lang),
+    name: HOME_SEO[lang].title,
+    inLanguage: lang,
+    isPartOf: { '@id': `${SITE}/#website` },
+    about: { '@id': `${SITE}/#organization` },
+    mainEntity: [{ '@id': `${SITE}/#catalyst` }, { '@id': `${SITE}/#ascend` }],
+  };
+  return [organization, website, page, software, catalyst, ascend, ...(faq ? [faq] : [])];
 }
 
+// Reuse visible page content; do not infer a registered address or legal entity.
+export function buildBusinessPageSchema(page, path, lang, updated) {
+  const url = urlFor(path, lang);
+  return [{
+    '@context': 'https://schema.org',
+    '@type': path === '/contact' ? 'ContactPage' : 'WebPage',
+    '@id': `${url}#webpage`,
+    url,
+    name: page.title,
+    description: page.description,
+    inLanguage: lang,
+    dateModified: updated,
+    isPartOf: { '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'BznsFlow', url: SITE },
+    about: { '@type': 'Organization', '@id': `${SITE}/#organization`, name: 'BznsFlow', url: SITE },
+  }];
+}

@@ -210,3 +210,29 @@
     padding: 9px var(--space-2);
   }
 }
+
+/* Public help/contact links use real anchors and generous keyboard/touch targets. */
+.legal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-block-end: var(--space-4);
+  list-style: none;
+  padding-inline-start: 0;
+}
+.legal-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  color: #2f6ea3;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.legal-actions a:focus-visible {
+  outline: 2px solid #2f6ea3;
+  outline-offset: 3px;
+}
+.legal-doc p { overflow-wrap: anywhere; }

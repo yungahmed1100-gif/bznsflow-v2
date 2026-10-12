@@ -2,6 +2,60 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://www.bznsflowai.com/contact</loc>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/contact" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/contact" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/contact" />
+  </url>
+  <url>
+    <loc>https://www.bznsflowai.com/en/contact</loc>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/contact" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/contact" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/contact" />
+  </url>
+  <url>
+    <loc>https://www.bznsflowai.com/services</loc>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/services" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/services" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/services" />
+  </url>
+  <url>
+    <loc>https://www.bznsflowai.com/en/services</loc>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/services" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/services" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/services" />
+  </url>
+  <url>
+    <loc>https://www.bznsflowai.com/support</loc>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/support" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/support" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/support" />
+  </url>
+  <url>
+    <loc>https://www.bznsflowai.com/en/support</loc>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/support" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/support" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/support" />
+  </url>
+  <url>
     <loc>https://www.bznsflowai.com/refund</loc>
     <lastmod>2026-10-12T00:00:00+00:00</lastmod>
     <changefreq>yearly</changefreq>
@@ -21,7 +75,7 @@
   </url>
   <url>
     <loc>https://www.bznsflowai.com/</loc>
-    <lastmod>2026-09-16T00:00:00+00:00</lastmod>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
       <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/" />
@@ -30,7 +84,7 @@
   </url>
   <url>
     <loc>https://www.bznsflowai.com/en</loc>
-    <lastmod>2026-09-16T00:00:00+00:00</lastmod>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
       <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/" />
@@ -57,7 +111,7 @@
   </url>
   <url>
     <loc>https://www.bznsflowai.com/terms</loc>
-    <lastmod>2026-09-23T00:00:00+00:00</lastmod>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
       <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/terms" />
@@ -66,7 +120,7 @@
   </url>
   <url>
     <loc>https://www.bznsflowai.com/en/terms</loc>
-    <lastmod>2026-09-23T00:00:00+00:00</lastmod>
+    <lastmod>2026-10-12T00:00:00+00:00</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
       <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/terms" />
