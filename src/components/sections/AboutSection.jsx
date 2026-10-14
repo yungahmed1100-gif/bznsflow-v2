@@ -1,6 +1,7 @@
 import React from 'react';
 import { Icon } from '../ui/Icon';
 import { waLink } from '../../lib/whatsapp';
+import teamImage from '../../assets/team-operations-meeting.webp';
 
 export function AboutSection({ t, CALENDAR_URL, trackEvent }) {
   return (
@@ -8,8 +9,8 @@ export function AboutSection({ t, CALENDAR_URL, trackEvent }) {
       <div className="container">
         <div className="about-wrapper">
           <div className="about-visual" data-reveal>
-            <figure className="about-art" aria-hidden="true">
-              <img src="/hero/flow-right.png" alt="" width={307} height={340} loading="lazy" decoding="async" />
+            <figure className="about-art">
+              <img src={teamImage} alt={t.about_team_alt} width={1536} height={1024} loading="lazy" decoding="async" />
             </figure>
             <div className="about-card-detail">
               <div className="detail-item">

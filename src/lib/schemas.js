@@ -123,8 +123,8 @@ export function buildSchemas(t, lang) {
     name: isAr ? 'أسيند' : 'Ascend',
     serviceType: isAr ? 'عمليات الأعمال حسب القطاع' : 'Sector-specific business operations',
     description: isAr
-      ? 'ليلى للاستفسارات، وحسيب لتتبّع العمل والتنبيهات والتذكيرات المفعّلة، وأديبة لصياغة العروض التي تحتاج موافقة صاحب العمل. الوصول يمنحه الفريق، والأتمتة تعتمد على القطاع والإعداد المتفق عليه.'
-      : 'Layla handles inquiries; Hasib tracks work, flags stalled steps and runs enabled automatic reminders; Adiba drafts offers requiring owner approval. Access is granted by the team. Automation depends on the sector and agreed setup.',
+      ? 'يشمل أسيند موقعاً مجانياً لجمع بيانات العملاء المحتملين كهدية، وليلى للاستفسارات، وحاسب لتتبّع العمل والتذكيرات المفعّلة، وأديبة للعروض التي تعتمدها. قريباً: راسل للنشرات والتسويق عبر البريد الإلكتروني للمشتركين والعملاء الموافقين، بحملات وسلاسل متابعة معتمدة. الوصول يمنحه الفريق، والأتمتة تعتمد على القطاع والإعداد المتفق عليه.'
+      : 'Ascend includes a free lead capture website as a gift, Layla for inquiries, Hasib for sector work and enabled reminders, and Adiba for owner-approved offers. Coming soon: Rasil for email newsletters and marketing to subscribers and consenting customers, using approved campaigns and follow-up sequences. Access is granted by the team. Automation depends on the sector and agreed setup.',
     provider: { '@id': `${SITE}/#organization` },
     areaServed: ['Oman', 'GCC'],
     url: `${urlFor('/', lang)}#tiers`,

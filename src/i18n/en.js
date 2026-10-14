@@ -45,6 +45,7 @@ export default {
   "tiers_sub": "Catalyst and Ascend are available today. Apex is in preparation, built around the next problem our clients name.",
   "about_title": "Built with you, <span class=\"mark\">run by us</span>",
   "about_location": "Oman first · across the GCC",
+  "about_team_alt": "Illustration of the BznsFlow team planning work together around a table",
   "about_role": "Done-for-you AI and automation",
   "about_founder_role": "Arabic & English, native",
   "about_p1": "BznsFlow builds and runs AI and automation for small and medium businesses in the GCC, starting in Oman. We start where inquiries arrive: WhatsApp and Instagram.",

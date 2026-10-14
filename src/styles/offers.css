@@ -24,6 +24,52 @@
 .pricing-card--soon .pricing-btn { margin-top: auto; }
 .pricing-card .pricing-btn { margin-top: 24px; }
 .pricing-card--popular .pricing-features { margin-bottom: 0; }
+.pricing-features .tier-gift { gap: var(--space-3); }
+.pricing-features .tier-gift > svg {
+  width: 28px;
+  height: 28px;
+  color: var(--orange-ink);
+}
+.tier-gift-copy { min-width: 0; }
+.tier-gift-badge {
+  display: inline-block;
+  padding: 4px var(--space-2);
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--yellow-tint);
+  color: var(--yellow-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.tier-gift-title {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+.pricing-features .tier-agent {
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.tier-agent-portrait {
+  width: var(--space-16);
+  height: var(--space-16);
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.tier-agent-copy { min-width: 0; }
+.tier-agent-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+.tier-agent-status {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
 .tiers-note {
   margin: 32px 0 0;
   padding-top: 16px;

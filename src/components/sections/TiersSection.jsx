@@ -2,6 +2,12 @@ import React from 'react';
 import { useAccount } from '../../hooks/useAccount';
 import { Icon } from '../ui/Icon';
 import { waLink } from '../../lib/whatsapp';
+import laylaPortrait from '../../assets/agents/layla.png';
+import hasibPortrait from '../../assets/agents/hasib.png';
+import adibaPortrait from '../../assets/agents/adiba.png';
+import rasilPortrait from '../../assets/agents/rasil.png';
+
+const agentPortraits = { layla: laylaPortrait, hasib: hasibPortrait, adiba: adibaPortrait, rasil: rasilPortrait };
 
 // The three plans without prices. Catalyst's CTA is the free audit (or setup, for granted accounts).
 // Ascend is available by Ahmed's grant only: a WhatsApp conversation, or the workspace for an account
@@ -46,7 +52,27 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
                 {tier.inside?.length > 0 && <>
                   <div className="tier-inside-label">{tier.insideLabel}</div>
                   <ul className="pricing-features">
-                    {tier.inside.map((f, i) => <li key={i}><Icon name="check" size={15} strokeWidth={2.5} /> <span>{f}</span></li>)}
+                    {tier.inside.map((feature, i) => {
+                      if (typeof feature === 'string') return <li key={i}><Icon name="check" size={15} strokeWidth={2.5} /> <span>{feature}</span></li>;
+                      if (feature.gift) return <li key="gift" className="tier-gift">
+                        <Icon name="gift" size={28} />
+                        <div className="tier-gift-copy">
+                          <span className="tier-gift-badge">{feature.label}</span>
+                          <strong className="tier-gift-title">{feature.title}</strong>
+                          <span>{feature.description}</span>
+                        </div>
+                      </li>;
+                      return <li key={feature.agent} className="tier-agent">
+                        <img className="tier-agent-portrait" src={agentPortraits[feature.agent]} alt="" width="64" height="64" loading="lazy" decoding="async" />
+                        <div className="tier-agent-copy">
+                          <div className="tier-agent-heading">
+                            <strong>{feature.name}</strong>
+                            {feature.status && <span className="tier-agent-status">{feature.status}</span>}
+                          </div>
+                          <span>{feature.description}</span>
+                        </div>
+                      </li>;
+                    })}
                   </ul>
                 </>}
 

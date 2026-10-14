@@ -1,11 +1,11 @@
 # BznsFlow
 
-> BznsFlow builds and operates AI and automation for small and medium businesses in Oman and across the GCC. Catalyst handles customer inquiries on WhatsApp and Instagram. Ascend adds sector operations and owner-approved offers. Arabic and English are supported. Scope, pricing and access are agreed with the team.
+> BznsFlow builds and operates AI and automation for small and medium businesses in Oman and across the GCC. Catalyst handles customer inquiries on WhatsApp and Instagram. Ascend adds a free lead capture website as a gift, sector operations and owner-approved offers. Rasil email newsletters and marketing are coming soon to Ascend. Arabic and English are supported. Scope, pricing and access are agreed with the team.
 
 ## Available services
 
 - **Catalyst — available:** Layla answers from approved business facts and catalog information, asks configured qualification questions, and records the conversation and customer details. The owner can take over. Catalyst does not promise automatic closing, bookings or payment collection.
-- **Ascend — available by owner-granted access:** Layla handles inquiries; Hasib tracks sector work, flags stalled steps and runs reminders configured as automatic; Adiba drafts quotes and offers for owner approval. Automation depends on the sector and agreed setup. Automatic Media reminders are available; this is not a claim that every sector has the same automation. There is no self-serve checkout.
+- **Ascend — available by owner-granted access:** Includes a free lead capture website as a gift to present services and collect customer inquiries, at no additional website charge within the package. Layla handles inquiries; Hasib tracks sector work, flags stalled steps and runs reminders configured as automatic; Adiba drafts quotes and offers for owner approval. **Rasil — coming soon:** email newsletters and marketing to subscribers and consenting customers, using owner-approved campaigns and follow-up sequences. Rasil is not yet an active feature; its delivery and activation will be agreed in writing. Automation depends on the sector and agreed setup. Automatic Media reminders are available; this is not a claim that every sector has the same automation. There is no self-serve checkout.
 - **Apex — in preparation:** payment portals and broader operational extensions are future capabilities, not included live functionality.
 
 Quotes and offers that require approval are not sent as approved prices until the owner approves them. Existing approved catalog prices may be used in configured workflows. Physical work status, such as repair diagnosis or readiness, must come from an authorised team update.
