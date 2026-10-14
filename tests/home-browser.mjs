@@ -46,6 +46,12 @@ try {
     assert.equal(await markColour('about'), 'rgb(92, 149, 198)'); count++;
     assert.equal(await page.locator('.tier-status.is-available').count(), 2, 'Catalyst and Ascend are available'); count++;
     assert.notEqual(await page.locator('[data-tier="catalyst"] .tier-status').evaluate(el => getComputedStyle(el).backgroundColor), await page.locator('[data-tier="apex"] .tier-status').evaluate(el => getComputedStyle(el).backgroundColor)); count++;
+    const teamImage = page.locator('.about-art img');
+    await teamImage.scrollIntoViewIfNeeded();
+    await teamImage.waitFor({ state: 'visible' });
+    assert.equal(await teamImage.evaluate(img => img.complete && img.naturalWidth > 0 && new URL(img.currentSrc).origin === location.origin), true, `${lang}: responsive team image loads locally`); count++;
+    const expectedFont = lang === 'ar' ? 'IBM Plex Sans Arabic' : 'Poppins';
+    assert.equal(await page.evaluate(font => document.fonts.check(`16px "${font}"`), expectedFont), true, `${lang}: local font is available`); count++;
     assert.deepEqual(await serious(page), [], `${lang} 1440 accessibility`); count++;
     assert.deepEqual(errors, []); count++;
     await context.close();

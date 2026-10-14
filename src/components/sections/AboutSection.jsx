@@ -1,7 +1,12 @@
 import React from 'react';
 import { Icon } from '../ui/Icon';
 import { waLink } from '../../lib/whatsapp';
-import teamImage from '../../assets/team-operations-meeting.webp';
+import teamImage480 from '../../assets/team-operations-meeting-480.webp';
+import teamImage960 from '../../assets/team-operations-meeting-960.webp';
+import teamImage1536 from '../../assets/team-operations-meeting.webp';
+import teamImageAvif480 from '../../assets/team-operations-meeting-480.avif';
+import teamImageAvif960 from '../../assets/team-operations-meeting-960.avif';
+import teamImageAvif1536 from '../../assets/team-operations-meeting-1536.avif';
 
 export function AboutSection({ t, CALENDAR_URL, trackEvent }) {
   return (
@@ -10,7 +15,26 @@ export function AboutSection({ t, CALENDAR_URL, trackEvent }) {
         <div className="about-wrapper">
           <div className="about-visual" data-reveal>
             <figure className="about-art">
-              <img src={teamImage} alt={t.about_team_alt} width={1536} height={1024} loading="lazy" decoding="async" />
+              <picture>
+                <source
+                  type="image/avif"
+                  srcSet={`${teamImageAvif480} 480w, ${teamImageAvif960} 960w, ${teamImageAvif1536} 1536w`}
+                  sizes="(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) calc(100vw - 80px), 560px"
+                />
+                <source
+                  type="image/webp"
+                  srcSet={`${teamImage480} 480w, ${teamImage960} 960w, ${teamImage1536} 1536w`}
+                  sizes="(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) calc(100vw - 80px), 560px"
+                />
+                <img
+                  src={teamImage1536}
+                  alt={t.about_team_alt}
+                  width={1536}
+                  height={1024}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
             </figure>
             <div className="about-card-detail">
               <div className="detail-item">

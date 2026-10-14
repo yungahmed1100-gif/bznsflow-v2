@@ -75,7 +75,10 @@ try {
       for (const width of [1440, 768, 320]) {
         for (const view of views) {
           const { page, context, problems } = await open(run.base, width, lang, `/layla/dashboard${PATH[view]}`);
-          await page.locator(READY[view]).first().waitFor();
+          await page.locator(READY[view]).first().waitFor().catch(async (error) => {
+            const visibleText = (await page.locator('body').innerText()).slice(0, 500);
+            throw new Error(`${who} ${view} ${lang} ${width}: view did not load; ${problems.join(' | ') || visibleText}; ${error.message}`);
+          });
           if (view === 'schedule' && width === 1440) {
             const nav = await sections(page);
             eq(nav, who === 'manager' ? TABS[lang] : TABS[lang].slice(0, 3), `${who} sees ${who === 'manager' ? 'the six tabs' : 'Chats, Visits and Patients'} in order, ${lang}`);

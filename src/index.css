@@ -13,6 +13,9 @@
    at the end unless you have checked the cascade.
    ============================================================ */
 
+/* Self-hosted font subsets must load before typography rules. */
+@import './styles/fonts.css';
+
 /* Design tokens, reset, typography, container, section rhythm, buttons */
 @import './styles/base.css';
 
