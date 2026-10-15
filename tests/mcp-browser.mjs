@@ -135,6 +135,92 @@ try {
       );
       assert.equal(await page.evaluate(() => typeof window.fbq), "undefined");
       checks++;
+      // Beginner setup works without exposing credentials or claiming connection success.
+      assert.equal(
+        await page
+          .locator('[role="tab"][aria-selected="true"]')
+          .getAttribute("id"),
+        "mcp-tab-claude",
+      );
+      await page.locator("#mcp-tab-claude").focus();
+      await page.keyboard.press("End");
+      assert.equal(
+        await page
+          .locator('[role="tab"][aria-selected="true"]')
+          .getAttribute("id"),
+        "mcp-tab-codex",
+      );
+      assert.ok(
+        (await page.getByRole("tabpanel").innerText()).includes(
+          "codex mcp login bznsflow",
+        ),
+      );
+      checks += 3;
+      for (const tab of ["claude", "claude-code", "codex"]) {
+        await page.locator("#mcp-tab-" + tab).click();
+        assert.equal(
+          await page
+            .getByRole("tabpanel")
+            .locator(".mcp-instructions > li")
+            .count(),
+          4,
+        );
+        assert.ok(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+          tab + " overflow",
+        );
+        checks += 2;
+      }
+      await page.keyboard.press("Home");
+      assert.equal(
+        await page
+          .locator('[role="tab"][aria-selected="true"]')
+          .getAttribute("id"),
+        "mcp-tab-claude",
+      );
+      await page.evaluate(() =>
+        Object.defineProperty(navigator, "clipboard", {
+          configurable: true,
+          value: {
+            writeText: async (value) => {
+              window.__copiedMcp = value;
+            },
+          },
+        }),
+      );
+      await page.locator(".mcp-command button").click();
+      assert.equal(
+        await page.evaluate(() => window.__copiedMcp),
+        BASE + "/api/mcp",
+      );
+      await page.locator(".mcp-art img").evaluate((img) => img.decode());
+      assert.ok(
+        await page
+          .locator(".mcp-art img")
+          .evaluate(
+            (img) =>
+              img.naturalWidth > 0 &&
+              new URL(img.currentSrc).origin === location.origin,
+          ),
+      );
+      for (const img of await page.locator(".mcp-client-tabs img").all()) {
+        await img.evaluate((el) => el.decode());
+        assert.ok(await img.evaluate((el) => el.naturalWidth > 0));
+      }
+      assert.ok(
+        await page.evaluate(
+          () =>
+            document.fonts.check('16px "IBM Plex Sans Arabic"') &&
+            document.fonts.check("16px Poppins"),
+        ),
+      );
+      checks += 7;
+      await page.screenshot({
+        path: OUT + "/" + lang + "-" + width + "-guide.png",
+        fullPage: true,
+      });
       signedIn = true;
       consent = true;
       await page.reload();
@@ -282,6 +368,23 @@ try {
       checks++;
       await ctx.close();
     }
+  for (const lang of ["ar", "en"]) {
+    const ctx = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width: 320, height: 900 },
+    });
+    const page = await ctx.newPage();
+    await page.goto(BASE + (lang === "ar" ? "/mcp" : "/en/mcp"));
+    assert.equal(await page.locator(".mcp-instructions > li").count(), 4);
+    assert.ok(await page.locator(".mcp-hero h1").isVisible());
+    assert.ok(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    );
+    checks += 3;
+    await ctx.close();
+  }
   // Static private shells contain neither customer details nor consent transactions.
   for (const path of ["mcp", "en/mcp"]) {
     const html = readFileSync(`dist/${path}/index.html`, "utf8");

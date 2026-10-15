@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import "../styles/mcp.css";
+import {
+  McpHero,
+  ConnectionGuide,
+  McpWalkthrough,
+  McpHelp,
+} from "../components/mcp/ConnectionGuide";
 const ENDPOINT = "https://www.bznsflowai.com/api/mcp";
 const AREAS = {
   conversations: ["Conversations and Layla", "المحادثات وليلى"],
@@ -10,6 +16,18 @@ const AREAS = {
   operations: ["Hasib and Adiba", "حاسب وأديبة"],
   team: ["Team", "الفريق"],
   files: ["File transfers", "نقل الملفات"],
+};
+const RESULT_LABELS = {
+  pending: ["Pending", "قيد التنفيذ"],
+  completed: ["Completed", "مكتمل"],
+  failed: ["Failed", "تعذّر التنفيذ"],
+  outcome_unknown: ["Outcome unknown", "النتيجة غير مؤكّدة"],
+  approval_required: ["Awaiting approval", "بانتظار الموافقة"],
+  approved: ["Approved", "تمت الموافقة"],
+  rejected: ["Rejected", "مرفوض"],
+  ready: ["Ready", "جاهز"],
+  cancelled: ["Cancelled", "ملغى"],
+  submitted: ["Submitted", "تم الإرسال إلى المزوّد"],
 };
 const CATEGORIES = {
   messages: ["Messages and campaigns", "الرسائل والحملات"],
@@ -337,18 +355,7 @@ export default function McpConnections({ lang = "ar" }) {
           </Link>
         </div>
       </nav>
-      <header className="mcp-hero">
-        <p className="mcp-eyebrow">
-          {tr("YOUR BUSINESS. YOUR ASSISTANT.", "نشاطك. مساعدك.")}
-        </p>
-        <h1>{tr("AI Connections", "اتصالات الذكاء الاصطناعي")}</h1>
-        <p>
-          {tr(
-            "Manage your business from Claude or Codex. Your BznsFlow account keeps you in control of access and important decisions.",
-            "أدر نشاطك من Claude أو Codex. يمنحك حساب BznsFlow التحكم في الوصول والقرارات المهمة.",
-          )}
-        </p>
-      </header>
+      <McpHero ar={ar} compact={!!consent || !!data?.approvals?.length} />
       <div role="status" aria-live="polite">
         {status}
         {copied && tr(`${copied} copied.`, `تم نسخ ${copied}.`)}
@@ -483,98 +490,8 @@ export default function McpConnections({ lang = "ar" }) {
           </div>
         </section>
       )}
-      <section aria-labelledby="mcp-connect">
-        <h2 id="mcp-connect">{tr("Connect your assistant", "اربط مساعدك")}</h2>
-        <div className="mcp-grid">
-          {[
-            [
-              "Claude",
-              tr(
-                "Add a custom web connector in Claude → Connectors, paste this URL, then sign in to BznsFlow.",
-                "أضف موصل ويب مخصصًا من Claude ← الموصلات، والصق الرابط ثم سجّل الدخول إلى BznsFlow.",
-              ),
-              endpoint,
-            ],
-            [
-              "Claude Code",
-              tr(
-                "Run this command, then use /mcp in Claude Code to authenticate.",
-                "نفّذ الأمر ثم استخدم ‎/mcp في Claude Code لتسجيل الدخول.",
-              ),
-              `claude mcp add --transport http --scope user bznsflow ${endpoint}`,
-            ],
-            [
-              "Codex",
-              tr(
-                "Add the server, then sign in through your browser.",
-                "أضف الخادم ثم سجّل الدخول عبر المتصفح.",
-              ),
-              `codex mcp add bznsflow --url ${endpoint}\ncodex mcp login bznsflow --scopes workspace:read,workspace:write`,
-            ],
-          ].map(([name, description, command]) => (
-            <article className="mcp-panel" key={name}>
-              <h3>{name}</h3>
-              <p>{description}</p>
-              <pre dir="ltr">
-                <code>{command}</code>
-              </pre>
-              <button
-                className="mcp-secondary"
-                onClick={() => copy(name, command)}
-              >
-                {tr("Copy", "نسخ")}
-              </button>
-            </article>
-          ))}
-        </div>
-      </section>
       {data && (
         <>
-          <section>
-            <h2>{tr("Your connections", "اتصالاتك")}</h2>
-            <p>
-              {tr("Workspace: ", "مساحة العمل: ")}
-              {data.workspace?.name || account?.email}
-            </p>
-            <p className="mcp-muted">
-              {tr(
-                "A connection is verified after your assistant successfully reaches BznsFlow.",
-                "يُؤكّد الاتصال بعد وصول مساعدك بنجاح إلى BznsFlow.",
-              )}
-            </p>
-            {!data.connections.length && (
-              <p className="mcp-panel">
-                {tr(
-                  "No assistants connected yet. Start with the instructions above.",
-                  "لم يُربط أي مساعد بعد. ابدأ بالتعليمات أعلاه.",
-                )}
-              </p>
-            )}
-            <div className="mcp-grid">
-              {data.connections.map((c) => (
-                <Connection
-                  key={`${c.id}-${c.version}`}
-                  connection={c}
-                  ar={ar}
-                  busy={busy}
-                  onSave={(connectionId, direct, write, areas) =>
-                    action({
-                      action: "policy",
-                      connectionId,
-                      direct,
-                      areas,
-                      scopes: write
-                        ? ["workspace:read", "workspace:write"]
-                        : ["workspace:read"],
-                    })
-                  }
-                  onRevoke={(connectionId) =>
-                    action({ action: "revoke", connectionId })
-                  }
-                />
-              ))}
-            </div>
-          </section>
           <section>
             <h2>{tr("Waiting for your approval", "بانتظار موافقتك")}</h2>
             {!data.approvals.length && (
@@ -642,6 +559,51 @@ export default function McpConnections({ lang = "ar" }) {
             ))}
           </section>
           <section>
+            <h2>{tr("Your connections", "اتصالاتك")}</h2>
+            <p>
+              {tr("Workspace: ", "مساحة العمل: ")}
+              {data.workspace?.name || account?.email}
+            </p>
+            <p className="mcp-muted">
+              {tr(
+                "A connection is verified after your assistant successfully reaches BznsFlow.",
+                "يُؤكّد الاتصال بعد وصول مساعدك بنجاح إلى BznsFlow.",
+              )}
+            </p>
+            {!data.connections.length && (
+              <p className="mcp-panel">
+                {tr(
+                  "No assistants connected yet. Follow the setup guide below.",
+                  "لم يُربط أي مساعد بعد. اتبع دليل الربط أدناه.",
+                )}
+              </p>
+            )}
+            <div className="mcp-grid">
+              {data.connections.map((c) => (
+                <Connection
+                  key={`${c.id}-${c.version}`}
+                  connection={c}
+                  ar={ar}
+                  busy={busy}
+                  onSave={(connectionId, direct, write, areas) =>
+                    action({
+                      action: "policy",
+                      connectionId,
+                      direct,
+                      areas,
+                      scopes: write
+                        ? ["workspace:read", "workspace:write"]
+                        : ["workspace:read"],
+                    })
+                  }
+                  onRevoke={(connectionId) =>
+                    action({ action: "revoke", connectionId })
+                  }
+                />
+              ))}
+            </div>
+          </section>
+          <section>
             <h2>{tr("Recent activity", "النشاط الأخير")}</h2>
             {!data.activity.length ? (
               <p>
@@ -655,7 +617,9 @@ export default function McpConnections({ lang = "ar" }) {
                 {data.activity.map((a) => (
                   <li key={a._id}>
                     <span dir="ltr">{a.tool}</span>
-                    <span>{a.status}</span>
+                    <span>
+                      {RESULT_LABELS[a.status]?.[ar ? 1 : 0] || a.status}
+                    </span>
                     <time>
                       {new Date(a.at).toLocaleString(ar ? "ar-OM" : "en-GB")}
                     </time>
@@ -666,11 +630,20 @@ export default function McpConnections({ lang = "ar" }) {
           </section>
         </>
       )}
+      <ConnectionGuide ar={ar} endpoint={endpoint} copy={copy} />
+      <McpWalkthrough ar={ar} />
+      <McpHelp ar={ar} />
       <footer className="mcp-footer">
         <p>
           {tr(
             "Your existing plan and business rules apply to every connected assistant.",
             "تسري باقتك الحالية وقواعد نشاطك على كل مساعد متصل.",
+          )}
+        </p>
+        <p>
+          {tr(
+            "Claude and Claude Code are Anthropic products. Codex is an OpenAI product. Their marks identify the connection options; no endorsement is implied.",
+            "Claude وClaude Code من منتجات Anthropic، وCodex من منتجات OpenAI. تُستخدم الشعارات للتعريف بخيارات الاتصال ولا تعني اعتمادًا من هذه الشركات.",
           )}
         </p>
         <Link to={`${prefix}/privacy`}>{tr("Privacy", "الخصوصية")}</Link>
