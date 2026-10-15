@@ -283,7 +283,7 @@ export function createBlueWorker({env=process.env,fetcher=fetch,store=messagingS
 // so the subscription proven at connect (checkedAt) is trusted for a day. Only a
 // stale proof costs one idempotent subscribe; the token check is a plain GET /me.
 const INSTAGRAM_TRANSIENT=['instagram_provider_unavailable','instagram_provider_failed','instagram_rate_limited'];
-async function verifyInstagram({sessionHash,env,fetcher,instagram,now=Date.now()}) {
+export async function verifyInstagram({sessionHash,env,fetcher,instagram,now=Date.now()}) {
   const connection=await instagram('context',{sessionHash});
   // A missing or stopped Instagram connection needs a reconnect; answers are a separate check.
   if(!connection || connection.status!=='connected') throw new PilotError('instagram_reconnect_required',409);

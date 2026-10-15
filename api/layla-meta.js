@@ -19,12 +19,14 @@ export function requestSurface(req) {
 // All active surfaces use authenticated Convex clients. Retired pilot routes
 // return 410 instead of falling back to another database.
 const INSTAGRAM_SURFACES = ['instagram', 'instagram-callback', 'instagram-deauthorize', 'instagram-delete', 'instagram-deletion-status'];
-export const SURFACES = ['dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', ...INSTAGRAM_SURFACES, 'customer-status', 'activation', 'test']; // activation and test are retired (410) but still rewritten
+export const SURFACES = ['mcp','dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', ...INSTAGRAM_SURFACES, 'customer-status', 'activation', 'test']; // activation and test are retired (410) but still rewritten
 
 export function createHandler({ env = process.env, fetcher = fetch, surfaces = {} } = {}) {
   const customer = createReviewHandler({ env, fetcher, reviewMode: false });
   const review = createReviewHandler({ env, fetcher, reviewMode: true });
+  let mcp;
   const handlers = {
+    mcp: async (req,res) => {mcp ||= (await import('./_lib/mcp/handler.js')).createMcpHandler({env});return mcp(req,res);},
     dashboard: createDashboardApi({ env, fetcher }),
     hasib: createHasibApi({ env, fetcher }),
     messaging: createMessagingApi({ env, fetcher }),

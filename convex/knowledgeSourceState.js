@@ -25,7 +25,12 @@ const draftSummary = d => ({ requestId: d.requestId, sourceKey: d.sourceKey, tit
 export async function executeKnowledge(ctx, a, now = Date.now()) {
   const session = await ctx.db.query('sessions').withIndex('by_token_hash', q => q.eq('tokenHash', a.tokenHash)).unique();
   if (!session || session.expiresAt <= now) return fail('sign_in_required');
-  const account = await ctx.db.get(session.accountId);
+  return executeKnowledgeForAccount(ctx,a,session.accountId,now);
+}
+
+// Shared use case; accountId is resolved by an authenticated server entry point.
+export async function executeKnowledgeForAccount(ctx,a,accountIdInput,now=Date.now()) {
+  const account = await ctx.db.get(accountIdInput);
   if (!account) return fail('sign_in_required');
   const membership = await ctx.db.query('ascendWorkspaceMembers').withIndex('by_account', q => q.eq('accountId', account._id)).unique();
   if (membership?.status === 'active') return fail('manager_required');

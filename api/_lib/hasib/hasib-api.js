@@ -29,7 +29,9 @@ export async function sendTeamInvitation({ member, env, fetcher = fetch }) {
     Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'Idempotency-Key': `ascend-invite/${member.id}/${member.resentAt || member.invitedAt}`,
   }, body: JSON.stringify({ from, to: [member.email], subject: 'You have been invited to join a BznsFlow team',
     text: `You have been invited to join your team's BznsFlow dashboard. Sign in with this email at ${appUrl('/en/layla/dashboard',env)} — your invitation activates only after the email-code sign-in is verified.\n\nتمت دعوتك للانضمام إلى لوحة فريقك على BznsFlow. سجّل الدخول بهذا البريد عبر ${appUrl('/layla/dashboard',env)}، ولن تتفعّل الدعوة إلا بعد التحقق من رمز البريد.` }) });
-  if (!response.ok || typeof (await response.json())?.id !== 'string') throw new PilotError('invite_send_failed', 502);
+  const receipt = await response.json();
+  if (!response.ok || typeof receipt?.id !== 'string') throw new PilotError('invite_send_failed', 502);
+  return { providerId: receipt.id, status: 'submitted' };
 }
 
 export function createHasibApi({ env = process.env, fetcher = fetch, accounts = blueAuthStore({ env, fetcher }), store = hasibStore({ env, fetcher }) } = {}) {

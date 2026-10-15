@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "react-router dev",
     "dev:api": "vercel dev",
-    "prebuild": "node scripts/gen-kb.mjs --check && npm run gen:sitemap",
+    "prebuild": "node scripts/gen-mcp-contracts.mjs --check && node scripts/gen-kb.mjs --check && npm run gen:sitemap",
     "build": "react-router build && node scripts/copy-static-build.mjs",
     "preview": "node scripts/preview.mjs",
     "test": "node tests/api-chat.test.mjs && node tests/cookies.test.mjs && node tests/auth.test.mjs && node tests/oauth.test.mjs && node tests/lead.test.mjs && node tests/contracts.test.mjs && node --test tests/green-config.test.mjs tests/green-cutover.test.mjs tests/green-whatsapp.test.mjs tests/global-reliability.test.mjs && npm run test:layla && npm run test:access",
@@ -31,23 +31,28 @@
     "preview:product": "node scripts/product-preview.mjs",
     "diagnose:global": "node scripts/check-global-reachability.mjs",
     "monitoring:test": "checkly test",
-    "monitoring:deploy": "checkly deploy"
+    "monitoring:deploy": "checkly deploy",
+    "gen:mcp": "node scripts/gen-mcp-contracts.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
     "@react-router/node": "7.18.4",
     "@vercel/functions": "3.9.7",
     "@vercel/speed-insights": "^2.0.0",
+    "ajv": "8.20.0",
     "convex": "^1.45.0",
     "exceljs": "^4.4.0",
     "isbot": "^5",
     "jszip": "^3.10.2",
     "mammoth": "^1.13.0",
+    "oidc-provider": "9.12.2",
     "pdfjs-dist": "^6.3.289",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "7.18.4",
     "react-router-dom": "7.18.4",
-    "tesseract.js": "^7.0.0"
+    "tesseract.js": "^7.0.0",
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",

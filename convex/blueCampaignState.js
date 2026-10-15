@@ -1,3 +1,4 @@
+import { mcpEffectAllowed } from './mcp/access.js';
 import { rolloutAllows } from './greenRollout.js';
 import { SECTOR_DRAFT_FIELDS } from './hasib/workspace/sectors.js';
 // Broadcast campaigns: approved marketing templates sent to consented contacts.
@@ -174,6 +175,7 @@ async function accountRow(ctx, accountId, integrationId) {
   return row?.integration?.id === integrationId ? row : null;
 }
 async function jobBlockReason(ctx, job, campaign, now) {
+  if(!await mcpEffectAllowed(ctx,campaign,now))return 'mcp_connection_revoked';
   const global = await ctx.db.query('blueMessagingSettings').withIndex('by_key', q => q.eq('key', 'global')).unique();
   if (!rolloutAllows(global,job.accountId,job.waId,now)) return 'rollout_restricted';
   if (!campaign || campaign.status !== 'processing') return 'campaign_not_processing';
@@ -192,12 +194,14 @@ export async function executeCampaignWorker(ctx, a, now = Date.now()) {
   if (a.operation === 'start_context') {
     const campaign = await ctx.db.get(a.campaignId);
     if (!campaign || campaign.status !== 'starting') return ok(null);
+    if(!await mcpEffectAllowed(ctx,campaign,now)){await blockCampaign(ctx,campaign,'mcp_connection_revoked',now);return ok(null);}
     const row = await accountRow(ctx, campaign.accountId, campaign.integrationId);
     return ok(row && messagingReady(row, now) ? { campaignId: campaign._id, template: campaign.template, integration: row.integration, sessionHash: row.sessionHash } : { campaignId: campaign._id, blocked: 'connection_not_ready' });
   }
   if (a.operation === 'start_result') {
     const campaign = await ctx.db.get(a.campaignId);
     if (!campaign || campaign.status !== 'starting') return ok(null);
+    if(!await mcpEffectAllowed(ctx,campaign,now)){await blockCampaign(ctx,campaign,'mcp_connection_revoked',now);return ok(null);}
     if (!await broadcastEnabled(ctx)) { await blockCampaign(ctx, campaign, 'broadcast_paused', now); return ok(null); }
     if (a.ready !== true) { await blockCampaign(ctx, campaign, typeof a.reason === 'string' ? a.reason.slice(0, 60) : 'start_checks_failed', now); return ok(null); }
     const allowance = Math.max(0, Number(a.allowance) || 0);

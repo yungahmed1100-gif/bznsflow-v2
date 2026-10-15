@@ -18,6 +18,7 @@ export function routeSeo(pathname) {
   const legal = { '/refund': REFUND, '/privacy': PRIVACY, '/terms': TERMS, '/data-deletion': DATA_DELETION }[path]?.[lang];
   if (legal) return { ...base, title: `${legal.title} — BznsFlow`, description: legal.lead.slice(0, 155) };
   if (path === '/playbook') return { ...base, title: `${t.playbook_title.replace(/<[^>]*>/g, '')} — BznsFlow`, description: t.playbook_solution };
+  if (path === '/mcp') return { ...base, title: `${lang === 'ar' ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections'} | BznsFlow`, description: 'Connect your AI assistant to your BznsFlow account', noindex: true };
   if (path === '/signin') return { ...base, title: t.auth_seo_title, description: t.auth_seo_desc, noindex: true };
   return { ...base, title: `${path.startsWith('/owner') ? (lang === 'ar' ? 'لوحة الإدارة' : 'Admin dashboard') : 'Layla'} | BznsFlow`, description: 'Private BznsFlow workspace', noindex: true };
 }

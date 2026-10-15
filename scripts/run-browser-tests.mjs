@@ -10,6 +10,7 @@ const PORT = 5199;
 const BASE = `http://127.0.0.1:${PORT}`;
 const SUITES = [
   'tests/auth-browser.mjs',
+  'tests/mcp-browser.mjs',
   'tests/owner-browser.mjs',
   'tests/review-onboarding-browser.mjs',
   'tests/whatsapp-connect-browser.mjs',

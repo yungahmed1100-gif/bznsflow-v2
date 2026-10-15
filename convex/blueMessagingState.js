@@ -1,3 +1,4 @@
+import { mcpEffectAllowed } from './mcp/access.js';
 import { adibaTurn } from './hasib/adibaTurn.js';
 import { recordOutcome } from './laylaOutcomes.js';
 import { rolloutAllows } from './greenRollout.js';
@@ -437,6 +438,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
   if(a.operation==='claim') {
     const job=await ctx.db.get(a.jobId);
     if(!job || job.status!=='queued') return ok(null);
+    if(!await mcpEffectAllowed(ctx,job,now)){await ctx.db.patch(job._id,{status:'blocked',reason:'mcp_connection_revoked'});return ok(null);}
     const inflight=await ctx.db.query('blueMessages').withIndex('by_integration_status',q=>q.eq('integrationId',job.integrationId).eq('status','attempting')).take(1);
     if(inflight.length) return ok(null);
     const control=await controls(job.integrationId), row=await rowForJob(job,control), person=await ctx.db.get(job.conversationId);
@@ -463,6 +465,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     return ok({jobId:job._id,intent:a.intent,number:person.number,text:job.text,integration:row.integration,sessionHash:row.sessionHash,profileVersion:row.profileVersion || 1,...(imageUrl?{imageUrl}:{})});
   }
   if(a.operation==='send_gate') {
+    if(!await mcpEffectAllowed(ctx,await ctx.db.get(a.jobId),now))return ok(false);
     const job=await ctx.db.get(a.jobId), control=job && await controls(job.integrationId), row=await rowForJob(job,control), person=job && await ctx.db.get(job.conversationId);
     return ok(!!(job?.status==='attempting' && job.intent===a.intent && (job.manual || job.profileVersion===(row?.profileVersion || 1)) && job.conversationVersion===(person?.version || 0) && rolloutAllows(global,job.accountId,person?.number,now) && ready(row) && (control?.active || job.manual) && !person?.optout && (!person?.takeover || job.manual || job.handoff) && now-person.lastInbound<DAY));
   }

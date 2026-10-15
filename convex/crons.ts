@@ -8,4 +8,5 @@ crons.interval('expire blue auth codes', {minutes: 15}, internal.blueAuth.cleanu
 crons.interval('maintain Instagram connections', {minutes:15}, internal.blueInstagram.maintain);
 crons.interval('remove unused Hasib photo uploads', {hours:1}, internal.blueHasib.sweepPhotos);
 crons.interval('run Hasib automation', {minutes:5}, internal.blueHasib.automationSweep);
+crons.interval('expire MCP authorization and activity', {minutes:15}, (internal as any).mcp.cleanup);
 export default crons;

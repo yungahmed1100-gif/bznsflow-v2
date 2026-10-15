@@ -111,6 +111,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
 
       <a className="ld-skip" href="#ld-main">{s.ar ? 'تخطَّ إلى المحتوى' : 'Skip to content'}</a>
       <header className="ld-top">
+        {!previewIndustry && <a href={lang === 'ar' ? '/mcp' : '/en/mcp'}>{s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections'}</a>}
         <a className="ld-brand" href={setupPath(lang)} aria-label="BznsFlow"><img src={logoImg} alt="" width="32" height="32" /><span>BznsFlow</span></a>
         {data && !previewIndustry && <DashboardHeader s={s} data={data} onChange={() => overview.refresh({ quiet: true })} onOpenChannels={() => go('settings', { view: 'channels' })} />}
         {account?.email?.trim().toLowerCase() === 'ahmed@bznsflowai.com' && <a className="ld-button ld-owner-access" href={s.ar ? '/owner' : '/en/owner'}>{s.ar ? 'لوحة الإدارة' : 'Admin dashboard'}</a>}

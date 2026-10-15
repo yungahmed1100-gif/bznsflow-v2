@@ -231,6 +231,15 @@ SHAPES.settings_update = b => ({ ...baseSettings(b), ...Object.fromEntries(Objec
 
 export const HASIB_ACTIONS = Object.keys(SHAPES);
 
+// Used by the MCP contract generator: read the same top-level allowlist as the HTTP API.
+export function hasibInputFields(action) {
+  if (action === 'overview') return [];
+  if (!SHAPES[action]) throw new Error('unknown_hasib_action');
+  const fields = new Set();
+  SHAPES[action](new Proxy({}, { get: (_, key) => { fields.add(key); return undefined; } }));
+  return [...fields].filter(key => typeof key === 'string');
+}
+
 export function hasibArgs(action, body) {
   const shape = SHAPES[action];
   if (!shape) throw new PilotError('invalid_action');

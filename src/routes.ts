@@ -1,5 +1,7 @@
 import type { RouteConfig } from "@react-router/dev/routes";
 export default [
+  { path: "mcp", file: "route-modules/mcp.jsx" },
+  { path: "en/mcp", file: "route-modules/en-mcp.jsx" },
   { file: "route-modules/contact.jsx", path: "contact" },
   { file: "route-modules/en-contact.jsx", path: "en/contact" },
   { file: "route-modules/services.jsx", path: "services" },
