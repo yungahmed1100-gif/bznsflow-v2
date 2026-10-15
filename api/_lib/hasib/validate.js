@@ -2,7 +2,7 @@ import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERAT
 // Per-action argument allow-lists for the Hasib API. Unknown keys are dropped,
 // strings are length-bounded, numbers must already be integers (money is sent
 // in minor units and never coerced from a string). Convex re-validates all of it.
-import { PilotError } from '../layla/config.js';
+import { PilotError } from '../layla/error.js';
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/, UUID = /^[a-f0-9-]{36}$/;
 const id = v => typeof v === 'string' && ID.test(v) ? v : undefined;

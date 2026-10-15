@@ -1,11 +1,10 @@
 import { createHash } from 'node:crypto';
+import { PilotError } from './error.js';
+export { PilotError } from './error.js';
 
 // Server-only general automation lock. The separately authorized open-test
 // transport has its own owner confirmation, environment gate and hard budget.
 export const LIVE_RELEASE_ENABLED = false;
-export class PilotError extends Error {
-  constructor(code, status = 400) { super(code); this.code = code; this.status = status; }
-}
 export function settings(env = process.env) {
   const mode = env.LAYLA_META_MODE || 'mock';
   if (!['mock', 'live'].includes(mode)) throw new PilotError('invalid_mode', 503);
