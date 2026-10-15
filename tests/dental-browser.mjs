@@ -108,6 +108,12 @@ try {
   {
     const { page, context, problems } = await open(manager.base, 1440, 'en', '/layla/dashboard?tab=work&view=followups&filter=today');
     await page.locator(READY.followups).waitFor();
+    // A recent seeded request can fall on yesterday when this suite runs near midnight.
+    const todayRequests = value(await api(page, manager.base, 'dental_followups', { filter: 'today' })).items;
+    if (!todayRequests.some(row => row.kind === 'visit_request')) {
+      await page.goto(`${manager.base}/en/layla/dashboard?tab=work&view=followups&filter=overdue`);
+      await page.locator(READY.followups).waitFor();
+    }
     const request = page.locator('.hb-followups > li[data-kind="visit_request"]').first();
     await request.waitFor();
     const name = (await request.locator('bdi').first().innerText()).trim();

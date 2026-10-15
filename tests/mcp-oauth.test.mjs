@@ -81,6 +81,39 @@ function durableStore() {
     },
   };
 }
+test("native OAuth redirects allow only the loopback port to vary", () => {
+  const provider = createOAuth({
+    env: {
+      NODE_ENV: "test",
+      PUBLIC_SITE_ORIGIN: "http://127.0.0.1:1234",
+      MCP_COOKIE_KEYS: "k".repeat(48),
+      MCP_OAUTH_ENCRYPTION_KEY: "a".repeat(64),
+    },
+    store: durableStore().call,
+  });
+  const client = new provider.Client({
+    client_id: "native-test",
+    token_endpoint_auth_method: "none",
+    grant_types: ["authorization_code", "refresh_token"],
+    response_types: ["code"],
+    redirect_uris: [
+      "http://localhost/callback",
+      "http://127.0.0.1/callback",
+      "https://example.com/callback",
+    ],
+  });
+  assert.ok(client.redirectUriAllowed("http://localhost:51872/callback"));
+  assert.ok(client.redirectUriAllowed("http://127.0.0.1:3333/callback"));
+  assert.ok(client.redirectUriAllowed("https://example.com/callback"));
+  for (const uri of [
+    "http://localhost.evil.example/callback",
+    "http://localhost:51872/other",
+    "http://localhost:51872/callback?next=evil",
+    "https://example.com:8443/callback",
+    "https://example.com/other",
+  ])
+    assert.equal(client.redirectUriAllowed(uri), false, uri);
+});
 test("OAuth adapter encrypts and authenticates payloads, hashes identifiers and atomically consumes codes", async () => {
   const store = durableStore(),
     Adapter = oauthAdapter(store.call, "a".repeat(64)),

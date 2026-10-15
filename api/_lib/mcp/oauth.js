@@ -235,6 +235,9 @@ export function createOAuth({
       },
     },
     clientDefaults: {
+      // OAuth CIMD clients omit OIDC's application_type. Native defaults permit
+      // ephemeral loopback ports (RFC 8252) while HTTPS redirects remain exact.
+      application_type: "native",
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       token_endpoint_auth_method: "none",
