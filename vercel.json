@@ -9,9 +9,6 @@
     "api/chat.js": {
       "maxDuration": 30
     },
-    "api/keepalive.js": {
-      "maxDuration": 10
-    },
     "api/auth-code.js": {
       "maxDuration": 30
     },
@@ -35,9 +32,6 @@
     },
     "api/layla-meta-worker.js": {
       "maxDuration": 60
-    },
-    "api/layla-meta-readiness.js": {
-      "maxDuration": 30
     }
   },
   "regions": [
@@ -67,14 +61,6 @@
     {
       "source": "/.well-known/oauth-authorization-server/oauth",
       "destination": "/api/layla-meta?surface=mcp&mcpRoute=/.well-known/oauth-authorization-server"
-    },
-    {
-      "source": "/api/layla-meta-activation",
-      "destination": "/api/layla-meta?surface=activation"
-    },
-    {
-      "source": "/api/layla-meta-test",
-      "destination": "/api/layla-meta?surface=test"
     },
     {
       "source": "/api/product-setup",
@@ -114,6 +100,16 @@
     {
       "source": "/ar/:path*",
       "destination": "/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/owner/layla",
+      "destination": "/owner",
+      "permanent": true
+    },
+    {
+      "source": "/en/owner/layla",
+      "destination": "/en/owner",
       "permanent": true
     }
   ],

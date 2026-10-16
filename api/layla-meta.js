@@ -19,7 +19,7 @@ export function requestSurface(req) {
 // All active surfaces use authenticated Convex clients. Retired pilot routes
 // return 410 instead of falling back to another database.
 const INSTAGRAM_SURFACES = ['instagram', 'instagram-callback', 'instagram-deauthorize', 'instagram-delete', 'instagram-deletion-status'];
-export const SURFACES = ['mcp','dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', ...INSTAGRAM_SURFACES, 'customer-status', 'activation', 'test']; // activation and test are retired (410) but still rewritten
+export const SURFACES = ['mcp','dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', ...INSTAGRAM_SURFACES, 'customer-status']; // retired pilot surfaces (activation, test, open, eligibility) fall through to 410
 
 export function createHandler({ env = process.env, fetcher = fetch, surfaces = {} } = {}) {
   const customer = createReviewHandler({ env, fetcher, reviewMode: false });

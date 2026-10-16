@@ -22,10 +22,6 @@ export default [
     "path": "en"
   },
   {
-    "file": "route-modules/owner-layla.jsx",
-    "path": "owner/layla"
-  },
-  {
     "file": "route-modules/owner.jsx",
     "path": "owner"
   },

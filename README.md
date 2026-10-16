@@ -20,7 +20,6 @@
 │   ├── auth-code.js      send a sign-in code   → Apps Script
 │   ├── auth-session.js   verify / profile / sign out
 │   ├── lead.js           playbook capture      → Apps Script
-│   ├── keepalive.js      daily cron, stops Supabase pausing
 │   └── _lib/             shared: db, auth, cookies, guard, http, fetch, llm
 ├── apps-script/          Code.gs — the Sheet-bound web app (deploys separately)
 ├── web-chatbot/          SETUP.md runbook + SQL migrations
@@ -100,7 +99,7 @@ All rights reserved © BznsFlow
 
 ## Layla official Meta Cloud API pilot
 
-Owner-only mock pilot: `/owner/layla`. The dedicated BznsFlow number is configured directly in Meta Cloud API; customer Coexistence through Embedded Signup remains a separate post-App-Review phase. Read [engineering pack](docs/layla-meta-engineering.md) before changing it. Setup, tests and release blockers are saved at `Desktop/Layla-Meta-Handoff`. Live sending remains source-locked. Existing login and registration remain the identity authority.
+The owner-only mock pilot at `/owner/layla` is retired; the path redirects to `/owner`. The dedicated BznsFlow number is configured directly in Meta Cloud API; customer Coexistence through Embedded Signup remains a separate post-App-Review phase. Read [engineering pack](docs/layla-meta-engineering.md) before changing it. Setup, tests and release blockers are saved at `Desktop/Layla-Meta-Handoff`. Live sending remains source-locked. Existing login and registration remain the identity authority.
 
 ## Release verification
 
