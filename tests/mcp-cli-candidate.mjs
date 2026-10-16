@@ -5,12 +5,31 @@ import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { stripVTControlCharacters } from "node:util";
+import { randomUUID } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import { chromium } from "playwright";
 const origin = "https://bznsflow-mcp-acceptance.vercel.app";
 const sessions = JSON.parse(
   readFileSync(process.env.MCP_ACCEPTANCE_SESSION_FILE, "utf8"),
 );
+if (process.env.MCP_ACCEPTANCE_MODEL_TEST === "true") {
+  const refreshed = spawnSync(
+    "npx",
+    [
+      "convex",
+      "run",
+      "--deployment",
+      "quaint-monitor-641",
+      "mcpAcceptance:fixture",
+      JSON.stringify({
+        operation: "refresh_session",
+        input: { sessionId: sessions.seeded.owner.sessionId },
+      }),
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(refreshed.status, 0, "Synthetic session refresh failed");
+}
 const config = `mcp_servers.bznsflow_acceptance.url="${origin}/api/mcp"`;
 const cli = process.argv[2] || "codex";
 assert.ok(["codex", "claude"].includes(cli));
@@ -177,6 +196,177 @@ try {
   console.log(
     `Installed ${cli} OAuth login passed against HTTPS candidate with real Arabic consent UI. Synthetic seeded account session; no OTP/social sign-in or model tool calls claimed.`,
   );
+  if (process.env.MCP_ACCEPTANCE_MODEL_TEST === "true") {
+    const toolCwd = mkdtempSync(join(tmpdir(), "bznsflow-mcp-model-"));
+    const configPath = join(toolCwd, "mcp.json");
+    writeFileSync(
+      configPath,
+      JSON.stringify({
+        mcpServers: {
+          bznsflow_acceptance: { type: "http", url: origin + "/api/mcp" },
+        },
+      }),
+      { mode: 0o600 },
+    );
+    const modelRun = async (prompt, stage) => {
+      const args =
+        cli === "codex"
+          ? [
+              "exec",
+              "--json",
+              "--ephemeral",
+              "--skip-git-repo-check",
+              "--sandbox",
+              "read-only",
+              "-c",
+              "mcp_servers={}",
+              "-c",
+              config,
+              prompt,
+            ]
+          : [
+              "-p",
+              prompt,
+              "--output-format",
+              "json",
+              "--strict-mcp-config",
+              "--mcp-config",
+              configPath,
+              "--tools",
+              "",
+              "--allowedTools",
+              "mcp__bznsflow_acceptance__*",
+              "--max-budget-usd",
+              "1",
+            ];
+      const proc = spawn(cli, args, {
+        cwd: toolCwd,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let text = "";
+      for (const stream of [proc.stdout, proc.stderr])
+        stream.on("data", (b) => {
+          text += b.toString();
+        });
+      const deadline = setTimeout(() => proc.kill(), 180000);
+      const code = await new Promise((resolve) => proc.on("exit", resolve));
+      clearTimeout(deadline);
+      writeFileSync(
+        join(tmpdir(), "bznsflow-mcp-" + cli + "-" + stage + ".log"),
+        text,
+        { mode: 0o600 },
+      );
+      assert.equal(code, 0, cli + " model stage failed: " + stage);
+      console.log(cli + " model stage returned: " + stage);
+    };
+    const list = async () => {
+      const r = await context.request.get(origin + "/api/mcp/manage");
+      assert.equal(r.status(), 200);
+      return r.json();
+    };
+    try {
+      const mutationId = randomUUID(),
+        exportId = randomUUID();
+      await modelRun(
+        'This is a synthetic MCP acceptance test. Use only the bznsflow_acceptance MCP server; do not use shell, files, other servers or external sends. Call bznsflow_business_state. Then call bznsflow_dashboard_set_timezone with requestId "' +
+          mutationId +
+          '" and timezone "Asia/Muscat". Then call bznsflow_dashboard_export_contacts with requestId "' +
+          exportId +
+          '". Stop when approval is required; do not approve it yourself. Reply in Arabic and distinguish completed changes from pending approval.',
+        "ar-read-write-preview",
+      );
+      let data = await list();
+      const connection = data.connections.find(
+        (c) =>
+          c.clientId === authParams.get("client_id") &&
+          !c.revokedAt &&
+          c.verifiedAt,
+      );
+      assert.ok(connection, "client did not make a verified MCP connection");
+      assert.ok(
+        data.activity.some(
+          (a) =>
+            a.tool === "bznsflow_dashboard_set_timezone" &&
+            a.status === "completed" &&
+            a.connectionId === connection.id,
+        ),
+        "actual client write missing",
+      );
+      const approval = data.approvals.find(
+        (a) =>
+          a.connectionId === connection.id && a.args?.requestId === exportId,
+      );
+      assert.ok(approval, "actual client approval preview missing");
+      await page.goto(origin + "/en/mcp");
+      const card = page.locator('[id="approval-' + approval.id + '"]');
+      await card
+        .getByRole("button", { name: "Approve this action", exact: true })
+        .click();
+      await card.waitFor({ state: "detached" });
+      await modelRun(
+        'Use only bznsflow_acceptance. Call bznsflow_dashboard_export_contacts with requestId "' +
+          exportId +
+          '" again. Its exact preview was approved on the website. Report the returned completion status in English; do not send any messages or use other tools.',
+        "en-approved-write",
+      );
+      data = await list();
+      assert.ok(
+        data.activity.some(
+          (a) =>
+            a.tool === "bznsflow_dashboard_export_contacts" &&
+            a.status === "completed" &&
+            a.connectionId === connection.id,
+        ),
+        "approved client execution missing",
+      );
+      const expire = spawnSync(
+        "npx",
+        [
+          "convex",
+          "run",
+          "--deployment",
+          "quaint-monitor-641",
+          "mcpAcceptance:fixture",
+          JSON.stringify({ operation: "expire_access_tokens", input: {} }),
+        ],
+        { cwd: process.cwd(), encoding: "utf8" },
+      );
+      assert.equal(expire.status, 0, "could not expire synthetic access token");
+      await modelRun(
+        "Use only bznsflow_acceptance. Call bznsflow_business_state and return a brief summary in English. Do not modify anything. The server may require automatic OAuth refresh; use existing authorization.",
+        "automatic-refresh",
+      );
+      const refreshed = await list();
+      assert.ok(
+        refreshed.activity.some(
+          (a) =>
+            a.tool === "bznsflow_business_state" &&
+            a.status === "completed" &&
+            a.connectionId === connection.id &&
+            a.at >
+              data.connections.find((c) => c.id === connection.id).lastUsedAt,
+        ),
+        "client read after forced token expiry missing",
+      );
+      await page.reload();
+      const connectionCard = page.locator("article").filter({
+        has: page.locator(".mcp-client-id", { hasText: connection.clientId }),
+      });
+      await connectionCard
+        .getByRole("button", { name: "Disconnect", exact: true })
+        .click();
+      assert.ok(
+        (await list()).connections.find((c) => c.id === connection.id)
+          .revokedAt,
+      );
+      console.log(
+        cli +
+          " real model acceptance passed: Arabic read/write/preview, English website-approved export, forced-expiry automatic refresh, website disconnection.",
+      );
+    } finally {
+      rmSync(toolCwd, { recursive: true, force: true });
+    }
+  }
 } finally {
   clearTimeout(timer);
   child.kill();

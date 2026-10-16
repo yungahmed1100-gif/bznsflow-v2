@@ -172,15 +172,19 @@ equal(
   "completed",
 );
 await sdk.close();
+// Codex's actual refresh shape: its default scope set includes `openid`.
 const refresh = await token({
   grant_type: "refresh_token",
   refresh_token: tokens.refresh_token,
   resource,
+  scope: "openid workspace:read workspace:write",
 });
 assert.equal(refresh.status, 200, await refresh.clone().text());
 checks++;
 const rotated = await refresh.json();
 assert.notEqual(rotated.refresh_token, tokens.refresh_token);
+checks++;
+equal(rotated.scope, "workspace:read workspace:write");
 checks++;
 const rpc = (access) =>
   request("/api/mcp", {

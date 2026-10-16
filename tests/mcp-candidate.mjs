@@ -53,8 +53,11 @@ const cookies =
 const hashes = Object.fromEntries(
   Object.entries(cookies).map(([k, v]) => [`${k}Hash`, hash(v)]),
 );
-const seeded = previous?.seeded || cli("seed", hashes);
-cli("refresh_session", { sessionId: seeded.owner.sessionId });
+const seeded =
+  previous?.seeded ||
+  cli(process.env.MCP_ACCEPTANCE_REBIND === "true" ? "rebind" : "seed", hashes);
+for (const actor of Object.values(seeded))
+  cli("refresh_session", { sessionId: actor.sessionId });
 if (process.env.MCP_ACCEPTANCE_SESSION_FILE)
   writeFileSync(
     process.env.MCP_ACCEPTANCE_SESSION_FILE,
@@ -78,6 +81,17 @@ const connect = () =>
     clientName: "Synthetic acceptance",
     scopes: ["workspace:read", "workspace:write"],
   });
+const existing = await store("manage", {
+  operation: "list",
+  tokenHash: hashes.ownerHash,
+});
+for (const c of existing.connections)
+  if (!c.revokedAt)
+    await store("manage", {
+      operation: "revoke",
+      tokenHash: hashes.ownerHash,
+      connectionId: c.id,
+    });
 const c = await connect();
 const call = async (tool, args = {}) => {
   const p = await store("prepare", { connectionId: c.id, tool, args });
@@ -133,7 +147,7 @@ await rejects(
 );
 const args = {
   requestId: randomUUID(),
-  content: "phone,name,country\n+96891234567,Synthetic,OM",
+  content: "phone,name,country\n+96891234568,أحمد Ahmed,OM",
 };
 const upload = await call("bznsflow_files_upload_contacts", args);
 equal(upload.status, "completed");
@@ -151,7 +165,16 @@ await rejects(
   }),
   /approval_required/,
 );
-await approve(pending.runId);
+const approvals = await Promise.allSettled(
+  Array.from({ length: 4 }, () => approve(pending.runId)),
+);
+equal(approvals.filter((x) => x.status === "fulfilled").length, 1);
+equal(
+  approvals.filter(
+    (x) => x.status === "rejected" && /approval_expired/.test(x.reason.message),
+  ).length,
+  3,
+);
 const imported = await Promise.all(
   Array.from({ length: 4 }, () =>
     call("bznsflow_files_import_contacts", importedArgs),
@@ -163,14 +186,34 @@ equal(
 );
 const exportArgs = { requestId: randomUUID() };
 const exported = await call("bznsflow_dashboard_export_contacts", exportArgs);
-equal(exported.preview.exportRecords, 1);
+equal(exported.preview.exportRecords >= 2, true);
 await approve(exported.runId);
 const file = await call("bznsflow_dashboard_export_contacts", exportArgs);
 equal(
   (await call("bznsflow_files_read", { transferId: file.result.transferId }))
     .result.data.items.length,
+  exported.preview.exportRecords,
+);
+const exportedData = await call("bznsflow_files_read", {
+  transferId: file.result.transferId,
+});
+equal(
+  exportedData.result.data.items.filter((x) => x.name === "أحمد Ahmed").length,
   1,
 );
+const racedArgs = { requestId: randomUUID() };
+const raced = await call("bznsflow_dashboard_export_contacts", racedArgs);
+const race = await Promise.allSettled([
+  approve(raced.runId),
+  call("bznsflow_dashboard_export_contacts", racedArgs),
+]);
+equal(race[0].status, "fulfilled");
+const finishedRace = await call(
+  "bznsflow_dashboard_export_contacts",
+  racedArgs,
+);
+equal(finishedRace.status, "completed");
+equal(finishedRace.runId, raced.runId);
 const stale = await call("bznsflow_dashboard_export_contacts", {
   requestId: randomUUID(),
 });
@@ -190,6 +233,50 @@ equal(leases.filter((x) => x.status === "rejected").length, 4);
 for (const [i, x] of leases.entries())
   if (x.status === "fulfilled")
     await store("release", { connectionId: c.id, lease: leaseIds[i] });
+const connectionKey = "connection:" + c.id,
+  workspaceKey = "workspace:" + seeded.owner.accountId;
+cli("limits", { counts: { [connectionKey]: 119, [workspaceKey]: 0 } });
+const lastLease = randomUUID();
+await store("admit", { connectionId: c.id, lease: lastLease });
+await store("release", { connectionId: c.id, lease: lastLease });
+await rejects(
+  store("admit", { connectionId: c.id, lease: randomUUID() }),
+  /rate_limited/,
+);
+cli("limits", { counts: { [connectionKey]: 0, [workspaceKey]: 299 } });
+const workspaceLease = randomUUID();
+await store("admit", { connectionId: c.id, lease: workspaceLease });
+await store("release", { connectionId: c.id, lease: workspaceLease });
+await rejects(
+  store("admit", { connectionId: c.id, lease: randomUUID() }),
+  /rate_limited/,
+);
+cli("limits", { counts: { [connectionKey]: 0, [workspaceKey]: 0 } });
+const durations = [];
+for (let batch = 0; batch < 12; batch++)
+  await Promise.all(
+    Array.from({ length: 5 }, async () => {
+      const started = performance.now(),
+        lease = randomUUID();
+      await store("admit", { connectionId: c.id, lease });
+      try {
+        equal((await call("bznsflow_business_state")).status, "completed");
+      } finally {
+        await store("release", { connectionId: c.id, lease });
+      }
+      durations.push(Math.round(performance.now() - started));
+    }),
+  );
+durations.sort((a, b) => a - b);
+console.log(
+  JSON.stringify({
+    syntheticLoadCalls: durations.length,
+    concurrency: 5,
+    p50Ms: durations[29],
+    p95Ms: durations[56],
+    maxMs: durations.at(-1),
+  }),
+);
 cli("set_plan", { grantId: seeded.owner.grantId, plan: "catalyst" });
 await rejects(call("bznsflow_hasib_expenses", {}), /tool_not_allowed/);
 cli("set_plan", {
@@ -202,12 +289,18 @@ cli("set_plan", { grantId: seeded.owner.grantId, plan: "ascend" });
 cli("disable_hasib", { disabled: true });
 await rejects(call("bznsflow_hasib_overview"), /tool_not_allowed/);
 cli("disable_hasib", { disabled: false });
+const effectId = cli("queued_effect", {
+  connectionId: c.id,
+  runId: imported[0].runId,
+});
 await store("manage", {
   operation: "revoke",
   tokenHash: hashes.ownerHash,
   connectionId: c.id,
 });
 await rejects(call("bznsflow_business_state"), /connection_revoked/);
+equal(await store("effect_claim", { effectId }), null);
+equal(cli("effect_status", { effectId }), { status: "cancelled", attempts: 0 });
 cli("refresh_session", { sessionId: seeded.owner.sessionId });
 const expiring = await connect();
 cli("expire_connection", { connectionId: expiring.id });
