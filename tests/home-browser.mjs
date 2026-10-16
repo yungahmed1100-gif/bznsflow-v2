@@ -50,6 +50,9 @@ try {
     await teamImage.scrollIntoViewIfNeeded();
     await teamImage.waitFor({ state: 'visible' });
     assert.equal(await teamImage.evaluate(img => img.complete && img.naturalWidth > 0 && new URL(img.currentSrc).origin === location.origin), true, `${lang}: responsive team image loads locally`); count++;
+    // The served format (AVIF first) must keep its transparency: a lost alpha
+    // channel renders the background black with colour noise.
+    assert.equal(await teamImage.evaluate(img => { const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; const x = c.getContext('2d'); x.drawImage(img, 0, 0); return x.getImageData(2, 2, 1, 1).data[3]; }), 0, `${lang}: team image background is transparent`); count++;
     const expectedFont = lang === 'ar' ? 'IBM Plex Sans Arabic' : 'Poppins';
     assert.equal(await page.evaluate(font => document.fonts.check(`16px "${font}"`), expectedFont), true, `${lang}: local font is available`); count++;
     assert.deepEqual(await serious(page), [], `${lang} 1440 accessibility`); count++;
