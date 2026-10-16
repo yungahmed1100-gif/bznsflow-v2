@@ -7,6 +7,8 @@ import {
   McpWalkthrough,
   McpHelp,
 } from "../components/mcp/ConnectionGuide";
+const COPIED_MS = 2500;
+const SAVED_MS = 4000;
 const ENDPOINT = "https://www.bznsflowai.com/api/mcp";
 const AREAS = {
   conversations: ["Conversations and Layla", "المحادثات وليلى"],
@@ -225,7 +227,19 @@ export default function McpConnections({ lang = "ar" }) {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [copied, setCopied] = useState(""),
+    [saved, setSaved] = useState(false),
     [consentAreas, setConsentAreas] = useState(Object.keys(AREAS));
+  // Confirmations are brief; errors and copy guidance stay until the next action.
+  useEffect(() => {
+    if (!copied) return undefined;
+    const timer = setTimeout(() => setCopied(""), COPIED_MS);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  useEffect(() => {
+    if (!saved) return undefined;
+    const timer = setTimeout(() => setSaved(false), SAVED_MS);
+    return () => clearTimeout(timer);
+  }, [saved]);
   const signIn = `${prefix}/signin?next=${encodeURIComponent(`${prefix}/mcp`)}`;
   const message = (code) =>
     (ERRORS[code] || [
@@ -297,6 +311,7 @@ export default function McpConnections({ lang = "ar" }) {
     setBusy(true);
     setError("");
     setStatus("");
+    setSaved(false);
     try {
       const r = await fetch("/api/mcp/manage", {
           method: "POST",
@@ -319,7 +334,7 @@ export default function McpConnections({ lang = "ar" }) {
         window.location.assign(next.href);
         return;
       }
-      setStatus(tr("Saved.", "تم الحفظ."));
+      setSaved(true);
       await load();
     } catch {
       setError("unavailable");
@@ -358,7 +373,12 @@ export default function McpConnections({ lang = "ar" }) {
       <McpHero ar={ar} compact={!!consent || !!data?.approvals?.length} />
       <div role="status" aria-live="polite">
         {status}
-        {copied && tr(`${copied} copied.`, `تم نسخ ${copied}.`)}
+        {saved && tr("Saved.", "تم الحفظ.")}
+        {copied && (
+          <span className="sr-only">
+            {tr(`${copied} copied.`, `تم نسخ ${copied}.`)}
+          </span>
+        )}
         {account === undefined &&
           tr("Loading your account…", "جارٍ تحميل حسابك…")}
       </div>
@@ -630,7 +650,12 @@ export default function McpConnections({ lang = "ar" }) {
           </section>
         </>
       )}
-      <ConnectionGuide ar={ar} endpoint={endpoint} copy={copy} />
+      <ConnectionGuide
+        ar={ar}
+        endpoint={endpoint}
+        copy={copy}
+        copied={copied}
+      />
       <McpWalkthrough ar={ar} />
       <McpHelp ar={ar} />
       <footer className="mcp-footer">

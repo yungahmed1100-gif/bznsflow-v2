@@ -220,6 +220,9 @@
 .mcp-consent {
   border: 2px solid var(--green-ink);
 }
+.mcp-consent .mcp-actions {
+  margin-top: 24px;
+}
 .mcp-dot {
   width: 12px;
   height: 12px;

@@ -195,6 +195,20 @@ try {
         await page.evaluate(() => window.__copiedMcp),
         BASE + "/api/mcp",
       );
+      // Confirmation sits on the pressed button, then clears itself.
+      const copyButton = page.locator(".mcp-command button");
+      assert.match(
+        await copyButton.textContent(),
+        lang === "ar" ? /تم النسخ/ : /Copied/,
+      );
+      await page.waitForFunction(
+        (done) =>
+          !document
+            .querySelector(".mcp-command button")
+            .textContent.includes(done),
+        lang === "ar" ? "تم النسخ" : "Copied",
+        { timeout: 5000 },
+      );
       await page.locator(".mcp-art img").evaluate((img) => img.decode());
       assert.ok(
         await page

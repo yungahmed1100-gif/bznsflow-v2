@@ -67,7 +67,7 @@ export function McpHero({ ar, compact = false }) {
   );
 }
 
-export function ConnectionGuide({ ar, endpoint, copy }) {
+export function ConnectionGuide({ ar, endpoint, copy, copied }) {
   const [client, setClient] = useState("claude");
   const tr = (en, arabic) => (ar ? arabic : en);
   const instructions =
@@ -253,7 +253,9 @@ export function ConnectionGuide({ ar, endpoint, copy }) {
                 className="mcp-secondary"
                 onClick={() => copy(label, command)}
               >
-                {tr("Copy", "نسخ")}
+                {copied === label
+                  ? tr("Copied", "تم النسخ")
+                  : tr("Copy", "نسخ")}
                 <span className="sr-only"> {label}</span>
               </button>
             </div>
@@ -281,7 +283,9 @@ export function ConnectionGuide({ ar, endpoint, copy }) {
                 )
               }
             >
-              {tr("Copy request", "نسخ الطلب")}
+              {copied === tr("Sample request", "الطلب التجريبي")
+                ? tr("Copied", "تم النسخ")
+                : tr("Copy request", "نسخ الطلب")}
             </button>
           </div>
           {client === "claude" && (
