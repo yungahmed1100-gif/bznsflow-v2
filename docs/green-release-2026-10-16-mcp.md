@@ -1,6 +1,6 @@
 # Green release 2026-10-16 — AI Connections (MCP) and restored website pages
 
-Status: **verified on the isolated candidate; ready to deploy to Green.** Ahmed authorized the production push on 16 October 2026. The permission system blocks Claude from Green writes and Green Convex reads, so Ahmed runs the steps under "Deploy".
+Status: **LIVE on Green since 16 October 2026, with MCP off.** Ahmed authorized the production push on 16 October 2026. The permission system blocks Claude from Green writes and Green Convex reads, so Ahmed runs the steps under "Deploy".
 
 ## What ships
 
@@ -91,6 +91,18 @@ Follow this order. Stop at any failed check.
    - `home-browser` passes against production.
 6. Enable the pilot: set `MCP_ENABLED=true` in Vercel production **and** Convex prod. Then redeploy the website from the same commit so the Vercel variable applies.
 7. Ahmed connects Claude or Codex from `/en/mcp` using the guide.
+
+## Production result (16 October 2026)
+
+- **Convex.** Ahmed ran `npx convex deploy` to `rare-fish-465` from the release folder, after the corrected selector.
+- **Website.** Ahmed ran `npx vercel deploy --prod --skip-domain`, which gave `dpl_CvmzSwQYZMFBLomsE3sik5nc57Fz` from source `c184829`. Claude checked it with `vercel curl`, then promoted it.
+- **Live checks on www.bznsflowai.com.**
+  - Pages: 19 return 200, including `/`, `/en`, `/services`, `/en/services`, `/support`, `/en/support`, `/contact`, `/en/contact`, `/refund`, `/privacy`, `/terms`, `/mcp`, `/en/mcp`, `/owner`, `/en/layla/dashboard`, `/en/catalyst/setup`, `/signin`, `sitemap.xml` and `robots.txt`. The pages that had been returning 404 are back.
+  - `/owner/layla` returns 308 to `/owner`.
+  - APIs: `/api/auth-session` returns 200. `/api/mcp` returns 503 `mcp_disabled`. A signed-out dashboard request returns 401. A cross-origin Hasib POST returns 403. `/api/keepalive` returns 404.
+  - `home-browser` against production: 42 checks passed.
+- **Rollback target:** promote `dpl_G7Yhchk1vpk3scx1GHCzFfgPyqyG` (Release B).
+- **MCP remains off.** Enabling the pilot needs `node scripts/mcp-provision.mjs`, then `MCP_ENABLED=true` in both runtimes and a redeploy.
 
 ## Rollback
 
