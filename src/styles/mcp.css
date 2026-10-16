@@ -26,9 +26,15 @@
   color: inherit;
 }
 .mcp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-weight: 800;
   font-size: 28px;
   text-decoration: none;
+}
+.mcp-brand img {
+  border-radius: var(--radius-sm);
 }
 .mcp-hero {
   display: grid;
@@ -160,7 +166,7 @@
   box-shadow: var(--shadow-raised);
   transform: translateY(-1px);
 }
-.mcp-page button.mcp-secondary {
+.mcp-page :is(button, a).mcp-secondary {
   background: var(--bg-card);
   color: var(--text-primary);
 }
@@ -223,6 +229,34 @@
 .mcp-consent .mcp-actions {
   margin-top: 24px;
 }
+/* Which AI app a connection belongs to, by its own logo. */
+.mcp-client {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.mcp-client-mark {
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+.mcp-client-initial {
+  display: grid;
+  place-items: center;
+  background: var(--bg-secondary);
+  font-weight: 800;
+}
+.mcp-consent-pair {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.mcp-consent-link {
+  width: 40px;
+  border-top: 2px dashed var(--border-hover);
+}
 .mcp-dot {
   width: 12px;
   height: 12px;
@@ -278,7 +312,7 @@
 }
 .mcp-client-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 24px;
 }
@@ -388,6 +422,27 @@
   font-size: 13px;
   margin-top: 24px;
 }
+.mcp-icon-download {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 32px;
+  border-top: 1px solid var(--border-hover);
+  padding-top: 24px;
+}
+.mcp-icon-download img {
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 1px var(--border-hover);
+}
+.mcp-icon-download h3 {
+  font-size: 15px;
+}
+.mcp-icon-download p {
+  margin: 4px 0 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
 .mcp-page .mcp-walkthrough {
   margin-top: 64px;
   padding: 32px;
@@ -493,6 +548,9 @@
     padding-top: 24px;
   }
   .mcp-walkthrough ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mcp-client-tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

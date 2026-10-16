@@ -380,6 +380,13 @@ for (const requestedScope of [
       },
     });
     await sdkClient.connect(transport);
+    // Clients show this name and icon, so the owner can recognise the connector.
+    const identity = sdkClient.getServerVersion();
+    assert.equal(identity.title, "BznsFlow");
+    assert.equal(
+      new URL(identity.icons[0].src).href,
+      new URL("/mcp/bznsflow-icon.png", resource).href,
+    );
     assert.equal(
       (await sdkClient.listTools()).tools[0].name,
       "bznsflow_business_state",

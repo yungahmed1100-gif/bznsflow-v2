@@ -156,7 +156,7 @@ try {
         ),
       );
       checks += 3;
-      for (const tab of ["claude", "claude-code", "codex"]) {
+      for (const tab of ["claude", "chatgpt", "claude-code", "codex"]) {
         await page.locator("#mcp-tab-" + tab).click();
         assert.equal(
           await page
@@ -173,6 +173,21 @@ try {
         );
         checks += 2;
       }
+      // ChatGPT: the address to paste, and the BznsFlow icon for the connector.
+      await page.locator("#mcp-tab-chatgpt").click();
+      assert.equal(
+        await page.locator(".mcp-command pre").textContent(),
+        BASE + "/api/mcp",
+      );
+      const iconLink = page.locator(".mcp-icon-download a");
+      assert.equal(await iconLink.getAttribute("href"), "/mcp/bznsflow-icon.png");
+      assert.equal(
+        (await page.request.get(BASE + "/mcp/bznsflow-icon.png")).headers()[
+          "content-type"
+        ],
+        "image/png",
+      );
+      await page.locator("#mcp-tab-chatgpt").focus();
       await page.keyboard.press("Home");
       assert.equal(
         await page
@@ -219,7 +234,9 @@ try {
               new URL(img.currentSrc).origin === location.origin,
           ),
       );
-      for (const img of await page.locator(".mcp-client-tabs img").all()) {
+      for (const img of await page
+        .locator(".mcp-client-tabs img, .mcp-brand img")
+        .all()) {
         await img.evaluate((el) => el.decode());
         assert.ok(await img.evaluate((el) => el.naturalWidth > 0));
       }
@@ -248,6 +265,24 @@ try {
         })
         .waitFor();
       checks++;
+      // The request shows which app is asking, next to the BznsFlow mark.
+      assert.equal(
+        await page.locator(".mcp-consent-pair img").count(),
+        2,
+        "consent shows the client logo and BznsFlow",
+      );
+      assert.equal(
+        await page
+          .locator(".mcp-consent-pair img")
+          .first()
+          .getAttribute("src"),
+        "/mcp/claude.svg",
+      );
+      assert.equal(
+        await page.locator(".mcp-panel .mcp-client img").getAttribute("src"),
+        "/mcp/claude.svg",
+      );
+      checks += 3;
       assert.ok(
         await page
           .getByText(

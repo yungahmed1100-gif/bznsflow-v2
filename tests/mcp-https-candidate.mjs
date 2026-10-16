@@ -14,8 +14,8 @@ const origin = env.PUBLIC_SITE_ORIGIN,
 assert.equal(origin, "https://bznsflow-mcp-acceptance.vercel.app");
 const jar = new Map([["bf_session", sessions.cookies.owner]]);
 let checks = 0;
-const equal = (a, b) => {
-  assert.deepEqual(a, b);
+const equal = (a, b, message) => {
+  assert.deepEqual(a, b, message);
   checks++;
 };
 async function request(path, options = {}) {
@@ -59,6 +59,16 @@ const discovery = await request(
 equal(discovery.status, 200);
 const metadata = await discovery.json();
 equal(metadata.issuer, `${origin}/oauth`);
+// Clients probe different discovery forms; every one names the same issuer.
+for (const path of [
+  "/.well-known/oauth-authorization-server",
+  "/.well-known/openid-configuration/oauth",
+  "/oauth/.well-known/openid-configuration",
+]) {
+  const alt = await request(path);
+  equal(alt.status, 200, path);
+  equal((await alt.json()).issuer, `${origin}/oauth`, path);
+}
 const reg = await post(metadata.registration_endpoint, {
   client_name: "Synthetic HTTPS acceptance",
   redirect_uris: ["http://127.0.0.1:3456/callback"],

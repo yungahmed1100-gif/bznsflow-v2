@@ -279,7 +279,20 @@ export function createMcpHandler({
           access.scopes.includes("workspace:write"),
       );
       const server = new Server(
-        { name: "bznsflow", version: "1.0.0" },
+        {
+          name: "bznsflow",
+          title: "BznsFlow",
+          version: "1.0.0",
+          websiteUrl: origin,
+          // Shown by clients next to the connector so the owner can recognise it.
+          icons: [
+            {
+              src: `${origin}/mcp/bznsflow-icon.png`,
+              mimeType: "image/png",
+              sizes: ["256x256"],
+            },
+          ],
+        },
         { capabilities: { tools: {} } },
       );
       server.setRequestHandler(ListToolsRequestSchema, async (request) => {

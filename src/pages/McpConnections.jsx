@@ -6,6 +6,8 @@ import {
   ConnectionGuide,
   McpWalkthrough,
   McpHelp,
+  ClientMark,
+  BZNSFLOW_ICON,
 } from "../components/mcp/ConnectionGuide";
 const COPIED_MS = 2500;
 const SAVED_MS = 4000;
@@ -93,21 +95,24 @@ function Connection({ connection: c, ar, busy, onSave, onRevoke }) {
   return (
     <article className="mcp-panel">
       <div className="mcp-row">
-        <div>
-          <h3>{c.clientName}</h3>
-          <p className="mcp-muted">
-            {inactive
-              ? ar
-                ? "غير متصل"
-                : "Disconnected"
-              : c.verifiedAt
+        <div className="mcp-client">
+          <ClientMark name={c.clientName} id={c.clientId} />
+          <div>
+            <h3>{c.clientName}</h3>
+            <p className="mcp-muted">
+              {inactive
                 ? ar
-                  ? "اتصال مؤكّد"
-                  : "Connection verified"
-                : ar
-                  ? "بانتظار أول اتصال"
-                  : "Waiting for first connection"}
-          </p>
+                  ? "غير متصل"
+                  : "Disconnected"
+                : c.verifiedAt
+                  ? ar
+                    ? "اتصال مؤكّد"
+                    : "Connection verified"
+                  : ar
+                    ? "بانتظار أول اتصال"
+                    : "Waiting for first connection"}
+            </p>
+          </div>
         </div>
         <span
           className={`mcp-dot ${!inactive && c.verifiedAt ? "active" : ""}`}
@@ -359,6 +364,7 @@ export default function McpConnections({ lang = "ar" }) {
         aria-label={tr("Account navigation", "روابط الحساب")}
       >
         <Link to={prefix || "/"} className="mcp-brand">
+          <img src={BZNSFLOW_ICON} width="36" height="36" alt="" />
           BznsFlow
         </Link>
         <div>
@@ -420,6 +426,21 @@ export default function McpConnections({ lang = "ar" }) {
       )}
       {consent && (
         <section className="mcp-panel mcp-consent">
+          <div className="mcp-consent-pair" aria-hidden="true">
+            <ClientMark
+              name={consent.clientName}
+              id={consent.clientId}
+              size={48}
+            />
+            <span className="mcp-consent-link" />
+            <img
+              className="mcp-client-mark"
+              src={BZNSFLOW_ICON}
+              width="48"
+              height="48"
+              alt=""
+            />
+          </div>
           <p className="mcp-eyebrow">{tr("CONNECTION REQUEST", "طلب اتصال")}</p>
           <h2>
             {tr(`Connect ${consent.clientName}?`, `ربط ${consent.clientName}؟`)}

@@ -2,9 +2,42 @@ import React, { useState } from "react";
 
 const CLIENTS = [
   { id: "claude", name: "Claude", logo: "/mcp/claude.svg" },
+  { id: "chatgpt", name: "ChatGPT", logo: "/mcp/openai.png" },
   { id: "claude-code", name: "Claude Code", logo: "/mcp/claude.svg" },
   { id: "codex", name: "Codex", logo: "/mcp/openai.png" },
 ];
+const BROWSER_CLIENTS = new Set(["claude", "chatgpt"]);
+export const BZNSFLOW_ICON = "/mcp/bznsflow-icon.png";
+
+// The logo of the AI app behind a connection, from its registered name or
+// client ID (a CIMD client ID is the app's own URL). Unknown apps get none.
+export function clientLogo(name = "", id = "") {
+  const text = `${name} ${id}`.toLowerCase();
+  if (/chatgpt|openai|codex/.test(text)) return "/mcp/openai.png";
+  if (/claude|anthropic/.test(text)) return "/mcp/claude.svg";
+  return null;
+}
+
+export function ClientMark({ name, id, size = 32 }) {
+  const logo = clientLogo(name, id);
+  return logo ? (
+    <img
+      className="mcp-client-mark"
+      src={logo}
+      width={size}
+      height={size}
+      alt=""
+    />
+  ) : (
+    <span
+      className="mcp-client-mark mcp-client-initial"
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    >
+      {(name || "AI").trim().charAt(0).toUpperCase()}
+    </span>
+  );
+}
 
 export function McpHero({ ar, compact = false }) {
   return (
@@ -20,8 +53,8 @@ export function McpHero({ ar, compact = false }) {
         </h1>
         <p>
           {ar
-            ? "اربط Claude أو Codex بحساب BznsFlow. اسأل عن عملائك، حدّث بيانات نشاطك، وراجع الإجراءات المهمة قبل تنفيذها."
-            : "Connect Claude or Codex to BznsFlow. Ask about your customers, update your business records, and review important actions before they run."}
+            ? "اربط Claude أو ChatGPT أو Codex بحساب BznsFlow. اسأل عن عملائك، حدّث بيانات نشاطك، وراجع الإجراءات المهمة قبل تنفيذها."
+            : "Connect Claude, ChatGPT or Codex to BznsFlow. Ask about your customers, update your business records, and review important actions before they run."}
         </p>
         <a className="mcp-button" href="#mcp-connect">
           {ar ? "اختر مساعدك وابدأ" : "Choose your assistant"}
@@ -77,7 +110,7 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
             tr("Open Claude’s connectors", "افتح إعدادات الاتصال في Claude"),
             tr(
               "In Claude, open Customize → Connectors → Add → Add custom connector. For a Team or Enterprise account, an organization owner may need to add it first.",
-              "في Claude، افتح Customize ثم Connectors ثم Add ثم Add custom connector. إذا كنت تستخدم حساب فريق أو مؤسسة، قد يحتاج مالك المؤسسة إلى إضافته أولًا.",
+              "في Claude، افتح Customize ثم Connectors ثم Add ثم \u2066Add custom connector\u2069. إذا كنت تستخدم حساب فريق أو مؤسسة، قد يحتاج مالك المؤسسة إلى إضافته أولًا.",
             ),
           ],
           [
@@ -87,7 +120,7 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
             ),
             tr(
               "Copy the address below into the server URL field, then continue. Choose “Sign in now” and Claude’s published identity when offered. You do not need an API key.",
-              "انسخ الرابط أدناه إلى خانة رابط الخادم ثم تابع. اختر Sign in now وهوية Claude المنشورة إذا ظهر هذا الخيار. لا تحتاج إلى مفتاح API.",
+              "انسخ الرابط أدناه إلى خانة رابط الخادم ثم تابع. اختر \u2066Sign in now\u2069 وهوية Claude المنشورة إذا ظهر هذا الخيار. لا تحتاج إلى مفتاح API.",
             ),
           ],
           [
@@ -108,61 +141,94 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
             ),
           ],
         ]
-      : [
-          [
-            tr("Open your terminal", "افتح نافذة الأوامر"),
-            tr(
-              `These steps are for the installed ${client === "codex" ? "Codex" : "Claude Code"} command-line app. For a browser-only setup, choose Claude above.`,
-              `هذه الخطوات لتطبيق ${client === "codex" ? "Codex" : "Claude Code"} المثبّت عبر سطر الأوامر. للربط من المتصفح فقط، اختر Claude أعلاه.`,
-            ),
-          ],
-          [
-            tr("Add BznsFlow", "أضف BznsFlow"),
-            tr(
-              "Copy and run the add command below.",
-              "انسخ أمر الإضافة أدناه ونفّذه.",
-            ),
-          ],
-          [
-            tr("Sign in through your browser", "سجّل الدخول عبر المتصفح"),
-            client === "codex"
-              ? tr(
-                  "Run the login command below. Sign in as the owner and review permissions in the browser window that opens.",
-                  "نفّذ أمر تسجيل الدخول أدناه. سجّل الدخول بصفتك المالك وراجع الصلاحيات في نافذة المتصفح التي تفتح.",
-                )
-              : tr(
-                  "Open Claude Code, enter /mcp, choose bznsflow, and select Authenticate. Sign in as the owner and review permissions in your browser.",
-                  "افتح Claude Code وأدخل ‎/mcp، ثم اختر bznsflow ثم Authenticate. سجّل الدخول بصفتك المالك وراجع الصلاحيات في المتصفح.",
-                ),
-          ],
-          [
-            tr("Try a first request", "جرّب طلبك الأول"),
-            tr(
-              "Start a conversation and ask for your workspace summary. A verified connection appears here after your assistant reaches BznsFlow.",
-              "ابدأ محادثة واطلب ملخّص مساحة عملك. يظهر اتصال مؤكّد هنا بعد وصول مساعدك إلى BznsFlow.",
-            ),
-          ],
-        ];
-  const commands =
-    client === "claude"
-      ? [[tr("Connection address", "رابط الاتصال"), endpoint]]
-      : client === "codex"
+      : client === "chatgpt"
         ? [
             [
-              tr("1. Add BznsFlow", "١. أضف BznsFlow"),
-              `codex mcp add bznsflow --url ${endpoint}`,
+              tr("Turn on Developer mode", "فعّل وضع المطوّر"),
+              tr(
+                "In ChatGPT, open Settings → Apps & Connectors → Advanced settings and turn on Developer mode. On a Business or Enterprise workspace, an admin may need to allow it first.",
+                "في ChatGPT، افتح Settings ثم \u2066Apps & Connectors\u2069 ثم \u2066Advanced settings\u2069 وفعّل \u2066Developer mode\u2069. في حسابات Business أو Enterprise، قد يحتاج المسؤول إلى السماح به أولًا.",
+              ),
             ],
             [
-              tr("2. Sign in", "٢. سجّل الدخول"),
-              "codex mcp login bznsflow --scopes workspace:read,workspace:write",
+              tr("Create the BznsFlow connector", "أنشئ اتصال BznsFlow"),
+              tr(
+                "In Apps & Connectors choose Create. Name it BznsFlow, add the BznsFlow icon below, paste the address into the MCP server URL field and choose OAuth. You do not need an API key.",
+                "في \u2066Apps & Connectors\u2069 اختر Create. سمّه BznsFlow، وأضف أيقونة BznsFlow أدناه، والصق الرابط في خانة \u2066MCP server URL\u2069 واختر OAuth. لا تحتاج إلى مفتاح API.",
+              ),
+            ],
+            [
+              tr(
+                "Sign in and choose permissions",
+                "سجّل الدخول واختر الصلاحيات",
+              ),
+              tr(
+                "A BznsFlow page opens. Sign in with your business owner account, check the requested information, and continue. Important actions require your approval by default.",
+                "تفتح صفحة BznsFlow. سجّل الدخول بحساب مالك النشاط، وراجع المعلومات المطلوبة، ثم تابع. الإجراءات المهمة تحتاج إلى موافقتك افتراضيًا.",
+              ),
+            ],
+            [
+              tr("Use BznsFlow in a chat", "استخدم BznsFlow في المحادثة"),
+              tr(
+                "Start a new chat, open + → Developer mode and turn on BznsFlow. Try the sample request below, then check that your connection is verified on this page.",
+                "ابدأ محادثة جديدة، وافتح + ثم \u2066Developer mode\u2069 وفعّل BznsFlow. جرّب الطلب أدناه، ثم تأكّد من ظهور اتصال مؤكّد في هذه الصفحة.",
+              ),
             ],
           ]
         : [
             [
+              tr("Open your terminal", "افتح نافذة الأوامر"),
+              tr(
+                `These steps are for the installed ${client === "codex" ? "Codex" : "Claude Code"} command-line app. For a browser-only setup, choose Claude or ChatGPT above.`,
+                `هذه الخطوات لتطبيق ${client === "codex" ? "Codex" : "Claude Code"} المثبّت عبر سطر الأوامر. للربط من المتصفح فقط، اختر Claude أو ChatGPT أعلاه.`,
+              ),
+            ],
+            [
               tr("Add BznsFlow", "أضف BznsFlow"),
-              `claude mcp add --transport http --scope user bznsflow ${endpoint}`,
+              tr(
+                "Copy and run the add command below.",
+                "انسخ أمر الإضافة أدناه ونفّذه.",
+              ),
+            ],
+            [
+              tr("Sign in through your browser", "سجّل الدخول عبر المتصفح"),
+              client === "codex"
+                ? tr(
+                    "Run the login command below. Sign in as the owner and review permissions in the browser window that opens.",
+                    "نفّذ أمر تسجيل الدخول أدناه. سجّل الدخول بصفتك المالك وراجع الصلاحيات في نافذة المتصفح التي تفتح.",
+                  )
+                : tr(
+                    "Open Claude Code, enter /mcp, choose bznsflow, and select Authenticate. Sign in as the owner and review permissions in your browser.",
+                    "افتح Claude Code وأدخل ‎/mcp، ثم اختر bznsflow ثم Authenticate. سجّل الدخول بصفتك المالك وراجع الصلاحيات في المتصفح.",
+                  ),
+            ],
+            [
+              tr("Try a first request", "جرّب طلبك الأول"),
+              tr(
+                "Start a conversation and ask for your workspace summary. A verified connection appears here after your assistant reaches BznsFlow.",
+                "ابدأ محادثة واطلب ملخّص مساحة عملك. يظهر اتصال مؤكّد هنا بعد وصول مساعدك إلى BznsFlow.",
+              ),
             ],
           ];
+  const commands = BROWSER_CLIENTS.has(client)
+    ? [[tr("Connection address", "رابط الاتصال"), endpoint]]
+    : client === "codex"
+      ? [
+          [
+            tr("1. Add BznsFlow", "١. أضف BznsFlow"),
+            `codex mcp add bznsflow --url ${endpoint}`,
+          ],
+          [
+            tr("2. Sign in", "٢. سجّل الدخول"),
+            "codex mcp login bznsflow --scopes workspace:read,workspace:write",
+          ],
+        ]
+      : [
+          [
+            tr("Add BznsFlow", "أضف BznsFlow"),
+            `claude mcp add --transport http --scope user bznsflow ${endpoint}`,
+          ],
+        ];
   function moveTab(event, index) {
     let next;
     if (event.key === "Home") next = 0;
@@ -210,9 +276,11 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
               <small>
                 {c.id === "claude"
                   ? tr("Browser · easiest start", "المتصفح · البداية الأسهل")
-                  : c.id === "codex"
-                    ? tr("OpenAI · command line", "OpenAI · سطر الأوامر")
-                    : tr("Advanced · command line", "متقدم · سطر الأوامر")}
+                  : c.id === "chatgpt"
+                    ? tr("Browser · Developer mode", "المتصفح · وضع المطوّر")
+                    : c.id === "codex"
+                      ? tr("OpenAI · command line", "OpenAI · سطر الأوامر")
+                      : tr("Advanced · command line", "متقدم · سطر الأوامر")}
               </small>
             </span>
           </button>
@@ -288,6 +356,27 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
                 : tr("Copy request", "نسخ الطلب")}
             </button>
           </div>
+          {client === "chatgpt" && (
+            <div className="mcp-icon-download">
+              <img src={BZNSFLOW_ICON} width="48" height="48" alt="" />
+              <div>
+                <h3>{tr("BznsFlow icon", "أيقونة BznsFlow")}</h3>
+                <p>
+                  {tr(
+                    "Add it to the connector so you can spot BznsFlow in ChatGPT.",
+                    "أضفها إلى الاتصال لتتعرّف على BznsFlow بسهولة في ChatGPT.",
+                  )}
+                </p>
+                <a
+                  className="mcp-button mcp-secondary"
+                  href={BZNSFLOW_ICON}
+                  download="bznsflow-icon.png"
+                >
+                  {tr("Download icon", "تنزيل الأيقونة")}
+                </a>
+              </div>
+            </div>
+          )}
           {client === "claude" && (
             <a
               className="mcp-help-link"
@@ -296,6 +385,19 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
               rel="noopener noreferrer"
             >
               {tr("Claude’s connection guide ↗", "دليل الاتصال من Claude ↗")}
+            </a>
+          )}
+          {client === "chatgpt" && (
+            <a
+              className="mcp-help-link"
+              href="https://help.openai.com/en/articles/12584461"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {tr(
+                "OpenAI’s Developer mode guide ↗",
+                "دليل وضع المطوّر من OpenAI ↗",
+              )}
             </a>
           )}
         </aside>
@@ -389,6 +491,10 @@ export function McpHelp({ ar }) {
           "راجع إعدادات Connectors ونوع حسابك. في حسابات الفرق والمؤسسات، قد يحتاج مالك المؤسسة إلى إضافة الاتصال أولًا. راجع دليل Claude أعلاه لمعرفة الخيارات المتاحة لحسابك.",
         ],
         [
+          "لا يظهر Create أو وضع المطوّر في ChatGPT",
+          "وضع المطوّر متاح على ChatGPT في المتصفح. الاتصالات الكاملة التي تعدّل البيانات متاحة لباقات Business وEnterprise وEdu، وقد يحتاج مسؤول المساحة إلى تفعيل وضع المطوّر لك أولًا. في الباقات الأخرى قد يقتصر الاتصال على القراءة. راجع دليل OpenAI أعلاه.",
+        ],
+        [
           "انتهى طلب الاتصال أو فتح حسابًا آخر",
           "ابدأ اتصالًا جديدًا من مساعدك. سجّل الدخول بحساب مالك النشاط الصحيح، ثم راجع طلب الصلاحيات الجديد. حساب الموظف لا يمكنه إنشاء اتصال للمالك.",
         ],
@@ -409,6 +515,10 @@ export function McpHelp({ ar }) {
         [
           "I can’t find the add-connector option in Claude",
           "Check Connectors settings and your account type. On Team and Enterprise accounts, an organization owner may need to add the connector first. See Claude’s guide above for the options available to your account.",
+        ],
+        [
+          "I can’t find Create or Developer mode in ChatGPT",
+          "Developer mode is on ChatGPT for the web. Full connectors that can make changes are available on Business, Enterprise and Edu plans, and a workspace admin may need to turn on Developer mode for you first. Other plans may be limited to reading. See OpenAI’s guide above.",
         ],
         [
           "The connection expired or opened the wrong account",

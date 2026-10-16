@@ -2,6 +2,29 @@
 
 Status (16 October 2026, afternoon): **integrated onto the live Green source and accepted on the isolated candidate. Ready for the Green deploy, which Ahmed authorized and runs.** Branch `release/mcp-integration-2026-10-16`. See [the 16 October integrated acceptance](#integrated-acceptance-16-october-2026) below and the [Green release record](../green-release-2026-10-16-mcp.md). The sections that follow it record the earlier, pre-integration evidence from branch `feat/bznsflow-mcp` (base `9f3a6a4`).
 
+## ChatGPT option and connector identity (16 October 2026, evening)
+
+- **ChatGPT tab.** `/mcp` and `/en/mcp` have four clients: Claude, ChatGPT, Claude Code and Codex. The ChatGPT steps are:
+  1. turn on Developer mode;
+  2. Apps & Connectors → Create, with the BznsFlow icon, the address and OAuth;
+  3. sign in;
+  4. turn on BznsFlow in a chat.
+
+  A help entry explains plan limits: full write connectors are for ChatGPT Business, Enterprise and Edu.
+- **The server already accepted ChatGPT.** It needed no server change: `https://chatgpt.com` is a trusted origin and CIMD origin, and dynamic registration accepts its HTTPS callback.
+- **Connector identity.**
+  - `initialize` now returns `title: "BznsFlow"`, `websiteUrl`, and an icon at `/mcp/bznsflow-icon.png` (256 px, the "b" mark).
+  - The page offers the same icon as a download for ChatGPT's connector form.
+  - The nav shows the mark. Connection cards and the consent request show the client's logo, and consent shows it beside BznsFlow's mark.
+- **Discovery.** `/.well-known/oauth-authorization-server` at the root and `/.well-known/openid-configuration/oauth` now reach the same metadata. They returned 404 before.
+- **Arabic copy.** English menu names inside Arabic steps are bidi-isolated, so "Advanced settings" no longer reorders.
+- **Evidence.**
+  - 218 MCP browser checks;
+  - 35 MCP unit tests, including the server identity through the SDK client;
+  - `npm test`.
+
+  ChatGPT client acceptance is **not** claimed until Ahmed's real run.
+
 ## Integrated acceptance (16 October 2026)
 
 - **Source.** `feat/bznsflow-mcp` merged onto `origin/master` (`e4c0f88`, Releases A and B). Green had been deployed from that line without the 13–14 October website work, so this release also restores `/services`, `/support` and `/contact`, which were 404 in production.
