@@ -115,7 +115,22 @@ try {
                     expiresAt: Date.now() + 900000,
                   },
                 ],
-            activity: [],
+            activity: [
+              {
+                _id: "activity-1",
+                connectionId: connection.id,
+                tool: "bznsflow_dashboard_overview",
+                status: "completed",
+                at: Date.now(),
+              },
+              {
+                _id: "activity-2",
+                connectionId: connection.id,
+                tool: "connection",
+                status: "policy_changed",
+                at: Date.now(),
+              },
+            ],
           });
         }
         return route.continue();
@@ -180,7 +195,10 @@ try {
         BASE + "/api/mcp",
       );
       const iconLink = page.locator(".mcp-icon-download a");
-      assert.equal(await iconLink.getAttribute("href"), "/mcp/bznsflow-icon.png");
+      assert.equal(
+        await iconLink.getAttribute("href"),
+        "/mcp/bznsflow-icon.png",
+      );
       assert.equal(
         (await page.request.get(BASE + "/mcp/bznsflow-icon.png")).headers()[
           "content-type"
@@ -272,10 +290,7 @@ try {
         "consent shows the client logo and BznsFlow",
       );
       assert.equal(
-        await page
-          .locator(".mcp-consent-pair img")
-          .first()
-          .getAttribute("src"),
+        await page.locator(".mcp-consent-pair img").first().getAttribute("src"),
         "/mcp/claude.svg",
       );
       assert.equal(
@@ -352,12 +367,35 @@ try {
         .waitFor();
       assert.ok(approved);
       checks++;
+      // Activity reads as names and outcomes, one row per event, without overflow.
+      const activityRows = page.locator(".mcp-activity li");
+      assert.equal(await activityRows.count(), 2);
+      assert.match(
+        await activityRows.first().innerText(),
+        lang === "ar"
+          ? /مساحة العمل[\s\S]*overview[\s\S]*مكتمل/
+          : /Workspace[\s\S]*overview[\s\S]*Completed/,
+      );
+      assert.match(
+        await activityRows.nth(1).innerText(),
+        lang === "ar" ? /تم تحديث الصلاحيات/ : /Permissions updated/,
+      );
+      checks += 2;
+      // Save stays off until something changes.
+      const save = page.getByRole("button", {
+        name: lang === "ar" ? "حفظ الصلاحيات" : "Save permissions",
+        exact: true,
+      });
+      assert.equal(await save.isDisabled(), true);
       await page
-        .getByRole("button", {
-          name: lang === "ar" ? "حفظ الصلاحيات" : "Save permissions",
-          exact: true,
-        })
+        .locator(".mcp-grid fieldset")
+        .first()
+        .locator('input[type="checkbox"]')
+        .first()
         .click();
+      assert.equal(await save.isDisabled(), false);
+      checks++;
+      await save.click();
       await page
         .getByRole("link", {
           name: lang === "ar" ? "التحقق من الحساب" : "Verify account",

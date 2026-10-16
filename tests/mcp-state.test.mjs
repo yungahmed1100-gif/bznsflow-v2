@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { blueHarness, seedTenant } from "./helpers/blue-tenant.mjs";
-import { manage, prepare, admit } from "../convex/mcp/state.js";
+import { manage, prepare, admit, recordMetric } from "../convex/mcp/state.js";
 import { executeApplication } from "../convex/mcp/application.js";
 import { connectionOwner, mcpEffectAllowed } from "../convex/mcp/access.js";
 import { TOOLS, toolsFor } from "../config/mcp/contracts.js";
@@ -106,6 +106,60 @@ test("authenticated read, routine edit and exact approval slice reuse domain ope
     () => call("bznsflow_messaging_pause", { ...args, confirm: false }),
     /idempotency_conflict/,
   );
+});
+test("one tool call is one activity row, with its duration", async () => {
+  const { m, c, call } = await fixture();
+  const list = async () =>
+    (
+      await manage(
+        m.ctx,
+        { operation: "list", tokenHash: "1".repeat(64) },
+        m.now(),
+      )
+    ).activity;
+  const before = (await list()).length;
+  await call("bznsflow_dashboard_overview");
+  // The API's metric arrives after the call returns.
+  await recordMetric(
+    m.ctx,
+    {
+      connectionId: c.id,
+      tool: "bznsflow_dashboard_overview",
+      status: "completed",
+      durationMs: 840,
+    },
+    m.now(),
+  );
+  const rows = (await list()).filter(
+    (r) => r.tool === "bznsflow_dashboard_overview",
+  );
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].status, "completed");
+  assert.equal(rows[0].durationMs, 840);
+  // A call refused before it ran still leaves one row.
+  await recordMetric(
+    m.ctx,
+    {
+      connectionId: c.id,
+      tool: "bznsflow_dashboard_conversations",
+      status: "tool_not_allowed",
+      durationMs: 12,
+    },
+    m.now(),
+  );
+  assert.equal((await list()).length, before + 2);
+  // Pairs written by the old metric (an untimed row, then a timed copy) show once.
+  const legacy = {
+    accountId: rows[0].accountId,
+    connectionId: c.id,
+    tool: "bznsflow_dashboard_contacts",
+    status: "completed",
+    at: m.now(),
+    expiresAt: m.now() + 86400000,
+  };
+  await m.db.insert("mcpAudit", legacy);
+  await m.db.insert("mcpAudit", { ...legacy, durationMs: 900 });
+  assert.equal((await list()).length, before + 3);
 });
 test("every owner with a plan can connect; no plan and the optional pilot lock refuse", async () => {
   const connect = (m, extra = {}) =>

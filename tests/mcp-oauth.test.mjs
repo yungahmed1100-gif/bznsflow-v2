@@ -283,10 +283,13 @@ for (const requestedScope of [
     let r = await request(`/oauth/auth?${params}`);
     assert.equal(r.status, 303, await r.clone().text());
     assert.match(r.headers.get("location"), /\/mcp\?interaction=/);
+    // One approval on the BznsFlow page signs in and grants access together;
+    // the owner is never shown the same request twice.
+    let steps = 0;
     for (
-      let step = 0;
-      step < 4 && new URL(r.headers.get("location")).pathname === "/mcp";
-      step++
+      ;
+      steps < 4 && new URL(r.headers.get("location")).pathname === "/mcp";
+      steps++
     ) {
       const view = await request("/api/mcp/manage?interaction=true");
       assert.equal(view.status, 200, await view.clone().text());
@@ -326,6 +329,11 @@ for (const requestedScope of [
       r = await request(redirect);
       assert.equal(r.status, 303, await r.clone().text());
     }
+    assert.equal(steps, 1, "a single approval completes the connection");
+    assert.ok(
+      !jar.get("bf_mcp_resume"),
+      "the finished request does not come back on the next visit",
+    );
     const callback = new URL(r.headers.get("location"));
     assert.equal(callback.origin, "http://127.0.0.1:3456");
     assert.equal(callback.searchParams.get("state"), "synthetic-state");

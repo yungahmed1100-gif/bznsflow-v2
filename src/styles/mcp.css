@@ -266,19 +266,64 @@
 .mcp-dot.active {
   background: var(--green-ink);
 }
+/* Approvals, connections and activity: one rhythm for the owner's own sections. */
+.mcp-page .mcp-section {
+  margin-top: 56px;
+}
+.mcp-section > h2 {
+  margin-bottom: 16px;
+}
+.mcp-section > p {
+  margin-bottom: 12px;
+}
 .mcp-activity {
   list-style: none;
   padding: 0;
+  margin: 0;
+  border-top: 1px solid var(--border-hover);
 }
 .mcp-activity li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--border-hover);
+  padding: 14px 4px;
+  font-size: 14px;
+}
+.mcp-activity-name {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border-hover);
-  padding: 14px 0;
+  gap: 4px 8px;
+  min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 14px;
+}
+.mcp-activity-name span {
+  color: var(--text-secondary);
+}
+.mcp-activity time {
+  color: var(--text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.mcp-result {
+  --tint: var(--coral-tint);
+  --tone-ink: var(--coral-ink);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--tint);
+  color: var(--tone-ink);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.mcp-result[data-tone="green"] {
+  --tint: var(--green-tint);
+  --tone-ink: var(--green-ink);
+}
+.mcp-result[data-tone="yellow"] {
+  --tint: var(--yellow-tint);
+  --tone-ink: var(--yellow-ink);
 }
 .mcp-footer {
   border-top: 1px solid var(--border-hover);
@@ -557,6 +602,13 @@
 @media (max-width: 520px) {
   .mcp-page {
     padding: 16px;
+  }
+  .mcp-activity li {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+  .mcp-activity time {
+    grid-column: 2 / -1;
   }
   .mcp-panel,
   .mcp-guide-body {

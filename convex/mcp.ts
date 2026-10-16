@@ -1,10 +1,16 @@
 import { executeReview } from "./reviewState.js";
-import { TOOL_BY_NAME } from "../config/mcp/contracts.js";
 import { executeBrain } from "./brainState.js";
 import { internalMutation, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import { manage, prepare, admit, rate, resolveRun } from "./mcp/state.js";
+import {
+  manage,
+  prepare,
+  admit,
+  rate,
+  resolveRun,
+  recordMetric,
+} from "./mcp/state.js";
 import { executeApplication } from "./mcp/application.js";
 import { transfer } from "./mcp/transfers.js";
 import {
@@ -39,27 +45,7 @@ export const execute = internalMutation({
         });
       return null;
     }
-    if (operation === "metric") {
-      const c = await ctx.db.get(
-        ctx.db.normalizeId("mcpConnections", input.connectionId)!,
-      );
-      demand(
-        c &&
-          TOOL_BY_NAME.has(input.tool) &&
-          /^[a-z_]{3,60}$/.test(input.status),
-        "invalid_metric",
-      );
-      await ctx.db.insert("mcpAudit", {
-        accountId: c!.accountId,
-        connectionId: c!._id,
-        tool: input.tool,
-        status: input.status,
-        durationMs: Math.max(0, Math.min(60000, Number(input.durationMs) || 0)),
-        at: now,
-        expiresAt: now + 30 * 86400000,
-      });
-      return null;
-    }
+    if (operation === "metric") return recordMetric(ctx, input, now);
     if (operation === "manage") return manage(ctx, input, now);
     if (operation === "prepare") return prepare(ctx, input, now);
     if (operation === "admit") return admit(ctx, input, now);

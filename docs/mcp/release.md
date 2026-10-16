@@ -2,6 +2,17 @@
 
 Status (16 October 2026, afternoon): **integrated onto the live Green source and accepted on the isolated candidate. Ready for the Green deploy, which Ahmed authorized and runs.** Branch `release/mcp-integration-2026-10-16`. See [the 16 October integrated acceptance](#integrated-acceptance-16-october-2026) below and the [Green release record](../green-release-2026-10-16-mcp.md). The sections that follow it record the earlier, pre-integration evidence from branch `feat/bznsflow-mcp` (base `9f3a6a4`).
 
+## Connection flow and activity fixes (16 October 2026, night)
+
+Found in Ahmed's first live ChatGPT connection:
+- **Every call was listed twice in activity.** The API's duration metric wrote a second row beside the call's own row. `recordMetric` (Convex) now adds the duration to the call's row. Calls refused before they ran still get one row. The list also hides the pairs already recorded.
+- **Connecting asked for approval twice.** The sign-in step and the consent step each showed "Continue with this account". One click now answers both. The resume cookie is cleared on the decision, so a finished request never reappears. The OAuth test asserts a single step.
+- **The page reloaded itself.** The Meta pixel exclusion did not cover `/mcp`. The pixel then loaded three seconds in, and the page's privacy guard forced a reload. `/mcp` is now excluded like the other owner pages.
+- **The page follows along without a reload.** It refreshes quietly on focus and every 5 s while a connection is unverified or an approval is waiting.
+- **Saving permissions.** "Save permissions" is off until something changes, and shows "Saved" on the button. A save interrupted by account re-verification is finished on return instead of being asked for again.
+- **Activity list.** Rows show the client logo, a readable area and action, a coloured result, and the time, with consistent section spacing.
+- **Deploy.** Convex (`recordMetric`, activity list) and the website/API (`oauth.js`, page, pixel rule).
+
 ## Open to every plan holder (16 October 2026, evening)
 
 - **Who can connect.** Every business owner with an active Catalyst, Ascend or Apex plan, including access granted from the admin page, since every plan is an access grant. There is no pilot list.

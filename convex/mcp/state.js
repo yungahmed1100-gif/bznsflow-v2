@@ -149,6 +149,68 @@ export async function audit(ctx, p, tool, status, now, runId) {
     ...(runId ? { runId } : {}),
   });
 }
+// The API reports each call's duration once the call returns. The call already
+// wrote its own activity row, so the duration joins that row instead of
+// becoming a second one. Calls refused before any row was written (unknown or
+// forbidden tools, bad arguments) still get a row of their own.
+export async function recordMetric(ctx, input, now = Date.now()) {
+  const c = await ctx.db.get(
+    ctx.db.normalizeId("mcpConnections", input.connectionId),
+  );
+  demand(
+    c && TOOL_BY_NAME.has(input.tool) && /^[a-z_]{3,60}$/.test(input.status),
+    "invalid_metric",
+  );
+  const durationMs = Math.max(
+    0,
+    Math.min(60000, Number(input.durationMs) || 0),
+  );
+  const since = now - Math.max(durationMs, 0) - 5000;
+  const recent = await ctx.db
+    .query("mcpAudit")
+    .withIndex("by_account", (q) =>
+      q.eq("accountId", c.accountId).gte("at", since),
+    )
+    .order("desc")
+    .take(50);
+  const own = recent.find(
+    (r) =>
+      r.connectionId === c._id &&
+      r.tool === input.tool &&
+      r.durationMs === undefined,
+  );
+  if (own) await ctx.db.patch(own._id, { durationMs });
+  else
+    await ctx.db.insert("mcpAudit", {
+      accountId: c.accountId,
+      connectionId: c._id,
+      tool: input.tool,
+      status: input.status,
+      durationMs,
+      at: now,
+      expiresAt: now + 30 * DAY,
+    });
+  return null;
+}
+// Rows written before recordMetric joined them: the call's own row had no
+// duration, and the metric then wrote a timed copy just after it.
+function withoutMetricEchoes(rows) {
+  return rows.filter(
+    (r) =>
+      r.runId ||
+      r.durationMs === undefined ||
+      !rows.some(
+        (o) =>
+          o !== r &&
+          o.durationMs === undefined &&
+          o.connectionId === r.connectionId &&
+          o.tool === r.tool &&
+          o.status === r.status &&
+          o.at <= r.at &&
+          r.at - o.at <= 5000,
+      ),
+  );
+}
 export async function rate(ctx, key, max, now, window = 60000) {
   const r = await lookup(ctx, "mcpLimits", "by_key", "key", key);
   if (r && r.expiresAt > now) {
@@ -212,7 +274,7 @@ export async function manage(ctx, a, now = Date.now()) {
           preview: r.preview,
           expiresAt: r.expiresAt,
         })),
-      activity,
+      activity: withoutMetricEchoes(activity),
       account: { email: p.account.email, plan: p.plan },
       workspace: {
         id: String(p.account._id),

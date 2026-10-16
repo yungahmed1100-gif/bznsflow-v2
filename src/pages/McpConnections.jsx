@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import "../styles/mcp.css";
 import {
@@ -11,6 +11,49 @@ import {
 } from "../components/mcp/ConnectionGuide";
 const COPIED_MS = 2500;
 const SAVED_MS = 4000;
+// While the owner is mid-connection (a new connection not yet verified, or an
+// approval waiting), the page follows along without a manual reload.
+const REFRESH_MS = 5000;
+const REFRESH_GAP_MS = 1500;
+// A permission change interrupted by account re-verification is finished on
+// return instead of being asked for again.
+const PENDING_POLICY_KEY = "bf_mcp_pending_policy";
+const PENDING_POLICY_MS = 10 * 60000;
+const DOMAINS = {
+  brain: ["BznsBrain", "BznsBrain"],
+  business: ["Business", "النشاط"],
+  catalog: ["Catalog", "الكتالوج"],
+  dashboard: ["Workspace", "مساحة العمل"],
+  files: ["Files", "الملفات"],
+  hasib: ["Hasib", "حاسب"],
+  instagram: ["Instagram", "Instagram"],
+  knowledge: ["Knowledge", "المعرفة"],
+  messaging: ["Messaging", "المراسلة"],
+  onboarding: ["Onboarding", "الإعداد"],
+  requests: ["Requests", "الطلبات"],
+  setup: ["Setup", "الإعداد"],
+};
+const sameSet = (a = [], b = []) =>
+  a.length === b.length && a.every((v) => b.includes(v));
+function readPendingPolicy() {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(PENDING_POLICY_KEY));
+    sessionStorage.removeItem(PENDING_POLICY_KEY);
+    return value && Date.now() - value.at < PENDING_POLICY_MS ? value : null;
+  } catch {
+    return null;
+  }
+}
+function keepPendingPolicy(body) {
+  try {
+    sessionStorage.setItem(
+      PENDING_POLICY_KEY,
+      JSON.stringify({ ...body, at: Date.now() }),
+    );
+  } catch {
+    // Without storage the owner simply saves again after verifying.
+  }
+}
 const ENDPOINT = "https://www.bznsflowai.com/api/mcp";
 const AREAS = {
   conversations: ["Conversations and Layla", "المحادثات وليلى"],
@@ -32,7 +75,24 @@ const RESULT_LABELS = {
   ready: ["Ready", "جاهز"],
   cancelled: ["Cancelled", "ملغى"],
   submitted: ["Submitted", "تم الإرسال إلى المزوّد"],
+  policy_changed: ["Permissions updated", "تم تحديث الصلاحيات"],
+  revoked: ["Disconnected", "تم قطع الاتصال"],
 };
+const RESULT_TONES = {
+  completed: "green",
+  approved: "green",
+  policy_changed: "green",
+  pending: "yellow",
+  approval_required: "yellow",
+  ready: "yellow",
+  submitted: "yellow",
+};
+function activityName(tool, ar) {
+  if (tool === "connection") return ar ? "الاتصال" : "Connection";
+  const [, domain = "", ...rest] = tool.split("_");
+  const area = DOMAINS[domain]?.[ar ? 1 : 0] || domain;
+  return { area, action: rest.join(" ") };
+}
 const CATEGORIES = {
   messages: ["Messages and campaigns", "الرسائل والحملات"],
   finance: ["Prices and financial approvals", "الأسعار والموافقات المالية"],
@@ -87,11 +147,15 @@ const ERRORS = {
     "اتصالات الذكاء الاصطناعي محدودة مؤقتًا. حاول مرة أخرى لاحقًا.",
   ],
 };
-function Connection({ connection: c, ar, busy, onSave, onRevoke }) {
+function Connection({ connection: c, ar, busy, saved, onSave, onRevoke }) {
   const [areas, setAreas] = useState(c.areas || Object.keys(AREAS)),
     [direct, setDirect] = useState(c.direct),
     [write, setWrite] = useState(c.scopes.includes("workspace:write"));
   const inactive = !!c.revokedAt || c.expiresAt < Date.now();
+  const changed =
+    !sameSet(areas, c.areas || Object.keys(AREAS)) ||
+    !sameSet(direct, c.direct) ||
+    write !== c.scopes.includes("workspace:write");
   return (
     <article className="mcp-panel">
       <div className="mcp-row">
@@ -201,10 +265,16 @@ function Connection({ connection: c, ar, busy, onSave, onRevoke }) {
           </fieldset>
           <div className="mcp-actions">
             <button
-              disabled={busy}
+              disabled={busy || !changed}
               onClick={() => onSave(c.id, direct, write, areas)}
             >
-              {ar ? "حفظ الصلاحيات" : "Save permissions"}
+              {saved && !changed
+                ? ar
+                  ? "تم الحفظ"
+                  : "Saved"
+                : ar
+                  ? "حفظ الصلاحيات"
+                  : "Save permissions"}
             </button>
             <button
               className="mcp-secondary"
@@ -233,6 +303,7 @@ export default function McpConnections({ lang = "ar" }) {
     [busy, setBusy] = useState(false),
     [copied, setCopied] = useState(""),
     [saved, setSaved] = useState(false),
+    [savedId, setSavedId] = useState(""),
     [consentAreas, setConsentAreas] = useState(Object.keys(AREAS));
   // Confirmations are brief; errors and copy guidance stay until the next action.
   useEffect(() => {
@@ -242,7 +313,10 @@ export default function McpConnections({ lang = "ar" }) {
   }, [copied]);
   useEffect(() => {
     if (!saved) return undefined;
-    const timer = setTimeout(() => setSaved(false), SAVED_MS);
+    const timer = setTimeout(() => {
+      setSaved(false);
+      setSavedId("");
+    }, SAVED_MS);
     return () => clearTimeout(timer);
   }, [saved]);
   const signIn = `${prefix}/signin?next=${encodeURIComponent(`${prefix}/mcp`)}`;
@@ -251,8 +325,9 @@ export default function McpConnections({ lang = "ar" }) {
       "Could not complete this request. Please try again.",
       "تعذّر إكمال الطلب. حاول مرة أخرى.",
     ])[ar ? 1 : 0];
-  const load = useCallback(async () => {
-    setError("");
+  // `quiet` refreshes keep whatever message the owner is reading.
+  const load = useCallback(async ({ quiet = false } = {}) => {
+    if (!quiet) setError("");
     const response = await fetch("/api/auth-session", {
       credentials: "same-origin",
       cache: "no-store",
@@ -272,6 +347,7 @@ export default function McpConnections({ lang = "ar" }) {
       }),
       value = await r.json();
     if (!r.ok) {
+      if (quiet) return;
       setData(null);
       setConsent(null);
       setError(value.reason);
@@ -291,7 +367,7 @@ export default function McpConnections({ lang = "ar" }) {
       if (c.ok) setConsent(view.interaction);
       else {
         setConsent(null);
-        setError(view.reason);
+        if (!quiet) setError(view.reason);
       }
     }
   }, []);
@@ -302,16 +378,56 @@ export default function McpConnections({ lang = "ar" }) {
     }
     setEndpoint(`${window.location.origin}/api/mcp`);
     let live = true;
-    load().catch(() => {
-      if (live) {
-        setAccount(null);
-        setError("unavailable");
-      }
-    });
+    load()
+      .then(() => {
+        const pending = live && readPendingPolicy();
+        if (pending) {
+          const { at: _at, ...body } = pending;
+          return action(body);
+        }
+        return undefined;
+      })
+      .catch(() => {
+        if (live) {
+          setAccount(null);
+          setError("unavailable");
+        }
+      });
     return () => {
       live = false;
     };
+    // `action` is recreated each render; the pending save runs once, on arrival.
   }, [load]);
+  const busyRef = useRef(false);
+  busyRef.current = busy;
+  const following =
+    !!data &&
+    !consent &&
+    (data.approvals.length > 0 ||
+      data.connections.some(
+        (c) => !c.revokedAt && c.expiresAt > Date.now() && !c.verifiedAt,
+      ));
+  useEffect(() => {
+    let last = 0;
+    const refresh = () => {
+      if (
+        document.visibilityState !== "visible" ||
+        busyRef.current ||
+        Date.now() - last < REFRESH_GAP_MS
+      )
+        return;
+      last = Date.now();
+      load({ quiet: true }).catch(() => {});
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const timer = following ? setInterval(refresh, REFRESH_MS) : null;
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+      if (timer) clearInterval(timer);
+    };
+  }, [load, following]);
   async function action(body) {
     setBusy(true);
     setError("");
@@ -326,6 +442,11 @@ export default function McpConnections({ lang = "ar" }) {
         }),
         value = await r.json();
       if (!r.ok) {
+        if (
+          body.action === "policy" &&
+          value.reason === "fresh_sign_in_required"
+        )
+          keepPendingPolicy(body);
         setError(value.reason);
         return;
       }
@@ -340,6 +461,7 @@ export default function McpConnections({ lang = "ar" }) {
         return;
       }
       setSaved(true);
+      if (body.action === "policy") setSavedId(body.connectionId);
       await load();
     } catch {
       setError("unavailable");
@@ -537,7 +659,7 @@ export default function McpConnections({ lang = "ar" }) {
       )}
       {data && (
         <>
-          <section>
+          <section className="mcp-section">
             <h2>{tr("Waiting for your approval", "بانتظار موافقتك")}</h2>
             {!data.approvals.length && (
               <p>
@@ -603,7 +725,7 @@ export default function McpConnections({ lang = "ar" }) {
               </article>
             ))}
           </section>
-          <section>
+          <section className="mcp-section">
             <h2>{tr("Your connections", "اتصالاتك")}</h2>
             <p>
               {tr("Workspace: ", "مساحة العمل: ")}
@@ -630,6 +752,7 @@ export default function McpConnections({ lang = "ar" }) {
                   connection={c}
                   ar={ar}
                   busy={busy}
+                  saved={savedId === c.id}
                   onSave={(connectionId, direct, write, areas) =>
                     action({
                       action: "policy",
@@ -648,7 +771,7 @@ export default function McpConnections({ lang = "ar" }) {
               ))}
             </div>
           </section>
-          <section>
+          <section className="mcp-section">
             <h2>{tr("Recent activity", "النشاط الأخير")}</h2>
             {!data.activity.length ? (
               <p>
@@ -659,17 +782,46 @@ export default function McpConnections({ lang = "ar" }) {
               </p>
             ) : (
               <ul className="mcp-activity">
-                {data.activity.map((a) => (
-                  <li key={a._id}>
-                    <span dir="ltr">{a.tool}</span>
-                    <span>
-                      {RESULT_LABELS[a.status]?.[ar ? 1 : 0] || a.status}
-                    </span>
-                    <time>
-                      {new Date(a.at).toLocaleString(ar ? "ar-OM" : "en-GB")}
-                    </time>
-                  </li>
-                ))}
+                {data.activity.map((a) => {
+                  const client = data.connections.find(
+                    (c) => c.id === a.connectionId,
+                  );
+                  const name = activityName(a.tool, ar);
+                  const result =
+                    RESULT_LABELS[a.status] || RESULT_LABELS.failed;
+                  return (
+                    <li key={a._id}>
+                      <ClientMark
+                        name={client?.clientName}
+                        id={client?.clientId}
+                        size={24}
+                      />
+                      <span className="mcp-activity-name">
+                        {typeof name === "string" ? (
+                          name
+                        ) : (
+                          <>
+                            <b>{name.area}</b>
+                            <span dir="ltr">{name.action}</span>
+                          </>
+                        )}
+                      </span>
+                      <span
+                        className="mcp-result"
+                        data-tone={RESULT_TONES[a.status] || "red"}
+                        title={a.status}
+                      >
+                        {result[ar ? 1 : 0]}
+                      </span>
+                      <time dateTime={new Date(a.at).toISOString()}>
+                        {new Date(a.at).toLocaleString(ar ? "ar-OM" : "en-GB", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </time>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>

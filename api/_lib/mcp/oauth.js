@@ -406,11 +406,11 @@ export async function completeInteraction(
   );
   if (interaction.uid !== interactionUid)
     throw new McpError("authorization_changed", 409);
-  if (interaction.prompt.name !== "login" || !allow)
-    appendCookie(
-      res,
-      serializeCookie("bf_mcp_resume", "", { maxAge: 0, httpOnly: true }),
-    );
+  // One owner decision finishes the request: the page never shows it again.
+  appendCookie(
+    res,
+    serializeCookie("bf_mcp_resume", "", { maxAge: 0, httpOnly: true }),
+  );
   if (!allow) {
     return provider.interactionResult(
       req,
@@ -423,14 +423,10 @@ export async function completeInteraction(
     tokenHash: tokenHash(req),
     fresh: true,
   });
-  if (interaction.prompt.name === "login")
-    return provider.interactionResult(
-      req,
-      res,
-      { login: { accountId: identity.accountId, remember: true } },
-      { mergeWithLastSubmission: false },
-    );
-  if (interaction.session?.accountId !== identity.accountId)
+  // The owner signs in and grants access with the same click, so the login
+  // and consent prompts are answered together rather than as two pages.
+  const signingIn = interaction.prompt.name === "login";
+  if (!signingIn && interaction.session?.accountId !== identity.accountId)
     throw new McpError("account_changed", 409);
   const connection = await store("manage", {
     operation: "connect",
@@ -470,7 +466,12 @@ export async function completeInteraction(
   return provider.interactionResult(
     req,
     res,
-    { consent: { grantId } },
-    { mergeWithLastSubmission: true },
+    {
+      ...(signingIn
+        ? { login: { accountId: identity.accountId, remember: true } }
+        : {}),
+      consent: { grantId },
+    },
+    { mergeWithLastSubmission: !signingIn },
   );
 }
