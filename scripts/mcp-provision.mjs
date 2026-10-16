@@ -3,7 +3,10 @@
 //   node scripts/mcp-provision.mjs
 // Generates independent production secrets and stores them only in Vercel and
 // Convex. Prints names, never values. Existing variables are left untouched.
-// MCP starts OFF; enabling the pilot is a separate, explicit step.
+// MCP starts OFF; turning it on is a separate, explicit step. Once on, every
+// business owner with an active plan (Catalyst, Ascend or Apex, including granted
+// access) can connect. MCP_PILOT_EMAIL is deliberately not set: it is an emergency
+// lever that narrows connections to one account.
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -16,7 +19,6 @@ const GREEN_CONVEX = "rare-fish-465";
 // Green's own selector (also in .env.green-convex.local). dev:quaint-nightingale-675
 // belongs to the Blue project; its --prod is valuable-mandrill-296, not Green.
 const CONVEX_SELECTOR = "prod:rare-fish-465";
-const PILOT_EMAIL = "ahmed@bznsflowai.com";
 const ORIGIN = "https://www.bznsflowai.com";
 
 const run = (cmd, args, options = {}) =>
@@ -39,7 +41,6 @@ const jwk = await exportJWK(privateKey);
 const workerSecret = randomBytes(32).toString("hex");
 const vercelValues = {
   MCP_ENABLED: "false",
-  MCP_PILOT_EMAIL: PILOT_EMAIL,
   MCP_WORKER_SECRET: workerSecret,
   MCP_OAUTH_ENCRYPTION_KEY: randomBytes(32).toString("hex"),
   MCP_COOKIE_KEYS: randomBytes(48).toString("base64url"),
@@ -61,7 +62,7 @@ for (const [name, value] of Object.entries(vercelValues)) {
     console.log(`Vercel production: ${name} already set, kept`);
     continue;
   }
-  const secret = !["MCP_ENABLED", "MCP_PILOT_EMAIL"].includes(name);
+  const secret = name !== "MCP_ENABLED";
   run(
     "npx",
     [
@@ -88,7 +89,6 @@ try {
     file,
     [
       "MCP_ENABLED=false",
-      `MCP_PILOT_EMAIL=${PILOT_EMAIL}`,
       `MCP_WORKER_SECRET=${workerSecret}`,
       `PUBLIC_SITE_ORIGIN=${ORIGIN}`,
     ].join("\n") + "\n",
@@ -99,7 +99,7 @@ try {
     stdio: ["ignore", "ignore", "inherit"],
   });
   console.log(
-    `Convex ${GREEN_CONVEX}: MCP_ENABLED, MCP_PILOT_EMAIL, MCP_WORKER_SECRET, PUBLIC_SITE_ORIGIN set`,
+    `Convex ${GREEN_CONVEX}: MCP_ENABLED, MCP_WORKER_SECRET, PUBLIC_SITE_ORIGIN set`,
   );
 } finally {
   rmSync(dir, { recursive: true, force: true });

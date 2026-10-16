@@ -107,6 +107,44 @@ test("authenticated read, routine edit and exact approval slice reuse domain ope
     /idempotency_conflict/,
   );
 });
+test("every owner with a plan can connect; no plan and the optional pilot lock refuse", async () => {
+  const connect = (m, extra = {}) =>
+    manage(
+      m.ctx,
+      {
+        operation: "connect",
+        tokenHash: "1".repeat(64),
+        clientId: "synthetic-client",
+        clientName: "ChatGPT",
+        scopes: ["workspace:read"],
+        ...extra,
+      },
+      m.now(),
+    );
+  assert.equal(process.env.MCP_PILOT_EMAIL, undefined);
+  for (const plan of ["catalyst", "ascend", "apex"]) {
+    const { m, c } = await fixture(plan);
+    assert.ok(c.id, `${plan} owner connects`);
+    assert.equal((await connectionOwner(m.ctx, c.id, m.now())).plan, plan);
+    assert.ok((await connect(m)).id, `${plan} owner connects a second app`);
+  }
+  const { m, c } = await fixture("catalyst");
+  const grant = m.table("blueAccessGrants")[0];
+  await m.db.patch(grant._id, { status: "revoked" });
+  await assert.rejects(() => connect(m), /access_required/);
+  await m.db.patch(grant._id, { status: "active" });
+  // MCP_PILOT_EMAIL is only an emergency narrowing lever; it is unset in production.
+  process.env.MCP_PILOT_EMAIL = "someone-else@example.com";
+  try {
+    await assert.rejects(() => connect(m), /mcp_pilot_only/);
+    await assert.rejects(
+      () => connectionOwner(m.ctx, c.id, m.now()),
+      /mcp_pilot_only/,
+    );
+  } finally {
+    delete process.env.MCP_PILOT_EMAIL;
+  }
+});
 test("employee, removed access, expired and revoked connections fail inside backend", async () => {
   const { m, a, c } = await fixture();
   await m.db.patch(c.id, { expiresAt: m.now() - 1 });

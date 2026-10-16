@@ -2,6 +2,15 @@
 
 Status (16 October 2026, afternoon): **integrated onto the live Green source and accepted on the isolated candidate. Ready for the Green deploy, which Ahmed authorized and runs.** Branch `release/mcp-integration-2026-10-16`. See [the 16 October integrated acceptance](#integrated-acceptance-16-october-2026) below and the [Green release record](../green-release-2026-10-16-mcp.md). The sections that follow it record the earlier, pre-integration evidence from branch `feat/bznsflow-mcp` (base `9f3a6a4`).
 
+## Open to every plan holder (16 October 2026, evening)
+
+- **Who can connect.** Every business owner with an active Catalyst, Ascend or Apex plan, including access granted from the admin page, since every plan is an access grant. There is no pilot list.
+- **Who cannot.** Employees (`manager_required`), accounts without an active plan (`access_required`, with a "See plans" link), and owners who have not finished setup.
+- **Unchanged gates.** Plan and pack checks still filter every tool, and important actions still need the owner's approval.
+- **How it works.** `MCP_PILOT_EMAIL` is no longer provisioned. It stays in the code as an emergency lever that narrows connections to one account.
+- **Tests.** A new state test covers all three plans connecting, a revoked plan being refused, and the lever.
+- **Still open before wide use:** tool discovery is about 108k tokens per owner (see below).
+
 ## ChatGPT option and connector identity (16 October 2026, evening)
 
 - **ChatGPT tab.** `/mcp` and `/en/mcp` have four clients: Claude, ChatGPT, Claude Code and Codex. The ChatGPT steps are:
@@ -123,7 +132,7 @@ The user authorized implementation and preparation; this record does **not** aut
 | Variable | Runtime | Purpose |
 | --- | --- | --- |
 | `MCP_ENABLED` | Vercel + Convex | Fail-closed admission/effect kill switch; initially false |
-| `MCP_PILOT_EMAIL` | Convex (mirror in deployment config) | Initially Ahmed's verified owner email; remove only after acceptance |
+| `MCP_PILOT_EMAIL` | Convex | Unset in production since 16 October 2026: every owner with an active plan can connect. Set it only as an emergency lever to narrow connections to one account |
 | `MCP_OAUTH_ENCRYPTION_KEY` | Vercel | Independent 32-byte AES key, hex |
 | `MCP_OAUTH_JWKS` | Vercel | Stable private RS256 JWKS with unique key ID |
 | `MCP_COOKIE_KEYS` | Vercel | Strong signing keys, newest first |
@@ -138,7 +147,7 @@ Candidate secrets were independently generated, stored in mode-0600 files outsid
 
 Deploy additive Convex tables/optional message/campaign origin fields and guarded workers first, only after explicit authorization for the target. Deploy the committed website/API candidate with MCP disabled, verify ordinary flows, then enable the pilot in both runtimes. OAuth clients must re-register for a changed issuer origin. Record source SHA, Vercel deployment ID/URL, Convex target, configuration version and acceptance evidence.
 
-Rollback: disable `MCP_ENABLED` in Vercel **and Convex**, revoke pilot connections, and restore the previous Vercel deployment if necessary. **Keep the additive Convex schema and MCP-aware worker guards** while tagged jobs exist. An older worker that ignores origin tags is not a safe rollback for queued MCP effects. Never undo already submitted external effects or delete receipt/audit evidence to make a rollback appear clean.
+Rollback: disable `MCP_ENABLED` in Vercel **and Convex** (or set `MCP_PILOT_EMAIL` in Convex to narrow it to one account), revoke connections, and restore the previous Vercel deployment if necessary. **Keep the additive Convex schema and MCP-aware worker guards** while tagged jobs exist. An older worker that ignores origin tags is not a safe rollback for queued MCP effects. Never undo already submitted external effects or delete receipt/audit evidence to make a rollback appear clean.
 
 Invitations have a durable intent and Resend idempotency key. A submitted receipt is not inbox delivery. An interrupted/uncertain attempt is reported as unknown and is not automatically resent; inspect the provider receipt first. Campaigns and messages retain their existing cancellation, opt-out, window and delivery-receipt rules.
 

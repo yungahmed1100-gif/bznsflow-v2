@@ -55,8 +55,8 @@ const ERRORS = {
     "تحقّق من حسابك مجددًا لتغيير الصلاحيات أو ربط المساعد.",
   ],
   access_required: [
-    "Your account needs active BznsFlow access.",
-    "يحتاج حسابك إلى صلاحية BznsFlow فعّالة.",
+    "AI connections come with every BznsFlow plan. Your account doesn’t have an active plan yet.",
+    "اتصالات الذكاء الاصطناعي متاحة مع جميع باقات BznsFlow. لا توجد باقة فعّالة في حسابك بعد.",
   ],
   manager_required: [
     "Only the business owner can manage AI connections.",
@@ -83,8 +83,8 @@ const ERRORS = {
     "خدمة الاتصال غير جاهزة بعد.",
   ],
   mcp_pilot_only: [
-    "AI connections are currently available to the pilot account.",
-    "اتصالات الذكاء الاصطناعي متاحة حاليًا للحساب التجريبي.",
+    "AI connections are temporarily limited. Please try again later.",
+    "اتصالات الذكاء الاصطناعي محدودة مؤقتًا. حاول مرة أخرى لاحقًا.",
   ],
 };
 function Connection({ connection: c, ar, busy, onSave, onRevoke }) {
@@ -394,6 +394,10 @@ export default function McpConnections({ lang = "ar" }) {
           {error === "fresh_sign_in_required" ? (
             <a href={`${signIn}&fresh=1`}>
               {tr("Verify account", "التحقق من الحساب")}
+            </a>
+          ) : error === "access_required" ? (
+            <a href={`${prefix || ""}/#tiers`}>
+              {tr("See plans", "اطّلع على الباقات")}
             </a>
           ) : (
             <button
