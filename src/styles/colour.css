@@ -46,11 +46,7 @@
   width: 100%;              /* the same width as the facts card under it */
   aspect-ratio: 3 / 2;
   display: grid;
-  place-items: center;
-  background: var(--bg-card);
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  place-items: center;     /* no card: the art sits on the page background */
 }
 .about-art img { width: 100%; height: auto; display: block; }
 .detail-icon[data-tone] { width: 30px; height: 30px; justify-content: center; border-radius: var(--radius-sm); background: var(--tint); color: var(--tone-ink); }
