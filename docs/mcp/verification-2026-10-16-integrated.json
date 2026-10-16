@@ -1,0 +1,72 @@
+{
+  "observedAt": "2026-10-16T11:45:00.000Z",
+  "branch": "release/mcp-integration-2026-10-16",
+  "base": "e4c0f88",
+  "productionChanged": false,
+  "candidate": {
+    "project": "bznsflow-mcp-acceptance",
+    "deploymentId": "dpl_3fj7jW3SacU2icg5yEa5n5McQwFW",
+    "target": "preview",
+    "alias": "https://bznsflow-mcp-acceptance.vercel.app",
+    "convex": {
+      "deployment": "quaint-monitor-641",
+      "fixtureRemoved": true,
+      "fixtureFlagRemoved": true,
+      "expiry": "19 October 2026 UTC"
+    }
+  },
+  "tests": {
+    "releaseCheck": "passed (unit, Convex typecheck, build, audit, 11 shared browser suites, all sector suites)",
+    "mcpUnit": 35,
+    "mcpBrowser": 188,
+    "retailBrowser": 582,
+    "realConvexBoundary": 91,
+    "httpsOAuthSdk": 37,
+    "syntheticLoad": {
+      "calls": 60,
+      "concurrency": 5,
+      "p50Ms": 1007,
+      "p95Ms": 2052,
+      "maxMs": 2434,
+      "note": "Measured from Muscat to Ireland; three Convex round trips per call"
+    },
+    "clients": [
+      {
+        "client": "Claude Code",
+        "version": "2.1.285",
+        "model": "claude-sonnet-5-5",
+        "login": "passed",
+        "arabicConsent": "passed",
+        "modelToolCalls": "passed",
+        "approvedWrite": "passed",
+        "automaticRefresh": "passed",
+        "websiteDisconnect": "passed",
+        "costUsd": 0.34
+      },
+      {
+        "client": "Codex",
+        "version": "0.161.0",
+        "login": "passed (local provider reproduction)",
+        "refreshScopeShape": "reproduced and fixed; covered by HTTPS checks",
+        "modelToolCalls": "blocked: Codex usage limit until 2026-10-22 10:30"
+      }
+    ]
+  },
+  "fixes": [
+    "Refresh scope narrowing for Codex (4036ea1)",
+    "MCP policy for 15 Release A/B sector operations, with coverage test",
+    "Six-tab dashboard waits for Hasib before resolving legacy tabs"
+  ],
+  "cleanup": {
+    "syntheticConnectionsRevoked": true,
+    "trackedAndUntrackedSecretMatches": 0,
+    "filesScanned": 1180
+  },
+  "remaining": [
+    "Codex model-driven run (usage limit)",
+    "Claude.ai web connector (needs Ahmed's browser)",
+    "Real email-code and social sign-in returns",
+    "Narrow Hasib tool schemas (~108k tokens of discovery) before customer enablement",
+    "Green deploy and pilot enablement, run by Ahmed"
+  ]
+}

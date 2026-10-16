@@ -1,6 +1,37 @@
 # MCP release and acceptance record
 
-Status: **implemented and deployed to an isolated synthetic candidate; Green is unchanged**. Branch `feat/bznsflow-mcp`, isolated worktree `/Users/ramsis21/Desktop/bznsflow-mcp`. Base: `9f3a6a4`, including the prior global-reliability release. The dirty main checkout is untouched. Customer enablement and production promotion remain gated below.
+Status (16 October 2026, afternoon): **integrated onto the live Green source and accepted on the isolated candidate. Ready for the Green deploy, which Ahmed authorized and runs.** Branch `release/mcp-integration-2026-10-16`. See [the 16 October integrated acceptance](#integrated-acceptance-16-october-2026) below and the [Green release record](../green-release-2026-10-16-mcp.md). The sections that follow it record the earlier, pre-integration evidence from branch `feat/bznsflow-mcp` (base `9f3a6a4`).
+
+## Integrated acceptance (16 October 2026)
+
+- **Source.** `feat/bznsflow-mcp` merged onto `origin/master` (`e4c0f88`, Releases A and B). Green had been deployed from that line without the 13–14 October website work, so this release also restores `/services`, `/support` and `/contact`, which were 404 in production.
+- **Codex refresh fix.** A real Codex run failed its automatic refresh with `invalid_scope`. Codex refreshes with `openid workspace:read workspace:write` after `mcp login --scopes workspace:read,workspace:write`. The token endpoint now drops requested scopes that the refresh token does not hold, and never adds any. A read-only grant stays read-only, and a request with no overlap is still refused. Reproduced with the real Codex CLI against a local provider. Regression tests cover both the stream and the pre-parsed (Vercel) body.
+- **Policy gap closed.** 15 automotive, construction and store operations from Releases A and B had no MCP policy. They are now mapped like their sibling sectors, and a coverage test fails on any unmapped validator operation.
+- **Candidate** `dpl_3fj7jW3SacU2icg5yEa5n5McQwFW`, Convex `quaint-monitor-641`, integrated source:
+  - **91 real Convex checks:**
+    - concurrent approvals: 4 sent, 1 accepted;
+    - approve-versus-execute race;
+    - exact 120 per connection and 300 per workspace minute limits;
+    - a queued invitation is cancelled by revocation, with 0 attempts;
+    - Arabic CSV round trip;
+    - plan and integration changes.
+  - **Synthetic load:** 60 calls at concurrency 5, measured from Muscat with three round trips per call. p50 1,007 ms, p95 2,052 ms, max 2,434 ms.
+  - **37 HTTPS checks**, including a refresh in Codex's exact scope shape.
+  - **Claude Code 2.1.285 on Sonnet 5.5, real model tool calls:**
+    - Arabic read, write and approval preview;
+    - English website-approved export;
+    - automatic refresh after forced token expiry;
+    - website disconnection.
+
+    The model cost was $0.34.
+- **Not verified:**
+  - **Codex model run.** Its account is usage-limited until 22 October 10:30.
+  - **The Claude.ai web connector.** It needs Ahmed's browser.
+  - **Real email-code and social sign-in returns.** Candidate email is deliberately disabled.
+- **Correction to the earlier record.** The earlier record said the fixture and its flag were removed. In fact the late 15 October model run had re-added both. They have now been removed and verified: no `mcpAcceptance` function and no `MCP_ACCEPTANCE_FIXTURES`. All synthetic connections are revoked. A scan of 1,180 tracked and untracked files found 0 candidate secrets.
+- **Open before customer enablement:** tool discovery for a sector owner is about 108k tokens, about 130 tools. Each Hasib tool reuses its whole sector input shape. Narrow each tool to `HASIB_FIELDS_BY_OPERATION`.
+
+Machine-readable evidence: [verification-2026-10-16-integrated.json](verification-2026-10-16-integrated.json).
 
 ## Implemented surface
 
