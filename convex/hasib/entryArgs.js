@@ -132,6 +132,8 @@ export const hasibEntryArgs = {
     fitness: v.optional(fitness), planId: v.optional(v.string()), classId: v.optional(v.string()), seatId: v.optional(v.string()),
     dental: v.optional(dental), visitId: v.optional(v.string()),
     dentalSettings: v.optional(v.object({ visitMinutes: v.optional(v.number()), lateCancelHours: v.optional(v.number()), balanceDueDays: v.optional(v.number()), recallWindowDays: v.optional(v.number()), chairDayMinutes: v.optional(v.number()), openDaysPerWeek: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
+    retailSettings: v.optional(v.object({ readyUncollectedHours: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
+    retailTechSettings: v.optional(v.object({ readyUncollectedHours: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     constructionSettings: v.optional(v.object({ approvalWaitDays: v.optional(v.number()), materialsLeadDays: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     automotiveSettings: v.optional(v.object({ approvalWaitHours: v.optional(v.number()), readyUncollectedHours: v.optional(v.number()), autoQuoteLimitMinor: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     fitnessSettings: v.optional(v.object({ conversionWindowDays: v.optional(v.number()), gapDays: v.optional(v.number()), minObservationDays: v.optional(v.number()), renewalNoticeDays: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),

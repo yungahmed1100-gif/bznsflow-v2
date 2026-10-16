@@ -8,10 +8,11 @@ import { isLivePack } from '../../config/hasib-packs.js';
 import { runMediaAutomation } from './mediaAutomation.js';
 import { runAutomotiveAutomation } from './automotiveAutomation.js';
 import { runConstructionAutomation } from './constructionAutomation.js';
+import { runRetailAutomation } from './retailAutomation.js';
 
 export const RUN_EVERY_MS = 5 * 60000;
 export const SWEEP_LIMIT = 20;
-const RUNNERS = { media: runMediaAutomation, automotive: runAutomotiveAutomation, construction: runConstructionAutomation };
+const RUNNERS = { media: runMediaAutomation, automotive: runAutomotiveAutomation, construction: runConstructionAutomation, retail: runRetailAutomation, 'retail-tech': runRetailAutomation };
 export { ensureAutomation } from './workspace/schedule.js';
 
 /** The cron: claims up to SWEEP_LIMIT due accounts (oldest first) and schedules one run for each. */

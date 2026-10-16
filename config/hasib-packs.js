@@ -84,7 +84,7 @@ const SECTOR = {
 // Owner-facing scope is independent of release approval. Non-live packs are local previews only.
 const OWNER_PACKS = {
   retail: ['Orders', 'الطلبات', 'Products', 'المنتجات', 'orders', [['best_variant', 'Best-selling variant', 'المقاس واللون الأكثر مبيعاً'], ['unsold_stock', 'Stock unsold 60 days', 'بضاعة لم تُبع منذ ٦٠ يوماً'], ['product_requests', 'Unfilled product requests', 'طلبات منتجات لم تُلبَّ']]],
-  'retail-tech': ['Orders', 'الطلبات', 'Products', 'المنتجات', 'orders', [['device_profit', 'Profit per device', 'الربح لكل جهاز'], ['unsold_stock', 'Stock held 60 days', 'بضاعة منذ ٦٠ يوماً'], ['overdue_repairs', 'Overdue repairs', 'إصلاحات متأخرة']]],
+  'retail-tech': ['Store & repairs', 'المتجر والصيانة', 'Products', 'المنتجات', 'orders', [['device_profit', 'Profit per device', 'الربح لكل جهاز'], ['unsold_stock', 'Stock held 60 days', 'بضاعة منذ ٦٠ يوماً'], ['overdue_repairs', 'Overdue repairs', 'إصلاحات متأخرة']]],
   beauty: ['Bookings', 'الحجوزات', 'Supplies', 'المستلزمات', 'bookings', [['missed_visits', 'Missed visits', 'زيارات فائتة'], ['booked_hours', 'Booked hours', 'الساعات المحجوزة'], ['return_visits', 'Completed return visits', 'زيارات متكررة مكتملة']]],
   // Dental on Ascend is the six-tab Visits workspace (ascend/dental.md): appointments with attendance, charges on Hasib orders.
   dental: ['Visits', 'الزيارات', 'Services', 'الخدمات', 'dental', [['missed_visits', 'Missed visits', 'زيارات فائتة'], ['followups_due', 'Follow-ups due', 'متابعات مستحقة'], ['overdue_balances', 'Overdue visit balances', 'أرصدة زيارات متأخرة']]],

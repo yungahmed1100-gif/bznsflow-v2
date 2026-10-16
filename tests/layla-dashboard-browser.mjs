@@ -212,7 +212,7 @@ try {
     await context.close();
   }
 
-  // Every released industry has visible, bilingual actions and truthful visuals at phone, tablet and desktop sizes.
+  // Every released industry opens its six-tab Work from an old Today link, bilingual, at phone, tablet and desktop sizes.
   for (const packId of ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive']) for (const lang of ['en', 'ar']) for (const width of [320, 768, 1440]) {
     const state = fixture(), handler = api(state);
     const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=today', handler, extra: (surface, request) => {
@@ -237,10 +237,11 @@ try {
       await context.close();
       continue;
     }
-    if (packId === 'automotive' || packId === 'construction') {
-      // Both are six tabs since Release A: an old Today link opens Work (Workshop or Projects) on its first view.
-      await page.locator(packId === 'automotive' ? '.hb-automotive-six' : '.hb-construction-six').first().waitFor();
-      assert.equal(await page.locator('.ld-section-tabs a').count(), packId === 'automotive' ? 4 : 3, `${packId} ${lang} Work views at ${width}`); count++;
+    if (packId !== 'real-estate' && packId !== 'dental') {
+      // Six tabs since Releases A and B: an old Today link opens Work (Workshop, Projects, Orders or Store & repairs) on its first view.
+      const container = { automotive: '.hb-automotive-six', construction: '.hb-construction-six', retail: '.hb-store-six', 'retail-tech': '.hb-store-six' }[packId];
+      await page.locator(container).first().waitFor();
+      assert.equal(await page.locator('.ld-section-tabs a').count(), packId === 'construction' ? 3 : 4, `${packId} ${lang} Work views at ${width}`); count++;
       assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr'); count++;
       assert.equal(await noOverflow(page), true, `${packId} ${lang} no overflow at ${width}`); count++;
       assert.deepEqual(await axe(page), [], `${packId} ${lang} axe at ${width}`); count++;
@@ -261,16 +262,6 @@ try {
       await context.close();
       continue;
     }
-    await page.locator('.hb-action-strip').first().waitFor();
-    assert.equal(await page.locator('.hb-action-card').count(), 4, `${packId} ${lang} actions at ${width}`); count++;
-    assert.equal(await page.locator('.hb-visual-metric').count(), packId === 'real-estate' ? 6 : 3, `${packId} ${lang} metrics at ${width}`); count++;
-    assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr'); count++;
-    assert.equal(await noOverflow(page), true, `${packId} ${lang} no overflow at ${width}`); count++;
-    assert.deepEqual(await axe(page), [], `${packId} ${lang} axe at ${width}`); count++;
-    await page.locator('.hb-action-card').first().click();
-    const expectedTab = packId === 'real-estate' ? 'orders' : packId === 'retail-tech' ? 'service' : 'orders';
-    await page.waitForFunction(tab => new URL(location.href).searchParams.get('tab') === tab, expectedTab); count++;
-    if (width === 320 || width === 1440) await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
     await context.close();
   }
 

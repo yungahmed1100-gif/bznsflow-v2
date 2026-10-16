@@ -56,22 +56,34 @@ const unitsOf = async (page, base, sku) => {
 };
 
 try {
-  // 1. Every manager section, deep-linked, in both languages and three widths.
-  const MANAGER_TABS = ['today', 'chats', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings'];
+  // 1. Every manager tab and view, deep-linked, in both languages and three widths: the six Ascend tabs,
+  // with Store & repairs as Work (repairs first). The old Today, Orders, Stock, Service, Money and Team links land inside.
+  const MANAGER_PATHS = [['work', 'repairs'], ['work', 'sales'], ['work', 'devices'], ['work', 'followups'], ['chats'], ['customers'], ['broadcasts'],
+    ['insights', 'overview'], ['insights', 'expenses'], ['settings', 'rules'], ['settings', 'team']];
   for (const lang of process.env.RETAIL_TECH_QUICK ? [] : ['en', 'ar']) {
     for (const width of [1440, 768, 320]) {
-      for (const tab of MANAGER_TABS) {
-        const { page, context, problems } = await open(manager.base, width, lang, `/layla/dashboard?tab=${tab}`);
+      for (const [tab, view] of MANAGER_PATHS) {
+        const { page, context, problems } = await open(manager.base, width, lang, `/layla/dashboard?tab=${tab}${view ? `&view=${view}` : ''}`);
         await page.locator('main h1, main h2').first().waitFor();
-        eq((await sections(page)).length, 9, `${lang} ${width}: nine sections`);
+        eq((await sections(page)).length, 6, `${lang} ${width}: six tabs`);
         eq(await page.locator('main').getAttribute('data-tab'), tab, `${lang} ${width} ${tab}: deep link`);
-        eq(await noOverflow(page), true, `${lang} ${width} ${tab}: overflow`);
-        eq(await axe(page), [], `${lang} ${width} ${tab}: axe`);
-        eq(problems, [], `${lang} ${width} ${tab}: no page errors or refused calls`);
-        if (width !== 768) await page.screenshot({ path: `${OUT}/manager-${tab}-${lang}-${width}.png`, fullPage: true });
+        if (view && (tab === 'work' || tab === 'insights')) eq(await page.locator('.ld-section-tabs a[aria-current="page"]').getAttribute('href'), `?tab=${tab}&view=${view}`, `${lang} ${width} ${tab}/${view}: the view is current`);
+        if (tab === 'work') await page.locator('.hb-attention').waitFor();
+        eq(await noOverflow(page), true, `${lang} ${width} ${tab} ${view || ''}: overflow`);
+        eq(await axe(page), [], `${lang} ${width} ${tab} ${view || ''}: axe`);
+        eq(problems, [], `${lang} ${width} ${tab} ${view || ''}: no page errors or refused calls`);
+        if (width !== 768) await page.screenshot({ path: `${OUT}/manager-${tab}-${view || 'main'}-${lang}-${width}.png`, fullPage: true });
         await context.close();
       }
     }
+  }
+  for (const [old, tab, view] of [['today', 'work', 'repairs'], ['service', 'work', 'repairs'], ['orders', 'work', 'sales'], ['stock', 'work', 'devices'], ['money', 'insights', 'overview'], ['team', 'settings', 'team']]) {
+    const { page, context, problems } = await open(manager.base, 1440, 'en', `/layla/dashboard?tab=${old}`);
+    await page.locator('main h1, main h2').first().waitFor();
+    eq(await page.locator('main').getAttribute('data-tab'), tab, `old ?tab=${old} lands on ${tab}`);
+    if (tab !== 'settings') eq(await page.locator('.ld-section-tabs a[aria-current="page"]').getAttribute('href'), `?tab=${tab}&view=${view}`, `old ?tab=${old} opens ${view}`);
+    eq(problems, [], `old ?tab=${old}: no errors`);
+    await context.close();
   }
 
   // 2. An IMEI sale: one order on a double click, overpayment refused, cancel asks first and the unit returns.
@@ -209,14 +221,14 @@ try {
     await context.close();
   }
 
-  // 8. The employee: six sections everywhere; manager tabs fall back.
+  // 8. The employee: Chats, Work and Customers everywhere; manager tabs fall back.
   for (const lang of process.env.RETAIL_TECH_QUICK ? [] : ['en', 'ar']) {
     for (const width of [1440, 320]) {
       for (const tab of ['today', 'chats', 'orders', 'stock', 'service', 'customers', 'money', 'settings', 'team']) {
         const { page, context, problems } = await open(employee.base, width, lang, `/layla/dashboard?tab=${tab}`);
         await page.locator('main h1, main h2').first().waitFor();
-        eq((await sections(page)).length, 6, `${lang} ${width} ${tab}: six sections for an employee`);
-        ok(['today', 'chats', 'orders', 'stock', 'service', 'customers'].includes(await page.locator('main').getAttribute('data-tab')), `${lang} ${width} ${tab}: manager tabs fall back`);
+        eq((await sections(page)).length, 3, `${lang} ${width} ${tab}: Chats, Work and Customers for an employee`);
+        ok(['work', 'chats', 'customers'].includes(await page.locator('main').getAttribute('data-tab')), `${lang} ${width} ${tab}: manager tabs fall back`);
         eq(await noOverflow(page), true, `${lang} ${width} ${tab}: overflow`);
         eq(await axe(page), [], `${lang} ${width} ${tab}: axe`);
         eq(problems, [], `${lang} ${width} ${tab}: no page errors or refused calls`);
@@ -228,9 +240,9 @@ try {
 
   // 9. What the employee can and cannot do in a phone shop.
   {
-    const { page, context, problems } = await open(employee.base, 1440, 'en', '/layla/dashboard?tab=today');
-    await page.locator('.hb-today').waitFor();
-    eq(await page.locator('.hb-action-card', { hasText: 'Record trade-in' }).count(), 0, 'no trade-in on Today');
+    const { page, context, problems } = await open(employee.base, 1440, 'en', '/layla/dashboard?tab=work');
+    await page.locator('.hb-attention').waitFor();
+    eq(await page.locator('.ld-section-tabs a').allInnerTexts(), ['Repairs', 'Sales', 'Devices', 'Follow-ups'], 'the same Work views as the manager');
     eq(await page.getByText('Profit per device').count(), 0, 'no profit card');
     await page.goto(`${employee.base}/en/layla/dashboard?tab=service`);
     await page.locator('.hb-service').waitFor();

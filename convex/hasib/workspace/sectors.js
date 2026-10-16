@@ -10,8 +10,11 @@ export const SIX_TAB_SECTORS = Object.freeze([
   { packId: 'dental', operations: DENTAL_OPERATIONS, settingsArg: 'dentalSettings', settingsKey: 'dental', draftField: 'dentalDraftId' },
   { packId: 'automotive', operations: AUTOMOTIVE_OPERATIONS, settingsArg: 'automotiveSettings', settingsKey: 'automotive', draftField: 'automotiveDraftId' },
   { packId: 'construction', operations: CONSTRUCTION_OPERATIONS, settingsArg: 'constructionSettings', settingsKey: 'construction', draftField: 'constructionDraftId' },
+  // The two store packs share one Work (store_* operations, retailWorkspace.js guards the pack), so neither claims them here.
+  { packId: 'retail', operations: [], settingsArg: 'retailSettings', settingsKey: 'retail', draftField: 'retailDraftId' },
+  { packId: 'retail-tech', operations: [], settingsArg: 'retailTechSettings', settingsKey: 'retailTech', draftField: 'retailDraftId' },
 ]);
-export const SECTOR_DRAFT_FIELDS = Object.freeze(SIX_TAB_SECTORS.map(s => s.draftField));
+export const SECTOR_DRAFT_FIELDS = Object.freeze([...new Set(SIX_TAB_SECTORS.map(s => s.draftField))]);
 
 /** A delivery receipt (delivered or read) moves the draft its message came from. */
 export async function markDraftDelivered(ctx, target, status, now) {

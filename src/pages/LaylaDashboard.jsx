@@ -39,10 +39,11 @@ import { FitnessDashboard } from '../components/hasib/FitnessDashboard';
 import { DentalDashboard } from '../components/hasib/DentalDashboard';
 
 // The six-tab sectors' Work, Insights and rules/team screens, by pack (Real Estate is the default).
-const SIX_TAB_DASHBOARDS = { 'real-estate': RealEstateDashboard, media: MediaDashboard, fitness: FitnessDashboard, dental: DentalDashboard, automotive: AutomotiveWorkspace, construction: ConstructionWorkspace };
+const SIX_TAB_DASHBOARDS = { 'real-estate': RealEstateDashboard, media: MediaDashboard, fitness: FitnessDashboard, dental: DentalDashboard, automotive: AutomotiveWorkspace, construction: ConstructionWorkspace, retail: StoreWorkspace, 'retail-tech': StoreWorkspace };
 import { ClinicDashboard } from '../components/hasib/ClinicDashboard';
 import { ConstructionWorkspace } from '../components/hasib/ConstructionWorkspace';
 import { AutomotiveWorkspace } from '../components/hasib/AutomotiveWorkspace';
+import { StoreWorkspace } from '../components/hasib/StoreWorkspace';
 import '../styles/layla-dashboard.css';
 import '../styles/hasib.css';
 import '../styles/workspace.css';
@@ -142,7 +143,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                 : tab === 'money' && view === 'expenses' ? <ExpensesView s={s} h={h} overview={hasibOverview} timezone={data.timezone} initialCreate={params.get('action') === 'expense'} />
                 : tab === 'money' ? <InsightsView s={s} h={h} overview={hasibOverview} onGo={go} />
                 : (tab === 'customers' && view === 'broadcast') || tab === 'broadcasts' ? (data.integration ? <BroadcastView s={s} overview={data} onTimezone={() => overview.refresh({ quiet: true })} /> : <div className="ld-state"><p>{s.t('broadcastWhatsAppOnly')}</p>{map.sections.includes('settings') && <button type="button" className="ld-button" onClick={() => go('settings', { view: 'channels' })}>{s.t('connectChannel')}</button>}</div>)
-                : tab === 'customers' ? <>{hasibOverview?.pack && !map.sixTab && <FollowupView s={s} h={h} packId={hasibOverview.pack.id} timezone={data.timezone} />}<ContactsView s={s} overview={data} onOpenChat={id => go('chats', { chat: id })} /></>
+                : tab === 'customers' ? <>{hasibOverview?.pack && (!map.sixTab || ['retail', 'retail-tech'].includes(hasibOverview.pack.id)) && <FollowupView s={s} h={h} packId={hasibOverview.pack.id} timezone={data.timezone} />}<ContactsView s={s} overview={data} onOpenChat={id => go('chats', { chat: id })} /></>
                 : tab === 'settings' && view === 'accounts' ? <AccountsSettings s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={() => { refreshHasib(); overview.refresh({ quiet: true }); }} />
                 : tab === 'settings' && view === 'brain' ? <BrainPage lang={lang} part={brainPart(params)} onPart={part => setParams(dashboardSearch(params, 'settings', { view: 'brain', part }), { replace: true })}
                     channel={!!data.connected} active={!!data.messaging?.active} onGo={go} />

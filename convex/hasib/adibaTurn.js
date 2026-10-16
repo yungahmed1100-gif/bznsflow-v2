@@ -18,9 +18,10 @@ const PRICE_QUESTION = /\b(price|prices|cost|costs|how much|quote|rate|rates|fee
 const ARABIC = /[؀-ۿ]/;
 
 /**
+ * @param {{ stockMatched?: boolean }} args stockMatched: commerceTurn answered from a stock item this turn
  * @returns {Promise<null | { ack?: string, facts?: string[] }>}
  */
-export async function adibaTurn(ctx, { row, person, contact, text, messageKey, catalog = [], now, secret }) {
+export async function adibaTurn(ctx, { row, person, contact, text, messageKey, catalog = [], stockMatched = false, now, secret }) {
   if (!contact || !text) return null;
   const pack = await sectorTurnPack(ctx, { row, secret });
   if (!pack) return null;
@@ -41,8 +42,9 @@ export async function adibaTurn(ctx, { row, person, contact, text, messageKey, c
   const facts = open.map(offerFact);
   if (open.length > 1 && YES.test(text)) facts.push(`Several offers are open (${open.map(o => o.ref).join(', ')}): ask which one they accept, by its reference.`);
 
-  // A price the catalog does not fix: Adiba drafts the offer, the owner prices it.
-  if (PRICE_QUESTION.test(text)) {
+  // A price the catalog does not fix: Adiba drafts the offer, the owner prices it. When Layla already
+  // answered from a stock line this turn (a store's own price), there is nothing for the owner to price.
+  if (PRICE_QUESTION.test(text) && !stockMatched) {
     for (const item of namedItems(catalog, text).slice(0, 3)) {
       if (fixedPriceMinor(item.prices) !== null) continue;
       const name = (ar ? item.nameAr : item.nameEn) || item.nameEn || item.nameAr;

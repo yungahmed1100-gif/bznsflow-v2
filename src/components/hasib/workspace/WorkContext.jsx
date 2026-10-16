@@ -6,6 +6,7 @@ import { FitnessContext } from '../fitness/FitnessContext.jsx';
 import { DentalContext } from '../dental/DentalContext.jsx';
 import { AutomotiveContext } from '../automotive/AutomotiveContext.jsx';
 import { ConstructionContext } from '../construction/ConstructionContext.jsx';
+import { StoreContext } from '../store/StoreContext.jsx';
 
 /** The linked work beside a chat or a customer, for whichever six-tab sector the workspace runs. */
 export function WorkContext(props) {
@@ -15,6 +16,7 @@ export function WorkContext(props) {
   if (pack === 'dental') return <DentalContext {...props} />;
   if (pack === 'automotive') return <AutomotiveContext {...props} />;
   if (pack === 'construction') return <ConstructionContext {...props} />;
+  if (pack === 'retail' || pack === 'retail-tech') return <StoreContext {...props} packId={pack} />;
   if (pack !== 'real-estate') return null;
   return <DealContext {...props} />;
 }

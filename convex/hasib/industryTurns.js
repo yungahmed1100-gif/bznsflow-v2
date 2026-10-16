@@ -33,8 +33,27 @@ async function constructionTurn(ctx, { row, contact, now, secret }) {
   return { contactId: contact._id };
 }
 
-/** Both intakes; each runs only for its own sector. */
+// A phone store's repair question. Catalog sectors have no service field, so a fixed word list on the
+// message decides; the task names no device or fault, only that a repair was asked about.
+const REPAIR = /\b(repair|repairs|fix|fixed|broken|crack(?:ed)?|screen|battery|not charging|won'?t turn on|water damage)\b|صيانة|تصليح|إصلاح|اصلاح|مكسور|شاشة|بطارية|ما يشحن|لا يشحن/i;
+const OPEN_REPAIRS = ['received', 'diagnosing', 'waiting_parts', 'repairing', 'ready'];
+
+async function repairTurn(ctx, { row, contact, text, now, secret }) {
+  if (!text || !REPAIR.test(text)) return null;
+  if (!await sectorTurnPack(ctx, { row, secret, packId: 'retail-tech' })) return null;
+  // A customer whose device is already in the shop is asking about that repair, not a new one.
+  for (const status of OPEN_REPAIRS) {
+    const open = await ctx.db.query('hasibRepairs').withIndex('by_account_status_created', q => q.eq('accountId', row.accountId).eq('status', status)).order('desc').take(300);
+    if (open.some(r => String(r.contactId) === String(contact._id))) return null;
+  }
+  await openTaskOnce(ctx, 'retailTasks', { accountId: row.accountId, kind: 'repair_request', entityType: 'contact', entityId: contact._id,
+    reason: 'Repair question from Layla: ask the customer to bring the device in' }, now);
+  return { contactId: contact._id };
+}
+
+/** Every intake; each runs only for its own sector. */
 export async function industryTurns(ctx, args) {
   await automotiveTurn(ctx, args);
   await constructionTurn(ctx, args);
+  await repairTurn(ctx, args);
 }

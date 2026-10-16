@@ -8,7 +8,7 @@ import { blueHarness, seedTenant } from './helpers/blue-tenant.mjs';
 import { SECRET } from './helpers/convex-memory.mjs';
 import { executeHasib } from '../convex/hasib/hasibState.js';
 import { grantPlan } from '../convex/hasib/plans.js';
-import { dashboardMap } from '../src/lib/dashboard/navigation.js';
+import { dashboardMap, resolveTab } from '../src/lib/dashboard/navigation.js';
 
 const DAY = 86400000;
 const value = r => { assert.equal(r.ok, true, r.reason); return r.value; };
@@ -45,12 +45,18 @@ const inStock = (h, id) => h.m.table('hasibSerials').filter(s => s.variantId ===
 const status = async (run, order, to, extra = {}) => value(await run('order_status', { orderId: order.id, to, version: order.version, ...extra }));
 const move = async (run, repair, to) => value(await run('repair_status', { repairId: repair.id, to, version: repair.version }));
 
-test('retail-tech on Ascend: the manager sees Service and Team; an employee sees no Money, Team or Settings', async () => {
+test('retail-tech on Ascend is the six tabs: Store & repairs is Work, led by repairs; an employee sees Chats, Work and Customers', async () => {
   const { manager, employee } = await shop();
   const o = value(await manager('overview'));
-  assert.deepEqual(dashboardMap(o, o.capabilities).sections, ['today', 'chats', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings']);
+  const map = dashboardMap(o, o.capabilities);
+  assert.deepEqual(map.sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
+  assert.deepEqual(map.views.work, ['repairs', 'sales', 'devices', 'followups']);
+  assert.equal(o.pack.ownerUi.work.en, 'Store & repairs');
+  assert.deepEqual(resolveTab('service', null, map), { tab: 'work', view: 'repairs' });
+  assert.deepEqual(resolveTab('orders', null, map), { tab: 'work', view: 'sales' });
+  assert.deepEqual(resolveTab('today', null, map), { tab: 'work', view: 'repairs' });
   const e = value(await employee('overview'));
-  assert.deepEqual(dashboardMap(e, e.capabilities).sections, ['today', 'chats', 'orders', 'stock', 'service', 'customers']);
+  assert.deepEqual(dashboardMap(e, e.capabilities).sections, ['chats', 'work', 'customers']);
 });
 
 test('a sold phone that is returned goes back in stock, and on-hand always equals the IMEIs in stock', async () => {

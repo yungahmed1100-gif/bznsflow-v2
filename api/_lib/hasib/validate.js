@@ -1,4 +1,4 @@
-import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS, ADIBA_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
+import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS, ADIBA_OPERATIONS, STORE_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
 // Per-action argument allow-lists for the Hasib API. Unknown keys are dropped,
 // strings are length-bounded, numbers must already be integers (money is sent
 // in minor units and never coerced from a string). Convex re-validates all of it.
@@ -223,12 +223,17 @@ const adibaShape = b => ({ version: int(b.version), offerId: id(b.offerId), stat
   adiba: b.adiba && typeof b.adiba === 'object' ? compact({ lines: list(b.adiba.lines, 20, x => compact({ key: str(x?.key, 20), unitPriceMinor: int(x?.unitPriceMinor), qty: int(x?.qty), name: str(x?.name, 120) })),
     text: str(b.adiba.text, 4000), depositMinor: int(b.adiba.depositMinor), validUntil: int(b.adiba.validUntil), acceptedBy: str(b.adiba.acceptedBy, 120), evidenceSource: str(b.adiba.evidenceSource, 40) }) : undefined });
 registerSector(ADIBA_OPERATIONS, adibaShape, {});
+// The store packs' Work (retail, retail-tech): follow-ups, tasks and rule drafts.
+const storeShape = b => ({ version: int(b.version), taskId: id(b.taskId), draftId: id(b.draftId), contactId: id(b.contactId), conversationId: id(b.conversationId),
+  filter: str(b.filter, 20), dueAt: int(b.dueAt), reason: str(b.reason, 200), text: str(b.text, 4000) });
+registerSector(STORE_OPERATIONS, storeShape, {});
 const DENTAL_SETTING_KEYS = ['visitMinutes', 'lateCancelHours', 'balanceDueDays', 'recallWindowDays', 'chairDayMinutes', 'openDaysPerWeek'];
 // Media, Fitness and Dental windows and rules arrive under their own settings_update argument.
 const baseSettings = SHAPES.settings_update;
 const AUTOMOTIVE_SETTING_KEYS = ['approvalWaitHours', 'readyUncollectedHours', 'autoQuoteLimitMinor'];
 const CONSTRUCTION_SETTING_KEYS = ['approvalWaitDays', 'materialsLeadDays'];
-const SECTOR_SETTINGS = { constructionSettings: sectorSettings(CONSTRUCTION_SETTING_KEYS, 4), automotiveSettings: sectorSettings(AUTOMOTIVE_SETTING_KEYS, 4), mediaSettings: sectorSettings(MEDIA_SETTING_KEYS, 3), fitnessSettings: sectorSettings(FITNESS_SETTING_KEYS, 3), dentalSettings: sectorSettings(DENTAL_SETTING_KEYS, 4) };
+const STORE_SETTING_KEYS = ['readyUncollectedHours'];
+const SECTOR_SETTINGS = { retailSettings: sectorSettings(STORE_SETTING_KEYS, 3), retailTechSettings: sectorSettings(STORE_SETTING_KEYS, 4), constructionSettings: sectorSettings(CONSTRUCTION_SETTING_KEYS, 4), automotiveSettings: sectorSettings(AUTOMOTIVE_SETTING_KEYS, 4), mediaSettings: sectorSettings(MEDIA_SETTING_KEYS, 3), fitnessSettings: sectorSettings(FITNESS_SETTING_KEYS, 3), dentalSettings: sectorSettings(DENTAL_SETTING_KEYS, 4) };
 SHAPES.settings_update = b => ({ ...baseSettings(b), ...Object.fromEntries(Object.entries(SECTOR_SETTINGS).map(([arg, shape]) => [arg, shape(b[arg])])) });
 
 export const HASIB_ACTIONS = Object.keys(SHAPES);

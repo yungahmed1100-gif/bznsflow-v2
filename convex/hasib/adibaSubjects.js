@@ -9,6 +9,7 @@ import { executeConstruction } from './constructionState.js';
 import { openTaskOnce } from './workspace/tasks.js';
 import { latestEstimates } from './automotiveRules.js';
 import { stableRequestId } from './workspace/records.js';
+import { repairSubject, REPAIR_SUBJECT } from './repairOffer.js';
 
 const none = async () => ({ ok: true });
 
@@ -76,6 +77,9 @@ export const SUBJECTS = Object.freeze({
         estimateId: estimate._id, approvedBy: `${by} · ${offer.ref}`.slice(0, 100), evidenceSource: source }, now);
     },
   },
+
+  // A phone store's repair quote: the owner approves; the customer's yes approves that quote (repairOffer.js).
+  [REPAIR_SUBJECT]: repairSubject,
 
   construction_variation: {
     /** Approve = submit the variation to the client at the price Adiba sent; a changed price is refused. */

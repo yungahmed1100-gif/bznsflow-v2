@@ -68,10 +68,18 @@ const CONSTRUCTION_VIEWS = Object.freeze({
   settings: ['brain', 'rules', 'team', 'site', 'business', 'channels', 'accounts'],
 });
 const CONSTRUCTION_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'projects'], orders: ['work', 'projects'], stock: ['work', 'procurement'] };
+// Stores (ascend/retail.md, ascend/retail-tech.md): Orders, or Store & repairs, as Work. Insights keeps
+// the store's money with its expenses; the old Today, Orders, Stock, Service, Money and Team links land inside.
+const STORE_SETTINGS = ['brain', 'rules', 'team', 'business', 'channels', 'accounts'];
+const RETAIL_VIEWS = Object.freeze({ work: ['orders', 'products', 'requests', 'followups'], insights: ['overview', 'expenses'], settings: STORE_SETTINGS });
+const RETAIL_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'orders'], orders: ['work', 'orders'], stock: ['work', 'products'], money: ['insights'], expenses: ['insights', 'expenses'] };
+const TECH_VIEWS = Object.freeze({ work: ['repairs', 'sales', 'devices', 'followups'], insights: ['overview', 'expenses'], settings: STORE_SETTINGS });
+const TECH_ALIASES = { ...RETAIL_ALIASES, today: ['work', 'repairs'], service: ['work', 'repairs'], orders: ['work', 'sales'], stock: ['work', 'devices'] };
 // Packs whose Ascend workspace is the six tabs, with their Work views and old-link aliases.
 const SIX_TAB_PACKS = Object.freeze({ 'real-estate': { views: REAL_ESTATE_VIEWS, aliases: REAL_ESTATE_ALIASES }, media: { views: MEDIA_VIEWS, aliases: MEDIA_ALIASES },
   fitness: { views: FITNESS_VIEWS, aliases: FITNESS_ALIASES }, dental: { views: DENTAL_VIEWS, aliases: DENTAL_ALIASES },
-  automotive: { views: AUTOMOTIVE_VIEWS, aliases: AUTOMOTIVE_ALIASES }, construction: { views: CONSTRUCTION_VIEWS, aliases: CONSTRUCTION_ALIASES } });
+  automotive: { views: AUTOMOTIVE_VIEWS, aliases: AUTOMOTIVE_ALIASES }, construction: { views: CONSTRUCTION_VIEWS, aliases: CONSTRUCTION_ALIASES },
+  retail: { views: RETAIL_VIEWS, aliases: RETAIL_ALIASES }, 'retail-tech': { views: TECH_VIEWS, aliases: TECH_ALIASES } });
 export const isSixTabPack = id => !!SIX_TAB_PACKS[id];
 /** Which BznsBrain tab a URL opens: `part`, else the old Services & prices links open the catalog. */
 export function brainPart(params) {

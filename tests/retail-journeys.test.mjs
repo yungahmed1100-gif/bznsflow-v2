@@ -9,7 +9,7 @@ import { SECRET } from './helpers/convex-memory.mjs';
 import { executeHasib } from '../convex/hasib/hasibState.js';
 import { grantPlan } from '../convex/hasib/plans.js';
 import { capabilitiesFor } from '../convex/hasib/capabilities.js';
-import { dashboardMap } from '../src/lib/dashboard/navigation.js';
+import { dashboardMap, resolveTab } from '../src/lib/dashboard/navigation.js';
 
 const value = r => { assert.equal(r.ok, true, r.reason); return r.value; };
 
@@ -42,21 +42,30 @@ async function contact(h, a, name = 'Aisha') {
   return (await h.dashboard('contacts', { sessionHash: a.sessionHash })).value.items[0];
 }
 
-test('retail on Ascend: the manager sees Today, Orders, Stock, Money, Customers, Team and Settings', async () => {
+test('retail on Ascend is the six tabs: Orders is Work, with products, customer requests and follow-ups inside', async () => {
   const { manager } = await boutique();
   const o = value(await manager('overview'));
   assert.equal(o.pack.id, 'retail');
   assert.equal(o.workspaceRole, 'manager');
   const map = dashboardMap(o, o.capabilities);
-  assert.deepEqual(map.sections, ['today', 'chats', 'orders', 'stock', 'money', 'customers', 'team', 'settings']);
+  assert.deepEqual(map.sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
+  assert.deepEqual(map.views.work, ['orders', 'products', 'requests', 'followups']);
+  assert.deepEqual(map.views.insights, ['overview', 'expenses']);
+  assert.ok(map.views.settings.includes('rules') && map.views.settings.includes('team'));
+  // Old links land where their screens now live.
+  assert.deepEqual(resolveTab('stock', 'products', map), { tab: 'work', view: 'products' });
+  assert.deepEqual(resolveTab('money', 'expenses', map), { tab: 'insights', view: 'expenses' });
+  assert.deepEqual(resolveTab('money', null, map), { tab: 'insights', view: 'overview' });
+  assert.deepEqual(resolveTab('expenses', null, map), { tab: 'insights', view: 'expenses' });
+  assert.deepEqual(resolveTab('team', null, map), { tab: 'settings', view: 'team' });
 });
 
-test('an employee sees no Money, Team or Settings, even before the Hasib overview has loaded', async () => {
+test('an employee sees Chats, Work and Customers only, even before the Hasib overview has loaded', async () => {
   const { employee } = await boutique();
   const o = value(await employee('overview'));
   assert.equal(o.workspaceRole, 'employee');
   const map = dashboardMap(o, o.capabilities);
-  assert.deepEqual(map.sections, ['today', 'chats', 'orders', 'stock', 'customers']);
+  assert.deepEqual(map.sections, ['chats', 'work', 'customers']);
   const early = dashboardMap(null, capabilitiesFor('ascend', 'employee'), 'employee');
   assert.ok(!early.sections.includes('settings'), 'Settings never flashes for an employee');
 });

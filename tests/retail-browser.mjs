@@ -52,22 +52,34 @@ const api = (page, base, action, body = {}) => page.evaluate(async ([url, payloa
 const sections = page => page.locator('.ld-nav a').allInnerTexts().then(list => list.map(x => x.trim()));
 
 try {
-  // 1. Every manager section, deep-linked, in both languages and three widths.
-  const MANAGER_TABS = ['today', 'chats', 'orders', 'stock', 'money', 'customers', 'team', 'settings'];
+  // 1. Every manager tab and view, deep-linked, in both languages and three widths: the six Ascend tabs,
+  // with Orders as Work. The old Today, Orders, Stock, Money and Team links land inside them.
+  const MANAGER_PATHS = [['work', 'orders'], ['work', 'products'], ['work', 'requests'], ['work', 'followups'], ['chats'], ['customers'], ['broadcasts'],
+    ['insights', 'overview'], ['insights', 'expenses'], ['settings', 'rules'], ['settings', 'team']];
   for (const lang of process.env.RETAIL_QUICK ? [] : ['en', 'ar']) {
     for (const width of [1440, 768, 320]) {
-      for (const tab of MANAGER_TABS) {
-        const { page, context, problems } = await open(manager.base, width, lang, `/layla/dashboard?tab=${tab}`);
+      for (const [tab, view] of MANAGER_PATHS) {
+        const { page, context, problems } = await open(manager.base, width, lang, `/layla/dashboard?tab=${tab}${view ? `&view=${view}` : ''}`);
         await page.locator('main h1, main h2').first().waitFor();
-        eq((await sections(page)).length, 8, `${lang} ${width}: eight sections`);
+        eq((await sections(page)).length, 6, `${lang} ${width}: six tabs`);
         eq(await page.locator('main').getAttribute('data-tab'), tab, `${lang} ${width} ${tab}: deep link`);
-        eq(await noOverflow(page), true, `${lang} ${width} ${tab}: overflow`);
-        eq(await axe(page), [], `${lang} ${width} ${tab}: axe`);
-        eq(problems, [], `${lang} ${width} ${tab}: no page errors or refused calls`);
-        if (width === 320 || width === 1440) await page.screenshot({ path: `${OUT}/manager-${tab}-${lang}-${width}.png`, fullPage: true });
+        if (view && (tab === 'work' || tab === 'insights')) eq(await page.locator('.ld-section-tabs a[aria-current="page"]').getAttribute('href'), `?tab=${tab}&view=${view}`, `${lang} ${width} ${tab}/${view}: the view is current`);
+        if (tab === 'work') await page.locator('.hb-attention').waitFor();
+        eq(await noOverflow(page), true, `${lang} ${width} ${tab} ${view || ''}: overflow`);
+        eq(await axe(page), [], `${lang} ${width} ${tab} ${view || ''}: axe`);
+        eq(problems, [], `${lang} ${width} ${tab} ${view || ''}: no page errors or refused calls`);
+        if (width === 320 || width === 1440) await page.screenshot({ path: `${OUT}/manager-${tab}-${view || 'main'}-${lang}-${width}.png`, fullPage: true });
         await context.close();
       }
     }
+  }
+  for (const [old, tab, view] of [['today', 'work', 'orders'], ['orders', 'work', 'orders'], ['stock', 'work', 'products'], ['money', 'insights', 'overview'], ['team', 'settings', 'team']]) {
+    const { page, context, problems } = await open(manager.base, 1440, 'en', `/layla/dashboard?tab=${old}`);
+    await page.locator('main h1, main h2').first().waitFor();
+    eq(await page.locator('main').getAttribute('data-tab'), tab, `old ?tab=${old} lands on ${tab}`);
+    if (tab !== 'settings') eq(await page.locator('.ld-section-tabs a[aria-current="page"]').getAttribute('href'), `?tab=${tab}&view=${view}`, `old ?tab=${old} opens ${view}`);
+    eq(problems, [], `old ?tab=${old}: no errors`);
+    await context.close();
   }
 
   // 2. A sale: confirm, overpayment refused, exact payment, cancel asks first and puts the piece back.
@@ -105,7 +117,7 @@ try {
 
   // 3. A customer waits for a size; a delivered order fills the request (it could not before).
   {
-    const { page, context, problems } = await open(manager.base, 1440, 'en', '/layla/dashboard?tab=orders');
+    const { page, context, problems } = await open(manager.base, 1440, 'en', '/layla/dashboard?tab=work&view=requests');
     const salma = (await page.evaluate(async url => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'contacts' }) })).json(), `${manager.base}/api/layla-meta?surface=dashboard`)).items.find(c => c.name === 'Salma Al Harthy');
     const navy = (await api(page, manager.base, 'items', { search: 'EM-54N' })).items[0].variants.find(v => v.sku === 'EM-54N');
     const requests = page.locator('.hb-requests');
@@ -208,8 +220,8 @@ try {
       for (const tab of ['today', 'chats', 'orders', 'stock', 'customers', 'money', 'settings', 'team']) {
         const { page, context, problems } = await open(employee.base, width, lang, `/layla/dashboard?tab=${tab}`);
         await page.locator('main h1, main h2').first().waitFor();
-        eq((await sections(page)).length, 5, `${lang} ${width} ${tab}: five sections for an employee`);
-        ok(['today', 'chats', 'orders', 'stock', 'customers'].includes(await page.locator('main').getAttribute('data-tab')), `${lang} ${width} ${tab}: manager tabs fall back`);
+        eq((await sections(page)).length, 3, `${lang} ${width} ${tab}: Chats, Work and Customers for an employee`);
+        ok(['work', 'chats', 'customers'].includes(await page.locator('main').getAttribute('data-tab')), `${lang} ${width} ${tab}: manager tabs fall back`);
         eq(await noOverflow(page), true, `${lang} ${width} ${tab}: overflow`);
         eq(await axe(page), [], `${lang} ${width} ${tab}: axe`);
         eq(problems, [], `${lang} ${width} ${tab}: no page errors or refused calls`);
@@ -219,10 +231,11 @@ try {
     }
   }
   {
-    const { page, context, problems } = await open(employee.base, 1440, 'en', '/layla/dashboard?tab=today');
-    await page.locator('.hb-today').waitFor();
-    eq(await page.getByRole('button', { name: /Import stock/ }).count(), 0, 'no import on Today');
+    const { page, context, problems } = await open(employee.base, 1440, 'en', '/layla/dashboard?tab=work');
+    await page.locator('.hb-attention').waitFor();
+    eq(await page.getByRole('button', { name: /Import stock/ }).count(), 0, 'no import on Work');
     eq(await page.getByRole('button', { name: /Pause|Check connection/ }).count(), 0, 'no whole-business switches');
+    eq(await page.locator('.ld-section-tabs a').allInnerTexts(), ['Orders', 'Products', 'Customer requests', 'Follow-ups'], 'the same Work views as the manager');
     const today = await api(page, employee.base, 'today');
     eq(today.money, null, 'no cash figures');
     await page.goto(`${employee.base}/en/layla/dashboard?tab=stock`);

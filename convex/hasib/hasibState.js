@@ -9,7 +9,7 @@ import { executeMemberships } from './membershipsState.js';
 import { executeBookings } from './bookingsState.js';
 import { bakingSuggestions } from './industryMetrics.js';
 import { businessTimezone } from './expensesState.js';
-import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS, ADIBA_OPERATIONS } from '../../config/hasib-workflow-operations.js';
+import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS, ADIBA_OPERATIONS, STORE_OPERATIONS } from '../../config/hasib-workflow-operations.js';
 import { executeClinic } from './clinicState.js';
 import { executeConstruction } from './constructionState.js';
 import { constructionSettings, mergeConstructionSettings } from './constructionSettings.js';
@@ -17,6 +17,8 @@ import { constructionFollowupQueue } from './constructionWorkspace.js';
 import { executeAutomotive } from './automotiveState.js';
 import { automotiveSettings, mergeAutomotiveSettings } from './automotiveSettings.js';
 import { automotiveFollowupQueue } from './automotiveFollowups.js';
+import { retailSettings, mergeRetailSettings, retailTechSettings, mergeRetailTechSettings } from './retailSettings.js';
+import { executeStore, storeFollowupQueue } from './retailWorkspace.js';
 import { realEstateSettings, mergeRealEstateSettings } from './realEstateSettings.js';
 import { mediaSettings, mergeMediaSettings } from './mediaSettings.js';
 import { executeMedia } from './mediaState.js';
@@ -64,8 +66,11 @@ const SECTOR_CODE = {
   dental: { read: dentalSettings, merge: mergeDentalSettings, queue: dentalFollowupQueue, execute: executeDental },
   automotive: { read: automotiveSettings, merge: mergeAutomotiveSettings, queue: automotiveFollowupQueue, execute: executeAutomotive },
   construction: { read: constructionSettings, merge: mergeConstructionSettings, queue: constructionFollowupQueue, execute: executeConstruction },
+  // Both store packs run the same Work; executeStore answers once, for whichever pack the account is on.
+  retail: { read: retailSettings, merge: mergeRetailSettings, queue: storeFollowupQueue, execute: executeStore },
+  'retail-tech': { read: retailTechSettings, merge: mergeRetailTechSettings, queue: storeFollowupQueue, execute: async () => null },
 };
-export const HASIB_OPERATIONS = [...Object.keys(BOOKING_OPERATIONS), ...ADIBA_OPERATIONS, ...JOB_OPERATIONS, ...REAL_ESTATE_OPERATIONS, ...TEAM_OPERATIONS, ...CLINIC_OPERATIONS, ...CONSTRUCTION_OPERATIONS, ...AUTOMOTIVE_OPERATIONS, ...MEDIA_OPERATIONS, ...FITNESS_OPERATIONS, ...DENTAL_OPERATIONS, 'overview', 'settings_update', 'items', 'item_save', 'item_archive', 'stock_move', 'stock_moves', 'low_stock',
+export const HASIB_OPERATIONS = [...Object.keys(BOOKING_OPERATIONS), ...ADIBA_OPERATIONS, ...JOB_OPERATIONS, ...REAL_ESTATE_OPERATIONS, ...TEAM_OPERATIONS, ...CLINIC_OPERATIONS, ...CONSTRUCTION_OPERATIONS, ...AUTOMOTIVE_OPERATIONS, ...MEDIA_OPERATIONS, ...FITNESS_OPERATIONS, ...DENTAL_OPERATIONS, ...STORE_OPERATIONS, 'overview', 'settings_update', 'items', 'item_save', 'item_archive', 'stock_move', 'stock_moves', 'low_stock',
   'order_create', 'order_status', 'orders', 'order', 'payment_record', 'contact_summary', 'conversation_orders', 'expense_create', 'expenses', 'expense_void', 'insights',
   'today', 'photo_upload_url', 'photo_register', 'item_photo', 'items_import', 'serials', 'serial_lookup', 'trade_in', 'repairs', 'repair', 'repair_create', 'repair_approval', 'repair_update', 'repair_status',
   'baking_suggestions', 'order_preparation', 'recipes', 'recipe_save', 'waste_create', 'stock_count', 'stock_receive', 'batch_create', 'restaurant_summary', 'stock_expiry', 'services_sync'];

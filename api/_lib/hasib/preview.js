@@ -72,6 +72,9 @@ export function hasibPreviewResponse(packId, operation) {
   if (operation === 'automotive_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
   if (operation === 'automotive_context') return { items: [] };
   if (operation === 'automotive_insights') return { synthetic:true, metrics:{requestResponseMedianMs:null,requestResponseP90Ms:null,requestToBookedRate:null,appointmentMissedRate:null,estimateApprovalRate:null,technicianProductivity:null,technicianEfficiency:null,technicianProficiency:null,onTimeDeliveryRate:null,firstTimeFixRate:null,averageRepairOrderMinor:null,recordedRevenueMinor:0,cashCollectedMinor:0,collectionRate:null,openReceivablesMinor:0,experienceAverage:null},coverage:{technicianProductivity:{numerator:0,denominator:0},firstTimeFix:{numerator:0,denominator:0},responseTime:{numerator:0,denominator:0},experience:{numerator:0,denominator:0}} };
+  if (operation === 'store_overview') return { synthetic:true, workspaceRole:'manager', attention: { unconfirmed: 0, ready: 0, requests: 0, lowStock: 0, approvalPending: 0, repairsReady: 0, approvals: 0 }, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
+  if (operation === 'store_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
+  if (operation === 'store_context') return { items: [] };
   if (operation === 'team_list') return { limit:5, members:[] };
   if (operation === 'insights') return insights();
   if (operation === 'restaurant_summary') return { menu: [], channels: [], priceIncreases: [], foodCostBps: null, laborCostBps: null, primeCostBps: null, wasteMinor: 0, stockVarianceMinor: 0, usageVarianceMinor: null };

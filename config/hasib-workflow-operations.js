@@ -30,5 +30,9 @@ export const MEDIA_OPERATIONS = ['media_overview','media_productions','media_pro
 export const DENTAL_OPERATIONS = ['dental_overview','dental_visits','dental_visit','dental_resources','dental_resource_save','dental_visit_book','dental_visit_reschedule','dental_visit_status','dental_charge','dental_charge_dispute','dental_payment_record','dental_recall_set','dental_followups','dental_task_resolve','dental_task_snooze','dental_draft_approve','dental_context','dental_insights','dental_metric_records'];
 export const FITNESS_OPERATIONS = ['fitness_overview','fitness_members','fitness_member','fitness_plans','fitness_plan_save','fitness_classes','fitness_class_save','fitness_seat_book','fitness_seat_status','fitness_checkin','fitness_membership_save','fitness_payment_record','fitness_freeze','fitness_cancel','fitness_renew','fitness_followups','fitness_task_resolve','fitness_task_snooze','fitness_draft_approve','fitness_context','fitness_insights','fitness_metric_records'];
 
+// Retail and Phones & electronics (ascend/retail.md, ascend/retail-tech.md): the six-tab Work both store packs share.
+// Orders, stock, requests, IMEIs and repairs keep their own operations.
+export const STORE_OPERATIONS = ['store_overview','store_followups','store_task_resolve','store_task_snooze','store_draft_approve','store_context'];
+
 // Adiba (every sector): the quotes and offers she drafts for the owner's approval.
 export const ADIBA_OPERATIONS = ['adiba_offers', 'adiba_offer', 'adiba_offer_price', 'adiba_offer_approve', 'adiba_offer_withdraw', 'adiba_offer_accept_record'];

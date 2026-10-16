@@ -11,8 +11,8 @@ import { EmptyState, PageHeader } from './DashboardVisuals';
 const FILTERS = ['', 'layla_waiting', 'pending', 'confirmed', 'ready', 'out_for_delivery', 'delivered', 'completed', 'cancelled'];
 
 /** Orders tab. Layla files orders from chats; "Waiting for you" lists the ones to confirm. */
-export function OrdersView({ s, h, overview, business, timezone, onChanged, initialCreate = false, initialOrderId = null }) {
-  const [status, setStatus] = useState(overview.counts?.laylaWaiting ? 'layla_waiting' : ''), [more, setMore] = useState({ items: [], cursor: undefined });
+export function OrdersView({ s, h, overview, business, timezone, onChanged, initialCreate = false, initialOrderId = null, initialStatus = '', requests = true, strip = null }) {
+  const [status, setStatus] = useState(initialStatus && FILTERS.includes(initialStatus) ? initialStatus : overview.counts?.laylaWaiting ? 'layla_waiting' : ''), [more, setMore] = useState({ items: [], cursor: undefined });
   const [composer, setComposer] = useState(initialCreate ? { prefill: null } : null), [openId, setOpenId] = useState(initialOrderId), [notice, setNotice] = useState('');
   const list = usePolling(() => hasib('orders', status ? { status } : {}), [status], { interval: 15000 });
   const items = [...(list.data?.items || []), ...more.items.filter(i => !(list.data?.items || []).some(x => x.id === i.id))];
@@ -40,7 +40,9 @@ export function OrdersView({ s, h, overview, business, timezone, onChanged, init
             </select></label>
         </div>
       </PageHeader>
-      {overview.pack.id === 'retail' && <ProductRequests s={s} h={h} />}
+      {strip}
+      {/* On the six tabs, customer requests are their own Work view. */}
+      {requests && overview.pack.id === 'retail' && <ProductRequests s={s} h={h} />}
       {notice && <p className={notice === h.t('depositFailed') || notice.startsWith(h.t('exchangeReturnFailed')) ? 'ld-inline-error' : 'ld-help'} role="status">{notice}</p>}
       {list.loading && !list.data ? <p className="ld-state" role="status">{h.t('loading')}</p>
         : list.error && !list.data ? <div className="ld-state" role="alert"><p>{h.reason(list.error.reason) || s.reason(list.error.reason)}</p><button className="ld-button" onClick={() => list.refresh()}>{h.t('retry')}</button></div>
