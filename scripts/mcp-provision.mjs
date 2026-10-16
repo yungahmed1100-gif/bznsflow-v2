@@ -13,7 +13,9 @@ import { generateKeyPair, exportJWK } from "jose";
 
 const GREEN_PROJECT = "bznsflow-main";
 const GREEN_CONVEX = "rare-fish-465";
-const CONVEX_SELECTOR = "dev:quaint-nightingale-675";
+// Green's own selector (also in .env.green-convex.local). dev:quaint-nightingale-675
+// belongs to the Blue project; its --prod is valuable-mandrill-296, not Green.
+const CONVEX_SELECTOR = "prod:rare-fish-465";
 const PILOT_EMAIL = "ahmed@bznsflowai.com";
 const ORIGIN = "https://www.bznsflowai.com";
 
@@ -26,11 +28,11 @@ if (linked.projectName !== GREEN_PROJECT)
   throw Error(
     `Linked Vercel project is ${linked.projectName}, not ${GREEN_PROJECT}`,
   );
-const spec = run("npx", ["convex", "function-spec", "--prod"], {
+const spec = run("npx", ["convex", "function-spec"], {
   env: convexEnv,
 });
 if (!spec.includes(`${GREEN_CONVEX}.`))
-  throw Error(`Convex --prod does not resolve to ${GREEN_CONVEX}`);
+  throw Error(`Convex does not resolve to ${GREEN_CONVEX}`);
 
 const { privateKey } = await generateKeyPair("RS256", { extractable: true });
 const jwk = await exportJWK(privateKey);
@@ -92,7 +94,7 @@ try {
     ].join("\n") + "\n",
     { mode: 0o600 },
   );
-  run("npx", ["convex", "env", "set", "--prod", "--from-file", file], {
+  run("npx", ["convex", "env", "set", "--from-file", file], {
     env: convexEnv,
     stdio: ["ignore", "ignore", "inherit"],
   });

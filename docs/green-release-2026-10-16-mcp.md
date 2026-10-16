@@ -62,7 +62,8 @@ Follow this order. Stop at any failed check.
 
 1. Push the source: `git push origin release/mcp-integration-2026-10-16:master`. This is a fast-forward from `e4c0f88`.
 2. Generate the production MCP secrets and set them with MCP **off**: `node scripts/mcp-provision.mjs`. It writes nothing to Git and prints no secrets.
-3. Deploy Convex to Green from the release worktree: `CONVEX_DEPLOYMENT=dev:quaint-nightingale-675 npx convex deploy`. It must report `rare-fish-465`. All schema changes are additive: new `mcp*` tables and optional fields.
+3. Deploy Convex to Green from the release worktree. First run `cp "/Users/ramsis21/Desktop/bznsflow web/.env.green-convex.local" .env.local`, then `npx convex deploy`. The CLI must name `rare-fish-465` before it pushes. All schema changes are additive: new `mcp*` tables and optional fields.
+   - **Never use `dev:quaint-nightingale-675` here.** That selector belongs to the Blue project, and its production is `valuable-mandrill-296`. On 16 October this release was pushed there by mistake. Green was not affected.
 4. Deploy the website: `npx vercel deploy --prod --skip-domain` in a checkout linked to `bznsflow-main`. Then promote it once the smoke checks below pass on the deployment URL.
 5. Smoke checks, with MCP off:
    - `/`, `/en`, `/services`, `/en/services`, `/support`, `/contact`, `/refund`, `/en/layla/dashboard` return 200;
