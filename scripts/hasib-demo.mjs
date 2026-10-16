@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 //
 // Local only. No network, no Meta, no Convex deployment; nothing is sent.
 // POST /demo/inbound {"from":"96899...","text":"..."} simulates a customer message to Layla.
+// POST /demo/advance {"minutes":31} moves the demo clock forward; POST /demo/run runs Hasib's scheduled pass once.
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -18,6 +19,7 @@ import { runReplyTurn } from '../convex/laylaRespond.js';
 import { executeDashboard } from '../convex/blueDashboardState.js';
 import { executeCampaigns } from '../convex/blueCampaignState.js';
 import { executeHasib } from '../convex/hasib/hasibState.js';
+import { automationRun } from '../convex/hasib/automationRun.js';
 import { hasibArgs } from '../api/_lib/hasib/validate.js';
 import { hasibPack } from '../config/hasib-packs.js';
 import { grantPlan } from '../convex/hasib/plans.js';
@@ -46,6 +48,7 @@ m.ctx.hasibPreview = !['retail', 'retail-tech', 'fitness', 'dental', 'media'].in
 m.ctx.storage.generateUploadUrl = async () => `http://localhost:${PORT}/demo/upload`;
 m.ctx.storage.getUrl = async id => `http://localhost:${PORT}/demo/file/${encodeURIComponent(id)}`;
 const uploads = new Map();
+let skewMs = 0; // POST /demo/advance
 
 // ── Seed ───────────────────────────────────────────────────────────────────
 const tenant = await seedTenant(m, { name: 'n', sector: 'Retail' });
@@ -353,9 +356,21 @@ createServer(async (req, res) => {
     }
     if (url.pathname === '/demo/inbound' && req.method === 'POST') {
       const { from = '96899000001', text = '', name } = await readJson(req);
-      await call(executeMessaging, 'ingest', { integrationId: tenant.integration.id, events: [{ kind: 'message', id: `live-${randomUUID()}`, from: String(from).replace(/\D/g, '').slice(0, 15), at: Date.now(),
+      await call(executeMessaging, 'ingest', { integrationId: tenant.integration.id, events: [{ kind: 'message', id: `live-${randomUUID()}`, from: String(from).replace(/\D/g, '').slice(0, 15), at: Math.max(Date.now(), m.now()),
         text: String(text).slice(0, 500), reply: 'Thanks!', intent: /price|how much|كم|سعر/i.test(text) ? 'price' : /want|need|order|buy|أبغى|ابغى|أبي|ابي|أريد|اريد|اطلب/i.test(text) ? 'catalog_item' : 'availability_request', handoff: false, ...(name ? { profileName: String(name).slice(0, 60) } : {}) }] }, Date.now());
       return json(res, 200, { ok: true });
+    }
+    // End-to-end checks of the rules and Adiba. Dashboard calls run on the wall clock, so "later" is
+    // an offset on it: Hasib's pass runs that far ahead, and the in-memory clock follows.
+    if (url.pathname === '/demo/advance' && req.method === 'POST') {
+      const { minutes = 0 } = await readJson(req);
+      skewMs += Math.max(0, Math.min(Number(minutes) || 0, 7 * 24 * 60)) * 60000;
+      return json(res, 200, { ok: true, skewMinutes: skewMs / 60000 });
+    }
+    if (url.pathname === '/demo/run' && req.method === 'POST') {
+      const at = Math.max(m.now(), Date.now() + skewMs);
+      if (at > m.now()) m.advance(at - m.now());
+      return json(res, 200, { ok: true, result: await automationRun(m.ctx, { accountId: tenant.accountId, workerFunction: null, secret: SECRET }, at) });
     }
     if (url.pathname.startsWith('/api/')) return json(res, 404, { ok: false, reason: 'not_in_demo' });
     return await staticFile(res, url.pathname === '/' ? '/layla/dashboard' : url.pathname);

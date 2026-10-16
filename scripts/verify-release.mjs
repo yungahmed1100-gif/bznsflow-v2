@@ -17,6 +17,8 @@ const checks = [
   // Dental clinics: the six-tab Visits workspace (ascend/dental.md) replaced the old dental screens and their suite.
   ['node', ['tests/dental-browser.mjs']],
   ['node', ['tests/hasib-industries-browser.mjs', 'construction', 'automotive']],
+  // End to end on the real-logic demo: rules that send themselves, Adiba's offers and the customer's yes, Layla's intake (Releases A and B).
+  ['node', ['tests/ascend-e2e-browser.mjs']],
 ];
 for (const [command, args] of checks) {
   console.log(`Release check: ${command} ${args.join(' ')}`);

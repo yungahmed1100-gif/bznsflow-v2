@@ -59,6 +59,7 @@ A held draft keeps its reason (for example `window_closed`).
 **Hasib.** Both packs are on his 5-minute run (`AUTOMATION_PACKS`, `RUNNERS`). Choosing either pack puts the store on the schedule.
 
 **Fixes along the way.**
+- Construction's Follow-ups rows now name the record a task is about (for example `P-E2E · Villa extension · VO-E2E`), not only the project. Found by the end-to-end run.
 - Variant options are stored as `[{ key, value }]`, so the back-in-stock message used to read "([object Object])". Found by the new test.
 - The phone store's Work tab is now named "Store & repairs".
 
@@ -71,6 +72,7 @@ A held draft keeps its reason (for example `window_closed`).
 | The owner approves repair quotes; a yes approves only that quote | `repairOffer.js`, `adibaSubjects.js` | "a repair quote becomes Adiba's offer…"; caught by a mutation check |
 | No offer for a price Layla gave from stock | `adibaTurn.js` `stockMatched` | "Layla takes in a repair question…"; caught by a mutation check |
 | Staff never approve drafts or see order amounts | `retailWorkspace.js` | "Follow-ups: an order Layla could not confirm…" |
+| End to end: a customer writes in, Hasib runs, Adiba's offer is approved, the yes comes back (all four sectors, manager and employee) | `scripts/hasib-demo.mjs` `/demo/advance`, `/demo/run` | `tests/ascend-e2e-browser.mjs` (83) |
 | Six tabs in EN and AR at 320–1440, accessible; old links land | `StoreWorkspace.jsx`, `navigation.js` | `retail-browser`, `retail-tech-browser` (603), `layla-dashboard-browser` |
 
 ## Not built

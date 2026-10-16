@@ -33,11 +33,13 @@ async function queueRows(ctx, tenant, actor, now, loaded = null) {
   const site = loaded || await loadSite(ctx, accountId, now), manager = actor.role === 'manager', rows = [];
   const projectOf = new Map(site.projects.map(p => [String(p._id), p]));
   const ofEntity = new Map([...site.variations, ...site.claims, ...site.commitments, ...site.milestones].map(r => [String(r._id), projectOf.get(String(r.projectId))]));
+  // Which record a task is about, as the owner names it: the variation, claim, commitment or milestone.
+  const nameOf = new Map([...site.variations, ...site.claims].map(r => [String(r._id), r.reference]).concat(site.commitments.map(r => [String(r._id), r.label || r.reference]), site.milestones.map(r => [String(r._id), r.label])));
   for (const t of await taskRows(ctx, 'constructionTasks', accountId)) {
     if (!manager && MONEY_TASKS.has(t.kind)) continue;
     const p = t.entityType === 'project' ? projectOf.get(String(t.entityId)) : ofEntity.get(String(t.entityId));
     const { due, bucket } = taskTiming(t, now, today, { decision: DECISION_TASKS, waiting: WAITING_TASKS });
-    rows.push({ ...taskBase(t, due, bucket), projectId: p?._id || null, contactId: t.entityType === 'contact' ? t.entityId : p?.contactId || null, assignedAccountId: t.assignedAccountId || p?.assignedAccountId || null, version: t.updatedAt, ...taskTail(t) });
+    rows.push({ ...taskBase(t, due, bucket), projectId: p?._id || null, recordName: t.entityType === 'project' ? null : nameOf.get(String(t.entityId)) || null, contactId: t.entityType === 'contact' ? t.entityId : p?.contactId || null, assignedAccountId: t.assignedAccountId || p?.assignedAccountId || null, version: t.updatedAt, ...taskTail(t) });
   }
   if (manager) for (const d of site.drafts) {
     const row = draftRow(d, rows, DRAFT_BUCKET, 'draft', { projectId: d.projectId, contactId: d.contactId, conversationId: d.conversationId || null });
@@ -53,7 +55,7 @@ async function decorate(ctx, accountId, projectOf, rows) {
   for (const r of rows) {
     const p = r.projectId ? projectOf.get(String(r.projectId)) : null;
     if (r.contactId && !names.has(String(r.contactId))) { const c = await owned(ctx, r.contactId, accountId, 'blueContacts'); names.set(String(r.contactId), c?.state === 'active' ? displayName(c).name : null); }
-    out.push({ ...r, ref: p?.reference || null, title: p?.title || null, contactName: r.contactId ? names.get(String(r.contactId)) : null, status: p?.status || null });
+    out.push({ ...r, ref: p?.reference || null, title: [p?.title, r.recordName].filter(Boolean).join(' · ') || null, contactName: r.contactId ? names.get(String(r.contactId)) : null, status: p?.status || null });
   }
   return out;
 }
