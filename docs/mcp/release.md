@@ -186,3 +186,13 @@ Stop rollout for any foreign-record access, unauthorized consequential action, r
   - Set `MCP_ENABLED=false` in both runtimes.
   - To restore the website, promote `dpl_8PFs7th8Gow8cbHoL3oXBi6zHPhc`.
 - **Not yet verified:** a real connection from ChatGPT, Claude.ai or Codex against production.
+
+## Flow fixes live (16 October 2026, night)
+
+- **Deploy.** Ahmed deployed Convex `rare-fish-465` and the website. Claude checked `dpl_CRd1zPaRt9XMWsQXqi2oTX8En2E2` (source `22e298f`) and promoted it.
+- **Live checks on www:**
+  - `/mcp` and `/en/mcp` load once, with no self-reload, and the Meta pixel is still absent after 5 s;
+  - `/api/mcp` returns 401;
+  - discovery returns 200;
+  - `home-browser`: 44 checks passed.
+- **Rollback.** Promote `dpl_BMyTxmVPYjrrXRr9k3GB2cejNWFd`.
