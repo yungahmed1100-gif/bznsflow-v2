@@ -41,9 +41,33 @@
     }
   },
   "regions": [
-    "sin1"
+    "dub1"
   ],
   "rewrites": [
+    {
+      "source": "/api/mcp",
+      "destination": "/api/layla-meta?surface=mcp&mcpRoute=/api/mcp"
+    },
+    {
+      "source": "/api/mcp/:path*",
+      "destination": "/api/layla-meta?surface=mcp&mcpRoute=/api/mcp/:path*"
+    },
+    {
+      "source": "/oauth/:path*",
+      "destination": "/api/layla-meta?surface=mcp&mcpRoute=/oauth/:path*"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource/:path*",
+      "destination": "/api/layla-meta?surface=mcp&mcpRoute=/.well-known/oauth-protected-resource/:path*"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource",
+      "destination": "/api/layla-meta?surface=mcp&mcpRoute=/.well-known/oauth-protected-resource"
+    },
+    {
+      "source": "/.well-known/oauth-authorization-server/oauth",
+      "destination": "/api/layla-meta?surface=mcp&mcpRoute=/.well-known/oauth-authorization-server"
+    },
     {
       "source": "/api/layla-meta-activation",
       "destination": "/api/layla-meta?surface=activation"
@@ -119,7 +143,7 @@
         },
         {
           "key": "Content-Security-Policy-Report-Only",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://www.facebook.com https://connect.facebook.net; connect-src 'self' https://connect.facebook.net; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://connect.facebook.net; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://www.facebook.com https://connect.facebook.net; connect-src 'self' https://connect.facebook.net; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
         }
       ]
     },
@@ -129,6 +153,40 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/mcp",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
+    {
+      "source": "/en/mcp",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
         }
       ]
     }

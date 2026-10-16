@@ -1,0 +1,162 @@
+{
+  "observedAt": "2026-10-15T21:25:11.438Z",
+  "runtimeCommit": "0d1705e",
+  "baseCommit": "9f3a6a4",
+  "branch": "feat/bznsflow-mcp",
+  "productionChanged": false,
+  "candidate": {
+    "project": "bznsflow-mcp-acceptance",
+    "deploymentId": "dpl_2beXpncptdFjZr33bKCJ2zaQiW2t",
+    "target": "preview",
+    "url": "bznsflow-mcp-acceptance-cpnxv7g01-yungahmed1100-7330s-projects.vercel.app",
+    "alias": "https://bznsflow-mcp-acceptance.vercel.app",
+    "functions": [
+      {
+        "path": "api/access-admin",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/auth-callback",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/auth-code",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/auth-oauth",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/auth-session",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/chat",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/keepalive",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/layla-meta",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/layla-meta-readiness",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/layla-meta-webhook",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/layla-meta-worker",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      },
+      {
+        "path": "api/lead",
+        "runtime": "nodejs24.x",
+        "deployedTo": [
+          "dub1"
+        ]
+      }
+    ],
+    "convex": {
+      "project": "bznsflow-mcp-acceptance",
+      "deployment": "quaint-monitor-641",
+      "region": "aws-eu-west-1",
+      "fixtureRemoved": true,
+      "expiry": "Four days after creation, 19 October 2026 UTC"
+    }
+  },
+  "tests": {
+    "unit": 1006,
+    "mcpUnit": 32,
+    "mcpBilingualBrowser": 86,
+    "realConvexBoundary": 21,
+    "httpsOAuthSdk": 35,
+    "authBrowser": 36,
+    "sharedBrowserSuites": 11,
+    "dentalBrowser": 315,
+    "constructionAutomotiveScenarios": 12,
+    "dependencyVulnerabilities": 0,
+    "convexTypecheck": "passed",
+    "convexDeployment": "passed",
+    "productionBuild": "passed",
+    "installedClients": [
+      {
+        "client": "Codex",
+        "version": "0.161.0",
+        "registration": "CIMD",
+        "login": "passed",
+        "arabicConsent": "passed",
+        "localCredentialCleanup": "passed",
+        "modelToolCalls": "not tested",
+        "automaticRefresh": "not tested"
+      },
+      {
+        "client": "Claude Code",
+        "version": "2.1.285",
+        "registration": "CIMD",
+        "login": "passed",
+        "arabicConsent": "passed",
+        "localCredentialCleanup": "passed",
+        "modelToolCalls": "not tested",
+        "automaticRefresh": "not tested"
+      }
+    ]
+  },
+  "greenObserved": {
+    "deploymentId": "dpl_9xmBvVwjrrrhkFuDMRJhdRQaM5EL",
+    "changed": false
+  },
+  "cleanup": {
+    "syntheticConnectionsRevoked": true,
+    "temporaryCliCredentialsRemoved": true,
+    "candidateFixtureFunctionRemoved": true,
+    "candidateFixtureFlagRemoved": true,
+    "trackedCandidateSecretMatches": 0
+  },
+  "remaining": [
+    "Claude web connector: no connected browser available",
+    "Actual-client model-driven workflows and automatic refresh",
+    "Real email-code and social sign-in returns",
+    "Extended deployed race, queued-provider revocation and load tests",
+    "Explicit Green release authorization"
+  ]
+}

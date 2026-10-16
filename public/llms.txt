@@ -1,50 +1,42 @@
 # BznsFlow
 
-> BznsFlow builds and runs AI and automation for small and medium businesses in the GCC, starting in Oman, as a done-for-you service. What we offer today is Catalyst: Layla on WhatsApp and/or Instagram. Layla answers customer inquiries from the business facts the owner approves, asks the owner's qualifying questions, and hands the owner the conversation and the customer record, ready for the next step. The owner can take over any conversation at any time. Arabic first, with English alongside.
+> BznsFlow builds and operates AI and automation for small and medium businesses in Oman and across the GCC. Catalyst handles customer inquiries on WhatsApp and Instagram. Ascend adds a free lead capture website as a gift, sector operations and owner-approved offers. Rasil email newsletters and marketing are coming soon to Ascend. Arabic and English are supported. Scope, pricing and access are agreed with the team.
 
-BznsFlow is a verified Meta Tech Provider (business verification, 2026-09-16).
+## Available services
 
-## Catalyst (available now)
+- **Catalyst — available:** Layla answers from approved business facts and catalog information, asks configured qualification questions, and records the conversation and customer details. The owner can take over. Catalyst does not promise automatic closing, bookings or payment collection.
+- **Ascend — available by owner-granted access:** Includes a free lead capture website as a gift to present services and collect customer inquiries, at no additional website charge within the package. Layla handles inquiries; Hasib tracks sector work, flags stalled steps and runs reminders configured as automatic; Adiba drafts quotes and offers for owner approval. **Rasil — coming soon:** email newsletters and marketing to subscribers and consenting customers, using owner-approved campaigns and follow-up sequences. Rasil is not yet an active feature; its delivery and activation will be agreed in writing. Automation depends on the sector and agreed setup. Automatic Media reminders are available; this is not a claim that every sector has the same automation. There is no self-serve checkout.
+- **Apex — in preparation:** payment portals and broader operational extensions are future capabilities, not included live functionality.
 
-- Layla on WhatsApp and/or Instagram.
-- Answers only from the business information and catalog the owner approves in BznsBrain; when she does not know, she gives the team's contact instead of guessing.
-- Asks the owner's qualifying questions, one at a time.
-- Every chat and customer record in the owner's dashboard; human takeover at any time.
-- Customer data deletion on request.
+Quotes and offers that require approval are not sent as approved prices until the owner approves them. Existing approved catalog prices may be used in configured workflows. Physical work status, such as repair diagnosis or readiness, must come from an authorised team update.
 
-Layla does not confirm bookings or promise sales. The written agreement for each business sets what is delivered.
+## Sectors
 
-## Plans
+Ascend sector workspaces include retail, phones and electronics, dental, real estate, construction, automotive, fitness and media production. The workflow, acceptance checks and automatic actions are agreed per business. A sector workspace is not evidence of a customer's achieved result.
 
-- **Catalyst** — available now.
-- **Ascend** — in preparation, for answered inquiries that still need follow-up.
-- **Apex** — in preparation, for inquiries spread across staff and branches.
+## Learn about BznsFlow
 
-Pricing is shared on the free audit, together with the agreed scope: a one-time setup and a monthly service, with a 90-day minimum. Messaging and AI usage are billed at cost.
+- [Arabic homepage](https://www.bznsflowai.com/): current plans, agent responsibilities and free business audit.
+- [English homepage](https://www.bznsflowai.com/en): the English version of the current offer.
+- [Service scope — Arabic](https://www.bznsflowai.com/services): what is included, approval boundaries and setup checks.
+- [Service scope — English](https://www.bznsflowai.com/en/services): service responsibilities and acceptance.
+- [Company and contact — Arabic](https://www.bznsflowai.com/contact): contact the BznsFlow team.
+- [Company and contact — English](https://www.bznsflowai.com/en/contact): sales, account and complaint contacts.
+- [Help and support — Arabic](https://www.bznsflowai.com/support): setup, troubleshooting and service requests.
+- [Help and support — English](https://www.bznsflowai.com/en/support): how to report an issue or request a change.
+- [SME operating playbook — Arabic](https://www.bznsflowai.com/playbook): business workflow guide.
+- [SME operating playbook — English](https://www.bznsflowai.com/en/playbook): English guide landing page.
 
-## Scoped projects beyond Catalyst
+## Policies
 
-Quoted separately in writing: customer acquisition systems, reorder journeys, loyalty journeys, WhatsApp and email outreach, websites, CRM and pipeline, automation and integrations, custom apps.
+- [Privacy — Arabic](https://www.bznsflowai.com/privacy) and [English](https://www.bznsflowai.com/en/privacy): information handling.
+- [Terms — Arabic](https://www.bznsflowai.com/terms) and [English](https://www.bznsflowai.com/en/terms): service terms and written scope.
+- [Refunds — Arabic](https://www.bznsflowai.com/refund) and [English](https://www.bznsflowai.com/en/refund): remedies when the agreed service does not work as promised.
+- [Data deletion — Arabic](https://www.bznsflowai.com/data-deletion) and [English](https://www.bznsflowai.com/en/data-deletion): how to request deletion.
 
-## Selected work
+## Contact and next step
 
-BizBay (Bahrain), Mawa Real Estate (Oman), Mekka Hijama, Reading Jeel (Oman), Royal Fish, Wild Muscat (Oman) and Five Gates (Bahrain). Madrasaty is BznsFlow's own venture.
+- [WhatsApp](https://wa.me/201036755930): discuss a free audit of your business and customer funnel.
+- [Email](mailto:ahmed@bznsflowai.com): ahmed@bznsflowai.com.
 
-## Next step
-
-A free audit of your business and customer funnel.
-
-- WhatsApp: https://wa.me/201036755930
-- Book the free audit: https://calendar.app.google/fUA7FtAyRHJ9okdk7
-- Email: ahmed@bznsflowai.com
-- Website: https://www.bznsflowai.com
-
-## Founder
-
-Ahmed Darwish. Founded 2024.
-
-## Key pages
-
-- [Home (Arabic)](https://www.bznsflowai.com/)
-- [Home (English)](https://www.bznsflowai.com/en)
-- [Privacy](https://www.bznsflowai.com/en/privacy)
+Pricing, usage charges, delivery, support, renewal and cancellation terms are confirmed in the written agreement. This summary does not replace that agreement or the policies above.

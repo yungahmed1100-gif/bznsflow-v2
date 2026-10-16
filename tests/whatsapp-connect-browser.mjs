@@ -17,7 +17,7 @@ let checks = 0;
 try {
   for (const [lang, width] of [['en', 1440], ['ar', 768], ['en', 320]]) {
     const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
-    const context = await browser.newContext({ viewport: { width, height: 900 } }), page = await context.newPage();
+    const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' }), page = await context.newPage();
     const calls = [], apiCalls = [], errors = [];
     const state = { ok: true, available: true, account: { email: 'owner@example.test' }, accountSaveAvailable: true, savedToAccount: true, journeyStep: 1, profileVersion: 1, csrfToken: 'c',
       profile: { businessName: 'Noor Abayas', sector: 'Retail', services: 'Abayas', humanContact: 'team@example.test', reviewed: true, faqs: [] }, integration: null };
@@ -98,7 +98,7 @@ try {
   }
   // A signed-in owner whose setup is still only in this browser gets it attached to the account automatically.
   {
-    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } }), page = await context.newPage();
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' }), page = await context.newPage();
     const calls = [];
     const state = { ok: true, available: true, account: { email: 'owner@example.test' }, accountSaveAvailable: true, savedToAccount: false, journeyStep: 1, profileVersion: 1, csrfToken: 'c',
       profile: { businessName: 'Qurum Coast Properties', sector: 'Real estate', services: 'Sales', humanContact: '96892183502', reviewed: true, faqs: [] }, integration: null };

@@ -1,5 +1,14 @@
 import type { RouteConfig } from "@react-router/dev/routes";
 export default [
+  { path: "mcp", file: "route-modules/mcp.jsx" },
+  { path: "en/mcp", file: "route-modules/en-mcp.jsx" },
+  { file: "route-modules/contact.jsx", path: "contact" },
+  { file: "route-modules/en-contact.jsx", path: "en/contact" },
+  { file: "route-modules/services.jsx", path: "services" },
+  { file: "route-modules/en-services.jsx", path: "en/services" },
+  { file: "route-modules/support.jsx", path: "support" },
+  { file: "route-modules/en-support.jsx", path: "en/support" },
+
   { file: "route-modules/refund.jsx", path: "refund" },
   { file: "route-modules/en-refund.jsx", path: "en/refund" },
   {"file": "route-modules/catalyst-setup.jsx", "path": "catalyst/setup"},

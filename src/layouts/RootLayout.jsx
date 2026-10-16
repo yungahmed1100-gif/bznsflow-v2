@@ -6,10 +6,10 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 // Shared shell for every route. Scroll reveals use the native IntersectionObserver
 // primitive in src/lib/reveal.js, initialized per-page.
 export function RootLayout() {
-  const privateOwnerPage = /^\/(?:en\/)?(?:owner|layla|reviewer)(?:\/|$)/.test(useLocation().pathname);
+  const privateOwnerPage = /^\/(?:en\/)?(?:owner|layla|reviewer|mcp)(?:\/|$)/.test(useLocation().pathname);
   useEffect(() => {
     if (privateOwnerPage) return;
-    // Marketing code inserts script nodes; run it only after React hydrates.
+    // Schedule marketing only after hydration; the injected loader waits for idle time.
     for (const source of documentScripts.slice(1)) {
       const script = document.createElement('script');
       script.textContent = source;

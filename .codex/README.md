@@ -45,6 +45,10 @@ Read [project-map.md](references/project-map.md) only when locating a workflow, 
 
 ## Research and update policy
 
+### GEO and Search Console (12 October 2026)
+
+`$geo-optimizer` is installed as a project skill from the user-requested Auriti Labs repository, with BznsFlow-specific factual and provider-guidance checks. Its pinned CLI is in `.codex/tools/seo/.venv/bin/geo`. The user-requested AminForou GSC MCP is registered as `gsc` through a read-only adapter; it exposes reporting and URL inspection only. Google authentication and access to `sc-domain:bznsflowai.com` were verified through the server on 12 October 2026. See [setup and evidence](../docs/geo-search-console-setup.md) for installation, Google authentication, limitations and verification. Restart this workspace after MCP configuration changes. Neither registration nor the GEO score proves indexing or search performance.
+
 Researched 2026-10-05 against installed Codex 0.157.1 and official sources:
 
 - [Codex skills](https://developers.openai.com/codex/skills/) — discovery and progressive loading.

@@ -35,18 +35,6 @@ export function Layout({ children }) {
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap"
-      media="all"
-
-    />
-    <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    </noscript>
     <meta name="facebook-domain-verification" content="gp7mxwceshctr5x1y0hrrmukfa1q0j" />
 
 

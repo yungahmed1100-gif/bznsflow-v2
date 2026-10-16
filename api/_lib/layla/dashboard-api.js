@@ -42,7 +42,7 @@ function recipientValues(list) {
     .filter(r => r.contactId);
 }
 
-function importRows(rows) {
+export function importRows(rows) {
   if (!Array.isArray(rows) || !rows.length || rows.length > 100) throw new PilotError('invalid_import');
   return rows.map(row => {
     const normalized = normalizePhone(`+${String(row?.waId || '')}`, row?.countryIso);

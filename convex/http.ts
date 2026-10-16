@@ -179,4 +179,15 @@ http.route({ path: '/knowledge-sources', method: 'POST', handler: httpAction(asy
     return new Response(JSON.stringify(result), { headers });
   } catch { return new Response(JSON.stringify({ ok: false, reason: 'knowledge_unavailable' }), { status: 503, headers }); }
 }) });
+
+http.route({path:'/mcp-internal',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request))return new Response(null,{status:401});
+  try {
+    const raw=await request.text();if(raw.length>700000)return new Response(null,{status:413});
+    const input=JSON.parse(raw);
+    const value=await ctx.runMutation((internal as any).mcp.execute,input);
+    return Response.json({ok:true,value},{headers:{'Cache-Control':'no-store'}});
+  }catch(error){const message=String((error as any)?.message||'');const reason=message.match(/(?:Error: )([a-z_]{3,60})(?:\n|$)/)?.[1]||'mcp_unavailable';return Response.json({ok:false,reason},{headers:{'Cache-Control':'no-store'}});}
+})});
+
 export default http;

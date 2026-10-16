@@ -105,3 +105,7 @@ Owner-only mock pilot: `/owner/layla`. The dedicated BznsFlow number is configur
 ## Release verification
 
 Run `npm run test:release` for unit tests, Convex typechecking, static build, dependency audit, and browser suites. See [Green release evidence](docs/green-release-2026-10-05.md) for production gates, migration boundaries, and rollback.
+
+## Owner MCP connections (release candidate)
+
+Remote MCP and the Arabic/English AI Connections page are documented in [the MCP engineering pack](docs/mcp/engineering-pack.md) and [release/runbook](docs/mcp/release.md). Disabled until credentials and candidate/client acceptance are complete. Production promotion needs explicit authorization.

@@ -28,6 +28,9 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
                 <li><a href="#tiers" onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.tiers_label}</a></li>
                 <li><a href="#about" onClick={(e) => onSmoothScroll(e, '#about')}>{t.footer_nav_5}</a></li>
                 <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_nav_2}</a></li>
+                <li><a href={lang === 'en' ? '/en/services' : '/services'}>{lang === 'en' ? 'Service Scope' : 'نطاق الخدمات'}</a></li>
+                <li><a href={lang === 'en' ? '/en/contact' : '/contact'}>{lang === 'en' ? 'Company & Contact' : 'عن الشركة والتواصل'}</a></li>
+                <li><a href={lang === 'en' ? '/en/support' : '/support'}>{lang === 'en' ? 'Help & Support' : 'المساعدة والدعم'}</a></li>
               </ul>
             </div>
 
@@ -67,14 +70,11 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
 
           <div className="footer-bottom">
             <p className="footer-copy">{t.footer_copy.replace(/©\s*\d{4}/, `© ${new Date().getFullYear()}`)}</p>
-            {/* A real link, not a hash anchor: unlike everything else in this
-                footer, /privacy is its own prerendered route. Google and
-                LinkedIn both expect a findable privacy policy. */}
-            <p className="footer-legal">
+            <nav className="footer-legal" aria-label={lang === 'en' ? 'Policies' : 'السياسات'}>
               <a href={lang === 'en' ? '/en/privacy' : '/privacy'}>{t.footer_privacy}</a>
-              <span aria-hidden="true"> · </span>
               <a href={lang === 'en' ? '/en/refund' : '/refund'}>{lang === 'en' ? 'Refund Policy' : 'سياسة الاسترداد'}</a>
-            </p>
+              <a href={lang === 'en' ? '/en/terms' : '/terms'}>{lang === 'en' ? 'Terms of Service' : 'شروط الخدمة'}</a>
+            </nav>
           </div>
         </div>
       </footer>

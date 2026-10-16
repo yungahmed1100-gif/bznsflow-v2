@@ -12,3 +12,7 @@ The renewed authorization and Green production cutover are recorded in `docs/gre
 Codex configuration and tool scope: `.codex/README.md`. Project skills are discovered in `.agents/skills/`: `bznsflow-dashboard-engineering`, `bznsflow-convex-engineering`, `bznsflow-layla-evaluation`, `bznsflow-rag-engineering`, `bznsflow-performance`, and `bznsflow-release-verification`. Load the relevant skill, not the full set. Read `.codex/references/project-map.md` when locating implementation or tests. Prefer the existing test/CLI harness for repeated work; use documentation MCPs for version-sensitive APIs and Playwright MCP for interactive exploration.
 
 The Claude Impeccable workflow is also available as `$impeccable` through `.agents/skills/impeccable` → `.codex/skills/impeccable`. Its four Codex roles and local-hook limitations are documented in `.codex/README.md`.
+
+## MCP engineering
+
+For owner MCP work read `docs/mcp/engineering-pack.md` and `docs/mcp/release.md`. Keep capability dispositions complete, consent independent of execution approval, and mutations/receipts atomic. Do not claim client or live Convex acceptance from local synthetic tests. Production promotion remains separately authorized.

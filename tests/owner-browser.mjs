@@ -72,7 +72,9 @@ try {
     assert.deepEqual(home.errors, []); await home.context.close(); checked++;
     for (const pack of HASIB_LIVE_PACKS) for (const width of [320, 768, 1440]) {
       const { page, context, errors, writes } = await open(`${prefix}/owner/preview/${pack}?tab=today`, width);
-      await page.locator('.hb-preview-banner').waitFor();
+      await page.locator('.hb-preview-banner').waitFor().catch((error) => {
+        throw new Error(`${pack} ${lang} ${width}: preview banner did not load: ${error.message}`);
+      });
       await page.locator('.ld-main .ld-state[role="status"]').waitFor({ state: 'hidden' });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${pack} ${lang} ${width} overflow`);
       const issues = (await new AxeBuilder({ page }).include('.ld').analyze()).violations.filter(v => ['serious','critical'].includes(v.impact));

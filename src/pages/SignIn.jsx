@@ -54,7 +54,7 @@ function fill(template, values) {
 
 // Only these destinations may be resumed after sign-in, so ?next= cannot be
 // used as an open redirect. Kept in sessionStorage so it survives OAuth.
-const NEXT_PATH = /^\/(en\/)?(catalyst\/setup|layla\/dashboard)$/;
+const NEXT_PATH = /^\/(en\/)?(catalyst\/setup|layla\/dashboard|mcp)$/;
 function rememberNext(path) {
   if (!path || !NEXT_PATH.test(path)) return;
   try { sessionStorage.setItem('bf_next', path); } catch { /* storage blocked */ }
@@ -187,7 +187,7 @@ export default function SignIn({ lang = 'ar' }) {
         if (cancelled) return;
         csrf.current = data?.csrfToken || '';
         if (Array.isArray(data?.providers)) setProviders(data.providers);
-        if (data?.account) applyAccount(data);
+        if (data?.account && new URLSearchParams(window.location.search).get('fresh') !== '1') applyAccount(data);
       } catch {
         // Offline or blocked. The form still renders; the first submit reports it.
       }

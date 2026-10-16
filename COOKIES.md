@@ -20,6 +20,9 @@ this registry lists both. "It's not a cookie" is not an exemption.
 
 | Name | Type | Lifetime | Purpose |
 |---|---|---|---|
+| `bf_mcp_session`, `bf_mcp_session.sig` | cookies, **HttpOnly** | up to 30 days | Signed OAuth authorization session for a requested AI connection. Necessary; not marketing. |
+| `bf_mcp_interaction`, `bf_mcp_interaction.sig`, `bf_mcp_auth_resume`, `bf_mcp_auth_resume.sig` | cookies, **HttpOnly** | 15 minutes | Bind sign-in and consent to the server-stored OAuth transaction. |
+| `bf_mcp_resume` | cookie, **HttpOnly** | 15 minutes | Resume the pending connection after BznsFlow sign-in; cleared when consent completes or is declined. |
 | `bf_locale` | cookie | 1 year | Remembers the language chosen in the switcher. Written in `src/pages/Home.jsx`. |
 | `bf_session` | cookie, **HttpOnly** | 30 days | Identifies a signed-in account. Issued by `POST /api/auth-session` on the sign-in page; cleared on sign-out. Holds a random 32-byte token — the database stores only its SHA-256. |
 | `bf_csrf` | cookie, **HttpOnly** | 30 days | CSRF double-submit token, echoed in `x-csrf-token`. Issued by `GET /api/auth-session`, which returns the token in its JSON body — so the page never reads the cookie and it can be HttpOnly, unlike the textbook pattern. |

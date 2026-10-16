@@ -41,6 +41,8 @@ dist-ssr
 
 # Scratch: screenshots, baselines and working notes, not artefacts.
 work/
+.codex/tools/seo/.venv/
+__pycache__/
 
 # Impeccable ships a ~14MB platform-specific binary. The skill is reinstalled
 # with `npx impeccable install`, so the download does not belong in git.

@@ -63,6 +63,7 @@ export function NavBar({
           </button>
 
           <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`} id="navLinks">
+            {account && <li><a className="nav-link" href={lang === 'ar' ? '/mcp' : '/en/mcp'}>{lang === 'ar' ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections'}</a></li>}
             {account?.email?.trim().toLowerCase() === 'ahmed@bznsflowai.com' && <li><a className="nav-link" href={lang === 'en' ? '/en/owner' : '/owner'}>{lang === 'ar' ? 'لوحة الإدارة' : 'Admin dashboard'}</a></li>}
             <li><a href="#tiers"      className={`nav-link ${activeLink === 'tiers'      ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.tiers_label}</a></li>
             <li><a href="#about"      className={`nav-link ${activeLink === 'about'      ? 'active' : ''}`} onClick={(e) => onSmoothScroll(e, '#about')}>{t.nav_about}</a></li>
@@ -88,19 +89,23 @@ export function NavBar({
               </button>
               <div className="lang-menu" role="menu">
                 {LANGUAGES.map(l => (
-                  <button
+                  <a
                     key={l.code}
-                    type="button"
+                    href={l.code === 'en' ? '/en' : '/'}
+                    hrefLang={l.code}
                     role="menuitemradio"
                     aria-checked={lang === l.code}
                     className={`lang-item ${lang === l.code ? 'active' : ''}`}
-                    onClick={() => handleLangSelect(l.code)}
+                    onClick={(e) => {
+                      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      handleLangSelect(l.code);
+                    }}
                     title={l.label}
                     aria-label={l.label}
                   >
                     <span className="lang-code" aria-hidden="true">{l.code2}</span>
                     <span className="label">{l.label}</span>
-                  </button>
+                  </a>
                 ))}
               </div>
             </li>

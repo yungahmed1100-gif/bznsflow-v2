@@ -193,10 +193,12 @@ async function seedVisits({ m, tenant, hasib, DAY, HOUR, people, contactOf, trea
   await visit(-2, 13, 22, 2, { outcome: 'missed', chair: 0 });
   // Today and the next three days.
   const hourNow = Math.floor(((now + offset) % DAY) / HOUR);
-  await visit(0, Math.max(8, hourNow - 2), 3, 0, { outcome: 'completed', chair: 0 });
-  await visit(0, Math.max(8, hourNow - 1), 4, 1, { outcome: hourNow - 1 >= 8 ? 'arrived' : 'confirmed', minutes: 60, chair: 1 });
-  await visit(0, Math.min(20, hourNow + 2), 5, 0, { outcome: 'confirmed', chair: 0 });
-  await visit(0, Math.min(21, hourNow + 3), 6, 2, { outcome: 'booked', chair: 1 });
+  // Clamp the whole schedule together: clamping each slot separately can overlap chairs overnight.
+  const demoHour = Math.min(18, Math.max(10, hourNow));
+  await visit(0, demoHour - 2, 3, 0, { outcome: 'completed', chair: 0 });
+  await visit(0, demoHour - 1, 4, 1, { outcome: hourNow - 1 >= 8 ? 'arrived' : 'confirmed', minutes: 60, chair: 1 });
+  await visit(0, demoHour + 2, 5, 0, { outcome: 'confirmed', chair: 0 });
+  await visit(0, demoHour + 3, 6, 2, { outcome: 'booked', chair: 1 });
   await visit(1, 9, 7, 0, { outcome: 'booked', chair: 0 });
   await visit(1, 11, 12, 1, { outcome: 'booked', minor: 11, chair: 1 }); // a minor, messages go to the guardian
   await visit(1, 16, 8, 2, { outcome: 'confirmed', chair: 0 });

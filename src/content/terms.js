@@ -6,12 +6,12 @@
 // charges and policies stay Meta's. Commercial terms (price, setup fee) are
 // agreed in writing per customer and are not restated here.
 
-export const TERMS_UPDATED_ISO = '2026-09-23';
+export const TERMS_UPDATED_ISO = '2026-10-12';
 
 const en = {
   title: 'Terms of Service',
-  updated: 'Last updated 23 September 2026',
-  lead: 'These terms apply when a business uses BznsFlow and its WhatsApp assistant, Layla. By creating an account or connecting a WhatsApp number, you agree to them on behalf of your business.',
+  updated: 'Last updated 12 October 2026',
+  lead: 'These terms apply to the BznsFlow services agreed for your business, including Catalyst and, where granted, Ascend. Your written service agreement defines your purchased scope and commercial terms. By creating an account or connecting a channel, you agree to these terms on behalf of your business and confirm you are authorised to do so.',
   sections: [
     {
       h: 'The service',
@@ -45,6 +45,7 @@ const en = {
         'Reply outside WhatsApp\'s 24-hour customer service window only with approved templates.',
         'Keep the facts Layla uses correct and up to date, and give customers a way to reach a person.',
         'Do not use the service for unlawful, misleading, harassing or spam messages, or for anything WhatsApp does not allow.',
+        'Do not upload contact lists or customer information you are not authorised to use, impersonate another business or use automation to evade platform restrictions. Marketing must respect consent, opt-outs and applicable rules.',
       ],
     },
     {
@@ -52,8 +53,21 @@ const en = {
       p: ['Layla answers from the facts you approve and tells customers when she does not know. Automated replies can still be wrong or incomplete, so review your conversations and correct your facts when needed. You remain responsible for the offers and commitments your business makes to its customers.'],
     },
     {
-      h: 'Fees',
-      p: ['Any paid plan, setup fee or trial is agreed with you in writing before it starts. Nothing in these terms creates a charge on its own.'],
+      h: 'Scope, billing and renewal',
+      p: ['Your written proposal or service agreement identifies the deliverables, exclusions, setup fee, recurring fee, applicable taxes, payment dates, billing frequency, any minimum commitment and the renewal arrangements. We agree these before paid work starts. This page does not create a charge or automatic renewal on its own.', 'A roadmap, demo or agent illustration is not a purchased feature. Additional channels, workflows or custom work require an agreed scope and price before extra paid work begins. Existing customer agreements and guarantees are not reduced by this page.'],
+    },
+    {
+      h: 'Usage and provider charges',
+      p: ['Your agreement defines the included allowance, the unit and method of counting usage, any additional-usage rate and the treatment of failed, duplicate or internal activity. Do not assume unlimited usage where it has not been agreed.', 'Messaging, AI, hosting or other provider charges are billed separately only as agreed with you. We distinguish charges paid directly to a provider from charges collected by BznsFlow and explain the basis of any billed usage.'],
+    },
+    {
+      h: 'Automation and owner approval',
+      p: ['The channels and workflows that may run automatically are agreed during setup. Automated work must use the business facts, catalog and permissions you approve. Your team remains responsible for confirming real-world events such as a completed repair or delivery.', 'In Ascend, Adiba drafts offers and quotations for owner approval. A draft does not authorise a new price, discount or commitment. Approved catalog prices and expressly authorised workflows may be used within the agreed scope; offers requiring an owner decision must be approved before they are sent.', 'You can pause supported automations and take over conversations. Report an unexpected action through support so we can review the configuration and the affected record.'],
+    },
+    {
+      h: 'Support and acceptance',
+      p: ['Your agreement sets the setup milestones, customer dependencies, acceptance checks, support availability and any response-time commitment. These terms do not create a universal delivery deadline or round-the-clock support promise.', 'If the agreed service does not work as promised, report the issue with relevant details. Our Refund Policy explains how we review a failure and the affected fees. Mandatory legal remedies and any stronger agreed guarantee remain available.'],
+      links: [{ label: 'Service Scope & Onboarding', href: '/en/services' }, { label: 'Help & Support', href: '/en/support' }, { label: 'Refund Policy', href: '/en/refund' }],
     },
     {
       h: 'Your data',
@@ -65,7 +79,8 @@ const en = {
     },
     {
       h: 'Ending the service',
-      p: ['You can stop at any time by pausing Layla, removing BznsFlow\'s access in Meta, or asking us to close your account. We may suspend an account that breaks these terms or Meta\'s policies, or that puts customers or the service at risk.'],
+      p: ['You can pause Layla or disconnect a channel to stop supported automation. This does not by itself cancel your service agreement or settle amounts due.', 'To request cancellation, email ahmed@bznsflowai.com with your business name and account email. The notice period, minimum commitment, renewal rules and service end date follow your written agreement and applicable law. We confirm the applicable end date and any remaining charges in writing; this page does not introduce a new cancellation fee.', 'We may suspend an account that breaches these terms or platform policies, or that puts customers or the service at risk. Cancellation and refund eligibility are separate; our Refund Policy and mandatory legal rights continue to apply.'],
+      links: [{ label: 'Data deletion instructions', href: '/en/data-deletion' }],
     },
     {
       h: 'Liability',
@@ -84,8 +99,8 @@ const en = {
 
 const ar = {
   title: 'شروط الخدمة',
-  updated: 'آخر تحديث ٢٣ سبتمبر ٢٠٢٦',
-  lead: 'تنطبق هذه الشروط عندما يستخدم نشاط تجاري BznsFlow ومساعدتها على واتساب، ليلى. بإنشاء حساب أو ربط رقم واتساب فإنك توافق عليها نيابةً عن نشاطك.',
+  updated: 'آخر تحديث ١٢ أكتوبر ٢٠٢٦',
+  lead: 'تنطبق هذه الشروط على خدمات BznsFlow المتفق عليها لنشاطك، بما فيها كاتاليست وأسيند عند منح الوصول إليه. يحدّد اتفاق الخدمة المكتوب نطاق الخدمة التي اشتريتها وشروطها التجارية. بإنشاء حساب أو ربط قناة، توافق على هذه الشروط نيابةً عن نشاطك وتؤكّد أنك مخوّل بذلك.',
   sections: [
     {
       h: 'الخدمة',
@@ -119,6 +134,7 @@ const ar = {
         'لا ترد خارج نافذة خدمة العملاء في واتساب (٢٤ ساعة) إلا بالقوالب المعتمدة.',
         'حافظ على صحة المعلومات التي تستخدمها ليلى وحداثتها، ووفّر للعملاء طريقة للتواصل مع شخص.',
         'لا تستخدم الخدمة لرسائل مخالفة للقانون أو مضللة أو مزعجة أو عشوائية، ولا لأي شيء لا يسمح به واتساب.',
+        'لا ترفع قوائم اتصال أو معلومات عملاء غير مخوّل باستخدامها، ولا تنتحل هوية نشاط آخر أو تستخدم الأتمتة للتحايل على قيود المنصات. يجب أن يحترم التسويق الموافقات وطلبات الانسحاب والقواعد المنطبقة.',
       ],
     },
     {
@@ -126,8 +142,21 @@ const ar = {
       p: ['تجيب ليلى من المعلومات التي تعتمدها، وتخبر العميل عندما لا تعرف. ومع ذلك قد تكون الردود الآلية خاطئة أو ناقصة، فراجع محادثاتك وصحّح معلوماتك عند الحاجة. وتظل مسؤولاً عن العروض والالتزامات التي يقدمها نشاطك لعملائه.'],
     },
     {
-      h: 'الرسوم',
-      p: ['أي باقة مدفوعة أو رسوم إعداد أو فترة تجريبية يُتفق عليها معك كتابةً قبل بدئها. ولا ينشئ أي بند في هذه الشروط رسوماً بحد ذاته.'],
+      h: 'النطاق والفوترة والتجديد',
+      p: ['يحدّد عرضك أو اتفاق الخدمة المكتوب المخرجات والاستثناءات ورسوم الإعداد والرسوم الدورية والضرائب المنطبقة ومواعيد الدفع ودورية الفوترة وأي حد أدنى للالتزام وترتيبات التجديد. نتفق عليها قبل بدء العمل المدفوع. لا تنشئ هذه الصفحة رسوماً أو تجديداً تلقائياً بحد ذاتها.', 'الميزة المخطط لها أو العرض التجريبي أو صورة الوكيل ليست ميزة مشتراة. تتطلب القنوات أو مسارات العمل أو الأعمال المخصصة الإضافية اتفاقاً على النطاق والسعر قبل بدء عمل إضافي مدفوع. لا تنتقص هذه الصفحة من اتفاقات العملاء وضماناتهم القائمة.'],
+    },
+    {
+      h: 'رسوم الاستخدام والمزوّدين',
+      p: ['يحدّد اتفاقك الاستخدام المشمول ووحدة وطريقة احتسابه وسعر أي استخدام إضافي وطريقة التعامل مع الأنشطة الفاشلة أو المكررة أو الداخلية. لا تفترض أن الاستخدام غير محدود إذا لم يُتفق على ذلك.', 'لا تُفوْتَر رسوم المراسلة أو الذكاء الاصطناعي أو الاستضافة أو غيرها من المزوّدين بصورة منفصلة إلا وفق الاتفاق معك. نميّز بين الرسوم المدفوعة مباشرةً للمزوّد والرسوم التي تحصّلها BznsFlow، ونوضّح أساس أي استخدام مفوتر.'],
+    },
+    {
+      h: 'الأتمتة وموافقة المالك',
+      p: ['نتفق أثناء الإعداد على القنوات ومسارات العمل المسموح بتشغيلها تلقائياً. يجب أن تستند الإجراءات الآلية إلى معلومات النشاط والكتالوج والصلاحيات التي تعتمدها. يظل فريقك مسؤولاً عن تأكيد الأحداث الفعلية مثل اكتمال إصلاح أو توصيل.', 'في أسيند، تُعدّ أديبة العروض والتسعيرات لموافقة المالك. لا تجيز المسودة سعراً أو خصماً أو التزاماً جديداً. يمكن استخدام أسعار الكتالوج المعتمد ومسارات العمل المصرّح بها صراحةً ضمن النطاق المتفق عليه؛ ويجب اعتماد العروض التي تتطلب قرار المالك قبل إرسالها.', 'يمكنك إيقاف الأتمتة المدعومة مؤقتاً وتولّي المحادثات. أبلغ الدعم بأي إجراء غير متوقع لنراجع الإعداد والسجل المتأثر.'],
+    },
+    {
+      h: 'الدعم والقبول',
+      p: ['يحدّد اتفاقك مراحل الإعداد ومتطلبات العميل واختبارات القبول وأوقات الدعم وأي التزام بزمن الاستجابة. لا تنشئ هذه الشروط موعد تسليم موحداً أو وعداً بالدعم على مدار الساعة.', 'إذا لم تعمل الخدمة المتفق عليها كما وعدنا، أبلغنا بالمشكلة والتفاصيل ذات الصلة. توضّح سياسة الاسترداد مراجعة الخلل والرسوم المتأثرة. تظل وسائل المعالجة القانونية الإلزامية وأي ضمان أقوى متفق عليه متاحة.'],
+      links: [{ label: 'نطاق الخدمات وبدء التشغيل', href: '/services' }, { label: 'المساعدة والدعم', href: '/support' }, { label: 'سياسة الاسترداد', href: '/refund' }],
     },
     {
       h: 'بياناتك',
@@ -139,7 +168,8 @@ const ar = {
     },
     {
       h: 'إنهاء الخدمة',
-      p: ['يمكنك التوقف في أي وقت بإيقاف ليلى مؤقتاً، أو إلغاء وصول BznsFlow من Meta، أو طلب إغلاق حسابك. ويجوز لنا تعليق أي حساب يخالف هذه الشروط أو سياسات Meta، أو يعرّض العملاء أو الخدمة للخطر.'],
+      p: ['يمكنك إيقاف ليلى مؤقتاً أو فصل قناة لإيقاف الأتمتة المدعومة. لا يلغي ذلك بحد ذاته اتفاق الخدمة ولا يسوّي المبالغ المستحقة.', 'لطلب الإلغاء، راسل ahmed@bznsflowai.com مع اسم نشاطك وبريد الحساب. تتبع مهلة الإشعار والحد الأدنى للالتزام وقواعد التجديد وتاريخ انتهاء الخدمة اتفاقك المكتوب والقانون المعمول به. نؤكّد تاريخ الانتهاء المنطبق وأي رسوم متبقية كتابةً؛ ولا تنشئ هذه الصفحة رسم إلغاء جديداً.', 'يجوز لنا تعليق حساب يخالف هذه الشروط أو سياسات المنصات أو يعرّض العملاء أو الخدمة للخطر. الإلغاء وأهلية الاسترداد أمران منفصلان؛ وتظل سياسة الاسترداد والحقوق القانونية الإلزامية منطبقة.'],
+      links: [{ label: 'تعليمات حذف البيانات', href: '/data-deletion' }],
     },
     {
       h: 'المسؤولية',
