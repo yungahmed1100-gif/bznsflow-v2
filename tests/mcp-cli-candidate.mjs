@@ -238,6 +238,13 @@ try {
               "mcp__bznsflow_acceptance__*",
               "--max-budget-usd",
               "1",
+              // Measure the BznsFlow server, not this machine's skills and settings.
+              "--disable-slash-commands",
+              "--setting-sources",
+              "project",
+              ...(process.env.MCP_ACCEPTANCE_CLAUDE_MODEL
+                ? ["--model", process.env.MCP_ACCEPTANCE_CLAUDE_MODEL]
+                : []),
             ];
       const proc = spawn(cli, args, {
         cwd: toolCwd,
@@ -355,10 +362,15 @@ try {
       await connectionCard
         .getByRole("button", { name: "Disconnect", exact: true })
         .click();
-      assert.ok(
-        (await list()).connections.find((c) => c.id === connection.id)
-          .revokedAt,
-      );
+      // The card's request completes after the click; poll the durable state.
+      let revoked = false;
+      for (let i = 0; i < 20 && !revoked; i++) {
+        revoked = !!(await list()).connections.find(
+          (c) => c.id === connection.id,
+        ).revokedAt;
+        if (!revoked) await page.waitForTimeout(500);
+      }
+      assert.ok(revoked, "website disconnection missing");
       console.log(
         cli +
           " real model acceptance passed: Arabic read/write/preview, English website-approved export, forced-expiry automatic refresh, website disconnection.",

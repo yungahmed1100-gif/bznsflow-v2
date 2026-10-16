@@ -75,7 +75,10 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const h = useMemo(() => createHasibStrings(lang, packId), [lang, packId]);
   // The prerendered shell has no URL, so resolving the tab before mount bakes "chats" into
   // the markup and hydration keeps that stale aria-current/data-tab. Resolve after mount.
-  const { tab, view } = ready ? resolveTab(params.get('tab'), params.get('view'), map) : { tab: null, view: null };
+  // Six-tab sectors map old links (?tab=today) through their own aliases, so wait for
+  // Hasib before resolving; otherwise the generic map briefly shows Chats instead.
+  const hasibPending = hasibAllowed && !hasibState.data && !hasibState.error;
+  const { tab, view } = ready && !hasibPending ? resolveTab(params.get('tab'), params.get('view'), map) : { tab: null, view: null };
 
   // Client-only: the prerendered HTML is a neutral loading shell.
   useEffect(() => { setHasibPreviewIndustry(previewPack); setReady(true); return () => setHasibPreviewIndustry(''); }, [previewPack]);
@@ -121,7 +124,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
       <HasibProvider lang={lang} overview={hasibOverview} business={data?.business?.name || ''} timezone={data?.timezone} onChanged={refreshHasib}>
       <DashboardNav packId={hasibOverview?.pack?.id} s={s} h={h} sections={map.sections} tab={tab} onSelect={go} search={params} business={data?.business?.name} preview={hasibOverview?.readOnly} badges={{ orders: hasibOverview?.counts?.laylaWaiting || 0, work: hasibOverview?.counts?.followupsActionable || 0 }} />
       <main id="ld-main" className={`ld-main ${hasibOverview?.readOnly ? 'hb-preview-mode' : ''}`} tabIndex={-1} data-tab={tab}>
-        {!ready || (overview.loading && !data) ? <p className="ld-state" role="status">{s.t('loading')}</p>
+        {!ready || (overview.loading && !data) || hasibPending ? <p className="ld-state" role="status">{s.t('loading')}</p>
           : unavailable ? <div className="ld-state"><p>{s.t('dashboardUnavailable')}</p><a className="ld-button" href={setupPath(lang)}>{s.t('setup')}</a></div>
           : overview.error && !data ? <div className="ld-state" role="alert"><p>{s.reason(overview.error.reason)}</p><button className="ld-button" onClick={() => overview.refresh()}>{s.t('retry')}</button></div>
           : data && (data.connected || data.capabilities?.operations || data.founderPreview) ? (
