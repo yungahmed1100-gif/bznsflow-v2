@@ -11,6 +11,11 @@ export default [
 
   { file: "route-modules/refund.jsx", path: "refund" },
   { file: "route-modules/en-refund.jsx", path: "en/refund" },
+  // Synthetic product draft: available only in the local development server.
+  ...(process.env.NODE_ENV === 'development' ? [
+    { file: 'route-modules/owner-ascend-draft.jsx', path: 'owner/ascend-draft' },
+    { file: 'route-modules/en-owner-ascend-draft.jsx', path: 'en/owner/ascend-draft' },
+  ] : []),
   {"file": "route-modules/catalyst-setup.jsx", "path": "catalyst/setup"},
   {"file": "route-modules/en-catalyst-setup.jsx", "path": "en/catalyst/setup"},
   {
