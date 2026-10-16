@@ -52,6 +52,26 @@ Source: branch `release/mcp-integration-2026-10-16`. It is a merge of `feat/bzns
 - **The Claude.ai web connector.** It needs Ahmed signed in to claude.ai.
 - **Real email-code and social sign-in returns.** The candidate's email endpoint is disabled on purpose.
 
+## Contract check and cleanup (16 October 2026, later)
+
+- **Front end ↔ API ↔ Convex.** A new test, `tests/frontend-api-contract.test.mjs` (in `npm run test:access`), checks four things:
+  - every `hasib`, `dashboard` and `messaging` action the browser sends is accepted by its controller;
+  - every `/api` URL and `surface=` it calls reaches a live handler, not a 410 stub;
+  - every Convex route the API uses is served by `convex/http.ts`;
+  - the AI Connections page sends only actions its handler accepts.
+
+  `acceptedActions` moved to `tests/helpers/accepted-actions.mjs` and is shared with `mcp-coverage`.
+- **Retired owner pilot removed.**
+  - Removed: `/owner/layla` and its four pages and CSS, and the 410-only `api/layla-meta-readiness.js` and `api/keepalive.js` (Vercel functions 12 → 10).
+  - Also removed: the `layla-meta-activation`/`-test` rewrites, their entries in `SURFACES`, and three tests that only covered the pilot UI.
+  - `/owner/layla` and `/en/owner/layla` now redirect permanently to `/owner` and `/en/owner`.
+- **Unused code and dependencies.**
+  - `src/hooks/useOrbitCarousel.js` deleted.
+  - `@vitejs/plugin-react` removed; the build uses `@react-router/dev`.
+  - `jose` and `esbuild` are now listed in devDependencies, at their installed versions.
+- **AI Connections page.** The design is unchanged. "Copied" now shows on the pressed button and clears after 2.5 s; screen readers still hear it. "Saved." clears after 4 s. The consent buttons have room above them. `tests/mcp-browser.mjs` checks the copy feedback.
+- **Follow-up, not done here.** Eleven `api/_lib/layla` modules are reachable only from tests: `activation(-api)`, `open-api`, `open-test`, `supervised`, `test-api`, `readiness`, `customer-api`, `customer-webhook`, `customer-store`, `blue-demo`. They are not deployed. The test-only harness `tests/helpers/retired-pilot` imports them, and that harness also covers live modules (`domain`, `gateway`, `webhook`). Removing them means rewriting the harness first, which is a separate change.
+
 ## Known issue before opening MCP beyond the pilot
 
 **Tool discovery is very large.** A real-estate owner sees about 130 tools, about 108k tokens of schemas. The cause: each sector's Hasib tools reuse the whole sector input shape, about 9.4k characters each, instead of their own fields. Clients work, but every conversation pays for the full list. Narrow each tool's schema to `HASIB_FIELDS_BY_OPERATION` before enabling customers.
