@@ -5,7 +5,11 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { createHash } from "node:crypto";
 import { generateKeyPair, exportJWK } from "jose";
-import { createOAuth, oauthAdapter } from "../api/_lib/mcp/oauth.js";
+import {
+  createOAuth,
+  narrowRefreshScope,
+  oauthAdapter,
+} from "../api/_lib/mcp/oauth.js";
 import { createMcpHandler } from "../api/_lib/mcp/handler.js";
 import { McpError } from "../api/_lib/mcp/store.js";
 function durableStore() {
@@ -133,9 +137,44 @@ test("OAuth adapter encrypts and authenticates payloads, hashes identifiers and 
   r.payload = r.payload.slice(0, -8) + "aaaaaaaa";
   await assert.rejects(() => a.find("raw-code"));
 });
+test("refresh scope narrowing works on pre-parsed (Vercel) bodies and never adds scopes", async () => {
+  const provider = {
+    RefreshToken: {
+      find: async (v) =>
+        v === "rt" ? { scopes: new Set(["workspace:read"]) } : undefined,
+    },
+  };
+  const run = async (body) => {
+    const ctx = { req: { readable: false, body } };
+    await narrowRefreshScope(provider, ctx);
+    return ctx.req.body;
+  };
+  const refresh = { grant_type: "refresh_token", refresh_token: "rt" };
+  assert.equal(
+    (await run({ ...refresh, scope: "openid workspace:read workspace:write" }))
+      .scope,
+    "workspace:read",
+  );
+  assert.equal(
+    (
+      await run(
+        "grant_type=refresh_token&refresh_token=rt&scope=openid%20workspace%3Aread",
+      )
+    ).scope,
+    "workspace:read",
+  );
+  assert.equal((await run({ ...refresh, scope: "openid" })).scope, "openid");
+  assert.equal(
+    (await run({ ...refresh, refresh_token: "unknown", scope: "openid" }))
+      .scope,
+    "openid",
+  );
+  assert.equal((await run({ ...refresh })).scope, undefined);
+});
 for (const requestedScope of [
   "openid offline_access workspace:read workspace:write",
   "workspace:read workspace:write",
+  "workspace:read",
 ])
   test(`HTTP OAuth PKCE, multi-instance, SDK, refresh and revoke: ${requestedScope}`, async (t) => {
     const durable = durableStore(),
@@ -359,14 +398,29 @@ for (const requestedScope of [
     for (const c of durable.connections.values()) c.revoked = true;
     assert.equal((await rpc(tokens.access_token)).status, 401);
     for (const c of durable.connections.values()) c.revoked = false;
+    // Codex refreshes with its default scope set even after
+    // `mcp login --scopes workspace:read,workspace:write`. Unheld scopes are
+    // dropped, never added: a read-only grant must stay read-only.
     const refreshed = await tokenReq({
       grant_type: "refresh_token",
       refresh_token: tokens.refresh_token,
       resource,
+      scope: "openid workspace:read workspace:write",
     });
     assert.equal(refreshed.status, 200, await refreshed.clone().text());
     const rotated = await refreshed.json();
     assert.notEqual(rotated.refresh_token, tokens.refresh_token);
+    assert.equal(
+      rotated.scope.split(" ").includes("workspace:write"),
+      requestedScope.split(" ").includes("workspace:write"),
+    );
+    const unheld = await tokenReq({
+      grant_type: "refresh_token",
+      refresh_token: rotated.refresh_token,
+      resource,
+      scope: "profile",
+    });
+    assert.equal((await unheld.json()).error, "invalid_scope");
     const replay = await tokenReq({
       grant_type: "refresh_token",
       refresh_token: tokens.refresh_token,

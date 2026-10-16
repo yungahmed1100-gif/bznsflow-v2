@@ -1,4 +1,5 @@
 import Provider from "oidc-provider";
+import { parse as parseForm } from "node:querystring";
 import {
   createHash,
   createCipheriv,
@@ -158,6 +159,42 @@ export function clientMetadataAllowed(metadata) {
     }
   });
 }
+// Same cap oidc-provider applies when it reads the body itself.
+const TOKEN_BODY_LIMIT = 56 * 1024;
+async function tokenForm(req) {
+  if (!req.readable)
+    return typeof req.body === "string" ? parseForm(req.body) : { ...req.body };
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > TOKEN_BODY_LIMIT) throw new McpError("request_too_large", 413);
+    chunks.push(chunk);
+  }
+  return parseForm(Buffer.concat(chunks).toString("utf8"));
+}
+// Clients may resend a broader scope on refresh: Codex adds `openid` after
+// `mcp login --scopes workspace:read,workspace:write`. Drop scopes the presented
+// refresh token does not hold; never add any. With no overlap the request is
+// left unchanged and oidc-provider still answers invalid_scope.
+export async function narrowRefreshScope(provider, ctx) {
+  const form = await tokenForm(ctx.req);
+  ctx.req.body = form;
+  if (
+    form.grant_type !== "refresh_token" ||
+    typeof form.scope !== "string" ||
+    typeof form.refresh_token !== "string"
+  )
+    return;
+  const token = await provider.RefreshToken.find(form.refresh_token).catch(
+    () => undefined,
+  );
+  if (!token) return;
+  const requested = form.scope.split(" ").filter(Boolean),
+    held = requested.filter((s) => token.scopes.has(s));
+  if (held.length && held.length < requested.length)
+    ctx.req.body = { ...form, scope: held.join(" ") };
+}
 export function createOAuth({
   env = process.env,
   store = mcpStore({ env }),
@@ -289,6 +326,15 @@ export function createOAuth({
     },
   });
   provider.proxy = true;
+  provider.use(async (ctx, next) => {
+    if (
+      ctx.method === "POST" &&
+      ctx.path === "/token" &&
+      ctx.is("application/x-www-form-urlencoded")
+    )
+      await narrowRefreshScope(provider, ctx);
+    return next();
+  });
   return provider;
 }
 export async function accessToken(provider, store, req, env) {
