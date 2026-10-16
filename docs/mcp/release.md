@@ -159,3 +159,19 @@ Stop rollout for any foreign-record access, unauthorized consequential action, r
 - [Claude custom connector setup](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)
 - [oidc-provider](https://github.com/panva/node-oidc-provider)
 - Codex/Claude Code command syntax was checked locally with each installed CLI's help. The page's commands do not claim a verified remote connection.
+
+## Production switch-on (16 October 2026, night)
+
+- **Who switched it on.** Ahmed provisioned the secrets, set `MCP_ENABLED=true` in Vercel production and Convex `rare-fish-465`, and deployed `744827d`.
+- **Deployment.** `dpl_BMyTxmVPYjrrXRr9k3GB2cejNWFd`. Claude checked it with `vercel curl` (pages, ChatGPT tab, icon), then promoted it.
+- **Live checks on www.bznsflowai.com:**
+  - `/api/mcp` without a token returns 401, with `WWW-Authenticate` pointing to the protected-resource metadata;
+  - all four authorization-server discovery URLs return 200 with issuer `https://www.bznsflowai.com/oauth` and S256 PKCE;
+  - a ChatGPT-shaped dynamic registration (`https://chatgpt.com/connector_platform_oauth_redirect`) returns 201;
+  - the icon is served;
+  - `home-browser`: 44 checks passed.
+- **Access.** Open to every owner with an active plan. `MCP_PILOT_EMAIL` is not set.
+- **Rollback.**
+  - Set `MCP_ENABLED=false` in both runtimes.
+  - To restore the website, promote `dpl_8PFs7th8Gow8cbHoL3oXBi6zHPhc`.
+- **Not yet verified:** a real connection from ChatGPT, Claude.ai or Codex against production.
