@@ -237,6 +237,17 @@ try {
       await context.close();
       continue;
     }
+    if (packId === 'automotive' || packId === 'construction') {
+      // Both are six tabs since Release A: an old Today link opens Work (Workshop or Projects) on its first view.
+      await page.locator(packId === 'automotive' ? '.hb-automotive-six' : '.hb-construction-six').first().waitFor();
+      assert.equal(await page.locator('.ld-section-tabs a').count(), packId === 'automotive' ? 4 : 3, `${packId} ${lang} Work views at ${width}`); count++;
+      assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr'); count++;
+      assert.equal(await noOverflow(page), true, `${packId} ${lang} no overflow at ${width}`); count++;
+      assert.deepEqual(await axe(page), [], `${packId} ${lang} axe at ${width}`); count++;
+      if (width === 320 || width === 1440) await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
+      await context.close();
+      continue;
+    }
     if (packId === 'dental') {
       // Dental is six tabs too: an old Today link opens the Visits day schedule.
       await page.locator('.hb-day-nav').waitFor();
