@@ -74,3 +74,18 @@
 
 - **Website:** promote `dpl_CRd1zPaRt9XMWsQXqi2oTX8En2E2`.
 - **Convex:** redeploy `4a6d80a` to `rare-fish-465`. There are no schema changes, so this is safe either way.
+
+## Follow-up: "Set up Ascend" (same day)
+
+The Ascend plan card's button for accounts granted Ascend changed:
+- **Before:** "Open my workspace" (افتح مساحة عملي), opening the dashboard.
+- **After:** "Set up Ascend" (إعداد أسيند), opening Ascend's setup in Settings › Business.
+
+Signed-out and Catalyst visitors still get the WhatsApp contact.
+
+| | |
+|:---|:---|
+| Source | `48a90b5`, website only (no Convex change) |
+| Deployment | `dpl_3EwqiSUZuU6RVpsZPUfGECvKXBzt`. Ahmed deployed it; Claude checked it with `vercel curl` (routes 200, `auth-session` ok, new label in the home chunks) and promoted it |
+| Live check | `www.bznsflowai.com` serves `dpl_3EwqiSUZ…`; key routes return 200 |
+| Rollback | promote `dpl_JC7Lhi88FADpUxzrGGJaqzhMZPba` |
