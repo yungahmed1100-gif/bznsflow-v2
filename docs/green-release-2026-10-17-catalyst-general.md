@@ -66,7 +66,7 @@
 
 ## Known issues
 
-- `tests/dental-browser.mjs` (the Ascend dental workspace) times out waiting for the `attendance_unrecorded` follow-up. It fails the same way on unchanged `4a6d80a`, so it predates this release. `test:release` stops at it; the suites after it were run by hand and pass.
+- ~~`tests/dental-browser.mjs` timed out waiting for the `attendance_unrecorded` follow-up.~~ **Fixed in `8adaf3e`.** The dental demo placed its only unrecorded visit "yesterday", which was skipped whenever yesterday was a Friday (the clinic's closed day), so the test failed on Saturdays. The fix is test data only (`scripts/hasib-demo-dental.mjs`), with no runtime change and nothing to deploy. The full `test:release` passed afterwards, and the dental suite passed on all seven weekdays with the clocks shifted.
 - No authenticated production walk-through yet: sign-in with a real account, setup, and publishing on a granted Catalyst account.
 - Notion mirror of the decision is pending.
 
