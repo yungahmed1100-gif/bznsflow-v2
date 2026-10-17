@@ -96,7 +96,8 @@ test('owner-entered values outrank messages, and question plans respect intent, 
 test('live ingest captures details by rule, plans one question at a time for the model, and marks the lead qualified', async () => {
   const h = blueHarness();
   await h.enable();
-  const t = await seedTenant(h.m, { name: 'q', sector: 'Real estate' });
+  // Sector questions are Ascend's: Catalyst is the same for every business.
+  const t = await seedTenant(h.m, { name: 'q', sector: 'Real estate', plan: 'ascend' });
   await h.messaging('activate', { sessionHash: t.sessionHash });
   const ask = () => h.m.table('blueConversations')[0].pendingReply?.askKey;
   await h.inbound(t, { id: 'm1', text: 'Do you have villas for rent?', reply: 'Yes, we have villas for rent.', intent: 'services', turn: false });

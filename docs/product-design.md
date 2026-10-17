@@ -41,7 +41,19 @@ Catalyst's knowledge lives in Settings › **BznsBrain** (views: BznsBrain, Chan
   - Accepting a suggestion writes a draft only.
 - **Test Layla**: a side panel. It uses the live context builder (`loadTurnSources` / `composeTurnContext` in `convex/laylaTurn.js`) and the live question planner on a simulated customer, for either the Draft or the Published version. It shows sources, captured details and a short reason. Nothing is sent or stored, apart from the existing last-preview record.
 
-Setup reuses these parts: industry → information → review → behaviour → test and publish, then saving to an account (which moves pre-sign-in catalog rows to the account), then connecting and activating a channel. The dashboard no longer sends a signed-in Catalyst account back to setup when no channel is connected.
+Setup reuses these parts: information → review → behaviour → test and publish, then saving to an account (which moves pre-sign-in catalog rows to the account), then connecting and activating a channel. The dashboard no longer sends a signed-in Catalyst account back to setup when no channel is connected.
+
+**Catalyst is general; Ascend is industry-specific (2026-10-17).** The industry is asked once, at sign-up. It goes to the CRM, pre-fills Ascend, and is recorded on the bzns.md `sector:` line. Catalyst setup has no industry step. It starts from the general starter (`brainTemplate(industry, lang, { general: true })`). Layla's sector is resolved on the server by `laylaSectorFor` (`convex/blueContacts.js`), which is plan-based, so no data migration is needed:
+- **Catalyst** (or no grant, or a browser draft): the general pack `other`. No industry questions, no medical/legal/finance prompt rules, normal text retention, and no industry named in the prompt.
+- **Ascend and Apex:** the business's sector, as before.
+
+The API's preview and extraction paths apply the same rule from `account.accessPlan`. Catalog changes write Hasib service items only on the industry plans. BznsBrain's dental reception flow (name → service → appointment preferences) only ever ran on Catalyst, so it is retired. Decision: vault `Decisions/2026-10-17-Catalyst-General-Ascend-Industry`.
+
+**Every step lands somewhere.** Each step change in sign-in, setup and the BznsBrain wizard scrolls the new step into view and focuses its heading (`src/lib/reveal-step.js`; smooth scrolling only without reduced motion).
+- Finished cards (essentials saved, sources read, review emptied, behaviour saved) offer "Next: …" with the existing `.brain-next` style.
+- Forward buttons carry the arrow icon, flipped in RTL.
+- The setup page mounts its wizard once, so signing in part-way never rebuilds it from step 1.
+- Sign-in and the OAuth callback share one destination rule (`config/signin-destination.js`). A social sign-in lands on setup or the dashboard in one hop, and a saved dashboard destination opens setup while no workspace exists.
 
 **Ascend** keeps its own prompt, qualification and Business/Services screens (BznsEditor, CatalogManager, AddInformation). BznsBrain mode applies only when the account's plan is not Ascend (`turnMode`).
 

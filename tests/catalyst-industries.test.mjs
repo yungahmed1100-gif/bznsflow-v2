@@ -13,7 +13,7 @@ import { executeBrain } from '../convex/brainState.js';
 import { convexMemory } from './helpers/convex-memory.mjs';
 import { blueHarness, seedTenant } from './helpers/blue-tenant.mjs';
 
-test('every named Catalyst industry has its own starter; Other keeps the generic starter', () => {
+test('every named industry has its own starter for the industry plans; Other keeps the generic starter', () => {
   assert.equal(BUSINESS_INDUSTRIES.length, 25);
   assert.equal(BUSINESS_INDUSTRIES.at(-1).id, 'other');
   assert.deepEqual(new Set(BZNS_TEMPLATE_SECTORS), new Set(['generic', ...BUSINESS_INDUSTRIES.filter(i => i.id !== 'other').map(i => i.id)]));
@@ -29,7 +29,7 @@ test('every named Catalyst industry has its own starter; Other keeps the generic
 });
 
 for (const industry of BUSINESS_INDUSTRIES) for (const lang of ['en', 'ar']) {
-  test(`Catalyst ${industry.id}/${lang}: starter → draft → owner completion → published business`, async () => {
+  test(`Industry ${industry.id}/${lang}: starter → draft → owner completion → published business`, async () => {
     const starter = brainTemplate(industry.id, lang);
     assert.equal(parseBzns(starter).meta.sector, industry.id);
     assert.equal(parseBzns(bznsTemplate(industry.id, lang)).meta.sector, industry.id);
@@ -93,10 +93,23 @@ test('Media captures real bilingual production requests and asks only for missin
   assert.deepEqual(nextQuestions('media', fields).map(f => f.key), ['date_needed', 'area']);
 });
 
-test('Media survives the Catalyst backend state and inbound contact path', async () => {
+test('Catalyst is the same for every business: a Media sign-up gets the general pack, not Media questions', async () => {
   const h = blueHarness();
   await h.enable();
   const t = await seedTenant(h.m, { name: 'media', sector: 'Media & production' });
+  const state = await executeBrain(h.m.ctx, { operation: 'state', sessionHash: t.sessionHash }, h.m.now());
+  assert.equal(state.ok, true);
+  assert.equal(state.value.sectorId, 'other');
+  assert.deepEqual(state.value.askable.map(f => f.key), ['need', 'area', 'timeline']);
+  assert.equal((await h.messaging('activate', { sessionHash: t.sessionHash })).ok, true);
+  assert.equal((await h.inbound(t, { text: 'I need video production in Muscat tomorrow', turn: false })).ok, true);
+  assert.equal(h.m.table('blueContacts')[0].sectorId, 'other');
+});
+
+test('Media survives the Ascend backend state and inbound contact path', async () => {
+  const h = blueHarness();
+  await h.enable();
+  const t = await seedTenant(h.m, { name: 'media', sector: 'Media & production', plan: 'ascend' });
   const state = await executeBrain(h.m.ctx, { operation: 'state', sessionHash: t.sessionHash }, h.m.now());
   assert.equal(state.ok, true);
   assert.equal(state.value.sectorId, 'media');
@@ -107,4 +120,17 @@ test('Media survives the Catalyst backend state and inbound contact path', async
   assert.equal(contact.sectorId, 'media');
   assert.equal(contact.fields.find(f => f.key === 'need')?.value, 'video');
   assert.equal(contact.qualificationStatus, 'qualified');
+});
+
+test('the general Catalyst starter is the same for every industry and records the sign-up industry only', () => {
+  for (const lang of ['en', 'ar']) {
+    const generic = brainTemplate('other', lang, { general: true }).replace(/^sector: .*$/m, '');
+    for (const industry of BUSINESS_INDUSTRIES) {
+      const doc = brainTemplate(industry.id, lang, { general: true });
+      assert.equal(doc.replace(/^sector: .*$/m, ''), generic, `${industry.id} ${lang}`);
+      assert.equal(parseBzns(doc).meta.sector, industry.id);
+    }
+    // No sign-up industry: a valid sector line all the same, so publish never asks for one.
+    assert.equal(parseBzns(brainTemplate(undefined, lang, { general: true })).meta.sector, 'other');
+  }
 });

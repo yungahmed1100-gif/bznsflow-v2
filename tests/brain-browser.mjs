@@ -7,12 +7,16 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { validateBzns, deriveProfile, upsertSection, parseBzns, prepareForPublish } from '../src/lib/bzns-doc.js';
 import { capabilitiesFor } from '../convex/hasib/capabilities.js';
-import { BUSINESS_INDUSTRIES } from '../src/lib/industries.js';
 import { brainTemplate } from '../config/bzns-templates.js';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:5199';
 const noOverflow = page => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 const axe = async (page, scope) => (await new AxeBuilder({ page }).include(scope).analyze()).violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`);
+/** The starter is saved once the setup loads; wait for that write before comparing. */
+async function expectDraft(s, markdown) {
+  for (let i = 0; i < 50 && !s.row.bznsDraft; i++) await new Promise(r => setTimeout(r, 100));
+  assert.equal(s.row.bznsDraft?.markdown, markdown, 'the general starter is saved');
+}
 const VALID = `---\nname: Bright Smile Dental\nsector: dental\n---\n# Bright Smile Dental\n\n## About us\nFamily dental clinic in Al Khuwair.\n\n## What we offer\n- Check-ups and cleaning\n\n## Location\nAl Khuwair, Way 3013\n\n## Team contact\nWhatsApp +968 9100 2000 (Sara)\n`;
 
 /** One owner's setup record, kept between requests like the real customer surface. */
@@ -95,66 +99,41 @@ async function open(browser, { width, lang, path, s, role = 'manager', signedIn 
 const browser = await chromium.launch();
 let count = 0;
 try {
-  // Every Catalyst industry must save its own starter and resume it, in both languages and at
-  // all supported widths. This uses the actual built selector and template, without live data.
+  // Catalyst is the same for every business (Ahmed, 2026-10-17): no industry step, one general starter.
+  // The sign-up industry is only recorded on its sector line. Both languages, all supported widths.
   for (const lang of ['en', 'ar']) for (const width of [320, 768, 1440]) {
     const ar = lang === 'ar';
-    for (const industry of BUSINESS_INDUSTRIES) {
-      const s = surface();
+    for (const savedToAccount of [false, true]) {
+      const s = surface({ savedToAccount });
       const { page, context, errors } = await open(browser, { width, lang, path: '/catalyst/setup', s, signedIn: false });
-      const select = page.getByLabel(ar ? 'المجال' : 'Industry');
-      await select.waitFor();
-      assert.equal(await select.locator('option').count(), BUSINESS_INDUSTRIES.length + 1); count++;
-      await select.selectOption(industry.id);
-      if (industry.id === 'media') {
-        await select.focus();
-        await page.keyboard.press('Tab');
-        assert.equal(await page.getByRole('button', { name: ar ? 'متابعة' : 'Continue' }).evaluate(el => el === document.activeElement), true, 'keyboard reaches Continue'); count++;
-        await page.keyboard.press('Enter');
-      } else await page.getByRole('button', { name: ar ? 'متابعة' : 'Continue' }).click();
       const heading = page.getByRole('heading', { name: ar ? 'أضف معلوماتك' : 'Add your information' });
       await heading.waitFor();
-      assert.equal(s.row.bznsDraft.markdown, brainTemplate(industry.id, lang), `${industry.id}/${lang}: actual template saved`); count++;
-      assert.equal(parseBzns(s.row.bznsDraft.markdown).meta.sector, industry.id); count++;
-      assert.equal(await noOverflow(page), true, `${industry.id}/${lang}/${width}: overflow`); count++;
+      assert.equal(await page.getByLabel(ar ? 'المجال' : 'Industry').count(), 0, 'no industry question in Catalyst setup'); count++;
+      assert.equal(await page.locator('.brain-setup-steps li').count(), 4); count++;
+      await expectDraft(s, brainTemplate(savedToAccount ? 'dental' : undefined, lang, { general: true }));
+      assert.equal(parseBzns(s.row.bznsDraft.markdown).meta.sector, savedToAccount ? 'dental' : 'other', 'the sign-up industry, or other'); count++;
+      assert.equal(await noOverflow(page), true, `${lang}/${width}: overflow`); count++;
       assert.equal(await page.locator('.brain-setup').getAttribute('dir'), ar ? 'rtl' : 'ltr'); count++;
-      if (industry.id === 'media') {
-        assert.deepEqual(await axe(page, '.brain-setup'), [], `${lang}/${width}: Media accessibility`); count++;
-        assert.equal(await heading.evaluate(el => el === document.activeElement), true, 'focus moves to the new step'); count++;
-      }
+      if (!savedToAccount) { assert.deepEqual(await axe(page, '.brain-setup'), [], `${lang}/${width}: setup accessibility`); count++; }
       await page.reload();
       await heading.waitFor();
-      assert.equal(s.row.bznsDraft.markdown, brainTemplate(industry.id, lang), 'reload preserves the draft'); count++;
-      assert.equal(s.writes.filter(action => action === 'bzns_save').length, 1, 'reload does not overwrite it'); count++;
-      assert.deepEqual(errors, [], `${industry.id}/${lang}/${width}: browser exceptions`); count++;
+      assert.equal(s.writes.filter(action => action === 'bzns_save').length, 1, 'reload does not overwrite the starter'); count++;
+      assert.deepEqual(errors, [], `${lang}/${width}: browser exceptions`); count++;
       await context.close();
     }
-    console.log(`Catalyst industry setup: ${BUSINESS_INDUSTRIES.length} selections passed (${lang}, ${width}px).`);
+    console.log(`Catalyst general setup passed (${lang}, ${width}px).`);
   }
 
-  // Choosing a newly added sector must preserve a business's existing owner-written document.
-  for (const lang of ['en', 'ar']) {
-    const s = surface({ markdown: VALID });
-    const { page, context } = await open(browser, { width: 768, lang, path: '/catalyst/setup', s, signedIn: false });
-    await page.getByLabel(lang === 'ar' ? 'المجال' : 'Industry').selectOption('media');
-    await page.getByRole('button', { name: lang === 'ar' ? 'متابعة' : 'Continue' }).click();
-    await page.getByRole('heading', { name: lang === 'ar' ? 'أضف معلوماتك' : 'Add your information' }).waitFor();
-    assert.equal(s.row.bznsDraft.markdown, VALID.replace('sector: dental', 'sector: media'), 'changing industry keeps owner content'); count++;
-    await context.close();
-  }
-
-  // 1. Setup: industry → information → review → behaviour → test and publish, then the channel step.
+  // 1. Setup: information → review → behaviour → test and publish, then the channel step. Each finished card offers the next step.
   for (const lang of ['en', 'ar']) for (const width of [320, 768, 1440]) {
     const ar = lang === 'ar', t = (en, arabic) => (ar ? arabic : en);
     const s = surface();
     const { page, context, errors } = await open(browser, { width, lang, path: '/catalyst/setup', s, signedIn: false });
     await page.locator('.brain-setup').waitFor();
-    assert.deepEqual(s.writes.filter(w => !['brain_state', 'catalog_list'].includes(w)), [], 'opening setup writes nothing'); count++;
-    assert.equal(await page.locator('.brain-setup-steps li').count(), 5); count++;
-    await page.getByLabel(t('Industry', 'المجال')).selectOption('dental');
-    await page.getByRole('button', { name: t('Continue', 'متابعة') }).click();
+    assert.equal(await page.locator('.brain-setup-steps li').count(), 4); count++;
     await page.getByRole('heading', { name: t('Add your information', 'أضف معلوماتك') }).waitFor();
-    assert.match(s.row.bznsDraft.markdown, /sector: dental/, 'the industry template is saved as a draft'); count++;
+    await expectDraft(s, brainTemplate(undefined, lang, { general: true }));
+    assert.deepEqual(s.writes.filter(w => !['brain_state', 'catalog_list'].includes(w)), ['bzns_save'], 'opening setup writes only the starter'); count++;
     assert.doesNotMatch(s.row.bznsDraft.markdown, /tone:|## FAQ|hand over/i, 'no tone, FAQ or handoff in BznsBrain\'s template'); count++;
     assert.equal(await noOverflow(page), true, `${lang} ${width} setup overflow`); count++;
     assert.deepEqual(await axe(page, '.brain-setup'), [], `${lang} ${width} setup axe`); count++;
@@ -163,8 +142,12 @@ try {
     await page.getByLabel(t('Paste text', 'الصق نصاً')).fill('Whitening: 60 OMR\nWe accept Dhofar Insurance.');
     await page.getByRole('button', { name: t('Read text', 'اقرأ النص') }).click();
     await page.getByText(t('2 suggestions to review', '2 اقتراحات للمراجعة')).waitFor(); count++;
-    await page.getByRole('button', { name: t('Continue', 'متابعة') }).click();
-    await page.getByRole('heading', { name: t('Review the facts', 'راجع المعلومات') }).waitFor();
+    // Finishing a card points to the next step, and the new step is brought into view with focus.
+    await page.locator('.brain-add').getByRole('button', { name: t('Next: Review the facts', 'التالي: راجع المعلومات') }).click();
+    const reviewHeading = page.getByRole('heading', { name: t('Review the facts', 'راجع المعلومات') });
+    await reviewHeading.waitFor();
+    await page.waitForFunction(() => document.activeElement?.matches('.brain-setup-head h3'));
+    assert.equal(await reviewHeading.evaluate(el => { const r = el.getBoundingClientRect(); return r.top >= 0 && r.top < window.innerHeight; }), true, 'the new step is in view'); count++;
     assert.equal(await page.locator('.brain-proposal').count(), 2); count++;
     assert.match(await page.locator('.brain-evidence').first().innerText(), /Whitening: 60 OMR/, 'each suggestion shows its source passage'); count++;
     await page.locator('.brain-proposal').first().getByRole('button', { name: t('Accept', 'اقبل') }).click();
@@ -172,13 +155,13 @@ try {
     assert.equal(s.catalog[0]?.nameEn, 'Whitening', 'an accepted price goes to the catalog draft'); count++;
     await page.locator('.brain-proposal').first().getByRole('button', { name: t('Accept', 'اقبل') }).click();
     await page.getByText(t('Nothing to review.', 'لا شيء للمراجعة.')).waitFor(); count++;
-    await page.getByRole('button', { name: t('Continue', 'متابعة') }).click();
+    await page.getByRole('button', { name: t('Next: Configure Layla', 'التالي: اضبط ليلى') }).click();
     await page.getByRole('heading', { name: t('Configure Layla', 'اضبط ليلى') }).waitFor();
     await page.locator('.brain-tone').nth(1).click();
     await page.getByRole('button', { name: t('Save behaviour', 'احفظ الإعدادات') }).click();
     await page.locator('.brain-behaviour .brain-note').getByText(t('Saved.', 'تم الحفظ.')).waitFor();
     assert.equal(s.behaviour?.tone !== undefined, true); count++;
-    await page.getByRole('button', { name: t('Continue', 'متابعة') }).click();
+    await page.locator('.brain-behaviour').getByRole('button', { name: t('Next: Test and publish', 'التالي: جرّب وانشر') }).click();
     await page.getByRole('heading', { name: t('Test and publish', 'جرّب وانشر') }).waitFor();
     // The template still has placeholders: publishing is refused with the reasons, nothing is sent.
     await page.getByRole('button', { name: t('Publish', 'انشر'), exact: true }).click();
@@ -195,6 +178,7 @@ try {
     await essentials.getByLabel(t('Team contact', 'جهة اتصال الفريق')).fill('WhatsApp +968 9100 2000 (Sara)');
     await essentials.getByRole('button', { name: t('Save', 'حفظ'), exact: true }).click();
     await essentials.getByText(t('Saved. Layla has what she needs to go live.', 'تم الحفظ. لدى ليلى ما تحتاجه لتبدأ.')).waitFor(); count++;
+    assert.equal(await essentials.getByRole('button', { name: t('Next: Review the facts', 'التالي: راجع المعلومات') }).count(), 1, 'a saved card offers the next step'); count++;
     assert.match(s.row.bznsDraft.markdown, /^name: Bright Smile Dental$/m, 'the name is written into bzns.md'); count++;
     for (let i = 0; i < 3; i++) await page.getByRole('button', { name: t('Continue', 'متابعة') }).click();
     await page.getByRole('heading', { name: t('Test and publish', 'جرّب وانشر') }).waitFor();

@@ -17,7 +17,6 @@ const T = {
   // Steps
   stepsTitle: ['Finish setup', 'أكمل الإعداد'],
   stepsDone: ['{done} of {total} done', 'أُنجز {done} من {total}'],
-  step_industry: ['Choose your industry', 'اختر مجالك'],
   step_information: ['Add your information', 'أضف معلوماتك'],
   step_review: ['Review suggestions', 'راجع الاقتراحات'],
   step_behaviour: ['Configure Layla', 'اضبط ليلى'],
@@ -27,6 +26,7 @@ const T = {
   open: ['Open', 'افتح'],
   // bzns.md
   bznsStart: ['Start from the {industry} template', 'ابدأ من قالب {industry}'],
+  bznsStartGeneral: ['Start from the template', 'ابدأ من القالب'],
   bznsEmpty: ['bzns.md is empty.', 'ملف bzns.md فارغ.'],
   bznsField: ['bzns.md text', 'نص bzns.md'],
   saveDraft: ['Save draft', 'احفظ المسودة'],
@@ -115,7 +115,6 @@ const T = {
   askDetails: ['Layla asks for', 'تسأل ليلى عن'],
   appointmentPreferences: ['Preferred appointment time', 'الوقت المفضل للموعد'],
   handoffNote: ['When to give your team\'s contact', 'متى تعطي رقم فريقك'],
-  industry: ['Industry', 'المجال'],
   saveBehaviour: ['Save behaviour', 'احفظ الإعدادات'],
   behaviourSaved: ['Saved.', 'تم الحفظ.'],
   // Test panel

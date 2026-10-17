@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from '../ui/Icon.jsx';
 import { BrandMark } from '../ui/BrandMark';
 import { MetaWindowGuide } from './MetaWindowGuide.jsx';
 import { ReadyChecklist } from './ReadyChecklist.jsx';
@@ -87,7 +88,7 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
     {!paused && !integration && !data?.selection && !open && <>
       <p>{tr('Let Layla answer your WhatsApp customers. You choose the number next.', 'دع ليلى تردّ على عملائك في واتساب. ستختار الرقم في الخطوة التالية.')}</p>
       {errorNote}
-      <button className="layla-primary" disabled={busy} onClick={onOpen}>{tr('Connect WhatsApp', 'ربط واتساب')}</button>
+      <button className="layla-primary" disabled={busy} onClick={onOpen}>{tr('Connect WhatsApp', 'ربط واتساب')}<Icon name="arrow-right" size={16} className="icon-flip-rtl" /></button>
     </>}
     {!paused && !integration && !data?.selection && open && <>
       <fieldset disabled={busy}><legend>{tr('Which WhatsApp number should Layla answer?', 'ما رقم واتساب الذي ستردّ عليه ليلى؟')}</legend>
@@ -120,8 +121,8 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
       {!ready && <p id="whatsapp-requirements-hint" className="layla-cta-hint">{tr('Complete the items above to continue.', 'أكمل البنود أعلاه للمتابعة.')}</p>}
       {errorNote}
       {ownPrepared
-        ? <button className="layla-primary" disabled={busy} onClick={onConnect}>{busy ? tr('Complete the Meta window…', 'أكمل الخطوات في نافذة Meta…') : tr('Connect with Facebook', 'الربط عبر فيسبوك')}</button>
-        : <button className="layla-primary" disabled={busy || preparing || !ready} aria-describedby={ready ? undefined : 'whatsapp-requirements whatsapp-requirements-hint'} onClick={onPrepare}>{preparing ? tr('Getting Meta ready…', 'جارٍ تجهيز Meta…') : tr('Get Meta ready', 'تجهيز الربط مع Meta')}</button>}
+        ? <button className="layla-primary" disabled={busy} onClick={onConnect}>{busy ? tr('Complete the Meta window…', 'أكمل الخطوات في نافذة Meta…') : tr('Connect with Facebook', 'الربط عبر فيسبوك')}<Icon name="arrow-right" size={16} className="icon-flip-rtl" /></button>
+        : <button className="layla-primary" disabled={busy || preparing || !ready} aria-describedby={ready ? undefined : 'whatsapp-requirements whatsapp-requirements-hint'} onClick={onPrepare}>{preparing ? tr('Getting Meta ready…', 'جارٍ تجهيز Meta…') : tr('Get Meta ready', 'تجهيز الربط مع Meta')}<Icon name="arrow-right" size={16} className="icon-flip-rtl" /></button>}
       {busy && ownPrepared && <button className="layla-secondary" onClick={() => onCancelAttempt('meta_cancelled')}>{tr('Cancel this attempt', 'إلغاء هذه المحاولة')}</button>}
       </>}
       <SetupHelpLinks tr={tr} businessName={data?.profile?.businessName} reference={data?.diagnostic?.at ? `${data.diagnostic.stage}-${data.diagnostic.at}` : ''} email={data?.account?.email} phoneOnly={phoneOnly} />

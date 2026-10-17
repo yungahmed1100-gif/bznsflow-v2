@@ -45,8 +45,9 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
   const now = Date.now();
   const windowOpen = conversation.windowOpenUntil > now;
   const name = contact.nameSource === 'number' ? formatPhone(contact.number) : contact.name;
-  // Dental chats keep text for 24 hours only (the captured details stay).
-  const clinical = contact.sectorId === 'dental' || s.packId === 'dental';
+  // Dental chats keep text for 24 hours only (the captured details stay). Catalyst has no sector
+  // rules, so only the industry plans (Hasib on) can be clinical.
+  const clinical = !!overview?.capabilities?.operations && (contact.sectorId === 'dental' || s.packId === 'dental');
 
   const act = async (label, task) => {
     setBusy(label); setError('');

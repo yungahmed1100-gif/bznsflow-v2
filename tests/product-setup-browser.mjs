@@ -59,5 +59,51 @@ try {
     assert.equal(await box.getByRole('link', { name: /^(Sign in|تسجيل الدخول)$/ }).count(), 0, `${lang}: no Sign in link for someone already signed in`);
     checks++; await page.close();
   }
-  console.log(`${checks} setup locale/viewport cases passed, including noindex, focus, overflow, accessibility, no Ascend setup page and the no-grant next step.`);
+  // Signing in part-way keeps the owner where they were: one setup, never rebuilt from step 1, no page load.
+  for (const lang of ['en', 'ar']) {
+    const en = lang === 'en';
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await context.newPage();
+    const errors = []; page.on('pageerror', e => errors.push(e.message));
+    let signedIn = false, claimed = false, loads = 0;
+    page.on('framenavigated', frame => { if (frame === page.mainFrame()) loads++; });
+    const customer = () => ({ ok: true, csrfToken: 'a'.repeat(64), available: true, accountSaveAvailable: true, journeyStep: 4, profileVersion: 1,
+      profile: { businessName: 'Blue Studio', sector: 'other', reviewed: true, humanContact: 'team@example.test' }, savedToAccount: claimed,
+      account: signedIn ? { email: 'owner@example.test', industry: 'other' } : null, status: 'business_saved', integration: null,
+      bzns: { markdown: '---\nname: Blue Studio\nsector: other\n---\n', version: 1, publishedRevision: 1, unpublishedChanges: false } });
+    await page.route('**/api/**', async route => {
+      const url = new URL(route.request().url()), body = route.request().postDataJSON();
+      if (url.pathname === '/api/product-setup') return route.fulfill(signedIn
+        ? { json: { ok: true, csrfToken: 'a'.repeat(64), progress: { product: 'catalyst', step: 1, completed: false, version: 1 }, settings: null, workspaceReady: claimed } }
+        : { status: 401, json: { ok: false, reason: 'sign_in_required' } });
+      if (url.pathname === '/api/auth-code') return route.fulfill({ json: { ok: true } });
+      if (url.pathname === '/api/auth-session') { if (route.request().method() === 'POST') signedIn = true; return route.fulfill({ json: { ok: true, csrfToken: 'b'.repeat(64) } }); }
+      if (url.searchParams.get('surface') === 'customer') { if (body?.action === 'claim_draft') claimed = true; return route.fulfill({ json: customer() }); }
+      return route.fulfill({ json: { ok: true, csrfToken: 'a'.repeat(64), available: false } });
+    });
+    await page.goto(`${base}${en ? '/en' : ''}/catalyst/setup`);
+    const panel = page.getByRole('heading', { name: en ? 'Save your setup to connect channels' : 'احفظ إعدادك لربط القنوات' });
+    await panel.waitFor();
+    // Mark the mounted setup and watch for the loading line, so a rebuild cannot pass unnoticed.
+    await page.evaluate(() => {
+      document.querySelector('.layla-customer').dataset.mounted = 'first';
+      window.__loadingSeen = false;
+      new MutationObserver(() => { if (/Loading saved setup|جارٍ تحميل الإعداد المحفوظ/.test(document.body.innerText)) window.__loadingSeen = true; }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+    const loadsBefore = loads;
+    await page.getByLabel(en ? 'Email address' : 'البريد الإلكتروني').fill('owner@example.test');
+    await page.getByRole('button', { name: en ? 'Email me a sign-in code' : 'أرسل رمز الدخول إلى بريدي' }).click();
+    await page.getByLabel(en ? 'Six-digit email sign-in code' : 'رمز الدخول من البريد — ستة أرقام').fill('123456');
+    await page.getByRole('button', { name: en ? 'Verify and save' : 'تحقق واحفظ' }).click();
+    await panel.waitFor({ state: 'detached' });
+    await page.getByText(en ? 'Saved to your account' : 'محفوظ في حسابك').first().waitFor();
+    assert.equal(claimed, true, `${lang}: the browser draft is attached to the account`);
+    assert.equal(await page.getByRole('heading', { name: en ? 'Connect a channel' : 'اربط قناة', level: 2 }).count(), 1, `${lang}: still on the channels step`);
+    assert.equal(await page.locator('.layla-customer').getAttribute('data-mounted'), 'first', `${lang}: the setup was not rebuilt`);
+    assert.equal(await page.evaluate(() => window.__loadingSeen), false, `${lang}: no loading screen after signing in`);
+    assert.equal(loads, loadsBefore, `${lang}: signing in did not load the page again`);
+    assert.deepEqual(errors, []);
+    checks++; await context.close();
+  }
+  console.log(`${checks} setup locale/viewport cases passed, including noindex, focus, overflow, accessibility, no Ascend setup page, the no-grant next step and signing in without a rebuild.`);
 } finally { await browser.close(); }

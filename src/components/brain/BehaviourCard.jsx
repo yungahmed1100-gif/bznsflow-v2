@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { TONES } from '../../../config/layla-tones.js';
-import { BUSINESS_INDUSTRIES } from '../../lib/industries.js';
 import { Icon } from '../ui/Icon.jsx';
 
 const pick = ({ tone, askName, ask, appointmentPreferences, handoffNote }) => ({ tone, askName, ask: [...(ask || [])], appointmentPreferences, handoffNote: handoffNote || '' });
@@ -9,7 +8,7 @@ const pick = ({ tone, askName, ask, appointmentPreferences, handoffNote }) => ({
  * Layla's behaviour: validated settings, live as soon as they are saved. Until the owner saves, they
  * are read from the old bzns.md, so nobody re-enters anything.
  */
-export function BehaviourCard({ b, lang, brain, request, take, act, busy, industry, onIndustry, open = false }) {
+export function BehaviourCard({ b, brain, request, take, act, busy, next, open = false }) {
   const current = brain?.behaviour;
   const [form, setForm] = useState(current ? pick(current) : null), [note, setNote] = useState('');
   useEffect(() => { if (current) setForm(pick(current)); }, [current?.version, current?.legacy]);
@@ -25,10 +24,6 @@ export function BehaviourCard({ b, lang, brain, request, take, act, busy, indust
   return (
     <details className="brain-card brain-behaviour" open={open || undefined}>
       <summary><Icon name="sliders" size={18} className="brain-card-icon" /><span className="brain-card-title">{b.t('behaviourTitle')}</span><span className="brain-card-value">{toneName}</span></summary>
-      {onIndustry && <label>{b.t('industry')}<select value={industry || ''} disabled={!!busy} onChange={e => onIndustry(e.target.value)}>
-        {!BUSINESS_INDUSTRIES.some(r => r.id === industry) && <option value="">{lang === 'ar' ? 'اختر مجالك' : 'Choose your industry'}</option>}
-        {BUSINESS_INDUSTRIES.map(r => <option key={r.id} value={r.id}>{b.ar ? r.ar : r.en}</option>)}
-      </select></label>}
       <fieldset><legend>{b.t('tone')}</legend><div className="brain-tones">
         {TONES.map(t => <label key={t.id} className="brain-tone" data-selected={form.tone === t.id}>
           <input type="radio" name="brain-tone" value={t.id} checked={form.tone === t.id} onChange={() => setForm(f => ({ ...f, tone: t.id }))} />
@@ -41,7 +36,7 @@ export function BehaviourCard({ b, lang, brain, request, take, act, busy, indust
         {booking && <label className="brain-check"><input type="checkbox" checked={form.appointmentPreferences} onChange={e => setForm(f => ({ ...f, appointmentPreferences: e.target.checked }))} />{b.t('appointmentPreferences')}</label>}
       </fieldset>
       <label>{b.t('handoffNote')}<textarea dir="auto" rows={3} maxLength={600} value={form.handoffNote} onChange={e => setForm(f => ({ ...f, handoffNote: e.target.value }))} /></label>
-      {note && <p role="status" className="brain-note">{note}</p>}
+      {note && <p role="status" className="brain-note">{note} {next}</p>}
       <div className="brain-actions"><button type="button" className="ld-button ld-primary" disabled={!!busy} onClick={save}>{busy === 'behaviour' ? b.t('saving') : b.t('saveBehaviour')}</button></div>
     </details>
   );

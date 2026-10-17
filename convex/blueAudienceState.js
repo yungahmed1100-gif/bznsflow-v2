@@ -1,7 +1,7 @@
 // Contact import and marketing-consent evidence. Importing never sends anything,
 // never clears an opt-out and never overwrites an owner-entered name or field.
 import { resolveTenant } from './blueTenant.js';
-import { catalogForFields, ensureContact, publicContact, searchTextFor, sectorFor } from './blueContacts.js';
+import { catalogForFields, ensureContact, laylaSectorFor, publicContact, searchTextFor } from './blueContacts.js';
 import { qualificationStatus, validateFieldValue } from '../config/layla-qualification.js';
 
 export const IMPORT_BATCH_ROWS = 100;
@@ -52,7 +52,7 @@ export async function executeAudience(ctx, a, now = Date.now()) {
   const consent = a.consent ? validateConsent(a.consent, now) : null;
   if (a.consent && !consent) return fail('invalid_consent');
   if (a.requireConsent && !consent) return fail('consent_required');
-  const sectorId = sectorFor(row);
+  const sectorId = await laylaSectorFor(ctx, row);
   const catalog = await catalogForFields(ctx, accountId, sectorId);
 
   // One attestation per import; later pages of the same import reuse it.

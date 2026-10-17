@@ -6,6 +6,7 @@ import { bznsTemplate } from '../../../config/bzns-templates.js';
 import { BUSINESS_INDUSTRIES } from '../../lib/industries.js';
 import { GuidedSetup } from '../onboarding/GuidedSetup.jsx';
 import { BznsPreview } from './BznsPreview.jsx';
+import { Icon } from '../ui/Icon.jsx';
 
 const TEXT_FILE = /\.(md|markdown|txt)$/i;
 
@@ -22,11 +23,12 @@ const TEXT_FILE = /\.(md|markdown|txt)$/i;
  *   onState: (state: object) => void,
  *   disabled?: boolean,
  *   sectorControl?: boolean,
+ *   next?: { label: string, go: () => void },
  * }} props
  *
  * The sector comes from sign-up. `sectorControl` (Settings → Business) is the one place it can change.
  */
-export function BznsEditor({ lang = 'en', data, request, onState, disabled = false, sectorControl = false }) {
+export function BznsEditor({ lang = 'en', data, request, onState, next, disabled = false, sectorControl = false }) {
   const ar = lang === 'ar', tr = (en, arabic) => (ar ? arabic : en);
   const saved = data?.bzns?.markdown ?? '';
   const [text, setText] = useState(saved);
@@ -39,7 +41,7 @@ export function BznsEditor({ lang = 'en', data, request, onState, disabled = fal
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useState(''), [continued, setContinued] = useState(false);
   const fileRef = useRef(null);
   // Adopt the server's text when it changes (first load, another save) unless the owner has unsaved edits.
   const lastSaved = useRef(saved);
@@ -62,6 +64,8 @@ export function BznsEditor({ lang = 'en', data, request, onState, disabled = fal
       onState(next);
       setNotice(action === 'bzns_publish' ? tr('Published. Layla now answers from this version.', 'تم النشر. تجيب ليلى الآن من هذه النسخة.') : tr('Draft saved. Layla keeps answering from the published version until you publish.', 'تم حفظ المسودة. تستمر ليلى في الإجابة من النسخة المنشورة حتى تنشر.'));
       if (action === 'bzns_publish') setConfirmed(false);
+      // "Publish and continue" (a first publish) confirms and then offers the next step.
+      if (action === 'bzns_publish' && !published) setContinued(true);
     } catch (e) { setError(bznsMessage(e?.reason || e?.message || 'unavailable', lang)); }
     finally { setBusy(false); }
   }
@@ -160,6 +164,7 @@ export function BznsEditor({ lang = 'en', data, request, onState, disabled = fal
       )}
       {error && <p className="layla-error" role="alert">{error}</p>}
       {notice && <p className="layla-notice layla-notice--done" role="status">{notice}</p>}
+      {continued && next && <button type="button" className="layla-primary" onClick={next.go}>{next.label}<Icon name="arrow-right" size={16} className="icon-flip-rtl" /></button>}
       <div className="bzns-actions">
         <button type="button" className="layla-secondary" disabled={!dirty || busy || disabled || text.length > BZNS_MAX_CHARS} onClick={() => send('bzns_save')}>{busy ? tr('Saving…', 'جارٍ الحفظ…') : tr('Save draft', 'حفظ المسودة')}</button>
         <label className="bzns-confirm"><input type="checkbox" checked={confirmed} disabled={!check.ok || busy || disabled} onChange={e => setConfirmed(e.target.checked)} />{tr('I checked these business details', 'راجعت معلومات النشاط هذه')}</label>

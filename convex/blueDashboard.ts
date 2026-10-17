@@ -2,7 +2,7 @@ import { executeAuthorizedDashboard } from './dashboardApplication.js';
 import { internalMutation, internalQuery } from './_generated/server';
 import { internal } from './_generated/api';
 import { v, type Value } from 'convex/values';
-import { linkConversation, sectorFor } from './blueContacts.js';
+import { laylaSectorFor, linkConversation } from './blueContacts.js';
 import { CAMPAIGN_OPERATIONS as CAMPAIGNS } from './blueDashboardGate.js';
 
 type Result = Promise<{ ok: boolean; value?: Value; reason?: string }>;
@@ -46,7 +46,7 @@ export const migrateContacts = internalMutation({ args: {}, handler: async ctx =
   for (const person of rows) {
     const account = await ctx.db.get(person.accountId);
     const session = account?.draftHash ? await ctx.db.query('blueReviewSessions').withIndex('by_hash', q => q.eq('sessionHash', account.draftHash!)).unique() : null;
-    await linkConversation(ctx, person, { sectorId: sectorFor(session), now, secret: process.env.CONVEX_SERVICE_SECRET });
+    await linkConversation(ctx, person, { sectorId: await laylaSectorFor(ctx, session), now, secret: process.env.CONVEX_SERVICE_SECRET });
   }
   if (rows.length === 50) await ctx.scheduler.runAfter(0, internal.blueDashboard.migrateContacts, {});
   return { linked: rows.length };

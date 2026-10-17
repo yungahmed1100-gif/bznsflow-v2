@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Icon } from '../components/ui/Icon.jsx';
 import { InstagramConnection } from '../components/dashboard/InstagramConnection';
 // InstagramConnection and ChannelSwitch render dashboard (ld-*) controls.
 import '../styles/layla-dashboard.css';
@@ -14,6 +15,7 @@ import { BrainSetup } from '../components/brain/BrainSetup.jsx';
 import { SaveAccountPanel } from '../components/onboarding/SaveAccountPanel.jsx';
 import { WhatsAppConnect } from '../components/onboarding/WhatsAppConnect.jsx';
 import { explain as explainReason, instagramReturnMessage } from '../lib/onboarding/explanations.js';
+import { revealStep } from '../lib/reveal-step.js';
 
 // Three steps, one primary action each: your business, connect a channel, live.
 // Ids are the saved journeyStep values; older saved steps (2, 3, 4) open the channels step.
@@ -90,10 +92,13 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   async function act(task) { if (actionBusy.current) return; actionBusy.current = true; setBusy(true); setError(''); try { await task(); } catch (e) { setError(explain(e.message)); } finally { actionBusy.current = false; setBusy(false); } }
   // Most actions save one step and redraw the page from the server's answer.
   const run = body => act(async () => applyState(await request(body)));
+  // Set once the page is on its way to the dashboard, so no later answer starts the same navigation again.
+  const leaving = useRef(false);
   function applyState(r) {
+    if (leaving.current) return;
     // Returning from the dashboard sign-in: a saved, connected account goes straight back.
     if (!reviewMode && new URLSearchParams(window.location.search).get('next') === 'dashboard') {
-      if (r.account && r.savedToAccount && ['connected', 'paused'].includes(r.integration?.status)) { window.location.replace(dashboardPath(lang)); return; }
+      if (r.account && r.savedToAccount && ['connected', 'paused'].includes(r.integration?.status)) { leaving.current = true; window.location.replace(dashboardPath(lang)); return; }
       if (!r.account) setSaveOpen(true);
     }
     setData(r); setAvailable(r.available === true); setCsrf(r.csrfToken || '');
@@ -117,7 +122,21 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     }).finally(() => { if (active) setChecking(false); });
     return () => { active = false; pending.current?.dispose(); pending.current = null; };
   }, []);
-  useEffect(() => { heading.current?.focus(); }, [step]);
+  // The standalone page starts on its heading; the setup page focuses its own. After that, every move
+  // to another step scrolls the new step into view, so a click never seems to do nothing.
+  useEffect(() => { if (!embedded) heading.current?.focus({ preventScroll: true }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const shownStep = useRef(null);
+  useEffect(() => {
+    if (!data) return;
+    if (shownStep.current !== null && shownStep.current !== step) revealStep(heading.current);
+    shownStep.current = step;
+  }, [data, step]);
+  // A channel going live puts "Open inbox" in front of the owner, wherever they had scrolled to.
+  const liveRef = useRef(null), wasLive = useRef(false);
+  useEffect(() => {
+    if (live && !wasLive.current) revealStep(liveRef.current);
+    wasLive.current = live;
+  }, [live]);
 
   // Meta's window --------------------------------------------------------------
   async function prepare(forPath = path, forPreselect = preselect) {
@@ -212,7 +231,6 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     await discardPrepared();
     return run({ action: 'save_progress', journeyStep });
   }
-  const goTo = journeyStep => run({ action: 'save_progress', journeyStep });
 
   const steps = { 0: tr('Your business', 'نشاطك التجاري'), 1: tr('Connect a channel', 'اربط قناة') };
   const walk = [steps[0], steps[1], tr('Layla is live', 'ليلى تعمل')];
@@ -220,7 +238,16 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   const needsAccount = !reviewMode && !data?.savedToAccount;
   const errorNote = error ? <p ref={errorRef} tabIndex={-1} className="layla-error" role="alert">{error}</p> : null;
   const saveProps = { lang, tr, data, busy, act, authRequest,
-    onSignedIn: async () => { applyState(await request()); applyState(await request({ action: 'claim_draft' })); setSaveOpen(false); onAccountChange?.(); },
+    // One redraw, after the browser draft is attached to the account, so the page never flashes an in-between state.
+    onSignedIn: async () => {
+      let r = await request();
+      if (r.account && !r.savedToAccount && r.profile && r.accountSaveAvailable) r = await request({ action: 'claim_draft' });
+      claimTried.current = true;
+      applyState(r); setSaveOpen(false);
+      if (leaving.current) return;
+      if (step === 1) revealStep(heading.current);
+      onAccountChange?.();
+    },
     onClaim: () => run({ action: 'claim_draft' }) };
   const Container = embedded ? 'section' : 'main';
   return <Container className={`layla-customer ${embedded ? 'setup-embedded' : ''}`} dir={ar ? 'rtl' : 'ltr'} lang={lang}>
@@ -254,10 +281,10 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
           {errorNote}
         </>}
         {step === 1 && <section className="layla-channel-stage">
-          {live && <section className="layla-live" role="status" aria-labelledby="layla-live-heading">
+          {live && <section ref={liveRef} className="layla-live" role="status" aria-labelledby="layla-live-heading">
             <h3 id="layla-live-heading">{s.t('liveTitle')}</h3>
             <p>{s.t('liveBody')}</p>
-            <a className="layla-primary" href={dashboardPath(lang)}>{s.t('openInbox')}</a>
+            <a className="layla-primary" href={dashboardPath(lang)}>{s.t('openInbox')}<Icon name="arrow-right" size={16} className="icon-flip-rtl" /></a>
           </section>}
           {!live && <p>{tr('Connect Instagram, WhatsApp or both. Layla starts replying as soon as a channel is connected, and you can turn her off at any time.', 'اربط إنستغرام أو واتساب أو كليهما. تبدأ ليلى الرد فور ربط القناة، ويمكنك إيقافها في أي وقت.')}</p>}
           {needsAccount && !data?.account && <SaveAccountPanel {...saveProps} />}

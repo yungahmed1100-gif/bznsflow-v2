@@ -553,6 +553,18 @@ await ta('binds state, nonce and verifier together and freshly each time', async
   assert.ok(!a.location.includes(a.parsed.v), 'the PKCE verifier must not be in the URL');
 });
 
+await ta('carries a resumable destination through the round trip, and never an unsafe one', async () => {
+  const stashFor = async (next) => {
+    const res = mockRes();
+    await authOauth({ method: 'GET', url: `/api/auth-oauth?provider=google&next=${encodeURIComponent(next)}`, headers: host }, res);
+    const raw = setCookies(res).find((c) => c.startsWith(`${OAUTH_COOKIE}=`)).split(';')[0].split('=').slice(1).join('=');
+    return JSON.parse(Buffer.from(decodeURIComponent(raw), 'base64url').toString());
+  };
+  assert.equal((await stashFor('/en/catalyst/setup')).x, '/en/catalyst/setup');
+  assert.equal((await stashFor('//evil.example')).x, undefined);
+  assert.equal((await stashFor('/layla/dashboard?x=1')).x, undefined);
+});
+
 console.log('\nGET /api/auth-callback');
 const stashCookie = (payload) =>
   `${OAUTH_COOKIE}=${Buffer.from(JSON.stringify(payload)).toString('base64url')}`;

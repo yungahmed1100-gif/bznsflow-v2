@@ -39,7 +39,7 @@
 .brain-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .brain-progress-title { margin: 0; font-size: var(--fs-md); font-weight: 700; }
 .brain-progress-count { font-size: var(--fs-sm); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-2); }
-.brain-progress-bar { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.brain-progress-bar { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
 .brain-progress-bar li { block-size: 4px; background: var(--paper-ruled); border-radius: 1px; }
 .brain-progress-bar li[data-done=true] { background: var(--green-mark); }
 .brain-progress-next { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -234,8 +234,6 @@
 .brain-setup-head h3 { margin: 0 0 4px; font-size: 22px; }
 .brain-setup-head h3:focus { outline: none; }
 .brain-setup-head p { margin: 0; }
-.brain-setup-industry { display: grid; gap: 12px; max-width: 420px; }
-.brain-setup-industry label { display: grid; gap: 4px; font-size: var(--fs-sm); font-weight: 600; }
 .brain-setup-nav, .brain-setup-publish { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; }
 .brain-setup-publish { justify-content: flex-start; }
 
@@ -252,3 +250,6 @@
 .brain-tab[data-tab=catalog] { --tab-mark: var(--orange); }
 .brain-setup-steps li[data-state=current] > span { background: var(--orange); color: var(--ink); border-color: var(--ink); }
 .brain-setup-steps li[data-state=done] > span { background: var(--green-mark); color: var(--ink); border-color: var(--ink); }
+
+/* Step changes scroll the new step heading into view; keep a little room above it. */
+.brain-setup-head h3 { scroll-margin-block-start: 16px; }

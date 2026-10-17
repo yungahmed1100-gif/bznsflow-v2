@@ -37,6 +37,7 @@ export async function shortenClinicalText(ctx, accountId, now, before = now + 1,
   return { shortened, next: rows.length === limit ? rows.at(-1).at : null };
 }
 export async function textRetention(ctx, accountId, row) {
+  if (!(await onIndustryPlan(ctx, accountId))) return TEXT_RETENTION_MS;
   const settings = await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
   return textRetentionFor(sectorIdFor(row?.profile?.sector), settings?.packId);
 }
@@ -57,6 +58,25 @@ export function searchTextFor(contact) {
     .filter(Boolean).join(' ').slice(0, 1000);
 }
 export function sectorFor(row) { return sectorIdFor(row?.profile?.sector); }
+
+// Ascend and Apex are the industry plans. Read straight from the grant (not hasib/plans.js, which
+// imports this module through hasib/shared.js).
+const INDUSTRY_PLANS = new Set(['ascend', 'apex']);
+export const GENERAL_SECTOR = 'other';
+export async function onIndustryPlan(ctx, accountId) {
+  const account = accountId && await ctx.db.get(accountId);
+  if (!account?.email) return false;
+  const grant = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', String(account.email).toLowerCase().trim())).unique();
+  return grant?.status === 'active' && INDUSTRY_PLANS.has(grant.plan);
+}
+/**
+ * Layla's sector for a setup. Catalyst is the same for every business (Ahmed, 2026-10-17): the general
+ * pack, so no industry questions, safety wording or short text retention. Only the industry plans read
+ * the business's sector.
+ */
+export async function laylaSectorFor(ctx, row) {
+  return await onIndustryPlan(ctx, row?.accountId) ? sectorFor(row) : GENERAL_SECTOR;
+}
 
 /** Approved catalog names, which sensitive packs need to accept an owner-typed service. Other packs skip the read. */
 export async function catalogForFields(ctx, accountId, sectorId) {

@@ -26,7 +26,8 @@ export function BznsTab({ b, lang, setup, request, take, act, busy, industry }) 
   const check = useMemo(() => validateBzns(prepareForPublish(text).markdown), [text]);
   const dirty = text !== saved;
   const sectors = new Set(check.parsed.sections.filter(s => String(s.body || '').trim()).map(s => s.key));
-  const industryName = (BUSINESS_INDUSTRIES.find(row => row.id === industry) || {})[lang === 'ar' ? 'ar' : 'en'] || (lang === 'ar' ? 'نشاطك' : 'your business');
+  // An industry plan starts from its industry's template; Catalyst (no industry) from the general one.
+  const industryName = (BUSINESS_INDUSTRIES.find(row => row.id === industry) || {})[lang === 'ar' ? 'ar' : 'en'];
   const save = () => act('bzns', async () => {
     take(await request({ action: 'bzns_save', markdown: text, version: setup?.bzns?.version || 0 }));
     setNotice(b.t('draftSaved'));
@@ -36,7 +37,7 @@ export function BznsTab({ b, lang, setup, request, take, act, busy, industry }) 
   if (!text.trim()) return (
     <div className="brain-empty">
       <p>{b.t('bznsEmpty')}</p>
-      <button type="button" className="ld-button ld-primary" disabled={!!busy} onClick={() => { setNotice(''); setText(brainTemplate(industry, lang)); }}>{b.t('bznsStart', { industry: industryName })}</button>
+      <button type="button" className="ld-button ld-primary" disabled={!!busy} onClick={() => { setNotice(''); setText(industryName ? brainTemplate(industry, lang) : brainTemplate(setup?.account?.industry, lang, { general: true })); }}>{industryName ? b.t('bznsStart', { industry: industryName }) : b.t('bznsStartGeneral')}</button>
     </div>
   );
   return (

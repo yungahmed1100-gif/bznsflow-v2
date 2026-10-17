@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from '../ui/Icon.jsx';
 
 // What a WhatsApp Business owner needs before connecting, in words a 13-year-old can follow.
 // Facts checked against Meta's Coexistence documentation (2026-10-02).
@@ -37,7 +38,7 @@ export function ReadyChecklist({ tr, onReady, known = [] }) {
       <li>{tr('Group chats stay on your phone only. Disappearing messages get switched off.', 'محادثات المجموعات تبقى في هاتفك فقط، وتُوقَف الرسائل المؤقتة.')}</li>
       <li>{tr('If you change phones, open WhatsApp Business and keep “connected apps” ticked when asked.', 'إذا غيّرت هاتفك، افتح واتساب للأعمال وأبقِ «التطبيقات المرتبطة» مفعّلة عندما يُطلب منك.')}</li>
     </ul></details>
-    <button type="button" className="layla-primary" disabled={!all} aria-describedby={all ? undefined : 'layla-ready-hint'} onClick={start}>{tr('I have everything — start', 'جهّزت كل شيء، ابدأ')}</button>
+    <button type="button" className="layla-primary" disabled={!all} aria-describedby={all ? undefined : 'layla-ready-hint'} onClick={start}>{tr('I have everything — start', 'جهّزت كل شيء، ابدأ')}<Icon name="arrow-right" size={16} className="icon-flip-rtl" /></button>
     {!all && <p id="layla-ready-hint" className="layla-cta-hint">{tr(`Tick each item to continue (${ticked.size} of ${READY_ITEMS.length}).`, `ضع علامة على كل بند للمتابعة (${ticked.size} من ${READY_ITEMS.length}).`)}</p>}
   </section>;
 }

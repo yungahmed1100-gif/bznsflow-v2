@@ -5,7 +5,7 @@ import { rolloutAllows } from './greenRollout.js';
 import { instagramConnection, instagramRow, rowForIntegration } from './blueInstagramState.js';
 // Atomic tenant messaging transitions. Network requests happen only after a
 // durable outbound intent has been claimed; uncertain sends are never retried.
-import { applyInbound, applyOptout, linkConversation, recordQuestions, sectorFor, textRetention, MESSAGE_RETENTION_MS } from './blueContacts.js';
+import { applyInbound, applyOptout, laylaSectorFor, linkConversation, recordQuestions, textRetention, MESSAGE_RETENTION_MS } from './blueContacts.js';
 import { recordDemand } from './hasib/demandState.js';
 import { recordUndeliverable } from './blueAudienceState.js';
 import { commerceTurn } from './hasib/laylaOrders.js';
@@ -254,7 +254,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     }
     const deleted=new Set(incoming.filter(e=>e.kind==='deleted').map(e=>e.id));
     const events=[...incoming].sort((x,y)=>Number(['optout','takeover'].includes(y.kind))-Number(['optout','takeover'].includes(x.kind)));
-    const sectorId=sectorFor(row);
+    const sectorId=await laylaSectorFor(ctx,row);
     const textKeep=await textRetention(ctx,row.accountId,row);
     let catalog=null, brain=null;
     for(let e of events) {
@@ -387,7 +387,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     const turn=await pendingTurn(a.conversationId,a.key);
     if(!turn.ok) return ok({skip:turn.reason});
     const {person,row,contact,pending}=turn;
-    return ok({context:await turnContext(ctx,{row,person,contact,pending,sectorId:sectorFor(row),now}),version:pending.version,profileVersion:pending.profileVersion});
+    return ok({context:await turnContext(ctx,{row,person,contact,pending,sectorId:await laylaSectorFor(ctx,row),now}),version:pending.version,profileVersion:pending.profileVersion});
   }
   // Part 2: the checked reply goes out only if nothing changed while the model was writing it.
   if(a.operation==='reply_commit') {
@@ -396,7 +396,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     const {person,row,control,contact,pending}=turn;
     await ctx.db.patch(person._id,{pendingReply:undefined});
     if(!enabled || !control?.active || !ready(row) || contact?.optout || now-pending.inboundAt>=DAY || !rolloutAllows(global,row.accountId,person.number,now)) return ok({skip:'not_allowed'});
-    const sectorId=sectorFor(row);
+    const sectorId=await laylaSectorFor(ctx,row);
     const brain=(await turnMode(ctx,row))==='brain';
     // Details the model heard are proposals: kept only when they pass the sector's own validation.
     if(contact && a.fields) {

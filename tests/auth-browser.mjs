@@ -151,6 +151,41 @@ for (const [hasWorkspace, target] of [[false, '/en/catalyst/setup'], [true, '/en
   await ctx.close();
 }
 
+// A saved destination of the dashboard, before a workspace exists, opens setup instead of bouncing through the dashboard.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.route('**/api/auth-code', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) }));
+  await page.route('**/api/auth-session', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(r.request().method() === 'GET'
+    ? { ok: true, csrfToken: 'a'.repeat(64), providers: [], account: null }
+    : { ok: true, needsProfile: false, account: { email: 'owner@example.test', accessPlan: 'catalyst', hasWorkspace: false } }) }));
+  const visited = [];
+  await page.route(/\/(en\/)?(catalyst\/setup|layla\/dashboard)$/, (r) => { visited.push(new URL(r.request().url()).pathname); return r.fulfill({ status: 200, contentType: 'text/html', body: '<p>workspace</p>' }); });
+  await page.goto(`${BASE}/en/signin?next=${encodeURIComponent('/en/layla/dashboard')}`, { waitUntil: 'networkidle' });
+  await page.fill('#auth-email', 'owner@example.test'); await page.click('button[type=submit]');
+  await page.waitForSelector('#auth-code'); await page.fill('#auth-code', '123456'); await page.click('button[type=submit]');
+  await page.waitForURL('**/en/catalyst/setup', { timeout: 5000 }).catch(() => {});
+  chk('a dashboard destination without a workspace opens setup directly', new URL(page.url()).pathname === '/en/catalyst/setup' && !visited.includes('/en/layla/dashboard'), visited.join(' → '));
+  await ctx.close();
+}
+
+// Back from a social sign-in: a status line stands in for the email form until the session answers.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  let answer;
+  const held = new Promise((resolve) => { answer = resolve; });
+  await page.route('**/api/auth-session', async (r) => { await held; return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, csrfToken: 'a'.repeat(64), providers: [], account: null }) }); });
+  await page.goto(`${BASE}/en/signin?welcome=1`);
+  await page.getByText('Signing you in…').waitFor({ timeout: 5000 }).catch(() => {});
+  chk('an OAuth return shows "Signing you in…", not the email form', await page.getByText('Signing you in…').count() === 1 && await page.locator('#auth-email').count() === 0);
+  chk('the welcome marker leaves the address bar', !new URL(page.url()).search.includes('welcome'));
+  answer();
+  await page.waitForSelector('#auth-email', { timeout: 5000 }).catch(() => {});
+  chk('no session after all: the email form returns', await page.locator('#auth-email').count() === 1);
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fail ? '✗' : '✓'} auth-browser: ${pass} passed, ${fail} failed`);
 console.log(`screenshots in ${OUT}/`);

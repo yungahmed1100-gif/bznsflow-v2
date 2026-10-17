@@ -84,7 +84,8 @@ export function composeTurnContext({ row, sectorId, sources, history, contact, p
   const document = sources.sections.length ? sources.sections : profileSections(row.profile);
   const latest = history.filter(h => h.role === 'customer').at(-1)?.text || '';
   return {
-    business: { name: row.profile?.businessName || '', sector: row.profile?.sector || '', sectorId },
+    // The general (Catalyst) pack names no industry in the prompt.
+    business: { name: row.profile?.businessName || '', sector: sectorId === 'other' ? '' : row.profile?.sector || '', sectorId },
     tone: brain ? sources.behaviour.tone : row.profile?.tone, channel: row.integration?.channel === 'instagram' ? 'instagram' : 'whatsapp',
     teamContact: teamContactOf(row.profile), sections: document, catalog: sources.catalog,
     knowledge: sources.knowledge.map(k => ({ title: k.title, text: k.text })),

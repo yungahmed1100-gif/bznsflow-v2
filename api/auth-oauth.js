@@ -21,6 +21,7 @@ import {
   redirectUriFor, signinPath,
 } from './_lib/oidc.js';
 import { randomToken, setOauthCookie } from './_lib/cookies.js';
+import { NEXT_PATH } from '../config/signin-destination.js';
 import { send, redirect } from './_lib/http.js';
 
 export default async function handler(req, res) {
@@ -32,6 +33,9 @@ export default async function handler(req, res) {
   const url = new URL(req.url || '/', `http://${req.headers?.host || 'localhost'}`);
   const lang = url.searchParams.get('lang') === 'en' ? 'en' : 'ar';
   const provider = providerFor(url.searchParams.get('provider'));
+  // Where the visitor was headed before signing in, kept only if it is one of the resumable pages.
+  const next = url.searchParams.get('next');
+  const resume = next && NEXT_PATH.test(next) ? next : undefined;
 
   // Unknown provider, or one whose secrets were never set. The page only
   // renders buttons for configured providers, so reaching this means a
@@ -63,6 +67,6 @@ export default async function handler(req, res) {
     return redirect(res, `${signinPath(lang)}?e=unavailable`);
   }
 
-  setOauthCookie(res, { p: provider.id, s: state, n: nonce, v: verifier, l: lang });
+  setOauthCookie(res, { p: provider.id, s: state, n: nonce, v: verifier, l: lang, ...(resume ? { x: resume } : {}) });
   return redirect(res, target);
 }

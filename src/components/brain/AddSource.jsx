@@ -7,7 +7,7 @@ import { Icon } from '../ui/Icon.jsx';
  * Layla (Qwen) reads each part and suggests catalog items and bzns.md text, each with the passage it
  * came from. Suggestions wait in "Needs your review"; nothing goes live from here.
  */
-export function AddSource({ b, request, take, act, busy, websiteAvailable, onDone, open = false }) {
+export function AddSource({ b, request, take, act, busy, websiteAvailable, onDone, next, open = false }) {
   const [mode, setMode] = useState('file'), [url, setUrl] = useState(''), [text, setText] = useState(''), [progress, setProgress] = useState(''), [result, setResult] = useState(null);
   const fileRef = useRef(null);
   async function read(raw, sourceKind, sourceLabel, partial = false) {
@@ -72,7 +72,7 @@ export function AddSource({ b, request, take, act, busy, websiteAvailable, onDon
         </form>}
       </div>
       {working && progress && <p role="status" className="brain-add-hint">{progress}</p>}
-      {result && <p role="status" className="brain-note">{result.added ? b.t('readDone', result) : result.duplicate ? b.t('readNothingNew') : b.t('readNothing')}{result.partial ? ` ${b.t('readPartial')}` : ''}{result.failed ? ` ${b.t('readFailed')}` : ''}</p>}
+      {result && <p role="status" className="brain-note">{result.added ? b.t('readDone', result) : result.duplicate ? b.t('readNothingNew') : b.t('readNothing')}{result.partial ? ` ${b.t('readPartial')}` : ''}{result.failed ? ` ${b.t('readFailed')}` : ''} {(result.added > 0 || result.duplicate > 0) && next}</p>}
     </details>
   );
 }

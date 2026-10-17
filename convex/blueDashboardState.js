@@ -3,7 +3,7 @@
 // credentials, hashes or internal integration identifiers.
 import { publicInstagram } from './blueInstagramState.js';
 import { resolveTenant, ownsIntegration, owned, encodeCursor, decodeCursor, afterCursor } from './blueTenant.js';
-import { DAY, catalogForFields, deleteContact, linkConversation, ownerContactPatch, publicContact, sectorFor } from './blueContacts.js';
+import { DAY, GENERAL_SECTOR, catalogForFields, deleteContact, laylaSectorFor, linkConversation, ownerContactPatch, publicContact } from './blueContacts.js';
 import { messagingReady, executeMessaging, stopQueuedJobs, RATE_LIMITS } from './blueMessagingState.js';
 import { packDescription } from '../config/layla-qualification.js';
 import { renderTemplate } from '../config/layla-templates.js';
@@ -48,7 +48,7 @@ function handoffFor(person) {
     resolvedAt: person.handoffResolvedAt || null, version: person.version || 0 };
 }
 async function conversationItem(ctx, person, tenant, now) {
-  const contact = await linkConversation(ctx, person, { sectorId: sectorFor(tenant.row), now, secret: tenant.secret });
+  const contact = await linkConversation(ctx, person, { sectorId: await laylaSectorFor(ctx, tenant.row), now, secret: tenant.secret });
   return { id: person._id, channel:person.channel || 'whatsapp', contact: publicContact(contact, person), lastMessage: await lastMessage(ctx, person._id, now),
     updatedAt: person.updatedAt, takeover: person.takeover, handoff: handoffFor(person), optout: person.optout || contact.optout, windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0 };
 }
@@ -57,7 +57,8 @@ async function conversationItem(ctx, person, tenant, now) {
 export async function migrateAccount(ctx, tenant, now, limit = 25) {
   const rows = await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', tenant.accountId)).order('desc').take(500);
   const pending = rows.filter(r => !r.contactId);
-  for (const person of pending.slice(0, limit)) await linkConversation(ctx, person, { sectorId: sectorFor(tenant.row), now, secret: tenant.secret });
+  const sectorId = await laylaSectorFor(ctx, tenant.row);
+  for (const person of pending.slice(0, limit)) await linkConversation(ctx, person, { sectorId, now, secret: tenant.secret });
   return Math.max(0, pending.length - limit);
 }
 
@@ -102,7 +103,7 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
   if (actor.role !== 'manager' && ['set_timezone', 'contact_delete', 'export_chat', 'export_contacts', 'export_account'].includes(a.operation)) return fail('manager_required');
   if (['export_chat', 'export_account'].includes(a.operation) && !capabilities.exports) return fail('plan_required');
   if (a.operation === 'export_contacts' && !capabilities.customerExport) return fail('plan_required');
-  const sectorId = sectorFor(row);
+  const sectorId = await laylaSectorFor(ctx, row);
 
   if (a.operation === 'overview') {
     const settings = await ctx.db.query('blueBusinessSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
@@ -111,7 +112,7 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
     const handoffsOpen = open.filter(p => p.takeover && !['resolved', 'returned'].includes(p.handoffState) && ownsIntegration(tenant, p.integrationId)).length;
     // What the owner still has to add after going live: approved services and a person customers can reach.
     const services = !!(await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved')).first());
-    return ok({ handoffsOpen, business: { name: row.profile?.businessName || '', sector: row.profile?.sector || '', sectorId },
+    return ok({ handoffsOpen, business: { name: row.profile?.businessName || '', sector: sectorId === GENERAL_SECTOR ? '' : row.profile?.sector || '', sectorId },
       setup: { services, teamContact: !!row.profile?.teamContact },
       connected: tenant.connected, integration: tenant.integration ? { sender: tenant.integration.sender, path: tenant.integration.path, status: row.status,
         checks: row.connectionChecks || null, checkedAt: row.checkedAt || null } : null,

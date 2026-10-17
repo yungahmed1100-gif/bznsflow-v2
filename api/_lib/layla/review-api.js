@@ -188,6 +188,9 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         if (!next || next.expiresAt <= now()) throw new PilotError('review_backend_unavailable',503);
         row = next; return row;
       };
+      // Catalyst is the same for every business; only the industry plans (Ascend, Apex) give Layla the sector.
+      const industryPlan = ['ascend', 'apex'].includes(account?.accessPlan);
+      const laylaBusiness = () => industryPlan ? { sector: row.profile?.sector || '', sectorId: sectorIdFor(row.profile?.sector) } : { sector: '', sectorId: 'other' };
       // Catalog rows belong to the account, or to this setup until it is saved to an account (claim_draft moves them).
       const ownerKey=row.accountId ? String(row.accountId) : `review_${row._id}`;
       // BznsBrain and catalog changes are the manager's: a team member never edits the business's knowledge.
@@ -282,7 +285,7 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         const parsed = parseBzns(markdown).sections.map(({ key, heading, body: sectionBody }) => ({ key, heading, body: sectionBody }));
         const sections = parsed.length ? parsed : profileSections(row.profile);
         const approved = row.accountId ? ((await catalog('list',{ownerKey,limit:50})).entries || []).filter(entry => entry.status === 'approved') : [];
-        const turn = await aiTurn({ business: { name: row.profile.businessName || '', sector: row.profile.sector || '', sectorId: sectorIdFor(row.profile.sector) },
+        const turn = await aiTurn({ business: { name: row.profile.businessName || '', ...laylaBusiness() },
           tone: row.profile.tone, channel: 'whatsapp', teamContact: teamContactOf(row.profile), sections, catalog: approved, knowledge: [], facts: [], acks: [],
           customer: {}, ask: null, firstReply: true, history: [{ role: 'customer', text }], fieldKeys: [], lang: langOf(text) }, generate);
         const preview = { question: text, text: turn.reply.slice(0, 1200), sourceFields: [], needsHuman: !!turn.needsTeam, intent: turn.intent, ...(turn.ai?.fallback ? { fallback: turn.ai.fallback } : {}) };
@@ -321,7 +324,7 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         const ip = String(req.headers['x-vercel-forwarded-for'] || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0];
         await accountStore('limit_extract',{ipHash:createHmac('sha256',secret).update(`blue-extract:${ip}`).digest('hex')});
         let raw = null, failure = null;
-        try { raw = extractJson((await extract(extractionMessages(body.text, { business: row.profile?.businessName || '', sector: row.profile?.sector || '' }))).text); if (!raw) failure = 'invalid_json'; }
+        try { raw = extractJson((await extract(extractionMessages(body.text, { business: row.profile?.businessName || '', sector: laylaBusiness().sector }))).text); if (!raw) failure = 'invalid_json'; }
         catch (e) { failure = e?.reason || 'ai_error'; }
         if (failure) return send(res,200,{...result(),extraction:{ ok:false, reason:failure, added:0, duplicate:0, rejected:0 }},{vary:'Cookie'});
         const counts = await brain('record_extraction',{sessionHash,raw,chunk:body.text,sourceKind:body.sourceKind,sourceLabel:String(body.sourceLabel || '').slice(0,200)});
@@ -357,6 +360,9 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
           const checked = validateBzns(markdown);
           if (!checked.ok) return send(res,400,{ok:false,reason:'bzns_invalid',errors:checked.errors.map(({code,section,heading})=>({code,section,...(heading ? {heading} : {})}))},{vary:'Cookie'});
           await write('bzns_publish',{ markdown, version:draft.version || 0 });
+        } else if (row.journeyStep === 0 && row.profile?.reviewed) {
+          // Back from Channels with nothing changed: Publish still moves the owner on, instead of doing nothing visible.
+          await write('save_progress',{ journeyStep:4 });
         }
         if (body.catalog !== false) await catalog('publish',{ownerKey});
         await brain('settle_publish',{sessionHash});

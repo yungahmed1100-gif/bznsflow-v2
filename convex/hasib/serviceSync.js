@@ -6,7 +6,7 @@
 import { STOCK_SOURCE } from './stockSync.js';
 import { clean } from './shared.js';
 import { searchText } from './catalogState.js';
-import { sectorFor } from '../blueContacts.js';
+import { onIndustryPlan, sectorFor } from '../blueContacts.js';
 import { hasibPack } from '../../config/hasib-packs.js';
 
 const ENTRIES = 200, ITEMS = 500;
@@ -74,6 +74,8 @@ export async function syncServiceItems(ctx, accountId, now) {
 export async function syncServicesForOwner(ctx, ownerKey, now) {
   const accountId = typeof ctx.db.normalizeId === 'function' ? ctx.db.normalizeId('accounts', ownerKey) : ownerKey;
   if (!accountId || !(await ctx.db.get(accountId))) return null;
+  // Service items are Hasib's (Ascend and Apex); a Catalyst catalog never writes into them.
+  if (!(await onIndustryPlan(ctx, accountId))) return null;
   const pack = await packForOwner(ctx, accountId);
   return pack.serviceItems ? syncServiceItems(ctx, accountId, now) : null;
 }

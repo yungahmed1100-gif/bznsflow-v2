@@ -56,7 +56,7 @@ test('extraction: a model failure or invalid JSON proposes nothing; long text is
 
 async function setup(name = 'a') {
   const h = blueHarness();
-  const tenant = await seedTenant(h.m, { name, sector: 'Dental clinics' });
+  const tenant = await seedTenant(h.m, { name, sector: 'Dental clinics', plan: 'ascend' });
   const review = (operation, args = {}) => executeReview(h.m.ctx, { operation, sessionHash: tenant.sessionHash, ...args }, h.m.now());
   assert.equal((await review('bzns_publish', { markdown: dentalDoc('informative'), version: 0 })).ok, true);
   const brain = (operation, args = {}) => executeBrain(h.m.ctx, { operation, sessionHash: tenant.sessionHash, ...args }, h.m.now());
@@ -91,7 +91,7 @@ test('proposals: another business cannot read, accept or dismiss them', async ()
   const a = await setup('a');
   await a.brain('record_extraction', { raw: extraction, chunk: DOC, sourceKind: 'file', sourceLabel: 'prices.pdf' });
   const proposal = (await a.brain('state')).value.proposals[0];
-  const other = await seedTenant(a.h.m, { name: 'b', sector: 'Dental clinics', phone: '9999', waba: '8888' });
+  const other = await seedTenant(a.h.m, { name: 'b', sector: 'Dental clinics', phone: '9999', waba: '8888', plan: 'ascend' });
   const b = (operation, args = {}) => executeBrain(a.h.m.ctx, { operation, sessionHash: other.sessionHash, ...args }, a.h.m.now());
   assert.equal((await b('state')).value.total, 0);
   assert.equal((await b('accept', { proposalId: proposal.id })).reason, 'proposal_not_found');
@@ -238,7 +238,7 @@ test('a behaviour save or a catalog publish while a reply is being written drops
   let release;
   const gate = new Promise(r => { release = r; });
   const model = scriptedModel(async () => { await gate; return { reply: 'Hello!', intent: 'greeting' }; });
-  const b = await business({ model, markdown: dentalDoc('informative'), sectorLabel: 'Dental clinics' });
+  const b = await business({ model, markdown: dentalDoc('informative'), sectorLabel: 'Dental clinics', plan: 'ascend' });
   const brain = (operation, args = {}) => executeBrain(b.h.m.ctx, { operation, sessionHash: b.tenant.sessionHash, ...args }, b.h.m.now());
   const sending = b.say('96894000001', 'Hello');
   await new Promise(r => setTimeout(r, 20));

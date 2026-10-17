@@ -10,7 +10,7 @@ const written = text => String(text || '').split('\n').filter(line => line.trim(
  * and who a customer can reach when they want a person. Each is written straight into bzns.md;
  * everything else in the starter template is optional and left out at publish if unchanged.
  */
-export function EssentialsCard({ lang, markdown, version, request, take, act, busy }) {
+export function EssentialsCard({ lang, markdown, version, request, take, act, busy, next }) {
   const ar = lang === 'ar', tr = (en, arabic) => (ar ? arabic : en);
   const read = () => ({ name: written(parseBzns(markdown).meta.name), offer: written(sectionText(markdown, 'offer')), contact: written(sectionText(markdown, 'contact')) });
   const [form, setForm] = useState(read), [saved, setSaved] = useState(false);
@@ -41,6 +41,7 @@ export function EssentialsCard({ lang, markdown, version, request, take, act, bu
       <div className="brain-actions">
         <button type="submit" className="ld-button ld-primary" disabled={!!busy || !(form.name.trim() || form.offer.trim() || form.contact.trim())}>{tr('Save', 'حفظ')}</button>
         {saved && <span className="brain-note" role="status">{complete ? tr('Saved. Layla has what she needs to go live.', 'تم الحفظ. لدى ليلى ما تحتاجه لتبدأ.') : tr('Saved.', 'تم الحفظ.')}</span>}
+        {saved && next}
       </div>
     </form>
   );

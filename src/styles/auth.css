@@ -476,3 +476,6 @@
     gap: 6px;
   }
 }
+
+/* Each sign-in step scrolls its heading into view; keep a little room above it. */
+.auth-title { scroll-margin-block-start: 16px; }

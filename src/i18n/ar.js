@@ -153,6 +153,7 @@ export default {
   "auth_seo_desc": "سجّل الدخول إلى BznsFlow برمز يُرسل لمرة واحدة إلى بريدك الإلكتروني.",
   "auth_back": "العودة للموقع",
   "auth_eyebrow": "الحساب",
+  "auth_resuming": "جارٍ تسجيل دخولك…",
   "auth_title": "تسجيل الدخول إلى BznsFlow",
   "auth_sub": "لا كلمة مرور تحفظها. نرسل لك رمزاً من ستة أرقام على بريدك.",
   "auth_step_email": "البريد",

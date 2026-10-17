@@ -154,6 +154,7 @@ export default {
   "auth_seo_desc": "Sign in to BznsFlow with a one-time code sent to your email.",
   "auth_back": "Back to site",
   "auth_eyebrow": "Account",
+  "auth_resuming": "Signing you in…",
   "auth_title": "Sign in to BznsFlow",
   "auth_sub": "No password to remember. We email you a six-digit code.",
   "auth_step_email": "Email",

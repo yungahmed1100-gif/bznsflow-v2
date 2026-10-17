@@ -315,3 +315,9 @@
 .layla-connection-details{margin:12px 0}
 .layla-connection-details summary{cursor:pointer;font-size:14px;font-weight:600;min-height:44px;display:flex;align-items:center}
 .layla-channel-card .ld-layla-switch{margin:4px 0 8px}
+
+/* Step changes and "live" scroll these into view; keep a little room above them. */
+.layla-workspace > h2, .layla-live { scroll-margin-block-start: 16px; }
+
+/* The forward arrow on a primary step button. */
+.layla-primary .icon-flip-rtl{vertical-align:-3px;margin-inline-start:8px}

@@ -206,7 +206,8 @@ test('a granted customer sets up, connects Instagram, activates, and Layla answe
   assert.equal(chat.channel, 'instagram');
   const contact = w.m.table('blueContacts')[0];
   assert.equal(contact.customerName, 'Sara');
-  assert.deepEqual(Object.fromEntries(contact.fields.map(f => [f.key, f.value])), { need: 'rent', property_type: 'villa', area: 'Al Mouj' });
+  // Catalyst is the same for every business: the general details, not a real-estate questionnaire.
+  assert.deepEqual(Object.fromEntries(contact.fields.map(f => [f.key, f.value])), { area: 'Al Mouj' });
 });
 
 test('the same journey on WhatsApp gives the same answers', async () => {

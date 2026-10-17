@@ -7,7 +7,7 @@ export const documentScripts = [
   `,
   `
     // Private setup and owner controls exclude marketing instrumentation.
-    if (!/^\\/(?:en\\/)?(?:owner|layla|reviewer|mcp)(?:\\/|$)/.test(window.location.pathname)) {
+    if (!/^\\/(?:en\\/)?(?:owner|layla|catalyst|reviewer|mcp)(?:\\/|$)/.test(window.location.pathname)) {
       var startMetaPixel = function () {
         try {
           !function(f,b,e,v,n,t,s) {

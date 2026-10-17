@@ -5,6 +5,8 @@ import { getStrings } from '../i18n';
 import { INDUSTRIES } from '../lib/industries';
 import { countryOptions } from '../lib/countries';
 import { CALENDAR_URL, WHATSAPP_URL } from '../lib/constants';
+import { NEXT_PATH, signinDestination } from '../../config/signin-destination.js';
+import { revealStep } from '../lib/reveal-step.js';
 import '../styles/auth.css';
 
 // Passwordless sign-in: email -> six-digit code -> (new accounts only) profile.
@@ -52,27 +54,23 @@ function fill(template, values) {
   return String(template ?? '').replace(/\{(\w+)\}/g, (_, k) => values[k] ?? '');
 }
 
-// Only these destinations may be resumed after sign-in, so ?next= cannot be
-// used as an open redirect. Kept in sessionStorage so it survives OAuth.
-const NEXT_PATH = /^\/(en\/)?(catalyst\/setup|layla\/dashboard|mcp)$/;
+// Kept in sessionStorage so it survives OAuth; the OAuth start also carries it to the callback.
 function rememberNext(path) {
   if (!path || !NEXT_PATH.test(path)) return;
   try { sessionStorage.setItem('bf_next', path); } catch { /* storage blocked */ }
 }
-function resumeNext() {
-  let path = null;
-  try { path = sessionStorage.getItem('bf_next'); sessionStorage.removeItem('bf_next'); } catch { return false; }
-  if (!path || !NEXT_PATH.test(path)) return false;
-  window.location.replace(path);
-  return true;
+function readNext() {
+  try { return sessionStorage.getItem('bf_next'); } catch { return null; }
 }
 
-// A granted account goes straight to its workspace: setup while it has none yet, else the
-// dashboard. Everyone else keeps the free-audit screen (Catalyst is set up with them after it).
-function openWorkspace(account, lang) {
-  if (!account?.accessPlan) return false;
-  const prefix = lang === 'ar' ? '' : '/en';
-  window.location.replace(`${prefix}/${account.hasWorkspace === false ? 'catalyst/setup' : 'layla/dashboard'}`);
+// One destination rule for every way in (code, profile, OAuth return, an existing session), shared
+// with api/auth-callback.js. Callers have already sent a missing profile to the profile step.
+// Returns false to stay on this page.
+function leaveFor(account, lang) {
+  const path = signinDestination({ account: { ...account, profileComplete: true }, lang, next: readNext() });
+  if (!path) return false;
+  try { sessionStorage.removeItem('bf_next'); } catch { /* storage blocked */ }
+  window.location.replace(path);
   return true;
 }
 
@@ -95,6 +93,9 @@ export default function SignIn({ lang = 'ar' }) {
   // mount request answers, so the prerendered HTML shows none — better than
   // rendering three and hiding two once the JSON lands.
   const [providers, setProviders] = useState([]);
+  // Back from a social sign-in: the session is already set, so the email form would only flash before
+  // the page moves on. A status line stands in until the session check answers.
+  const [resuming, setResuming] = useState(false);
 
   const csrf = useRef('');
   // Focus the field that just became relevant, so a step change does not leave a
@@ -165,7 +166,7 @@ export default function SignIn({ lang = 'ar' }) {
       setStep('profile');
       return;
     }
-    if (resumeNext() || openWorkspace(data.account, lang)) return;
+    if (leaveFor(data.account, lang)) return;
     setReturning(true);
     setStep('done');
   }, [lang]);
@@ -190,6 +191,8 @@ export default function SignIn({ lang = 'ar' }) {
         if (data?.account && new URLSearchParams(window.location.search).get('fresh') !== '1') applyAccount(data);
       } catch {
         // Offline or blocked. The form still renders; the first submit reports it.
+      } finally {
+        if (!cancelled) setResuming(false);
       }
     })();
     return () => { cancelled = true; };
@@ -205,6 +208,7 @@ export default function SignIn({ lang = 'ar' }) {
     if (typeof window === 'undefined') return; // prerendered by vite-react-ssg
     const params = new URLSearchParams(window.location.search);
     rememberNext(params.get('next'));
+    if (params.get('welcome') === '1') { setResuming(true); window.history.replaceState({}, '', window.location.pathname); }
     const code = params.get('e');
     if (!code) return;
 
@@ -223,7 +227,12 @@ export default function SignIn({ lang = 'ar' }) {
     return () => clearTimeout(id);
   }, [resendIn]);
 
-  useEffect(() => { stepHeading.current?.focus?.(); }, [step]);
+  // The first step keeps its autofocused field; every later step scrolls into view with its heading.
+  const firstStep = useRef(true);
+  useEffect(() => {
+    if (firstStep.current) { firstStep.current = false; return; }
+    revealStep(stepHeading.current);
+  }, [step]);
 
   const sendCode = useCallback(async (e) => {
     e?.preventDefault?.();
@@ -275,7 +284,7 @@ export default function SignIn({ lang = 'ar' }) {
       });
       if (status === 200 && data?.ok) {
         setAccount(data.account);
-        if (resumeNext() || openWorkspace(data.account, lang)) return;
+        if (leaveFor(data.account, lang)) return;
         setReturning(false);
         setStep('done');
       } else {
@@ -296,6 +305,9 @@ export default function SignIn({ lang = 'ar' }) {
     setStep('email'); setBusy(false); setError('');
   }, [session]);
 
+  // Carried through the provider round-trip so the callback can send the account straight on.
+  const next = providers.length > 0 ? readNext() : null;
+  const nextQuery = next ? `&next=${encodeURIComponent(next)}` : '';
   const steps = [t.auth_step_email, t.auth_step_code, t.auth_step_profile];
   const stepIndex = { email: 0, code: 1, profile: 2, done: 3 }[step];
 
@@ -335,7 +347,8 @@ export default function SignIn({ lang = 'ar' }) {
 
           {error && <p className="auth-error" role="alert">{error}</p>}
 
-          {step === 'email' && (
+          {step === 'email' && resuming && <p className="auth-sub" role="status">{t.auth_resuming}</p>}
+          {step === 'email' && !resuming && (
             <form className="auth-form" onSubmit={sendCode}>
               <p className="section-label">{t.auth_eyebrow}</p>
               <h1 className="auth-title" tabIndex={-1} ref={stepHeading}>{t.auth_title}</h1>
@@ -357,7 +370,7 @@ export default function SignIn({ lang = 'ar' }) {
                       <a
                         key={p.id}
                         className="auth-provider"
-                        href={`/api/auth-oauth?provider=${p.id}&lang=${lang}`}
+                        href={`/api/auth-oauth?provider=${p.id}&lang=${lang}${nextQuery}`}
                         aria-disabled={busy || undefined}
                         onClick={busy ? (e) => e.preventDefault() : undefined}
                       >
@@ -383,6 +396,7 @@ export default function SignIn({ lang = 'ar' }) {
               <button type="submit" className="btn btn-primary btn-large auth-submit" disabled={busy}>
                 <Icon name="mail" size={18} />
                 <span>{busy ? t.auth_email_sending : t.auth_email_cta}</span>
+                <Icon name="arrow-right" size={18} className="icon-flip-rtl" />
               </button>
 
               <p className="auth-privacy">{t.auth_privacy}</p>
@@ -420,6 +434,7 @@ export default function SignIn({ lang = 'ar' }) {
               >
                 <Icon name="shield-check" size={18} />
                 <span>{busy ? t.auth_code_verifying : t.auth_code_cta}</span>
+                <Icon name="arrow-right" size={18} className="icon-flip-rtl" />
               </button>
 
               <div className="auth-alt">
@@ -515,6 +530,7 @@ export default function SignIn({ lang = 'ar' }) {
               <button type="submit" className="btn btn-primary btn-large auth-submit" disabled={busy}>
                 <Icon name="building-2" size={18} />
                 <span>{busy ? t.auth_profile_saving : t.auth_profile_cta}</span>
+                <Icon name="arrow-right" size={18} className="icon-flip-rtl" />
               </button>
 
               <p className="auth-privacy">{t.auth_privacy}</p>

@@ -28,6 +28,7 @@ import { hashToken } from './_lib/auth.js';
 import { blueAuthStore } from './_lib/blue-auth.js';
 import { convexServiceSecret } from './_lib/green-config.js';
 import { send, redirect } from './_lib/http.js';
+import { signinDestination } from '../config/signin-destination.js';
 
 // A completed round trip costs the visitor a consent screen, so the per-IP
 // allowance is looser than sending codes — but still bounded, because this is
@@ -150,6 +151,10 @@ export default async function handler(req, res) {
 
   setSessionCookie(res, token, SESSION_MAX_AGE);
 
-  // No ?e= — the page's mount request reads the cookie and takes it from here.
-  return back();
+  // A finished account goes straight to its page. Anyone with a profile still to fill (or no plan yet)
+  // returns to sign-in, which shows a status line instead of the email form while it catches up.
+  const next = typeof stash?.x === 'string' ? stash.x : null;
+  const destination = signinDestination({ account: result, lang, next });
+  if (destination) return redirect(res, destination);
+  return redirect(res, `${signinPath(lang)}?welcome=1`);
 }

@@ -16,7 +16,7 @@ const endpoint = '/api/layla-meta?surface=customer';
  * 'services' (Stock → Services, or Catalyst's Settings → Services & prices when `catalyst`).
  * Catalyst's Settings is also the one place its sector changes (`catalyst`).
  */
-export function BusinessDetails({ s, section = 'all', onSaved, catalyst = false }) {
+export function BusinessDetails({ s, section = 'all', onSaved, next, catalyst = false }) {
   const { lang, ar } = s;
   const tr = (en, arabic) => ar ? arabic : en;
   const explain = reason => explainReason(reason, lang);
@@ -47,7 +47,7 @@ export function BusinessDetails({ s, section = 'all', onSaved, catalyst = false 
           <p className="layla-stage-intro">{tr('What Layla tells your customers. Change anything here and she answers with it from the next message.', 'ما تخبر به ليلى عملاءك. غيّر أي شيء هنا وستجيب به من الرسالة التالية.')}</p>
         </>}
         {error && <p className="layla-error" role="alert">{error}</p>}
-        {section !== 'services' && <BznsEditor lang={lang} data={setup} request={request} onState={next => { setSetup(next); onSaved?.(); }} disabled={busy} sectorControl={catalyst} />}
+        {section !== 'services' && <BznsEditor lang={lang} data={setup} request={request} onState={next => { setSetup(next); onSaved?.(); }} next={next} disabled={busy} sectorControl={catalyst} />}
         {/* Older accounts keep their published Q&A until bzns.md replaces it. */}
         {setup.profile && section !== 'services' && !setup.bzns?.publishedRevision && <AddInformation lang={lang} request={request} />}
         {setup.profile && section !== 'details' && <section {...(section === 'all' ? { 'aria-labelledby': 'business-catalog-heading' } : { 'aria-label': tr('Services', 'الخدمات') })}>

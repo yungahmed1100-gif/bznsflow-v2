@@ -64,14 +64,15 @@ A: Yes, viewings are always free.
 `;
 
 /**
- * @param {{ tone?: string, sector?: string, name?: string, sectorLabel?: string, markdown?: string, ascend?: string, seed?: (hasib: Function) => Promise<void>, channel?: 'whatsapp'|'instagram' }} options
+ * @param {{ tone?: string, sector?: string, name?: string, sectorLabel?: string, markdown?: string, ascend?: string, plan?: string, seed?: (hasib: Function) => Promise<void>, channel?: 'whatsapp'|'instagram' }} options
  *   `ascend` grants the Ascend plan with that Hasib pack; `seed` then adds stock rows.
  *   `channel: 'instagram'` connects an Instagram account and talks to Layla through it.
+ *   `plan` is the grant (default Catalyst, which is the same for every business); sector behaviour needs 'ascend'.
  */
 export async function business(options = {}) {
   const h = blueHarness(); await h.enable();
   const model = options.model || scriptedModel();
-  const tenant = await seedTenant(h.m, { sector: options.sectorLabel || 'Real estate' });
+  const tenant = await seedTenant(h.m, { sector: options.sectorLabel || 'Real estate', plan: options.plan || (options.ascend ? 'ascend' : 'catalyst') });
   // A real sealed credential so the worker can open it, as in production.
   const row = await h.m.db.get(tenant.rowId);
   const integration = { ...row.integration, credential: sealToken('synthetic-token-only', credentialContext(tenant.sessionHash, row.integration), env) };

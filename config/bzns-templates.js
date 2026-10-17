@@ -169,19 +169,25 @@ export function bznsTemplate(sector, lang = 'en') {
   ].join('\n\n') + '\n';
 }
 
+const GENERAL_SECTOR = 'other';
+
 /**
  * Catalyst BznsBrain's starting document: the same sector template without the parts BznsBrain moved
  * elsewhere. Tone and handoff rules are Layla's behaviour settings; FAQs are gone (each fact has one
  * home: bzns.md for information and policies, the Catalog for services and prices).
- * @param {string} sector @param {'en'|'ar'} lang @returns {string}
+ * Catalyst is the same for every business (Ahmed, 2026-10-17), so its setup passes `general: true`:
+ * the generic starter, whatever the industry. The industry starters remain for the industry plans.
+ * @param {string} sector @param {'en'|'ar'} lang @param {{ general?: boolean }} [options] @returns {string}
  */
-export function brainTemplate(sector, lang = 'en') {
-  const id = Object.hasOwn(SECTORS, sector) ? sector : 'generic';
+export function brainTemplate(sector, lang = 'en', { general = false } = {}) {
+  const id = !general && Object.hasOwn(SECTORS, sector) ? sector : 'generic';
   const l = lang === 'ar' ? 'ar' : 'en';
   const c = COMMON[l], s = SECTORS[id][l];
   const section = ([heading, body]) => `## ${heading}\n${String(body).replace(/Services & prices|الخدمات والأسعار/g, l === 'ar' ? 'الكتالوج' : 'the Catalog')}`;
+  // The general starter never asks for a sector: it records the sign-up industry, or "other".
+  const sectorLine = INDUSTRY_IDS.has(sector) ? sector : general ? GENERAL_SECTOR : SECTOR_LINE[l];
   return [
-    `---\nname: ${c.name}\nsector: ${INDUSTRY_IDS.has(sector) ? sector : SECTOR_LINE[l]}\n---`,
+    `---\nname: ${c.name}\nsector: ${sectorLine}\n---`,
     `# ${c.name}`,
     section(c.about),
     section([OFFER_HEADING[l], s.offer.map(line => `- ${line}`).join('\n')]),

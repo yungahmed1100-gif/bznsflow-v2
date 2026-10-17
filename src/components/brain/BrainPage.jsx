@@ -1,12 +1,12 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { parseBzns, prepareForPublish, setMeta, validateBzns } from '../../lib/bzns-doc.js';
+import { parseBzns, prepareForPublish, validateBzns } from '../../lib/bzns-doc.js';
 import { bznsMessages } from '../../lib/bzns-messages.js';
-import { BUSINESS_INDUSTRIES } from '../../lib/industries.js';
 import { brainStrings } from '../../lib/brain/strings.js';
 import { useBrain } from './useBrain.js';
 import { BznsWord } from './BznsWord.jsx';
 import { BznsTab, bznsProgress } from './BznsTab.jsx';
 import { Icon } from '../ui/Icon.jsx';
+import { revealStep } from '../../lib/reveal-step.js';
 import { CatalogTab } from './CatalogTab.jsx';
 import { AddSource } from './AddSource.jsx';
 import { ReviewCard } from './ReviewCard.jsx';
@@ -19,9 +19,8 @@ const TABS = ['bzns', 'catalog'];
 /** Which setup steps are done, from what is saved (connections included), never from the browser alone. */
 export function brainSteps({ setup, brain, catalog, channel, active, tested }) {
   const markdown = setup?.bzns?.markdown || '';
-  const sector = parseBzns(markdown).meta.sector || setup?.profile?.sector || '';
+  // No industry step: Catalyst is the same for every business, and the industry plans get theirs at grant.
   return [
-    ['industry', BUSINESS_INDUSTRIES.some(r => r.id === sector || r.en === sector || r.ar === sector)],
     ['information', !!markdown.trim() || !!catalog?.entries?.length],
     ['review', !!brain && !brain.total && (!!markdown.trim() || !!catalog?.entries?.length)],
     ['behaviour', !!brain?.behaviour && !brain.behaviour.legacy],
@@ -45,7 +44,8 @@ export function BrainPage({ lang, part = 'bzns', onPart, channel = false, active
   if (loadError) return <div className="ld-state" role="alert"><p>{b.reason(loadError)}</p><button type="button" className="ld-button" onClick={load}>{b.t('retry')}</button></div>;
   if (!setup || !brain) return <p className="ld-state" role="status">{b.t('loading')}</p>;
   const markdown = setup.bzns?.markdown || '';
-  const industry = parseBzns(markdown).meta.sector || brain.sectorId || '';
+  // The industry starter is for the industry plans only; Catalyst's sector comes back as the general pack.
+  const industry = brain.sectorId && brain.sectorId !== 'other' ? parseBzns(markdown).meta.sector || brain.sectorId : '';
   const catalogChanges = (catalog?.entries || []).some(e => e.state && e.state !== 'published' && e.source !== 'hasib_stock');
   const bznsChanges = !!setup.bzns?.unpublishedChanges || (!setup.bzns?.publishedRevision && !!markdown.trim());
   const status = !setup.bzns?.publishedRevision ? 'statusNew' : bznsChanges || catalogChanges ? 'statusChanges' : 'statusLive';
@@ -70,13 +70,9 @@ export function BrainPage({ lang, part = 'bzns', onPart, channel = false, active
     await loadCatalog();
     setPublished(b.t('published'));
   });
-  const changeIndustry = id => act('industry', async () => {
-    if (!id) return;
-    take(await request({ action: 'bzns_save', markdown: setMeta(markdown || '---\n---\n', 'sector', id), version: setup.bzns?.version || 0 }));
-  });
   // A missing step opens the card that finishes it and brings it into view.
-  const reveal = selector => { const el = document.querySelector(selector); if (!el) return; if (el.tagName === 'DETAILS') el.open = true; el.scrollIntoView({ block: 'start', behavior: 'smooth' }); el.querySelector('summary')?.focus(); };
-  const STEP_GO = { industry: () => reveal('.brain-behaviour'), information: () => reveal('.brain-add'), review: () => reveal('.brain-review'), behaviour: () => reveal('.brain-behaviour'),
+  const reveal = selector => { const el = document.querySelector(selector); if (!el) return; if (el.tagName === 'DETAILS') el.open = true; revealStep(el); el.querySelector('summary')?.focus({ preventScroll: true }); };
+  const STEP_GO = { information: () => reveal('.brain-add'), review: () => reveal('.brain-review'), behaviour: () => reveal('.brain-behaviour'),
     test: () => setTesting(true), channel: () => onGo?.('settings', { view: 'channels' }), active: () => onGo?.('settings', { view: 'channels' }) };
   return (
     <div className="brain" dir={b.ar ? 'rtl' : 'ltr'} lang={lang}>
@@ -112,7 +108,7 @@ export function BrainPage({ lang, part = 'bzns', onPart, channel = false, active
         </div>
       </div>
       <AddSource b={b} request={request} take={take} act={act} busy={busy} websiteAvailable={!!setup.websiteImportAvailable} onDone={() => loadCatalog()} />
-      <BehaviourCard b={b} lang={lang} brain={brain} request={request} take={take} act={act} busy={busy} industry={industry} onIndustry={changeIndustry} />
+      <BehaviourCard b={b} brain={brain} request={request} take={take} act={act} busy={busy} />
       {testing && <TestLaylaPanel b={b} request={request} take={take} hasDraft={bznsChanges || catalogChanges} onClose={() => setTesting(false)} onTested={() => setTested(true)} />}
     </div>
   );

@@ -12,7 +12,7 @@ import { sectorIdFor } from '../config/layla-qualification.js';
 import { hmacSha256Hex } from './hash.js';
 import { approvedKnowledge } from './knowledgeSourceState.js';
 import { catalogOwnerKey, composeTurnContext, loadTurnSources } from './laylaTurn.js';
-import { planInbound } from './blueContacts.js';
+import { GENERAL_SECTOR, onIndustryPlan, planInbound } from './blueContacts.js';
 import { executeCatalog } from './blueCatalogState.js';
 
 export const MAX_OPEN = 300, MAX_GAPS = 50, LIST_LIMIT = 100;
@@ -103,7 +103,7 @@ export async function executeBrain(ctx, a, now = Date.now()) {
   if (!hash(a.sessionHash)) return fail('invalid_state');
   const row = await ctx.db.query('blueReviewSessions').withIndex('by_hash', q => q.eq('sessionHash', a.sessionHash)).unique();
   if (!row || row.expiresAt <= now) return fail('session_expired');
-  const sectorId = sectorOf(row);
+  const sectorId = await onIndustryPlan(ctx, row.accountId) ? sectorOf(row) : GENERAL_SECTOR;
   const owned = async id => {
     const proposalId = typeof id === 'string' ? ctx.db.normalizeId('brainProposals', id) : null;
     const proposal = proposalId ? await ctx.db.get(proposalId) : null;
