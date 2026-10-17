@@ -178,11 +178,14 @@ async function seedVisits({ m, tenant, hasib, DAY, HOUR, people, contactOf, trea
 
   // Two weeks behind: nine visits a day on two chairs (never two at once on a chair or a provider); Fridays closed.
   const SLOTS = [[9, 0, 0, 0, 30], [9, 0, 1, 1, 45], [10, 0, 2, 0, 30], [10, 0, 0, 1, 30], [11, 30, 1, 0, 45], [16, 0, 0, 0, 30], [16, 30, 2, 1, 30], [17, 30, 1, 0, 45], [19, 0, 0, 1, 30]];
+  const friday = d => new Date(day0 + d * DAY + offset).getUTCDay() === 5;
+  // The visit whose outcome nobody recorded sits on the last open day: yesterday, or the day before when yesterday was a Friday.
+  const unrecordedDay = friday(-1) ? -2 : -1;
   for (let d = -14; d <= -1; d++) {
-    if ((new Date(day0 + d * DAY + offset).getUTCDay()) === 5) continue;
+    if (friday(d)) continue;
     for (const [i, [hour, minute, p, chair, minutes]] of SLOTS.entries()) {
       const who = ((d + 14) * 9 + i) % 20;
-      const outcome = (i === 6 && (d === -8 || d === -3)) || (i === 4 && (d === -13 || d === -9 || d === -6)) || (i === 2 && d === -2) ? 'missed' : i === 8 && d === -5 ? 'late_cancel' : i === 8 && d === -11 ? 'cancelled' : i === 8 && d === -1 ? 'unknown' : 'completed';
+      const outcome = (i === 6 && (d === -8 || d === -3)) || (i === 4 && (d === -13 || d === -9 || d === -6)) || (i === 2 && d === -2) ? 'missed' : i === 8 && d === -5 ? 'late_cancel' : i === 8 && d === -11 ? 'cancelled' : i === 8 && d === unrecordedDay ? 'unknown' : 'completed';
       await visit(d, hour + minute / 60, who, p, { chair, minutes, outcome, pay: i === 7 && d === -4 ? 'none' : i === 1 && d === -10 ? 'part' : 'full', recall: i === 0 && d === -6 ? 120 : undefined });
     }
   }
