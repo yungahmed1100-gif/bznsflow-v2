@@ -211,7 +211,7 @@ export default {
   "tier_soon": "In preparation",
   "tier_problem": "Solves",
   "tier_setup": "Set up Catalyst",
-  "tier_workspace": "Open my workspace",
+  "tier_setup_ascend": "Set up Ascend",
   "hero_pipeline_label": "How Catalyst handles an inquiry",
   "footer_privacy": "Privacy Policy",
 

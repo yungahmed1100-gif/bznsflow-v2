@@ -210,7 +210,7 @@ export default {
   "tier_soon": "قيد الإعداد",
   "tier_problem": "يحل",
   "tier_setup": "إعداد كاتاليست",
-  "tier_workspace": "افتح مساحة عملي",
+  "tier_setup_ascend": "إعداد أسيند",
   "hero_pipeline_label": "كيف يتعامل كاتاليست مع الاستفسار",
   "footer_privacy": "سياسة الخصوصية",
 

@@ -10,8 +10,8 @@ import rasilPortrait from '../../assets/agents/rasil.png';
 const agentPortraits = { layla: laylaPortrait, hasib: hasibPortrait, adiba: adibaPortrait, rasil: rasilPortrait };
 
 // The three plans without prices. Catalyst's CTA is the free audit (or setup, for granted accounts).
-// Ascend is available by Ahmed's grant only: a WhatsApp conversation, or the workspace for an account
-// already granted Ascend. Apex is in preparation. Prices are shared on the free audit (Ahmed, 2026-10-09).
+// Ascend is available by Ahmed's grant only: a WhatsApp conversation, or Ascend's setup (in the dashboard's
+// Settings › Business: industry and business details) for an account already granted Ascend. Apex is in preparation. Prices are shared on the free audit (Ahmed, 2026-10-09).
 export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
   const account = useAccount();
   const owner = String(account?.email || '').trim().toLowerCase() === 'ahmed@bznsflowai.com';
@@ -20,7 +20,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
   const planMsg = name => (t.wa_msg_plan || 'Hi BznsFlow, I am interested in {plan}.').replace('{plan}', name);
   const link = tier => {
     if (canSetup(tier.key)) return { href: setupHref, icon: 'arrow-right', label: t.tier_setup, event: 'SetupClick' };
-    if (tier.key === 'ascend' && (owner || account?.accessPlan === 'ascend')) return { href: `${lang === 'ar' ? '' : '/en'}/layla/dashboard`, icon: 'arrow-right', label: t.tier_workspace, event: 'WorkspaceClick' };
+    if (tier.key === 'ascend' && (owner || account?.accessPlan === 'ascend')) return { href: `${lang === 'ar' ? '' : '/en'}/layla/dashboard?tab=settings&view=business`, icon: 'arrow-right', label: t.tier_setup_ascend, event: 'SetupClick' };
     if (tier.key === 'ascend') return { href: waLink(planMsg(tier.name)), icon: 'whatsapp', label: tier.cta, event: 'WhatsAppClick', external: true };
     return { href: waLink(tier.available ? t.wa_msg_hero : planMsg(tier.name)), icon: 'whatsapp', label: tier.cta, event: 'WhatsAppClick', external: true };
   };
