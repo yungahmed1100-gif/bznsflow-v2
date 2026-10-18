@@ -4,6 +4,7 @@ export default {
   "nav_solution": "Solutions",
   "nav_about": "Why Us",
   "nav_signin": "Sign in",
+  "nav_settings": "Settings",
   "nav_account": "Your account",
   "skip_to_content": "Skip to main content",
   "lang_label": "Choose language",

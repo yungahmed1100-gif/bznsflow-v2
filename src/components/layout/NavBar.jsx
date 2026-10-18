@@ -23,16 +23,35 @@ export function NavBar({
 }) {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const langToggleRef = useRef(null);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const accountToggleRef = useRef(null);
 
   const closeLang = () => setIsLangOpen(false);
   const handleLangSelect = (code) => { onSetLanguage(code); closeLang(); langToggleRef.current?.focus(); };
   // Close the menu (and restore focus) on Escape, or when focus leaves the group.
   const handleLangKeyDown = (e) => { if (e.key === 'Escape') { closeLang(); langToggleRef.current?.focus(); } };
   const handleLangBlur = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) closeLang(); };
+  // The account menu behaves the same way.
+  const closeAccount = () => setIsAccountOpen(false);
+  const handleAccountKeyDown = (e) => { if (e.key === 'Escape') { closeAccount(); accountToggleRef.current?.focus(); } };
+  const handleAccountBlur = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) closeAccount(); };
 
-  // Same destination either way: /signin shows the account and the sign-out
-  // control once a session exists, so it is the account page already.
+  // Sign out needs the CSRF token, which only GET /api/auth-session hands out. Whatever the
+  // answer, reload: the server has cleared the session cookie, or the next page shows who is
+  // still signed in (the same assumption as SignIn.jsx).
+  const signOut = async () => {
+    setIsSigningOut(true);
+    try {
+      const session = await fetch('/api/auth-session', { credentials: 'same-origin', cache: 'no-store' }).then(r => r.json());
+      await fetch('/api/auth-session', { method: 'DELETE', credentials: 'same-origin', headers: { 'x-csrf-token': session?.csrfToken || '' }, signal: AbortSignal.timeout(10000) });
+    } catch { /* reload either way */ }
+    window.location.assign(lang === 'en' ? '/en' : '/');
+  };
+
+  // Signed out: the sign-in page. Signed in, the name opens a menu with Settings and Sign out.
   const accountHref = lang === 'en' ? '/en/signin' : '/signin';
+  const settingsHref = `${lang === 'en' ? '/en' : ''}/layla/dashboard?tab=settings`;
   const name = account ? shortName(account) : '';
   const initial = name ? Array.from(name)[0].toLocaleUpperCase(lang) : '';
 
@@ -116,19 +135,37 @@ export function NavBar({
                   the cross-page navigation on this site works the same way. */}
               {name ? (
                 /* Signed in: the person's own name, not an invitation to do
-                   again what they have already done. The accessible name says
-                   what the link is FOR, because "Ahmed" on its own tells a
-                   screen-reader user nothing about where it goes. */
-                <a
-                  href={accountHref}
-                  className="nav-link nav-account"
-                  aria-label={`${t.nav_account}: ${name}`}
-                >
-                  <span className="nav-account-mark" aria-hidden="true">{initial}</span>
-                  {/* bdi, so a Latin name keeps its own direction inside the
-                      Arabic bar rather than being reordered around it. */}
-                  <bdi className="nav-account-name">{name}</bdi>
-                </a>
+                   again what they have already done. It opens the account menu;
+                   the accessible name says so, because "Ahmed" on its own tells a
+                   screen-reader user nothing about what the control does. */
+                <div className={`account-selector ${isAccountOpen ? 'open' : ''}`} onKeyDown={handleAccountKeyDown} onBlur={handleAccountBlur}>
+                  <button
+                    ref={accountToggleRef}
+                    type="button"
+                    className="nav-link nav-account"
+                    aria-haspopup="true"
+                    aria-expanded={isAccountOpen}
+                    aria-label={`${t.nav_account}: ${name}`}
+                    onClick={() => setIsAccountOpen(o => !o)}
+                  >
+                    <span className="nav-account-mark" aria-hidden="true">{initial}</span>
+                    {/* bdi, so a Latin name keeps its own direction inside the
+                        Arabic bar rather than being reordered around it. */}
+                    <bdi className="nav-account-name">{name}</bdi>
+                    <Icon name="chevron-down" size={13} className="dropdown-arrow" aria-hidden="true" />
+                  </button>
+                  <div className="account-menu" role="menu" aria-label={t.nav_account}>
+                    {account.email && <bdi className="account-menu-email">{account.email}</bdi>}
+                    <a href={settingsHref} role="menuitem" className="lang-item account-item">
+                      <Icon name="settings" size={16} aria-hidden="true" />
+                      <span>{t.nav_settings}</span>
+                    </a>
+                    <button type="button" role="menuitem" className="lang-item account-item account-signout" disabled={isSigningOut} onClick={signOut}>
+                      <Icon name="log-out" size={16} aria-hidden="true" />
+                      <span>{t.auth_signout}</span>
+                    </button>
+                  </div>
+                </div>
               ) : (
                 /* A text link, not a filled button. Sign-in serves people who
                    already bought; making it the loudest control on a marketing

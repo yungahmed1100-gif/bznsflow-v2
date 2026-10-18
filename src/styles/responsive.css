@@ -129,6 +129,35 @@
     font-size: 0.9rem;
   }
 
+  /* In the open panel the account menu is part of the list: its items sit under the
+     name, always visible and full-width, instead of floating off a hover. */
+  .nav-links .account-selector .dropdown-arrow {
+    display: none;
+  }
+
+  .nav-links .account-menu {
+    position: static;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    min-width: 0;
+    margin-top: 8px;
+    border: 0;
+    background: transparent;
+    align-items: center;
+  }
+
+  .nav-links .account-menu-email {
+    border-bottom: 0;
+    margin-bottom: 0;
+    text-align: center;
+  }
+
+  .nav-links .account-item {
+    justify-content: center;
+    min-height: 44px;
+  }
+
   /* Hero Mobile */
   .hero-content {
     padding: 120px 20px 80px;

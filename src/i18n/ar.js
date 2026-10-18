@@ -3,6 +3,7 @@ export default {
   "nav_solution": "الحلول",
   "nav_about": "لماذا نحن",
   "nav_signin": "تسجيل الدخول",
+  "nav_settings": "الإعدادات",
   "nav_account": "حسابك",
   "skip_to_content": "تخطَّ إلى المحتوى الرئيسي",
   "lang_label": "اختر اللغة",

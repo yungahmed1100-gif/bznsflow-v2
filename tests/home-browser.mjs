@@ -72,6 +72,45 @@ try {
     assert.deepEqual(await serious(still.page), [], `${lang} 375 accessibility`); count++;
     await still.context.close();
   }
+  // Signed in, the name opens a menu: who is signed in, Settings, and Sign out, which clears
+  // the session with the CSRF token and comes back signed out. Desktop dropdown, mobile panel.
+  for (const [lang, path] of [['en', '/en'], ['ar', '/']]) {
+    for (const width of [1440, 375]) {
+      const context = await browser.newContext({ viewport: { width, height: 900 } });
+      const page = await context.newPage();
+      let signedIn = true; const deletes = [];
+      await page.route('**/*', route => {
+        const url = new URL(route.request().url());
+        if (url.origin !== new URL(base).origin) return route.abort();
+        if (url.pathname !== '/api/auth-session') return route.continue();
+        if (route.request().method() === 'DELETE') { deletes.push(route.request().headers()['x-csrf-token']); signedIn = false; return route.fulfill({ json: { ok: true } }); }
+        return route.fulfill({ json: { ok: true, csrfToken: 'c'.repeat(64), account: signedIn ? { id: 'a1', email: 'sara@example.com', name: 'Sara Al Balushi', profileComplete: true } : null } });
+      });
+      await page.goto(base + path);
+      const ar = lang === 'ar', t = (en, arabic) => (ar ? arabic : en);
+      if (width < 769) await page.locator('.hamburger').click();
+      const toggle = page.getByRole('button', { name: t('Your account: Sara', 'حسابك: Sara') });
+      await toggle.waitFor();
+      await toggle.click();
+      assert.equal(await toggle.getAttribute('aria-expanded'), 'true', `${lang} ${width}: the name opens the menu`); count++;
+      const settings = page.getByRole('menuitem', { name: t('Settings', 'الإعدادات') });
+      await settings.waitFor({ state: 'visible' });
+      assert.equal(await settings.getAttribute('href'), `${ar ? '' : '/en'}/layla/dashboard?tab=settings`); count++;
+      assert.equal(await page.locator('.account-menu-email').textContent(), 'sara@example.com'); count++;
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `${lang} ${width}: no horizontal overflow with the menu open`); count++;
+      assert.deepEqual(await serious(page), [], `${lang} ${width}: account menu accessibility`); count++;
+      if (width > 768) {
+        await page.keyboard.press('Escape');
+        assert.equal(await toggle.getAttribute('aria-expanded'), 'false', `${lang}: Escape closes the menu`); count++;
+        await toggle.click();
+      }
+      await page.getByRole('menuitem', { name: t('Sign out', 'تسجيل الخروج') }).click();
+      await page.getByRole('link', { name: t('Sign in', 'تسجيل الدخول'), exact: true }).first().waitFor();
+      assert.deepEqual(deletes, ['c'.repeat(64)], `${lang} ${width}: one sign-out with the CSRF token`); count++;
+      assert.equal(new URL(page.url()).pathname, ar ? '/' : '/en', `${lang}: back on the home page, signed out`); count++;
+      await context.close();
+    }
+  }
   console.log(`${count} home page checks passed (live pipeline, colour meanings, reduced motion, EN/AR, 320–1440).`);
 } finally {
   await browser.close();

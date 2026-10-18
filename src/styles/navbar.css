@@ -136,6 +136,86 @@
   white-space: nowrap;
 }
 
+/* The name is a button that opens the account menu (Settings, Sign out). It keeps
+   the look of the link it replaced; the menu borrows the language menu's surface. */
+button.nav-account {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.account-selector {
+  position: relative;
+}
+
+.account-selector:hover .dropdown-arrow,
+.account-selector.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.account-menu {
+  position: absolute;
+  top: 100%;
+  inset-inline-end: 0;
+  margin-top: 8px;
+  min-width: 220px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
+  z-index: 100;
+}
+
+.account-selector.open .account-menu,
+.account-selector:focus-within .account-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Who is signed in, before the actions: easy to confirm, impossible to click. */
+.account-menu-email {
+  display: block;
+  padding: 6px 12px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-item {
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+/* Coral: leaving is the one action here that changes state (DESIGN.md colour meanings). */
+.account-menu .account-signout {
+  color: var(--coral-ink);
+}
+
+.account-menu .account-signout:hover {
+  background: var(--coral-tint);
+  color: var(--coral-ink);
+}
+
+.account-signout:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
 /* Hamburger */
 .hamburger {
   display: none;
