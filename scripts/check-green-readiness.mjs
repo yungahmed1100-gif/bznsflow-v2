@@ -29,6 +29,10 @@ check('Microsoft sign-in disabled', !has('MS_CLIENT_ID') && !has('MS_CLIENT_SECR
 const instagramOpen = env.GREEN_INSTAGRAM_APPROVED === 'true' && env.GREEN_INSTAGRAM_ENABLED === 'true';
 check('Instagram configured when open', !instagramOpen || ((has('GREEN_INSTAGRAM_APP_ID') || has('MAIN_INSTAGRAM_APP_ID')) && (has('GREEN_INSTAGRAM_APP_SECRET') || has('MAIN_INSTAGRAM_APP_SECRET')) && has('GREEN_INSTAGRAM_VERIFY_TOKEN')),
   'Instagram app ID and secret (MAIN_ or GREEN_INSTAGRAM_*) and GREEN_INSTAGRAM_VERIFY_TOKEN are required once both Instagram flags are on');
+// Catalyst online payment (api/paymob-*.js). Off until a key is set; once any is, all are required.
+const PAYMOB_KEYS = ['PAYMOB_SECRET_KEY', 'PAYMOB_PUBLIC_KEY', 'PAYMOB_HMAC_SECRET', 'PAYMOB_INTEGRATION_IDS'];
+check('Paymob configured when payments open', !PAYMOB_KEYS.some(has) || (PAYMOB_KEYS.every(has) && /^\d+(\s*,\s*\d+)*$/.test(env.PAYMOB_INTEGRATION_IDS)),
+  'Secret, public and HMAC keys plus comma-separated integration IDs (card, OmanNet) are required together');
 check('reviewed data migration gate', env.GREEN_DATA_MIGRATION_VERIFIED === 'true', 'Freeze source writes and verify Ahmed-only source/destination counts before cutover');
 check('all production state paths use Convex', env.GREEN_STATE_PATHS_CONVEX === 'true', 'Auth, website, Layla, customer, dashboard and background routes must be migrated');
 check('Green worker credential', validSecret('GREEN_MESSAGING_WORKER_SECRET'), 'Dedicated 64-hex Convex-to-Vercel worker secret required');

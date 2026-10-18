@@ -1,5 +1,7 @@
 import React from 'react';
 import { useAccount } from '../../hooks/useAccount';
+import { usePaymentReturn } from '../../hooks/usePaymentReturn';
+import { PlanPay } from './PlanPay';
 import { Icon } from '../ui/Icon';
 import { waLink } from '../../lib/whatsapp';
 import laylaPortrait from '../../assets/agents/layla.png';
@@ -9,15 +11,32 @@ import rasilPortrait from '../../assets/agents/rasil.png';
 
 const agentPortraits = { layla: laylaPortrait, hasib: hasibPortrait, adiba: adibaPortrait, rasil: rasilPortrait };
 
-// The three plans without prices. Catalyst's CTA is the free audit (or setup, for granted accounts).
-// Ascend is available by Ahmed's grant only: a WhatsApp conversation, or Ascend's setup (in the dashboard's
-// Settings › Business: industry and business details) for an account already granted Ascend. Apex is in preparation. Prices are shared on the free audit (Ahmed, 2026-10-09).
+// The three plans. Visitors see no prices: Catalyst's CTA is the free audit and Ascend's is WhatsApp.
+// A signed-in account can pay online (Ahmed, 2026-10-18): Catalyst at OMR 9 a month or 89 a year, and
+// Ascend at OMR 29 or 289 for one live industry, also as an upgrade from Catalyst. Once held, Catalyst
+// opens its setup and Ascend its Settings › Business, plus the website brief for Ascend's free website.
+// Apex is in preparation.
 export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
-  const account = useAccount();
+  const signedIn = useAccount();
+  const payment = usePaymentReturn();
+  // Back from Paymob, the re-read session is the fresher one.
+  const account = payment.account || signedIn;
   const owner = String(account?.email || '').trim().toLowerCase() === 'ahmed@bznsflowai.com';
   const canSetup = key => key === 'catalyst' && (owner || ['catalyst', 'ascend'].includes(account?.accessPlan));
   const setupHref = `${lang === 'ar' ? '' : '/en'}/catalyst/setup`;
   const planMsg = name => (t.wa_msg_plan || 'Hi BznsFlow, I am interested in {plan}.').replace('{plan}', name);
+  // Paying online: a signed-in account without the plan (Ascend also over Catalyst), or a paid holder
+  // that can extend. Operator grants have no end date and are never billed online.
+  const plan = account?.accessPlan;
+  // Only while the server says payments are open for this account (test keys: listed testers only).
+  const payable = key => !!account && !owner && !!account.paymentsOpen && (
+    key === 'catalyst' ? !plan || (plan === 'catalyst' && !!account.accessUntil)
+      : key === 'ascend' ? !plan || plan === 'catalyst' || (plan === 'ascend' && !!account.accessUntil) : false);
+  const prices = {
+    catalyst: { monthly: t.tier_pay_monthly, yearly: t.tier_pay_yearly },
+    ascend: { monthly: t.tier_pay_ascend_monthly, yearly: t.tier_pay_ascend_yearly },
+  };
+  const websiteHref = `${lang === 'ar' ? '' : '/en'}/layla/dashboard?tab=settings&view=website`;
   const link = tier => {
     if (canSetup(tier.key)) return { href: setupHref, icon: 'arrow-right', label: t.tier_setup, event: 'SetupClick' };
     if (tier.key === 'ascend' && (owner || account?.accessPlan === 'ascend')) return { href: `${lang === 'ar' ? '' : '/en'}/layla/dashboard?tab=settings&view=business`, icon: 'arrow-right', label: t.tier_setup_ascend, event: 'SetupClick' };
@@ -76,7 +95,8 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
                   </ul>
                 </>}
 
-                <a
+                {payable(tier.key) && <PlanPay plan={tier.key} labels={{ name: tier.name, ...prices[tier.key] }} t={t} lang={lang} account={account} payment={payment} trackEvent={trackEvent} whatsapp={waLink(planMsg(tier.name))} />}
+                {!(payable(tier.key) && plan !== tier.key) && <a
                   href={cta.href}
                   target={cta.external ? '_blank' : undefined}
                   rel={cta.external ? 'noopener noreferrer' : undefined}
@@ -85,7 +105,8 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
                 >
                   <Icon name={cta.icon} size={18} className={cta.icon === 'arrow-right' ? 'icon-flip-rtl' : undefined} />
                   <span>{cta.label}</span>
-                </a>
+                </a>}
+                {tier.key === 'ascend' && (owner || plan === 'ascend') && <a href={websiteHref} className="tier-website-link">{t.tier_website}</a>}
               </article>
             );
           })}

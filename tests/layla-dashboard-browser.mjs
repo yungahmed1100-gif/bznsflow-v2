@@ -105,7 +105,7 @@ function hasibOverview(packId, preview = false) {
     counts: { pendingOrders: 0, lowStock: 0, laylaWaiting: 0, laylaOverdue: 0 } };
 }
 
-async function openPage(browser, { width, lang = 'en', path, handler, extra, authEmail = null }) {
+async function openPage(browser, { width, lang = 'en', path, handler, extra, authEmail = null, authAccount = null }) {
   const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   let resolveAuthSession;
@@ -119,7 +119,7 @@ async function openPage(browser, { width, lang = 'en', path, handler, extra, aut
       return route.fulfill({ status: response.status, json: response.json });
     }
     if (url.pathname === '/api/auth-session') {
-      await route.fulfill({ status: 200, json: { ok: true, account: authEmail ? { email: authEmail } : null } });
+      await route.fulfill({ status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), account: authAccount || (authEmail ? { email: authEmail } : null) } });
       resolveAuthSession();
       return;
     }
@@ -461,6 +461,58 @@ try {
     assert.equal(await page.getByRole('heading', { name: t('Add information', 'إضافة معلومات') }).count(), 0, `${lang}: the legacy Q&A panel retires once bzns.md is published`); count++;
     assert.equal(writes.length, 1); assert.match(writes[0].markdown, new RegExp(t('Portraits and weddings', 'صور شخصية وحفلات زفاف'))); count += 2;
     assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`); count++;
+    await context.close();
+  }
+  // Ascend's free website: the reminder leads to the brief in Business details, the form asks for what
+  // Ahmed needs, and one submit sends the brief (emailed server-side). Prefilled from confirmed details.
+  for (const [lang, width] of [['en', 1280], ['ar', 375]]) {
+    const submits = [];
+    const brief = { account: { email: 'owner@example.test', name: 'Sara' }, version: 0, fields: { nameEn: 'Blue Studio', phone: '+968 9000 0000' }, submittedAt: null, emailedAt: null, logo: null, photos: [] };
+    const setup = { ok: true, csrfToken: 'a'.repeat(64), available: true, status: 'connected', savedToAccount: true, profileVersion: 3,
+      bzns: { markdown: '# Blue Studio', version: 1, publishedRevision: 1, publishedAt: now, unpublishedChanges: false },
+      profile: { businessName: 'Blue Studio', sector: 'Photography', services: 'Portraits', prices: '', hours: '', location: '', humanContact: 'team@example.test', faqs: [], reviewed: true } };
+    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=chats', handler: api(fixture()),
+      authAccount: { id: 'a1', email: 'owner@example.test', accessPlan: 'ascend', profileComplete: true },
+      extra: (surface, request) => {
+        if (surface === 'website-brief') {
+          const body = request.method() === 'POST' ? request.postDataJSON() : null;
+          if (!body) return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), brief } };
+          submits.push(body);
+          return { status: 200, json: { ok: true, version: 1, emailed: true } };
+        }
+        if (surface !== 'customer') return null;
+        const body = request.method() === 'POST' ? request.postDataJSON() : {};
+        if (body.action === 'catalog_list') return { status: 200, json: { ...setup, catalog: { entries: [], cursor: null } } };
+        if (body.operation || body.action === 'list') return { status: 200, json: { ...setup, sources: [], drafts: [] } };
+        return { status: 200, json: setup };
+      } });
+    const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
+    await page.getByRole('heading', { name: t('Your free website is waiting for your details', 'موقعك المجاني بانتظار تفاصيلك') }).waitFor(); count++;
+    await page.getByRole('link', { name: t('Send website details', 'أرسل تفاصيل الموقع') }).click();
+    const form = page.locator('.ld-brief');
+    await form.getByRole('heading', { name: t('Your free website', 'موقعك المجاني') }).waitFor(); count++;
+    assert.equal(await form.getByLabel(t('Business name in English', 'اسم النشاط بالإنجليزية')).inputValue(), 'Blue Studio', `${lang}: prefilled from confirmed details`); count++;
+    // A language is required, and so is a logo or a request to design one.
+    await form.getByRole('button', { name: t('Send to BznsFlow', 'أرسل إلى BznsFlow') }).click();
+    await form.getByText(t('Fill in the required fields.', 'أكمل الحقول المطلوبة.')).waitFor(); count++;
+    assert.equal(submits.length, 0, `${lang}: nothing is sent while required fields are missing`); count++;
+    await form.getByRole('radio', { name: t('Arabic and English', 'العربية والإنجليزية') }).check();
+    await form.getByRole('button', { name: t('Send to BznsFlow', 'أرسل إلى BznsFlow') }).click();
+    await form.getByText(t('Fill in the required fields.', 'أكمل الحقول المطلوبة.')).waitFor();
+    await form.getByLabel(t('I don’t have a logo. Please design a simple one.', 'ليس لدي شعار. صمّموا لي شعارًا بسيطًا.')).check();
+    await form.getByRole('radio', { name: t('Minimal', 'بسيط') }).check();
+    await form.getByRole('checkbox', { name: t('Gallery', 'المعرض') }).check();
+    await form.getByRole('button', { name: t('Add a colour', 'أضف لونًا') }).click();
+    await form.getByRole('button', { name: t('Send to BznsFlow', 'أرسل إلى BznsFlow') }).click();
+    await form.getByText(t('We’ll contact you before your website goes live.', 'سنتواصل معك قبل نشر موقعك.'), { exact: false }).waitFor(); count++;
+    assert.equal(submits.length, 1); count++;
+    assert.deepEqual(submits[0].fields, { nameEn: 'Blue Studio', phone: '+968 9000 0000', languages: 'both', style: 'minimal', colors: ['#1f4f7a'], pages: ['gallery'], designLogo: true }, `${lang}: the brief as entered`); count++;
+    assert.deepEqual([submits[0].action, submits[0].version, submits[0].logoId, submits[0].photoIds], ['submit', 0, null, []]); count++;
+    assert.equal(await form.getByRole('button', { name: t('Send update', 'أرسل التحديث') }).count(), 1, `${lang}: later sends are updates`); count++;
+    const violations = (await new AxeBuilder({ page }).include('.ld-brief').analyze()).violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
+    assert.deepEqual(violations, [], `${lang} ${width}: website brief accessibility`); count++;
+    assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`); count++;
+    await form.screenshot({ path: `${OUT}/website-brief-${lang}-${width}.png` });
     await context.close();
   }
   console.log(`${count} dashboard browser assertions passed at 320–1440px in English and Arabic. Synthetic API; no external network.`);

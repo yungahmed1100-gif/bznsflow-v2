@@ -446,3 +446,33 @@ a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ld-counts div:nth-child(4) dd { color: var(--coral); }
 /* A chip is as wide as its words, also when table cells stack on a phone. */
 .ld-table td .ld-chip { justify-self: start; inline-size: fit-content; }
+/* Paid Catalyst in its three days of grace (AccessNotice.jsx): coral is a problem that needs the owner. */
+.ld-access-notice { margin: 12px 16px 0; padding: 12px 14px; border: 1px solid var(--rule-strong); border-inline-start: 3px solid var(--coral-mark); border-radius: var(--radius); background: var(--card); display: grid; gap: 8px; }
+.ld-access-notice h2 { margin: 0; font-size: 15px; color: var(--coral); }
+.ld-access-notice p { margin: 0; font-size: 14px; color: var(--ink-2); }
+.ld-access-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ld-access-error { color: var(--coral); }
+/* Ascend website brief (WebsiteBrief.jsx), at the top of Settings › Business details. */
+.ld-brief { max-width: 720px; margin: 16px 24px 24px; padding: 16px 18px; border: 1px solid var(--rule-strong); border-inline-start: 3px solid var(--blue); border-radius: var(--radius); background: var(--card); }
+.ld-brief > h2 { margin: 0 0 4px; font-size: 17px; }
+.ld-brief > p { margin: 0 0 8px; font-size: 14px; color: var(--ink-2); }
+.ld-brief > fieldset { border: 0; border-top: 1px solid var(--rule-strong); padding: 12px 0 4px; margin: 16px 0 0; min-width: 0; }
+.ld-brief > fieldset > legend { font-weight: 700; padding-inline-end: 8px; }
+.ld-brief textarea { min-height: 84px; resize: vertical; }
+.ld-brief-required { font-style: normal; font-weight: 400; color: var(--ink-2); }
+.ld-brief-choice { border: 0; padding: 0; margin: 10px 0; display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; }
+.ld-brief-choice legend { font-size: 13px; font-weight: 600; margin-block-end: 6px; padding: 0; }
+.ld-brief-choice label, .ld-brief-check { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; }
+.ld-brief-colors, .ld-brief-refs { display: grid; gap: 8px; margin: 10px 0; font-size: 13px; font-weight: 600; justify-items: start; }
+.ld-brief-refs input { width: 100%; }
+.ld-brief-color { display: inline-flex; align-items: center; gap: 8px; font-weight: 400; }
+.ld-brief-color input[type=color] { width: 44px; height: 36px; padding: 2px; border: 1px solid var(--rule-strong); border-radius: 6px; background: var(--paper); }
+.ld-brief-photos { display: flex; flex-wrap: wrap; gap: 10px; }
+.ld-brief-thumb { margin: 6px 0; display: grid; gap: 6px; justify-items: start; }
+.ld-brief-thumb img { width: 96px; height: 96px; object-fit: contain; border: 1px solid var(--rule-strong); border-radius: 6px; background: var(--paper-ruled); }
+.ld-brief-status { padding: 10px 12px; border-radius: var(--radius); background: var(--yellow-tint); font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ld-brief-status.is-done { background: var(--green-tint); }
+.ld-brief .is-invalid > span, .ld-brief .is-invalid > legend { color: var(--coral); }
+.ld-brief > .ld-primary { margin-top: 16px; }
+@media (max-width: 640px) { .ld-brief { margin: 12px; padding: 14px; } }
+.ld-website-reminder { margin: 12px 16px 0; border-inline-start-color: var(--blue); }

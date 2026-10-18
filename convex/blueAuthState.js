@@ -1,13 +1,22 @@
 import { activatePendingInvitation } from './hasib/workspaceState.js';
 import { applyGrantedPack } from './hasib/packChoice.js';
+import { deniedAt, grantLive } from './grantStatus.js';
 
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 export async function executeBlueAuth(ctx,a,now = Date.now()) {
   const fail = reason => ({ok:false,reason}), ok = value => ({ok:true,value});
   const lookup = (table,index,field,value) => ctx.db.query(table).withIndex(index,q=>q.eq(field,value)).unique();
+  const grantOf = email => lookup('blueAccessGrants','by_email','email',String(email).toLowerCase());
   const accessFor = async email => {
-    const grant = await lookup('blueAccessGrants','by_email','email',String(email).toLowerCase());
-    return grant?.status === 'active' ? grant.plan : null;
+    const grant = await grantOf(email);
+    return grantLive(grant, now) ? grant.plan : null;
+  };
+  // A paid plan's end date and, three days later, when access is denied: the plan card's "active until"
+  // line and the grace warning. Both null for a grant with no end.
+  const accessDatesFor = async email => {
+    const grant = await grantOf(email);
+    const paid = grantLive(grant, now) && !!grant.paidUntil;
+    return { accessUntil: paid ? grant.paidUntil : null, accessDeniedAt: paid ? deniedAt(grant) : null };
   };
   if(a.operation==='review_access') {
     if(!hash(a.accessHash) || !hash(a.tokenHash)) return fail('invalid_state');
@@ -131,7 +140,7 @@ export async function executeBlueAuth(ctx,a,now = Date.now()) {
       workspaceDraftHash = manager?.draftHash || null;
       workspaceRole = 'employee';
     }
-    return ok({id:account._id,email:account.email,name:account.name || '',phone:account.phone || '',country:account.country || '',industry:account.industry || '',lang:account.lang || 'en',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email),hasWorkspace:!!account.draftHash,draftHash:account.draftHash || null,workspaceDraftHash,workspaceRole});
+    return ok({id:account._id,email:account.email,name:account.name || '',phone:account.phone || '',country:account.country || '',industry:account.industry || '',lang:account.lang || 'en',profileComplete:!!account.profileComplete,accessPlan:await accessFor(account.email),...await accessDatesFor(account.email),hasWorkspace:!!account.draftHash,draftHash:account.draftHash || null,workspaceDraftHash,workspaceRole});
   }
   return fail('invalid_state');
 }

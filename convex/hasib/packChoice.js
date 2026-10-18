@@ -5,6 +5,7 @@ import { syncServiceItems } from './serviceSync.js';
 import { STOCK_SOURCE } from './stockSync.js';
 import { DEFAULT_SETTINGS } from './shared.js';
 import { hasibPack, isLivePack } from '../../config/hasib-packs.js';
+import { grantLive } from '../grantStatus.js';
 import { ensureAutomation, AUTOMATION_PACKS } from './workspace/schedule.js';
 
 /** What choosing an industry changes beyond the setting itself. */
@@ -45,6 +46,6 @@ export async function applyGrantedPack(ctx, account, now) {
   const email = String(account?.email || '').toLowerCase().trim();
   if (!email) return false;
   const grant = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', email)).unique();
-  if (grant?.status !== 'active' || grant.plan !== 'ascend' || !grant.packId) return false;
+  if (!grantLive(grant, now) || grant.plan !== 'ascend' || !grant.packId) return false;
   return setAccountPack(ctx, account._id, grant.packId, now, { onlyIfUnset: true });
 }

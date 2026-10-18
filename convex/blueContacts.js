@@ -1,6 +1,7 @@
 // Tenant contact records, shared by messaging ingest, the dashboard and campaigns.
 // Every helper takes an explicit accountId; nothing here trusts a client id.
 import { numberHash } from './hash.js';
+import { grantLive } from './grantStatus.js';
 import { anonymizeContactOrders } from './hasib/contactLink.js';
 import { langOf } from '../config/layla-tones.js';
 import { NAME_FIELD, extractBareName, isQuestion, extractQualification, isSensitiveSector, mergeFields, planQuestions, planReception, qualificationPack, qualificationStatus, sectorIdFor, validateFieldValue } from '../config/layla-qualification.js';
@@ -67,7 +68,7 @@ export async function onIndustryPlan(ctx, accountId) {
   const account = accountId && await ctx.db.get(accountId);
   if (!account?.email) return false;
   const grant = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', String(account.email).toLowerCase().trim())).unique();
-  return grant?.status === 'active' && INDUSTRY_PLANS.has(grant.plan);
+  return grantLive(grant) && INDUSTRY_PLANS.has(grant.plan);
 }
 /**
  * Layla's sector for a setup. Catalyst is the same for every business (Ahmed, 2026-10-17): the general

@@ -9,6 +9,7 @@ import { PilotError } from './layla/config.js';
 import { sendOtpEmail, pushLead } from './mailer.js';
 import { isAllowedOrigin } from './guard.js';
 import { configuredProviders } from './oidc.js';
+import { paymentsOpen } from './paymob.js';
 
 // blueAuthStore is built in convex.js alongside the other five Convex route
 // clients; re-exported here because this module is where its callers look.
@@ -40,7 +41,7 @@ export function createBlueAuthHandler({env = process.env,fetcher = fetch,store =
         if (!token && !blueAccountsAvailable(env)) return send(res,200,{ok:true,csrfToken:ensureCsrfToken(req,res),account:null,needsProfile:false,providers:[]},{vary:'Cookie'});
         if (!blueAccountsAvailable(env)) return send(res,503,{ok:false,reason:'account_unavailable'},{vary:'Cookie'});
         const account = await blueAccount(req,store);
-        return send(res,200,{ok:true,csrfToken:ensureCsrfToken(req,res),account:account ? {...account,profileComplete:!!account.profileComplete} : null,needsProfile:!!account && !account.profileComplete,providers:configuredProviders()},{vary:'Cookie'});
+        return send(res,200,{ok:true,csrfToken:ensureCsrfToken(req,res),account:account ? {...account,profileComplete:!!account.profileComplete,paymentsOpen:paymentsOpen(env,account.email)} : null,needsProfile:!!account && !account.profileComplete,providers:configuredProviders()},{vary:'Cookie'});
       }
       if (req.method === 'DELETE' && action === 'session') {
         const token = parseCookies(req)[BLUE_ACCOUNT_COOKIE];

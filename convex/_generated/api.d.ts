@@ -10,6 +10,8 @@
 
 import type * as activationStage from "../activationStage.js";
 import type * as auth from "../auth.js";
+import type * as billing from "../billing.js";
+import type * as billingState from "../billingState.js";
 import type * as blueAccess from "../blueAccess.js";
 import type * as blueAccessState from "../blueAccessState.js";
 import type * as blueAudienceState from "../blueAudienceState.js";
@@ -36,6 +38,7 @@ import type * as brain from "../brain.js";
 import type * as brainState from "../brainState.js";
 import type * as crons from "../crons.js";
 import type * as dashboardApplication from "../dashboardApplication.js";
+import type * as grantStatus from "../grantStatus.js";
 import type * as greenCore from "../greenCore.js";
 import type * as greenOwnerImport from "../greenOwnerImport.js";
 import type * as greenOwnerImportState from "../greenOwnerImportState.js";
@@ -188,6 +191,8 @@ import type * as productSetupState from "../productSetupState.js";
 import type * as review from "../review.js";
 import type * as reviewMaintenance from "../reviewMaintenance.js";
 import type * as reviewState from "../reviewState.js";
+import type * as websiteBrief from "../websiteBrief.js";
+import type * as websiteBriefState from "../websiteBriefState.js";
 
 import type {
   ApiFromModules,
@@ -198,6 +203,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   activationStage: typeof activationStage;
   auth: typeof auth;
+  billing: typeof billing;
+  billingState: typeof billingState;
   blueAccess: typeof blueAccess;
   blueAccessState: typeof blueAccessState;
   blueAudienceState: typeof blueAudienceState;
@@ -224,6 +231,7 @@ declare const fullApi: ApiFromModules<{
   brainState: typeof brainState;
   crons: typeof crons;
   dashboardApplication: typeof dashboardApplication;
+  grantStatus: typeof grantStatus;
   greenCore: typeof greenCore;
   greenOwnerImport: typeof greenOwnerImport;
   greenOwnerImportState: typeof greenOwnerImportState;
@@ -376,6 +384,8 @@ declare const fullApi: ApiFromModules<{
   review: typeof review;
   reviewMaintenance: typeof reviewMaintenance;
   reviewState: typeof reviewState;
+  websiteBrief: typeof websiteBrief;
+  websiteBriefState: typeof websiteBriefState;
 }>;
 
 /**

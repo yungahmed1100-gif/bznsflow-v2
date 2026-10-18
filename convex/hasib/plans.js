@@ -4,15 +4,16 @@
 import { ok, fail } from './shared.js';
 import { setAccountPack } from './packChoice.js';
 import { isLivePack } from '../../config/hasib-packs.js';
+import { grantLive } from '../grantStatus.js';
 
 export const HASIB_PLANS = Object.freeze(['ascend']);
 const normEmail = email => String(email || '').toLowerCase().trim();
 
-export async function planFor(ctx, accountId) {
+export async function planFor(ctx, accountId, now = Date.now()) {
   const account = await ctx.db.get(accountId);
   if (!account?.email) return null;
   const grant = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', normEmail(account.email))).unique();
-  return grant?.status === 'active' ? grant.plan : null;
+  return grantLive(grant, now) ? grant.plan : null;
 }
 
 export async function accountByEmail(ctx, email) {

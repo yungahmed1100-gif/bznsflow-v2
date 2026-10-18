@@ -17,10 +17,10 @@ export async function executeAccess(ctx, args, now = Date.now()) {
       // whether an account exists. Revoked grants stay listed, so a revoked address never just vanishes.
       const accountOf = email => ctx.db.query('accounts').withIndex('by_email', q => q.eq('email', email)).unique();
       // The phone (from the owner's sign-up profile) lets Ahmed send the setup link on WhatsApp.
-      const view = async ({ email, plan, status, grantedAt, grantedBy, note, packId, revokedAt }) => {
+      const view = async ({ email, plan, status, grantedAt, grantedBy, note, packId, revokedAt, paidUntil }) => {
         const account = await accountOf(email);
         const row = account?.draftHash ? await ctx.db.query('blueReviewSessions').withIndex('by_hash', q => q.eq('sessionHash', account.draftHash)).unique() : null;
-        return { email, plan, status, grantedAt, grantedBy, packId, revokedAt, note: note || '', hasAccount: !!account, phone: account?.phone || '', progress: activationStage({ account, row, grantedAt }) };
+        return { email, plan, status, grantedAt, grantedBy, packId, revokedAt, paidUntil: paidUntil || null, note: note || '', hasAccount: !!account, phone: account?.phone || '', progress: activationStage({ account, row, grantedAt }) };
       };
       const active = await ctx.db.query('blueAccessGrants').withIndex('by_status', q => q.eq('status', 'active')).take(200);
       const revoked = await ctx.db.query('blueAccessGrants').withIndex('by_status', q => q.eq('status', 'revoked')).take(200);

@@ -8,6 +8,9 @@ import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { DashboardNav } from '../components/dashboard/DashboardNav';
 import { ChatsView } from '../components/dashboard/ChatsView';
 import { SetupReminder } from '../components/dashboard/SetupReminder';
+import { AccessNotice } from '../components/dashboard/AccessNotice';
+import { WebsiteBrief } from '../components/dashboard/WebsiteBrief';
+import { WebsiteReminder } from '../components/dashboard/WebsiteReminder';
 import { ContactsView } from '../components/dashboard/ContactsView';
 import { BroadcastView } from '../components/dashboard/BroadcastView';
 import { usePolling } from '../hooks/usePolling';
@@ -124,9 +127,13 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
       <HasibProvider lang={lang} overview={hasibOverview} business={data?.business?.name || ''} timezone={data?.timezone} onChanged={refreshHasib}>
       <DashboardNav packId={hasibOverview?.pack?.id} s={s} h={h} sections={map.sections} tab={tab} onSelect={go} search={params} business={data?.business?.name} preview={hasibOverview?.readOnly} badges={{ orders: hasibOverview?.counts?.laylaWaiting || 0, work: hasibOverview?.counts?.followupsActionable || 0 }} />
       <main id="ld-main" className={`ld-main ${hasibOverview?.readOnly ? 'hb-preview-mode' : ''}`} tabIndex={-1} data-tab={tab}>
+        {!previewPack && <AccessNotice s={s} account={account} />}
+        {!previewPack && !(tab === 'settings' && view === 'business') && <WebsiteReminder s={s} account={account} onGo={go} />}
         {!ready || (overview.loading && !data) || hasibPending ? <p className="ld-state" role="status">{s.t('loading')}</p>
           : unavailable ? <div className="ld-state"><p>{s.t('dashboardUnavailable')}</p><a className="ld-button" href={setupPath(lang)}>{s.t('setup')}</a></div>
-          : overview.error && !data ? <div className="ld-state" role="alert"><p>{s.reason(overview.error.reason)}</p><button className="ld-button" onClick={() => overview.refresh()}>{s.t('retry')}</button></div>
+          : overview.error && !data ? <div className="ld-state" role="alert"><p>{s.reason(overview.error.reason)}</p>{overview.error.reason === 'access_required'
+            ? <a className="ld-button ld-primary" href={s.ar ? '/' : '/en'}>{s.t('choosePlan')}</a>
+            : <button className="ld-button" onClick={() => overview.refresh()}>{s.t('retry')}</button>}</div>
           : data && (data.connected || data.capabilities?.operations || data.founderPreview) ? (
             <>
               {!previewPack && data.founderPreview && hasibOverview && <FounderIndustryPreview s={s} industries={hasibOverview.industries} current={previewIndustry} onChange={changePreview} />}
@@ -152,7 +159,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                 : tab === 'settings' && view === 'brain' ? <BrainPage lang={lang} part={brainPart(params)} onPart={part => setParams(dashboardSearch(params, 'settings', { view: 'brain', part }), { replace: true })}
                     channel={!!data.connected} active={!!data.messaging?.active} onGo={go} />
                 : tab === 'settings' && view === 'services' ? <BusinessDetails s={s} section="services" catalyst={!!map.catalyst} onSaved={() => overview.refresh({ quiet: true })} />
-                : tab === 'settings' && view === 'business' ? <><BusinessDetails s={s} catalyst={!!map.catalyst} section={map.catalyst || map.sections.includes('stock') ? 'details' : 'all'} initialIndustryId={hasibOverview?.readOnly ? undefined : hasibOverview?.legacyIndustryId || undefined} next={data?.connected ? { label: lang === 'ar' ? 'التالي: المحادثات' : 'Next: Chats', go: () => go('chats') } : { label: lang === 'ar' ? 'التالي: اربط قناة' : 'Next: Connect a channel', go: () => go('settings', { view: 'channels' }) }} onSaved={map.catalyst ? () => overview.refresh({ quiet: true }) : refreshHasib} />
+                : tab === 'settings' && view === 'business' ? <>{!map.catalyst && account?.accessPlan === 'ascend' && <WebsiteBrief s={s} />}<BusinessDetails s={s} catalyst={!!map.catalyst} section={map.catalyst || map.sections.includes('stock') ? 'details' : 'all'} initialIndustryId={hasibOverview?.readOnly ? undefined : hasibOverview?.legacyIndustryId || undefined} next={data?.connected ? { label: lang === 'ar' ? 'التالي: المحادثات' : 'Next: Chats', go: () => go('chats') } : { label: lang === 'ar' ? 'التالي: اربط قناة' : 'Next: Connect a channel', go: () => go('settings', { view: 'channels' }) }} onSaved={map.catalyst ? () => overview.refresh({ quiet: true }) : refreshHasib} />
                     {!hasibOverview?.readOnly && hasibOverview?.pack && <IndustrySetup selection={false} heading={false} s={s} h={h} livePacks={hasibOverview.livePacks} industries={hasibOverview.industries} current={hasibOverview.pack.id} settings={hasibOverview.settings} onChosen={refreshHasib} />}
                     {/* A sign-up sector that is not live yet: the owner picks a live one here (docs/product-design.md). */}
                     {!hasibOverview?.readOnly && !hasibOverview?.pack && hasibOverview?.setupRequired && <IndustrySetup s={s} h={h} livePacks={hasibOverview.livePacks} industries={hasibOverview.industries} current={hasibOverview.selectedIndustryId} settings={hasibOverview.settings} onChosen={refreshHasib} />}</>

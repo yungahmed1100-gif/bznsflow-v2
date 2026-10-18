@@ -46,7 +46,7 @@ try {
     assert.equal(await page.getByText(/Live sector|القطاع المتاح/).count(), 0, `${path} still shows the Ascend wizard`);
     checks++; await page.close();
   }
-  // A signed-in account without a grant: the work is saved and the next step is the free audit, never "Sign in" again.
+  // A signed-in account without a plan: the work is saved and the next step is choosing a Catalyst plan, never "Sign in" again.
   for (const lang of ['en', 'ar']) {
     const page = await browser.newPage();
     await page.route('**/api/**', route => route.fulfill(new URL(route.request().url()).pathname === '/api/product-setup'
@@ -54,8 +54,10 @@ try {
     await page.goto(`${base}${lang === 'en' ? '/en' : ''}/catalyst/setup`);
     const box = page.locator('.setup-error');
     await box.waitFor();
-    assert.match(await box.innerText(), lang === 'en' ? /Your setup is saved\. Catalyst is switched on with you after a free audit\./ : /تم حفظ إعدادك/, `${lang}: the saved-work message`);
-    assert.equal(await box.getByRole('link', { name: lang === 'en' ? 'Book the free audit' : 'احجز التدقيق المجاني' }).count(), 1, `${lang}: one next action, the free audit`);
+    assert.match(await box.innerText(), lang === 'en' ? /Your setup is saved\. Choose a Catalyst plan to switch Layla on\./ : /تم حفظ إعدادك/, `${lang}: the saved-work message`);
+    const plans = box.getByRole('link', { name: lang === 'en' ? 'Choose a plan' : 'اختر خطة' });
+    assert.equal(await plans.count(), 1, `${lang}: one next action, choosing a plan`);
+    assert.equal(await plans.getAttribute('href'), lang === 'en' ? '/en' : '/', `${lang}: the plan cards`);
     assert.equal(await box.getByRole('link', { name: /^(Sign in|تسجيل الدخول)$/ }).count(), 0, `${lang}: no Sign in link for someone already signed in`);
     checks++; await page.close();
   }

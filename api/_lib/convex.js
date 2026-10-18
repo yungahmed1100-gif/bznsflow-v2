@@ -98,3 +98,12 @@ export const coreStore = convexStore({ route: 'green-core', fallback: 'core_unav
 export const productSetupStore = convexStore({ route: 'product-setup', fallback: 'setup_unavailable', status: setupStatus });
 
 export const knowledgeStore = convexStore({ route: 'knowledge-sources', fallback: 'knowledge_unavailable', status: setupStatus });
+
+// Online payments: checkout refusals reach the customer; webhook refusals are logged and acknowledged.
+const billingStatus = r => r === 'sign_in_required' ? 401 : ['invalid_interval', 'invalid_pack'].includes(r) ? 400 : r === 'too_many' ? 429 : 409;
+export const billingStore = convexStore({ route: 'billing', fallback: 'payment_unavailable', status: billingStatus,
+  reasons: ['sign_in_required', 'invalid_interval', 'invalid_pack', 'plan_active', 'too_many', 'invalid_state', 'unknown_payment', 'already_paid', 'amount_mismatch'] });
+
+// Ascend website brief (convex/websiteBriefState.js): refusals the form explains to the owner.
+export const websiteBriefStore = convexStore({ route: 'website-brief', fallback: 'brief_unavailable', status: setupStatus,
+  reasons: ['sign_in_required', 'access_required', 'manager_required', 'upload_limit', 'invalid_file', 'too_many_files', 'invalid_brief', 'brief_too_long', 'brief_required', 'brief_conflict', 'invalid_state'] });

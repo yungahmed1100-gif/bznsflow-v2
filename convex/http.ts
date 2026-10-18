@@ -119,6 +119,31 @@ http.route({path:'/blue-instagram',method:'POST',handler:httpAction(async(ctx,re
     return new Response(JSON.stringify(result),{headers});
   } catch {return new Response(JSON.stringify({ok:false,reason:'instagram_unavailable'}),{status:503,headers});}
 })});
+http.route({path:'/website-brief',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text();if(raw.length>16000) return new Response(null,{status:413});
+    const args=JSON.parse(raw);
+    if(!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null,{status:400});
+    // Only this route may say whether an uploaded file's bytes are a real image.
+    delete args.fileCheck;
+    if(args.operation==='file_register') args.fileCheck=await checkPhotoBytes(ctx,args.storageId);
+    const result=await ctx.runMutation(internal.websiteBrief.execute,args);
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'brief_unavailable'}),{status:503,headers}); }
+})});
+
+http.route({path:'/billing',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text(); if(raw.length>4000) return new Response(null,{status:413});
+    const result=await ctx.runMutation(internal.billing.execute,JSON.parse(raw));
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'billing_unavailable'}),{status:503,headers}); }
+})});
+
 http.route({path:'/blue-access',method:'POST',handler:httpAction(async(ctx,request)=>{
   if(!serviceAuthorized(request)) return new Response(null,{status:401});
   const headers={'Content-Type':'application/json','Cache-Control':'no-store'};

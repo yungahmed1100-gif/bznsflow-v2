@@ -13,6 +13,8 @@ const attachedTo = async (ctx, id) => [
   ...(await ctx.db.query('hasibItems').withIndex('by_photo', q => q.eq('photoId', id)).take(2)),
   ...(await ctx.db.query('hasibPropertyPhotos').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
   ...(await ctx.db.query('automotiveInspectionPhotos').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
+  // Ascend website brief uploads (convex/websiteBriefState.js) are not orphans either.
+  ...(await ctx.db.query('websiteBriefFiles').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
 ];
 const registration = (ctx, id) => ctx.db.query('hasibPhotoUploads').withIndex('by_storage', q => q.eq('storageId', id)).unique();
 

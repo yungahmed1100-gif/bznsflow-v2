@@ -6,6 +6,7 @@
 // roadmap for this pack, hidden from the owner) or `off` (not a fit).
 import { SECTOR_PACKS } from './layla-sector-packs.js';
 import { BUSINESS_INDUSTRIES } from '../src/lib/industries.js';
+import { HASIB_LIVE_PACKS } from './hasib-live-packs.js';
 
 export const HASIB_PACK_VERSION = 'hasib-packs-v3';
 const t = (key, en, ar) => ({ key, en, ar });
@@ -200,8 +201,8 @@ export const visibleModules = pack => Object.entries(pack.modules).filter(([, v]
 
 // Sectors ship one at a time. A pack opens Hasib only once its setup, tests and
 // acceptance evidence exist; the others stay hidden even though they are configured.
-// Media went live 2026-10-12 (Ahmed): Layla's brief, Hasib's schedule and automatic quotes, Adiba's offers.
-export const HASIB_LIVE_PACKS = Object.freeze(['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness', 'media']);
+// The live list itself is in config/hasib-live-packs.js.
+export { HASIB_LIVE_PACKS };
 export const HASIB_PREVIEW_PACKS = Object.freeze(Object.keys(OWNER_PACKS).filter(id => !HASIB_LIVE_PACKS.includes(id)));
 const labelFor = id => BUSINESS_INDUSTRIES.find(industry => industry.id === id);
 export const isLivePack = id => HASIB_LIVE_PACKS.includes(id);
