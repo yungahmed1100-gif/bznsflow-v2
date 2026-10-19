@@ -87,7 +87,7 @@ export function parseBzns(markdown) {
   return { meta, title, sections: rows, faqs, length: source.length };
 }
 
-const CURRENCY = '(?:OMR|R\\.?O\\.?|AED|SAR|QAR|KWD|BHD|USD|EUR|GBP|ريال|ر\\.?\\s?ع\\.?|درهم|دولار|دينار|بيسة|[$€£])';
+const CURRENCY = '(?:OMR|R\\.?O\\.?|AED|SAR|QAR|KWD|BHD|USD|EUR|GBP|ريال|(?<![\\u0621-\\u064A])ر\\.?\\s?ع(?![\\u0621-\\u064A])\\.?|درهم|دولار|دينار|بيسة|[$€£])';
 const NUMBER = '[\\d\\u0660-\\u0669][\\d\\u0660-\\u0669,.\\s]*';
 const MONEY = new RegExp(`(?:${NUMBER}\\s*${CURRENCY}(?![A-Za-z]))|(?:(?<![A-Za-z])${CURRENCY}\\s*[\\d\\u0660-\\u0669])`, 'i');
 const PERCENT = /[\d٠-٩]+(?:[.,][\d٠-٩]+)?\s*[%٪]/;

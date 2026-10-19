@@ -11,7 +11,7 @@ import { parseBzns } from '../src/lib/bzns-doc.js';
 
 export const HANDOFF_NOTE_MAX = 600;
 const CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
-const MONEY = /(\d[\d.,]*)\s*(omr|r\.?o\.?|rial|riyal|aed|sar|usd|\$|ر\.?\s?ع|ريال|درهم)|(omr|aed|sar|usd|\$|ريال)\s*\d/i;
+const MONEY = /(\d[\d.,]*)\s*(omr|r\.?o\.?|rial|riyal|aed|sar|usd|\$|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])|ريال|درهم)|(omr|aed|sar|usd|\$|ريال)\s*\d/i;
 
 /** The details a sector may ask for, in the order Layla asks them. */
 export function askableFields(sectorId) {

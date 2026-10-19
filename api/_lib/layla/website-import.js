@@ -32,7 +32,7 @@ export function relevantLinks(html,baseUrl,limit=19) {
   return links;
 }
 const decode = s => String(s || '').replace(/&(?:nbsp|amp|lt|gt|quot|apos|#39);/g, m => ({ '&nbsp;': ' ', '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&apos;': "'", '&#39;': "'" }[m])).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-const PRICE_LINE = /(?:OMR|RO|ر\.?\s?ع\.?|AED|SAR|QAR|BHD|KWD|USD|\$|د\.?\s?إ\.?|ر\.?\s?س\.?)\s*\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s*(?:OMR|RO|ريال|درهم|AED|SAR|QAR|BHD|KWD|USD)/i;
+const PRICE_LINE = /(?:OMR|RO|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])\.?|AED|SAR|QAR|BHD|KWD|USD|\$|د\.?\s?إ\.?|ر\.?\s?س\.?)\s*\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s*(?:OMR|RO|ريال|درهم|AED|SAR|QAR|BHD|KWD|USD)/i;
 /**
  * What a search result shows, plus the page's service headings and price lines: the title, the meta (Google)
  * description, the social-card title and description, h1–h3 headings, and short sentences carrying a price.
@@ -80,9 +80,9 @@ export function pageSummary(html, limit = 4000) {
 export function extractCatalogFacts(text, source='website') {
   const clean=String(text||'').replace(/\s+/g,' ').trim();
   const parts=clean.split(/(?<=[.!؟])\s+|\s*[|•·]\s*/).map(s=>s.trim()).filter(s=>s.length>=4&&s.length<=500);
-  const price=/(?:OMR|RO|ر\.?\s?ع\.?|AED|SAR|USD|\$|د\.?\s?إ\.?|ر\.?\s?س\.?)\s*\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s*(?:OMR|RO|ريال|AED|SAR|USD)/i;
+  const price=/(?:OMR|RO|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])\.?|AED|SAR|USD|\$|د\.?\s?إ\.?|ر\.?\s?س\.?)\s*\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s*(?:OMR|RO|ريال|AED|SAR|USD)/i;
   const entries=[];
-  for(const part of parts){const match=part.match(price);if(!match)continue;const before=part.slice(0,match.index).replace(/^(price|prices|السعر|الأسعار)\s*[:—-]?\s*/i,'').trim();const name=before.split(/[:—-]/)[0].trim().slice(0,160);if(name.length<2)continue;entries.push({kind:'service',nameEn:/[\u0600-\u06ff]/.test(name)?'':name,nameAr:/[\u0600-\u06ff]/.test(name)?name:'',category:'',benefitEn:'',benefitAr:'',descriptionEn:/[\u0600-\u06ff]/.test(part)?'':part,descriptionAr:/[\u0600-\u06ff]/.test(part)?part:'',availability:'',prices:[{type:/from|starting|ابتداء|يبدأ/i.test(part)?'from':'fixed',currency:/OMR|RO|ر\.?\s?ع|ريال/i.test(match[0])?'OMR':/AED|د\.?\s?إ/i.test(match[0])?'AED':/SAR|ر\.?\s?س/i.test(match[0])?'SAR':'USD',label:match[0],unit:''}],source,confidence:.7,laylaUseEn:'Answer customer questions about this service and its approved price.',laylaUseAr:'الإجابة عن أسئلة العملاء حول هذه الخدمة وسعرها المعتمد.'});if(entries.length>=1000)break;}
+  for(const part of parts){const match=part.match(price);if(!match)continue;const before=part.slice(0,match.index).replace(/^(price|prices|السعر|الأسعار)\s*[:—-]?\s*/i,'').trim();const name=before.split(/[:—-]/)[0].trim().slice(0,160);if(name.length<2)continue;entries.push({kind:'service',nameEn:/[\u0600-\u06ff]/.test(name)?'':name,nameAr:/[\u0600-\u06ff]/.test(name)?name:'',category:'',benefitEn:'',benefitAr:'',descriptionEn:/[\u0600-\u06ff]/.test(part)?'':part,descriptionAr:/[\u0600-\u06ff]/.test(part)?part:'',availability:'',prices:[{type:/from|starting|ابتداء|يبدأ/i.test(part)?'from':'fixed',currency:/OMR|RO|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])|ريال/i.test(match[0])?'OMR':/AED|د\.?\s?إ/i.test(match[0])?'AED':/SAR|ر\.?\s?س/i.test(match[0])?'SAR':'USD',label:match[0],unit:''}],source,confidence:.7,laylaUseEn:'Answer customer questions about this service and its approved price.',laylaUseAr:'الإجابة عن أسئلة العملاء حول هذه الخدمة وسعرها المعتمد.'});if(entries.length>=1000)break;}
   const named=entries.map(item=>`${item.nameEn||item.nameAr}${item.prices[0]?.label?` — ${item.prices[0].label}`:''}`);
   const serviceFacts=parts.filter(part=>/service|product|menu|package|offer|book|خدم|منتج|قائم|باق|نقدم|نوفر|حجز/i.test(part));
   const benefitFacts=parts.filter(part=>/help|benefit|save|support|deliver|customer|حل|يساعد|فائد|يوفر|دعم|توصيل|عميل/i.test(part));

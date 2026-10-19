@@ -14,12 +14,12 @@ const MAX_CATALOG = 40, MAX_SECTIONS = 10, SECTION_MAX = 1500, QUOTE_MIN = 8, QU
 const PRICE_TYPES = ['fixed', 'from', 'range', 'free', 'quote', 'recurring', 'unavailable'];
 const CURRENCIES = ['OMR', 'AED', 'SAR', 'USD', 'QAR', 'BHD', 'KWD'];
 // The currency written in the evidence wins over the model's guess (it read "ر.ع." as SAR once).
-const CURRENCY_MARKS = [['OMR', /ر\.?\s?ع\b|ر\.ع|ريال\s*عماني|\bOMR\b|\bR\.?O\.?\b/i], ['SAR', /ر\.?\s?س\b|ر\.س|ريال\s*سعودي|\bSAR\b/i], ['AED', /د\.?\s?إ|درهم|\bAED\b/i],
+const CURRENCY_MARKS = [['OMR', /(?<![ء-ي])ر\.?\s?ع(?![ء-ي])|ر\.ع|ريال\s*عماني|\bOMR\b|\bR\.?O\.?\b/i], ['SAR', /ر\.?\s?س\b|ر\.س|ريال\s*سعودي|\bSAR\b/i], ['AED', /د\.?\s?إ|درهم|\bAED\b/i],
   ['QAR', /ر\.?\s?ق\b|ر\.ق|ريال\s*قطري|\bQAR\b/i], ['BHD', /د\.?\s?ب\b|د\.ب|دينار\s*بحريني|\bBHD\b/i], ['KWD', /د\.?\s?ك\b|د\.ك|دينار\s*كويتي|\bKWD\b/i], ['USD', /\$|\bUSD\b|دولار/i]];
 export const writtenCurrency = text => (CURRENCY_MARKS.find(([, re]) => re.test(String(text || ''))) || [])[0];
 export const SECTION_KEYS = Object.freeze(Object.keys(BRAIN_SECTIONS).filter(k => k !== 'contact'));
 const INSTRUCTION = /\b(ignore|disregard|forget)\b[^.\n]{0,30}\b(instructions?|rules?|prompt)\b|\bsystem prompt\b|\byou are now\b|\bact as\b|\bpretend (to be|you)\b|\bnew instructions?\b|تجاهل\s*(التعليمات|القواعد)|انس\s*(التعليمات|القواعد)|أنت الآن/i;
-const MONEY = /(\d[\d.,]*)\s*(omr|r\.?o\.?|rial|riyal|baisa|aed|sar|usd|qar|bhd|kwd|\$|€|£|ر\.?\s?ع|ريال|بيسة|درهم)|(omr|aed|sar|usd|\$|ريال|درهم)\s*\d/i;
+const MONEY = /(\d[\d.,]*)\s*(omr|r\.?o\.?|rial|riyal|baisa|aed|sar|usd|qar|bhd|kwd|\$|€|£|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])|ريال|بيسة|درهم)|(omr|aed|sar|usd|\$|ريال|درهم)\s*\d/i;
 const CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g;
 
 const toLatin = s => String(s || '').replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x6f0));

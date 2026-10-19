@@ -20,7 +20,7 @@ const ok = value => ({ ok: true, value });
 const fail = reason => ({ ok: false, reason });
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const digest = text => hmacSha256Hex('brain-proposal-v1', text).slice(0, 24);
-const MONEY = /(\d[\d.,]*)\s*(omr|r\.?o\.?|rial|riyal|aed|sar|usd|\$|ر\.?\s?ع|ريال|درهم)|(omr|aed|sar|usd|\$|ريال)\s*\d/i;
+const MONEY = /(\d[\d.,]*)\s*(omr|r\.?o\.?|rial|riyal|aed|sar|usd|\$|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])|ريال|درهم)|(omr|aed|sar|usd|\$|ريال)\s*\d/i;
 const INSTRUCTION = /\b(ignore|disregard|forget)\b[^.\n]{0,30}\b(instructions?|rules?|prompt)\b|\bsystem prompt\b|\byou are now\b|\bact as\b|تجاهل\s*(التعليمات|القواعد)/i;
 const CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 const clip = (s, n) => String(s || '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);

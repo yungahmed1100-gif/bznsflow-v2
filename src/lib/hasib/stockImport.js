@@ -61,7 +61,7 @@ export function findHeaderRow(rows, variantOptions = []) {
 /** An amount cell ("25.500", "OMR 25", "٢٥٫٥ ر.ع.", "1,250") in minor units, or null. */
 export function parseCellAmount(value) {
   if (typeof value === 'number') return parseAmount(value);
-  const text = normalizeDigits(clean(value)).replace(/(omr|r\.?o\.?|ر\.?\s?ع\.?|ريال( عماني)?|baisa)/gi, '').replace(/\s/g, '');
+  const text = normalizeDigits(clean(value)).replace(/(omr|r\.?o\.?|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])\.?|ريال( عماني)?|baisa)/gi, '').replace(/\s/g, '');
   if (!text) return null;
   const unthousand = /^\d{1,3}(,\d{3})+(\.\d+)?$/.test(text) ? text.replace(/,/g, '') : text.replace(/,/g, '.');
   return parseAmount(unthousand);
@@ -135,7 +135,7 @@ export function buildStockPreview(rows, mapping, variantOptions = []) {
   return { products: list, invalid, truncated, counts: { products: list.length, variants: variants.length, units: variants.reduce((n, v) => n + (v.quantity || 0), 0) } };
 }
 
-const PRICE_IN_LINE = /(?:(?:omr|r\.?o\.?|ر\.?\s?ع\.?)\s*)?(\d{1,7}(?:[.,]\d{1,3})?)\s*(?:omr|r\.?o\.?|ر\.?\s?ع\.?|ريال(?: عماني)?)?/gi;
+const PRICE_IN_LINE = /(?:(?:omr|r\.?o\.?|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])\.?)\s*)?(\d{1,7}(?:[.,]\d{1,3})?)\s*(?:omr|r\.?o\.?|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])\.?|ريال(?: عماني)?)?/gi;
 const QTY_IN_LINE = /(?:qty|quantity|stock|x|×|الكمية|العدد|المخزون)\s*[:=]?\s*(\d{1,6})\b|\b(\d{1,6})\s*(?:pcs|pieces|units|قطعة|حبة|حبات)\b/i;
 
 /**
@@ -153,7 +153,7 @@ export function textToStockRows(text) {
     const line = normalizeDigits(raw).replace(/٬/g, ',');
     const qtyMatch = line.match(QTY_IN_LINE);
     const withoutQty = qtyMatch ? line.replace(qtyMatch[0], ' ') : line;
-    const prices = [...withoutQty.matchAll(PRICE_IN_LINE)].filter(m => /[.,]\d|omr|r\.?o|ر\.?\s?ع|ريال/i.test(m[0]));
+    const prices = [...withoutQty.matchAll(PRICE_IN_LINE)].filter(m => /[.,]\d|omr|r\.?o|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])|ريال/i.test(m[0]));
     const price = prices.at(-1) || [...withoutQty.matchAll(/\b(\d{1,7}(?:\.\d{1,3})?)\s*$/g)].at(-1);
     if (!price) continue;
     const name = withoutQty.slice(0, price.index).replace(/[\s:–—\-|•·.]+$/, '').replace(/^[\s\d.)•·-]+(?=\D)/, '').trim();

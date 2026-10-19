@@ -5,7 +5,7 @@
 const toLatin = s => String(s || '').replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x6f0));
 const norm = s => toLatin(s).normalize('NFKC').toLowerCase().replace(/[ً-ٰٟ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
   .replace(/[^\p{L}\p{N}%]+/gu, ' ').trim();
-const CURRENCY = /(omr|r\.?o\.?|rial|riyal|baisa|aed|sar|usd|\$|€|£|ر\.?\s?ع|ريال|بيسة|درهم|%)/i;
+const CURRENCY = /(omr|r\.?o\.?|rial|riyal|baisa|aed|sar|usd|\$|€|£|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])|ريال|بيسة|درهم|%)/i;
 const MONEY = new RegExp(`(\\d[\\d.,]*)\\s*${CURRENCY.source}|${CURRENCY.source}\\s*(\\d[\\d.,]*)`, 'gi');
 const FROM = /\b(from|starting|starts?\s+at|as low as|minimum)\b|يبدا|يبدأ|ابتداء|اعتبارا|من\s*\d|من\s+/i;
 const RANGE_IN_LABEL = /(\d[\d.,]*)\s*(?:-|–|—|to|الى|إلى)\s*(\d[\d.,]*)/i;
