@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { prepareForPublish, validateBzns } from '../../lib/bzns-doc.js';
-import { bznsMessages } from '../../lib/bzns-messages.js';
+import { bznsMessages, serverBznsProblems } from '../../lib/bzns-messages.js';
 import { brainTemplate } from '../../../config/bzns-templates.js';
 import { revealStep } from '../../lib/reveal-step.js';
 import { Icon } from '../ui/Icon.jsx';
@@ -63,7 +63,13 @@ export function BrainSetup({ lang, onPublished }) {
     // Unreplaced template hints are left out at publish, so only what a customer needs can block.
     const check = validateBzns(prepareForPublish(markdown).markdown);
     if (!check.ok) { setProblems(bznsMessages(check.errors, lang)); setPart('bzns'); return; }
-    take(await request({ action: 'brain_publish' }));
+    let result;
+    try { result = await request({ action: 'brain_publish' }); } catch (e) {
+      const server = serverBznsProblems(e);
+      if (!server) throw e;
+      setProblems(bznsMessages(server, lang)); setPart('bzns'); return;
+    }
+    take(result);
     await onPublished?.();
   });
   return (

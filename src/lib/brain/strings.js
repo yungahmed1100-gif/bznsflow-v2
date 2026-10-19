@@ -139,6 +139,7 @@ const T = {
   noReply: ['No reply needed', 'لا يحتاج رداً'],
   // Errors
   err_generic: ['That did not work. Your saved data is safe. Try again.', 'لم ينجح ذلك. بياناتك المحفوظة آمنة. حاول مجدداً.'],
+  err_bzns_invalid: ['bzns.md did not pass the final check before publishing. Reload the page, fix what the bzns.md tab lists, then publish again.', 'لم يجتز ملف bzns.md الفحص الأخير قبل النشر. أعد تحميل الصفحة، وصحّح ما يظهر في تبويب bzns.md، ثم انشر مجدداً.'],
   err_manager_required: ['Only the business manager can change this.', 'يمكن لمدير النشاط فقط تغيير هذا.'],
   err_bzns_conflict: ['bzns.md changed in another tab. Reload before saving.', 'تغيّر bzns.md في نافذة أخرى. أعد التحميل قبل الحفظ.'],
   err_behaviour_conflict: ['These settings changed in another tab. Reload before saving.', 'تغيّرت هذه الإعدادات في نافذة أخرى. أعد التحميل قبل الحفظ.'],

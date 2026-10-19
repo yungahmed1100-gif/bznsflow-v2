@@ -53,9 +53,11 @@ function surface({ markdown = null, published = false, brainStep = 0, savedToAcc
     }
     if (a === 'brain_behaviour') { s.behaviour = { ...body.behaviour, version: (s.behaviour?.version || 0) + 1, legacy: false }; return { ...state(), brain: brain() }; }
     if (a === 'brain_publish') {
-      // As review-api: unreplaced template hints are left out before the checks.
+      // A server-side refusal the browser's check cannot see: a list (as review-api sends) or a bare reason (as Convex does).
+      if (s.serverRefusal) return { httpStatus: 400, json: { ok: false, reason: 'bzns_invalid', ...(Array.isArray(s.serverRefusal) ? { errors: s.serverRefusal } : {}) } };
+      // As review-api: unreplaced template hints are left out before the checks, and the failed checks are listed.
       const md = prepareForPublish(state().bzns.markdown).markdown, checked = validateBzns(md);
-      if (!checked.ok) return { httpStatus: 400, json: { ok: false, reason: 'bzns_invalid' } };
+      if (!checked.ok) return { httpStatus: 400, json: { ok: false, reason: 'bzns_invalid', errors: checked.errors.map(({ code, section, heading }) => ({ code, section, ...(heading ? { heading } : {}) })) } };
       const { businessName, profile } = deriveProfile(checked.parsed);
       s.row = { ...s.row, profile: { ...profile, businessName }, journeyStep: 4, bznsPublished: { markdown: md, revision: (s.row.bznsPublished?.revision || 0) + 1 }, bznsDraft: { markdown: md, version: s.row.bznsDraft?.version || 1 } };
       s.catalog = s.catalog.map(e => ({ ...e, status: 'approved', state: 'published' }));
@@ -229,6 +231,26 @@ try {
     assert.deepEqual(await axe(page, '.brain-sheet'), [], `${lang} ${width} test panel axe`); count++;
     await page.keyboard.press('Escape');
     assert.deepEqual(errors, [], `${lang} ${width} settings page errors`); count++;
+    await context.close();
+  }
+
+  // 2b. When the server refuses a publish the browser's check passed, the owner sees what to fix, not "try again".
+  for (const lang of ['en', 'ar']) {
+    const ar = lang === 'ar', t = (en, arabic) => (ar ? arabic : en);
+    const s = surface({ markdown: VALID, published: false, savedToAccount: true, connected: true });
+    s.serverRefusal = [{ code: 'bzns_money', section: 'location', heading: 'Location' }];
+    const { page, context, errors } = await open(browser, { width: 1440, lang, path: '/layla/dashboard?tab=settings', s });
+    await page.locator('.brain').waitFor();
+    const publishButton = page.locator('.brain-head-actions').getByRole('button', { name: t('Publish', 'انشر') });
+    await publishButton.click();
+    const problems = page.locator('.brain-problems');
+    await problems.waitFor();
+    assert.match(await problems.innerText(), ar ? /احذف الأسعار أو الرسوم في: Location/ : /Remove prices or fees in: Location/, `${lang}: the server's own problem is listed`); count++;
+    assert.doesNotMatch(await problems.innerText(), /That did not work|لم ينجح ذلك/, `${lang}: not the generic message`); count++;
+    s.serverRefusal = 'bare';
+    await publishButton.click();
+    await page.getByText(t('bzns.md did not pass the final check before publishing.', 'لم يجتز ملف bzns.md الفحص الأخير قبل النشر.'), { exact: false }).waitFor(); count++;
+    assert.deepEqual(errors, [], `${lang}: page errors`); count++;
     await context.close();
   }
 

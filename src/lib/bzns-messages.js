@@ -70,3 +70,10 @@ export function bznsMessages(errors, lang = 'en') {
   }
   return lines;
 }
+
+/**
+ * The server's own bzns.md problems from a refused publish, or null. The server re-checks the saved
+ * draft, so it can refuse what the browser's check passed (an older copy, or a newer rule); its list is
+ * shown like the browser's instead of a generic "try again".
+ */
+export const serverBznsProblems = error => (error?.reason === 'bzns_invalid' && error.errors?.length ? error.errors : null);

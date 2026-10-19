@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { parseBzns, prepareForPublish, validateBzns } from '../../lib/bzns-doc.js';
-import { bznsMessages } from '../../lib/bzns-messages.js';
+import { bznsMessages, serverBznsProblems } from '../../lib/bzns-messages.js';
 import { brainStrings } from '../../lib/brain/strings.js';
 import { useBrain } from './useBrain.js';
 import { BznsWord } from './BznsWord.jsx';
@@ -66,7 +66,13 @@ export function BrainPage({ lang, part = 'bzns', onPart, channel = false, active
       const check = validateBzns(prepareForPublish(markdown).markdown);
       if (!check.ok) { setProblems(bznsMessages(check.errors, lang)); select('bzns'); return; }
     }
-    take(await request({ action: 'brain_publish' }));
+    let result;
+    try { result = await request({ action: 'brain_publish' }); } catch (e) {
+      const server = serverBznsProblems(e);
+      if (!server) throw e;
+      setProblems(bznsMessages(server, lang)); select('bzns'); return;
+    }
+    take(result);
     await loadCatalog();
     setPublished(b.t('published'));
   });
