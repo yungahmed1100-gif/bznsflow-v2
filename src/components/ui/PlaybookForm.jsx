@@ -33,6 +33,8 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
   const [email, setEmail] = useState('');
   const [industry, setIndustry] = useState('');
   const [phone, setPhone] = useState('');
+  const [emailOptIn, setEmailOptIn] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [status, setStatus] = useState('idle'); // idle | sending | error
 
   const ar = lang === 'ar';
@@ -54,6 +56,8 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
           signal: AbortSignal.timeout(SUBMIT_TIMEOUT_MS),
           body: JSON.stringify({
             playbook: true,
+            emailOptIn,
+            emailConsentVersion: 'subscriber-v1',
             name: name.trim(),
             email: email.trim(),
             industry,
@@ -83,14 +87,25 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
           console.error('[playbook] lead captured but the email failed to send');
         }
 
-        onSuccess?.();
+        if (emailOptIn) {
+          setSubscriptionStatus(data.subscription === 'confirmation_pending' ? 'pending' : 'failed');
+          setStatus('subscribed');
+        } else { onSuccess?.(); }
       } catch {
         // Timeout, offline, or a server error. Never a dead end: the failure
         // state still hands over the PDF.
         setStatus('error');
       }
     },
-    [status, name, email, industry, phone, sourceCta, lang, trackEvent, onSuccess],
+    [status, name, email, industry, phone, sourceCta, lang, emailOptIn, trackEvent, onSuccess],
+  );
+
+  if (subscriptionStatus) return (
+    <div className="playbook-success" role="status" dir={ar ? 'rtl' : 'ltr'}>
+      <p>{subscriptionStatus === 'pending' ? t.playbook_optin_pending : t.playbook_optin_failed}</p>
+      <a href={PLAYBOOK_PDF} download className="btn btn-primary">{t.playbook_download}</a>
+      {subscriptionStatus === 'failed' && <button type="button" className="btn btn-ghost" onClick={() => { setSubscriptionStatus(null); setStatus('idle'); }}>{t.playbook_optin_retry}</button>}
+    </div>
   );
 
   return (
@@ -144,6 +159,11 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
             value={phone} onChange={(e) => setPhone(e.target.value)}
           />
         </div>
+
+        <label className="playbook-email-consent">
+          <input type="checkbox" name="emailOptIn" checked={emailOptIn} onChange={e => setEmailOptIn(e.target.checked)} />
+          <span>{t.playbook_optin_label}</span>
+        </label>
 
         <button type="submit" className="btn btn-primary btn-large playbook-submit" disabled={status === 'sending'}>
           <Icon name="mail" size={18} />

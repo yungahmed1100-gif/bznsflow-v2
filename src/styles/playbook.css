@@ -224,6 +224,9 @@
 }
 .playbook-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
+.playbook-email-consent { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.9rem; line-height: 1.6; }
+.playbook-email-consent input { width: auto; margin-top: 0.3rem; flex-shrink: 0; }
+
 .playbook-privacy {
   margin-top: var(--space-2);
   font-size: 0.75rem;

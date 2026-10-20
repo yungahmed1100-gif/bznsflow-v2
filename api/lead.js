@@ -22,6 +22,7 @@
 //             playbook?: boolean }
 // Response  { ok: true, emailed?: boolean } | { ok: false, reason: string }
 
+import { requestEmailSubscription } from './_lib/email-subscription.js';
 import { isAllowedOrigin, clientIp } from './_lib/guard.js';
 import { isValidEmail, normalizeEmail, authBuckets, LIMITS, MIN_PHONE_DIGITS } from './_lib/auth.js';
 import { INDUSTRY_IDS } from '../src/lib/industries.js';
@@ -114,30 +115,36 @@ export default async function handler(req, res) {
       sourceUrl: pageUrl,
     });
 
-    const result = await pushLead({
-      name,
-      email,
-      phone,
-      industry,
-      sourceCta,
-      lang,
-      pageUrl,
-      playbook: wantsPlaybook,
-      // Absolute, because Apps Script fetches it from the open internet.
-      playbookUrl: wantsPlaybook ? `${SITE}${PLAYBOOK_PDF}` : undefined,
-    });
+    // The optional email series runs beside the Sheet write; it never throws and
+    // its 6s timeout no longer adds to the visitor's wait.
+    const [subscription, result] = await Promise.all([
+      requestEmailSubscription({ ...body, email, name, language: lang }),
+      pushLead({
+        name,
+        email,
+        phone,
+        industry,
+        sourceCta,
+        lang,
+        pageUrl,
+        playbook: wantsPlaybook,
+        // Absolute, because Apps Script fetches it from the open internet.
+        playbookUrl: wantsPlaybook ? `${SITE}${PLAYBOOK_PDF}` : undefined,
+      }),
+    ]);
 
     // `emailed: false` means the row saved but the mail failed — the exact state
     // that went unnoticed for weeks when the PDF 404'd. Surfaced, not swallowed.
     if (wantsPlaybook && result?.emailed === false) {
       console.error('[lead] row saved but playbook email failed:', result.emailError);
-      return send(res, 200, { ok: true, emailed: false, crmSynced: true });
+      return send(res, 200, { ok: true, emailed: false, crmSynced: true, ...subscription });
     }
 
     return send(res, 200, {
       ok: true,
       emailed: wantsPlaybook ? true : undefined,
       crmSynced: true,
+      ...subscription,
     });
   } catch (err) {
     console.error('[lead] capture failed:', err.message);
