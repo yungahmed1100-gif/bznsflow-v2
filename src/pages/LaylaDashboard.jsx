@@ -13,6 +13,7 @@ import { WebsiteBrief } from '../components/dashboard/WebsiteBrief';
 import { WebsiteReminder } from '../components/dashboard/WebsiteReminder';
 import { ContactsView } from '../components/dashboard/ContactsView';
 import { BroadcastView } from '../components/dashboard/BroadcastView';
+import { EmailView } from '../components/dashboard/rasil/EmailView';
 import { usePolling } from '../hooks/usePolling';
 import { dashboard, hasib, loadOverview, loadHasib, setHasibPreviewIndustry, setupPath, DashboardError } from '../lib/dashboard/api';
 import { createHasibStrings } from '../lib/hasib/strings';
@@ -73,7 +74,8 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const packId = hasibOverview?.setupRequired ? undefined : hasibOverview?.pack?.id;
   const s = useMemo(() => createStrings(lang, packId), [lang, packId]);
   // Eight plain sections; Hasib's appear only when Business Setup selects a live pack.
-  const map = useMemo(() => dashboardMap(hasibOverview, overview.data?.capabilities || hasibOverview?.capabilities, overview.data?.workspaceRole), [hasibOverview, overview.data?.capabilities, overview.data?.workspaceRole]);
+  const map = useMemo(() => dashboardMap(hasibOverview, overview.data?.capabilities || hasibOverview?.capabilities, overview.data?.workspaceRole,
+    { email: !!overview.data?.rasilEnabled && !!overview.data?.capabilities?.email }), [hasibOverview, overview.data?.capabilities, overview.data?.workspaceRole, overview.data?.rasilEnabled]);
   const SixTabWorkspace = map.sixTab ? SIX_TAB_DASHBOARDS[map.packId] || RealEstateDashboard : null;
   const h = useMemo(() => createHasibStrings(lang, packId), [lang, packId]);
   // The prerendered shell has no URL, so resolving the tab before mount bakes "chats" into
@@ -153,6 +155,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                 : tab === 'service' ? <ServiceView initialRepairId={params.get('repair')} initialAction={params.get('action') || ''} s={s} h={h} timezone={data.timezone} staff={hasibOverview?.workspaceRole === 'employee'} onClearLink={() => setParams(new URLSearchParams({ tab: 'service' }), { replace: true })} onChanged={refreshHasib} />
                 : tab === 'money' && view === 'expenses' ? <ExpensesView s={s} h={h} overview={hasibOverview} timezone={data.timezone} initialCreate={params.get('action') === 'expense'} />
                 : tab === 'money' ? <InsightsView s={s} h={h} overview={hasibOverview} onGo={go} />
+                : tab === 'email' ? <EmailView s={s} overview={data} view={view} explicitView={params.has('view')} onGo={(next, extra) => setParams(dashboardSearch(params, next, extra), { replace: true })} />
                 : (tab === 'customers' && view === 'broadcast') || tab === 'broadcasts' ? (data.integration ? <BroadcastView s={s} overview={data} onTimezone={() => overview.refresh({ quiet: true })} /> : <div className="ld-state"><p>{s.t('broadcastWhatsAppOnly')}</p>{map.sections.includes('settings') && <button type="button" className="ld-button" onClick={() => go('settings', { view: 'channels' })}>{s.t('connectChannel')}</button>}</div>)
                 : tab === 'customers' ? <>{hasibOverview?.pack && (!map.sixTab || ['retail', 'retail-tech'].includes(hasibOverview.pack.id)) && <FollowupView s={s} h={h} packId={hasibOverview.pack.id} timezone={data.timezone} />}<ContactsView s={s} overview={data} onOpenChat={id => go('chats', { chat: id })} /></>
                 : tab === 'settings' && view === 'accounts' ? <AccountsSettings s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={() => { refreshHasib(); overview.refresh({ quiet: true }); }} />

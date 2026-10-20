@@ -460,6 +460,39 @@ a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ld-fees ol { margin: 0; padding-inline-start: 20px; display: grid; gap: 4px; font-size: 14px; }
 .ld-fees p { margin: 0; font-size: 14px; color: var(--ink-2); }
 .ld-fees-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+/* Rasil (components/dashboard/rasil): Ascend's email campaigns, beside WhatsApp in Broadcasts. */
+.ld-channel-tabs { margin-block: 4px 16px; }
+.ld-email > .ld-lede { margin: 0 0 4px; }
+.ld-email-card { max-width: 900px; }
+.ld-email-card h3 { margin: 0 0 4px; font-size: 15px; }
+.ld-email-domain-name { margin: 0 0 8px; font-weight: 700; font-size: 17px; }
+.ld-inline-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; }
+.ld-inline-form .ld-field { flex: 1 1 240px; margin: 0; }
+.ld-records code, .ld-code code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
+.ld-record-value { display: flex; align-items: flex-start; gap: 8px; }
+.ld-record-value code { flex: 1 1 auto; min-width: 0; }
+.ld-copy { min-height: 32px; padding: 4px 10px; font-size: 12px; flex: none; }
+.ld-email-sender { margin-top: 16px; display: grid; gap: 8px; max-width: 520px; }
+.ld-address-input { display: flex; align-items: center; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--card); }
+.ld-address-input input { border: 0; flex: 1 1 6ch; min-width: 6ch; background: transparent; }
+.ld-address-input span { flex: 0 1 auto; min-width: 0; padding-inline: 8px 12px; color: var(--ink-2); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ld-email-add { display: grid; gap: 8px; margin-block: 8px; }
+.ld-email-add textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+.ld-code { margin: 0 0 8px; padding: 12px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--paper-ruled); overflow-x: auto; max-height: 260px; white-space: pre-wrap; }
+.ld-email-compose { display: grid; gap: 12px; }
+.ld-email-draft { display: grid; gap: 8px; padding: 12px 14px; border-inline-start: 3px solid var(--blue); background: var(--card); }
+.ld-email-compose-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.ld-email-compose-grid textarea { min-height: 220px; resize: vertical; }
+.ld-email-preview { margin: 0; display: grid; gap: 6px; }
+.ld-email-preview figcaption { font-size: 13px; color: var(--ink-2); }
+.ld-email-preview-subject { margin: 0; font-size: 14px; }
+.ld-email-preview iframe { width: 100%; height: 420px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: #f6efdf; }
+.ld-email-detail { grid-column: 1 / -1; }
+@media (max-width: 760px) {
+  .ld-email-compose-grid { grid-template-columns: minmax(0, 1fr); }
+  .ld-email-preview iframe { height: 320px; }
+  .ld-record-value { flex-direction: column; }
+}
 /* Ascend website brief (WebsiteBrief.jsx), at the top of Settings › Business details. */
 .ld-brief { max-width: 720px; margin: 16px 24px 24px; padding: 16px 18px; border: 1px solid var(--rule-strong); border-inline-start: 3px solid var(--blue); border-radius: var(--radius); background: var(--card); }
 .ld-brief > h2 { margin: 0 0 4px; font-size: 17px; }

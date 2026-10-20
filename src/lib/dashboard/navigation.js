@@ -87,8 +87,10 @@ export function brainPart(params) {
   if (['bzns', 'catalog'].includes(part)) return part;
   return params.get('view') === 'services' || params.get('tab') === 'stock' ? 'catalog' : 'bzns';
 }
+// Rasil's Email tab is the same in every Ascend industry: campaigns, subscribers, then the domain and website form.
+export const EMAIL_VIEWS = Object.freeze(['campaigns', 'subscribers', 'setup']);
 const TEAM_PACKS = ['retail', 'retail-tech', 'dental', 'real-estate', 'media', 'fitness', 'clinic', 'construction', 'automotive'];
-export const SECTION_ORDER = ['today', 'chats', 'broadcasts', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings'];
+export const SECTION_ORDER = ['today', 'chats', 'broadcasts', 'email', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings'];
 
 /** Preserve caller-owned URL parameters while clearing record state when changing sections. */
 export function dashboardSearch(current, tab, extra = {}) {
@@ -103,9 +105,10 @@ export function dashboardSearch(current, tab, extra = {}) {
  * @param {{ modules: string[], setupRequired: boolean, pack?: { id: string } } | null} hasib the Hasib overview, or null when Hasib is off
  * @param {Record<string, boolean>} [capabilities]
  * @param {'manager' | 'employee'} [role] the role from the main overview, used until the Hasib overview arrives
+ * @param {{ email?: boolean }} [open] Rasil's Email tab, when the server says it is open to this account
  * @returns {{ sections: string[], views: Record<string, string[]> }}
  */
-export function dashboardMap(hasib, capabilities = { broadcasts: true, money: true }, role = 'manager') {
+export function dashboardMap(hasib, capabilities = { broadcasts: true, money: true }, role = 'manager', { email = false } = {}) {
   // Catalyst (no operations): Chats, Broadcasts, Customers, Settings. Ascend keeps the map below.
   if (!hasib && !capabilities.operations) {
     const sections = CATALYST.sections.filter(id => (id !== 'broadcasts' || capabilities.broadcasts) && (id !== 'settings' || role !== 'employee'));
@@ -124,8 +127,8 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
   const sixTab = !hasib?.setupRequired && SIX_TAB_PACKS[hasib?.pack?.id];
   if (sixTab) {
     const has = { chats: true, work: true, customers: true, broadcasts: workspaceRole === 'manager' && capabilities.broadcasts !== false,
-      insights: workspaceRole === 'manager' && capabilities.insights !== false, settings: workspaceRole !== 'employee' };
-    return { sections: ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings'].filter(id => has[id]), views: { ...sixTab.views, customers: [] }, sixTab: true, packId: hasib.pack.id };
+      email: email && workspaceRole === 'manager', insights: workspaceRole === 'manager' && capabilities.insights !== false, settings: workspaceRole !== 'employee' };
+    return { sections: ['chats', 'work', 'customers', 'broadcasts', 'email', 'insights', 'settings'].filter(id => has[id]), views: { ...sixTab.views, customers: [], ...(email ? { email: EMAIL_VIEWS } : {}) }, sixTab: true, packId: hasib.pack.id };
   }
   // Services are edited in Business details, which is the manager's.
   const managerViews = list => list.filter(v => v !== 'services' || workspaceRole !== 'employee');
@@ -141,8 +144,9 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
     today: !!hasib, chats: !clinic, orders: on('orders'), stock: on('stock'), service: on('repairs'),
     money: (construction || automotive ? on('insights') : views.money.length > 0) && capabilities.money !== false, customers: true,
     team: !!hasib && TEAM_PACKS.includes(hasib.pack?.id) && workspaceRole === 'manager', settings: workspaceRole !== 'employee',
+    email: email && workspaceRole === 'manager',
   };
-  return { sections: SECTION_ORDER.filter(id => has[id]), views };
+  return { sections: SECTION_ORDER.filter(id => has[id]), views: email ? { ...views, email: EMAIL_VIEWS } : views };
 }
 
 /** The section and view to show for a URL, falling back to the home section. */

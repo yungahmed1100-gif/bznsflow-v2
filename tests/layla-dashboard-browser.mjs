@@ -431,6 +431,107 @@ try {
     await context.close();
   }
 
+  // Rasil on Ascend: its own Email tab, the same in every industry (Retail here, a six-tab dashboard). It opens on
+  // Domain & form until the domain is ready; then subscribers with consent, then a campaign drafted, previewed and sent.
+  for (const [width, lang] of [[1280, 'en'], [375, 'ar']]) {
+    const ar = lang === 'ar', t = (en, arabic) => (ar ? arabic : en);
+    const rs = { domain: null, subscribers: [], campaigns: [], calls: [] };
+    const records = status => [{ type: 'TXT', name: 'resend._domainkey', value: 'p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC', status }, { type: 'MX', name: 'send', value: 'feedback-smtp.eu-west-1.amazonses.com', priority: 10, status }, { type: 'TXT', name: '_dmarc', value: 'v=DMARC1; p=none;', status: 'recommended' }];
+    const counts = () => ({ subscribed: rs.subscribers.length, pending: 0, unsubscribed: 0, suppressed: 0 });
+    const state = () => ({ ok: true, csrfToken: 'a'.repeat(64), domain: rs.domain, business: { name: 'Blue Studio Properties', address: 'Al Khuwair, Muscat' }, subscribers: counts(), usage: { month: 0, cap: 2000, today: 0, reserved: 0 } });
+    const reply = value => ({ status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), ...value } });
+    const rasilApi = (method, body) => {
+      if (method === 'GET') return state();
+      rs.calls.push(body);
+      switch (body.action) {
+        case 'domain_connect': rs.domain = { domain: 'daralrayan.om', status: 'pending', records: records('not_started'), fromName: '', fromLocal: '', replyTo: '', formKey: 'fk_0123456789abcdefghij', verifiedAt: null, dailyLimit: 0, ready: false }; return { domain: rs.domain };
+        case 'domain_check': rs.domain = { ...rs.domain, status: 'verified', records: records('verified'), dailyLimit: 50 }; return { domain: rs.domain };
+        case 'sender_save': rs.domain = { ...rs.domain, fromName: body.fromName, fromLocal: body.fromLocal, replyTo: body.replyTo, ready: true }; return { domain: rs.domain };
+        case 'subscribers_import': rs.subscribers.push(...body.rows); return { added: body.rows.length, updated: 0, kept: 0, invalid: 0 };
+        case 'subscribers': return { items: rs.subscribers.map((r, i) => ({ id: `sub${i}`, email: r.email, name: r.name || '', status: 'subscribed', source: 'manual', reason: null, consentDate: '2026-10-01', createdAt: now })), cursor: null };
+        case 'campaigns': return { items: rs.campaigns, cursor: null };
+        case 'draft': return { draft: { subject: t('New flats in Al Khuwair', 'شقق جديدة في الخوير'), body: t('Hello {{name}},\n\nOur new two-bedroom flats are ready from 900 OMR.\nSee them at https://daralrayan.om/flats', 'أهلاً {{name}}،\n\nشققنا الجديدة بغرفتين جاهزة من 900 ر.ع.'), untracedPrice: '900 OMR' } };
+        case 'campaign_preview': return { eligible: rs.subscribers.length, remaining: 2000, cap: 2000, dailyLimit: 50, ready: true, reason: null, business: { name: 'Blue Studio Properties' }, sample: { name: rs.subscribers[0]?.name || '' } };
+        case 'campaign_create': rs.campaigns.unshift({ id: 'ec1', name: body.name || body.subject, subject: body.subject, body: body.body, lang: body.lang, status: 'scheduled', reason: null,
+          sender: { domain: 'daralrayan.om', fromName: rs.domain.fromName, fromLocal: rs.domain.fromLocal }, scheduledAt: now, timezone: 'Asia/Muscat', recipientCount: rs.subscribers.length, counts: { pending: rs.subscribers.length }, createdAt: now });
+          return { campaign: rs.campaigns[0] };
+        default: return null;
+      }
+    };
+    const base = api(fixture());
+    const handler = async (surface, method, body) => {
+      const out = await base(surface, method, body);
+      if (surface === 'dashboard' && method === 'GET' && out.json?.ok) return { ...out, json: { ...out.json, rasilEnabled: true } };
+      return out;
+    };
+    const extra = (surface, request) => {
+      if (surface !== 'rasil') return null;
+      const value = rasilApi(request.method(), request.method() === 'POST' ? request.postDataJSON() : null);
+      return value ? reply(value) : { status: 400, json: { ok: false, reason: 'invalid_action' } };
+    };
+    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=email', handler, extra });
+    await page.getByRole('heading', { name: t('Your sending domain', 'نطاق الإرسال') }).waitFor(); count++;
+    assert.equal(await page.locator('.ld-nav a[data-section="email"]').first().getAttribute('aria-current'), 'page', 'Email is its own tab'); count++;
+    assert.match(page.url(), /tab=email&view=setup/, 'no domain yet: it opens on Domain & form'); count++;
+    assert.equal(await page.locator('.ld-section-tabs a').count(), 3, 'Campaigns, Subscribers, Domain & form'); count++;
+    await page.getByLabel(t('Your domain', 'نطاقك')).fill('daralrayan.om');
+    await page.getByRole('button', { name: t('Connect domain', 'ربط النطاق') }).click();
+    await page.getByText('resend._domainkey').waitFor(); count++;
+    assert.equal(await page.locator('.ld-records tbody tr').count(), 3, 'DKIM, the return path and DMARC'); count++;
+    await page.getByRole('button', { name: t('Check records', 'فحص السجلات') }).click();
+    await page.getByText(t('Verified', 'موثّق'), { exact: true }).first().waitFor(); count++;
+    await page.getByLabel(t('Sender name', 'اسم المُرسِل'), { exact: true }).fill('Blue Studio');
+    await page.getByRole('button', { name: t('Save sender', 'حفظ المُرسِل') }).click();
+    await page.getByText(t('Saved.', 'حُفظ.')).waitFor(); count++;
+    assert.deepEqual(rs.calls.find(c => c.action === 'sender_save'), { action: 'sender_save', fromName: 'Blue Studio', fromLocal: 'news', replyTo: '' }); count++;
+    // The website form carries this owner's key and the hidden bot trap.
+    const snippet = await page.locator('.ld-code').textContent();
+    assert.match(snippet, /action="http:\/\/127\.0\.0\.1:\d+\/email\/subscribe"/); count++;
+    assert.match(snippet, /name="k" value="fk_0123456789abcdefghij"/); count++;
+    assert.match(snippet, /name="website"/); count++;
+    await page.screenshot({ path: `${OUT}/email-setup-${lang}-${width}.png`, fullPage: true });
+    // Subscribers need a consent record before they can be added.
+    await page.locator('.ld-section-tabs a').nth(1).click();
+    await page.getByRole('button', { name: t('Add subscribers', 'إضافة مشتركين') }).click();
+    await page.getByLabel(t('Email addresses', 'عناوين البريد')).fill('huda@example.om, Huda\nsalim@example.om');
+    const addTwo = page.getByRole('button', { name: t('Add 2', 'إضافة 2') });
+    assert.equal(await addTwo.isDisabled(), true, 'no consent record yet'); count++;
+    await page.getByLabel(t('How they agreed', 'كيف وافقوا'), { exact: false }).first().fill(t('Signed up in store', 'اشتركوا في المعرض'));
+    await page.getByLabel(t('What they agreed to receive', 'ما الذي وافقوا على استلامه'), { exact: false }).fill(t('Monthly offers', 'العروض الشهرية'));
+    await page.getByRole('checkbox', { name: t(/marketing emails/, /بالبريد الإلكتروني/) }).check();
+    await addTwo.click();
+    await page.getByText(t('Added 2, updated 0.', 'أُضيف 2، وحُدّث 0.'), { exact: false }).waitFor(); count++;
+    assert.deepEqual(rs.calls.find(c => c.action === 'subscribers_import').rows, [{ email: 'huda@example.om', name: 'Huda' }, { email: 'salim@example.om' }]); count++;
+    assert.deepEqual(await axe(page), [], `email subscribers ${lang} ${width}`); count++;
+    await page.screenshot({ path: `${OUT}/email-subscribers-${lang}-${width}.png`, fullPage: true });
+    await page.locator('.ld-section-tabs a').nth(0).click();
+    // A campaign: Adiba drafts, a price that is not in the catalog is flagged, the preview is the real email.
+    await page.getByRole('button', { name: t('New email campaign', 'حملة بريد جديدة') }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: t('Write a draft', 'اكتب مسودة') }).click();
+    await dialog.getByText(t('900 OMR is not in your services', '900 OMR غير موجود في خدماتك')).waitFor(); count++;
+    const frame = dialog.frameLocator('iframe');
+    await frame.getByText(t('Hello Huda,', 'أهلاً Huda،')).waitFor(); count++;
+    await frame.getByText(t('Unsubscribe', 'إلغاء الاشتراك')).waitFor(); count++;
+    await dialog.getByText(t('2 subscribers will receive it.', 'سيستلمها 2 مشترك.')).waitFor(); count++;
+    assert.equal(await noOverflow(page), true, `email compose ${lang} ${width}`); count++;
+    assert.deepEqual(await axe(page), [], `email compose ${lang} ${width}`); count++;
+    await page.screenshot({ path: `${OUT}/email-compose-${lang}-${width}.png` });
+    await dialog.getByRole('button', { name: t('Send to 2 now', 'إرسال إلى 2 الآن') }).click();
+    await page.locator('.ld-campaign').filter({ hasText: t('New flats in Al Khuwair', 'شقق جديدة في الخوير') }).waitFor(); count++;
+    const created = rs.calls.find(c => c.action === 'campaign_create');
+    assert.deepEqual([created.confirm, created.lang, created.schedule.mode, created.schedule.timezone], [true, lang, 'now', 'Asia/Muscat']); count++;
+    assert.match(created.requestId, /^[a-f0-9-]{36}$/); count++;
+    assert.equal(await noOverflow(page), true, `email ${lang} ${width}`); count++;
+    assert.deepEqual(await axe(page), [], `email ${lang} ${width}`); count++;
+    await page.screenshot({ path: `${OUT}/email-${lang}-${width}.png`, fullPage: true });
+    // Broadcasts is WhatsApp again, with no email inside it.
+    await page.goto(`${BASE}${ar ? '' : '/en'}/layla/dashboard?tab=customers&view=broadcast`);
+    await page.locator('.ld-broadcast h1').waitFor(); count++;
+    assert.equal(await page.getByText(t('Your sending domain', 'نطاق الإرسال')).count(), 0); count++;
+    await context.close();
+  }
+
   // Every tab at narrow widths in both languages: no overflow, no serious accessibility issues.
   for (const [width, lang] of [[375, 'ar'], [768, 'en'], [320, 'en']]) {
     for (const tab of ['contacts', 'broadcast']) {

@@ -113,3 +113,22 @@ test('Accounts and VAT appear in Settings once an industry is set', () => {
   assert.deepEqual(dashboardMap(null, { operations: true }).views.settings, ['channels', 'business']);
   assert.deepEqual(dashboardMap({ modules: [], setupRequired: true }).views.settings, ['channels', 'business']);
 });
+
+test('Rasil’s Email tab is one general section in every Ascend dashboard, for the manager, when the server opens it', async () => {
+  const { capabilitiesFor } = await import('../convex/hasib/capabilities.js');
+  const { livePackSummaries } = await import('../config/hasib-packs.js');
+  const caps = capabilitiesFor('ascend');
+  for (const { id } of livePackSummaries()) {
+    const hasib = { modules: ['orders', 'stock', 'insights', 'repairs'], setupRequired: false, pack: { id }, workspaceRole: 'manager' };
+    const map = dashboardMap(hasib, caps, 'manager', { email: true });
+    if (map.sections.includes('broadcasts')) assert.equal(map.sections.indexOf('email'), map.sections.indexOf('broadcasts') + 1, `${id}: right after Broadcasts`);
+    assert.ok(map.sections.includes('email'), `${id}: the Email tab`);
+    assert.deepEqual(map.views.email, ['campaigns', 'subscribers', 'setup'], id);
+    assert.deepEqual(resolveTab('email', 'subscribers', map), { tab: 'email', view: 'subscribers' }, id);
+    assert.deepEqual(resolveTab('email', null, map), { tab: 'email', view: 'campaigns' }, id);
+    assert.equal(dashboardMap({ ...hasib, workspaceRole: 'employee' }, capabilitiesFor('ascend', 'employee'), 'employee', { email: true }).sections.includes('email'), false, `${id}: staff`);
+    assert.deepEqual(dashboardMap(hasib, caps, 'manager'), dashboardMap(hasib, caps, 'manager', { email: false }), `${id}: closed means no change`);
+    assert.equal(dashboardMap(hasib, caps, 'manager').sections.includes('email'), false, id);
+  }
+  assert.equal(dashboardMap(null, capabilitiesFor('catalyst'), 'manager', { email: true }).sections.includes('email'), false, 'Catalyst has no Email tab');
+});
