@@ -3,6 +3,7 @@ import { internal } from './_generated/api';
 const crons = cronJobs();
 crons.interval('recover Blue message jobs', {minutes:1}, internal.blueMessaging.maintain);
 crons.interval('start and recover Blue campaigns', {minutes:1}, internal.blueCampaign.maintain);
+crons.interval('start and recover Rasil email campaigns', {minutes:1}, internal.rasil.maintain);
 crons.interval('expire Blue review records', { minutes: 15 }, internal.review.cleanup);
 crons.interval('expire blue auth codes', {minutes: 15}, internal.blueAuth.cleanup);
 crons.interval('maintain Instagram connections', {minutes:15}, internal.blueInstagram.maintain);

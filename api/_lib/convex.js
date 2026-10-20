@@ -107,3 +107,11 @@ export const billingStore = convexStore({ route: 'billing', fallback: 'payment_u
 // Ascend website brief (convex/websiteBriefState.js): refusals the form explains to the owner.
 export const websiteBriefStore = convexStore({ route: 'website-brief', fallback: 'brief_unavailable', status: setupStatus,
   reasons: ['sign_in_required', 'access_required', 'manager_required', 'upload_limit', 'invalid_file', 'too_many_files', 'invalid_brief', 'brief_too_long', 'brief_required', 'brief_conflict', 'invalid_state'] });
+
+// Rasil (convex/rasilState.js): the owner's email campaigns, and the server-side worker, webhook and public links.
+const RASIL_REASONS = ['sign_in_required', 'access_required', 'plan_required', 'manager_required', 'workspace_access_revoked', 'invalid_domain', 'domain_in_use', 'domain_not_found',
+  'domain_required', 'domain_not_verified', 'sender_required', 'invalid_sender', 'campaign_in_progress', 'consent_required', 'invalid_import', 'subscriber_not_found',
+  'invalid_subject', 'invalid_body', 'invalid_request', 'confirmation_required', 'no_eligible_recipients', 'monthly_cap', 'invalid_schedule', 'invalid_timezone',
+  'campaign_not_found', 'campaign_not_cancellable', 'invalid_action', 'form_unavailable', 'invalid_email', 'too_many', 'invalid_state'];
+export const rasilStore = convexStore({ route: 'rasil', fallback: 'email_unavailable', status: setupStatus, reasons: RASIL_REASONS });
+export const rasilWorkerStore = convexStore({ route: 'rasil-worker', fallback: 'email_unavailable', timeout: 6000, reasons: RASIL_REASONS });

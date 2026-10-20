@@ -5,13 +5,14 @@ export const PLAN_CAPABILITIES = Object.freeze({
   // Catalyst exports its customer list as CSV; chat and full-account exports stay with Ascend and Apex.
   catalyst: Object.freeze({ chats: true, customers: true, customerDelete: true, humanHandoff: true, businessDetails: true, channelsSetup: true, broadcasts: true, imports: true, customerExport: true }),
   ascend: Object.freeze({ chats: true, customers: true, customerDelete: true, humanHandoff: true, businessDetails: true, channelsSetup: true,
-    realEstate: true, automotive: true, operations: true, money: true, insights: true, approvals: true, exports: true, customerExport: true, imports: true, broadcasts: true, team: true, settings: true }),
+    realEstate: true, automotive: true, operations: true, money: true, insights: true, approvals: true, exports: true, customerExport: true, imports: true, broadcasts: true, team: true, settings: true, email: true }),
   apex: Object.freeze({ chats: true, customers: true, customerDelete: true, humanHandoff: true, businessDetails: true, channelsSetup: true,
-    realEstate: true, automotive: true, operations: true, money: true, insights: true, approvals: true, exports: true, customerExport: true, imports: true, broadcasts: true, team: true, settings: true }),
+    realEstate: true, automotive: true, operations: true, money: true, insights: true, approvals: true, exports: true, customerExport: true, imports: true, broadcasts: true, team: true, settings: true, email: true }),
 });
 
 export const effectivePlan = plan => plan === 'ascend' || plan === 'apex' ? plan : 'catalyst';
-const MANAGER_ONLY = ['money', 'insights', 'approvals', 'exports', 'customerExport', 'imports', 'broadcasts', 'team', 'settings'];
+// Rasil's email campaigns (convex/rasilState.js) are Ascend's and the manager's, like broadcasts.
+const MANAGER_ONLY = ['money', 'insights', 'approvals', 'exports', 'customerExport', 'imports', 'broadcasts', 'team', 'settings', 'email'];
 
 export const capabilitiesFor = (plan, role = 'manager') => {
   const capabilities = { ...PLAN_CAPABILITIES[effectivePlan(plan)] };

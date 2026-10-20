@@ -15,7 +15,7 @@ export const respond = internalAction({args:{conversationId:v.id('blueConversati
   await runReplyTurn({exec,conversationId:args.conversationId,key:args.key,generate:qwenGenerator(process.env)});
 }});
 
-export const dispatch = internalAction({args:{jobId:v.optional(v.id('blueMessages')),integrationId:v.optional(v.string()),campaignJobId:v.optional(v.id('blueCampaignRecipients')),campaignStartId:v.optional(v.id('blueCampaigns')),instagramRefreshId:v.optional(v.string())},handler:async(_ctx,args)=>{
+export const dispatch = internalAction({args:{jobId:v.optional(v.id('blueMessages')),integrationId:v.optional(v.string()),campaignJobId:v.optional(v.id('blueCampaignRecipients')),campaignStartId:v.optional(v.id('blueCampaigns')),rasilJobId:v.optional(v.id('emailCampaignRecipients')),instagramRefreshId:v.optional(v.string())},handler:async(_ctx,args)=>{
   const secret=process.env.GREEN_MESSAGING_WORKER_SECRET;
   if(!secret) throw new Error('blue_worker_not_configured');
   const origin=process.env.PUBLIC_SITE_ORIGIN || 'https://www.bznsflowai.com';

@@ -33,6 +33,9 @@ check('Instagram configured when open', !instagramOpen || ((has('GREEN_INSTAGRAM
 const PAYMOB_KEYS = ['PAYMOB_SECRET_KEY', 'PAYMOB_PUBLIC_KEY', 'PAYMOB_HMAC_SECRET', 'PAYMOB_INTEGRATION_IDS'];
 check('Paymob configured when payments open', !PAYMOB_KEYS.some(has) || (PAYMOB_KEYS.every(has) && /^\d+(\s*,\s*\d+)*$/.test(env.PAYMOB_INTEGRATION_IDS)),
   'Secret, public and HMAC keys plus comma-separated integration IDs (card, OmanNet) are required together');
+// Rasil email campaigns (api/_lib/rasil-*.js). Off until RASIL_ENABLED; then Resend's webhook secret and a key that can manage domains are required.
+check('Rasil configured when open', env.RASIL_ENABLED !== 'true' || (/^whsec_/.test(env.RESEND_WEBHOOK_SECRET || '') && (has('RASIL_RESEND_API_KEY') || has('RESEND_API_KEY'))),
+  'RESEND_WEBHOOK_SECRET (whsec_…) and a full-access Resend key (RASIL_RESEND_API_KEY or RESEND_API_KEY) are required once RASIL_ENABLED is true');
 check('reviewed data migration gate', env.GREEN_DATA_MIGRATION_VERIFIED === 'true', 'Freeze source writes and verify Ahmed-only source/destination counts before cutover');
 check('all production state paths use Convex', env.GREEN_STATE_PATHS_CONVEX === 'true', 'Auth, website, Layla, customer, dashboard and background routes must be migrated');
 check('Green worker credential', validSecret('GREEN_MESSAGING_WORKER_SECRET'), 'Dedicated 64-hex Convex-to-Vercel worker secret required');

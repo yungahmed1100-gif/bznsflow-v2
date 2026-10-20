@@ -15,6 +15,7 @@ import { validTimezone, zonedLocalToUtc } from './timezone.js';
 import { normalizePhone } from '../../../src/lib/dashboard/phone.js';
 import { dashboardPreviewResponse } from '../hasib/preview.js';
 import { isHasibFounder } from '../hasib/founder.js';
+import { rasilOpen } from '../rasil-api.js';
 
 const SITE_ORIGIN = env => env.PUBLIC_SITE_ORIGIN || 'https://www.bznsflowai.com';
 const GRAPH = { app: '1388038082832745', version: 'v25.0' };
@@ -83,7 +84,7 @@ export function createDashboardApi({ env = process.env, fetcher = fetch, now = D
         const overview = await store('overview', { sessionHash, actorAccountId: account.id });
         // Template sync needs only the Vercel gate, so an approved template can be confirmed
         // before the durable Convex gate allows any campaign to be created.
-        return reply({ ...overview, account: { email: account.email }, founderPreview: isHasibFounder(account), dashboardAvailable: true, broadcastApiEnabled: broadcastAvailable(env), broadcastEnabled: !!overview.integration && broadcastAvailable(env) && overview.messaging.broadcastAvailable });
+        return reply({ ...overview, account: { email: account.email }, founderPreview: isHasibFounder(account), dashboardAvailable: true, rasilEnabled: rasilOpen(env, account.email), broadcastApiEnabled: broadcastAvailable(env), broadcastEnabled: !!overview.integration && broadcastAvailable(env) && overview.messaging.broadcastAvailable });
       }
       if (!verifyCsrf(req)) throw new PilotError('csrf', 403);
       const body = readBody(req);

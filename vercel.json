@@ -45,6 +45,22 @@
   ],
   "rewrites": [
     {
+      "source": "/api/rasil-webhook",
+      "destination": "/api/layla-meta-webhook?source=resend"
+    },
+    {
+      "source": "/email/subscribe",
+      "destination": "/api/layla-meta?surface=rasil-subscribe"
+    },
+    {
+      "source": "/email/unsubscribe",
+      "destination": "/api/layla-meta?surface=rasil-unsubscribe"
+    },
+    {
+      "source": "/email/confirm",
+      "destination": "/api/layla-meta?surface=rasil-confirm"
+    },
+    {
       "source": "/api/mcp",
       "destination": "/api/layla-meta?surface=mcp&mcpRoute=/api/mcp"
     },

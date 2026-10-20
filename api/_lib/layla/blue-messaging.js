@@ -1,3 +1,4 @@
+import { runRasilSend } from '../rasil-public.js';
 import { randomUUID } from 'node:crypto';
 import { SUBSCRIPTION_PROOF_MS, checkInstagramToken, instagramConfig, instagramSendResult, instagramUsername, postInstagramMessage, refreshInstagram, subscribeInstagram } from './instagram.js';
 import { convexConfigured, instagramStore, messagingStore, reviewStore } from '../convex.js';
@@ -207,6 +208,8 @@ export function createBlueWorker({env=process.env,fetcher=fetch,store=messagingS
         await refreshInstagram({integrationId:body.instagramRefreshId,env,store:instagram,fetcher});
         return send(res,200,{ok:true});
       }
+      // Rasil's email jobs: independent of WhatsApp and Instagram switches. Only created campaigns are ever scheduled.
+      if(typeof body?.rasilJobId==='string' && body.rasilJobId.length<=100) return send(res,200,{ok:true,...await runRasilSend({jobId:body.rasilJobId,env,fetcher})});
       if(!whatsappMessagingEnabled(env) && !instagramMessagingEnabled(env)) throw new PilotError('messaging_unavailable',503);
       // Broadcast jobs use their own store, limits and failure state.
       if(typeof body?.campaignStartId==='string' && body.campaignStartId.length<=100) {

@@ -150,6 +150,30 @@ export default defineSchema({
     .index('by_campaign_status',['campaignId','status']).index('by_status_next',['status','nextAttemptAt']).index('by_integration_status',['integrationId','status'])
     .index('by_contact_at',['contactId','at']).index('by_intent',['intent']).index('by_provider',['providerId']).index('by_expiry',['expiresAt']),
   blueMessageRates: defineTable({key:v.string(),count:v.number(),expiresAt:v.number()}).index('by_key',['key']).index('by_expiry',['expiresAt']),
+  // Rasil (config/rasil.js): Ascend email campaigns from the owner's own domain. Subscribers are their own list,
+  // separate from WhatsApp contacts and their consent; a chat customer who gives an email is linked by contactId.
+  emailDomains: defineTable({accountId:v.id('accounts'),domain:v.string(),resendDomainId:v.string(),status:v.union(v.literal('pending'),v.literal('verified'),v.literal('failed')),
+    records:v.array(v.object({type:v.string(),name:v.string(),value:v.string(),priority:v.optional(v.number()),status:v.string()})),
+    fromName:v.optional(v.string()),fromLocal:v.optional(v.string()),replyTo:v.optional(v.string()),formKey:v.string(),
+    verifiedAt:v.optional(v.number()),warmupStartedAt:v.optional(v.number()),checkedAt:v.number(),createdAt:v.number(),updatedAt:v.number()})
+    .index('by_account',['accountId']).index('by_domain',['domain']).index('by_form_key',['formKey']),
+  emailSubscribers: defineTable({accountId:v.id('accounts'),email:v.string(),name:v.optional(v.string()),contactId:v.optional(v.id('blueContacts')),
+    status:v.union(v.literal('pending'),v.literal('subscribed'),v.literal('unsubscribed'),v.literal('suppressed')),suppressReason:v.optional(v.string()),
+    source:v.union(v.literal('website'),v.literal('chat'),v.literal('import'),v.literal('manual')),consent:consent,
+    requestedAt:v.optional(v.number()),confirmRequests:v.optional(v.number()),confirmedAt:v.optional(v.number()),unsubscribedAt:v.optional(v.number()),createdAt:v.number(),updatedAt:v.number()})
+    .index('by_account_email',['accountId','email']).index('by_account_status',['accountId','status','createdAt']).index('by_account_created',['accountId','createdAt']),
+  emailCampaigns: defineTable({accountId:v.id('accounts'),requestId:v.string(),name:v.string(),subject:v.string(),body:v.string(),lang:v.union(v.literal('ar'),v.literal('en')),
+    sender:v.object({domain:v.string(),fromName:v.string(),fromLocal:v.string(),replyTo:v.optional(v.string())}),
+    status:v.string(),reason:v.optional(v.string()),scheduledAt:v.number(),timezone:v.string(),recipientCount:v.number(),counts:v.record(v.string(),v.number()),
+    createdAt:v.number(),updatedAt:v.number(),startedAt:v.optional(v.number()),completedAt:v.optional(v.number()),cancelledAt:v.optional(v.number())})
+    .index('by_account_request',['accountId','requestId']).index('by_account_created',['accountId','createdAt']).index('by_status_scheduled',['status','scheduledAt']),
+  emailCampaignRecipients: defineTable({campaignId:v.id('emailCampaigns'),accountId:v.id('accounts'),subscriberId:v.id('emailSubscribers'),email:v.string(),name:v.optional(v.string()),
+    status:v.string(),attempts:v.number(),nextAttemptAt:v.number(),intent:v.optional(v.string()),attemptAt:v.optional(v.number()),providerId:v.optional(v.string()),reason:v.optional(v.string()),
+    openedAt:v.optional(v.number()),clickedAt:v.optional(v.number()),updatedAt:v.number(),expiresAt:v.number()})
+    .index('by_campaign_status',['campaignId','status']).index('by_status_next',['status','nextAttemptAt']).index('by_subscriber',['subscriberId'])
+    .index('by_intent',['intent']).index('by_provider',['providerId']).index('by_expiry',['expiresAt']),
+  // Sent emails per account per UTC month and day, for Ascend's allowance and a new domain's warm-up.
+  emailUsage: defineTable({key:v.string(),count:v.number(),expiresAt:v.number()}).index('by_key',['key']).index('by_expiry',['expiresAt']),
   blueKnowledgeChunks: defineTable({tenantId:v.string(),revision:v.number(),locale:v.string(),text:v.string(),searchText:v.optional(v.string()),source:v.string(),docType:v.optional(v.string()),effectiveDate:v.optional(v.string()),sectionPath:v.optional(v.string()),approved:v.boolean(),contentHash:v.string(),embedding:v.optional(v.array(v.float64())),updatedAt:v.number()})
     .index('by_tenant_revision',['tenantId','revision'])
     .index('by_tenant_locale',['tenantId','locale'])

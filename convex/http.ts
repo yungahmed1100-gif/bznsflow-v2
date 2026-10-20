@@ -134,6 +134,27 @@ http.route({path:'/website-brief',method:'POST',handler:httpAction(async(ctx,req
   } catch { return new Response(JSON.stringify({ok:false,reason:'brief_unavailable'}),{status:503,headers}); }
 })});
 
+// Rasil (convex/rasilState.js): the owner's email campaigns, and the worker, webhook and public links.
+http.route({path:'/rasil',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text();if(raw.length>131072) return new Response(null,{status:413});
+    const args=JSON.parse(raw);
+    if(!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null,{status:400});
+    const result=await ctx.runMutation(internal.rasil.execute,args);
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'email_unavailable'}),{status:503,headers}); }
+})});
+http.route({path:'/rasil-worker',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text();if(raw.length>16000) return new Response(null,{status:413});
+    const result=await ctx.runMutation(internal.rasil.worker,JSON.parse(raw));
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'email_unavailable'}),{status:503,headers}); }
+})});
 http.route({path:'/billing',method:'POST',handler:httpAction(async(ctx,request)=>{
   if(!serviceAuthorized(request)) return new Response(null,{status:401});
   const headers={'Content-Type':'application/json','Cache-Control':'no-store'};

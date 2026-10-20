@@ -7,6 +7,8 @@ import { createHasibApi } from './_lib/hasib/hasib-api.js';
 import { createProductSetupApi } from './_lib/product-setup-api.js';
 import { createKnowledgeApi } from './_lib/knowledge-api.js';
 import { createWebsiteBriefApi } from './_lib/website-brief-api.js';
+import { createRasilApi } from './_lib/rasil-api.js';
+import { createConfirm, createSubscribe, createUnsubscribe } from './_lib/rasil-public.js';
 import { createReviewHandler, reviewAvailable } from './_lib/layla/review-api.js';
 
 export function requestSurface(req) {
@@ -20,7 +22,7 @@ export function requestSurface(req) {
 // All active surfaces use authenticated Convex clients. Retired pilot routes
 // return 410 instead of falling back to another database.
 const INSTAGRAM_SURFACES = ['instagram', 'instagram-callback', 'instagram-deauthorize', 'instagram-delete', 'instagram-deletion-status'];
-export const SURFACES = ['mcp','dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', 'website-brief', ...INSTAGRAM_SURFACES, 'customer-status']; // retired pilot surfaces (activation, test, open, eligibility) fall through to 410
+export const SURFACES = ['mcp','dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', 'website-brief', 'rasil', 'rasil-subscribe', 'rasil-unsubscribe', 'rasil-confirm', ...INSTAGRAM_SURFACES, 'customer-status']; // retired pilot surfaces (activation, test, open, eligibility) fall through to 410
 
 export function createHandler({ env = process.env, fetcher = fetch, surfaces = {} } = {}) {
   const customer = createReviewHandler({ env, fetcher, reviewMode: false });
@@ -36,6 +38,11 @@ export function createHandler({ env = process.env, fetcher = fetch, surfaces = {
     'product-setup': createProductSetupApi({ env, fetcher }),
     knowledge: createKnowledgeApi({ env, fetcher }),
     'website-brief': createWebsiteBriefApi({ env, fetcher }),
+    // Rasil's email campaigns, and the public links a subscriber clicks (/email/… in vercel.json).
+    rasil: createRasilApi({ env, fetcher }),
+    'rasil-subscribe': createSubscribe({ env, fetcher }),
+    'rasil-unsubscribe': createUnsubscribe({ env, fetcher }),
+    'rasil-confirm': createConfirm({ env, fetcher }),
   };
   Object.assign(handlers, surfaces);
   return async (req, res) => {

@@ -5,6 +5,7 @@ import { rawBody, signatureValid } from './_lib/layla/webhook.js';
 import { ingestBlueEnvelope, ingestInstagramEnvelope, messagingStore } from './_lib/layla/blue-messaging.js';
 import { instagramConfig } from './_lib/layla/instagram.js';
 import { greenDataReady, instagramMessagingEnabled, isGreenConvexConfigured } from './_lib/green-config.js';
+import { createRasilWebhook } from './_lib/rasil-public.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -18,8 +19,10 @@ function secretsFor(env) {
   return { whatsapp: [env.LAYLA_META_APP_SECRET].filter(Boolean), instagram: [...instagram, env.LAYLA_META_APP_SECRET].filter(Boolean) };
 }
 
-export function createHandler({ env = process.env, fetcher = fetch, messaging = messagingStore({ env, fetcher }) } = {}) {
+export function createHandler({ env = process.env, fetcher = fetch, messaging = messagingStore({ env, fetcher }), rasil = createRasilWebhook({ env, fetcher, raw: rawBody }) } = {}) {
   return async (req, res) => {
+    // Resend's delivery events for Rasil share this function's raw body (vercel.json: /api/rasil-webhook), since the plan allows 12 functions.
+    if (new URL(req.url || '/', 'https://callback.invalid').searchParams.get('source') === 'resend') return rasil(req, res);
     try {
       if (req.method === 'GET') {
         const q = new URL(req.url, 'https://callback.invalid').searchParams;
