@@ -5,6 +5,7 @@ import { browserTimezone, localInputValue, timezoneOptions } from '../../lib/das
 import { recipientValues, serverMapping } from '../../lib/dashboard/broadcast';
 import { renderTemplate } from '../../../config/layla-templates.js';
 import { ConsentForm, consentComplete } from './ConsentForm';
+import { META_PRICING_URL } from './MetaBillingNotice';
 
 /** Step 3: each customer's own message, who is left out and why, then send now or later. */
 export function SendStep({ s, overview, template, rules, rows, single, onTimezone, onCreated, onBack }) {
@@ -68,6 +69,7 @@ export function SendStep({ s, overview, template, rules, rows, single, onTimezon
         </label>
       </fieldset>
 
+      <p className="ld-help ld-fees-short">{s.t('metaFeeLine')} <a className="ld-link" href={META_PRICING_URL} target="_blank" rel="noopener noreferrer">{s.t('feesPricing')}</a></p>
       {!sending && <p className="ld-help" role="status">{s.t('sendingOffShort')}</p>}
       {error && <p className="ld-inline-error" role="alert">{error}</p>}
       <div className="ld-actions ld-wizard-nav">

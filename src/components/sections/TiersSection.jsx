@@ -95,6 +95,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
                   </ul>
                 </>}
 
+                {tier.available && <p className="tier-pay-note tier-meta-fees">{t.tier_meta_fees}</p>}
                 {payable(tier.key) && <PlanPay plan={tier.key} labels={{ name: tier.name, ...prices[tier.key] }} t={t} lang={lang} account={account} payment={payment} trackEvent={trackEvent} whatsapp={waLink(planMsg(tier.name))} />}
                 {!(payable(tier.key) && plan !== tier.key) && <a
                   href={cta.href}

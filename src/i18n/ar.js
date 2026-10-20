@@ -215,6 +215,7 @@ export default {
   "tier_pay_monthly": "9 ر.ع. شهريًا",
   "tier_pay_yearly": "89 ر.ع. سنويًا، وفّر 19 ر.ع.",
   "tier_pay_note": "ادفع بأمان بالبطاقة أو عبر OmanNet من خلال Paymob.",
+  "tier_meta_fees": "رسائل واتساب الجماعية تحاسبك عليها Meta مباشرة على حساب واتساب للأعمال. BznsFlow لا تتقاضى أي رسوم على الرسائل.",
   "tier_pay_grace": "انتهت فترتك المدفوعة في {ended}. سيُمنع الوصول إلى المنصة في {denied} ما لم تدفع للاستمرار.",
   "tier_pay_ascend_monthly": "29 ر.ع. شهريًا",
   "tier_pay_ascend_yearly": "289 ر.ع. سنويًا، وفّر 59 ر.ع.",

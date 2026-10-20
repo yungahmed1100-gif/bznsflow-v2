@@ -32,6 +32,19 @@ const en = {
   automatic: 'Automatic ({status})', captured: 'Captured by Layla', fromOwner: 'Your edit', deleteContact: 'Delete contact', deleteConfirm: 'Delete {name}? Their readable details and chat text are removed. If they opted out, that choice is kept so they are never messaged again.',
   deleteNow: 'Delete permanently', contactDeleted: 'Contact deleted.', fieldsHeading: 'Lead details', migrationPending: 'Older chats are still being linked to contacts. Refresh in a moment.',
   broadcastIntro: 'Send an approved WhatsApp marketing template to customers who agreed to receive it.', templates: 'Templates', syncTemplates: 'Sync approved templates', syncing: 'Syncing…',
+  feesTitle: 'Before your first broadcast: add a payment method in Meta', feesStopped: 'Meta stopped your broadcast: your WhatsApp Business account needs a working payment method',
+  feesStep1: 'Open Meta Billing & payments.', feesStep2: 'Go to Accounts › WhatsApp Business accounts and choose yours (not your ads account).',
+  feesStep3: 'Add a bank card that allows international online payments, and pay any balance due. Meta refuses prepaid and virtual cards.',
+  feesNote: 'Meta bills your WhatsApp Business account for each delivered message, at its rate for the recipient’s country. BznsFlow doesn’t charge for messages; your plan covers the platform.',
+  feesShort: 'Meta bills broadcast messages to your WhatsApp Business account. BznsFlow doesn’t charge for messages.', feesBilling: 'Open Meta Billing & payments', feesPricing: 'Meta’s message prices',
+  metaFeeLine: 'Meta bills your WhatsApp Business account for each delivered message. BznsFlow adds no charge.',
+  campReason_payment_method_required: 'Stopped: Meta needs a working payment method on your WhatsApp Business account.', campReason_connection_not_ready: 'Stopped: the WhatsApp connection needs checking.',
+  campReason_template_unavailable: 'Stopped: this template no longer exists in WhatsApp Manager.', campReason_template_paused: 'Stopped: Meta paused this template.', campReason_template_disabled: 'Stopped: Meta disabled this template.',
+  campReason_template_policy: 'Stopped: Meta refused this template under its policies.', campReason_template_not_approved: 'Stopped: this template is no longer approved.',
+  campReason_broadcast_paused: 'Stopped: broadcast sending is switched off.', campReason_broadcast_unavailable: 'Stopped: broadcast sending is switched off.',
+  campReason_messaging_limit_unknown: 'Stopped: Meta didn’t confirm your sending limit. Try again later.', campReason_start_checks_failed: 'Stopped: the checks before sending didn’t pass. Try again.',
+  campReason_mcp_connection_revoked: 'Stopped: the AI connection that scheduled this broadcast was removed.', campReason_rollout_restricted: 'Stopped: sending isn’t open for this account yet.',
+  metaError_131042: 'Meta payment issue', metaError_131026: 'Can’t receive WhatsApp messages', metaError_131049: 'Meta limited marketing messages to this person', metaError_131047: 'More than 24 hours since they last wrote',
   lastSynced: 'Last synced {time}', neverSynced: 'Not synced yet', manageTemplates: 'Create or edit templates in WhatsApp Manager', noTemplates: 'No approved templates yet. Create one in WhatsApp Manager, wait for Meta to approve it, then press Sync templates.',
   unsupported: 'Can’t be sent here', unsupported_media_header: 'Media header', unsupported_dynamic_button: 'Button needs a variable', unsupported_unsupported_component: 'Unsupported layout', unsupported_invalid_variables: 'Variables out of order', unsupported_not_approved: 'Not approved', unsupported_not_marketing: 'Not marketing', unsupported_missing_body: 'No body text',
   newBroadcast: 'New broadcast', campaigns: 'Broadcasts', noCampaigns: 'No broadcasts yet.', cancelBroadcast: 'Cancel broadcast', scheduledFor: 'Scheduled for {time}', recipients: 'Recipients',
@@ -98,6 +111,19 @@ const ar = {
   automatic: 'تلقائي ({status})', captured: 'جمعته ليلى', fromOwner: 'تعديلك', deleteContact: 'حذف جهة الاتصال', deleteConfirm: 'حذف {name}؟ تُحذف بياناته ونصوص محادثته. إذا ألغى الاشتراك يبقى اختياره محفوظاً حتى لا يُراسَل مجدداً.',
   deleteNow: 'حذف نهائي', contactDeleted: 'حُذفت جهة الاتصال.', fieldsHeading: 'تفاصيل العميل المحتمل', migrationPending: 'ما زال ربط المحادثات القديمة بجهات الاتصال جارياً. حدّث الصفحة بعد قليل.',
   broadcastIntro: 'أرسل قالب تسويق معتمداً على واتساب إلى العملاء الذين وافقوا على استلامه.', templates: 'القوالب', syncTemplates: 'مزامنة القوالب المعتمدة', syncing: 'جارٍ المزامنة…',
+  feesTitle: 'قبل أول رسالة جماعية: أضف وسيلة دفع في Meta', feesStopped: 'أوقفت Meta رسالتك الجماعية: حساب واتساب للأعمال يحتاج إلى وسيلة دفع صالحة',
+  feesStep1: 'افتح «الفوترة والمدفوعات» في Meta.', feesStep2: 'اذهب إلى الحسابات ← حسابات واتساب للأعمال واختر حسابك (وليس حساب الإعلانات).',
+  feesStep3: 'أضف بطاقة بنكية تسمح بالدفع الدولي عبر الإنترنت، وسدّد أي رصيد مستحق. لا تقبل Meta البطاقات المسبقة الدفع أو الافتراضية.',
+  feesNote: 'تحاسب Meta حساب واتساب للأعمال على كل رسالة تصل، بسعرها لدولة المستلم. لا تتقاضى BznsFlow أي رسوم على الرسائل؛ اشتراكك يغطي المنصة.',
+  feesShort: 'تحاسبك Meta على الرسائل الجماعية في حساب واتساب للأعمال. لا تتقاضى BznsFlow أي رسوم على الرسائل.', feesBilling: 'افتح الفوترة والمدفوعات في Meta', feesPricing: 'أسعار رسائل Meta',
+  metaFeeLine: 'تحاسب Meta حساب واتساب للأعمال على كل رسالة تصل. لا تضيف BznsFlow أي رسوم.',
+  campReason_payment_method_required: 'توقفت: تحتاج Meta إلى وسيلة دفع صالحة في حساب واتساب للأعمال.', campReason_connection_not_ready: 'توقفت: اتصال واتساب يحتاج إلى فحص.',
+  campReason_template_unavailable: 'توقفت: هذا القالب لم يعد موجوداً في مدير واتساب.', campReason_template_paused: 'توقفت: أوقفت Meta هذا القالب مؤقتاً.', campReason_template_disabled: 'توقفت: عطّلت Meta هذا القالب.',
+  campReason_template_policy: 'توقفت: رفضت Meta هذا القالب بموجب سياساتها.', campReason_template_not_approved: 'توقفت: هذا القالب لم يعد معتمداً.',
+  campReason_broadcast_paused: 'توقفت: إرسال الرسائل الجماعية متوقف.', campReason_broadcast_unavailable: 'توقفت: إرسال الرسائل الجماعية متوقف.',
+  campReason_messaging_limit_unknown: 'توقفت: لم تؤكد Meta حد الإرسال لديك. حاول لاحقاً.', campReason_start_checks_failed: 'توقفت: لم تنجح الفحوص قبل الإرسال. حاول مجدداً.',
+  campReason_mcp_connection_revoked: 'توقفت: أُزيل اتصال الذكاء الاصطناعي الذي جدول هذه الرسالة.', campReason_rollout_restricted: 'توقفت: الإرسال غير متاح لهذا الحساب بعد.',
+  metaError_131042: 'مشكلة دفع لدى Meta', metaError_131026: 'لا يستقبل رسائل واتساب', metaError_131049: 'حدّت Meta الرسائل التسويقية لهذا الشخص', metaError_131047: 'مرّت أكثر من ٢٤ ساعة منذ آخر رسالة منه',
   lastSynced: 'آخر مزامنة {time}', neverSynced: 'لم تتم المزامنة بعد', manageTemplates: 'أنشئ القوالب أو عدّلها في مدير واتساب', noTemplates: 'لا توجد قوالب معتمدة بعد. أنشئ قالباً في مدير واتساب، وانتظر موافقة Meta، ثم اضغط مزامنة القوالب.',
   unsupported: 'لا يمكن إرساله هنا', unsupported_media_header: 'رأس وسائط', unsupported_dynamic_button: 'زر يحتاج متغيراً', unsupported_unsupported_component: 'تصميم غير مدعوم', unsupported_invalid_variables: 'ترتيب المتغيرات غير صحيح', unsupported_not_approved: 'غير معتمد', unsupported_not_marketing: 'ليس تسويقياً', unsupported_missing_body: 'بلا نص',
   newBroadcast: 'رسالة جماعية جديدة', campaigns: 'الرسائل الجماعية', noCampaigns: 'لا توجد رسائل جماعية بعد.', cancelBroadcast: 'إلغاء الإرسال', scheduledFor: 'مجدولة في {time}', recipients: 'المستلمون',
@@ -228,6 +254,9 @@ export function createStrings(lang, packId) {
 /** "Submitted" names the channel Meta accepted the message on. */
 /** A plain-language reason for a message that was not sent, or null for unknown reasons. */
 export const issueKey = reason => (reason && Object.hasOwn(en, `issue_${reason}`) ? `issue_${reason}` : null);
+/** Plain-language reason a broadcast stopped, and meaning of common Meta failure codes; null when unknown. */
+export const campaignReasonKey = reason => (reason && Object.hasOwn(en, `campReason_${reason}`) ? `campReason_${reason}` : null);
+export const metaErrorKey = code => (code && Object.hasOwn(en, `metaError_${code}`) ? `metaError_${code}` : null);
 export const statusKey = (status, channel) => status === 'submitted' && channel === 'instagram' ? 'status_submitted_instagram' : `status_${status}`;
 export const STRING_KEYS = Object.keys(en);
 export const ARABIC_KEYS = Object.keys(ar);

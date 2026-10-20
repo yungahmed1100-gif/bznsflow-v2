@@ -66,6 +66,7 @@ function api(state, { overviewStatus = 200, overviewReason, founderPreview = fal
       case 'contacts': return ok({ items: state.contacts.map(c => ({ ...c, takeover: !!state.takeover[c.conversationId] })), cursor: null, migrationPending: false, qualification: pack });
       case 'templates': return ok({ templates: [template], syncedAt: now, broadcastAvailable: true });
       case 'campaigns': return ok({ items: state.campaigns, cursor: null });
+      case 'campaign_detail': return ok({ campaign: state.campaigns.find(c => c.id === body.campaignId) });
       case 'import_contacts': {
         // Imported numbers become consented contacts; the wizard maps them back by number.
         const contacts = body.rows.map(r => ({ id: `n${r.waId}`, number: r.waId, name: r.name || `+${r.waId}`, consent: { status: body.consent?.attested ? 'granted' : 'unknown' } }));
@@ -316,6 +317,14 @@ try {
     // Contacts and Broadcast now sit under Customers as two views.
     await page.getByRole('navigation', { name: 'Views in this section' }).getByRole('link', { name: 'Message many' }).click();
     await page.getByRole('heading', { name: 'Broadcast', exact: true }).waitFor();
+    // No broadcast delivered yet: how to add the Meta payment method, and that BznsFlow doesn't charge for messages.
+    const fees = page.getByRole('region', { name: 'Before your first broadcast: add a payment method in Meta' });
+    await fees.waitFor(); count++;
+    assert.match(await fees.textContent(), /BznsFlow doesn’t charge for messages/); count++;
+    for (const [name, href] of [['Open Meta Billing & payments', 'https://business.facebook.com/billing_hub/accounts'], ['Meta’s message prices', 'https://developers.facebook.com/docs/whatsapp/pricing']]) {
+      const a = fees.getByRole('link', { name });
+      assert.deepEqual([await a.getAttribute('href'), await a.getAttribute('target'), await a.getAttribute('rel')], [href, '_blank', 'noopener noreferrer']); count++;
+    }
     await page.getByRole('button', { name: 'New broadcast' }).click();
     const dialog = page.getByRole('dialog');
     // Step 1: template, with its variables shown.
@@ -345,6 +354,7 @@ try {
     await dialog.getByRole('button', { name: 'Continue' }).click();
     // Step 3: every customer's own message, then send.
     await dialog.getByText('3 will receive it').waitFor(); count++;
+    await dialog.getByText('Meta bills your WhatsApp Business account for each delivered message. BznsFlow adds no charge.').waitFor(); count++;
     const shown = [];
     for (let i = 0; i < 3; i++) {
       shown.push(await dialog.locator('.ld-per-contact p').textContent());
@@ -378,11 +388,46 @@ try {
     await page.screenshot({ path: `${OUT}/broadcast-numbers-ar-375.png` });
     await dialog.getByRole('button', { name: 'متابعة' }).click();
     await dialog.getByText('الإرسال غير مفعّل بعد').waitFor(); count++;
+    await dialog.getByText('لا تضيف BznsFlow أي رسوم', { exact: false }).waitFor(); count++;
     assert.equal(await dialog.getByRole('button', { name: /إرسال إلى 1 الآن/ }).isDisabled(), true); count++;
     assert.equal(await page.locator('.ld').getAttribute('dir'), 'rtl'); count++;
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'no page overflow at 375'); count++;
     assert.deepEqual(await axe(page), []); count++;
     await page.screenshot({ path: `${OUT}/broadcast-off-ar-375.png`, fullPage: true });
+    await context.close();
+  }
+
+  // Meta stopped a broadcast for billing (131042): the coral alert repeats the steps, and the stop reason and
+  // each failure code are in words. Once a later broadcast is delivered, the card shrinks to one line.
+  for (const [width, lang] of [[1280, 'en'], [375, 'ar']]) {
+    const state = fixture();
+    const counts = { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 2, blocked: 1 };
+    state.campaigns = [{ id: 'camp9', name: 'marketing_ar', origin: 'broadcast', status: 'blocked', reason: 'payment_method_required', template: { name: 'marketing_ar', language: 'ar', body: 'Hello {{1}}' },
+      scheduledAt: Date.now() - HOUR, timezone: 'Asia/Muscat', recipientCount: 3, createdAt: Date.now() - HOUR, counts,
+      recipients: [{ name: 'Huda', number: '+968 9333 4444', status: 'failed', reason: 'provider_delivery_failed', errorCode: 131042 }, { name: 'Salim', number: '+968 9111 2222', status: 'failed', reason: 'provider_delivery_failed', errorCode: 131026 }, { name: 'Aisha', number: '+968 9555 6666', status: 'blocked', reason: 'payment_method_required', errorCode: null }] }];
+    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state) });
+    const ar = lang === 'ar';
+    const alert = page.getByRole('alert').filter({ hasText: ar ? 'أوقفت Meta رسالتك الجماعية' : 'Meta stopped your broadcast' });
+    await alert.waitFor(); count++;
+    assert.equal(await alert.locator('ol li').count(), 3); count++;
+    await page.getByText(ar ? 'توقفت: تحتاج Meta إلى وسيلة دفع صالحة في حساب واتساب للأعمال.' : 'Stopped: Meta needs a working payment method on your WhatsApp Business account.').waitFor(); count++;
+    await page.getByRole('button', { name: ar ? 'التفاصيل' : 'Details' }).click();
+    const table = page.locator('.ld-campaign .ld-table');
+    await table.waitFor();
+    assert.match(await table.textContent(), ar ? /مشكلة دفع لدى Meta \(131042\)/ : /Meta payment issue \(131042\)/); count++;
+    assert.match(await table.textContent(), ar ? /لا يستقبل رسائل واتساب \(131026\)/ : /Can’t receive WhatsApp messages \(131026\)/); count++;
+    assert.equal(await noOverflow(page), true, `stopped ${lang} ${width} overflow`); count++;
+    assert.deepEqual(await axe(page), [], `stopped ${lang} ${width} axe`); count++;
+    await page.screenshot({ path: `${OUT}/broadcast-payment-stopped-${lang}-${width}.png`, fullPage: true });
+    await context.close();
+  }
+  {
+    const state = fixture();
+    state.campaigns = [{ id: 'camp10', name: 'autumn_offer', origin: 'broadcast', status: 'completed', reason: null, template: { name: 'autumn_offer', language: 'en', body: 'Hello {{1}}' },
+      scheduledAt: Date.now() - HOUR, timezone: 'Asia/Muscat', recipientCount: 2, createdAt: Date.now() - HOUR, counts: { submitted: 0, sent: 0, delivered: 1, read: 1, failed: 0 } }];
+    const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state) });
+    await page.getByText('Meta bills broadcast messages to your WhatsApp Business account. BznsFlow doesn’t charge for messages.').waitFor(); count++;
+    assert.equal(await page.locator('.ld-fees').count(), 0, 'the full card is gone once a broadcast was delivered'); count++;
     await context.close();
   }
 

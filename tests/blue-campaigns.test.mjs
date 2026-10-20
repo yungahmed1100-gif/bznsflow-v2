@@ -58,6 +58,7 @@ test('provider responses: accepted, definite throttling (retry), definite reject
   assert.deepEqual(templateSendResult(429, { error: { code: 130429 } }), { status: 'retry', errorCode: 130429, reason: 'provider_throttled' });
   assert.deepEqual(templateSendResult(400, { error: { code: 131026 } }), { status: 'failed', errorCode: 131026, reason: 'provider_rejected' });
   assert.equal(templateSendResult(400, { error: { code: 132015 } }).campaignBlock, 'template_paused');
+  assert.equal(templateSendResult(400, { error: { code: 131042 } }).campaignBlock, 'payment_method_required');
   assert.equal(messagingAllowance('TIER_250'), 250);
   assert.equal(messagingAllowance('TIER_UNLIMITED'), Infinity);
   assert.equal(messagingAllowance(undefined), 0);
@@ -229,6 +230,29 @@ test('receipts reconcile campaign sends in order, ignore mismatched recipients a
   await other.h.worker('result', { jobId: job2._id, intent: claim2.value.intent, status: 'submitted', providerId: 'wamid.y' });
   await other.h.messaging('ingest', { integrationId: other.t.integration.id, events: [{ kind: 'receipt', id: 'wamid.y', recipient: job2.waId, status: 'failed', errorCode: 131049, at: other.h.m.now() }] });
   assert.deepEqual([(await other.h.m.db.get(job2._id)).status, (await other.h.m.db.get(job2._id)).errorCode], ['failed', 131049]);
+});
+
+// Meta reports a WhatsApp Business account without a working payment method (131042) only in the
+// delivery receipt, after accepting the send. Every later recipient would fail the same way.
+test('a Meta payment failure stops the campaign; an undeliverable number does not', async () => {
+  const sendFirst = async (contacts, errorCode) => {
+    const { h, t, create } = await campaignTenant({ contacts });
+    const campaign = (await create()).value.campaign;
+    await h.maintain();
+    await h.worker('start_result', { campaignId: campaign.id, ready: true, allowance: 250 });
+    const [first, ...rest] = h.m.table('blueCampaignRecipients');
+    const claim = await h.worker('claim', { jobId: first._id, intent: randomUUID() });
+    await h.worker('result', { jobId: first._id, intent: claim.value.intent, status: 'submitted', providerId: 'wamid.p' });
+    await h.messaging('ingest', { integrationId: t.integration.id, events: [{ kind: 'receipt', id: 'wamid.p', intent: claim.value.intent, recipient: first.waId, status: 'failed', errorCode, at: h.m.now() }] });
+    return { h, campaign: await h.m.db.get(campaign.id), first: await h.m.db.get(first._id), rest: await Promise.all(rest.map(r => h.m.db.get(r._id))) };
+  };
+  const paid = await sendFirst(3, 131042);
+  assert.deepEqual([paid.campaign.status, paid.campaign.reason], ['blocked', 'payment_method_required']);
+  assert.deepEqual([paid.first.status, paid.first.errorCode], ['failed', 131042]);
+  assert.deepEqual(paid.rest.map(r => [r.status, r.reason]), [['blocked', 'payment_method_required'], ['blocked', 'payment_method_required']]);
+  const gone = await sendFirst(2, 131026);
+  assert.equal(gone.campaign.status, 'processing');
+  assert.deepEqual(gone.rest.map(r => r.status), ['queued']);
 });
 
 test('a new opt-out blocks every unclaimed campaign job and closes the send gate for an in-flight one', async () => {

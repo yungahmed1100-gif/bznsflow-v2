@@ -452,6 +452,14 @@ a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ld-access-notice p { margin: 0; font-size: 14px; color: var(--ink-2); }
 .ld-access-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .ld-access-error { color: var(--coral); }
+/* Meta message fees (MetaBillingNotice.jsx), at the top of Broadcast. Coral only when Meta stopped a broadcast for billing. */
+.ld-fees { margin: 0 0 16px; padding: 14px 16px; border: 1px solid var(--rule-strong); border-inline-start: 3px solid var(--blue); border-radius: var(--radius); background: var(--card); display: grid; gap: 8px; max-width: 760px; }
+.ld-fees.is-stopped { border-inline-start-color: var(--coral-mark); }
+.ld-fees h2 { margin: 0; font-size: 15px; }
+.ld-fees.is-stopped h2 { color: var(--coral); }
+.ld-fees ol { margin: 0; padding-inline-start: 20px; display: grid; gap: 4px; font-size: 14px; }
+.ld-fees p { margin: 0; font-size: 14px; color: var(--ink-2); }
+.ld-fees-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 /* Ascend website brief (WebsiteBrief.jsx), at the top of Settings › Business details. */
 .ld-brief { max-width: 720px; margin: 16px 24px 24px; padding: 16px 18px; border: 1px solid var(--rule-strong); border-inline-start: 3px solid var(--blue); border-radius: var(--radius); background: var(--card); }
 .ld-brief > h2 { margin: 0 0 4px; font-size: 17px; }

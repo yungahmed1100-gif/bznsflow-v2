@@ -216,6 +216,7 @@ export default {
   "tier_pay_monthly": "OMR 9 / month",
   "tier_pay_yearly": "OMR 89 / year, save OMR 19",
   "tier_pay_note": "Pay securely by card or OmanNet on Paymob.",
+  "tier_meta_fees": "WhatsApp broadcast messages are billed by Meta directly to your WhatsApp Business account. BznsFlow doesn't charge for messages.",
   "tier_pay_grace": "Your paid period ended on {ended}. Access to the platform will be denied on {denied} unless you pay to continue.",
   "tier_pay_ascend_monthly": "OMR 29 / month",
   "tier_pay_ascend_yearly": "OMR 289 / year, save OMR 59",

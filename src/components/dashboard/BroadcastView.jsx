@@ -4,6 +4,8 @@ import { dashboard } from '../../lib/dashboard/api';
 import { formatDateTime } from '../../lib/dashboard/format';
 import { CampaignWizard } from './CampaignWizard';
 import { Dialog } from './Dialog';
+import { MetaBillingNotice } from './MetaBillingNotice';
+import { campaignReasonKey, metaErrorKey } from '../../lib/dashboard/strings';
 
 const MANAGER_URL = 'https://business.facebook.com/wa/manage/message-templates/';
 
@@ -35,6 +37,7 @@ export function BroadcastView({ s, overview, onTimezone }) {
         {start}
       </div>
       {!sending && <p className="ld-help" role="status">{s.t('broadcastSendingOff')}</p>}
+      {campaigns.data && <MetaBillingNotice s={s} campaigns={campaigns.data.items} />}
       {error && <p className="ld-inline-error" role="alert">{error}</p>}
 
       <section className="ld-section" aria-labelledby="ld-campaigns">
@@ -54,7 +57,7 @@ export function BroadcastView({ s, overview, onTimezone }) {
                   <strong>{c.name}</strong>
                   <span className={`ld-chip ${c.status === 'completed' ? 'is-green' : c.status === 'blocked' ? 'is-coral' : ['processing', 'starting'].includes(c.status) ? 'is-yellow' : ''}`}>{s.t(`camp_${c.status}`)}</span>
                   <small>{s.t('scheduledFor', { time: formatDateTime(c.scheduledAt, s.lang, c.timezone) })} · {c.timezone}</small>
-                  {c.reason && <small className="ld-issue">{c.reason}</small>}
+                  {c.reason && <small className="ld-issue">{campaignReasonKey(c.reason) ? s.t(campaignReasonKey(c.reason)) : c.reason}</small>}
                 </div>
                 <dl className="ld-counts ld-num">
                   {['sent', 'delivered', 'read', 'failed'].map(k => <div key={k}><dt>{s.t(`status_${k}`)}</dt><dd>{k === 'sent' ? c.counts.submitted + c.counts.sent : c.counts[k]}</dd></div>)}
@@ -68,7 +71,7 @@ export function BroadcastView({ s, overview, onTimezone }) {
                   <div className="ld-table-wrap">
                     <table className="ld-table ld-compact">
                       <thead><tr><th scope="col">{s.t('name')}</th><th scope="col">{s.t('number')}</th><th scope="col">{s.t('status')}</th></tr></thead>
-                      <tbody>{detail.data.campaign.recipients.map((r, i) => <tr key={i}><th scope="row"><bdi>{r.name}</bdi></th><td><bdi dir="ltr" className="ld-num">{r.number}</bdi></td><td>{s.t(`status_${r.status}`)}{r.errorCode ? ` · ${r.errorCode}` : ''}</td></tr>)}</tbody>
+                      <tbody>{detail.data.campaign.recipients.map((r, i) => <tr key={i}><th scope="row"><bdi>{r.name}</bdi></th><td><bdi dir="ltr" className="ld-num">{r.number}</bdi></td><td>{s.t(`status_${r.status}`)}{r.errorCode ? ` · ${metaErrorKey(r.errorCode) ? `${s.t(metaErrorKey(r.errorCode))} (${r.errorCode})` : r.errorCode}` : ''}</td></tr>)}</tbody>
                     </table>
                   </div>
                 )}

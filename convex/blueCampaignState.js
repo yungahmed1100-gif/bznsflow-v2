@@ -164,6 +164,14 @@ async function blockCampaign(ctx, campaign, reason, now) {
   await ctx.db.patch(campaign._id, { status: 'blocked', reason, updatedAt: now });
   for (const status of ['pending', 'queued']) for (const r of await recipientsFor(ctx, campaign._id, status)) await ctx.db.patch(r._id, { status: 'blocked', reason, updatedAt: now });
 }
+// Meta accepts a template send, then fails it in the receipt when the WhatsApp Business account has no
+// working payment method. Every later recipient would fail the same way, so the campaign stops.
+export const PAYMENT_REQUIRED = 131042;
+export async function stopForPayment(ctx, job, errorCode, now) {
+  if (errorCode !== PAYMENT_REQUIRED) return;
+  const campaign = await ctx.db.get(job.campaignId);
+  if (campaign?.status === 'processing') await blockCampaign(ctx, campaign, 'payment_method_required', now);
+}
 async function nextQueued(ctx, a, campaignId, now) {
   const [next] = (await recipientsFor(ctx, campaignId, 'queued')).filter(r => r.nextAttemptAt <= now).sort((x, y) => x.nextAttemptAt - y.nextAttemptAt);
   if (next) await schedule(ctx, a, { campaignJobId: next._id });

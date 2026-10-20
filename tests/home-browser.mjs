@@ -45,6 +45,9 @@ try {
     assert.equal(await markColour('tiers'), 'rgb(81, 164, 123)'); count++;
     assert.equal(await markColour('about'), 'rgb(92, 149, 198)'); count++;
     assert.equal(await page.locator('.tier-status.is-available').count(), 2, 'Catalyst and Ascend are available'); count++;
+    // Meta, not BznsFlow, bills WhatsApp broadcast messages: said on each available plan.
+    for (const tier of ['catalyst', 'ascend']) assert.match(await page.locator(`[data-tier="${tier}"] .tier-meta-fees`).textContent(), lang === 'ar' ? /BznsFlow لا تتقاضى أي رسوم على الرسائل/ : /BznsFlow doesn't charge for messages/); count++;
+    assert.equal(await page.locator('[data-tier="apex"] .tier-meta-fees').count(), 0); count++;
     assert.notEqual(await page.locator('[data-tier="catalyst"] .tier-status').evaluate(el => getComputedStyle(el).backgroundColor), await page.locator('[data-tier="apex"] .tier-status').evaluate(el => getComputedStyle(el).backgroundColor)); count++;
     const teamImage = page.locator('.about-art img');
     await teamImage.scrollIntoViewIfNeeded();
