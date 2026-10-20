@@ -41,10 +41,18 @@
 
 | | |
 |:---|:---|
-| Source | `master`, see the commits below |
-| Convex | `rare-fish-465` (Green): receipt change only, no schema change |
-| Website | _filled in after deploy_ |
+| Source | `f5d10a3` on `master` (`f47c137`, `6e7f5ff`, `316f90a`, `f5d10a3`), pushed to origin; contains `608972c` |
+| Convex | `rare-fish-465` (Green), deployed from `f5d10a3`: receipt change only, no schema change |
+| Website | `dpl_4q29SHVjfvRBcBJMFjLubGRfZx47`, aliased to www.bznsflowai.com, carries git SHA `f5d10a3` |
 | Previous production | `dpl_4sPKcct5t6Jv9d8HrEqH3GHekGQc` (rollback target) |
+
+## Live checks (2026-10-20)
+
+- `/`, `/en`, `/layla/dashboard`, `/catalyst/setup` and `/en/playbook` return 200.
+- The plan-card fee line is on `/en` and `/`, and the opt-in label is on `/en/playbook`.
+- `GET /api/paymob-checkout` returns 405.
+- An unsigned `TRANSACTION` webhook returns 401 `signature`. Non-transaction events are acknowledged with 200 by design.
+- A cross-origin `POST /api/lead` returns `origin`.
 
 ## Remaining gaps
 
