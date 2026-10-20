@@ -99,5 +99,7 @@
   .ld-handoff .ld-button { flex: 1 1 auto; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .ld-button, .ld-nav a { transition: background-color 120ms ease, border-color 120ms ease; }
+  .ld-nav a { transition: background-color 120ms ease, border-color 120ms ease; }
+  /* Buttons skip background-color: text colour switches instantly, so a button becoming enabled would flash light text on a light background. */
+  .ld-button { transition: border-color 120ms ease; }
 }
