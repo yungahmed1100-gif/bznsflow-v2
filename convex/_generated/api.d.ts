@@ -188,11 +188,11 @@ import type * as mcp_transfers from "../mcp/transfers.js";
 import type * as migrate from "../migrate.js";
 import type * as productSetup from "../productSetup.js";
 import type * as productSetupState from "../productSetupState.js";
+import type * as rasil from "../rasil.js";
+import type * as rasilState from "../rasilState.js";
 import type * as review from "../review.js";
 import type * as reviewMaintenance from "../reviewMaintenance.js";
 import type * as reviewState from "../reviewState.js";
-import type * as rasil from "../rasil.js";
-import type * as rasilState from "../rasilState.js";
 import type * as websiteBrief from "../websiteBrief.js";
 import type * as websiteBriefState from "../websiteBriefState.js";
 
@@ -383,11 +383,11 @@ declare const fullApi: ApiFromModules<{
   migrate: typeof migrate;
   productSetup: typeof productSetup;
   productSetupState: typeof productSetupState;
+  rasil: typeof rasil;
+  rasilState: typeof rasilState;
   review: typeof review;
   reviewMaintenance: typeof reviewMaintenance;
   reviewState: typeof reviewState;
-  rasil: typeof rasil;
-  rasilState: typeof rasilState;
   websiteBrief: typeof websiteBrief;
   websiteBriefState: typeof websiteBriefState;
 }>;
