@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Icon } from '../ui/Icon';
 import { PaymobBadge } from './PaymobBadge';
-import { RENEW_WINDOW_MS, paidDate, startCheckout } from '../../lib/billing';
+import { RENEW_WINDOW_MS, paidDate, rememberCheckout, signInToPay, startCheckout, takeCheckout } from '../../lib/billing';
 import { INDUSTRIES } from '../../lib/industries';
 import { HASIB_LIVE_PACKS } from '../../../config/hasib-live-packs.js';
 
@@ -13,6 +13,8 @@ const NOT_LISTED = 'not-listed';
 // it, an "active until" line for a paid one, the same choice again in its last two weeks, and a warning
 // with the date access will be denied during the three days of grace after it ends. Ascend is bought for
 // one live industry; a business outside them is sent to WhatsApp rather than paying for a poor fit.
+// A visitor sees the same choice (Ahmed, 2026-10-23): picking a price signs them in first, then the
+// plan they picked opens on Paymob as soon as they are back.
 export function PlanPay({ plan, labels, t, lang, account, payment, trackEvent, whatsapp }) {
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState('');
@@ -24,15 +26,31 @@ export function PlanPay({ plan, labels, t, lang, account, payment, trackEvent, w
   const date = ms => paidDate(ms, lang);
   const returned = payment.plan === plan ? payment.status : 'none';
 
-  const pay = async interval => {
-    if (picksIndustry && !HASIB_LIVE_PACKS.includes(industry)) { setError(t.tier_pay_pick_industry); return; }
+  const checkout = async (interval, packId) => {
     setBusy(interval); setError('');
-    trackEvent?.('CheckoutClick', { source: 'plan', plan, interval });
-    try { await startCheckout(plan, interval, lang, picksIndustry ? industry : undefined); } catch (e) {
+    try { await startCheckout(plan, interval, lang, packId); } catch (e) {
       setError(t[ERRORS[e?.reason]] || t.tier_pay_error);
       setBusy(null);
     }
   };
+  const pay = interval => {
+    if (picksIndustry && !HASIB_LIVE_PACKS.includes(industry)) { setError(t.tier_pay_pick_industry); return; }
+    const packId = picksIndustry ? industry : undefined;
+    trackEvent?.('CheckoutClick', { source: 'plan', plan, interval, signedIn: !!account });
+    if (account) return checkout(interval, packId);
+    rememberCheckout({ plan, interval, ...(packId ? { packId } : {}) });
+    setBusy(interval);
+    signInToPay(lang);
+  };
+
+  // Back from signing in with a plan picked: open it on Paymob without asking again.
+  useEffect(() => {
+    if (!account || !canPay) return;
+    const choice = takeCheckout(plan);
+    if (!choice || (picksIndustry && !HASIB_LIVE_PACKS.includes(choice.packId))) return;
+    if (picksIndustry) setIndustry(choice.packId);
+    checkout(choice.interval, choice.packId);
+  }, [account?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="tier-pay">
@@ -64,6 +82,7 @@ export function PlanPay({ plan, labels, t, lang, account, payment, trackEvent, w
               <span>{busy === 'yearly' ? t.tier_pay_opening : labels.yearly}</span>
             </button>
           </div>
+          {!account && <p className="tier-pay-note">{t.tier_pay_signin}</p>}
           <PaymobBadge t={t} />
         </>}
       </>}

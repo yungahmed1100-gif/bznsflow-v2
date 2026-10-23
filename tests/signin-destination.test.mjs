@@ -20,9 +20,13 @@ test('a saved destination is resumed, except the dashboard before a workspace ex
   assert.equal(signinDestination({ account: granted, next: '/mcp' }), '/mcp');
   assert.equal(signinDestination({ account: { ...granted, hasWorkspace: false }, next: '/en/layla/dashboard' }), '/en/catalyst/setup');
   assert.equal(signinDestination({ account: { profileComplete: true, accessPlan: null }, next: '/catalyst/setup' }), '/catalyst/setup');
+  // A visitor who picked a plan comes back to the plans to pay, even before having any access.
+  assert.equal(signinDestination({ account: { profileComplete: true, accessPlan: null }, next: '/en' }), '/en');
+  assert.equal(signinDestination({ account: { profileComplete: true, accessPlan: null }, next: '/' }), '/');
 });
 
 test('only the known pages can be resumed', () => {
   assert.equal(signinDestination({ account: granted, lang: 'ar', next: '//evil.example' }), '/layla/dashboard');
   assert.equal(signinDestination({ account: granted, lang: 'ar', next: 'https://evil.example/layla/dashboard' }), '/layla/dashboard');
+  for (const next of ['/en/', '/enx', '/en?x=1', '/\\evil.example']) assert.equal(signinDestination({ account: granted, lang: 'ar', next }), '/layla/dashboard', next);
 });

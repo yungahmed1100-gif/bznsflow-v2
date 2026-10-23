@@ -160,7 +160,47 @@ try {
     }
     await context.close();
   }
-  console.log(`${count} home page checks passed (live pipeline, colour meanings, reduced motion, pay block, EN/AR, 320–1440).`);
+  // A visitor sees the same prices; picking one signs them in and brings them back to the plans, where the
+  // plan they picked (with Ascend's industry) opens on Paymob without asking again.
+  for (const [lang, path] of [['en', '/en'], ['ar', '/']]) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    let signedIn = false;
+    const checkouts = [];
+    await page.route('**/*', route => {
+      const url = new URL(route.request().url());
+      if (url.origin !== new URL(base).origin) return route.abort();
+      if (url.pathname === '/api/paymob-checkout') { checkouts.push(route.request().postDataJSON()); return undefined; }
+      if (url.pathname !== '/api/auth-session') return route.continue();
+      return route.fulfill({ json: { ok: true, csrfToken: 'c'.repeat(64), account: signedIn ? { id: 'v1', email: 'new@example.com', name: 'Huda', profileComplete: true, paymentsOpen: true } : null } });
+    });
+    await page.goto(base + path);
+    const ar = lang === 'ar';
+    for (const tier of ['catalyst', 'ascend']) {
+      await page.locator(`[data-tier="${tier}"] .tier-pay-choices button`).first().waitFor();
+      assert.equal(await page.locator(`[data-tier="${tier}"] .tier-pay-choices button`).count(), 2, `${lang}: a visitor sees monthly and yearly on ${tier}`); count++;
+      assert.match(await page.locator(`[data-tier="${tier}"] .tier-pay`).textContent(), ar ? /ستسجّل الدخول أو تنشئ حسابك أولًا/ : /sign in or create your account first/); count++;
+    }
+    assert.equal(await page.locator('[data-tier="apex"] .tier-pay').count(), 0, `${lang}: Apex is not on sale`); count++;
+    // Ascend still needs an industry before anything happens.
+    await page.locator('[data-tier="ascend"] .tier-pay-choices button').first().click();
+    await page.locator('[data-tier="ascend"] .tier-pay-error').waitFor(); count++;
+    await page.locator('[data-tier="ascend"] select').selectOption('retail');
+    await page.locator('[data-tier="ascend"] .tier-pay-choices button').first().click();
+    await page.waitForURL(url => url.pathname.endsWith('/signin'));
+    assert.equal(new URL(page.url()).searchParams.get('next'), ar ? '/' : '/en', `${lang}: sign-in returns to the plans`); count++;
+    assert.deepEqual(await page.evaluate(() => { const c = JSON.parse(sessionStorage.getItem('bf_checkout')); delete c.at; return c; }), { plan: 'ascend', interval: 'monthly', packId: 'retail' }); count++;
+    assert.equal(checkouts.length, 0, `${lang}: nothing is charged before sign-in`); count++;
+    // Signed in and back on the plans: the picked plan opens on Paymob, once.
+    signedIn = true;
+    const opened = page.waitForRequest(r => new URL(r.url()).pathname === '/api/paymob-checkout');
+    await page.goto(base + path);
+    await opened;
+    assert.equal(await page.evaluate(() => sessionStorage.getItem('bf_checkout')), null, `${lang}: the choice is used once`); count++;
+    assert.deepEqual(checkouts.map(c => [c.plan, c.interval, c.packId]), [['ascend', 'monthly', 'retail']], `${lang}: the picked plan opens without asking again`); count++;
+    await context.close();
+  }
+  console.log(`${count} home page checks passed (live pipeline, colour meanings, reduced motion, pay block, visitor checkout, EN/AR, 320–1440).`);
 } finally {
   await browser.close();
 }

@@ -218,6 +218,7 @@ export default {
   "tier_setup_ascend": "إعداد أسيند",
   "tier_pay_monthly": "9 ر.ع. شهريًا",
   "tier_pay_yearly": "89 ر.ع. سنويًا، وفّر 19 ر.ع.",
+  "tier_pay_signin": "ستسجّل الدخول أو تنشئ حسابك أولًا، ثم تدفع عبر Paymob.",
   "tier_pay_secured": "دفع آمن ومحمي عبر",
   "tier_pay_cards": "البطاقات المقبولة",
   "tier_pay_opening": "جارٍ فتح Paymob…",

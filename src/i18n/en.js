@@ -219,6 +219,7 @@ export default {
   "tier_setup_ascend": "Set up Ascend",
   "tier_pay_monthly": "OMR 9 / month",
   "tier_pay_yearly": "OMR 89 / year, save OMR 19",
+  "tier_pay_signin": "You’ll sign in or create your account first, then pay on Paymob.",
   "tier_pay_secured": "Safe and secured by",
   "tier_pay_cards": "Cards accepted",
   "tier_pay_opening": "Opening Paymob…",

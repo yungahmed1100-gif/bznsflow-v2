@@ -2,7 +2,8 @@
 // sign-in lands on its destination in one hop instead of stopping on /signin to be redirected again.
 
 // Only these destinations may be resumed after sign-in, so ?next= cannot be used as an open redirect.
-export const NEXT_PATH = /^\/(en\/)?(catalyst\/setup|layla\/dashboard|mcp)$/;
+// The home page is one: a visitor who picks a plan signs in and comes back to pay for it.
+export const NEXT_PATH = /^\/(en\/)?(catalyst\/setup|layla\/dashboard|mcp)$|^\/(en)?$/;
 const DASHBOARD = /layla\/dashboard$/;
 
 /**

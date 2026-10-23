@@ -11,11 +11,10 @@ import rasilPortrait from '../../assets/agents/rasil.png';
 
 const agentPortraits = { layla: laylaPortrait, hasib: hasibPortrait, adiba: adibaPortrait, rasil: rasilPortrait };
 
-// The three plans. Visitors see no prices: Catalyst's CTA is the free audit and Ascend's is WhatsApp.
-// A signed-in account can pay online (Ahmed, 2026-10-18): Catalyst at OMR 9 a month or 89 a year, and
+// The three plans, paid online through Paymob (Ahmed, 2026-10-18): Catalyst at OMR 9 a month or 89 a year, and
 // Ascend at OMR 29 or 289 for one live industry, also as an upgrade from Catalyst. Once held, Catalyst
 // opens its setup and Ascend its Settings › Business, plus the website brief for Ascend's free website.
-// Apex is in preparation.
+// Apex is in preparation. Visitors see the same prices (Ahmed, 2026-10-23) and sign in when they pick one.
 export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
   const signedIn = useAccount();
   const payment = usePaymentReturn();
@@ -29,7 +28,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
   // that can extend. Operator grants have no end date and are never billed online.
   const plan = account?.accessPlan;
   // Only while the server says payments are open for this account (test keys: listed testers only).
-  const payable = key => !!account && !owner && !!account.paymentsOpen && (
+  const payable = key => !account ? ['catalyst', 'ascend'].includes(key) : !owner && !!account.paymentsOpen && (
     key === 'catalyst' ? !plan || (plan === 'catalyst' && !!account.accessUntil)
       : key === 'ascend' ? !plan || plan === 'catalyst' || (plan === 'ascend' && !!account.accessUntil) : false);
   const prices = {
