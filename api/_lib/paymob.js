@@ -1,7 +1,7 @@
 // Paymob (Oman) Intention API and callback verification.
 //
 // One intention per checkout: the server names the amount from config/billing-plans.js, Paymob
-// hosts the card/OmanNet page, and the only thing that changes access is the processed callback,
+// hosts the card page, and the only thing that changes access is the processed callback,
 // after its HMAC verifies here and Convex matches it against the pending payment.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { PilotError } from './layla/config.js';

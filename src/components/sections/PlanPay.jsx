@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Icon } from '../ui/Icon';
+import { PaymobBadge } from './PaymobBadge';
 import { RENEW_WINDOW_MS, paidDate, startCheckout } from '../../lib/billing';
 import { INDUSTRIES } from '../../lib/industries';
 import { HASIB_LIVE_PACKS } from '../../../config/hasib-live-packs.js';
@@ -36,9 +37,9 @@ export function PlanPay({ plan, labels, t, lang, account, payment, trackEvent, w
   return (
     <div className="tier-pay">
       {returned === 'checking' && <p className="tier-pay-status" role="status">{t.tier_pay_checking}</p>}
-      {returned === 'active' && until && <p className="tier-pay-status is-done" role="status">{t.tier_pay_done.replace('{plan}', labels.name).replace('{date}', date(until))}</p>}
+      {returned === 'active' && until && <p className="tier-pay-status is-done" role="status"><Icon name="check" size={16} />{t.tier_pay_done.replace('{plan}', labels.name).replace('{date}', date(until))}</p>}
       {returned === 'pending' && <p className="tier-pay-status" role="status">{t.tier_pay_pending}</p>}
-      {grace && <p className="tier-pay-status is-ending" role="alert">{t.tier_pay_grace.replace('{ended}', date(until)).replace('{denied}', date(account.accessDeniedAt))}</p>}
+      {grace && <p className="tier-pay-status is-ending" role="alert"><Icon name="alert-triangle" size={16} />{t.tier_pay_grace.replace('{ended}', date(until)).replace('{denied}', date(account.accessDeniedAt))}</p>}
       {until && !grace && returned !== 'active' && <p className="tier-pay-until">{t.tier_paid_until.replace('{date}', date(until))}</p>}
       {canPay && <>
         {picksIndustry && <label className="tier-pay-industry">
@@ -56,14 +57,14 @@ export function PlanPay({ plan, labels, t, lang, account, payment, trackEvent, w
           </a>
         </> : <>
           <div className="tier-pay-choices">
-            <button type="button" className="btn btn-primary pricing-btn" disabled={!!busy} onClick={() => pay('monthly')}>
-              <Icon name="arrow-right" size={18} className="icon-flip-rtl" /><span>{labels.monthly}</span>
+            <button type="button" className="btn btn-primary pricing-btn" disabled={!!busy} aria-busy={busy === 'monthly'} onClick={() => pay('monthly')}>
+              <Icon name="arrow-right" size={18} className="icon-flip-rtl" /><span>{busy === 'monthly' ? t.tier_pay_opening : labels.monthly}</span>
             </button>
-            <button type="button" className="btn btn-ghost pricing-btn" disabled={!!busy} onClick={() => pay('yearly')}>
-              <span>{labels.yearly}</span>
+            <button type="button" className="btn btn-ghost pricing-btn" disabled={!!busy} aria-busy={busy === 'yearly'} onClick={() => pay('yearly')}>
+              <span>{busy === 'yearly' ? t.tier_pay_opening : labels.yearly}</span>
             </button>
           </div>
-          <p className="tier-pay-note">{t.tier_pay_note}</p>
+          <PaymobBadge t={t} />
         </>}
       </>}
       {error && <p className="tier-pay-error" role="alert">{error}</p>}

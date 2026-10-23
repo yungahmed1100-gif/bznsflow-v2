@@ -21,7 +21,7 @@ async function open(path, width, reducedMotion = 'no-preference') {
   return { page, context, errors };
 }
 const activeLabel = page => page.locator('.pipeline-step[data-state=active] .pipeline-node-label').textContent();
-const serious = async page => (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.length}`);
+const serious = async page => (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`);
 
 try {
   for (const [lang, path, first, record] of [['en', '/en', 'A customer asks', 'Need'], ['ar', '/', 'العميل يسأل', 'الاحتياج']]) {
@@ -114,7 +114,53 @@ try {
       await context.close();
     }
   }
-  console.log(`${count} home page checks passed (live pipeline, colour meanings, reduced motion, EN/AR, 320–1440).`);
+  // Payments open: each available plan card offers monthly or yearly with the Paymob badge and the
+  // cards the live checkout takes. While Paymob opens, the pressed button says so and both wait.
+  for (const [lang, path] of [['en', '/en'], ['ar', '/']]) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    const checkouts = [];
+    await page.route('**/*', route => {
+      const url = new URL(route.request().url());
+      if (url.origin !== new URL(base).origin) return route.abort();
+      if (url.pathname === '/api/paymob-checkout') { checkouts.push(route.request().postDataJSON()); return undefined; } // left pending: Paymob is "opening"
+      if (url.pathname !== '/api/auth-session') return route.continue();
+      return route.fulfill({ json: { ok: true, csrfToken: 'c'.repeat(64), account: { id: 'a1', email: 'sara@example.com', name: 'Sara', profileComplete: true, paymentsOpen: true } } });
+    });
+    await page.goto(base + path);
+    const ar = lang === 'ar';
+    for (const tier of ['catalyst', 'ascend']) {
+      const badge = page.locator(`[data-tier="${tier}"] .paymob-badge`);
+      await badge.waitFor();
+      assert.match(await badge.locator('.paymob-badge-line').textContent(), ar ? /دفع آمن ومحمي عبر/ : /Safe and secured by/); count++;
+      assert.deepEqual(await badge.locator('img').evaluateAll(imgs => imgs.map(img => img.alt)), ['Paymob', 'Visa', 'Mastercard', 'American Express']); count++;
+      await badge.scrollIntoViewIfNeeded();
+      await page.waitForFunction(el => [...el.querySelectorAll('img')].every(img => img.complete && img.naturalWidth > 0), await badge.elementHandle());
+      count++;
+    }
+    assert.doesNotMatch(await page.locator('#tiers').textContent(), /OmanNet/, `${lang}: no payment method the live checkout doesn't offer`); count++;
+    const monthly = page.locator('[data-tier="catalyst"] .tier-pay-choices button').first();
+    await monthly.click();
+    await page.waitForFunction(() => document.querySelector('[data-tier="catalyst"] .tier-pay-choices button[aria-busy="true"]'));
+    assert.equal(await monthly.textContent(), ar ? 'جارٍ فتح Paymob…' : 'Opening Paymob…'); count++;
+    assert.deepEqual(await page.locator('[data-tier="catalyst"] .tier-pay-choices button').evaluateAll(b => b.map(x => x.disabled)), [true, true]); count++;
+    await page.waitForFunction(n => n > 0, checkouts.length).catch(() => {});
+    assert.deepEqual(checkouts.map(c => [c.plan, c.interval]), [['catalyst', 'monthly']]); count++;
+    for (const width of [320, 375, 768, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `${lang} ${width}: pay block fits`); count++;
+      if (width === 375 || width === 1440) {
+        // A breakpoint change fades the account menu between layouts; measure once it has settled.
+        await page.evaluate(() => Promise.allSettled(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished)));
+        const pay = page.locator('[data-tier="catalyst"] .tier-pay');
+        await pay.evaluate(el => el.scrollIntoView({ block: 'center' }));
+        await pay.screenshot({ path: `work/home-browser/pay-${lang}-${width}.png` });
+        assert.deepEqual(await serious(page), [], `${lang} ${width}: pay block accessibility`); count++;
+      }
+    }
+    await context.close();
+  }
+  console.log(`${count} home page checks passed (live pipeline, colour meanings, reduced motion, pay block, EN/AR, 320–1440).`);
 } finally {
   await browser.close();
 }
