@@ -58,7 +58,7 @@
 
 1. **Not seen signed in.** Nobody has opened the Email tab on production yet. Ahmed has to sign in to confirm it appears on his Ascend account.
 2. **Resend plan and key:** a plan that allows customer domains is still needed. The current `RESEND_API_KEY` may be sending-only, in which case domain connect answers `email_unavailable`. If so, set `RASIL_RESEND_API_KEY` to a full-access key.
-3. **Webhook:** add a Resend webhook to `https://www.bznsflowai.com/api/rasil-webhook` for `email.delivered`, `email.bounced`, `email.complained`, `email.opened` and `email.clicked`. Set its signing secret (`whsec_…`) as `RESEND_WEBHOOK_SECRET`, then redeploy. Until then, receipts are refused and the counts stay at "sent".
+3. **Webhook (done 2026-10-23):** Ahmed added the Resend webhook to `https://www.bznsflowai.com/api/rasil-webhook` for delivered, bounced, complained, opened and clicked, and set `RESEND_WEBHOOK_SECRET` in Production. Redeployed as `dpl_33YGzZxTP6YBhAuDkRN6euHNsvgr` (same source `ac52b83`). An unsigned call is still refused. A signed event has not arrived yet: the first one comes with the first real send.
 4. **Real-domain test:** on a domain Ahmed owns, check that SPF, DKIM and DMARC pass, that mail reaches the Gmail, Outlook and iCloud inboxes, and that one-click unsubscribe and bounce suppression work.
 5. **Opening it to customers:** only after 2–4 pass. Set `RASIL_ENABLED=true`, and change the Ascend card in `src/data/tiers.js` from "Coming soon".
 6. **Not built:** Layla collecting an email in chat, and Phase 2 sequences.
