@@ -61,13 +61,21 @@ try {
     assert.equal(await businessChoice.isChecked(), true, 'opening the guide does not change the choice'); checks++;
     // One short line instead of the ten-item checklist (Ahmed, 2026-10-24): nothing to tick, Meta is one press away.
     await card.locator('.layla-ready-line').waitFor();
-    assert.equal(await card.locator('.layla-ready-line').textContent(), t('Have your phone with WhatsApp Business (updated) and your Facebook login ready.', 'جهّز هاتفك وعليه واتساب للأعمال (محدّث) وتسجيل دخول فيسبوك.')); checks++;
+    assert.equal(await card.locator('.layla-ready-line').textContent(), t('Have your phone with WhatsApp Business (version 2.24.17 or later) and your Facebook login ready.', 'جهّز هاتفك وعليه واتساب للأعمال (الإصدار 2.24.17 أو أحدث) وتسجيل دخول فيسبوك.')); checks++;
     assert.equal(await card.getByRole('heading', { name: t('Before you start, have these ready', 'قبل أن تبدأ، جهّز ما يلي') }).count(), 0, 'no checklist'); checks++;
     assert.equal(await card.getByRole('checkbox').count(), 0, 'nothing to tick'); checks++;
     assert.equal(await card.getByRole('button', { name: t('Get Meta ready', 'تجهيز الربط مع Meta'), exact: true }).isDisabled(), false, 'Meta is ready to prepare straight away'); checks++;
     await page.screenshot({ path: `${OUT}/${lang}-${width}-ready-line.png`, fullPage: true });
     const metaGuide = card.getByText(t('What you’ll see in Facebook’s window', 'ما ستراه في نافذة فيسبوك'), { exact: true });
     await metaGuide.waitFor();
+    // Meta's 2026 flow, closed until asked for; the app route warns about the SMS-code wrong turn.
+    const guide = card.locator('.layla-meta-guide');
+    assert.equal(await guide.evaluate(el => el.open), false, 'the guide starts closed'); checks++;
+    await metaGuide.click();
+    assert.equal(await guide.locator('li').count(), 6, 'six steps for the WhatsApp Business number'); checks++;
+    assert.match(await guide.textContent(), /Connect a WhatsApp Business App/); checks++;
+    assert.equal(await guide.locator('.layla-guide-warning').isVisible(), true, 'the SMS-code warning'); checks++;
+    assert.match(await guide.textContent(), width <= 760 ? (ar ? /أدخل الرمز الذي يعرضه فيسبوك/ : /enter the code Facebook shows/) : (ar ? /امسح رمز QR/ : /scan the QR code/), 'phone screens are not told to scan their own screen'); checks++;
     assert.equal(calls.filter(c => c === 'begin').length, 0, 'the owner chooses when to prepare Meta'); checks++;
     // The setup help chat is retired: BznsBrain and the WhatsApp card carry their own guidance.
     assert.equal(await page.getByRole('button', { name: t('Open setup help chat', 'فتح محادثة مساعدة الإعداد') }).count(), 0); checks++;
@@ -80,6 +88,9 @@ try {
     // Switching the number type releases the unused attempt before preparing another.
     await otherChoice.check();
     assert.equal(await card.locator('.layla-ready-line').count(), 0, 'the app line is only for the WhatsApp Business number'); checks++;
+    if (!(await guide.evaluate(el => el.open))) await metaGuide.click();
+    assert.equal(await guide.locator('li').count(), 5, 'five steps for a different number'); checks++;
+    assert.equal(await guide.locator('.layla-guide-warning').count(), 0, 'no SMS warning on the number route'); checks++;
     await card.getByRole('button', { name: t('Get Meta ready', 'تجهيز الربط مع Meta'), exact: true }).click();
     await connect.waitFor();
     assert.deepEqual(calls.filter(c => ['begin', 'cancel'].includes(c)), ['begin', 'cancel', 'begin']); checks++;
@@ -137,6 +148,8 @@ try {
     await card.getByRole('button', { name: t('Finishing your connection…', 'جارٍ إكمال الربط…') }).waitFor({ timeout: 8000 }); checks++;
     assert.equal(await card.getByRole('button', { name: t('Cancel this attempt', 'إلغاء هذه المحاولة') }).count(), 0, 'nothing to cancel once Meta has answered'); checks++;
     await card.getByRole('heading', { name: t('Connected ✓ What’s next', 'تم الربط ✓ ما التالي') }).waitFor({ timeout: 10000 }); checks++;
+    assert.match(await card.locator('.layla-answer').last().textContent(), ar ? /حساب المراسلة/ : /Messaging account/, 'billing is on the Messaging account'); checks++;
+    assert.equal(await card.locator('.layla-linked-devices').isVisible(), true, 'linked computers must be linked again after the app route'); checks++;
     assert.equal(finishes.length, 1, 'finished exactly once'); checks++;
     assert.deepEqual({ ...finishes[0], state: undefined }, { action: 'finish', attempt: 'a-1', state: undefined, code: 'meta-code', ...(message ? { waba: '111222', phone: '333444' } : {}) },
       message ? `${message} from another facebook.com window is used` : 'no message: the code goes alone and the server finds the WABA'); checks++;

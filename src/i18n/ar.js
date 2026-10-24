@@ -222,7 +222,7 @@ export default {
   "tier_pay_secured": "دفع آمن ومحمي عبر",
   "tier_pay_cards": "البطاقات المقبولة",
   "tier_pay_opening": "جارٍ فتح Paymob…",
-  "tier_meta_fees": "رسائل واتساب الجماعية تحاسبك عليها Meta مباشرة على حساب واتساب للأعمال. BznsFlow لا تتقاضى أي رسوم على الرسائل.",
+  "tier_meta_fees": "رسائل واتساب الجماعية تحاسبك عليها Meta مباشرة على حساب المراسلة. BznsFlow لا تتقاضى أي رسوم على الرسائل.",
   "tier_pay_grace": "انتهت فترتك المدفوعة في {ended}. سيُمنع الوصول إلى المنصة في {denied} ما لم تدفع للاستمرار.",
   "tier_pay_ascend_monthly": "29 ر.ع. شهريًا",
   "tier_pay_ascend_yearly": "289 ر.ع. سنويًا، وفّر 59 ر.ع.",

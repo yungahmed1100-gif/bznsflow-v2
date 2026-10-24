@@ -440,7 +440,7 @@ try {
     await dialog.getByRole('button', { name: 'Continue' }).click();
     // Step 3: every customer's own message, then send.
     await dialog.getByText('3 will receive it').waitFor(); count++;
-    await dialog.getByText('Meta bills your WhatsApp Business account for each delivered message. BznsFlow adds no charge.').waitFor(); count++;
+    await dialog.getByText('Meta bills your Messaging account for each delivered message. BznsFlow adds no charge.').waitFor(); count++;
     const shown = [];
     for (let i = 0; i < 3; i++) {
       shown.push(await dialog.locator('.ld-per-contact p').textContent());
@@ -496,7 +496,7 @@ try {
     const alert = page.getByRole('alert').filter({ hasText: ar ? 'أوقفت Meta رسالتك الجماعية' : 'Meta stopped your broadcast' });
     await alert.waitFor(); count++;
     assert.equal(await alert.locator('ol li').count(), 3); count++;
-    await page.getByText(ar ? 'توقفت: تحتاج Meta إلى وسيلة دفع صالحة في حساب واتساب للأعمال.' : 'Stopped: Meta needs a working payment method on your WhatsApp Business account.').waitFor(); count++;
+    await page.getByText(ar ? 'توقفت: تحتاج Meta إلى وسيلة دفع صالحة في حساب المراسلة.' : 'Stopped: Meta needs a working payment method on your Messaging account.').waitFor(); count++;
     await page.getByRole('button', { name: ar ? 'التفاصيل' : 'Details' }).click();
     const table = page.locator('.ld-campaign .ld-table');
     await table.waitFor();
@@ -512,7 +512,7 @@ try {
     state.campaigns = [{ id: 'camp10', name: 'autumn_offer', origin: 'broadcast', status: 'completed', reason: null, template: { name: 'autumn_offer', language: 'en', body: 'Hello {{1}}' },
       scheduledAt: Date.now() - HOUR, timezone: 'Asia/Muscat', recipientCount: 2, createdAt: Date.now() - HOUR, counts: { submitted: 0, sent: 0, delivered: 1, read: 1, failed: 0 } }];
     const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state) });
-    await page.getByText('Meta bills broadcast messages to your WhatsApp Business account. BznsFlow doesn’t charge for messages.').waitFor(); count++;
+    await page.getByText('Meta bills broadcast messages to your Messaging account. BznsFlow doesn’t charge for messages.').waitFor(); count++;
     assert.equal(await page.locator('.ld-fees').count(), 0, 'the full card is gone once a broadcast was delivered'); count++;
     await context.close();
   }

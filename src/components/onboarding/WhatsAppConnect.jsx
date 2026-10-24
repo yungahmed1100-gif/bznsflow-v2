@@ -77,7 +77,7 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
     {integration?.sender?.startsWith('1555') && <p className="layla-help">{tr('This resembles a Meta-provided 555 number. Check the selected number and display-name approval in WhatsApp Manager before using it for customers.', 'يبدو أن هذا رقم 555 مقدّم من Meta. تحقّق من الرقم وموافقة اسم العرض في مدير واتساب قبل استخدامه للعملاء.')}</p>}
     {live && liveSwitch}
     {integration && !live && <p role="status">{tr('This number is saved. Complete the registration step if shown, or check your connection to continue.', 'هذا الرقم محفوظ. أكمل خطوة التسجيل إن ظهرت، أو تحقّق من الاتصال للمتابعة.')}</p>}
-    {live && <AfterConnect tr={tr} />}
+    {live && <AfterConnect tr={tr} path={integration.path} />}
     {integration && errorNote}
     {integration && !data?.connectionChecks && <button className="layla-secondary" disabled={busy} onClick={() => run({ action: 'refresh' })}>{tr('Check my connection', 'التحقق من الاتصال')}</button>}
     {data?.ownerConnectAvailable && !prepared && <section className="layla-answer" aria-labelledby="layla-owner-number">
@@ -98,7 +98,7 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
         <PathChoice path={path} value={PATHS[1]} onChange={changePath}><strong>{tr('A different number', 'رقم آخر')}</strong><small>{tr('A new number, or one already on an API. A new number needs SMS or a call.', 'رقم جديد، أو رقم مرتبط بواجهة API. يحتاج الرقم الجديد إلى رسالة SMS أو مكالمة.')}</small></PathChoice>
       </fieldset>
       {/* One line, not a checklist: everything else is asked for inside Meta's window (Ahmed, 2026-10-24). */}
-      {path === 'coexistence' && <p className="layla-help layla-ready-line">{tr('Have your phone with WhatsApp Business (updated) and your Facebook login ready.', 'جهّز هاتفك وعليه واتساب للأعمال (محدّث) وتسجيل دخول فيسبوك.')}</p>}
+      {path === 'coexistence' && <p className="layla-help layla-ready-line">{tr('Have your phone with WhatsApp Business (version 2.24.17 or later) and your Facebook login ready.', 'جهّز هاتفك وعليه واتساب للأعمال (الإصدار 2.24.17 أو أحدث) وتسجيل دخول فيسبوك.')}</p>}
       {!ready && <ul id="whatsapp-requirements" className="layla-checklist" aria-label={tr('Before connecting WhatsApp', 'قبل ربط واتساب')}>{requirements.map(([key, ok]) => <li key={key} data-ok={ok ? '' : undefined}>
         {/* An unmet item is never a dead end: saving to the account is one press away. */}
         {key === 'account' && !ok && data?.account && data?.accountSaveAvailable
@@ -106,7 +106,7 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
           : labels[key]}
         <span className="ld-visually-hidden">{ok ? tr(': done', ': تم') : tr(': needed', ': مطلوب')}</span></li>)}</ul>}
       {ready && <p className="layla-help">{tr('Meta’s window opens next. Log in with the Facebook account that manages your business. Passwords and codes go only into Meta’s window.', 'ستفتح نافذة Meta. سجّل الدخول بحساب فيسبوك الذي يدير نشاطك. أدخل كلمات المرور والرموز في نافذة Meta فقط.')}</p>}
-      {ready && path === 'coexistence' && <MetaWindowGuide tr={tr} phoneOnly={phoneOnly} />}
+      {ready && <MetaWindowGuide tr={tr} path={path} phoneOnly={phoneOnly} />}
       {!ready && <p id="whatsapp-requirements-hint" className="layla-cta-hint">{tr('Complete the items above to continue.', 'أكمل البنود أعلاه للمتابعة.')}</p>}
       {errorNote}
       {ownPrepared

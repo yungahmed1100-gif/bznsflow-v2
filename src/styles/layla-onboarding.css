@@ -164,6 +164,7 @@
 .layla-store-link{display:inline-block;margin-inline-end:10px}
 .layla-meta-guide{margin:16px 0!important}
 .layla-meta-guide ol{margin-block:14px}
+.layla-guide-warning{padding:10px 14px;border-inline-start:3px solid var(--orange);background:var(--orange-tint);border-radius:var(--layla-radius);color:var(--layla-ink)!important}
 .layla-help-links{padding:16px 18px;border-inline-start:3px solid var(--layla-ink-2);background:var(--layla-band);border-radius:var(--layla-radius)}
 .layla-help-links p{margin:0 0 6px}
 .layla-help-actions{display:flex;flex-wrap:wrap;gap:8px}

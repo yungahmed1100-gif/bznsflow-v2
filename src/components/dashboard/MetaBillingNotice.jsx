@@ -1,7 +1,7 @@
 import React from 'react';
 
 // BznsFlow is a Meta Tech Provider: each business pays Meta for its own broadcast messages, on its
-// WhatsApp Business account. Until a broadcast has been delivered, say how to add the payment method;
+// Messaging account (Meta's 2026 name for the WABA). Until a broadcast has been delivered, say how to add the payment method;
 // after that one line is enough, unless Meta stopped the latest broadcast for billing (error 131042).
 export const META_BILLING_URL = 'https://business.facebook.com/billing_hub/accounts';
 export const META_PRICING_URL = 'https://developers.facebook.com/docs/whatsapp/pricing';
