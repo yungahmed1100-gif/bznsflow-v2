@@ -60,6 +60,22 @@ Decision: BF-2026-10-24-AUDIT-BOOKING-TEST-BENCH (vault `Decisions/2026-10-24-Ow
   - The fixed versions are 2–13 days old. They weren't taken in this release; that is a follow-up.
   - All other release gates were run on their own.
 
-## Deploy
+## Deploy (2026-10-24)
 
-See the commit and deployment IDs recorded below once live.
+1. **Commit:** `e9bde13` on master, pushed. Lineage contains `f29db1c`.
+2. **Convex Green** `prod:rare-fish-465`, deployed from a clean worktree.
+   - Added indexes only: `auditBookings.by_start/by_email`, `websiteDrafts.by_account`, `websiteProjects.by_account/by_stage_due`.
+   - No index deleted.
+3. **Vercel production:** `dpl_E5RJhhWLLsE81jAgxTA1uLnx1muW`, aliased to www.bznsflowai.com. Rollback target: `dpl_E6zkJLe5YdvUD7k6FqTJSQC5tx8E`.
+4. **Grant:** `blueHasib:grantPlan` gave `ahmed@bznsflowai.com` the `ascend` plan with `packId: retail`, note "Founder test bench (2026-10-24)". The operator mutation writes no `blueAccessAudit` row; this note is the record.
+
+## Live checks
+- **Pages:** `/audit`, `/en/audit`, `/`, `/en`, `/en/layla/dashboard` and `/en/owner/websites` all return 200.
+- **Booking page in a real browser:** 15 working days with 14 times each, and the titles are right in Arabic and English.
+- **`GET /api/lead?op=audit`:** 210 open times, the first on Sunday 25 Oct at 10:00 Muscat. The keys are only `ok` and `slots`.
+- **Refusals:** `/api/access-admin?op=audits` returns 401 `sign_in_required` signed out. A booking POST from a foreign origin returns 403 `origin`.
+- **Home page and sitemap:** the home page links to `/en/audit`, and the sitemap lists `/audit`.
+- **Not done by the agent:**
+  - A real booking: it would email Ahmed and take a public time.
+  - Signing in as Ahmed: there is no session.
+  - Ahmed's first sign-in is what shows the Retail dashboard, with the founder bar and the Audits, Email and Website tabs.
