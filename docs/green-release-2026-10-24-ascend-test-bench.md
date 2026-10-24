@@ -95,3 +95,39 @@ Decision: BF-2026-10-24-AUDIT-BOOKING-TEST-BENCH (vault `Decisions/2026-10-24-Ow
 - New browser checks at 1440×800, 1280×760, 1024×600 and 375×740 (EN/AR). They fail on the old CSS.
 - All 12 shared browser suites and every sector suite pass.
 - The rule is confirmed in the live CSS.
+
+## Follow-up fix (same day): WhatsApp connection not shown after Meta's window
+
+**Report:** Ahmed finished Meta's window ("Keep my WhatsApp Business app", the coexistence path), including verification, but the page never showed the connection.
+
+**Diagnosis from Green data** (yungahmed1100@gmail.com):
+- The setup record stayed `prepared`, the attempt `claimed: false`.
+- There was no integration, no asset claim and no diagnostic, and no errors in the Vercel logs.
+- So the page never sent `finish`, and the server never saw Meta's result.
+- In `src/lib/layla-signup.js` the browser dropped Meta's result silently in three ways:
+  - Only `FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING` counted on coexistence.
+  - Only messages from the captured popup counted.
+  - The code had to wait for Meta's message.
+- The attempt also expired 10 minutes after "Get Meta ready".
+
+**Fix** (`012625f`; Convex Green, then Vercel `dpl_mXfsCFW47Nponwq3dXENaWLx8ku3`):
+- **Finish events:** any `FINISH*` event with a numeric WABA counts on every path. The server still checks the number against the path (`is_on_biz_app`). Messages from any https facebook.com window count while the attempt is pending.
+- **Code-only finish:** if Meta's code arrives and its message doesn't within 4 s, the code is sent alone. The server takes the WABA from the signup token's `target_ids` when exactly one is granted, and refuses (`waba_not_granted`) rather than choosing among several. A preselected WABA must still match.
+- **Attempt lifetime:** 30 minutes (`ATTEMPT_MS`).
+- **Page:**
+  - The page shows "Finishing your connection…" once Meta answers.
+  - Completion no longer goes through the busy guard that could drop it.
+  - Post-connect checks run for about 3 minutes.
+  - The expiry message names "Get Meta ready".
+- **Checklist removed:** the ten-item "Before you start, have these ready" list (`ReadyChecklist`) is gone. One line replaces it: "Have your phone with WhatsApp Business (updated) and your Facebook login ready."
+
+**Checks:**
+- Unit tests for the finish events, the other-window message, the code-only send (once; a late message ignored), Meta's `error_code` reference, the server's WABA lookup (one, several, none) and the 30-minute expiry. Removing each of the 8 new guards fails a test.
+- `whatsapp-connect-browser`: 92 checks. It now covers a finished coexistence connection ending on "Connected ✓":
+  - a `FINISH` from another window;
+  - `FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING` in AR at 375;
+  - code only.
+- All unit tests, the typecheck, the build, all 12 shared browser suites, and the Catalyst, Retail and Ascend end-to-end suites pass.
+- The live onboarding chunk contains the fix and no checklist.
+
+**Not tested:** a real Meta connection. Ahmed's retry is the live proof.
