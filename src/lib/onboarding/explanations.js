@@ -160,12 +160,12 @@ export const EXPLANATIONS = {
     ar: "بلغ هذا الإعداد الحد الأقصى لمحاولات الربط. تواصل مع ahmed@bznsflowai.com برقم المرجع أدناه.",
   },
   attempt_expired: {
-    en: "The Meta connection window expired. Press Connect with Facebook to start again.",
-    ar: "انتهت مهلة نافذة Meta. اضغط «الربط عبر فيسبوك» للبدء من جديد.",
+    en: "The Meta connection window expired. Press Get Meta ready to start again.",
+    ar: "انتهت مهلة نافذة Meta. اضغط «تجهيز الربط مع Meta» للبدء من جديد.",
   },
   attempt_used: {
-    en: "This Meta connection attempt was already used. Press Connect with Facebook to start again.",
-    ar: "استُخدمت محاولة ربط Meta هذه من قبل. اضغط «الربط عبر فيسبوك» للبدء من جديد.",
+    en: "This Meta connection attempt was already used. Press Get Meta ready to start again.",
+    ar: "استُخدمت محاولة ربط Meta هذه من قبل. اضغط «تجهيز الربط مع Meta» للبدء من جديد.",
   },
   operation_conflict: {
     en: "Another connection step is still running. Reload to check your setup before retrying.",

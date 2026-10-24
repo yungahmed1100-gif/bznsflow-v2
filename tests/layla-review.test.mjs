@@ -2,12 +2,12 @@ import { groundedModel } from './helpers/fake-model.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { detachIntegration, executeReview, resetAttempts } from '../convex/reviewState.js';
+import { ATTEMPT_MS, detachIntegration, executeReview, resetAttempts } from '../convex/reviewState.js';
 import { createReviewHandler, inspectReviewConnection } from '../api/_lib/layla/review-api.js';
 import { GREEN_CLOUD as BLUE_CLOUD, GREEN_ORIGIN } from './helpers/green-env.mjs';
 import { reviewStore } from '../api/_lib/convex.js';
 import { PilotError } from '../api/_lib/layla/config.js';
-import { createSignupAttempt, signupInit, signupOptions } from '../src/lib/layla-signup.js';
+import { ASSETS_WAIT_MS, createSignupAttempt, signupInit, signupOptions } from '../src/lib/layla-signup.js';
 import { executeBlueAuth } from '../convex/blueAuthState.js';
 import { hashAccountToken } from '../api/_lib/blue-auth.js';
 
@@ -57,15 +57,44 @@ test('anonymous sessions persist facts, isolate visitors, bind CSRF and expose n
   const preview=await a.call({action:'preview',text:'Who are you?'});assert.match(preview.body.preview,/Blue Review Studio/);assert.equal(preview.body.synthetic,true);
   h.db.advance(86400001);assert.equal((await a.call()).body.reason,'session_expired');
 });
-test('both callback orders finish once; other popups, stale attempts and expiry cannot finish',async()=>{
+test('both callback orders finish once; Meta’s message from another facebook.com window counts; expiry cannot finish',async()=>{
   for(const order of ['code','event']) {
     const done=[],fail=[],popup={}; const prepared={attempt:'a',state:'s',path:'coexistence',expiresAt:100};
-    const a=createSignupAttempt({prepared,complete:async b=>done.push({...b}),failed:r=>fail.push(r),now:()=>1});a.capture(popup);
-    const e={origin:'https://www.facebook.com',source:popup,data:{type:'WA_EMBEDDED_SIGNUP',event:'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING',data:{waba_id:'1',phone_number_id:'2'}}};
-    a.message({...e,source:{}});a.callback({authResponse:{code:'code'}});if(order==='event') {a.dispose(); const b=createSignupAttempt({prepared,complete:async v=>done.push({...v}),failed:r=>fail.push(r),now:()=>1});b.capture(popup);b.message(e);b.callback({authResponse:{code:'code'}});b.message(e);}else {a.message(e);a.message(e);}
+    const a=createSignupAttempt({prepared,complete:async b=>done.push({...b}),failed:r=>fail.push(r),now:()=>1,wait:()=>0,clear:()=>{}});a.capture(popup);
+    const e={origin:'https://www.facebook.com',source:{},data:{type:'WA_EMBEDDED_SIGNUP',event:'FINISH',data:{waba_id:'1',phone_number_id:'2'}}};
+    if(order==='code'){a.callback({authResponse:{code:'code'}});a.message(e);a.message(e);}else{a.message(e);a.callback({authResponse:{code:'code'}});a.message(e);}
     await new Promise(r=>setImmediate(r));assert.equal(done.length,1);assert.equal(fail.length,0);
+    assert.deepEqual(done[0],{action:'finish',attempt:'a',state:'s',code:'code',waba:'1',phone:'2'});
   }
   let expired;const a=createSignupAttempt({prepared:{expiresAt:1},complete:()=>assert.fail(),failed:r=>expired=r,now:()=>2});a.callback({authResponse:{code:'x'}});assert.equal(expired,'attempt_expired');
+});
+test('when Meta’s message never arrives, the code goes alone after a short wait, once, and a late message changes nothing',async()=>{
+  const done=[],fail=[],timers=[];let codeSeen=0;
+  const a=createSignupAttempt({prepared:{attempt:'a',state:'s',path:'coexistence',expiresAt:100},complete:async b=>done.push({...b}),failed:r=>fail.push(r),onCode:()=>codeSeen++,now:()=>1,
+    wait:(fn,ms)=>{timers.push({fn,ms});return timers.length;},clear:()=>{}});
+  a.capture({});a.callback({authResponse:{code:'code'}});
+  assert.equal(codeSeen,1,'the page is told Meta returned its code');
+  assert.equal(done.length,0,'waits a moment for the WABA first');
+  assert.equal(timers.at(-1).ms,ASSETS_WAIT_MS);
+  timers.at(-1).fn();
+  a.message({origin:'https://www.facebook.com',source:{},data:{type:'WA_EMBEDDED_SIGNUP',event:'FINISH',data:{waba_id:'1'}}});
+  timers.at(-1).fn();
+  await new Promise(r=>setImmediate(r));
+  assert.deepEqual(done,[{action:'finish',attempt:'a',state:'s',code:'code'}]);assert.equal(fail.length,0);
+  // A message that arrives inside the wait is used and the timer does nothing.
+  const quick=[];const t=[];const b=createSignupAttempt({prepared:{attempt:'b',state:'s',path:'coexistence',expiresAt:100},complete:async v=>quick.push(v),failed:()=>assert.fail(),now:()=>1,wait:fn=>t.push(fn),clear:()=>{}});
+  b.capture({});b.callback({authResponse:{code:'c'}});b.message({origin:'https://business.facebook.com',source:{},data:{type:'WA_EMBEDDED_SIGNUP',event:'FINISH_ONLY_WABA',data:{waba_id:'7'}}});t[0]();
+  await new Promise(r=>setImmediate(r));assert.deepEqual(quick.map(v=>v.waba),['7']);
+});
+test('a finish without the WABA connects with the one the token names; a phone without a WABA is refused',async()=>{
+  const seen=[];
+  const h=harness({exchange:async args=>{seen.push(args.waba);return {token:'synthetic-token-'.repeat(4),waba:'1712714900182074',phone:'1234',sender:'96890000000'};}});
+  const c=await client(h.handler),body=await begin(c);
+  const {waba,phone,...codeOnly}=body;
+  const odd=await c.call({...codeOnly,phone});assert.deepEqual([odd.statusCode,odd.body.reason],[400,'invalid_signup_result']);
+  const r=await c.call(codeOnly);
+  assert.equal(r.body.status,'connected');assert.deepEqual(seen,[undefined],'the server looked the WABA up');
+  assert.equal((await c.call()).body.integration.status,'connected');
 });
 test('single-use competing finish claims and stored path prevent duplicate exchange and coexistence registration',async()=>{
   let exchanges=0;const h=harness({exchange:async()=>{exchanges++;return {token:'t'.repeat(30),sender:'96890000000'};}});const c=await client(h.handler),body=await begin(c);
@@ -125,7 +154,7 @@ test('reload resumes the same prepared attempt and another session cannot use it
   assert.equal((await a.call(body)).statusCode,409);
 });
 test('expired attempts and occupied assets cannot trigger additional subscriptions',async()=>{
-  const h=harness(),a=await client(h.handler),body=await begin(a);h.db.advance(600001);assert.equal((await a.call(body)).body.reason,'attempt_expired');
+  const h=harness(),a=await client(h.handler),body=await begin(a);h.db.advance(ATTEMPT_MS+1);assert.equal((await a.call(body)).body.reason,'attempt_expired');
   const second=await begin(a);assert.equal((await a.call(second)).body.status,'connected');
   const b=await client(h.handler),other=await begin(b);assert.equal((await b.call(other)).body.reason,'asset_in_use');assert.equal(h.effects.length,1);
 });

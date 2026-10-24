@@ -230,6 +230,9 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         try {
           const verified = await exchange({ c:connectionConfig || configuration(env), ...exchangeArgs, waba, phone, path:row.attempt.path, allowPhoneSelection:!exchangeArgs.token, fetcher, now });
           token = verified.token;
+          // Without Meta's message the token named the WABA; the preselected one must still match.
+          waba = verified.waba || waba;
+          if (row.attempt?.preselect?.waba && row.attempt.preselect.waba !== waba) throw new PilotError('invalid_signup_result');
           if (verified.candidates) {
             const credential = sealToken(token,`review-selection:${sessionHash}:${row.attempt.id}:${waba}`,env);
             await write('pending_selection',{selection:{waba,path:row.attempt.path,candidates:verified.candidates,credential}});
@@ -387,10 +390,11 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         if (body.action === 'cancel') await write('cancel',{attempt:body.attempt,stateHash:digest(body.state)});
         else {
           configuration(env);
-          if (!assetId(body.waba) || (body.phone !== undefined && !assetId(body.phone))) throw new PilotError('invalid_signup_result');
+          // The WABA may be missing when Meta's message never reached the page; the token names it then.
+          if ((body.waba !== undefined && !assetId(body.waba)) || (body.phone !== undefined && !assetId(body.phone)) || (body.waba === undefined && body.phone !== undefined)) throw new PilotError('invalid_signup_result');
           if (typeof body.code !== 'string' || !body.code || body.code.length > 4096) throw new PilotError('invalid_signup_result');
           // The owner named this WABA before launch; a different one is a wrong selection, not a connection.
-          if (row.attempt?.preselect?.waba && row.attempt.preselect.waba !== body.waba) throw new PilotError('invalid_signup_result');
+          if (row.attempt?.preselect?.waba && body.waba !== undefined && row.attempt.preselect.waba !== body.waba) throw new PilotError('invalid_signup_result');
           await write('claim',{attempt:body.attempt,stateHash:digest(body.state)});
           // If a provider operation was claimed, its record survives even if
           // persistence fails. A refresh can reconcile it after 60 seconds.

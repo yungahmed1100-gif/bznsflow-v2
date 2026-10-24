@@ -21,7 +21,8 @@ import { revealStep } from '../lib/reveal-step.js';
 // Ids are the saved journeyStep values; older saved steps (2, 3, 4) open the channels step.
 const WHATSAPP_LIVE = ['connected', 'paused'];
 const EMPTY_PRESELECT = { business: '', waba: '' };
-const REFRESH_INTERVAL_MS = 5000, REFRESH_ROUNDS = 12;
+// About three minutes: coexistence registration on Meta's side can take longer than one.
+const REFRESH_INTERVAL_MS = 5000, REFRESH_ROUNDS = 36;
 
 export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embedded = false, onStageChange, onAccountChange }) {
   const ar = lang === 'ar';
@@ -34,6 +35,8 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   const [path, setPath] = useState('coexistence'), [preselect, setPreselect] = useState(EMPTY_PRESELECT);
   const [prepared, setPrepared] = useState(null), [preparing, setPreparing] = useState(false);
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
+  // Meta returned its code: the connection is being finished, so the owner is told, not left on "Complete the Meta window".
+  const [finishing, setFinishing] = useState(false), finishingRef = useRef(false);
   const [saveOpen, setSaveOpen] = useState(false);
   // WhatsApp work starts only when the customer asks for it, so an Instagram-only
   // setup never opens a Meta attempt or spends the attempt budget.
@@ -181,7 +184,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     const receive = event => pending.current?.message(event);
     window.addEventListener('message', receive);
     const timer = setTimeout(() => {
-      if (pending.current) pending.current.cancel('attempt_expired');
+      if (pending.current && !finishingRef.current) pending.current.cancel('attempt_expired');
       else setPrepared(null);
     }, Math.max(0, prepared.expiresAt - Date.now()));
     return () => { window.removeEventListener('message', receive); clearTimeout(timer); };
@@ -200,14 +203,17 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     setBusy(true); setError('');
     const attempt = createSignupAttempt({
       prepared,
+      onCode: () => { finishingRef.current = true; setFinishing(true); },
+      // Not through act(): its busy guard could drop Meta's one-time code without a word.
       complete: async body => {
-        pending.current = null; setPrepared(null);
-        await act(async () => {
-          const r = await request(body); applyState(r);
-        });
+        pending.current = null;
+        actionBusy.current = true; setBusy(true); setError('');
+        try { applyState(await request(body)); }
+        catch (e) { setError(explain(e.message)); }
+        finally { actionBusy.current = false; setBusy(false); finishingRef.current = false; setFinishing(false); setPrepared(null); }
       },
       failed: (reason, reference) => {
-        pending.current = null; setPrepared(null); setBusy(false);
+        pending.current = null; setPrepared(null); setBusy(false); finishingRef.current = false; setFinishing(false);
         setError(reference ? `${explain(reason)} ${tr('Meta reference:', 'مرجع Meta:')} ${reference}` : explain(reason));
         // Release the durable unclaimed attempt. A failed cancellation remains
         // visible and expires server-side; it never triggers a second exchange.
@@ -291,7 +297,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
           {needsAccount && !data?.account && errorNote}
           {!needsAccount && !reviewMode && <InstagramConnection lang={lang} inSetup autoOn={!!instagramReturn?.ok} onActive={reportLive('instagram')} />}
           <WhatsAppConnect tr={tr} explain={explain} open={whatsappOpen} onOpen={() => setWhatsappOpen(true)} data={data} busy={busy} available={available} reviewMode={reviewMode}
-            prepared={prepared} preparing={preparing} path={path} onPathChange={changePath} preselect={preselect} onPreselectChange={changePreselect}
+            prepared={prepared} preparing={preparing} finishing={finishing} path={path} onPathChange={changePath} preselect={preselect} onPreselectChange={changePreselect}
             onPrepare={() => prepare()} onConnect={connect} onCancelAttempt={reason => pending.current?.cancel(reason)}
             run={run} act={act} request={request} applyState={applyState}
             liveSwitch={!reviewMode && data?.savedToAccount ? <ChannelSwitch s={s} channel="whatsapp" autoOn={whatsappJustConnected} onActive={reportLive('whatsapp')} /> : null}

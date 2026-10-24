@@ -3,6 +3,9 @@ import { BZNS_MAX_CHARS, bznsChunks, deriveProfile, validateBzns } from '../src/
 const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const id = value => typeof value === 'string' && /^[a-f0-9-]{32,64}$/.test(value);
 const paths = ['coexistence', 'new_number', 'existing_cloud'];
+// A Meta attempt counts from "Get Meta ready": coexistence (QR, verification, an app update) can take well over
+// 10 minutes, and an expired attempt silently threw the owner's finished connection away (2026-10-24).
+export const ATTEMPT_MS = 30 * 60000;
 export async function executeReview(ctx, a, now = Date.now()) {
   const fail = reason => ({ ok: false, reason });
   if (!hash(a.sessionHash)) return fail('invalid_state');
@@ -65,7 +68,7 @@ export async function executeReview(ctx, a, now = Date.now()) {
     if (row.attempts >= 10) return fail('attempt_limit');
     if (row.attempt && row.attempt.expiresAt > now && !['cancelled','failed','expired'].includes(row.status)) return fail('operation_conflict');
     // A new attempt starts clean: the previous attempt's diagnostic no longer describes it.
-    await patch({ status: 'prepared', metrics:{...row.metrics,metaStartedAt:row.metrics?.metaStartedAt || now}, pendingSelection: undefined, diagnostic: undefined, attempts: row.attempts + 1, attempt: { id: a.attempt, stateHash: a.stateHash, path: a.path, expiresAt: now + 600000, claimed: false, ...(a.preselect ? { preselect: a.preselect } : {}) } });
+    await patch({ status: 'prepared', metrics:{...row.metrics,metaStartedAt:row.metrics?.metaStartedAt || now}, pendingSelection: undefined, diagnostic: undefined, attempts: row.attempts + 1, attempt: { id: a.attempt, stateHash: a.stateHash, path: a.path, expiresAt: now + ATTEMPT_MS, claimed: false, ...(a.preselect ? { preselect: a.preselect } : {}) } });
   } else if (['await','claim','cancel'].includes(a.operation)) {
     if (row.attempt?.id !== a.attempt || row.attempt?.stateHash !== a.stateHash) return fail('invalid_state');
     if (row.attempt.expiresAt <= now) return fail('attempt_expired');

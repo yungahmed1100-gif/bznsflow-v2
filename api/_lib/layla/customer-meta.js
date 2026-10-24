@@ -38,7 +38,9 @@ export async function metaRequest(c, path, token, fetcher, body) {
   } catch (error) { if (error instanceof PilotError) throw error; throw new PilotError('meta_connection_unavailable', 502); }
 }
 export async function exchangeAndVerify({ c, code, token: existingToken, waba, phone, path, allowPhoneSelection = false, ownerBusiness, configuredOwner = false, fetcher = fetch, now = Date.now }) {
-  if ((!existingToken && (typeof code !== 'string' || !code || code.length > 4096)) || !/^\d{1,30}$/.test(waba || '') || (!/^\d{1,30}$/.test(phone || '') && !(allowPhoneSelection && !phone))) throw new PilotError('invalid_signup_result');
+  // Signup may arrive without the WABA when Meta's message never reached the page; the token then names it.
+  const findWaba = allowPhoneSelection && !existingToken && !waba;
+  if ((!existingToken && (typeof code !== 'string' || !code || code.length > 4096)) || (!findWaba && !/^\d{1,30}$/.test(waba || '')) || (!/^\d{1,30}$/.test(phone || '') && !(allowPhoneSelection && !phone))) throw new PilotError('invalid_signup_result');
   const token = existingToken || (await metaRequest(c, 'oauth/access_token', `${c.app}|${c.secret}`, fetcher, { client_id: c.app, client_secret: c.secret, code })).access_token;
   if (typeof token !== 'string' || token.length < 20 || token.length > 8192) throw new PilotError('invalid_customer_token', 502);
   const debug = await metaRequest(c, `debug_token?input_token=${encodeURIComponent(token)}`, `${c.app}|${c.secret}`, fetcher);
@@ -51,6 +53,11 @@ export async function exchangeAndVerify({ c, code, token: existingToken, waba, p
   // lists none; only the server-configured owner path may use it. Meta must return
   // the exact configured WABA and its portfolio; an explicitly pinned portfolio must match.
   const listed = Array.isArray(granted?.target_ids) && granted.target_ids.length > 0;
+  // Exactly one granted WhatsApp account, or the owner connects again and picks one: never chosen silently.
+  if (findWaba) {
+    if (!listed || granted.target_ids.length !== 1 || !/^\d{1,30}$/.test(String(granted.target_ids[0]))) throw new PilotError('waba_not_granted', 403);
+    waba = String(granted.target_ids[0]);
+  }
   const ownerToken = !listed && !!granted && (/^\d{1,30}$/.test(ownerBusiness || '') || (configuredOwner && !!existingToken && path === 'existing_cloud')) && d.type === 'SYSTEM_USER';
   if (listed ? !granted.target_ids.includes(waba) : !ownerToken) throw new PilotError('waba_not_granted', 403);
   const [account, phones] = await Promise.all([
@@ -63,7 +70,7 @@ export async function exchangeAndVerify({ c, code, token: existingToken, waba, p
     const eligible = phones.data.filter(p => /^\d{1,30}$/.test(p.id) && p.is_on_biz_app === (path === 'coexistence') && /^\d{7,15}$/.test(String(p.display_phone_number || '').replace(/\D/g,'')));
     if (!eligible.length) throw new PilotError('phone_not_in_customer_waba',403);
     // Never silently choose among multiple numbers (including paginated results).
-    if (eligible.length !== 1 || phones.paging?.next) return {token, candidates: eligible.map(p => ({id:p.id, sender:String(p.display_phone_number).replace(/\D/g,'')}))};
+    if (eligible.length !== 1 || phones.paging?.next) return {token, waba, candidates: eligible.map(p => ({id:p.id, sender:String(p.display_phone_number).replace(/\D/g,'')}))};
     phone = eligible[0].id;
   }
   const selected = phones.data?.find(p => p.id === phone);
@@ -72,5 +79,5 @@ export async function exchangeAndVerify({ c, code, token: existingToken, waba, p
   if (['new_number','existing_cloud'].includes(path) && selected.is_on_biz_app !== false) throw new PilotError('business_app_requires_coexistence', 409);
   const sender = String(selected.display_phone_number || '').replace(/\D/g, '');
   if (!/^\d{7,15}$/.test(sender)) throw new PilotError('sender_not_verified', 409);
-  return { token, phone, sender, coexistence: selected.is_on_biz_app === true, cloudApi: selected.platform_type === 'CLOUD_API' };
+  return { token, waba, phone, sender, coexistence: selected.is_on_biz_app === true, cloudApi: selected.platform_type === 'CLOUD_API' };
 }

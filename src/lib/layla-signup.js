@@ -45,10 +45,11 @@ export function signupEvent(event, path) {
   try { payload = typeof event.data === 'string' ? JSON.parse(event.data) : event.data; } catch { return null; }
   if (payload?.type !== 'WA_EMBEDDED_SIGNUP') return null;
   if (['CANCEL', 'ERROR'].includes(payload.event)) return { cancelled: true, ...signupFailure(payload.data) };
-  // Coexistence and existing API numbers may finish with only a WABA; the server then lists its numbers.
-  const expected = path === 'coexistence' ? ['FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING'] : path === 'existing_cloud' ? ['FINISH', 'FINISH_ONLY_WABA'] : ['FINISH'];
-  const phoneOptional = path === 'coexistence' || path === 'existing_cloud';
-  if (!expected.includes(payload.event) || !/^\d{1,30}$/.test(payload.data?.waba_id || '') || (payload.data?.phone_number_id ? !/^\d{1,30}$/.test(payload.data.phone_number_id) : !phoneOptional)) return null;
+  // Any finish counts (FINISH, FINISH_ONLY_WABA, FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING, …): Meta's event name
+  // varies with what the owner picked, and dropping one left the page waiting forever (2026-10-24). The server
+  // decides whether the number fits the path (is_on_biz_app) and lists numbers when no phone is given.
+  if (typeof payload.event !== 'string' || !payload.event.startsWith('FINISH') || !/^\d{1,30}$/.test(payload.data?.waba_id || '')
+    || (payload.data?.phone_number_id && !/^\d{1,30}$/.test(payload.data.phone_number_id))) return null;
   return { assets: { waba: payload.data.waba_id, ...(payload.data.phone_number_id ? { phone: payload.data.phone_number_id } : {}) } };
 }
 
@@ -57,7 +58,7 @@ export function signupEvent(event, path) {
 // in the browser: only a known reason and a numeric reference are surfaced.
 function signupFailure(data) {
   const message = typeof data?.error_message === 'string' ? data.error_message : '';
-  const reference = /^\d{1,30}$/.test(String(data?.error_id ?? '')) ? String(data.error_id) : undefined;
+  const reference = [data?.error_id, data?.error_code].map(v => String(v ?? '')).find(v => /^\d{1,30}$/.test(v));
   if (!message) return { reason: 'meta_cancelled' };
   const reason = /feature/i.test(message) && /invalid|not (?:available|supported)/i.test(message) ? 'meta_feature_invalid'
     : /version|update/i.test(message) && /app/i.test(message) ? 'whatsapp_app_update_required'
@@ -65,35 +66,43 @@ function signupFailure(data) {
   return { reason, ...(reference ? { reference } : {}) };
 }
 
-// One coordinator belongs to one popup attempt. Both SDK callback orders are
-// supported; only messages from the captured popup can contribute assets.
-export function createSignupAttempt({ prepared, complete, failed, now = Date.now }) {
-  let popup, code, assets, settled = false;
-  const fail = (reason, reference) => { if (settled) return; settled = true; code = undefined; assets = undefined; failed(reason, reference); };
+// One coordinator belongs to one popup attempt. Both SDK callback orders are supported. Meta's message
+// may come from another facebook.com window (a phone-only flow finishes in a new tab), so the origin, the
+// one pending attempt and the server's state hash guard it, not the popup handle. If the code arrives and
+// the message never does, the code goes alone after a short wait; the server reads the WABA from the token.
+export const ASSETS_WAIT_MS = 4000;
+export function createSignupAttempt({ prepared, complete, failed, onCode, now = Date.now, wait = setTimeout, clear = clearTimeout }) {
+  let popup, code, assets, settled = false, timer;
+  const fail = (reason, reference) => { if (settled) return; settled = true; clear(timer); code = undefined; assets = undefined; failed(reason, reference); };
+  const send = () => {
+    settled = true; clear(timer);
+    const body = {action:'finish',attempt:prepared.attempt,state:prepared.state,code,...(assets || {})};
+    code = undefined; assets = undefined;
+    Promise.resolve().then(() => complete(body)).catch(() => failed('review_backend_unavailable')).finally(() => { delete body.code; });
+  };
   const finish = () => {
     if (settled) return;
     if (now() >= prepared.expiresAt) return fail('attempt_expired');
-    if (!code || !assets) return;
-    settled = true;
-    const body = {action:'finish',attempt:prepared.attempt,state:prepared.state,code,...assets};
-    code = undefined; assets = undefined;
-    Promise.resolve().then(() => complete(body)).catch(() => failed('review_backend_unavailable')).finally(() => { delete body.code; });
+    if (!code) return;
+    if (assets) return send();
+    clear(timer);
+    timer = wait(() => { if (!settled && code) send(); }, ASSETS_WAIT_MS);
   };
   return {
     capture(value) { popup = value; if (!popup) fail('popup_blocked'); },
     callback(response) {
       if (settled) return;
       if (typeof response?.authResponse?.code !== 'string' || !response.authResponse.code) return fail(response?.status === 'not_authorized' ? 'permission_rejected' : 'missing_code');
-      code = response.authResponse.code; finish();
+      code = response.authResponse.code; onCode?.(); finish();
     },
     message(event) {
-      if (settled || !popup || event.source !== popup) return;
+      if (settled || !popup) return;
       const result = signupEvent(event,prepared.path);
       if (!result) return;
       if (result.cancelled) return fail(result.reason || 'meta_cancelled', result.reference);
       assets = result.assets; finish();
     },
     cancel: fail,
-    dispose() { settled = true; code = undefined; assets = undefined; popup = undefined; },
+    dispose() { settled = true; clear(timer); code = undefined; assets = undefined; popup = undefined; },
   };
 }

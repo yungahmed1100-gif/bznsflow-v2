@@ -17,7 +17,15 @@ test('v4 signup separates coexistence, validates origins and ignores incomplete 
   assert.equal(signupOptions({ configId: '456', path: 'new_number' }).extras.featureType, undefined);
   const event = { origin: 'https://www.facebook.com', data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING', data: { waba_id: '456', phone_number_id: '789' } } };
   assert.deepEqual(signupEvent(event, 'coexistence'), { assets: { waba: '456', phone: '789' } });
-  assert.equal(signupEvent(event, 'new_number'), null);
+  // Any finish counts on any path: a dropped finish left the owner waiting forever (2026-10-24). The server checks the path.
+  assert.deepEqual(signupEvent(event, 'new_number'), { assets: { waba: '456', phone: '789' } });
+  for (const name of ['FINISH', 'FINISH_ONLY_WABA', 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING'])
+    assert.deepEqual(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: name, data: { waba_id: '456' } } }, 'coexistence'), { assets: { waba: '456' } }, name);
+  assert.equal(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'PROGRESS', data: { waba_id: '456' } } }, 'coexistence'), null, 'not a finish');
+  assert.equal(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH', data: { waba_id: 'x1' } } }, 'coexistence'), null, 'numeric WABA only');
+  assert.equal(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH', data: { waba_id: '1', phone_number_id: '2x' } } }, 'coexistence'), null, 'numeric phone only');
+  assert.equal(signupEvent({ ...event, origin: 'http://www.facebook.com' }, 'coexistence'), null);
+  assert.deepEqual(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'CANCEL', data: { error_message: 'Something failed', error_code: 524126 } } }, 'coexistence'), { cancelled: true, reason: 'meta_error', reference: '524126' }, 'Meta’s error_code is the reference');
   assert.equal(signupEvent({ ...event, origin: 'https://evilfacebook.com' }, 'coexistence'), null);
   assert.equal(signupEvent({ ...event, data: '{' }, 'coexistence'), null);
   assert.deepEqual(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'CANCEL' } }, 'coexistence'), { cancelled: true, reason: 'meta_cancelled' });
@@ -86,6 +94,21 @@ test('server verifies app, permissions, granted WABA, phone relationship and act
   const verify = (change = () => {}) => exchangeAndVerify({ c, code: 'PRIVATE_CODE', waba, phone, path: 'coexistence', fetcher: async url => { const body = fixture(url); change(body, String(url)); return { ok: true, text: async () => JSON.stringify(body) }; } });
   assert.equal((await verify()).sender, '201036755930');
   for (const change of [b => { if (b.data?.app_id) b.data.app_id = 'wrong'; }, b => { if (b.data?.scopes) b.data.scopes = []; }, b => { if (b.data?.granular_scopes) b.data.granular_scopes = []; }, b => { if (Array.isArray(b.data)) b.data[0].id = 'wrong'; }, b => { if (Array.isArray(b.data)) b.data[0].is_on_biz_app = false; }]) await assert.rejects(verify(change));
+});
+test('without Meta’s message the signup token names the WABA: exactly one is used, several are never chosen silently', async () => {
+  const token = 'SECRET_CUSTOMER_TOKEN_LONG', phone = '789';
+  const run = (targets, args = {}) => exchangeAndVerify({ c, code: 'PRIVATE_CODE', path: 'coexistence', allowPhoneSelection: true, ...args, fetcher: async url => {
+    const u = String(url);
+    const body = u.includes('oauth/access_token') ? { access_token: token } : u.includes('debug_token')
+      ? { data: { is_valid: true, app_id: c.app, scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'], granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: targets }] } }
+      : u.includes('/phone_numbers') ? { data: [{ id: phone, display_phone_number: '+968 9000 0000', platform_type: 'CLOUD_API', is_on_biz_app: true }] } : { id: u.match(/v\d+\.\d+\/(\d+)/)?.[1] };
+    return { ok: true, text: async () => JSON.stringify(body) };
+  } });
+  const found = await run(['456']);
+  assert.deepEqual([found.waba, found.phone, found.sender], ['456', phone, '96890000000']);
+  await assert.rejects(run(['456', '457']), /waba_not_granted/, 'two WhatsApp accounts: the owner picks one in Meta');
+  await assert.rejects(run([]), /waba_not_granted/);
+  await assert.rejects(run(['456'], { allowPhoneSelection: false }), /invalid_signup_result/, 'only the signup flow may omit the WABA');
 });
 test('owner system-user token is accepted only for its verified owner portfolio and exact Green asset', async () => {
   const token='OWNER_SYSTEM_USER_TOKEN_PRIVATE', business='999', waba='456', phone='789';

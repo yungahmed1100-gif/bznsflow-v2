@@ -1,5 +1,5 @@
 // WhatsApp setup rehearsal: API and Meta SDK are synthetic, external traffic blocked.
-// Proves the readiness journey, v4 launch options, and recovery from a Meta refusal.
+// Proves the readiness journey, v4 launch options, a finished coexistence connection, and recovery from a Meta refusal.
 // Not evidence of Meta consent or delivery.
 //   npm run build && npx vite preview --port 5199 & node tests/whatsapp-connect-browser.mjs http://127.0.0.1:5199
 import { chromium } from 'playwright';
@@ -46,7 +46,7 @@ try {
     await page.screenshot({ path: `${OUT}/${lang}-${width}-choose-app.png`, fullPage: true });
     if (width === 1440) {
       await card.locator('.layla-which-card').first().click();
-      await card.getByRole('heading', { name: t('Before you start, have these ready', 'قبل أن تبدأ، جهّز ما يلي') }).waitFor();
+      await card.locator('.layla-ready-line').waitFor();
       await card.getByRole('radio', { name: new RegExp(t('My number already uses an API or another provider', 'رقمي مرتبط بواجهة API أو مزوّد آخر')) }).check();
       await card.getByRole('radio', { name: new RegExp(t('Keep my WhatsApp Business app', 'الاستمرار باستخدام تطبيق واتساب للأعمال')) }).check();
       assert.equal(await card.getByRole('heading', { name: t('Which WhatsApp do you use for your shop?', 'أي واتساب تستخدم لمتجرك؟') }).count(), 1, 'changing paths resets the Business App checklist'); checks++;
@@ -55,16 +55,13 @@ try {
     const switchButton = card.getByRole('button', { name: t('Done — I now use WhatsApp Business', 'تم، أستخدم الآن واتساب للأعمال'), exact: true });
     await switchButton.waitFor();
     await switchButton.click();
-    const readyHeading = card.getByRole('heading', { name: t('Before you start, have these ready', 'قبل أن تبدأ، جهّز ما يلي') });
-    await readyHeading.waitFor();
-    await page.screenshot({ path: `${OUT}/${lang}-${width}-checklist.png`, fullPage: true });
-    const start = card.getByRole('button', { name: t('I have everything — start', 'جهّزت كل شيء، ابدأ'), exact: true });
-    assert.equal(await start.isDisabled(), true, 'readiness must be acknowledged before continuing'); checks++;
-    // Published details, the team contact and the signed-in email are already proven by the account.
-    assert.equal(await card.getByRole('checkbox', { checked: true }).count(), 3, 'what the account proves starts ticked'); checks++;
-    for (const checkbox of await card.getByRole('checkbox').all()) await checkbox.check();
-    await start.click();
-    assert.equal(await page.evaluate(() => localStorage.getItem('layla-ready-v1')), null, 'readiness checks are not remembered across people sharing this browser'); checks++;
+    // One short line instead of the ten-item checklist (Ahmed, 2026-10-24): nothing to tick, Meta is one press away.
+    await card.locator('.layla-ready-line').waitFor();
+    assert.equal(await card.locator('.layla-ready-line').textContent(), t('Have your phone with WhatsApp Business (updated) and your Facebook login ready.', 'جهّز هاتفك وعليه واتساب للأعمال (محدّث) وتسجيل دخول فيسبوك.')); checks++;
+    assert.equal(await card.getByRole('heading', { name: t('Before you start, have these ready', 'قبل أن تبدأ، جهّز ما يلي') }).count(), 0, 'no checklist'); checks++;
+    assert.equal(await card.getByRole('checkbox').count(), 0, 'nothing to tick'); checks++;
+    assert.equal(await card.getByRole('button', { name: t('Get Meta ready', 'تجهيز الربط مع Meta'), exact: true }).isDisabled(), false, 'Meta is ready to prepare straight away'); checks++;
+    await page.screenshot({ path: `${OUT}/${lang}-${width}-ready-line.png`, fullPage: true });
     const metaGuide = card.getByText(t('What you’ll see in Facebook’s window', 'ما ستراه في نافذة فيسبوك'), { exact: true });
     await metaGuide.waitFor();
     assert.equal(calls.filter(c => c === 'begin').length, 0, 'the owner chooses when to prepare Meta'); checks++;
@@ -93,6 +90,57 @@ try {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     assert.ok(overflow <= 1, `no horizontal scroll at ${width}px`); checks++;
     await page.screenshot({ path: `${OUT}/${lang}-${width}-declined.png`, fullPage: true });
+    assert.deepEqual(errors, []); checks++;
+    await context.close();
+  }
+  // Keep my WhatsApp Business app, end to end: Meta finishes, the page says it is finishing, then shows the connection.
+  // `message` sends Meta's finish event (any FINISH name); without it the code goes alone and the server finds the WABA.
+  for (const [lang, width, message] of [['en', 1280, 'FINISH'], ['ar', 375, 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING'], ['en', 768, null]]) {
+    const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
+    const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' }), page = await context.newPage();
+    const calls = [], finishes = [], errors = [];
+    const state = { ok: true, available: true, account: { email: 'owner@example.test' }, accountSaveAvailable: true, savedToAccount: true, journeyStep: 1, profileVersion: 1, csrfToken: 'c',
+      profile: { businessName: 'Noor Abayas', sector: 'Retail', services: 'Abayas', humanContact: 'team@example.test', reviewed: true, faqs: [] }, integration: null };
+    // Meta's event comes from a facebook.com window that is not the popup handle (a phone-only flow finishes in another tab).
+    const sdk = `window.FB={init(o){},login(cb,o){window.open('about:blank','fb');setTimeout(()=>{${message ? `window.dispatchEvent(new MessageEvent('message',{origin:'https://web.facebook.com',data:JSON.stringify({type:'WA_EMBEDDED_SIGNUP',event:'${message}',data:{waba_id:'111222',phone_number_id:'333444'}})}));` : ''}cb({status:'connected',authResponse:{code:'meta-code'}});},50);}};`;
+    page.on('pageerror', e => errors.push(e.message));
+    await page.route('**/*', async route => {
+      const u = new URL(route.request().url());
+      if (u.hostname === 'connect.facebook.net') return route.fulfill({ contentType: 'text/javascript', body: sdk });
+      if (u.origin !== BASE) return route.abort();
+      if (u.pathname === '/api/layla-meta') {
+        const body = route.request().postDataJSON() || {}, surface = u.searchParams.get('surface');
+        if (surface !== 'customer') return route.fulfill({ json: { ok: true, connected: false, available: false } });
+        calls.push(body.action || 'get');
+        if (body.action === 'begin') return route.fulfill({ json: { ...state, attempt: 'a-1', state: 'f'.repeat(64), path: body.path, expiresAt: Date.now() + 1800000, appId: '1388038082832745', configId: '998877665544', version: 'v25.0', esVersion: 'v4' } });
+        if (body.action === 'finish') {
+          finishes.push(body);
+          await new Promise(r => setTimeout(r, 700));
+          Object.assign(state, { status: 'connected', integration: { id: 'i1', sender: '96890000000', path: 'coexistence', status: 'connected' }, connectionChecks: { path: true, registered: true, routing: true, nameStatus: 'APPROVED' } });
+        }
+        return route.fulfill({ json: state });
+      }
+      if (u.pathname.startsWith('/api/product-setup')) return route.fulfill({ status: 401, json: { ok: false, reason: 'sign_in_required' } });
+      if (u.pathname.startsWith('/api/')) return route.fulfill({ status: 404, json: { ok: false } });
+      return route.continue();
+    });
+    await page.goto(`${BASE}/${ar ? '' : 'en/'}catalyst/setup`);
+    const card = page.getByRole('region', { name: 'WhatsApp', exact: true });
+    await card.getByRole('button', { name: t('Connect WhatsApp', 'ربط واتساب'), exact: true }).click();
+    await card.locator('.layla-which-card').first().click();
+    await card.getByRole('button', { name: t('Get Meta ready', 'تجهيز الربط مع Meta'), exact: true }).click();
+    await card.getByRole('button', { name: t('Connect with Facebook', 'الربط عبر فيسبوك'), exact: true }).click();
+    await card.getByRole('button', { name: t('Finishing your connection…', 'جارٍ إكمال الربط…') }).waitFor({ timeout: 8000 }); checks++;
+    assert.equal(await card.getByRole('button', { name: t('Cancel this attempt', 'إلغاء هذه المحاولة') }).count(), 0, 'nothing to cancel once Meta has answered'); checks++;
+    await card.getByRole('heading', { name: t('Connected ✓ What’s next', 'تم الربط ✓ ما التالي') }).waitFor({ timeout: 10000 }); checks++;
+    assert.equal(finishes.length, 1, 'finished exactly once'); checks++;
+    assert.deepEqual({ ...finishes[0], state: undefined }, { action: 'finish', attempt: 'a-1', state: undefined, code: 'meta-code', ...(message ? { waba: '111222', phone: '333444' } : {}) },
+      message ? `${message} from another facebook.com window is used` : 'no message: the code goes alone and the server finds the WABA'); checks++;
+    assert.equal(calls.includes('cancel'), false, 'the attempt is not thrown away'); checks++;
+    const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+    assert.deepEqual(axe.violations.filter(item => ['serious', 'critical'].includes(item.impact)).map(item => item.id), [], `${lang}/${width}: accessibility`); checks++;
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth) <= 1, `${lang}/${width}: no horizontal scroll`); checks++;
+    await page.screenshot({ path: `${OUT}/${lang}-${width}-connected${message ? '' : '-code-only'}.png`, fullPage: true });
     assert.deepEqual(errors, []); checks++;
     await context.close();
   }
