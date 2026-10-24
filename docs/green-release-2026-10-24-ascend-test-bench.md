@@ -131,3 +131,20 @@ Decision: BF-2026-10-24-AUDIT-BOOKING-TEST-BENCH (vault `Decisions/2026-10-24-Ow
 - The live onboarding chunk contains the fix and no checklist.
 
 **Not tested:** a real Meta connection. Ahmed's retry is the live proof.
+
+## Follow-up (2026-10-25): two WhatsApp number choices
+
+**Report:** Ahmed's screenshot of the WhatsApp card asked to simplify the options. His retry had also ended on `coexistence_not_verified` (the record reached the server, so the 2026-10-24 finish fix works), with a message telling him to check the number he "typed", although nothing is typed on that path.
+
+**Change** (`59fa138`; Vercel `dpl_J6ya1ze2y9LxUfQkd3vPwxoMYzCV`; no Convex change):
+- **Two choices:** "My WhatsApp Business number" (recommended) and "A different number". "A different number" covers both a new number and one already on an API. Both open the same Meta window, and the server's `new_number` path connects an already registered number without the PIN step (new unit test). The server still accepts `existing_cloud`, which the owner's direct connection uses, and an older attempt on that path shows as "A different number".
+- **Removed:** the portfolio and WABA ID fields, and the "Which WhatsApp do you use?" question. Instructions for switching from regular WhatsApp are now a closed link under the first choice.
+- **Messages:** `coexistence_not_verified` now says Meta's window picked a number that isn't on the app, so pick the app's number or choose "A different number". `business_app_requires_coexistence` names the new label.
+
+**Checks:**
+- `whatsapp-connect-browser`: 121 checks. Covers two radios, no portfolio fields, the switch link, `begin` sending only the path, and the three finished connections. EN/AR at 320–1440.
+- All unit tests, the typecheck, the build and all 12 shared browser suites pass.
+- The live chunk `LaylaOnboarding-CI58drbH.js` contains the new label and none of the old ones.
+- Rollback target: `dpl_mXfsCFW47Nponwq3dXENaWLx8ku3`.
+
+**Still open:** a real coexistence connection. Ahmed's last attempt is recorded as `coexistence_not_verified`.
