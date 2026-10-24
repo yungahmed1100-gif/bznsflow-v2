@@ -79,3 +79,19 @@ Decision: BF-2026-10-24-AUDIT-BOOKING-TEST-BENCH (vault `Decisions/2026-10-24-Ow
   - A real booking: it would email Ahmed and take a public time.
   - Signing in as Ahmed: there is no session.
   - Ahmed's first sign-in is what shows the Retail dashboard, with the founder bar and the Audits, Email and Website tabs.
+
+## Follow-up fix (same day): Chats cut off at the bottom
+
+**Report:** Ahmed's screenshot showed the Chats tab clipped at the bottom.
+- **Cause:** the chat panes were sized at 100% of the main area, while the plan notice, the website reminder and the founder bar sat above them. The thread and reply box ran past the bottom of the screen.
+- **Who it affected:** any customer with a notice above Chats, not only the founder.
+
+**Fix** (`aadf1e7`, `dpl_2tfhPCyx8RrjGdLzoHxorB61wCoM`; CSS only, no Convex change):
+- Chats is now a column: the notices keep their own height, and the panes fill the rest with a 440px minimum. On very short windows the tab scrolls instead.
+- An open chat on a phone hides the notices.
+- The app frame uses `overflow: clip`, so focusing the reply box can't scroll it away.
+
+**Checks:**
+- New browser checks at 1440×800, 1280×760, 1024×600 and 375×740 (EN/AR). They fail on the old CSS.
+- All 12 shared browser suites and every sector suite pass.
+- The rule is confirmed in the live CSS.
