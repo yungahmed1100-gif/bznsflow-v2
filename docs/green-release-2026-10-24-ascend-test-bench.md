@@ -148,3 +148,32 @@ Decision: BF-2026-10-24-AUDIT-BOOKING-TEST-BENCH (vault `Decisions/2026-10-24-Ow
 - Rollback target: `dpl_mXfsCFW47Nponwq3dXENaWLx8ku3`.
 
 **Still open:** a real coexistence connection. Ahmed's last attempt is recorded as `coexistence_not_verified`.
+
+## Follow-up (2026-10-25): Meta window guide matches Meta's 2026 flow
+
+**Report:** Ahmed pasted Meta's new **Messaging accounts** page and asked that the in-app Meta guide match Meta's latest screens.
+
+**Meta changes reflected** (Meta's "Onboard WhatsApp Business app users" page and partner guides):
+- The WhatsApp Business Account is now a **Messaging account**, which holds templates, billing and the payment method. Its ID is the old WABA ID, so nothing changes in our API use.
+- The app route is **Connect a WhatsApp Business App**. A message from Facebook arrives inside WhatsApp Business; the owner taps **Connect**, then **Connect to the Business Platform**, chooses whether to share chat history, then scans the QR code or enters the code.
+- The app version must be 2.24.17 or later.
+- Linked devices are signed out when the app is connected.
+- The business portfolio can't be changed later.
+
+**Change** (`7ebaf90`; Vercel `dpl_6pFCjB4JugFQwYifiN7kPWpuLbPR`; no Convex change):
+- **The guide:** closed by default.
+  - 6 steps for "My WhatsApp Business number" and 5 for "A different number".
+  - On the app route, a warning says an SMS or call code means Meta has taken the new-number route. That is the wrong turn in Ahmed's 2026-10-24 attempt.
+  - Meta's English button names are bold `<bdi>` labels, so the Arabic lines read correctly.
+- **The ready line** names version 2.24.17.
+- **The connected card:**
+  - Billing points to the Messaging account.
+  - The app route adds a line saying linked computers must be linked again and the app should stay open for a few minutes while it syncs.
+  - It makes no claim about importing chat history, which BznsFlow doesn't do.
+- **Dashboard and pricing billing wording:** "WhatsApp Business account" became "Messaging account", and the billing path is Accounts › Messaging accounts.
+
+**Checks:**
+- `whatsapp-connect-browser`: 148 checks.
+- All unit tests, the typecheck, the build and all 12 shared browser suites pass.
+- The live chunk `LaylaOnboarding-Kt9JmxxU.js` has the new guide and none of the old wording.
+- Rollback target: `dpl_J6ya1ze2y9LxUfQkd3vPwxoMYzCV`.
