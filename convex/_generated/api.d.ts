@@ -9,6 +9,8 @@
  */
 
 import type * as activationStage from "../activationStage.js";
+import type * as audit from "../audit.js";
+import type * as auditState from "../auditState.js";
 import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
 import type * as billingState from "../billingState.js";
@@ -195,6 +197,7 @@ import type * as reviewMaintenance from "../reviewMaintenance.js";
 import type * as reviewState from "../reviewState.js";
 import type * as websiteBrief from "../websiteBrief.js";
 import type * as websiteBriefState from "../websiteBriefState.js";
+import type * as websiteProjectsState from "../websiteProjectsState.js";
 
 import type {
   ApiFromModules,
@@ -204,6 +207,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activationStage: typeof activationStage;
+  audit: typeof audit;
+  auditState: typeof auditState;
   auth: typeof auth;
   billing: typeof billing;
   billingState: typeof billingState;
@@ -390,6 +395,7 @@ declare const fullApi: ApiFromModules<{
   reviewState: typeof reviewState;
   websiteBrief: typeof websiteBrief;
   websiteBriefState: typeof websiteBriefState;
+  websiteProjectsState: typeof websiteProjectsState;
 }>;
 
 /**

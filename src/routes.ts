@@ -9,6 +9,8 @@ export default [
   { file: "route-modules/support.jsx", path: "support" },
   { file: "route-modules/en-support.jsx", path: "en/support" },
 
+  { file: "route-modules/audit.jsx", path: "audit" },
+  { file: "route-modules/en-audit.jsx", path: "en/audit" },
   { file: "route-modules/refund.jsx", path: "refund" },
   { file: "route-modules/en-refund.jsx", path: "en/refund" },
   // Synthetic product draft: available only in the local development server.
@@ -50,6 +52,8 @@ export default [
     "file": "route-modules/owner-access.jsx",
     "path": "owner/access"
   },
+  { file: "route-modules/en-owner-websites.jsx", path: "en/owner/websites" },
+  { file: "route-modules/owner-websites.jsx", path: "owner/websites" },
   {
     "file": "route-modules/layla-dashboard.jsx",
     "path": "layla/dashboard"

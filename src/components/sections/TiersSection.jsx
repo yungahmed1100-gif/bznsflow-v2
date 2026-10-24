@@ -35,7 +35,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
     catalyst: { monthly: t.tier_pay_monthly, yearly: t.tier_pay_yearly },
     ascend: { monthly: t.tier_pay_ascend_monthly, yearly: t.tier_pay_ascend_yearly },
   };
-  const websiteHref = `${lang === 'ar' ? '' : '/en'}/layla/dashboard?tab=settings&view=website`;
+  const websiteHref = `${lang === 'ar' ? '' : '/en'}/layla/dashboard?tab=website`;
   const link = tier => {
     if (canSetup(tier.key)) return { href: setupHref, icon: 'arrow-right', label: t.tier_setup, event: 'SetupClick' };
     if (tier.key === 'ascend' && (owner || account?.accessPlan === 'ascend')) return { href: `${lang === 'ar' ? '' : '/en'}/layla/dashboard?tab=settings&view=business`, icon: 'arrow-right', label: t.tier_setup_ascend, event: 'SetupClick' };

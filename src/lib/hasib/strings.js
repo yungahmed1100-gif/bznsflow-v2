@@ -326,6 +326,7 @@ const shopReasons = {
   employee_owns_workspace: ['That email already runs its own BznsFlow business, so it can’t join as an employee.', 'هذا البريد يدير نشاطاً خاصاً على BznsFlow، فلا يمكن إضافته كموظف.'],
   invalid_email: ['Enter a valid email address.', 'أدخل بريداً إلكترونياً صحيحاً.'],
   industry_profile_required: ['Choose your industry in Business details first.', 'اختر نوع نشاطك من تفاصيل النشاط أولاً.'],
+  founder_dental_preview_only: ['Dental opens as a preview on this account, so your real chats keep their text.', 'يُفتح قطاع الأسنان كمعاينة في هذا الحساب، لتبقى نصوص محادثاتك الحقيقية.'],
   invite_send_failed: ['The invitation is saved, but the email didn’t send. Use Resend in a minute.', 'حُفظت الدعوة لكن البريد لم يُرسل. استخدم إعادة الإرسال بعد دقيقة.'],
   invalid_cursor: ['The list changed. It has been reloaded from the top.', 'تغيّرت القائمة، وتمت إعادة تحميلها من البداية.'],
   item_archived: ['A product in this order has been archived. Remove it or restore the product before confirming.', 'منتج في هذا الطلب مؤرشف. احذفه أو أعد المنتج قبل التأكيد.'],

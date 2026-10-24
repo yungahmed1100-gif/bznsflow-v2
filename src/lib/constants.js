@@ -1,5 +1,6 @@
 // Site-wide shared constants.
-export const CALENDAR_URL = 'https://calendar.app.google/fUA7FtAyRHJ9okdk7';
+// The free audit is booked on our own page (src/pages/AuditBooking.jsx), not an outside calendar (2026-10-24).
+export const auditPath = lang => (lang === 'en' ? '/en/audit' : '/audit');
 export const WHATSAPP_URL = 'https://wa.me/201036755930';
 
 // Second conversion route, offered alongside WhatsApp wherever Layla closes —

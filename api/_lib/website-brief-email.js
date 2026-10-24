@@ -2,6 +2,7 @@
 // attached. The recipient is fixed in config/website-brief.js; nothing the owner sends can change it.
 import { BRIEF_LABELS, BRIEF_RECIPIENT } from '../../config/website-brief.js';
 
+const QUEUE = 'https://www.bznsflowai.com/en/owner/websites';
 const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
 const shown = value => Array.isArray(value) ? value.join(', ') : value === true ? 'Yes' : String(value);
@@ -19,7 +20,8 @@ export function briefEmail(brief) {
   const files = [...(brief.logo ? [{ ...brief.logo, filename: 'logo' }] : []), ...brief.photos.map((p, i) => ({ ...p, filename: `photo-${i + 1}` }))]
     .filter(f => f.url).map(f => ({ filename: `${f.filename}.${EXT[f.contentType] || 'jpg'}`, path: f.url }));
   const subject = `${brief.update ? 'Updated website brief' : 'Website brief'} — ${name}`.slice(0, 200);
-  const intro = `Ascend account ${brief.account.email}${brief.account.name ? ` (${brief.account.name})` : ''}, brief version ${brief.version}. ${files.length} file(s) attached.`;
+  const due = brief.project?.dueAt ? ` Due ${new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Muscat' }).format(new Date(brief.project.dueAt))}, 17:00 Muscat.` : '';
+  const intro = `Ascend account ${brief.account.email}${brief.account.name ? ` (${brief.account.name})` : ''}, brief version ${brief.version}. ${files.length} file(s) attached.${due} Queue: ${QUEUE}`;
   const html = `<p>${escape(intro)}</p><table cellpadding="6" style="border-collapse:collapse;font-family:sans-serif;font-size:14px">${
     rows.map(([key, label]) => `<tr><th align="left" valign="top" style="border-bottom:1px solid #ddd">${escape(label)}</th><td dir="auto" style="border-bottom:1px solid #ddd">${htmlValue(key, brief.fields[key])}</td></tr>`).join('')
   }</table>`;

@@ -63,10 +63,13 @@ export function sectorFor(row) { return sectorIdFor(row?.profile?.sector); }
 // Ascend and Apex are the industry plans. Read straight from the grant (not hasib/plans.js, which
 // imports this module through hasib/shared.js).
 const INDUSTRY_PLANS = new Set(['ascend', 'apex']);
+// The founder's Ascend account tests every sector, while Layla on its pilot number keeps answering
+// BznsFlow's own prospects exactly as before: the general setup (Ahmed, 2026-10-24).
+export const FOUNDER_EMAIL = 'ahmed@bznsflowai.com';
 export const GENERAL_SECTOR = 'other';
 export async function onIndustryPlan(ctx, accountId) {
   const account = accountId && await ctx.db.get(accountId);
-  if (!account?.email) return false;
+  if (!account?.email || String(account.email).toLowerCase().trim() === FOUNDER_EMAIL) return false;
   const grant = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', String(account.email).toLowerCase().trim())).unique();
   return grantLive(grant) && INDUSTRY_PLANS.has(grant.plan);
 }

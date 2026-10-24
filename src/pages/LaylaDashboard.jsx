@@ -9,11 +9,12 @@ import { DashboardNav } from '../components/dashboard/DashboardNav';
 import { ChatsView } from '../components/dashboard/ChatsView';
 import { SetupReminder } from '../components/dashboard/SetupReminder';
 import { AccessNotice } from '../components/dashboard/AccessNotice';
-import { WebsiteBrief } from '../components/dashboard/WebsiteBrief';
+import { WebsiteOnboarding } from '../components/dashboard/website/WebsiteOnboarding';
 import { WebsiteReminder } from '../components/dashboard/WebsiteReminder';
 import { ContactsView } from '../components/dashboard/ContactsView';
 import { BroadcastView } from '../components/dashboard/BroadcastView';
 import { EmailView } from '../components/dashboard/rasil/EmailView';
+import { AuditsView } from '../components/dashboard/audits/AuditsView';
 import { usePolling } from '../hooks/usePolling';
 import { dashboard, hasib, loadOverview, loadHasib, setHasibPreviewIndustry, setupPath, DashboardError } from '../lib/dashboard/api';
 import { createHasibStrings } from '../lib/hasib/strings';
@@ -66,7 +67,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const overview = usePolling(loadOverview, [], { interval: 30000, enabled: ready });
   // Hasib is optional: when it is off (or unavailable) its tabs simply do not appear.
   // Catalyst has no operations capability; asking Hasib would only earn a plan_required refusal every minute.
-  // The founder's own Catalyst account stays Catalyst; industry previews live at /owner/preview/<pack>.
+  // The founder's Ascend account is the test bench: its bar switches the real sector or opens a read-only preview.
   const hasibAllowed = !!overview.data?.capabilities?.operations;
   const hasibState = usePolling(loadHasib, [], { interval: 60000, enabled: ready && hasibAllowed });
   const hasibOverview = hasibState.data?.modules ? hasibState.data : null;
@@ -75,7 +76,8 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const s = useMemo(() => createStrings(lang, packId), [lang, packId]);
   // Eight plain sections; Hasib's appear only when Business Setup selects a live pack.
   const map = useMemo(() => dashboardMap(hasibOverview, overview.data?.capabilities || hasibOverview?.capabilities, overview.data?.workspaceRole,
-    { email: !!overview.data?.rasilEnabled && !!overview.data?.capabilities?.email }), [hasibOverview, overview.data?.capabilities, overview.data?.workspaceRole, overview.data?.rasilEnabled]);
+    { email: !!overview.data?.rasilEnabled && !!overview.data?.capabilities?.email, website: account?.accessPlan === 'ascend', audits: !!overview.data?.founderPreview && !previewIndustry }),
+    [hasibOverview, overview.data?.capabilities, overview.data?.workspaceRole, overview.data?.rasilEnabled, overview.data?.founderPreview, previewIndustry, account?.accessPlan]);
   const SixTabWorkspace = map.sixTab ? SIX_TAB_DASHBOARDS[map.packId] || RealEstateDashboard : null;
   const h = useMemo(() => createHasibStrings(lang, packId), [lang, packId]);
   // The prerendered shell has no URL, so resolving the tab before mount bakes "chats" into
@@ -111,6 +113,17 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
     await Promise.all([hasibState.refresh(), overview.refresh()]);
     go('today');
   };
+  // The founder's real sector, remembered while a preview replaces the Hasib overview.
+  const [livePack, setLivePack] = useState('');
+  useEffect(() => { if (!previewIndustry && hasibOverview?.pack?.id && !hasibOverview.readOnly) setLivePack(hasibOverview.pack.id); }, [previewIndustry, hasibOverview]);
+  const changeLive = async packId => {
+    setHasibPreviewIndustry('');
+    setPreviewIndustry('');
+    await hasib('settings_update', { packId });
+    setLivePack(packId);
+    await Promise.all([hasibState.refresh(), overview.refresh()]);
+    go('work');
+  };
   const data = overview.data;
   const workflow = hasibOverview?.pack ? hasibPack(hasibOverview.pack.id).ownerUi.workflow : 'orders';
   const unavailable = overview.error?.reason === 'dashboard_unavailable';
@@ -130,7 +143,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
       <DashboardNav packId={hasibOverview?.pack?.id} s={s} h={h} sections={map.sections} tab={tab} onSelect={go} search={params} business={data?.business?.name} preview={hasibOverview?.readOnly} badges={{ orders: hasibOverview?.counts?.laylaWaiting || 0, work: hasibOverview?.counts?.followupsActionable || 0 }} />
       <main id="ld-main" className={`ld-main ${hasibOverview?.readOnly ? 'hb-preview-mode' : ''}`} tabIndex={-1} data-tab={tab}>
         {!previewPack && <AccessNotice s={s} account={account} />}
-        {!previewPack && !(tab === 'settings' && view === 'business') && <WebsiteReminder s={s} account={account} onGo={go} />}
+        {!previewPack && tab !== 'website' && map.sections.includes('website') && <WebsiteReminder s={s} account={account} onGo={go} />}
         {!ready || (overview.loading && !data) || hasibPending ? <p className="ld-state" role="status">{s.t('loading')}</p>
           : unavailable ? <div className="ld-state"><p>{s.t('dashboardUnavailable')}</p><a className="ld-button" href={setupPath(lang)}>{s.t('setup')}</a></div>
           : overview.error && !data ? <div className="ld-state" role="alert"><p>{s.reason(overview.error.reason)}</p>{overview.error.reason === 'access_required'
@@ -138,7 +151,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
             : <button className="ld-button" onClick={() => overview.refresh()}>{s.t('retry')}</button>}</div>
           : data && (data.connected || data.capabilities?.operations || data.founderPreview) ? (
             <>
-              {!previewPack && data.founderPreview && hasibOverview && <FounderIndustryPreview s={s} industries={hasibOverview.industries} current={previewIndustry} onChange={changePreview} />}
+              {!previewPack && data.founderPreview && hasibOverview && <FounderIndustryPreview s={s} h={h} industries={hasibOverview.industries} livePack={livePack} current={previewIndustry} onLive={changeLive} onPreview={changePreview} />}
               {hasibOverview?.readOnly && <p className="hb-preview-banner" role="status">{s.ar ? 'معاينة للقراءة فقط — جميع إجراءات الحفظ محظورة.' : 'Read-only preview — all save actions are blocked.'}</p>}
               {!(map.sixTab && tab === 'work') && <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} />}
               {hasibOverview?.readOnly && (tab === 'settings' || (tab === 'stock' && view === 'services')) ? <p className="ld-state">{s.ar ? 'إعدادات تجريبية للقراءة فقط. لا توجد قناة مراسلة مرتبطة بهذه المعاينة.' : 'Read-only sample settings. This preview has no connected messaging channel.'}</p>
@@ -155,6 +168,8 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                 : tab === 'service' ? <ServiceView initialRepairId={params.get('repair')} initialAction={params.get('action') || ''} s={s} h={h} timezone={data.timezone} staff={hasibOverview?.workspaceRole === 'employee'} onClearLink={() => setParams(new URLSearchParams({ tab: 'service' }), { replace: true })} onChanged={refreshHasib} />
                 : tab === 'money' && view === 'expenses' ? <ExpensesView s={s} h={h} overview={hasibOverview} timezone={data.timezone} initialCreate={params.get('action') === 'expense'} />
                 : tab === 'money' ? <InsightsView s={s} h={h} overview={hasibOverview} onGo={go} />
+                : tab === 'audits' ? <AuditsView s={s} />
+                : tab === 'website' ? <WebsiteOnboarding s={s} emailOpen={map.sections.includes('email')} onGo={go} />
                 : tab === 'email' ? <EmailView s={s} overview={data} view={view} explicitView={params.has('view')} onGo={(next, extra) => setParams(dashboardSearch(params, next, extra), { replace: true })} />
                 : (tab === 'customers' && view === 'broadcast') || tab === 'broadcasts' ? (data.integration ? <BroadcastView s={s} overview={data} onTimezone={() => overview.refresh({ quiet: true })} /> : <div className="ld-state"><p>{s.t('broadcastWhatsAppOnly')}</p>{map.sections.includes('settings') && <button type="button" className="ld-button" onClick={() => go('settings', { view: 'channels' })}>{s.t('connectChannel')}</button>}</div>)
                 : tab === 'customers' ? <>{hasibOverview?.pack && (!map.sixTab || ['retail', 'retail-tech'].includes(hasibOverview.pack.id)) && <FollowupView s={s} h={h} packId={hasibOverview.pack.id} timezone={data.timezone} />}<ContactsView s={s} overview={data} onOpenChat={id => go('chats', { chat: id })} /></>
@@ -162,7 +177,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
                 : tab === 'settings' && view === 'brain' ? <BrainPage lang={lang} part={brainPart(params)} onPart={part => setParams(dashboardSearch(params, 'settings', { view: 'brain', part }), { replace: true })}
                     channel={!!data.connected} active={!!data.messaging?.active} onGo={go} />
                 : tab === 'settings' && view === 'services' ? <BusinessDetails s={s} section="services" catalyst={!!map.catalyst} onSaved={() => overview.refresh({ quiet: true })} />
-                : tab === 'settings' && view === 'business' ? <>{!map.catalyst && account?.accessPlan === 'ascend' && <WebsiteBrief s={s} />}<BusinessDetails s={s} catalyst={!!map.catalyst} section={map.catalyst || map.sections.includes('stock') ? 'details' : 'all'} initialIndustryId={hasibOverview?.readOnly ? undefined : hasibOverview?.legacyIndustryId || undefined} next={data?.connected ? { label: lang === 'ar' ? 'التالي: المحادثات' : 'Next: Chats', go: () => go('chats') } : { label: lang === 'ar' ? 'التالي: اربط قناة' : 'Next: Connect a channel', go: () => go('settings', { view: 'channels' }) }} onSaved={map.catalyst ? () => overview.refresh({ quiet: true }) : refreshHasib} />
+                : tab === 'settings' && view === 'business' ? <><BusinessDetails s={s} catalyst={!!map.catalyst} section={map.catalyst || map.sections.includes('stock') ? 'details' : 'all'} initialIndustryId={hasibOverview?.readOnly ? undefined : hasibOverview?.legacyIndustryId || undefined} next={data?.connected ? { label: lang === 'ar' ? 'التالي: المحادثات' : 'Next: Chats', go: () => go('chats') } : { label: lang === 'ar' ? 'التالي: اربط قناة' : 'Next: Connect a channel', go: () => go('settings', { view: 'channels' }) }} onSaved={map.catalyst ? () => overview.refresh({ quiet: true }) : refreshHasib} />
                     {!hasibOverview?.readOnly && hasibOverview?.pack && <IndustrySetup selection={false} heading={false} s={s} h={h} livePacks={hasibOverview.livePacks} industries={hasibOverview.industries} current={hasibOverview.pack.id} settings={hasibOverview.settings} onChosen={refreshHasib} />}
                     {/* A sign-up sector that is not live yet: the owner picks a live one here (docs/product-design.md). */}
                     {!hasibOverview?.readOnly && !hasibOverview?.pack && hasibOverview?.setupRequired && <IndustrySetup s={s} h={h} livePacks={hasibOverview.livePacks} industries={hasibOverview.industries} current={hasibOverview.selectedIndustryId} settings={hasibOverview.settings} onChosen={refreshHasib} />}</>

@@ -12,15 +12,19 @@ import { convexMemory } from './helpers/convex-memory.mjs';
 import { GREEN_ORIGIN } from './helpers/green-env.mjs';
 
 const token = 'a'.repeat(64), csrf = 'b'.repeat(64), sessionHash = createHash('sha256').update(token).digest('hex');
-const minimal = { nameEn: 'Nour Abayas', phone: '+968 9000 0000', languages: 'both' };
+const minimal = { nameEn: 'Nour Abayas', phone: '+968 9000 0000', languages: 'both', domainChoice: 'nourabayas.com', mailboxLocal: 'info' };
 
-test('a brief needs a name, a phone and a language; everything else is checked by kind and length', () => {
+test('a brief needs a name, a phone, a language, a domain and a mailbox; everything else is checked by kind and length', () => {
   assert.deepEqual(normalizeBrief(minimal), { ok: true, value: minimal });
   assert.equal(normalizeBrief({ ...minimal, nameEn: '' }).field, 'nameEn');
   assert.equal(normalizeBrief({ ...minimal, nameEn: '', nameAr: 'نور' }).ok, true);
   assert.equal(normalizeBrief({ ...minimal, phone: undefined }).reason, 'brief_required');
+  assert.equal(normalizeBrief({ ...minimal, domainChoice: undefined }).field, 'domainChoice');
+  assert.equal(normalizeBrief({ ...minimal, mailboxLocal: undefined }).field, 'mailboxLocal');
   for (const [field, value] of [['mapUrl', 'javascript:alert(1)'], ['email', 'not-an-email'], ['colors', ['red']], ['colors', ['#000000', '#111111', '#222222', '#333333']],
-    ['references', ['ftp://x.example']], ['pages', ['blog']], ['style', 'brutal'], ['languages', 'fr'], ['designLogo', 'yes'], ['about', 42]]) {
+    ['references', ['ftp://x.example']], ['pages', ['blog']], ['style', 'brutal'], ['languages', 'fr'], ['designLogo', 'yes'], ['about', 42],
+    ['domainChoice', 'nour.om'], ['domainChoice', 'nour abayas.com'], ['domainChoice', 'shop.nour.com'], ['domainChoice', 'bznsflow.com'],
+    ['mailboxLocal', 'in fo'], ['mailboxLocal', '.info'], ['recoveryEmail', 'nope'], ['domainAlternates', ['a.com', 'b.com', 'c.com']], ['domainAlternates', ['x.org']]]) {
     assert.equal(normalizeBrief({ ...minimal, [field]: value }).field, field, `${field} ${JSON.stringify(value)}`);
   }
   assert.equal(normalizeBrief({ ...minimal, about: 'x'.repeat(1501) }).reason, 'brief_too_long');
@@ -28,6 +32,9 @@ test('a brief needs a name, a phone and a language; everything else is checked b
   assert.equal(clean.value.about, 'Abayas for every day');
   assert.deepEqual(clean.value.colors, ['#1F4F7A']);
   assert.deepEqual(clean.value.references, ['https://example.com']);
+  // Names are kept lowercase, and a backup that repeats the choice is dropped.
+  const named = normalizeBrief({ ...minimal, domainChoice: 'NourAbayas.COM', mailboxLocal: 'Sales', domainAlternates: ['nourabayas.com', 'Nour-Abayas.net'] });
+  assert.deepEqual([named.value.domainChoice, named.value.mailboxLocal, named.value.domainAlternates], ['nourabayas.com', 'sales', ['nour-abayas.net']]);
 });
 
 // ── Convex state ────────────────────────────────────────────────────────────
@@ -61,7 +68,11 @@ test('a first brief starts from the business details the owner already confirmed
   const { run } = await fixture();
   const { value } = await run({ operation: 'get' });
   assert.equal(value.version, 0);
-  assert.deepEqual(value.fields, { nameEn: 'Nour', services: 'Abayas', hours: '9–9', address: 'Muscat', phone: '+96890000000', email: 'owner@example.com' });
+  assert.deepEqual(value.fields, { nameEn: 'Nour', services: 'Abayas', hours: '9–9', address: 'Muscat', phone: '+96890000000', email: 'owner@example.com',
+    recoveryEmail: 'owner@example.com', mailboxLocal: 'info' });
+  // The wizard marks what came from BznsBrain; the mailbox defaults are not the owner's business details.
+  assert.deepEqual(value.prefilled.sort(), ['address', 'email', 'hours', 'nameEn', 'phone', 'services']);
+  assert.deepEqual([value.project, value.draft], [null, null]);
 });
 
 test('uploads are rate limited, byte-checked, and only the account\'s own files can be used', async () => {

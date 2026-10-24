@@ -74,7 +74,7 @@ export function AboutSection({ t, CALENDAR_URL, trackEvent }) {
                 <Icon name="whatsapp" size={18} />
                 <span>{t.about_cta1}</span>
               </a>
-              <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" onClick={() => trackEvent?.('AboutCallClick')}>
+              <a href={CALENDAR_URL} className="btn btn-ghost" onClick={() => trackEvent?.('AboutCallClick')}>
                 <Icon name="calendar" size={16} />
                 <span>{t.secondary_cta_call}</span>
               </a>

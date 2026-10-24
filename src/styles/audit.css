@@ -1,0 +1,73 @@
+/* The free-audit booking page (/audit). Ledger rules: 4px radius, no blur or gradients; the chosen day
+ * is orange (the current step), the confirmation green. Logical properties only, so RTL needs no override. */
+
+.audit-card {
+  max-inline-size: 760px;
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-6);
+  background: var(--bg-card);
+  border: 1px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
+}
+
+.audit-title { margin: 0 0 var(--space-3); font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.25rem); line-height: 1.15; color: var(--text-primary); }
+.audit-lead { margin: 0 0 var(--space-3); max-inline-size: 56ch; font-size: 1.05rem; line-height: 1.65; color: var(--text-secondary); }
+.audit-zone { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-4); font-size: 0.9rem; color: var(--text-muted); }
+
+.audit-step { margin: var(--space-6) 0 var(--space-3); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-primary); }
+[dir="rtl"] .audit-step { letter-spacing: normal; text-transform: none; font-size: 0.95rem; }
+
+.audit-days { display: flex; gap: var(--space-2); overflow-x: auto; padding-block-end: var(--space-2); scroll-snap-type: x proximity; }
+.audit-day {
+  display: grid; gap: 2px; flex: 0 0 auto; min-inline-size: 76px; padding: var(--space-3);
+  font: inherit; text-align: center; color: var(--text-primary); cursor: pointer; scroll-snap-align: start;
+  background: var(--bg-primary); border: 1px solid var(--border-hover); border-radius: var(--radius-sm);
+  transition: border-color var(--transition), background-color var(--transition);
+}
+.audit-day span { font-size: 0.8rem; color: var(--text-muted); }
+.audit-day:hover { border-color: var(--text-primary); }
+.audit-day[aria-pressed="true"] { background: var(--orange-tint); border-color: var(--orange); box-shadow: inset 0 -3px 0 var(--orange); }
+.audit-day[aria-pressed="true"] span { color: var(--orange-ink); }
+
+.audit-times { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: var(--space-2); }
+.audit-time {
+  padding: var(--space-3) var(--space-2); font: inherit; font-weight: 600; color: var(--text-primary); cursor: pointer;
+  background: var(--bg-card); border: 1px solid var(--border-hover); border-radius: var(--radius-sm);
+  transition: border-color var(--transition), background-color var(--transition), transform var(--transition-press);
+}
+.audit-time:hover { border-color: var(--orange); background: var(--orange-tint); }
+.audit-time:active { transform: translateY(1px); }
+
+.audit-form { display: grid; gap: var(--space-4); }
+.audit-form label { display: grid; gap: 6px; font-weight: 600; color: var(--text-primary); }
+.audit-form input, .audit-form select, .audit-form textarea {
+  inline-size: 100%; padding: 10px 12px; font: inherit; font-weight: 400; color: var(--text-primary);
+  background: var(--bg-card); border: 1px solid var(--border-hover); border-radius: var(--radius-sm);
+}
+.audit-form input:focus-visible, .audit-form select:focus-visible, .audit-form textarea:focus-visible { border-color: var(--text-primary); }
+.audit-form .btn { justify-self: start; }
+.audit-chosen {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-3); padding: var(--space-4);
+  background: var(--orange-tint); border-inline-start: 4px solid var(--orange); border-radius: var(--radius-sm);
+}
+.audit-chosen span { font-size: 0.85rem; color: var(--orange-ink); }
+.audit-chosen strong { color: var(--text-primary); }
+.audit-link { margin-inline-start: auto; padding: 0; font: inherit; color: var(--blue-ink); text-decoration: underline; background: none; border: 0; cursor: pointer; }
+.audit-hp { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.audit-state { margin: 0; padding: var(--space-6) 0; color: var(--text-secondary); }
+.audit-state .btn { margin-block-start: var(--space-3); }
+.audit-error { margin: var(--space-3) 0 0; padding: var(--space-3); color: var(--coral-ink); background: var(--coral-tint); border-radius: var(--radius-sm); }
+
+.audit-done h1 { margin: var(--space-3) 0; font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.9rem); color: var(--text-primary); }
+.audit-done p { color: var(--text-secondary); line-height: 1.65; }
+.audit-done-mark { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; padding: 4px 10px; font-weight: 700; color: var(--green-ink); background: var(--green-tint); border-radius: var(--radius-sm); }
+
+/* Wide screens show all three weeks at once; phones scroll the row. */
+@media (min-width: 700px) { .audit-days { flex-wrap: wrap; overflow: visible; } }
+
+@media (max-width: 600px) {
+  .audit-card { padding: var(--space-6) var(--space-4); }
+  .audit-form .btn { justify-self: stretch; justify-content: center; }
+}

@@ -4,7 +4,7 @@ import { BrandMark } from '../components/ui/BrandMark';
 import { getStrings } from '../i18n';
 import { INDUSTRIES } from '../lib/industries';
 import { countryOptions } from '../lib/countries';
-import { CALENDAR_URL, WHATSAPP_URL } from '../lib/constants';
+import { auditPath, WHATSAPP_URL } from '../lib/constants';
 import { NEXT_PATH, signinDestination } from '../../config/signin-destination.js';
 import { revealStep } from '../lib/reveal-step.js';
 import '../styles/auth.css';
@@ -552,7 +552,7 @@ export default function SignIn({ lang = 'ar' }) {
 
               <a
                 className="btn btn-primary btn-large auth-submit"
-                href={CALENDAR_URL} target="_blank" rel="noopener noreferrer"
+                href={auditPath(lang)}
               >
                 <Icon name="calendar" size={18} />
                 <span>{t.auth_done_book}</span>

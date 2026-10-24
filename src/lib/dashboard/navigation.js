@@ -90,7 +90,7 @@ export function brainPart(params) {
 // Rasil's Email tab is the same in every Ascend industry: campaigns, subscribers, then the domain and website form.
 export const EMAIL_VIEWS = Object.freeze(['campaigns', 'subscribers', 'setup']);
 const TEAM_PACKS = ['retail', 'retail-tech', 'dental', 'real-estate', 'media', 'fitness', 'clinic', 'construction', 'automotive'];
-export const SECTION_ORDER = ['today', 'chats', 'broadcasts', 'email', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'settings'];
+export const SECTION_ORDER = ['today', 'chats', 'audits', 'broadcasts', 'email', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'website', 'settings'];
 
 /** Preserve caller-owned URL parameters while clearing record state when changing sections. */
 export function dashboardSearch(current, tab, extra = {}) {
@@ -105,10 +105,11 @@ export function dashboardSearch(current, tab, extra = {}) {
  * @param {{ modules: string[], setupRequired: boolean, pack?: { id: string } } | null} hasib the Hasib overview, or null when Hasib is off
  * @param {Record<string, boolean>} [capabilities]
  * @param {'manager' | 'employee'} [role] the role from the main overview, used until the Hasib overview arrives
- * @param {{ email?: boolean }} [open] Rasil's Email tab, when the server says it is open to this account
+ * @param {{ email?: boolean, website?: boolean, audits?: boolean }} [open] Rasil's Email tab, when the server says it is open to this account;
+ *   the free website's onboarding and tracker, for an Ascend account; the free-audit calendar, for the founder only
  * @returns {{ sections: string[], views: Record<string, string[]> }}
  */
-export function dashboardMap(hasib, capabilities = { broadcasts: true, money: true }, role = 'manager', { email = false } = {}) {
+export function dashboardMap(hasib, capabilities = { broadcasts: true, money: true }, role = 'manager', { email = false, website = false, audits = false } = {}) {
   // Catalyst (no operations): Chats, Broadcasts, Customers, Settings. Ascend keeps the map below.
   if (!hasib && !capabilities.operations) {
     const sections = CATALYST.sections.filter(id => (id !== 'broadcasts' || capabilities.broadcasts) && (id !== 'settings' || role !== 'employee'));
@@ -126,9 +127,10 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
   const realEstate = hasib?.pack?.id === 'real-estate' && !hasib.setupRequired;
   const sixTab = !hasib?.setupRequired && SIX_TAB_PACKS[hasib?.pack?.id];
   if (sixTab) {
-    const has = { chats: true, work: true, customers: true, broadcasts: workspaceRole === 'manager' && capabilities.broadcasts !== false,
-      email: email && workspaceRole === 'manager', insights: workspaceRole === 'manager' && capabilities.insights !== false, settings: workspaceRole !== 'employee' };
-    return { sections: ['chats', 'work', 'customers', 'broadcasts', 'email', 'insights', 'settings'].filter(id => has[id]), views: { ...sixTab.views, customers: [], ...(email ? { email: EMAIL_VIEWS } : {}) }, sixTab: true, packId: hasib.pack.id };
+    const has = { chats: true, audits, work: true, customers: true, broadcasts: workspaceRole === 'manager' && capabilities.broadcasts !== false,
+      email: email && workspaceRole === 'manager', insights: workspaceRole === 'manager' && capabilities.insights !== false,
+      website: website && workspaceRole === 'manager', settings: workspaceRole !== 'employee' };
+    return { sections: ['chats', 'audits', 'work', 'customers', 'broadcasts', 'email', 'insights', 'website', 'settings'].filter(id => has[id]), views: { ...sixTab.views, customers: [], ...(email ? { email: EMAIL_VIEWS } : {}) }, sixTab: true, packId: hasib.pack.id };
   }
   // Services are edited in Business details, which is the manager's.
   const managerViews = list => list.filter(v => v !== 'services' || workspaceRole !== 'employee');
@@ -144,7 +146,7 @@ export function dashboardMap(hasib, capabilities = { broadcasts: true, money: tr
     today: !!hasib, chats: !clinic, orders: on('orders'), stock: on('stock'), service: on('repairs'),
     money: (construction || automotive ? on('insights') : views.money.length > 0) && capabilities.money !== false, customers: true,
     team: !!hasib && TEAM_PACKS.includes(hasib.pack?.id) && workspaceRole === 'manager', settings: workspaceRole !== 'employee',
-    email: email && workspaceRole === 'manager',
+    email: email && workspaceRole === 'manager', website: website && workspaceRole === 'manager', audits,
   };
   return { sections: SECTION_ORDER.filter(id => has[id]), views: email ? { ...views, email: EMAIL_VIEWS } : views };
 }

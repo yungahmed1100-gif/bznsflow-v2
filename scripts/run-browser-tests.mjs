@@ -20,6 +20,7 @@ const SUITES = [
   'tests/product-setup-browser.mjs',
   'tests/brain-browser.mjs',
   'tests/home-browser.mjs',
+  'tests/audit-browser.mjs',
 ];
 
 const server = spawn(process.execPath, ['scripts/preview.mjs', '--port', String(PORT)], { stdio: 'ignore' });

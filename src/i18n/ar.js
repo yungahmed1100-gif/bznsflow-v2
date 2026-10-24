@@ -232,7 +232,7 @@ export default {
   "tier_pay_industry_other_note": "مساحة عمل أسيند جاهزة للمجالات المذكورة. أخبرنا عن نشاطك عبر واتساب وسننصحك.",
   "tier_pay_whatsapp": "تواصل معنا عبر واتساب",
   "tier_pay_pick_industry": "اختر مجال نشاطك أولًا.",
-  "tier_website": "أرسل تفاصيل موقعك",
+  "tier_website": "جهّز موقعك المجاني",
   "tier_paid_until": "مفعّل حتى {date}",
   "tier_pay_checking": "نتحقق من دفعتك…",
   "tier_pay_done": "تم استلام الدفعة. {plan} مفعّل حتى {date}.",

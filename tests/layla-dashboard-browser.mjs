@@ -8,6 +8,7 @@ import { mkdir } from 'node:fs/promises';
 import { hasibPack, industryCatalog, visibleModules } from '../config/hasib-packs.js';
 import { capabilitiesFor } from '../convex/hasib/capabilities.js';
 import { resolveParameters, recipientValueMap } from '../config/layla-templates.js';
+import { addBusinessDays } from '../config/website-brief.js';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:5199';
 const OUT = process.env.LAYLA_BROWSER_OUT || 'work/layla-dashboard-browser';
@@ -124,6 +125,7 @@ async function openPage(browser, { width, lang = 'en', path, handler, extra, aut
       resolveAuthSession();
       return;
     }
+    if (url.pathname === '/api/access-admin') { const response = extra?.('access-admin', route.request()); if (response) return route.fulfill({ status: response.status, json: response.json }); }
     if (url.pathname === '/api/product-setup' || url.pathname === '/api/knowledge') return route.fulfill({ status: 401, json: { reason: 'sign_in_required' } });
     if (url.pathname.startsWith('/api/')) return route.fulfill({ status: 404, json: { ok: false } });
     return route.continue();
@@ -195,21 +197,76 @@ try {
     const ar = lang === 'ar';
     const selector = page.locator('.hb-founder-preview select');
     await selector.waitFor();
-    assert.equal(await selector.locator('option[value="retail-tech"]').count(), 1); count++;
-    assert.equal(await selector.locator('option[value="dental"]').count(), 1); count++;
-    assert.match(await selector.locator('option[value="retail-tech"]').textContent(), ar ? /مباشر/ : /Live/); count++;
-    assert.match(await selector.locator('option[value="dental"]').textContent(), ar ? /مباشر/ : /Live/); count++;
-    assert.match(await selector.locator('option[value=""]').textContent(), ar ? /بيانات حقيقية/ : /real data/); count++;
-    assert.notEqual(await selector.locator('option[value="travel"]').getAttribute('disabled'), null); count++;
-    await selector.selectOption('retail-tech');
-    await page.waitForFunction(() => document.querySelector('.hb-founder-preview select')?.value === 'retail-tech');
+    // Live: the founder's real sector, Dental left out (its 24-hour text rule would trim the pilot chats).
+    assert.equal(await selector.locator('option[value="live:retail-tech"]').count(), 1); count++;
+    assert.equal(await selector.locator('option[value="live:media"]').count(), 1); count++;
+    assert.equal(await selector.locator('option[value="live:dental"]').count(), 0, 'Dental is never a live choice for the founder'); count++;
+    assert.equal(await selector.inputValue(), 'live:retail', 'the current live sector is selected'); count++;
+    // Preview: every built industry, Dental included; pending ones disabled.
+    assert.equal(await selector.locator('option[value="preview:dental"]').count(), 1); count++;
+    assert.match(await selector.locator('option[value="preview:retail-tech"]').textContent(), ar ? /مباشر/ : /Live/); count++;
+    assert.notEqual(await selector.locator('option[value="preview:travel"]').getAttribute('disabled'), null); count++;
+    await selector.selectOption('preview:retail-tech');
+    await page.waitForFunction(() => document.querySelector('.hb-founder-preview select')?.value === 'preview:retail-tech');
     await page.getByText(ar ? /معاينة للقراءة فقط/ : /Read-only preview/).first().waitFor(); assert.equal(state.livePack, undefined, 'preview does not change the live sector'); count++;
-    await selector.selectOption('dental');
-    await page.waitForFunction(() => document.querySelector('.hb-founder-preview select')?.value === 'dental');
+    await selector.selectOption('preview:dental');
+    await page.waitForFunction(() => document.querySelector('.hb-founder-preview select')?.value === 'preview:dental');
     await page.getByText(ar ? /معاينة للقراءة فقط/ : /Read-only preview/).first().waitFor(); assert.equal(state.livePack, undefined, 'preview does not change the live sector'); count++;
-    await selector.selectOption('beauty');
-    await page.getByText(ar ? /معاينة للقراءة فقط/ : /Read-only preview/).first().waitFor(); count++;
+    // A live choice saves the real sector, leaves the preview and keeps the bar on it.
+    await selector.selectOption('live:media');
+    await page.waitForFunction(() => document.querySelector('.hb-founder-preview select')?.value === 'live:media');
+    assert.equal(state.livePack, 'media', 'the live sector was saved'); count++;
+    await page.getByText(ar ? /قطاعك المباشر/ : /Your live sector: Media/).waitFor(); count++;
+    assert.equal(await page.locator('.hb-preview-banner').count(), 0, 'no longer a preview'); count++;
     assert.equal(await noOverflow(page), true); count++;
+    assert.deepEqual(await axe(page), []); count++;
+    await context.close();
+  }
+
+  // The founder's Audits tab: a Sunday–Thursday week of free-audit bookings, details, and marking one done.
+  for (const [lang, width] of [['en', 1280], ['ar', 375]]) {
+    const state = fixture(), handler = api(state, { founderPreview: true });
+    const week = (() => { const local = Date.now() + 4 * HOUR, day = local - (local % (24 * HOUR)); return day - new Date(day).getUTCDay() * 24 * HOUR - 4 * HOUR; })();
+    const bookings = [{ id: 'b1', startAt: week + 24 * HOUR + 11 * HOUR, name: 'Sara', email: 'sara@example.com', phone: '+96890000000', business: 'Nour Abayas', industry: 'retail', note: 'WhatsApp replies', lang: 'en', status: 'booked', adminNote: '', createdAt: now },
+      { id: 'b2', startAt: week + 2 * 24 * HOUR + 14 * HOUR, name: 'Omar', email: 'omar@example.com', phone: '', business: '', industry: '', note: '', lang: 'ar', status: 'done', adminNote: 'Good fit', createdAt: now }];
+    const audits = { gets: [], posts: [] };
+    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=audits', handler, extra: (surface, request) => {
+      if (surface === 'hasib') return request.method() === 'GET' ? { status: 200, json: hasibOverview('retail') } : null;
+      if (surface !== 'access-admin') return null;
+      if (request.method() === 'GET') { audits.gets.push(new URL(request.url()).searchParams); return { status: 200, json: { ok: true, bookings, upcoming: 1 } }; }
+      const body = request.postDataJSON(); audits.posts.push({ body, csrf: request.headers()['x-csrf-token'] });
+      Object.assign(bookings.find(b => b.id === body.bookingId), body.status ? { status: body.status } : {}, body.adminNote !== undefined ? { adminNote: body.adminNote } : {});
+      return { status: 200, json: { ok: true, booking: {} } };
+    } });
+    const ar = lang === 'ar';
+    await page.locator('#ld-audits-title').waitFor();
+    assert.ok(await page.locator('[data-section="audits"][aria-current="page"]').count() >= 1, 'the Audits tab is current'); count++;
+    assert.equal(audits.gets[0].get('op'), 'audits'); count++;
+    assert.equal(Number(audits.gets[0].get('to')) - Number(audits.gets[0].get('from')), 7 * 24 * HOUR, 'one week at a time'); count++;
+    const slot = page.locator('.ld-audit-slot.is-booked:visible').first();
+    await slot.click();
+    await page.locator('.ld-audit-detail').getByText('sara@example.com').waitFor(); count++;
+    await page.locator('.ld-audit-detail').getByText(ar ? 'التجزئة والتجارة الإلكترونية' : 'Retail & e-commerce').waitFor(); count++;
+    await page.locator('.ld-audit-detail textarea').fill('Send the retail offer');
+    await page.getByRole('button', { name: ar ? 'تم التدقيق' : 'Mark done' }).click();
+    await page.getByText(ar ? 'تم التعليم كمكتمل.' : 'Marked done.').waitFor();
+    assert.deepEqual(audits.posts[0].body, { bookingId: 'b1', status: 'done', adminNote: 'Send the retail offer' }); count++;
+    assert.equal(audits.posts[0].csrf, 'a'.repeat(64), 'the change carries the dashboard CSRF token'); count++;
+    assert.ok(audits.gets.length >= 2, 'the calendar reloads after a change'); count++;
+    await Promise.all([page.waitForResponse(r => r.url().includes('op=audits') && r.request().method() === 'GET'), page.getByRole('button', { name: ar ? 'التالي' : 'Next' }).click()]);
+    assert.equal(Number(audits.gets.at(-1).get('from')), week + 7 * 24 * HOUR, 'next week'); count++;
+    assert.equal(await noOverflow(page), true); count++;
+    assert.deepEqual(await axe(page), []); count++;
+    await page.screenshot({ path: `${OUT}/audits-${lang}-${width}.png`, fullPage: true });
+    await context.close();
+  }
+
+  // Someone other than the founder never gets the Audits tab, even from a link.
+  {
+    const state = fixture(), handler = api(state);
+    const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard?tab=audits', handler, extra: surface => surface === 'hasib' ? { status: 200, json: hasibOverview('retail') } : null });
+    await page.locator('[data-section="work"][aria-current="page"]').waitFor();
+    assert.equal(await page.locator('[data-section="audits"]').count(), 0); count++;
     await context.close();
   }
 
@@ -609,11 +666,15 @@ try {
     assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`); count++;
     await context.close();
   }
-  // Ascend's free website: the reminder leads to the brief in Business details, the form asks for what
-  // Ahmed needs, and one submit sends the brief (emailed server-side). Prefilled from confirmed details.
+  // Ascend's free website (Ahmed, 2026-10-23): the reminder opens the Website tab, a six-step wizard
+  // prefilled from BznsBrain that saves each step and resumes after a reload, a live domain search, a
+  // review with edit links, then a tracker promising the site within 3 business days.
   for (const [lang, width] of [['en', 1280], ['ar', 375]]) {
-    const submits = [];
-    const brief = { account: { email: 'owner@example.test', name: 'Sara' }, version: 0, fields: { nameEn: 'Blue Studio', phone: '+968 9000 0000' }, submittedAt: null, emailedAt: null, logo: null, photos: [] };
+    const posts = [];
+    const server = { version: 0, fields: { nameEn: 'Blue Studio', phone: '+968 9000 0000', mailboxLocal: 'info', recoveryEmail: 'owner@example.test' },
+      prefilled: ['nameEn', 'phone'], draft: null, project: null };
+    const view = () => ({ account: { email: 'owner@example.test', name: 'Sara' }, version: server.version, submittedAt: server.version ? now : null, emailedAt: server.version ? now : null,
+      fields: server.fields, prefilled: server.draft ? [] : server.prefilled, draft: server.draft, project: server.project, logo: null, photos: [] });
     const setup = { ok: true, csrfToken: 'a'.repeat(64), available: true, status: 'connected', savedToAccount: true, profileVersion: 3,
       bzns: { markdown: '# Blue Studio', version: 1, publishedRevision: 1, publishedAt: now, unpublishedChanges: false },
       profile: { businessName: 'Blue Studio', sector: 'Photography', services: 'Portraits', prices: '', hours: '', location: '', humanContact: 'team@example.test', faqs: [], reviewed: true } };
@@ -622,9 +683,17 @@ try {
       extra: (surface, request) => {
         if (surface === 'website-brief') {
           const body = request.method() === 'POST' ? request.postDataJSON() : null;
-          if (!body) return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), brief } };
-          submits.push(body);
-          return { status: 200, json: { ok: true, version: 1, emailed: true } };
+          if (!body) return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), brief: view() } };
+          posts.push(body);
+          if (body.action === 'save_draft') { server.fields = body.fields; server.draft = { step: body.step, updatedAt: now }; return { status: 200, json: { ok: true, step: body.step } }; }
+          if (body.action === 'domain_check') return { status: 200, json: { ok: true, results: [
+            { domain: 'blue-studio.com', status: 'available' }, { domain: 'blue-studio.net', status: 'taken' }, { domain: 'blue-studio.co', status: 'unavailable' }] } };
+          if (body.action === 'submit') {
+            Object.assign(server, { version: 1, fields: body.fields, draft: null, project: { stage: 'received', stageAt: { received: now }, dueAt: addBusinessDays(now),
+              domain: body.fields.domainChoice, mailbox: `${body.fields.mailboxLocal}@${body.fields.domainChoice}`, liveUrl: '', delayReason: '' } });
+            return { status: 200, json: { ok: true, version: 1, emailed: true } };
+          }
+          return { status: 400, json: { ok: false, reason: 'invalid_action' } };
         }
         if (surface !== 'customer') return null;
         const body = request.method() === 'POST' ? request.postDataJSON() : {};
@@ -633,32 +702,91 @@ try {
         return { status: 200, json: setup };
       } });
     const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
+    const wizard = page.locator('.ld-web');
+    const next = () => wizard.getByRole('button', { name: t('Next', 'التالي'), exact: true }).click();
+    const onStep = (n, name) => wizard.getByRole('heading', { name, exact: true }).waitFor().then(async () => {
+      assert.equal(await wizard.locator('.ld-web-step-count').textContent(), t(`Step ${n} of 6`, `الخطوة ${n} من 6`)); count++;
+    });
+    const required = async what => { await wizard.getByText(t('Fill in the required fields.', 'أكمل الحقول المطلوبة.')).waitFor(); count++; assert.equal(posts.length, what, `${lang}: nothing saved while a required answer is missing`); count++; };
+
     await page.getByRole('heading', { name: t('Your free website is waiting for your details', 'موقعك المجاني بانتظار تفاصيلك') }).waitFor(); count++;
+    if (width > 768) { assert.equal(await page.locator('.ld-nav a[data-section="website"]').count(), 1, `${lang}: Website is a tab for the Ascend owner`); count++; }
     await page.getByRole('link', { name: t('Send website details', 'أرسل تفاصيل الموقع') }).click();
-    const form = page.locator('.ld-brief');
-    await form.getByRole('heading', { name: t('Your free website', 'موقعك المجاني') }).waitFor(); count++;
-    assert.equal(await form.getByLabel(t('Business name in English', 'اسم النشاط بالإنجليزية')).inputValue(), 'Blue Studio', `${lang}: prefilled from confirmed details`); count++;
-    // A language is required, and so is a logo or a request to design one.
-    await form.getByRole('button', { name: t('Send to BznsFlow', 'أرسل إلى BznsFlow') }).click();
-    await form.getByText(t('Fill in the required fields.', 'أكمل الحقول المطلوبة.')).waitFor(); count++;
-    assert.equal(submits.length, 0, `${lang}: nothing is sent while required fields are missing`); count++;
-    await form.getByRole('radio', { name: t('Arabic and English', 'العربية والإنجليزية') }).check();
-    await form.getByRole('button', { name: t('Send to BznsFlow', 'أرسل إلى BznsFlow') }).click();
-    await form.getByText(t('Fill in the required fields.', 'أكمل الحقول المطلوبة.')).waitFor();
-    await form.getByLabel(t('I don’t have a logo. Please design a simple one.', 'ليس لدي شعار. صمّموا لي شعارًا بسيطًا.')).check();
-    await form.getByRole('radio', { name: t('Minimal', 'بسيط') }).check();
-    await form.getByRole('checkbox', { name: t('Gallery', 'المعرض') }).check();
-    await form.getByRole('button', { name: t('Add a colour', 'أضف لونًا') }).click();
-    await form.getByRole('button', { name: t('Send to BznsFlow', 'أرسل إلى BznsFlow') }).click();
-    await form.getByText(t('We’ll contact you before your website goes live.', 'سنتواصل معك قبل نشر موقعك.'), { exact: false }).waitFor(); count++;
-    assert.equal(submits.length, 1); count++;
-    assert.deepEqual(submits[0].fields, { nameEn: 'Blue Studio', phone: '+968 9000 0000', languages: 'both', style: 'minimal', colors: ['#1f4f7a'], pages: ['gallery'], designLogo: true }, `${lang}: the brief as entered`); count++;
-    assert.deepEqual([submits[0].action, submits[0].version, submits[0].logoId, submits[0].photoIds], ['submit', 0, null, []]); count++;
-    assert.equal(await form.getByRole('button', { name: t('Send update', 'أرسل التحديث') }).count(), 1, `${lang}: later sends are updates`); count++;
-    const violations = (await new AxeBuilder({ page }).include('.ld-brief').analyze()).violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
-    assert.deepEqual(violations, [], `${lang} ${width}: website brief accessibility`); count++;
+    await wizard.getByRole('heading', { name: t('Your free website', 'موقعك المجاني'), level: 1 }).waitFor(); count++;
+    assert.equal(new URL(page.url()).searchParams.get('tab'), 'website'); count++;
+
+    // 1 Business: prefilled from BznsBrain, and it says so.
+    await onStep(1, t('Your business', 'نشاطك'));
+    assert.equal(await wizard.getByLabel(t('Business name in English', 'اسم النشاط بالإنجليزية')).inputValue(), 'Blue Studio'); count++;
+    assert.equal(await wizard.locator('.ld-web-from-brain').count(), 1, `${lang}: the prefilled name is marked as from BznsBrain`); count++;
+    await next();
+    // 2 Contact: the phone came prefilled too.
+    await onStep(2, t('Contact & location', 'التواصل والموقع'));
+    assert.deepEqual(posts.map(p => [p.action, p.step]), [['save_draft', 1]], `${lang}: Next saves a draft that resumes at the next step`); count++;
+    await next();
+    // 3 Look: a logo or a request to design one.
+    await onStep(3, t('Look & feel', 'الهوية البصرية'));
+    await next();
+    await required(2);
+    await wizard.getByLabel(t('I don’t have a logo. Please design a simple one.', 'ليس لدي شعار. صمّموا لي شعارًا بسيطًا.')).check();
+    await wizard.getByRole('radio', { name: t('Minimal', 'بسيط') }).check();
+    await next();
+    // 4 Pages & languages: a language is required.
+    await onStep(4, t('Pages & languages', 'الصفحات واللغات'));
+    await next();
+    await required(3);
+    await wizard.getByRole('radio', { name: t('Arabic and English', 'العربية والإنجليزية') }).check();
+    await next();
+    await onStep(5, t('Domain & email', 'النطاق والبريد'));
+
+    // Leaving and coming back resumes at the same step with the answers kept.
+    await page.reload();
+    await onStep(5, t('Domain & email', 'النطاق والبريد'));
+    // 5 Domain & email: a name must be chosen from the live search.
+    await next();
+    await required(4);
+    assert.equal(await wizard.locator('#ld-web-domain-q').inputValue(), 'Blue Studio', `${lang}: the search starts from the business name`); count++;
+    await wizard.getByRole('button', { name: t('Check', 'تحقّق'), exact: true }).click();
+    const results = wizard.locator('.ld-web-domain-results li');
+    await results.first().waitFor();
+    assert.deepEqual(await results.evaluateAll(rows => rows.map(r => r.className)), ['is-available', 'is-taken', 'is-unavailable']); count++;
+    assert.equal(await results.nth(1).getByRole('button').count(), 0, `${lang}: a taken name cannot be chosen`); count++;
+    await results.first().getByRole('button', { name: t('Choose', 'اختر') }).click();
+    assert.match(await wizard.locator('.ld-web-domain-chosen').textContent(), /blue-studio\.com/); count++;
+    assert.equal(await wizard.locator('.ld-web-mailbox-row span').textContent(), '@blue-studio.com', `${lang}: the mailbox shows on the chosen domain`); count++;
+    await page.screenshot({ path: `${OUT}/website-domain-${lang}-${width}.png`, fullPage: true });
+    await next();
+    // 6 Review: every answer grouped by step, each with a way back.
+    await onStep(6, t('Review & send', 'المراجعة والإرسال'));
+    assert.equal(await wizard.locator('.ld-web-review').count(), 5); count++;
+    assert.match(await wizard.locator('.ld-web-review').nth(4).textContent(), /info@blue-studio\.com/); count++;
+    await wizard.getByRole('button', { name: `${t('Edit', 'تعديل')}: ${t('Look & feel', 'الهوية البصرية')}` }).click();
+    await onStep(3, t('Look & feel', 'الهوية البصرية'));
+    for (const n of [4, 5, 6]) { await next(); await wizard.locator('.ld-web-step-count', { hasText: t(`Step ${n} of 6`, `الخطوة ${n} من 6`) }).waitFor(); }
+    count++;
+    await page.screenshot({ path: `${OUT}/website-review-${lang}-${width}.png`, fullPage: true });
+    await wizard.getByRole('button', { name: t('Send to BznsFlow', 'أرسل إلى BznsFlow') }).click();
+
+    // The tracker replaces the wizard: five stages and the promised date.
+    await wizard.getByRole('heading', { name: t('Your website is on its way', 'موقعك في الطريق') }).waitFor(); count++;
+    const submitted = posts.find(p => p.action === 'submit');
+    assert.deepEqual(submitted.fields, { nameEn: 'Blue Studio', phone: '+968 9000 0000', mailboxLocal: 'info', recoveryEmail: 'owner@example.test',
+      designLogo: true, style: 'minimal', languages: 'both', domainChoice: 'blue-studio.com' }, `${lang}: the brief as entered`); count++;
+    assert.deepEqual([submitted.version, submitted.logoId, submitted.photoIds], [0, null, []]); count++;
+    const due = new Intl.DateTimeFormat(ar ? 'ar-OM-u-nu-latn' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Muscat' }).format(new Date(addBusinessDays(now)));
+    assert.equal(await wizard.locator('.ld-web-due').textContent(), t(`Ready by ${due}`, `جاهز بحلول ${due}`)); count++;
+    assert.deepEqual(await wizard.locator('.ld-web-stages li').evaluateAll(li => li.map(x => x.className)), ['is-done', 'is-current', '', '', ''], `${lang}: details received; the domain is underway`); count++;
+    assert.match(await wizard.locator('.ld-web-facts').textContent(), /info@blue-studio\.com/); count++;
+    const violations = (await new AxeBuilder({ page }).include('.ld-web').analyze()).violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
+    assert.deepEqual(violations, [], `${lang} ${width}: website tracker accessibility`); count++;
     assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`); count++;
-    await form.screenshot({ path: `${OUT}/website-brief-${lang}-${width}.png` });
+    await page.screenshot({ path: `${OUT}/website-tracker-${lang}-${width}.png`, fullPage: true });
+    // Changing the details reopens the wizard with what was sent, and can be abandoned.
+    await wizard.getByRole('button', { name: t('Change my details', 'عدّل بياناتي') }).click();
+    await onStep(1, t('Your business', 'نشاطك'));
+    await wizard.getByRole('button', { name: t('Keep my sent details', 'أبقِ ما أرسلته') }).click();
+    await wizard.getByRole('heading', { name: t('Your website is on its way', 'موقعك في الطريق') }).waitFor(); count++;
+    assert.equal(await page.locator('.ld-website-reminder').count(), 0, `${lang}: no reminder once the details are sent`); count++;
     await context.close();
   }
   console.log(`${count} dashboard browser assertions passed at 320–1440px in English and Arabic. Synthetic API; no external network.`);

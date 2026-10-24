@@ -7,7 +7,7 @@
 > - Catalyst and Ascend are available today (Ascend is set up with the team; there is no self-serve sign-up). Apex is in preparation; never describe its contents.
 > - Never promise bookings, sales, response times, refunds or guarantees. No voice calls.
 > - If a question is not covered here → escalate to the human team. Never invent capabilities, prices, or statistics.
-> - Contacts: WhatsApp **+20 103 675 5930** · Email **ahmed@bznsflowai.com** · Free audit: https://calendar.app.google/fUA7FtAyRHJ9okdk7
+> - Contacts: WhatsApp **+20 103 675 5930** · Email **ahmed@bznsflowai.com** · Free audit: https://www.bznsflowai.com/audit
 > - Source of truth: the vault (Market/Pricing, Market/Product-Marketing-Context, Resources/client-materials/Testimonials). Update this file when they change.
 
 ---
@@ -95,9 +95,9 @@
 ## 25 — Free Audit / التدقيق المجاني
 **Keywords:** book, احجز, demo, عرض, تجربة, تواصل, contact, جلسة, consultation, استشارة, audit, تدقيق, رقم, اتصال, sign up, التسجيل, get started, email, إيميل, بريد
 
-**EN:** The next step is a free audit of your business and customer funnel. Book it here: https://calendar.app.google/fUA7FtAyRHJ9okdk7, or message us on WhatsApp +20 103 675 5930 (fastest), or email ahmed@bznsflowai.com. Sharing the link does not confirm a booking.
+**EN:** The next step is a free audit of your business and customer funnel. Book it here: https://www.bznsflowai.com/audit, or message us on WhatsApp +20 103 675 5930 (fastest), or email ahmed@bznsflowai.com. Sharing the link does not confirm a booking.
 
-**AR:** الخطوة التالية تدقيق مجاني لنشاطك ومسار عملائك. احجزه هنا: https://calendar.app.google/fUA7FtAyRHJ9okdk7، أو راسلنا على واتساب ‎+20 103 675 5930 (الأسرع)، أو على البريد ahmed@bznsflowai.com. مشاركة الرابط لا تعني تأكيد الحجز.
+**AR:** الخطوة التالية تدقيق مجاني لنشاطك ومسار عملائك. احجزه هنا: https://www.bznsflowai.com/audit، أو راسلنا على واتساب ‎+20 103 675 5930 (الأسرع)، أو على البريد ahmed@bznsflowai.com. مشاركة الرابط لا تعني تأكيد الحجز.
 
 ## 26 — Selected Work / من أعمالنا
 **Keywords:** reviews, تقييمات, testimonials, شهادات, clients, عملاء سابقين, proof, دليل, examples, أمثلة, portfolio, أعمالنا

@@ -28,6 +28,11 @@ try {
     // The pipeline cycles on its own, one step every few seconds.
     const { page, context, errors } = await open(path, 1440);
     assert.equal(await activeLabel(page), first); count++;
+    // Every "book the audit" link opens our own booking page, in the same tab (2026-10-24).
+    const audit = lang === 'en' ? '/en/audit' : '/audit';
+    const booking = await page.locator('a[href$="/audit"], a[href*="calendar.app.google"]').evaluateAll(links => links.map(a => [a.getAttribute('href'), a.getAttribute('target')]));
+    assert.ok(booking.length >= 3, `${lang}: hero, about and footer offer the audit`); count++;
+    assert.deepEqual([...new Set(booking.map(([href, target]) => `${href}|${target}`))], [`${audit}|null`]); count++;
     await page.waitForFunction(f => document.querySelector('.pipeline-step[data-state=active] .pipeline-node-label')?.textContent !== f, first, { timeout: 6000 });
     count++;
     // Picking a step shows its example and stops the cycle.

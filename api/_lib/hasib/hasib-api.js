@@ -67,6 +67,8 @@ export function createHasibApi({ env = process.env, fetcher = fetch, accounts = 
       }
       if (!sessionHash) throw new PilotError('setup_required', 409);
       if (action === 'settings_update' && body.packId !== undefined && !isHasibFounder(account)) throw new PilotError('industry_profile_required', 409);
+      // Dental's 24-hour text rule would trim the founder's real pilot chats: it is a preview there (2026-10-24).
+      if (action === 'settings_update' && body.packId === 'dental' && isHasibFounder(account)) throw new PilotError('founder_dental_preview_only', 409);
       const result = await store(action, { sessionHash, actorAccountId: account.id, ...hasibArgs(action, body) });
       if (['team_invite', 'team_resend'].includes(action)) {
         try { await sendTeamInvitation({ member: result, env, fetcher }); }

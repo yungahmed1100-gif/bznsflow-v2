@@ -62,7 +62,7 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
                 </li>
                 <li>
                   <Icon name="calendar" size={15} />
-                  <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer">{t.footer_book}</a>
+                  <a href={CALENDAR_URL}>{t.footer_book}</a>
                 </li>
               </ul>
             </div>

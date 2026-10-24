@@ -134,6 +134,37 @@ http.route({path:'/website-brief',method:'POST',handler:httpAction(async(ctx,req
   } catch { return new Response(JSON.stringify({ok:false,reason:'brief_unavailable'}),{status:503,headers}); }
 })});
 
+// Ahmed's free-website queue (convex/websiteProjectsState.js), from the owner page's access-admin endpoint.
+http.route({path:'/website-admin',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text();if(raw.length>4000) return new Response(null,{status:413});
+    const result=await ctx.runMutation(internal.websiteBrief.admin,JSON.parse(raw));
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'websites_unavailable'}),{status:503,headers}); }
+})});
+
+// The free audit (convex/auditState.js): public times and booking, and Ahmed's Audits tab.
+http.route({path:'/audit',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text();if(raw.length>4000) return new Response(null,{status:413});
+    const result=await ctx.runMutation(internal.audit.execute,JSON.parse(raw));
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'audit_unavailable'}),{status:503,headers}); }
+})});
+http.route({path:'/audit-admin',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text();if(raw.length>4000) return new Response(null,{status:413});
+    const result=await ctx.runMutation(internal.audit.admin,JSON.parse(raw));
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'audit_unavailable'}),{status:503,headers}); }
+})});
+
 // Rasil (convex/rasilState.js): the owner's email campaigns, and the worker, webhook and public links.
 http.route({path:'/rasil',method:'POST',handler:httpAction(async(ctx,request)=>{
   if(!serviceAuthorized(request)) return new Response(null,{status:401});

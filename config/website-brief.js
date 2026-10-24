@@ -15,6 +15,7 @@ export const BRIEF_TEXT = Object.freeze({
   phone: [40, 'text'], email: [254, 'email'], address: [300, 'text'], mapUrl: [500, 'url'], hours: [300, 'text'],
   instagram: [300, 'text'], facebook: [300, 'text'], tiktok: [300, 'text'], otherSocial: [300, 'text'],
   domain: [253, 'text'], fontNotes: [300, 'text'], notes: [2000, 'text'],
+  domainChoice: [80, 'domain'], mailboxLocal: [64, 'local'], recoveryEmail: [254, 'email'],
 });
 
 // Email labels, in the order Ahmed reads them.
@@ -22,7 +23,8 @@ export const BRIEF_LABELS = Object.freeze([
   ['nameEn', 'Business name (English)'], ['nameAr', 'Business name (Arabic)'], ['about', 'What the business does'],
   ['services', 'Services or products to feature'], ['phone', 'Phone / WhatsApp'], ['email', 'Email'], ['address', 'Address'],
   ['mapUrl', 'Map link'], ['hours', 'Opening hours'], ['instagram', 'Instagram'], ['facebook', 'Facebook'], ['tiktok', 'TikTok'],
-  ['otherSocial', 'Other social'], ['domainStatus', 'Domain'], ['domain', 'Domain name'], ['languages', 'Website languages'],
+  ['otherSocial', 'Other social'], ['domainChoice', 'Domain to register'], ['domainAlternates', 'If taken, these instead'],
+  ['mailboxLocal', 'Mailbox name'], ['recoveryEmail', 'Recovery email'], ['domainStatus', 'Domain'], ['domain', 'Domain name'], ['languages', 'Website languages'],
   ['style', 'Style'], ['colors', 'Brand colours'], ['fontNotes', 'Fonts'], ['references', 'Reference websites'],
   ['pages', 'Pages'], ['designLogo', 'Needs a simple logo designed'], ['notes', 'Anything else'],
 ]);
@@ -49,7 +51,9 @@ export function normalizeBrief(input) {
     if (!text) continue;
     if (kind === 'url' && !URL_RE.test(text)) return bad(key);
     if (kind === 'email' && !EMAIL_RE.test(text)) return bad(key);
-    value[key] = text;
+    if (kind === 'domain' && !websiteDomain(text)) return bad(key);
+    if (kind === 'local' && !LOCAL_RE.test(text.toLowerCase())) return bad(key);
+    value[key] = kind === 'domain' || kind === 'local' ? text.toLowerCase() : text;
   }
   const pick = (key, allowed) => {
     if (input[key] === undefined || input[key] === '') return true;
@@ -71,11 +75,62 @@ export function normalizeBrief(input) {
   if (!list('colors', 3, x => HEX_RE.test(x))) return bad('colors');
   if (!list('references', 3, x => x.length <= 300 && URL_RE.test(x))) return bad('references');
   if (!list('pages', BRIEF_PAGES.length, x => BRIEF_PAGES.includes(x))) return bad('pages');
+  if (!list('domainAlternates', 2, websiteDomain)) return bad('domainAlternates');
+  if (value.domainAlternates) value.domainAlternates = value.domainAlternates.map(d => d.toLowerCase()).filter(d => d !== value.domainChoice);
+  if (value.domainAlternates && !value.domainAlternates.length) delete value.domainAlternates;
   if (input.designLogo !== undefined && typeof input.designLogo !== 'boolean') return bad('designLogo');
   if (input.designLogo) value.designLogo = true;
   // What Ahmed cannot build without.
   if (!value.nameEn && !value.nameAr) return bad('nameEn', 'brief_required');
   if (!value.phone) return bad('phone', 'brief_required');
   if (!value.languages) return bad('languages', 'brief_required');
+  if (!value.domainChoice) return bad('domainChoice', 'brief_required');
+  if (!value.mailboxLocal) return bad('mailboxLocal', 'brief_required');
   return { ok: true, value };
+}
+
+// ── The domain and mailbox BznsFlow registers for the website (Ahmed, 2026-10-23) ──────────────
+
+/** Endings we register through Vercel Domains. Not .om, which needs an Omani registrar and papers. */
+export const WEBSITE_TLDS = Object.freeze(['com', 'net', 'co']);
+/** Above this yearly price (USD) a name is not offered; premium names never are. */
+export const WEBSITE_DOMAIN_MAX_USD = 20;
+const LABEL = '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?';
+const DOMAIN_RE = new RegExp(`^${LABEL}\\.(${WEBSITE_TLDS.join('|')})$`);
+const LOCAL_RE = /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/;
+const RESERVED = /^(bznsflow|bznsflowai)\./;
+export const websiteDomain = value => typeof value === 'string' && DOMAIN_RE.test(value.trim().toLowerCase()) && !RESERVED.test(value.trim().toLowerCase());
+
+/**
+ * The names to look up for what the owner typed: "Nour Abayas", "nourabayas.net" or "https://www.nour.co/x"
+ * becomes nour-abayas.com, .net, .co, with an ending they typed first. Nothing for text without Latin letters.
+ */
+export function domainCandidates(input) {
+  const raw = String(input || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[/?#].*$/, '');
+  const [name, tld] = raw.includes('.') ? [raw.slice(0, raw.lastIndexOf('.')), raw.slice(raw.lastIndexOf('.') + 1)] : [raw, ''];
+  const label = name.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 63).replace(/-+$/, '');
+  if (!label) return [];
+  const order = WEBSITE_TLDS.includes(tld) ? [tld, ...WEBSITE_TLDS.filter(t => t !== tld)] : WEBSITE_TLDS;
+  return order.map(t => `${label}.${t}`).filter(websiteDomain);
+}
+
+// ── Delivery: the website is promised within three business days of the brief ────────────────
+
+export const WEBSITE_STAGES = Object.freeze(['received', 'domain', 'mailbox', 'building', 'live']);
+export const WEBSITE_DELIVERY_DAYS = 3;
+const HOUR = 3600000, DAY = 24 * HOUR;
+const MUSCAT = 4 * HOUR; // Asia/Muscat is UTC+4 all year.
+const DUE_HOUR = 17;
+const working = localMidnight => new Date(localMidnight).getUTCDay() <= 4; // Sunday to Thursday
+
+/**
+ * 17:00 Muscat on the nth working day after the day the brief arrives. Oman works Sunday to Thursday, so
+ * a brief sent on Sunday is due Wednesday and one sent from Thursday to Saturday is due Tuesday. Public
+ * holidays are not modelled: Ahmed moves the date with a reason the owner sees.
+ */
+export function addBusinessDays(at, days = WEBSITE_DELIVERY_DAYS) {
+  const local = at + MUSCAT;
+  let day = local - (local % DAY);
+  for (let count = 0; count < days; count++) do day += DAY; while (!working(day));
+  return day + DUE_HOUR * HOUR - MUSCAT;
 }

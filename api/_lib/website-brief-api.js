@@ -1,5 +1,6 @@
 // Ascend website brief: /api/layla-meta?surface=website-brief
-// GET returns the saved (or prefilled) brief. POST { action } uploads, registers, submits or resends.
+// GET returns the saved (or prefilled) brief, the draft in progress and the website's delivery. POST
+// { action } saves a wizard step, looks up domain names, uploads, registers, submits or resends.
 // Each submitted version is emailed once to Ahmed; a failed email keeps the brief and can be resent.
 import { createHash } from 'node:crypto';
 import { websiteBriefStore } from './convex.js';
@@ -9,9 +10,34 @@ import { readBody, send, sendPilotError } from './http.js';
 import { PilotError } from './layla/config.js';
 import { sendEmail } from './resend.js';
 import { briefEmail } from './website-brief-email.js';
+import { WEBSITE_DOMAIN_MAX_USD, domainCandidates } from '../../config/website-brief.js';
 
 const MAX_BODY = 14000;
-const ACTIONS = ['upload_url', 'file_register', 'submit', 'resend'];
+const ACTIONS = ['upload_url', 'file_register', 'save_draft', 'domain_check', 'submit', 'resend'];
+const REGISTRAR = 'https://api.vercel.com/v1/registrar/domains/search';
+
+/**
+ * Availability and yearly price for each candidate, from Vercel's registrar search (no account needed).
+ * A name is offered only when it is free, not premium, and within the price BznsFlow pays for it.
+ */
+export async function searchDomains(names, { env = process.env, fetcher = fetch } = {}) {
+  const cap = Number(env.WEBSITE_DOMAIN_MAX_USD) > 0 ? Number(env.WEBSITE_DOMAIN_MAX_USD) : WEBSITE_DOMAIN_MAX_USD;
+  let body;
+  try {
+    const response = await fetcher(REGISTRAR, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(8000),
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ domains: names }) });
+    if (!response.ok) throw new Error(String(response.status));
+    body = await response.json();
+  } catch { throw new PilotError('domain_check_unavailable', 502); }
+  const results = new Map((Array.isArray(body?.results) ? body.results : []).map(r => [String(r?.domain || '').toLowerCase(), r]));
+  return names.map(domain => {
+    const r = results.get(domain);
+    const free = r?.available === true || r?.available === 'true';
+    const price = Number(r?.price);
+    const status = !r ? 'unknown' : !free ? 'taken' : r.premium || !Number.isFinite(price) || price > cap ? 'unavailable' : 'available';
+    return { domain, status };
+  });
+}
 const id = value => typeof value === 'string' && /^[A-Za-z0-9_-]{8,80}$/.test(value);
 
 export function createWebsiteBriefApi({ env = process.env, fetcher = fetch, store = websiteBriefStore({ env, fetcher }) } = {}) {
@@ -36,6 +62,17 @@ export function createWebsiteBriefApi({ env = process.env, fetcher = fetch, stor
       if (body.action === 'file_register') {
         if (!id(body.storageId) || !['logo', 'photo'].includes(body.kind)) throw new PilotError('invalid_file', 400);
         return send(res, 200, { ok: true, ...(await store('file_register', { sessionHash, storageId: body.storageId, kind: body.kind })) }, { vary: 'Cookie' });
+      }
+      if (body.action === 'save_draft') {
+        const photoIds = body.photoIds ?? [];
+        if (!Number.isInteger(body.step) || !Array.isArray(photoIds) || !photoIds.every(id) || (body.logoId !== undefined && body.logoId !== null && !id(body.logoId))) throw new PilotError('invalid_brief', 400);
+        return send(res, 200, { ok: true, ...(await store('save_draft', { sessionHash, step: body.step, fields: body.fields, photoIds, ...(body.logoId ? { logoId: body.logoId } : {}) })) }, { vary: 'Cookie' });
+      }
+      if (body.action === 'domain_check') {
+        const names = domainCandidates(typeof body.query === 'string' ? body.query.slice(0, 80) : '');
+        if (!names.length) return send(res, 200, { ok: true, results: [] }, { vary: 'Cookie' });
+        await store('domain_rate', { sessionHash });
+        return send(res, 200, { ok: true, results: await searchDomains(names, { env, fetcher }) }, { vary: 'Cookie' });
       }
       if (body.action === 'resend') {
         const brief = await store('get', { sessionHash });

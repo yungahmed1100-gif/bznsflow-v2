@@ -92,9 +92,18 @@ test('the founder real dashboard reads the account store without synthetic data'
 test('only the founder can switch a live dashboard from the dashboard selector', async () => {
   const founder = { accounts: async () => ({ id: 'founder', email: 'ahmed@bznsflowai.com', draftHash: 'd'.repeat(64) }) };
   const { calls, run } = harness(founder);
-  const changed = await run(request('POST', { action: 'settings_update', packId: 'dental' }));
+  const changed = await run(request('POST', { action: 'settings_update', packId: 'media' }));
   assert.equal(changed.statusCode, 200);
-  assert.deepEqual(calls, [{ operation: 'settings_update', args: { sessionHash: 'd'.repeat(64), actorAccountId: 'founder', packId: 'dental' } }]);
+  assert.deepEqual(calls, [{ operation: 'settings_update', args: { sessionHash: 'd'.repeat(64), actorAccountId: 'founder', packId: 'media' } }]);
+});
+
+test('the founder opens Dental only as a preview: a live switch would trim the real pilot chats (2026-10-24)', async () => {
+  const founder = { accounts: async () => ({ id: 'founder', email: 'ahmed@bznsflowai.com', draftHash: 'd'.repeat(64) }) };
+  const { calls, run } = harness(founder);
+  const refused = await run(request('POST', { action: 'settings_update', packId: 'dental' }));
+  assert.deepEqual([refused.statusCode, refused.body.reason, calls.length], [409, 'founder_dental_preview_only', 0]);
+  const preview = await run(request('POST', { action: 'today', previewIndustry: 'dental' }));
+  assert.equal(preview.statusCode, 200, 'the read-only preview still opens');
 });
 
 test('founder previews use empty read-only data and cannot replace a live dashboard', async () => {

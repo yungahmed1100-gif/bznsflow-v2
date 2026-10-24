@@ -3,7 +3,7 @@ import { Icon } from '../components/ui/Icon';
 import { PlaybookForm, PlaybookSuccess } from '../components/ui/PlaybookForm';
 import { getStrings } from '../i18n';
 import { trackEvent } from '../lib/analytics';
-import { CALENDAR_URL, WHATSAPP_URL } from '../lib/constants';
+import { auditPath, WHATSAPP_URL } from '../lib/constants';
 import '../styles/playbook.css';
 
 // /playbook — the page an ad campaign can point at.
@@ -76,7 +76,7 @@ export default function Playbook({ lang = 'ar' }) {
                 {/* The popup has no room for this. A lead magnet that ends at
                     the download wastes the one moment the visitor is warmest. */}
                 <div className="pb-next">
-                  <a className="btn btn-ghost" href={CALENDAR_URL} target="_blank" rel="noopener noreferrer">
+                  <a className="btn btn-ghost" href={auditPath(lang)}>
                     <Icon name="calendar" size={18} />
                     <span>{t.auth_done_book}</span>
                   </a>

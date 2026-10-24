@@ -165,8 +165,6 @@ export function HeroSection({ t, trackEvent, CALENDAR_URL }) {
               </a>
               <a
                 href={CALENDAR_URL}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="btn btn-ghost btn-large"
                 onClick={() => trackEvent('HeroCallClick')}
               >

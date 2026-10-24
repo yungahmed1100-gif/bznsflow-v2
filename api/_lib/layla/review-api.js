@@ -15,6 +15,7 @@ import { previewOutcome } from '../../../config/brain-preview.js';
 import { extractJson } from '../../../config/layla-ai.js';
 import { teamContactOf, langOf } from '../../../config/layla-tones.js';
 import { sectorIdFor } from '../../../config/layla-qualification.js';
+import { isHasibFounder } from '../hasib/founder.js';
 import { BZNS_MAX_CHARS, parseBzns, prepareForPublish, validateBzns } from '../../../src/lib/bzns-doc.js';
 import { credentialContext, exchangeAndVerify, metaRequest, openToken, sealToken } from './customer-meta.js';
 import { verifySignupConfiguration } from './eligibility.js';
@@ -189,7 +190,8 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
         row = next; return row;
       };
       // Catalyst is the same for every business; only the industry plans (Ascend, Apex) give Layla the sector.
-      const industryPlan = ['ascend', 'apex'].includes(account?.accessPlan);
+      // The founder's Ascend account is a test bench; Layla on its pilot number stays general.
+      const industryPlan = ['ascend', 'apex'].includes(account?.accessPlan) && !isHasibFounder(account);
       const laylaBusiness = () => industryPlan ? { sector: row.profile?.sector || '', sectorId: sectorIdFor(row.profile?.sector) } : { sector: '', sectorId: 'other' };
       // Catalog rows belong to the account, or to this setup until it is saved to an account (claim_draft moves them).
       const ownerKey=row.accountId ? String(row.accountId) : `review_${row._id}`;

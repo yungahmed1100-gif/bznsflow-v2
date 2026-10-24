@@ -233,7 +233,7 @@ export default {
   "tier_pay_industry_other_note": "Ascend's workspace is ready for the industries listed. Tell us about your business on WhatsApp and we'll advise.",
   "tier_pay_whatsapp": "Contact us on WhatsApp",
   "tier_pay_pick_industry": "Choose your industry first.",
-  "tier_website": "Send your website details",
+  "tier_website": "Set up your free website",
   "tier_paid_until": "Active until {date}",
   "tier_pay_checking": "Confirming your payment…",
   "tier_pay_done": "Payment received. {plan} is active until {date}.",

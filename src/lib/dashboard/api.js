@@ -37,3 +37,6 @@ let hasibPreviewIndustry = '';
 export const setHasibPreviewIndustry = value => { hasibPreviewIndustry = typeof value === 'string' ? value : ''; };
 export const loadHasib = () => call('hasib', undefined, { query: hasibPreviewIndustry ? { previewIndustry: hasibPreviewIndustry } : {} });
 export const hasib = (action, body = {}, options) => call('hasib', { action, ...body, ...(hasibPreviewIndustry ? { previewIndustry: hasibPreviewIndustry } : {}) }, options);
+/** The founder's free-audit calendar (api/access-admin.js ?op=audits): a range on GET, a booking change on POST. */
+export const loadAudits = (from, to) => callApi(`/api/access-admin?${new URLSearchParams({ op: 'audits', from: String(from), to: String(to) })}`);
+export const updateAudit = body => callApi('/api/access-admin?op=audits', { body, csrf: csrfToken });

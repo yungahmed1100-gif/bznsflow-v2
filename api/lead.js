@@ -29,6 +29,7 @@ import { INDUSTRY_IDS } from '../src/lib/industries.js';
 import { captureWebsiteLead, checkRate } from './_lib/db.js';
 import { pushLead } from './_lib/mailer.js';
 import { send, readBody } from './_lib/http.js';
+import { createAuditApi } from './_lib/audit-api.js';
 
 const SITE = 'https://www.bznsflowai.com';
 
@@ -59,7 +60,11 @@ export function cleanIndustry(raw) {
   return INDUSTRY_IDS.has(id) ? id : undefined;
 }
 
+// ?op=audit: the free-audit booking page (api/_lib/audit-api.js), here because every function slot is used.
+const audit = createAuditApi();
+
 export default async function handler(req, res) {
+  if (new URL(req.url || '/', 'https://x.invalid').searchParams.get('op') === 'audit') return audit(req, res);
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return send(res, 405, { ok: false, reason: 'method' });

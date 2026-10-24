@@ -18,8 +18,6 @@ export function StickyMobileCTA({ t, CALENDAR_URL, trackEvent }) {
       </a>
       <a
         href={CALENDAR_URL}
-        target="_blank"
-        rel="noopener noreferrer"
         className="sticky-mobile-btn sticky-mobile-btn--book"
         onClick={() => trackEvent('StickyCTAClick', { action: 'book-call' })}
         aria-label={t.sticky_book}

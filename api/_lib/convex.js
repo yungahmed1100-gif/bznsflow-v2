@@ -106,7 +106,18 @@ export const billingStore = convexStore({ route: 'billing', fallback: 'payment_u
 
 // Ascend website brief (convex/websiteBriefState.js): refusals the form explains to the owner.
 export const websiteBriefStore = convexStore({ route: 'website-brief', fallback: 'brief_unavailable', status: setupStatus,
-  reasons: ['sign_in_required', 'access_required', 'manager_required', 'upload_limit', 'invalid_file', 'too_many_files', 'invalid_brief', 'brief_too_long', 'brief_required', 'brief_conflict', 'invalid_state'] });
+  reasons: ['sign_in_required', 'access_required', 'manager_required', 'upload_limit', 'invalid_file', 'too_many_files', 'invalid_brief', 'brief_too_long', 'brief_required', 'brief_conflict', 'too_many', 'invalid_state'] });
+// Ahmed's free-website queue (convex/websiteProjectsState.js).
+const websitesStatus = r => r === 'sign_in_required' ? 401 : r === 'admin_required' ? 403 : r === 'project_not_found' ? 404 : 400;
+export const websiteAdminStore = convexStore({ route: 'website-admin', fallback: 'websites_unavailable', status: websitesStatus,
+  reasons: ['sign_in_required', 'admin_required', 'project_not_found', 'live_url_required', 'invalid_due', 'reason_required', 'invalid_action', 'invalid_state'] });
+
+// The free audit (convex/auditState.js): public booking, and Ahmed's Audits tab.
+const auditStatus = r => r === 'sign_in_required' ? 401 : r === 'admin_required' ? 403 : r === 'booking_not_found' ? 404 : ['slot_taken', 'already_booked'].includes(r) ? 409 : 400;
+export const auditStore = convexStore({ route: 'audit', fallback: 'audit_unavailable', status: auditStatus,
+  reasons: ['invalid_slot', 'invalid_name', 'invalid_email', 'slot_taken', 'already_booked'] });
+export const auditAdminStore = convexStore({ route: 'audit-admin', fallback: 'audit_unavailable', status: auditStatus,
+  reasons: ['sign_in_required', 'admin_required', 'booking_not_found', 'invalid_range', 'invalid_status', 'slot_taken'] });
 
 // Rasil (convex/rasilState.js): the owner's email campaigns, and the server-side worker, webhook and public links.
 const RASIL_REASONS = ['sign_in_required', 'access_required', 'plan_required', 'manager_required', 'workspace_access_revoked', 'invalid_domain', 'domain_in_use', 'domain_not_found',

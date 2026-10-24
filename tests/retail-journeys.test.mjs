@@ -235,7 +235,7 @@ test('a retail manager invites, resends and revokes staff', async () => {
 // Codes the retail dashboard can receive from Hasib or its API wrapper.
 const RETAIL_CODES = ['module_unavailable', 'invalid_request', 'order_not_found', 'order_locked', 'invalid_order', 'invalid_payment_method', 'invalid_stock_move', 'invalid_quantity',
   'request_conflict', 'request_not_found', 'order_not_reversed', 'followup_conflict', 'followup_not_found', 'invalid_followup', 'linked_record_not_found', 'expense_not_found', 'invalid_settings',
-  'team_limit', 'member_not_found', 'member_not_pending', 'employee_already_member', 'employee_owns_workspace', 'invalid_email', 'industry_profile_required', 'invite_send_failed', 'invalid_cursor',
+  'team_limit', 'member_not_found', 'member_not_pending', 'employee_already_member', 'employee_owns_workspace', 'invalid_email', 'industry_profile_required', 'founder_dental_preview_only', 'invite_send_failed', 'invalid_cursor',
   'item_archived', 'payment_exceeds_balance', 'item_has_stock', 'contact_not_found', 'invalid_transition', 'order_conflict', 'insufficient_stock', 'manager_required', 'plan_required',
   'workspace_access_revoked', 'record_not_found', 'invalid_item', 'variant_not_found', 'photo_limit', 'invalid_photo', 'invalid_import', 'exact_variant_required', 'order_closed', 'refund_exceeds_paid'];
 

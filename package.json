@@ -17,7 +17,7 @@
     "seo:audit": "node scripts/seo-audit.mjs",
     "test:auth-browser": "node tests/auth-browser.mjs",
     "test:layla": "node --test tests/layla-meta.test.mjs tests/layla-meta-db.test.mjs tests/layla-setup.test.mjs tests/layla-open.test.mjs tests/layla-customer.test.mjs tests/layla-scheduler.test.mjs tests/product-api.test.mjs tests/product-setup.test.mjs tests/knowledge-import.test.mjs tests/product-handoffs.test.mjs tests/bzns-doc.test.mjs tests/bzns-state.test.mjs tests/layla-tones.test.mjs tests/layla-guardrails.test.mjs tests/layla-conversation-e2e.test.mjs tests/layla-reply.test.mjs tests/layla-reply-quality.test.mjs tests/layla-stress.test.mjs tests/green-webhook.test.mjs tests/customer-journey-e2e.test.mjs",
-    "test:access": "node --test tests/blue-auth.test.mjs tests/hasib-plans.test.mjs tests/blue-dashboard.test.mjs tests/frontend-api-contract.test.mjs tests/paymob.test.mjs tests/website-brief.test.mjs tests/rial-abbreviation.test.mjs tests/rasil.test.mjs tests/rasil-state.test.mjs tests/rasil-api.test.mjs",
+    "test:access": "node --test tests/blue-auth.test.mjs tests/hasib-plans.test.mjs tests/blue-dashboard.test.mjs tests/frontend-api-contract.test.mjs tests/paymob.test.mjs tests/website-brief.test.mjs tests/website-onboarding.test.mjs tests/audit-booking.test.mjs tests/rial-abbreviation.test.mjs tests/rasil.test.mjs tests/rasil-state.test.mjs tests/rasil-api.test.mjs",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy",
     "convex:codegen": "convex codegen",

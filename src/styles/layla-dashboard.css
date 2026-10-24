@@ -517,3 +517,113 @@ a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ld-brief > .ld-primary { margin-top: 16px; }
 @media (max-width: 640px) { .ld-brief { margin: 12px; padding: 14px; } }
 .ld-website-reminder { margin: 12px 16px 0; border-inline-start-color: var(--blue); }
+
+/* Website tab (website/*.jsx): Ascend's free website, domain and mailbox. The wizard reuses .ld-steps and
+   .ld-brief; the tracker is a ruled ledger: done stages green, the current one yellow, a delay coral. */
+.ld-web { padding: 20px 24px 32px; max-width: 880px; }
+.ld-web .ld-brief { margin: 16px 0 0; }
+.ld-web-steps { margin-top: 4px; }
+.ld-web-step-count { margin: 0; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.ld-web-step h2 { margin: 2px 0 8px; font-size: 18px; }
+.ld-web-step h2:focus { outline: none; }
+.ld-web-step h2:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.ld-web-from-brain { color: var(--blue-ink); }
+.ld-web-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }
+.ld-web-logo { display: grid; gap: 4px; padding-block-end: 8px; border-bottom: 1px solid var(--rule); }
+.ld-web-logo.is-invalid { border-bottom-color: var(--coral); }
+.ld-web-logo.is-invalid .ld-field > span { color: var(--coral); }
+.ld-web-cancel { margin: 12px 0 0; }
+
+.ld-web-domain { display: grid; gap: 6px; margin-block: 10px; }
+.ld-web-domain > .ld-field { margin: 0; }
+.ld-web-domain.is-invalid .ld-field > span { color: var(--coral); }
+.ld-web-domain-row, .ld-web-mailbox-row { display: flex; gap: 8px; align-items: stretch; min-width: 0; }
+.ld-web-domain-row input { flex: 1 1 auto; min-width: 0; }
+.ld-web-domain-results { list-style: none; margin: 4px 0 0; padding: 0; border-top: 1px solid var(--rule-strong); }
+.ld-web-domain-results li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: 14px; }
+.ld-web-domain-name { font-weight: 700; overflow-wrap: anywhere; }
+.ld-web-domain-status { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--paper-ruled); color: var(--ink-2); }
+.ld-web-domain-results .is-available .ld-web-domain-status { background: var(--green-tint); color: var(--green); }
+.ld-web-domain-results .is-taken .ld-web-domain-name { color: var(--ink-2); text-decoration: line-through; }
+.ld-web-domain-actions { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-inline-start: auto; }
+.ld-web-domain-chosen { margin: 6px 0 0; padding: 10px 12px; border-radius: var(--radius); background: var(--green-tint); font-size: 14px; }
+.ld-web-domain-chosen span { font-weight: 600; }
+.ld-web-domain-chosen bdi { font-weight: 700; }
+.ld-web-mailbox { margin-block: 14px 0; }
+.ld-web-mailbox-row { align-items: center; font-size: 15px; }
+.ld-web-mailbox-row input { flex: 0 1 180px; min-width: 0; }
+.ld-web-mailbox-row span { font-weight: 600; overflow-wrap: anywhere; min-width: 0; }
+
+.ld-web-review { padding-block: 12px; border-top: 1px solid var(--rule-strong); }
+.ld-web-review-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ld-web-review h3 { margin: 0; font-size: 15px; }
+.ld-web-review dl { margin: 8px 0 0; display: grid; gap: 6px; }
+.ld-web-review dl > div { display: grid; grid-template-columns: minmax(120px, 200px) 1fr; gap: 12px; font-size: 14px; }
+.ld-web-review dt { color: var(--ink-2); }
+.ld-web-review dd { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.ld-web-swatch { display: inline-block; width: 18px; height: 18px; margin-inline-end: 6px; border: 1px solid var(--rule-strong); border-radius: var(--radius); vertical-align: middle; }
+
+.ld-web-tracker { margin-top: 16px; }
+.ld-web-tracker h2 { margin: 0 0 6px; font-size: 18px; }
+.ld-web-due { display: inline-block; margin: 0 0 14px; padding: 6px 12px; border-radius: var(--radius); background: var(--orange-tint); color: var(--orange-ink); font-weight: 700; }
+.ld-web-due.is-late { background: var(--coral-tint); color: var(--coral); }
+.ld-web-stages { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule-strong); }
+.ld-web-stages li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 12px 14px; border-bottom: 1px solid var(--rule); color: var(--ink-2);
+  box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--rule-strong); }
+.ld-web-stages li.is-done { color: var(--ink); box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--green-mark); }
+.ld-web-stages li.is-current { color: var(--ink); font-weight: 700; background: var(--yellow-tint); box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--yellow); }
+.ld-web-stage-at { font-size: 13px; color: var(--ink-2); font-weight: 400; white-space: nowrap; }
+.ld-web-facts { margin: 14px 0; display: grid; gap: 6px; }
+.ld-web-facts > div { display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; }
+.ld-web-facts dt { color: var(--ink-2); }
+.ld-web-facts dd { margin: 0; font-weight: 700; }
+@media (max-width: 640px) {
+  .ld-web { padding: 16px 12px 24px; }
+  .ld-web-review dl > div { grid-template-columns: 1fr; gap: 2px; }
+  .ld-web-domain-actions { margin-inline-start: 0; }
+}
+
+/* Free-audit calendar (founder only, src/components/dashboard/audits/AuditsView.jsx): a Sunday–Thursday week.
+   Booked is yellow (in progress), done green, cancelled muted; the open booking is orange (current). */
+.ld-audits { display: grid; gap: 16px; }
+.ld-audits-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+.ld-audits-head h1 { margin: 0 0 4px; font-size: 24px; }
+.ld-audits-head p { margin: 0; color: var(--ink-2); }
+.ld-audits-week { display: flex; gap: 8px; flex-wrap: wrap; }
+.ld-audits-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.ld-audit-grid-wrap { overflow-x: auto; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: var(--card); }
+.ld-audit-grid { inline-size: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+.ld-audit-grid th, .ld-audit-grid td { padding: 3px; border-block-end: 1px solid var(--rule); border-inline-start: 1px solid var(--rule); block-size: 44px; vertical-align: top; }
+.ld-audit-grid thead th { block-size: auto; padding: 8px 6px; font-weight: 600; text-align: start; background: var(--paper); }
+.ld-audit-grid thead th.is-today { box-shadow: inset 0 -3px 0 var(--orange); }
+.ld-audit-grid tbody th { inline-size: 64px; padding: 6px; font-weight: 500; color: var(--ink-muted); text-align: start; }
+.ld-audit-grid thead th:first-child { inline-size: 64px; }
+.ld-audit-slot { display: grid; gap: 2px; inline-size: 100%; block-size: 100%; padding: 4px 6px; font: inherit; text-align: start; color: var(--ink); cursor: pointer;
+  background: var(--yellow-tint); border: 0; border-inline-start: 3px solid var(--yellow); border-radius: var(--radius); }
+.ld-audit-slot strong, .ld-audit-slot span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-audit-slot span { color: var(--ink-2); font-size: 12px; }
+.ld-audit-slot.is-done { background: var(--green-tint); border-inline-start-color: var(--green-mark); }
+.ld-audit-slot.is-cancelled { background: var(--paper); border-inline-start-color: var(--rule-strong); color: var(--ink-2); }
+.ld-audit-slot[aria-pressed="true"] { outline: 2px solid var(--orange); outline-offset: -2px; }
+.ld-audit-list { display: none; margin: 0; padding: 0; list-style: none; }
+.ld-audit-list > li { padding: 12px 0; border-block-end: 1px solid var(--rule); }
+.ld-audit-list > li.is-today h2 { color: var(--orange-ink); }
+.ld-audit-list h2 { margin: 0 0 8px; font-size: 15px; }
+.ld-audit-list ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ld-audit-list .ld-audit-slot { grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; }
+.ld-audit-list p { margin: 0; color: var(--ink-muted); }
+.ld-audit-detail { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--ink); border-radius: var(--radius); background: var(--card); box-shadow: calc(4px * var(--x-sign)) 4px 0 var(--ink); }
+.ld-audit-detail h2 { margin: 0; font-size: 18px; }
+.ld-audit-detail > p { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; color: var(--ink-2); }
+.ld-audit-detail dl { display: grid; gap: 8px; margin: 0; }
+.ld-audit-detail dl div { display: grid; gap: 2px; }
+.ld-audit-detail dt { font-size: 12px; color: var(--ink-muted); }
+.ld-audit-detail dd { margin: 0; overflow-wrap: anywhere; }
+.ld-audit-detail textarea { inline-size: 100%; font: inherit; padding: 8px; border: 1px solid var(--rule-strong); border-radius: var(--radius); }
+.ld-audit-saved { margin: 0; color: var(--green); }
+.ld-audit-hint { margin: 0; padding: 16px; color: var(--ink-2); border: 1px dashed var(--rule-strong); border-radius: var(--radius); }
+@media (max-width: 900px) {
+  .ld-audits-body { grid-template-columns: 1fr; }
+  .ld-audit-grid-wrap { display: none; }
+  .ld-audit-list { display: block; }
+}

@@ -27,6 +27,8 @@ export const PAGES = [
   // The lead magnet's own page — where the ad campaign lands, and the only
   // URL that offers the playbook. Ranks second only to the home page because
   // it is the page most likely to be linked to from outside.
+  // The free-audit booking page every "Book the free audit" button opens (2026-10-24).
+  { path: '/audit', changefreq: 'weekly', priority: 0.9, lastmod: '2026-10-24' },
   { path: '/playbook', changefreq: 'monthly', priority: 0.8, lastmod: '2026-09-11' },
 ];
 
