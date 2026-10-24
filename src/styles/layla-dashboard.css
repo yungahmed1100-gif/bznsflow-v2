@@ -21,7 +21,7 @@
 .ld[lang=ar], .ld[lang=ar] .ld-dialog, [lang=ar] .ld-dialog { font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', var(--font); line-height: 1.8; }
 .ld *, .ld *::before, .ld *::after, .ld-dialog * { box-sizing: border-box; }
 /* App shell: the page never scrolls; panes do. Bottom padding clears the fixed Blue banner. */
-.ld { background: var(--paper); height: 100dvh; overflow: hidden; padding-bottom: var(--banner); display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); grid-template-rows: var(--top) minmax(0, 1fr); }
+.ld { background: var(--paper); height: 100dvh; overflow: hidden; overflow: clip; padding-bottom: var(--banner); display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); grid-template-rows: var(--top) minmax(0, 1fr); }
 .ld[lang=ar] { --rail: 104px; }
 .ld-num { font-variant-numeric: tabular-nums; }
 .ld-visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -60,7 +60,13 @@
 .ld[lang=en] .ld-nav a span { letter-spacing: .02em; }
 
 .ld-main { grid-row: 2; grid-column: 2; min-width: 0; min-height: 0; outline: none; overflow-y: auto; }
-.ld-main[data-tab=chats] { overflow: hidden; }
+/* Chats fills what the notices above it leave (founder bar, plan or website reminder), never the full
+   height beneath them: a 100%-tall pane under a notice was cut off at the bottom. `clip` also stops focus
+   or scrollIntoView from scrolling the shell itself. */
+.ld-main[data-tab=chats] { overflow-y: auto; display: flex; flex-direction: column; }
+.ld-main[data-tab=chats] > :not(.ld-chats) { flex: none; margin: 12px clamp(12px, 2vw, 24px) 0; }
+/* Never shorter than a usable thread: on a very short window the tab scrolls rather than hiding the reply box. */
+.ld-main[data-tab=chats] > .ld-chats { flex: 1 1 0; min-height: min(440px, 100%); height: auto; }
 .ld-main:not([data-tab=chats]) { padding: 24px clamp(16px, 3vw, 40px) 48px; }
 .ld-state { padding: 32px 24px; color: var(--ink-2); max-width: 60ch; }
 .ld-state .ld-button { margin-top: 12px; }
@@ -306,7 +312,10 @@
   .ld-nav li { flex: 1; min-width: 0; }
   .ld-nav a { flex-direction: column; justify-content: center; padding: 6px 2px; font-size: 11px; }
   .ld-main { grid-row: 3; grid-column: 1; }
-  .ld-chats { grid-template-columns: minmax(0, 1fr); height: 100%; }
+  .ld-chats { grid-template-columns: minmax(0, 1fr); }
+  /* An open conversation on a phone gets the whole screen; the notices stay on the chat list. */
+  .ld-main[data-tab=chats]:has(> .ld-chats.has-thread) > :not(.ld-chats) { display: none; }
+  .ld-main[data-tab=chats] > .ld-chats.has-thread { min-height: 0; }
   .ld-chats .ld-thread-pane { display: none; }
   .ld-chats.has-thread .ld-list { display: none; }
   .ld-chats.has-thread .ld-thread-pane { display: flex; height: 100%; }

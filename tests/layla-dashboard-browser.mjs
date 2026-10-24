@@ -223,6 +223,35 @@ try {
     await context.close();
   }
 
+  // Notices above Chats (founder bar, website reminder) shrink the chat panes instead of pushing them past the
+  // bottom: the reply box stays on screen, and focusing it never scrolls the app shell (2026-10-24 report).
+  for (const [lang, width, height, fitsWithoutScroll] of [['en', 1440, 800, true], ['ar', 1280, 760, true], ['en', 1024, 600, false], ['ar', 375, 740, true]]) {
+    const state = fixture(), handler = api(state, { founderPreview: true });
+    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=chats&chat=c-k1', handler,
+      authAccount: { id: 'a1', email: 'ahmed@bznsflowai.com', accessPlan: 'ascend', profileComplete: true },
+      extra: (surface, request) => surface === 'hasib' && request.method() === 'GET' ? { status: 200, json: hasibOverview('retail') }
+        : surface === 'website-brief' ? { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), brief: { version: 0, fields: {}, prefilled: [], draft: null, project: null, logo: null, photos: [] } } } : null });
+    await page.setViewportSize({ width, height });
+    await page.locator('.ld-website-reminder').waitFor({ state: 'attached' });
+    await page.locator('.hb-founder-preview').waitFor({ state: 'attached' });
+    const reply = page.locator('#ld-reply');
+    await reply.waitFor();
+    const where = () => page.evaluate(() => {
+      const box = document.querySelector('.ld-composer').getBoundingClientRect();
+      return { composer: box.bottom <= window.innerHeight + 1 && box.top >= 0, header: document.querySelector('.ld-top').getBoundingClientRect().top >= 0,
+        shell: document.querySelector('.ld').scrollTop + window.scrollY };
+    });
+    const tag = `${lang} ${width}×${height}`;
+    await page.screenshot({ path: `${OUT}/chats-notices-${lang}-${width}.png` });
+    if (fitsWithoutScroll) { assert.equal((await where()).composer, true, `${tag}: the reply box is on screen`); count++; }
+    await reply.focus();
+    await page.keyboard.type('x');
+    assert.deepEqual(await where(), { composer: true, header: true, shell: 0 }, `${tag}: the reply box is reachable and the app frame never scrolls away`); count++;
+    if (width <= 768) { assert.equal(await page.locator('.ld-website-reminder').isVisible(), false, `${tag}: an open chat gets the whole phone screen`); count++; }
+    assert.equal(await noOverflow(page), true); count++;
+    await context.close();
+  }
+
   // The founder's Audits tab: a Sunday–Thursday week of free-audit bookings, details, and marking one done.
   for (const [lang, width] of [['en', 1280], ['ar', 375]]) {
     const state = fixture(), handler = api(state, { founderPreview: true });
