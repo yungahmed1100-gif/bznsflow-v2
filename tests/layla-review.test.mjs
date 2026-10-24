@@ -127,6 +127,13 @@ test('new number requires explicit PIN confirmation and registration cannot be r
   assert.equal(h.effects.filter(e=>e.path.endsWith('/register')).length,1);
   assert(!JSON.stringify([...h.db.rows.values()]).includes('123456'));
 });
+// "A different number" is always new_number (2026-10-25): a number already registered on the API connects with no PIN step.
+test('new number that is already registered connects without the PIN step',async()=>{
+  const h=harness({inspect:async()=>({isolated:true,connected:true,pathVerified:true,registered:true})}),c=await client(h.handler),body=await begin(c,'new_number');
+  const r=await c.call(body);assert.equal(r.body.status,'connected');assert.equal(r.body.integration.path,'new_number');
+  assert.equal(h.effects.filter(e=>e.path.endsWith('/register')).length,0);
+  assert.equal((await c.call({action:'register_number',pin:'123456',confirm:true})).statusCode,409);
+});
 test('crashed operation allows read-only recovery after deadline and fences late results',async()=>{
   const h=harness(),c=await client(h.handler);await c.call(await begin(c));
   h.db.advance(5001); const row=[...h.db.rows.values()][0],old=randomUUID(),fresh=randomUUID();

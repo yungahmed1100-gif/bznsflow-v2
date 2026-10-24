@@ -20,7 +20,6 @@ import { revealStep } from '../lib/reveal-step.js';
 // Three steps, one primary action each: your business, connect a channel, live.
 // Ids are the saved journeyStep values; older saved steps (2, 3, 4) open the channels step.
 const WHATSAPP_LIVE = ['connected', 'paused'];
-const EMPTY_PRESELECT = { business: '', waba: '' };
 // About three minutes: coexistence registration on Meta's side can take longer than one.
 const REFRESH_INTERVAL_MS = 5000, REFRESH_ROUNDS = 36;
 
@@ -32,7 +31,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   const [checking, setChecking] = useState(true);
   const heading = useRef(null);
   const [data, setData] = useState(null), [csrf, setCsrf] = useState(''), [step, setStep] = useState(0);
-  const [path, setPath] = useState('coexistence'), [preselect, setPreselect] = useState(EMPTY_PRESELECT);
+  const [path, setPath] = useState('coexistence');
   const [prepared, setPrepared] = useState(null), [preparing, setPreparing] = useState(false);
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   // Meta returned its code: the connection is being finished, so the owner is told, not left on "Complete the Meta window".
@@ -142,12 +141,11 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   }, [live]);
 
   // Meta's window --------------------------------------------------------------
-  async function prepare(forPath = path, forPreselect = preselect) {
+  async function prepare(forPath = path) {
     if (preparing) return;
     setPreparing(true); setError('');
     try {
-      const named = forPath === 'coexistence' ? {} : Object.fromEntries(Object.entries(forPreselect).filter(([, v]) => v));
-      const r = await request({ action: 'begin', path: forPath, ...named });
+      const r = await request({ action: 'begin', path: forPath });
       await prepareFacebook(r);
       setPrepared(r);
     } catch (e) { setError(explain(e.message)); }
@@ -166,10 +164,6 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     if (next === path) return;
     setPath(next);
     if (prepared && prepared.path !== next) discardPrepared();
-  }
-  function changePreselect(next) {
-    setPreselect(next);
-    if (prepared) discardPrepared();
   }
   // Signed in with a setup still only in this browser: attach it to the account once, automatically,
   // so connecting a channel is never blocked behind a button the owner has to find.
@@ -297,7 +291,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
           {needsAccount && !data?.account && errorNote}
           {!needsAccount && !reviewMode && <InstagramConnection lang={lang} inSetup autoOn={!!instagramReturn?.ok} onActive={reportLive('instagram')} />}
           <WhatsAppConnect tr={tr} explain={explain} open={whatsappOpen} onOpen={() => setWhatsappOpen(true)} data={data} busy={busy} available={available} reviewMode={reviewMode}
-            prepared={prepared} preparing={preparing} finishing={finishing} path={path} onPathChange={changePath} preselect={preselect} onPreselectChange={changePreselect}
+            prepared={prepared} preparing={preparing} finishing={finishing} path={path} onPathChange={changePath}
             onPrepare={() => prepare()} onConnect={connect} onCancelAttempt={reason => pending.current?.cancel(reason)}
             run={run} act={act} request={request} applyState={applyState}
             liveSwitch={!reviewMode && data?.savedToAccount ? <ChannelSwitch s={s} channel="whatsapp" autoOn={whatsappJustConnected} onActive={reportLive('whatsapp')} /> : null}

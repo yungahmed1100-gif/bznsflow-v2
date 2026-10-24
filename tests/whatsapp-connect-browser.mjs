@@ -18,7 +18,7 @@ try {
   for (const [lang, width] of [['en', 1440], ['ar', 768], ['en', 320]]) {
     const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
     const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' }), page = await context.newPage();
-    const calls = [], apiCalls = [], errors = [];
+    const calls = [], begins = [], apiCalls = [], errors = [];
     const state = { ok: true, available: true, account: { email: 'owner@example.test' }, accountSaveAvailable: true, savedToAccount: true, journeyStep: 1, profileVersion: 1, csrfToken: 'c',
       profile: { businessName: 'Noor Abayas', sector: 'Retail', services: 'Abayas', humanContact: 'team@example.test', reviewed: true, faqs: [] }, integration: null };
     page.on('pageerror', e => errors.push(e.message));
@@ -30,6 +30,7 @@ try {
         const body = route.request().postDataJSON() || {}, surface = u.searchParams.get('surface');
         if (surface !== 'customer') return route.fulfill({ json: { ok: true, connected: false, available: false } });
         calls.push(body.action || 'get');
+        if (body.action === 'begin') begins.push(body);
         if (body.action === 'begin') return route.fulfill({ json: { ...state, attempt: `a-${calls.length}`, state: 'f'.repeat(64), path: body.path, expiresAt: Date.now() + 600000, appId: '1388038082832745', configId: '998877665544', version: 'v25.0', esVersion: 'v4' } });
         return route.fulfill({ json: state });
       }
@@ -44,17 +45,20 @@ try {
     await card.getByRole('button', { name: t('Connect WhatsApp', 'ربط واتساب'), exact: true }).click();
     assert.equal(calls.filter(c => c === 'begin').length, 0, 'opening help does not start a Meta attempt'); checks++;
     await page.screenshot({ path: `${OUT}/${lang}-${width}-choose-app.png`, fullPage: true });
-    if (width === 1440) {
-      await card.locator('.layla-which-card').first().click();
-      await card.locator('.layla-ready-line').waitFor();
-      await card.getByRole('radio', { name: new RegExp(t('My number already uses an API or another provider', 'رقمي مرتبط بواجهة API أو مزوّد آخر')) }).check();
-      await card.getByRole('radio', { name: new RegExp(t('Keep my WhatsApp Business app', 'الاستمرار باستخدام تطبيق واتساب للأعمال')) }).check();
-      assert.equal(await card.getByRole('heading', { name: t('Which WhatsApp do you use for your shop?', 'أي واتساب تستخدم لمتجرك؟') }).count(), 1, 'changing paths resets the Business App checklist'); checks++;
-    }
-    await card.locator('.layla-which-card').nth(1).click();
-    const switchButton = card.getByRole('button', { name: t('Done — I now use WhatsApp Business', 'تم، أستخدم الآن واتساب للأعمال'), exact: true });
-    await switchButton.waitFor();
-    await switchButton.click();
+    // Two choices, no portfolio IDs and no second question (Ahmed, 2026-10-25).
+    const radios = card.getByRole('radio');
+    assert.equal(await radios.count(), 2, 'two number choices'); checks++;
+    const businessChoice = card.getByRole('radio', { name: new RegExp(t('My WhatsApp Business number', 'رقم واتساب للأعمال الخاص بي')) });
+    const otherChoice = card.getByRole('radio', { name: new RegExp(t('A different number', 'رقم آخر')) });
+    assert.equal(await businessChoice.isChecked(), true, 'the WhatsApp Business number is chosen by default'); checks++;
+    assert.equal(await card.getByText(t('My number is in a different Meta business portfolio', 'رقمي في محفظة أعمال مختلفة')).count(), 0, 'no portfolio IDs'); checks++;
+    assert.equal(await card.getByRole('heading', { name: t('Which WhatsApp do you use for your shop?', 'أي واتساب تستخدم لمتجرك؟') }).count(), 0, 'no second question'); checks++;
+    const switchGuide = card.getByText(t('Only have regular WhatsApp? How to switch', 'تستخدم واتساب العادي؟ طريقة الانتقال'), { exact: true });
+    assert.equal(await card.getByRole('link', { name: 'App Store (iPhone)' }).isVisible(), false, 'the switch guide starts closed'); checks++;
+    await switchGuide.click();
+    assert.equal(await card.getByRole('link', { name: 'App Store (iPhone)' }).isVisible(), true); checks++;
+    assert.equal(await card.getByRole('link', { name: 'Google Play (Android)' }).isVisible(), true); checks++;
+    assert.equal(await businessChoice.isChecked(), true, 'opening the guide does not change the choice'); checks++;
     // One short line instead of the ten-item checklist (Ahmed, 2026-10-24): nothing to tick, Meta is one press away.
     await card.locator('.layla-ready-line').waitFor();
     assert.equal(await card.locator('.layla-ready-line').textContent(), t('Have your phone with WhatsApp Business (updated) and your Facebook login ready.', 'جهّز هاتفك وعليه واتساب للأعمال (محدّث) وتسجيل دخول فيسبوك.')); checks++;
@@ -70,15 +74,16 @@ try {
     const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     const serious = axe.violations.filter(item => ['serious', 'critical'].includes(item.impact));
     assert.deepEqual(serious.map(item => ({ id: item.id, nodes: item.nodes.map(node => node.target) })), [], `serious accessibility findings at ${lang}/${width}`); checks++;
-    await card.getByRole('radio', { name: new RegExp(t('Use another number I own', 'استخدام رقم آخر أملكه')) }).check();
     await card.getByRole('button', { name: t('Get Meta ready', 'تجهيز الربط مع Meta'), exact: true }).click();
     const connect = card.getByRole('button', { name: t('Connect with Facebook', 'الربط عبر فيسبوك'), exact: true });
     await connect.waitFor();
     // Switching the number type releases the unused attempt before preparing another.
-    await card.getByRole('radio', { name: new RegExp(t('My number already uses an API or another provider', 'رقمي مرتبط بواجهة API أو مزوّد آخر')) }).check();
+    await otherChoice.check();
+    assert.equal(await card.locator('.layla-ready-line').count(), 0, 'the app line is only for the WhatsApp Business number'); checks++;
     await card.getByRole('button', { name: t('Get Meta ready', 'تجهيز الربط مع Meta'), exact: true }).click();
     await connect.waitFor();
     assert.deepEqual(calls.filter(c => ['begin', 'cancel'].includes(c)), ['begin', 'cancel', 'begin']); checks++;
+    assert.deepEqual(begins, [{ action: 'begin', path: 'coexistence' }, { action: 'begin', path: 'new_number' }], 'a different number is a new_number attempt with nothing else'); checks++;
     await page.screenshot({ path: `${OUT}/${lang}-${width}-ready.png`, fullPage: true });
     await connect.click();
     await page.getByRole('alert').filter({ hasText: t('Meta permissions were declined', 'رُفضت أذونات Meta') }).waitFor(); checks++;
@@ -93,7 +98,7 @@ try {
     assert.deepEqual(errors, []); checks++;
     await context.close();
   }
-  // Keep my WhatsApp Business app, end to end: Meta finishes, the page says it is finishing, then shows the connection.
+  // My WhatsApp Business number, end to end: Meta finishes, the page says it is finishing, then shows the connection.
   // `message` sends Meta's finish event (any FINISH name); without it the code goes alone and the server finds the WABA.
   for (const [lang, width, message] of [['en', 1280, 'FINISH'], ['ar', 375, 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING'], ['en', 768, null]]) {
     const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
@@ -127,7 +132,6 @@ try {
     await page.goto(`${BASE}/${ar ? '' : 'en/'}catalyst/setup`);
     const card = page.getByRole('region', { name: 'WhatsApp', exact: true });
     await card.getByRole('button', { name: t('Connect WhatsApp', 'ربط واتساب'), exact: true }).click();
-    await card.locator('.layla-which-card').first().click();
     await card.getByRole('button', { name: t('Get Meta ready', 'تجهيز الربط مع Meta'), exact: true }).click();
     await card.getByRole('button', { name: t('Connect with Facebook', 'الربط عبر فيسبوك'), exact: true }).click();
     await card.getByRole('button', { name: t('Finishing your connection…', 'جارٍ إكمال الربط…') }).waitFor({ timeout: 8000 }); checks++;
@@ -175,7 +179,6 @@ try {
     assert.match(await alert.textContent(), /خطوة ربط ما زالت قيد الإنهاء/, 'the refusal says what to do'); checks++;
     assert.equal(await alert.evaluate(el => document.activeElement === el), true, 'the message takes focus'); checks++;
     await card.getByRole('button', { name: 'ربط واتساب', exact: true }).click();
-    await card.getByRole('radio', { name: /استخدام رقم آخر أملكه/ }).check();
     const prepare = card.getByRole('button', { name: 'تجهيز الربط مع Meta' });
     assert.equal(await prepare.isDisabled(), true); checks++;
     assert.match(await prepare.getAttribute('aria-describedby'), /whatsapp-requirements/, 'the disabled button points to what is missing'); checks++;

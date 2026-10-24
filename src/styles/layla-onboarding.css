@@ -151,18 +151,16 @@
 .layla-answer p{margin:12px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .layla-answer>h3{margin:0}
 .layla-faq{padding:14px 0;border-bottom:1px solid var(--layla-rule)}
-.layla-which{margin:18px 0;padding:20px;background:var(--layla-band);border:1px solid var(--layla-rule-strong);border-radius:var(--layla-radius)}
-.layla-which>h4,.layla-answer>h4{margin:0 0 6px;font-size:17px;line-height:1.4}
-.layla-which>p{margin:0 0 12px;color:var(--layla-ink-2);font-size:14px}
-.layla-which-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.layla-which-card{display:flex;align-items:center;gap:12px;width:100%;margin:0!important;padding:14px!important;text-align:start;background:var(--layla-surface);color:var(--layla-ink);border:1px solid var(--layla-rule-strong);border-radius:var(--layla-radius)}
-.layla-which-card:hover{border-color:var(--layla-blue-ink);background:var(--layla-surface-soft)}
-.layla-which-card span{min-width:0}
-.layla-which-card strong,.layla-which-card small{display:block}
-.layla-which-card small{margin-top:4px;color:var(--layla-ink-2);font-size:13px;font-weight:400;line-height:1.45}
-.layla-app-icon{flex:none;border-radius:8px}
-.layla-which .layla-answer{margin:14px 0 0;padding:18px}
-.layla-which .layla-answer ol,.layla-meta-guide ol{padding-inline-start:24px}
+.layla-answer>h4{margin:0 0 6px;font-size:17px;line-height:1.4}
+/* "Only have regular WhatsApp?" sits under the first choice as a quiet link, not a third card. */
+.layla-workspace details.layla-switch{margin:-4px 0 12px;border:0;background:none}
+.layla-workspace .layla-switch>summary{justify-content:flex-start;min-height:44px;padding:0 4px;font-size:14px;color:var(--layla-blue-ink);text-decoration:underline;text-underline-offset:3px}
+.layla-workspace .layla-switch>summary::after{content:none}
+.layla-workspace .layla-switch>summary:hover{background:none;color:var(--layla-ink)}
+.layla-workspace .layla-switch[open]>summary{border-bottom:0}
+.layla-workspace .layla-switch>ol{margin:4px 0 0;padding:14px 18px;padding-inline-start:40px;background:var(--layla-band);border-radius:var(--layla-radius)}
+.layla-switch li+li{margin-top:6px}
+.layla-meta-guide ol{padding-inline-start:24px}
 .layla-store-link{display:inline-block;margin-inline-end:10px}
 .layla-meta-guide{margin:16px 0!important}
 .layla-meta-guide ol{margin-block:14px}
@@ -231,8 +229,6 @@
   .layla-customer .chat-widget{bottom:96px}
   .layla-phone-fields{grid-template-columns:1fr}
   .layla-answer{padding:18px}
-  .layla-which{padding:16px}
-  .layla-which-cards{grid-template-columns:1fr}
   .layla-help-actions{display:grid}
 }
 /* The business form embedded in the dashboard's Business tab: same tokens and

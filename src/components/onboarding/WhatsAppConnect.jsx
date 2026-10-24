@@ -3,9 +3,11 @@ import { Icon } from '../ui/Icon.jsx';
 import { BrandMark } from '../ui/BrandMark';
 import { MetaWindowGuide } from './MetaWindowGuide.jsx';
 import { SetupHelpLinks, AfterConnect, usePhoneOnly } from './SetupHelpLinks.jsx';
-import { WhichWhatsApp } from './WhichWhatsApp.jsx';
+import { SwitchToBusiness } from './SwitchToBusiness.jsx';
 
-const PATHS = ['coexistence', 'existing_cloud', 'new_number'];
+// Two choices (Ahmed, 2026-10-25). "A different number" covers a new number and one already on an API:
+// both open the same Meta window, and the server's new_number path connects a registered number directly.
+const PATHS = ['coexistence', 'new_number'];
 
 /** Everything the customer must have before Meta's window can open, in order. */
 export function whatsappRequirements({ data, available, reviewMode }) {
@@ -23,15 +25,16 @@ function nameStatus(tr, status) {
   return tr('not approved — check it in WhatsApp Manager', 'غير معتمد — راجعه في مدير واتساب');
 }
 
-function PathChoice({ tr, path, value, onChange, children }) {
-  return <label className="layla-choice"><input type="radio" name="number-path" checked={path === value} onChange={() => onChange(value)} /><span>{children}</span></label>;
+function PathChoice({ path, value, onChange, children }) {
+  // An older existing_cloud attempt or connection shows as "A different number".
+  const checked = value === 'coexistence' ? path === value : path !== 'coexistence';
+  return <label className="layla-choice"><input type="radio" name="number-path" checked={checked} onChange={() => onChange(value)} /><span>{children}</span></label>;
 }
 
 // WhatsApp card on the channels step: number type, Meta's signup window, the
 // verification checklist and the new-number registration PIN.
-export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim, liveSwitch = null, data, busy, available, reviewMode, prepared, preparing, finishing = false, path, onPathChange, preselect, onPreselectChange, onPrepare, onConnect, onCancelAttempt, run, act, request, applyState }) {
+export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim, liveSwitch = null, data, busy, available, reviewMode, prepared, preparing, finishing = false, path, onPathChange, onPrepare, onConnect, onCancelAttempt, run, act, request, applyState }) {
   const [pin, setPin] = useState('');
-  const [businessApp, setBusinessApp] = useState(false);
   const phoneOnly = usePhoneOnly();
   const requirements = whatsappRequirements({ data, available, reviewMode });
   const ready = requirements.every(([, ok]) => ok);
@@ -53,7 +56,7 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
     act(async () => { try { applyState(await request(body)); } finally { delete body.pin; } });
   };
   const changePath = next => {
-    if (next !== path) { setBusinessApp(false); onPathChange(next); }
+    if ((next === 'coexistence') !== (path === 'coexistence')) onPathChange(next);
   };
   return <section className="layla-channel-card layla-channel-card--whatsapp" aria-labelledby="whatsapp-channel-heading">
     <h3 id="whatsapp-channel-heading"><BrandMark name="whatsapp" size={26} className="layla-channel-logo" />WhatsApp</h3>
@@ -89,20 +92,13 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
       <button className="layla-primary" disabled={busy} onClick={onOpen}>{tr('Connect WhatsApp', 'ربط واتساب')}<Icon name="arrow-right" size={16} className="icon-flip-rtl" /></button>
     </>}
     {!paused && !integration && !data?.selection && open && <>
-      <fieldset disabled={busy}><legend>{tr('Which WhatsApp number should Layla answer?', 'ما رقم واتساب الذي ستردّ عليه ليلى؟')}</legend>
-        <PathChoice tr={tr} path={path} value={PATHS[0]} onChange={changePath}><strong>{tr('Keep my WhatsApp Business app', 'الاستمرار باستخدام تطبيق واتساب للأعمال')} <span className="layla-chip layla-chip--recommended">{tr('Recommended', 'موصى به')}</span></strong><small>{tr('Keep using your app on your phone. Meta checks whether your number is eligible.', 'استمر باستخدام التطبيق على هاتفك. تتحقق Meta من أهلية رقمك.')}</small></PathChoice>
-        <PathChoice tr={tr} path={path} value={PATHS[1]} onChange={changePath}><strong>{tr('My number already uses an API or another provider', 'رقمي مرتبط بواجهة API أو مزوّد آخر')}</strong><small>{tr('Select your existing account and registered number in Meta. A connection with conflicting routing needs assisted setup.', 'اختر الحساب والرقم المسجّل في Meta. إذا كان الربط الحالي يتعارض مع هذا الإعداد فسنساعدك على إكماله.')}</small></PathChoice>
-        <PathChoice tr={tr} path={path} value={PATHS[2]} onChange={changePath}><strong>{tr('Use another number I own', 'استخدام رقم آخر أملكه')}</strong><small>{tr('You need access to SMS or calls. BznsFlow does not supply a number.', 'تحتاج إلى استقبال رسائل SMS أو المكالمات. لا توفر BznsFlow رقماً جديداً.')}</small></PathChoice>
+      <fieldset disabled={busy}><legend>{tr('Which number should Layla answer?', 'ما الرقم الذي ستردّ عليه ليلى؟')}</legend>
+        <PathChoice path={path} value={PATHS[0]} onChange={changePath}><strong>{tr('My WhatsApp Business number', 'رقم واتساب للأعمال الخاص بي')} <span className="layla-chip layla-chip--recommended">{tr('Recommended', 'موصى به')}</span></strong><small>{tr('Keep using the app on your phone. Layla answers alongside you.', 'استمر باستخدام التطبيق على هاتفك، وتردّ ليلى معك.')}</small></PathChoice>
+        <SwitchToBusiness tr={tr} />
+        <PathChoice path={path} value={PATHS[1]} onChange={changePath}><strong>{tr('A different number', 'رقم آخر')}</strong><small>{tr('A new number, or one already on an API. A new number needs SMS or a call.', 'رقم جديد، أو رقم مرتبط بواجهة API. يحتاج الرقم الجديد إلى رسالة SMS أو مكالمة.')}</small></PathChoice>
       </fieldset>
-      {path === 'coexistence' && !businessApp && <WhichWhatsApp tr={tr} onBusiness={() => setBusinessApp(true)} />}
-      {(path !== 'coexistence' || businessApp) && <>
       {/* One line, not a checklist: everything else is asked for inside Meta's window (Ahmed, 2026-10-24). */}
       {path === 'coexistence' && <p className="layla-help layla-ready-line">{tr('Have your phone with WhatsApp Business (updated) and your Facebook login ready.', 'جهّز هاتفك وعليه واتساب للأعمال (محدّث) وتسجيل دخول فيسبوك.')}</p>}
-      {path !== 'coexistence' && <details className="layla-preselect"><summary>{tr('My number is in a different Meta business portfolio (optional)', 'رقمي في محفظة أعمال مختلفة في Meta (اختياري)')}</summary>
-        <p className="layla-help">{tr('Enter its IDs from Meta Business Suite → Settings so Meta opens on the right business.', 'أدخل معرّفاته من Meta Business Suite ← الإعدادات لتفتح Meta على النشاط الصحيح.')}</p>
-        <label>{tr('Meta business portfolio ID', 'معرّف محفظة الأعمال في Meta')}<small>{tr('Settings → Business info', 'الإعدادات ← معلومات النشاط')}</small><input inputMode="numeric" autoComplete="off" dir="ltr" maxLength={30} disabled={busy} value={preselect.business} onChange={e => onPreselectChange({ ...preselect, business: e.target.value.replace(/\D/g, '').slice(0, 30) })} /></label>
-        <label>{tr('WhatsApp Business account ID', 'معرّف حساب واتساب للأعمال')}<small>{tr('Settings → Accounts → WhatsApp accounts', 'الإعدادات ← الحسابات ← حسابات واتساب')}</small><input inputMode="numeric" autoComplete="off" dir="ltr" maxLength={30} disabled={busy} value={preselect.waba} onChange={e => onPreselectChange({ ...preselect, waba: e.target.value.replace(/\D/g, '').slice(0, 30) })} /></label>
-      </details>}
       {!ready && <ul id="whatsapp-requirements" className="layla-checklist" aria-label={tr('Before connecting WhatsApp', 'قبل ربط واتساب')}>{requirements.map(([key, ok]) => <li key={key} data-ok={ok ? '' : undefined}>
         {/* An unmet item is never a dead end: saving to the account is one press away. */}
         {key === 'account' && !ok && data?.account && data?.accountSaveAvailable
@@ -117,7 +113,6 @@ export function WhatsAppConnect({ tr, explain, open, onOpen, errorNote, onClaim,
         ? <button className="layla-primary" disabled={busy} onClick={onConnect}>{finishing ? tr('Finishing your connection…', 'جارٍ إكمال الربط…') : busy ? tr('Complete the Meta window…', 'أكمل الخطوات في نافذة Meta…') : tr('Connect with Facebook', 'الربط عبر فيسبوك')}<Icon name="arrow-right" size={16} className="icon-flip-rtl" /></button>
         : <button className="layla-primary" disabled={busy || preparing || !ready} aria-describedby={ready ? undefined : 'whatsapp-requirements whatsapp-requirements-hint'} onClick={onPrepare}>{preparing ? tr('Getting Meta ready…', 'جارٍ تجهيز Meta…') : tr('Get Meta ready', 'تجهيز الربط مع Meta')}<Icon name="arrow-right" size={16} className="icon-flip-rtl" /></button>}
       {busy && ownPrepared && !finishing && <button className="layla-secondary" onClick={() => onCancelAttempt('meta_cancelled')}>{tr('Cancel this attempt', 'إلغاء هذه المحاولة')}</button>}
-      </>}
       <SetupHelpLinks tr={tr} businessName={data?.profile?.businessName} reference={data?.diagnostic?.at ? `${data.diagnostic.stage}-${data.diagnostic.at}` : ''} email={data?.account?.email} phoneOnly={phoneOnly} />
     </>}
     {integration?.path === 'new_number' && integration.status === 'registration_required' && <form autoComplete="off" onSubmit={register}>

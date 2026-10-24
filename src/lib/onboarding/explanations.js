@@ -16,12 +16,12 @@ export const EXPLANATIONS = {
     ar: "مسار المراجعة متاح دون دعوة من BznsFlow. ينتظر ربط Meta إعداد اختبار Blue.",
   },
   coexistence_not_verified: {
-    en: "Facebook couldn’t confirm this number is on the WhatsApp Business app. Check you typed the number your shop uses in WhatsApp Business, then try again.",
-    ar: "لم يتمكن فيسبوك من التأكد أن هذا الرقم على تطبيق واتساب للأعمال. تأكد أنك كتبت رقم متجرك في واتساب للأعمال ثم حاول مجدداً.",
+    en: "Meta says the number picked in its window isn’t on the WhatsApp Business app. Connect again and pick the number from your WhatsApp Business app, or choose “A different number”.",
+    ar: "تقول Meta إن الرقم المختار في نافذتها ليس على تطبيق واتساب للأعمال. اربط مجدداً واختر رقم تطبيق واتساب للأعمال، أو اختر «رقم آخر».",
   },
   business_app_requires_coexistence: {
-    en: "This number uses WhatsApp Business. Choose “Keep using my WhatsApp Business app.”",
-    ar: "هذا الرقم يستخدم تطبيق واتساب للأعمال. اختر «الاستمرار في استخدام تطبيق واتساب للأعمال».",
+    en: "This number uses the WhatsApp Business app. Choose “My WhatsApp Business number”.",
+    ar: "هذا الرقم يستخدم تطبيق واتساب للأعمال. اختر «رقم واتساب للأعمال الخاص بي».",
   },
   onboarding_in_progress_or_limited: {
     en: "A connection is already in progress, or you have reached the attempt limit. Finish the current connection or try again later.",
