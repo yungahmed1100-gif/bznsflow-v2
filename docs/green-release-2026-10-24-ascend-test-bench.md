@@ -177,3 +177,24 @@ Decision: BF-2026-10-24-AUDIT-BOOKING-TEST-BENCH (vault `Decisions/2026-10-24-Ow
 - All unit tests, the typecheck, the build and all 12 shared browser suites pass.
 - The live chunk `LaylaOnboarding-Kt9JmxxU.js` has the new guide and none of the old wording.
 - Rollback target: `dpl_J6ya1ze2y9LxUfQkd3vPwxoMYzCV`.
+
+## Follow-up (2026-10-25): attempt limit, and the app number re-checked before refusing
+
+**Report:** Ahmed's third retry ended on `coexistence_not_verified` again, then on "reached its connection attempt limit".
+- The record for yungahmed1100@gmail.com showed `attempts: 10`, status `failed`, path `coexistence`.
+- It held no detail about what Meta said.
+- Reading the shared Messaging account 1431439178536480 directly wasn't possible: Vercel doesn't release sensitive values to a local pull.
+
+**Operator action:** `review:resetAttemptBudget` for yungahmed1100@gmail.com gave `{reset: true}`. The record now shows `attempts: 0`.
+
+**Change** (`28a786a`; Convex Green first because of the additive `diagnostic.meta` field; Vercel `dpl_AUkamoQHciksU3RstkDB9RjM9t4s`):
+- **Re-check before refusing:** on the app path, the server asks Meta again (4 × 3 s) before refusing. Meta's docs say linking the app takes a few minutes, so the flag may be set after the window closes.
+- **Meta's answer on the record:** a refusal stores `diagnostic.meta`, holding Meta's finish event, the app flag (`true`/`false`/`missing`), the number type and the last 4 digits. The event name is evidence only and never decides the path.
+- **Attempt counting:** the limit (10) counts only attempts that came back from Meta (claim). Preparing, or switching the number type, no longer uses one.
+
+**Checks:**
+- New unit tests for the re-check (connects on the third look; refused after all re-checks with the facts kept), for the record detail, for an unexpected event name being dropped, and for free preparing. Breaking each of 6 new guards fails a test.
+- All unit tests, the typecheck, the build, `whatsapp-connect-browser` (148) and all 12 shared browser suites pass.
+- Rollback targets: Vercel `dpl_6pFCjB4JugFQwYifiN7kPWpuLbPR`. The Convex change is additive.
+
+**Next:** Ahmed retries. If it is refused again, `diagnostic.meta` shows Meta's exact answer.
