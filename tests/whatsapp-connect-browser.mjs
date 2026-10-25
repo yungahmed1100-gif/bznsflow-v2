@@ -151,7 +151,7 @@ try {
     assert.match(await card.locator('.layla-answer').last().textContent(), ar ? /حساب المراسلة/ : /Messaging account/, 'billing is on the Messaging account'); checks++;
     assert.equal(await card.locator('.layla-linked-devices').isVisible(), true, 'linked computers must be linked again after the app route'); checks++;
     assert.equal(finishes.length, 1, 'finished exactly once'); checks++;
-    assert.deepEqual({ ...finishes[0], state: undefined }, { action: 'finish', attempt: 'a-1', state: undefined, code: 'meta-code', ...(message ? { waba: '111222', phone: '333444' } : {}) },
+    assert.deepEqual({ ...finishes[0], state: undefined }, { action: 'finish', attempt: 'a-1', state: undefined, code: 'meta-code', ...(message ? { waba: '111222', phone: '333444', event: message } : {}) },
       message ? `${message} from another facebook.com window is used` : 'no message: the code goes alone and the server finds the WABA'); checks++;
     assert.equal(calls.includes('cancel'), false, 'the attempt is not thrown away'); checks++;
     const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();

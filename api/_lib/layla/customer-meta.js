@@ -37,7 +37,19 @@ export async function metaRequest(c, path, token, fetcher, body) {
     return value;
   } catch (error) { if (error instanceof PilotError) throw error; throw new PilotError('meta_connection_unavailable', 502); }
 }
-export async function exchangeAndVerify({ c, code, token: existingToken, waba, phone, path, allowPhoneSelection = false, ownerBusiness, configuredOwner = false, fetcher = fetch, now = Date.now }) {
+// Meta can mark a number as on the WhatsApp Business app a little after its window closes; the app
+// path asks again for about 15 seconds before refusing (2026-10-25: two refusals with no other cause known).
+// Kept short: the whole finish must fit api/layla-meta.js's 60-second limit.
+export const COEXISTENCE_RECHECKS = 4, COEXISTENCE_RECHECK_MS = 3000;
+const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+// What Meta said about a number, safe to keep on the record: the app flag, the number type and the last 4 digits.
+export function numberFacts(p) {
+  const digits = String(p?.display_phone_number || '').replace(/\D/g, '');
+  return { onBizApp: p?.is_on_biz_app === true ? 'true' : p?.is_on_biz_app === false ? 'false' : 'missing',
+    ...(/^[A-Z_]{1,30}$/.test(p?.platform_type || '') ? { platform: p.platform_type } : {}), ...(digits.length >= 7 ? { last4: digits.slice(-4) } : {}) };
+}
+const refuse = (code, status, number) => Object.assign(new PilotError(code, status), number ? { meta: numberFacts(number) } : {});
+export async function exchangeAndVerify({ c, code, token: existingToken, waba, phone, path, allowPhoneSelection = false, ownerBusiness, configuredOwner = false, fetcher = fetch, now = Date.now, sleep = pause }) {
   // Signup may arrive without the WABA when Meta's message never reached the page; the token then names it.
   const findWaba = allowPhoneSelection && !existingToken && !waba;
   if ((!existingToken && (typeof code !== 'string' || !code || code.length > 4096)) || (!findWaba && !/^\d{1,30}$/.test(waba || '')) || (!/^\d{1,30}$/.test(phone || '') && !(allowPhoneSelection && !phone))) throw new PilotError('invalid_signup_result');
@@ -60,23 +72,23 @@ export async function exchangeAndVerify({ c, code, token: existingToken, waba, p
   }
   const ownerToken = !listed && !!granted && (/^\d{1,30}$/.test(ownerBusiness || '') || (configuredOwner && !!existingToken && path === 'existing_cloud')) && d.type === 'SYSTEM_USER';
   if (listed ? !granted.target_ids.includes(waba) : !ownerToken) throw new PilotError('waba_not_granted', 403);
-  const [account, phones] = await Promise.all([
-    metaRequest(c, `${waba}?fields=id${ownerToken ? ',owner_business_info' : ''}`, token, fetcher),
-    metaRequest(c, `${waba}/phone_numbers?fields=id,display_phone_number,platform_type,is_on_biz_app&limit=100`, token, fetcher),
-  ]);
+  const listPhones = () => metaRequest(c, `${waba}/phone_numbers?fields=id,display_phone_number,platform_type,is_on_biz_app&limit=100`, token, fetcher);
+  let [account, phones] = await Promise.all([metaRequest(c, `${waba}?fields=id${ownerToken ? ',owner_business_info' : ''}`, token, fetcher), listPhones()]);
+  const onApp = list => Array.isArray(list?.data) && list.data.some(p => p.is_on_biz_app === true && (!phone || p.id === phone));
+  for (let i = 0; path === 'coexistence' && !onApp(phones) && i < COEXISTENCE_RECHECKS; i++) { await sleep(COEXISTENCE_RECHECK_MS); phones = await listPhones(); }
   if (account.id !== waba || !Array.isArray(phones.data)) throw new PilotError('phone_not_in_customer_waba', 403);
   if (ownerToken && (!/^\d{1,30}$/.test(account.owner_business_info?.id || '') || (ownerBusiness && account.owner_business_info.id !== ownerBusiness))) throw new PilotError('waba_not_granted', 403);
   if (!phone && allowPhoneSelection) {
     const eligible = phones.data.filter(p => /^\d{1,30}$/.test(p.id) && p.is_on_biz_app === (path === 'coexistence') && /^\d{7,15}$/.test(String(p.display_phone_number || '').replace(/\D/g,'')));
-    if (!eligible.length) throw new PilotError('phone_not_in_customer_waba',403);
+    if (!eligible.length) throw refuse('phone_not_in_customer_waba', 403, phones.data.length === 1 ? phones.data[0] : null);
     // Never silently choose among multiple numbers (including paginated results).
     if (eligible.length !== 1 || phones.paging?.next) return {token, waba, candidates: eligible.map(p => ({id:p.id, sender:String(p.display_phone_number).replace(/\D/g,'')}))};
     phone = eligible[0].id;
   }
   const selected = phones.data?.find(p => p.id === phone);
   if (account.id !== waba || !selected) throw new PilotError('phone_not_in_customer_waba', 403);
-  if (path === 'coexistence' && selected.is_on_biz_app !== true) throw new PilotError('coexistence_not_verified', 409);
-  if (['new_number','existing_cloud'].includes(path) && selected.is_on_biz_app !== false) throw new PilotError('business_app_requires_coexistence', 409);
+  if (path === 'coexistence' && selected.is_on_biz_app !== true) throw refuse('coexistence_not_verified', 409, selected);
+  if (['new_number','existing_cloud'].includes(path) && selected.is_on_biz_app !== false) throw refuse('business_app_requires_coexistence', 409, selected);
   const sender = String(selected.display_phone_number || '').replace(/\D/g, '');
   if (!/^\d{7,15}$/.test(sender)) throw new PilotError('sender_not_verified', 409);
   return { token, waba, phone, sender, coexistence: selected.is_on_biz_app === true, cloudApi: selected.platform_type === 'CLOUD_API' };

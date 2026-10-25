@@ -225,7 +225,7 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
       };
       // Exchange (or token check), then connection persistence. A failure before any provider
       // operation is recorded against the attempt; a claimed operation keeps its own record.
-      const verifyAndPersist = async ({ attemptId, waba, phone, exchangeArgs, stage, connectionConfig }) => {
+      const verifyAndPersist = async ({ attemptId, waba, phone, exchangeArgs, stage, connectionConfig, event }) => {
         let token;
         try {
           const verified = await exchange({ c:connectionConfig || configuration(env), ...exchangeArgs, waba, phone, path:row.attempt.path, allowPhoneSelection:!exchangeArgs.token, fetcher, now });
@@ -238,12 +238,14 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
             await write('pending_selection',{selection:{waba,path:row.attempt.path,candidates:verified.candidates,credential}});
           } else await persistConnection(verified,waba,phone,connectionConfig || configuration(env));
         } catch (error) {
-          if (!row.operation) await write('result',{attempt:attemptId,status:row.integration ? 'reconciliation_required' : 'failed',diagnostic:diagnostic(error,stage)});
+          if (!row.operation) await write('result',{attempt:attemptId,status:row.integration ? 'reconciliation_required' : 'failed',diagnostic:diagnostic(error,stage,event)});
           throw error;
         } finally { token = undefined; }
       };
       const checks = proof => ({ routing:!!proof.isolated, registered:!!(proof.registered ?? proof.connected), path:!!(proof.pathVerified ?? proof.isolated), nameStatus:proof.nameStatus || 'UNKNOWN' });
-      const diagnostic = (error, stage) => ({reason:error instanceof PilotError ? error.code : 'review_backend_unavailable',stage,at:now(),...(Number.isSafeInteger(error.providerCode) ? {providerCode:error.providerCode} : {})});
+      // meta: Meta's finish event and what it said about the number, so a refusal on the record shows its cause.
+      const diagnostic = (error, stage, event) => ({reason:error instanceof PilotError ? error.code : 'review_backend_unavailable',stage,at:now(),...(Number.isSafeInteger(error.providerCode) ? {providerCode:error.providerCode} : {}),
+        ...(error.meta || event ? {meta:{...(event ? {event} : {}),...(error.meta || {})}} : {})});
       if (body.action === 'claim_draft') {
         if (!accountsAvailable || !account) throw new PilotError('sign_in_required',401);
         const token = parseCookies(req)[BLUE_ACCOUNT_COOKIE];
@@ -393,12 +395,14 @@ export function createReviewHandler({ env = process.env, fetcher = fetch, now = 
           // The WABA may be missing when Meta's message never reached the page; the token names it then.
           if ((body.waba !== undefined && !assetId(body.waba)) || (body.phone !== undefined && !assetId(body.phone)) || (body.waba === undefined && body.phone !== undefined)) throw new PilotError('invalid_signup_result');
           if (typeof body.code !== 'string' || !body.code || body.code.length > 4096) throw new PilotError('invalid_signup_result');
+          // Meta's finish event name is evidence for the record only; anything unexpected is dropped, not refused.
+          const event = typeof body.event === 'string' && /^FINISH[A-Z_]{0,60}$/.test(body.event) ? body.event : undefined;
           // The owner named this WABA before launch; a different one is a wrong selection, not a connection.
           if (row.attempt?.preselect?.waba && body.waba !== undefined && row.attempt.preselect.waba !== body.waba) throw new PilotError('invalid_signup_result');
           await write('claim',{attempt:body.attempt,stateHash:digest(body.state)});
           // If a provider operation was claimed, its record survives even if
           // persistence fails. A refresh can reconcile it after 60 seconds.
-          try { await verifyAndPersist({ attemptId:body.attempt, waba:body.waba, phone:body.phone, exchangeArgs:{ code:body.code }, stage:'verification' }); }
+          try { await verifyAndPersist({ attemptId:body.attempt, waba:body.waba, phone:body.phone, exchangeArgs:{ code:body.code }, stage:'verification', event }); }
           finally { delete body.code; }
         }
       } else if (body.action === 'connect_owner_number') {

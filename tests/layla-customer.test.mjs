@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
-import { sealToken, openToken, credentialContext, exchangeAndVerify } from '../api/_lib/layla/customer-meta.js';
+import { sealToken, openToken, credentialContext, exchangeAndVerify, numberFacts, COEXISTENCE_RECHECKS, COEXISTENCE_RECHECK_MS } from '../api/_lib/layla/customer-meta.js';
 import { customerIdentity, createHandler } from '../api/_lib/layla/customer-api.js';
 import { routeCustomerEnvelope, persistCustomerEvents } from '../api/_lib/layla/customer-webhook.js';
 import { verifySignupConfiguration, createHandler as eligibilityHandler } from '../api/_lib/layla/eligibility.js';
@@ -16,11 +16,11 @@ test('v4 signup separates coexistence, validates origins and ignores incomplete 
   assert.equal(options.config_id, '456'); assert.equal(options.extras.version, undefined); assert.equal(options.extras.featureType, 'whatsapp_business_app_onboarding');
   assert.equal(signupOptions({ configId: '456', path: 'new_number' }).extras.featureType, undefined);
   const event = { origin: 'https://www.facebook.com', data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING', data: { waba_id: '456', phone_number_id: '789' } } };
-  assert.deepEqual(signupEvent(event, 'coexistence'), { assets: { waba: '456', phone: '789' } });
+  assert.deepEqual(signupEvent(event, 'coexistence'), { event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING', assets: { waba: '456', phone: '789' } });
   // Any finish counts on any path: a dropped finish left the owner waiting forever (2026-10-24). The server checks the path.
-  assert.deepEqual(signupEvent(event, 'new_number'), { assets: { waba: '456', phone: '789' } });
+  assert.deepEqual(signupEvent(event, 'new_number'), { event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING', assets: { waba: '456', phone: '789' } });
   for (const name of ['FINISH', 'FINISH_ONLY_WABA', 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING'])
-    assert.deepEqual(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: name, data: { waba_id: '456' } } }, 'coexistence'), { assets: { waba: '456' } }, name);
+    assert.deepEqual(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: name, data: { waba_id: '456' } } }, 'coexistence'), { event: name, assets: { waba: '456' } }, name);
   assert.equal(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'PROGRESS', data: { waba_id: '456' } } }, 'coexistence'), null, 'not a finish');
   assert.equal(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH', data: { waba_id: 'x1' } } }, 'coexistence'), null, 'numeric WABA only');
   assert.equal(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH', data: { waba_id: '1', phone_number_id: '2x' } } }, 'coexistence'), null, 'numeric phone only');
@@ -91,13 +91,35 @@ test('server verifies app, permissions, granted WABA, phone relationship and act
   const fixture = (url) => String(url).includes('oauth/access_token') ? { access_token: token } : String(url).includes('debug_token')
     ? { data: { is_valid: true, app_id: c.app, scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'], granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: [waba] }] } }
     : String(url).includes('/phone_numbers') ? { data: [{ id: phone, display_phone_number: '+20 1036755930', platform_type: 'CLOUD_API', is_on_biz_app: true }] } : { id: waba };
-  const verify = (change = () => {}) => exchangeAndVerify({ c, code: 'PRIVATE_CODE', waba, phone, path: 'coexistence', fetcher: async url => { const body = fixture(url); change(body, String(url)); return { ok: true, text: async () => JSON.stringify(body) }; } });
+  const verify = (change = () => {}) => exchangeAndVerify({ c, code: 'PRIVATE_CODE', waba, phone, path: 'coexistence', sleep: async () => {}, fetcher: async url => { const body = fixture(url); change(body, String(url)); return { ok: true, text: async () => JSON.stringify(body) }; } });
   assert.equal((await verify()).sender, '201036755930');
   for (const change of [b => { if (b.data?.app_id) b.data.app_id = 'wrong'; }, b => { if (b.data?.scopes) b.data.scopes = []; }, b => { if (b.data?.granular_scopes) b.data.granular_scopes = []; }, b => { if (Array.isArray(b.data)) b.data[0].id = 'wrong'; }, b => { if (Array.isArray(b.data)) b.data[0].is_on_biz_app = false; }]) await assert.rejects(verify(change));
 });
+test('the app path asks Meta again before refusing, and a refusal carries what Meta said about the number', async () => {
+  const token = 'SECRET_CUSTOMER_TOKEN_LONG', waba = '456', phone = '789';
+  const run = ({ flags, recheckSleep = [] }) => { let lists = 0;
+    return exchangeAndVerify({ c, code: 'PRIVATE_CODE', waba, phone, path: 'coexistence', sleep: async ms => { recheckSleep.push(ms); }, fetcher: async url => {
+      const u = String(url);
+      const body = u.includes('oauth/access_token') ? { access_token: token } : u.includes('debug_token')
+        ? { data: { is_valid: true, app_id: c.app, scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'], granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: [waba] }] } }
+        : u.includes('/phone_numbers') ? { data: [{ id: phone, display_phone_number: '+968 9123 4567', platform_type: 'CLOUD_API', ...(flags[Math.min(lists++, flags.length - 1)] === undefined ? {} : { is_on_biz_app: flags[Math.min(lists - 1, flags.length - 1)] }) }] } : { id: waba };
+      return { ok: true, text: async () => JSON.stringify(body) };
+    } }); };
+  // Meta marks the number as on the app on the third look: connected, after two pauses.
+  const pauses = [];
+  assert.equal((await run({ flags: [false, false, true], recheckSleep: pauses })).coexistence, true);
+  assert.deepEqual(pauses, [COEXISTENCE_RECHECK_MS, COEXISTENCE_RECHECK_MS]);
+  // Never on the app: refused after every re-check, with Meta's answer kept (no full number).
+  const waits = [];
+  const refused = await run({ flags: [false], recheckSleep: waits }).catch(error => error);
+  assert.equal(refused.code, 'coexistence_not_verified'); assert.equal(waits.length, COEXISTENCE_RECHECKS);
+  assert.deepEqual(refused.meta, { onBizApp: 'false', platform: 'CLOUD_API', last4: '4567' });
+  assert.equal((await run({ flags: [undefined] }).catch(error => error)).meta.onBizApp, 'missing', 'a missing flag is recorded as missing');
+  assert.deepEqual(numberFacts({ display_phone_number: '12', platform_type: 'bad value' }), { onBizApp: 'missing' });
+});
 test('without Meta’s message the signup token names the WABA: exactly one is used, several are never chosen silently', async () => {
   const token = 'SECRET_CUSTOMER_TOKEN_LONG', phone = '789';
-  const run = (targets, args = {}) => exchangeAndVerify({ c, code: 'PRIVATE_CODE', path: 'coexistence', allowPhoneSelection: true, ...args, fetcher: async url => {
+  const run = (targets, args = {}) => exchangeAndVerify({ c, code: 'PRIVATE_CODE', path: 'coexistence', allowPhoneSelection: true, sleep: async () => {}, ...args, fetcher: async url => {
     const u = String(url);
     const body = u.includes('oauth/access_token') ? { access_token: token } : u.includes('debug_token')
       ? { data: { is_valid: true, app_id: c.app, scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'], granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: targets }] } }

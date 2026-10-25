@@ -65,15 +65,16 @@ export async function executeReview(ctx, a, now = Date.now()) {
     await patch({ journeyStep: a.journeyStep });
   } else if (a.operation === 'begin') {
     if (!row.profile?.reviewed || (!row.profile.humanContact && row.profile.handoffMode !== 'inbox') || row.integration || (row.pendingSelection && row.attempt?.expiresAt > now) || row.status === 'reconciliation_required' || (row.status === 'verifying' && row.attempt?.expiresAt > now)) return fail('operation_conflict');
+    // Only attempts that came back from Meta count (claim, below): preparing or switching the number type is free.
     if (row.attempts >= 10) return fail('attempt_limit');
     if (row.attempt && row.attempt.expiresAt > now && !['cancelled','failed','expired'].includes(row.status)) return fail('operation_conflict');
     // A new attempt starts clean: the previous attempt's diagnostic no longer describes it.
-    await patch({ status: 'prepared', metrics:{...row.metrics,metaStartedAt:row.metrics?.metaStartedAt || now}, pendingSelection: undefined, diagnostic: undefined, attempts: row.attempts + 1, attempt: { id: a.attempt, stateHash: a.stateHash, path: a.path, expiresAt: now + ATTEMPT_MS, claimed: false, ...(a.preselect ? { preselect: a.preselect } : {}) } });
+    await patch({ status: 'prepared', metrics:{...row.metrics,metaStartedAt:row.metrics?.metaStartedAt || now}, pendingSelection: undefined, diagnostic: undefined, attempt: { id: a.attempt, stateHash: a.stateHash, path: a.path, expiresAt: now + ATTEMPT_MS, claimed: false, ...(a.preselect ? { preselect: a.preselect } : {}) } });
   } else if (['await','claim','cancel'].includes(a.operation)) {
     if (row.attempt?.id !== a.attempt || row.attempt?.stateHash !== a.stateHash) return fail('invalid_state');
     if (row.attempt.expiresAt <= now) return fail('attempt_expired');
     if (row.attempt.claimed || !['prepared','awaiting_meta'].includes(row.status)) return fail('attempt_used');
-    await patch(a.operation === 'claim' ? { status: 'verifying', attempt: { ...row.attempt, claimed: true } } : { status: a.operation === 'await' ? 'awaiting_meta' : 'cancelled' });
+    await patch(a.operation === 'claim' ? { status: 'verifying', attempts: row.attempts + 1, attempt: { ...row.attempt, claimed: true } } : { status: a.operation === 'await' ? 'awaiting_meta' : 'cancelled' });
   } else if (a.operation === 'cancel_selection') {
     if (!row.pendingSelection || row.integration) return fail('operation_conflict');
     await patch({ pendingSelection: undefined, status: 'cancelled' });

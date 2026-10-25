@@ -50,7 +50,9 @@ export function signupEvent(event, path) {
   // decides whether the number fits the path (is_on_biz_app) and lists numbers when no phone is given.
   if (typeof payload.event !== 'string' || !payload.event.startsWith('FINISH') || !/^\d{1,30}$/.test(payload.data?.waba_id || '')
     || (payload.data?.phone_number_id && !/^\d{1,30}$/.test(payload.data.phone_number_id))) return null;
-  return { assets: { waba: payload.data.waba_id, ...(payload.data.phone_number_id ? { phone: payload.data.phone_number_id } : {}) } };
+  // The event name goes to the server only as evidence for the record; it never decides the path.
+  const finish = /^FINISH[A-Z_]{0,60}$/.test(payload.event) ? payload.event : 'FINISH';
+  return { event: finish, assets: { waba: payload.data.waba_id, ...(payload.data.phone_number_id ? { phone: payload.data.phone_number_id } : {}) } };
 }
 
 // Session logging reports Meta errors on CANCEL/ERROR with error_message and
@@ -72,11 +74,11 @@ function signupFailure(data) {
 // the message never does, the code goes alone after a short wait; the server reads the WABA from the token.
 export const ASSETS_WAIT_MS = 4000;
 export function createSignupAttempt({ prepared, complete, failed, onCode, now = Date.now, wait = setTimeout, clear = clearTimeout }) {
-  let popup, code, assets, settled = false, timer;
+  let popup, code, assets, finishEvent, settled = false, timer;
   const fail = (reason, reference) => { if (settled) return; settled = true; clear(timer); code = undefined; assets = undefined; failed(reason, reference); };
   const send = () => {
     settled = true; clear(timer);
-    const body = {action:'finish',attempt:prepared.attempt,state:prepared.state,code,...(assets || {})};
+    const body = {action:'finish',attempt:prepared.attempt,state:prepared.state,code,...(assets || {}),...(finishEvent ? {event:finishEvent} : {})};
     code = undefined; assets = undefined;
     Promise.resolve().then(() => complete(body)).catch(() => failed('review_backend_unavailable')).finally(() => { delete body.code; });
   };
@@ -100,7 +102,7 @@ export function createSignupAttempt({ prepared, complete, failed, onCode, now = 
       const result = signupEvent(event,prepared.path);
       if (!result) return;
       if (result.cancelled) return fail(result.reason || 'meta_cancelled', result.reference);
-      assets = result.assets; finish();
+      assets = result.assets; finishEvent = result.event; finish();
     },
     cancel: fail,
     dispose() { settled = true; clear(timer); code = undefined; assets = undefined; popup = undefined; },

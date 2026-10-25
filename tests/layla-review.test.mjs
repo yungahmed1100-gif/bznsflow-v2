@@ -64,7 +64,7 @@ test('both callback orders finish once; Meta’s message from another facebook.c
     const e={origin:'https://www.facebook.com',source:{},data:{type:'WA_EMBEDDED_SIGNUP',event:'FINISH',data:{waba_id:'1',phone_number_id:'2'}}};
     if(order==='code'){a.callback({authResponse:{code:'code'}});a.message(e);a.message(e);}else{a.message(e);a.callback({authResponse:{code:'code'}});a.message(e);}
     await new Promise(r=>setImmediate(r));assert.equal(done.length,1);assert.equal(fail.length,0);
-    assert.deepEqual(done[0],{action:'finish',attempt:'a',state:'s',code:'code',waba:'1',phone:'2'});
+    assert.deepEqual(done[0],{action:'finish',attempt:'a',state:'s',code:'code',waba:'1',phone:'2',event:'FINISH'},'Meta’s event name goes with the result');
   }
   let expired;const a=createSignupAttempt({prepared:{expiresAt:1},complete:()=>assert.fail(),failed:r=>expired=r,now:()=>2});a.callback({authResponse:{code:'x'}});assert.equal(expired,'attempt_expired');
 });
@@ -438,4 +438,23 @@ test('bzns.md drafts save with versions, publish returns section errors, and a p
   assert.equal(published.body.journeyStep,4);
   assert.match((await c.call({action:'preview',text:'What are your opening hours?'})).body.preview,/Sunday to Thursday/);
   assert.equal((await c.call({action:'bzns_save',markdown:'x'.repeat(10001),version:2})).statusCode,413);
+});
+// 2026-10-25: Meta refused an app number twice and the record could not say why.
+test('a refusal keeps Meta’s finish event and what Meta said about the number; an unexpected event name is dropped',async()=>{
+  const exchange=async()=>{throw Object.assign(new PilotError('coexistence_not_verified',409),{meta:{onBizApp:'false',platform:'CLOUD_API',last4:'4567'}});};
+  const h=harness({exchange}),c=await client(h.handler),body=await begin(c);
+  const r=await c.call({...body,event:'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING'});
+  assert.equal(r.statusCode,409);
+  const saved=(await c.call()).body.diagnostic;
+  assert.deepEqual([saved.reason,saved.meta],['coexistence_not_verified',{event:'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING',onBizApp:'false',platform:'CLOUD_API',last4:'4567'}]);
+  const h2=harness({exchange}),c2=await client(h2.handler),body2=await begin(c2);
+  await c2.call({...body2,event:'<script>'});
+  assert.equal((await c2.call()).body.diagnostic.meta.event,undefined);
+});
+test('only attempts that came back from Meta count toward the limit: preparing and switching are free',async()=>{
+  const h=harness(),c=await client(h.handler),first=await begin(c);await c.call({action:'cancel',attempt:first.attempt,state:first.state});
+  for(let i=0;i<12;i++){const r=await c.call({action:'begin',path:i%2?'coexistence':'new_number'});assert.equal(r.statusCode,200,`prepare ${i}`);await c.call({action:'cancel',attempt:r.body.attempt,state:r.body.state});}
+  const row=[...h.db.rows.values()].find(r=>r.__table==='blueReviewSessions');assert.equal(row.attempts,0);
+  row.attempts=10;
+  assert.equal((await c.call({action:'begin',path:'coexistence'})).body.reason,'attempt_limit','ten finished attempts still stop it');
 });

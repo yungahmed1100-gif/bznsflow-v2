@@ -212,7 +212,7 @@ export default defineSchema({
     accountId: v.optional(v.id('accounts')),
     sessionHash: v.string(), status: v.string(), expiresAt: v.number(), createdAt: v.number(), updatedAt: v.number(), attempts: v.number(),
     pendingSelection: v.optional(v.object({ waba: v.string(), path, candidates: v.array(v.object({ id: v.string(), sender: v.string() })), credential: v.object({ v: v.number(), iv: v.string(), data: v.string(), tag: v.string() }) })),
-    checkedAt: v.optional(v.number()), diagnostic: v.optional(v.object({ reason: v.string(), stage: v.string(), at: v.number(), providerCode: v.optional(v.number()) })),
+    checkedAt: v.optional(v.number()), diagnostic: v.optional(v.object({ reason: v.string(), stage: v.string(), at: v.number(), providerCode: v.optional(v.number()), meta: v.optional(v.object({ event: v.optional(v.string()), onBizApp: v.optional(v.string()), platform: v.optional(v.string()), last4: v.optional(v.string()) })) })),
     connectionChecks: v.optional(v.object({ routing: v.boolean(), registered: v.boolean(), path: v.boolean(), nameStatus:v.optional(v.string()), portfolio:v.optional(v.object({ id:v.string(), name:v.string(), verificationStatus:v.string() })) })),
     journeyStep: v.optional(v.number()), profileVersion: v.optional(v.number()),
     // bzns.md: the owner's working draft and the version Layla currently answers from.
