@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { blueHarness, seedTenant } from './helpers/blue-tenant.mjs';
 import { executeInstagram } from '../convex/blueInstagramState.js';
-import { resetAccount } from '../convex/blueResetState.js';
+import { resetAccount, resetMessages } from '../convex/blueResetState.js';
 import { executeBlueAuth } from '../convex/blueAuthState.js';
 
 async function populated() {
@@ -66,4 +66,34 @@ test('reset refuses while a reply is being sent', async () => {
   const job = h.m.table('blueMessages').find(m => m.accountId === a.accountId && m.direction === 'out');
   await h.m.db.patch(job._id, { status: 'attempting' });
   assert.deepEqual(await resetAccount(h.m.ctx, { email, confirm: true }), { ok: false, reason: 'send_in_progress' });
+});
+
+// 2026-10-25: Basma Muscat Dental Clinic moved to Dental with its chats cleared and everything else kept.
+test('a messages reset clears chats and chat contacts for one account and keeps its setup, connection, catalog and settings', async () => {
+  const { h, a, b } = await populated();
+  const conversation = h.m.table('blueConversations').find(r => r.accountId === a.accountId);
+  await h.m.db.insert('blueHandoffAudit', { accountId: a.accountId, conversationId: conversation._id, actorAccountId: String(a.accountId), action: 'takeover', at: h.m.now(), version: 1 });
+  await h.m.db.insert('blueCatalogEntries', { ownerKey: String(a.accountId), status: 'approved', nameEn: 'Cleaning', nameAr: 'تنظيف' });
+  const chats = t => h.m.table(t).filter(r => r.accountId === a.accountId).length;
+  const kept = () => [h.m.table('blueReviewSessions').filter(r => r.sessionHash === a.sessionHash).length, chats('blueMessagingControls'), chats('blueBusinessSettings'),
+    h.m.table('blueAssetClaims').filter(r => r.sessionHash === a.sessionHash).length, chats('blueInstagramConnections'), h.m.table('blueCatalogEntries').filter(r => r.ownerKey === String(a.accountId)).length];
+  const before = kept(), bMessages = h.m.table('blueMessages').filter(r => r.accountId === b.accountId).length;
+  assert.equal((await resetMessages(h.m.ctx, { email })).reason, 'confirmation_required');
+  const dry = await resetMessages(h.m.ctx, { email, dryRun: true });
+  assert.ok(dry.value.counts.blueMessages > 0 && dry.value.counts.blueConversations === 1 && dry.value.counts.blueContacts === 1 && dry.value.counts.blueHandoffAudit === 1);
+  assert.ok(chats('blueMessages') > 0, 'a dry run deletes nothing');
+  const result = await resetMessages(h.m.ctx, { email, confirm: true });
+  assert.deepEqual([result.ok, result.value.done], [true, true]);
+  assert.deepEqual(['blueMessages', 'blueConversations', 'blueContacts', 'blueHandoffAudit'].map(chats), [0, 0, 0, 0]);
+  assert.deepEqual(kept(), before, 'setup, control, settings, claim, Instagram and catalog stay');
+  assert.ok(before.every(n => n > 0), 'the kept rows were really there');
+  assert.equal(h.m.table('accounts').find(r => r._id === a.accountId).draftHash, a.sessionHash, 'the saved setup stays attached');
+  assert.equal(h.m.table('blueMessages').filter(r => r.accountId === b.accountId).length, bMessages, 'other accounts untouched');
+});
+
+test('a messages reset refuses while a reply is being sent', async () => {
+  const { h, a } = await populated();
+  const job = h.m.table('blueMessages').find(m => m.accountId === a.accountId && m.direction === 'out');
+  await h.m.db.patch(job._id, { status: 'attempting' });
+  assert.deepEqual(await resetMessages(h.m.ctx, { email, confirm: true }), { ok: false, reason: 'send_in_progress' });
 });

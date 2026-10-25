@@ -35,8 +35,12 @@ export async function grantPlan(ctx, { email, plan, packId, note }, now) {
   const current = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', normalized)).unique();
   const row = { email: normalized, plan, status: 'active', grantedAt: now, grantedBy: 'ahmed@bznsflowai.com', ...(packId ? { packId } : {}), ...(note ? { note: String(note).slice(0, 200) } : {}) };
   if (current) await ctx.db.replace(current._id, row); else await ctx.db.insert('blueAccessGrants', row);
-  // An account that doesn't exist yet gets the sector at sign-in (applyGrantedPack).
-  if (account && packId) await setAccountPack(ctx, account._id, packId, now);
+  // An account that doesn't exist yet gets the sector at sign-in (applyGrantedPack). Owners pick their sector
+  // only at sign-up, so an operator's assignment also becomes the account's sign-up industry: one answer everywhere.
+  if (account && packId) {
+    await setAccountPack(ctx, account._id, packId, now);
+    if (account.industry !== packId) await ctx.db.patch(account._id, { industry: packId });
+  }
   return ok({ accountId: account?._id || null, email: normalized, plan, packId: packId || null });
 }
 

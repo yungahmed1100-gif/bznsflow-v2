@@ -56,3 +56,28 @@ export async function resetAccount(ctx, a) {
   if (done) await ctx.db.patch(accountId, { draftHash: undefined });
   return { ok: true, value: { dryRun: false, done, counts } };
 }
+
+// Operator reset of one account's chats only (Ahmed, 2026-10-25): messages, conversations, their takeover
+// history and the chat contacts go; the saved setup and bzns.md, the WhatsApp connection, Layla's on/off
+// control, the catalog, business settings, the plan and Hasib's records all stay.
+export async function resetMessages(ctx, a) {
+  const fail = reason => ({ ok: false, reason });
+  const email = typeof a.email === 'string' ? a.email.trim().toLowerCase() : '';
+  if (!email) return fail('email_required');
+  if (a.confirm !== true && a.dryRun !== true) return fail('confirmation_required');
+  const account = await ctx.db.query('accounts').withIndex('by_email', q => q.eq('email', email)).unique();
+  if (!account) return fail('account_not_found');
+  const accountId = account._id;
+  const messages = await ctx.db.query('blueMessages').withIndex('by_account_at', q => q.eq('accountId', accountId)).take(BATCH);
+  if (messages.some(m => OPEN_SENDS.includes(m.status))) return fail('send_in_progress');
+  const rows = {
+    blueMessages: messages,
+    blueHandoffAudit: await ctx.db.query('blueHandoffAudit').withIndex('by_account_at', q => q.eq('accountId', accountId)).take(BATCH),
+    blueConversations: await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).take(BATCH),
+    blueContacts: await ctx.db.query('blueContacts').withIndex('by_account_state_activity', q => q.eq('accountId', accountId)).take(BATCH),
+  };
+  const counts = Object.fromEntries(Object.entries(rows).map(([table, list]) => [table, list.length]));
+  if (a.dryRun === true) return { ok: true, value: { dryRun: true, counts } };
+  for (const list of Object.values(rows)) for (const row of list) await ctx.db.delete(row._id);
+  return { ok: true, value: { dryRun: false, done: Object.values(rows).every(list => list.length < BATCH), counts } };
+}

@@ -36,6 +36,7 @@ test('granting Ascend by email with the retail pack opens Hasib directly, and La
   assert.equal(o.pack.id, 'retail');
   assert.equal(o.plan, 'ascend');
   assert.equal(h.m.table('blueReviewSessions').find(x => x._id === a.rowId).profile.sector, 'Technology & software');
+  assert.equal(h.m.table('accounts').find(x => x._id === a.accountId).industry, 'retail', 'an operator sector is also the sign-up industry');
   // Granting again updates the verified-email record instead of duplicating.
   await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'ascend' }, h.m.now());
   assert.equal(h.m.table('blueAccessGrants').filter(e => e.email === 'a@example.com').length, 1);
