@@ -54,6 +54,13 @@ try {
     for (const tier of ['catalyst', 'ascend']) assert.match(await page.locator(`[data-tier="${tier}"] .tier-meta-fees`).textContent(), lang === 'ar' ? /BznsFlow لا تتقاضى أي رسوم على الرسائل/ : /BznsFlow doesn't charge for messages/); count++;
     assert.equal(await page.locator('[data-tier="apex"] .tier-meta-fees').count(), 0); count++;
     assert.notEqual(await page.locator('[data-tier="catalyst"] .tier-status').evaluate(el => getComputedStyle(el).backgroundColor), await page.locator('[data-tier="apex"] .tier-status').evaluate(el => getComputedStyle(el).backgroundColor)); count++;
+    // Apex (2026-10-27): custom enterprise by request — a blue status, the four agent functions, Request Apex, then WhatsApp.
+    const apex = page.locator('[data-tier="apex"]');
+    assert.equal(await apex.locator('.tier-status.is-request').textContent(), lang === 'ar' ? 'حسب الطلب' : 'By request'); count++;
+    assert.equal(await apex.locator('.tier-capability').count(), 4, `${lang}: four agent functions`); count++;
+    assert.equal(await apex.locator('.pricing-btn').first().getAttribute('href'), lang === 'ar' ? '/apex' : '/en/apex'); count++;
+    assert.match(await apex.locator('.tier-whatsapp').getAttribute('href'), /^https:\/\/wa\.me\//, `${lang}: the WhatsApp button stays under Request Apex`); count++;
+    assert.equal(await apex.locator('.tier-whatsapp').evaluate(el => el.previousElementSibling?.classList.contains('pricing-btn')), true); count++;
     const teamImage = page.locator('.about-art img');
     await teamImage.scrollIntoViewIfNeeded();
     await teamImage.waitFor({ state: 'visible' });

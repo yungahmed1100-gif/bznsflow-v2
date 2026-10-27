@@ -119,6 +119,13 @@ export const auditStore = convexStore({ route: 'audit', fallback: 'audit_unavail
 export const auditAdminStore = convexStore({ route: 'audit-admin', fallback: 'audit_unavailable', status: auditStatus,
   reasons: ['sign_in_required', 'admin_required', 'booking_not_found', 'invalid_range', 'invalid_status', 'slot_taken'] });
 
+// Apex requests (convex/apexState.js): the public request page and Ahmed's /owner/apex queue.
+const apexStatus = r => r === 'sign_in_required' ? 401 : r === 'admin_required' ? 403 : r === 'request_not_found' ? 404 : r === 'too_many_requests' ? 429 : 400;
+export const apexStore = convexStore({ route: 'apex', fallback: 'apex_unavailable', status: apexStatus,
+  reasons: ['invalid_company', 'invalid_name', 'invalid_email', 'invalid_functions', 'invalid_need', 'too_many_requests'] });
+export const apexAdminStore = convexStore({ route: 'apex-admin', fallback: 'apex_unavailable', status: apexStatus,
+  reasons: ['sign_in_required', 'admin_required', 'request_not_found', 'invalid_status'] });
+
 // Rasil (convex/rasilState.js): the owner's email campaigns, and the server-side worker, webhook and public links.
 const RASIL_REASONS = ['sign_in_required', 'access_required', 'plan_required', 'manager_required', 'workspace_access_revoked', 'invalid_domain', 'domain_in_use', 'domain_not_found',
   'domain_required', 'domain_not_verified', 'sender_required', 'invalid_sender', 'campaign_in_progress', 'consent_required', 'invalid_import', 'subscriber_not_found',

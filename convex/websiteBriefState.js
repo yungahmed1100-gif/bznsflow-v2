@@ -26,7 +26,8 @@ async function ownerOf(ctx, sessionHash, now) {
   const membership = await ctx.db.query('ascendWorkspaceMembers').withIndex('by_account', q => q.eq('accountId', account._id)).unique();
   if (membership?.status === 'active') return { reason: 'manager_required' };
   const admin = String(account.email).toLowerCase().trim() === ADMIN;
-  if (!admin && (await planFor(ctx, account._id, now)) !== 'ascend') return { reason: 'access_required' };
+  // Ascend's free website; Apex holds everything Ascend has (2026-10-27).
+  if (!admin && !['ascend', 'apex'].includes(await planFor(ctx, account._id, now))) return { reason: 'access_required' };
   return { account };
 }
 

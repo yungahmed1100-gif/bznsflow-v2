@@ -6,7 +6,8 @@ import { setAccountPack } from './packChoice.js';
 import { isLivePack } from '../../config/hasib-packs.js';
 import { grantLive } from '../grantStatus.js';
 
-export const HASIB_PLANS = Object.freeze(['ascend']);
+// Apex (custom enterprise, by request) holds everything Ascend has (Ahmed, 2026-10-27).
+export const HASIB_PLANS = Object.freeze(['ascend', 'apex']);
 const normEmail = email => String(email || '').toLowerCase().trim();
 
 export async function planFor(ctx, accountId, now = Date.now()) {

@@ -90,3 +90,27 @@
 /* Latin display tracking at the DESIGN values. */
 .hero-headline { letter-spacing: -0.02em; }
 .section-title { letter-spacing: -0.015em; }
+
+/* Apex (2026-10-27): by request. Its status is blue — something you act on (DESIGN.md Meaning Rule) —
+   and its agent functions sit like Ascend's agents, with an icon in place of a portrait. */
+.tier-status.is-request { box-shadow: inset calc(3px * var(--x-sign, 1)) 0 0 var(--accent-blue); }
+[dir="rtl"] .tier-status.is-request { box-shadow: inset -3px 0 0 var(--accent-blue); }
+.pricing-features .tier-capability {
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+/* Beats `.pricing-features svg` (18px, green), which would leave no room for the glyph inside the padding. */
+.pricing-features .tier-capability > .tier-capability-icon {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  margin-top: 0;
+  padding: 9px;
+  width: 40px;
+  height: 40px;
+  color: var(--blue-ink);
+  background: var(--blue-tint);
+  border-radius: var(--radius-sm);
+}
+.tier-capability-title { display: block; margin-bottom: 4px; color: var(--text-primary); }
+.tier-whatsapp { margin-top: var(--space-3); }

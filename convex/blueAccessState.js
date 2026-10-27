@@ -35,7 +35,8 @@ export async function executeAccess(ctx, args, now = Date.now()) {
 
     if (args.operation === 'grant') {
       if (!args.plan) return { ok: false, reason: 'invalid_plan' };
-      if (args.packId !== undefined && (args.plan !== 'ascend' || !isLivePack(args.packId))) return { ok: false, reason: 'invalid_pack' };
+      // Apex (custom enterprise, 2026-10-27) holds everything Ascend has, including a live sector.
+      if (args.packId !== undefined && (!['ascend', 'apex'].includes(args.plan) || !isLivePack(args.packId))) return { ok: false, reason: 'invalid_pack' };
       const sector = args.packId ? { packId: args.packId } : {};
       const next = { ...sector, email, plan: args.plan, status: 'active', grantedAt: now, grantedBy: ADMIN_EMAIL, ...(note ? { note } : {}) };
       if (current) await ctx.db.replace(current._id, next);

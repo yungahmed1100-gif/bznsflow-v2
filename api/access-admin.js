@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { accessStore, auditAdminStore, websiteAdminStore } from './_lib/convex.js';
+import { accessStore, apexAdminStore, auditAdminStore, websiteAdminStore } from './_lib/convex.js';
 import { parseCookies, verifyCsrf } from './_lib/cookies.js';
 import { isAllowedOrigin } from './_lib/guard.js';
 import { readBody, send } from './_lib/http.js';
@@ -34,7 +34,18 @@ async function audits(req, res, method, sessionHash, store) {
   return send(res, 200, { ok: true, ...value }, { vary: 'Cookie' });
 }
 
-export function createAccessAdmin({ store = accessStore(), websiteStore = websiteAdminStore(), auditStore = auditAdminStore() } = {}) {
+// ?op=apex: Ahmed's Apex request queue (convex/apexState.js). GET lists it; POST moves one request along.
+async function apexRequests(req, res, method, sessionHash, store) {
+  if (method === 'DELETE') return send(res, 405, { ok: false, reason: 'method' }, { vary: 'Cookie' });
+  if (method === 'GET') return send(res, 200, { ok: true, ...(await store('list', { sessionHash })) }, { vary: 'Cookie' });
+  const body = readBody(req);
+  if (!body || Array.isArray(body) || typeof body !== 'object') return send(res, 400, { ok: false, reason: 'invalid_body' }, { vary: 'Cookie' });
+  const text = (key, n = 600) => (typeof body[key] === 'string' ? { [key]: body[key].slice(0, n) } : {});
+  const value = await store('update', { sessionHash, ...text('requestId'), ...text('status'), ...text('adminNote', 1200) });
+  return send(res, 200, { ok: true, ...value }, { vary: 'Cookie' });
+}
+
+export function createAccessAdmin({ store = accessStore(), websiteStore = websiteAdminStore(), auditStore = auditAdminStore(), apexStore = apexAdminStore() } = {}) {
 return async function handler(req, res) {
   const method = String(req.method || '').toUpperCase();
   if (!['GET', 'POST', 'DELETE'].includes(method)) {
@@ -49,21 +60,22 @@ return async function handler(req, res) {
     const op = new URL(req.url || '/', 'https://x.invalid').searchParams.get('op');
     if (op === 'websites') return await websites(req, res, method, hash(token), websiteStore);
     if (op === 'audits') return await audits(req, res, method, hash(token), auditStore);
+    if (op === 'apex') return await apexRequests(req, res, method, hash(token), apexStore);
     const body = method === 'GET' ? {} : readBody(req);
     if (!body || Array.isArray(body) || typeof body !== 'object') return send(res, 400, { ok: false, reason: 'invalid_body' });
-    if (method === 'POST' && body.packId !== undefined && (body.plan !== 'ascend' || !isLivePack(body.packId))) return send(res, 400, { ok: false, reason: 'invalid_pack' });
+    if (method === 'POST' && body.packId !== undefined && (!['ascend', 'apex'].includes(body.plan) || !isLivePack(body.packId))) return send(res, 400, { ok: false, reason: 'invalid_pack' });
     const operation = method === 'GET' ? 'list' : method === 'POST' ? 'grant' : 'revoke';
     const value = await store(operation, {
       sessionHash: hash(token),
       ...(typeof body.email === 'string' ? { email: body.email } : {}),
-      ...(body.plan === 'catalyst' || body.plan === 'ascend' ? { plan: body.plan } : {}),
+      ...(['catalyst', 'ascend', 'apex'].includes(body.plan) ? { plan: body.plan } : {}),
       ...(typeof body.packId === 'string' ? { packId: body.packId } : {}),
       ...(typeof body.note === 'string' ? { note: body.note } : {}),
     });
     return send(res, 200, { ok: true, ...value }, { vary: 'Cookie' });
   } catch (error) {
     const reason = /^[a-z_]{1,60}$/.test(error?.code || '') ? error.code : 'access_unavailable';
-    const status = reason === 'sign_in_required' ? 401 : reason === 'admin_required' ? 403 : ['project_not_found', 'booking_not_found'].includes(reason) ? 404
+    const status = reason === 'sign_in_required' ? 401 : reason === 'admin_required' ? 403 : ['project_not_found', 'booking_not_found', 'request_not_found'].includes(reason) ? 404
       : reason === 'slot_taken' ? 409
       : ['invalid_email', 'invalid_plan', 'invalid_pack', 'live_url_required', 'invalid_due', 'reason_required', 'invalid_action', 'invalid_state', 'invalid_range', 'invalid_status'].includes(reason) ? 400 : 503;
     return send(res, status, { ok: false, reason }, { vary: 'Cookie' });

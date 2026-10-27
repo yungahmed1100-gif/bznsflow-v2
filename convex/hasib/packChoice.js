@@ -46,6 +46,6 @@ export async function applyGrantedPack(ctx, account, now) {
   const email = String(account?.email || '').toLowerCase().trim();
   if (!email) return false;
   const grant = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', email)).unique();
-  if (!grantLive(grant, now) || grant.plan !== 'ascend' || !grant.packId) return false;
+  if (!grantLive(grant, now) || !['ascend', 'apex'].includes(grant.plan) || !grant.packId) return false;
   return setAccountPack(ctx, account._id, grant.packId, now, { onlyIfUnset: true });
 }

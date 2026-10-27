@@ -9,6 +9,8 @@
  */
 
 import type * as activationStage from "../activationStage.js";
+import type * as apex from "../apex.js";
+import type * as apexState from "../apexState.js";
 import type * as audit from "../audit.js";
 import type * as auditState from "../auditState.js";
 import type * as auth from "../auth.js";
@@ -207,6 +209,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activationStage: typeof activationStage;
+  apex: typeof apex;
+  apexState: typeof apexState;
   audit: typeof audit;
   auditState: typeof auditState;
   auth: typeof auth;

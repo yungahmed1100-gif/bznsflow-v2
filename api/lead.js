@@ -30,6 +30,7 @@ import { captureWebsiteLead, checkRate } from './_lib/db.js';
 import { pushLead } from './_lib/mailer.js';
 import { send, readBody } from './_lib/http.js';
 import { createAuditApi } from './_lib/audit-api.js';
+import { createApexApi } from './_lib/apex-api.js';
 
 const SITE = 'https://www.bznsflowai.com';
 
@@ -62,9 +63,13 @@ export function cleanIndustry(raw) {
 
 // ?op=audit: the free-audit booking page (api/_lib/audit-api.js), here because every function slot is used.
 const audit = createAuditApi();
+// ?op=apex: the Apex request page (api/_lib/apex-api.js).
+const apex = createApexApi();
 
 export default async function handler(req, res) {
-  if (new URL(req.url || '/', 'https://x.invalid').searchParams.get('op') === 'audit') return audit(req, res);
+  const op = new URL(req.url || '/', 'https://x.invalid').searchParams.get('op');
+  if (op === 'audit') return audit(req, res);
+  if (op === 'apex') return apex(req, res);
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return send(res, 405, { ok: false, reason: 'method' });

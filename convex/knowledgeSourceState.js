@@ -35,7 +35,7 @@ export async function executeKnowledgeForAccount(ctx,a,accountIdInput,now=Date.n
   const membership = await ctx.db.query('ascendWorkspaceMembers').withIndex('by_account', q => q.eq('accountId', account._id)).unique();
   if (membership?.status === 'active') return fail('manager_required');
   const plan = await planFor(ctx, account._id);
-  if (!['catalyst', 'ascend'].includes(plan) && account.email !== 'ahmed@bznsflowai.com') return fail('access_required');
+  if (!['catalyst', 'ascend', 'apex'].includes(plan) && account.email !== 'ahmed@bznsflowai.com') return fail('access_required');
   const accountId = account._id;
   // Publishing or withdrawing evidence fences already-computed automatic replies.
   const invalidate = async () => {

@@ -1,6 +1,7 @@
 // The three plans, shown without prices (Ahmed, 2026-10-09). Catalyst and Ascend are available
 // (Ascend from 2026-10-12, by Ahmed's grant only: its CTA is a WhatsApp conversation, not self-serve).
-// Ascend includes a free lead capture website as a gift; Rasil email marketing is coming soon. Apex is in preparation.
+// Ascend includes a free lead capture website as a gift; Rasil email marketing is coming soon. Apex (2026-10-27) is custom
+// enterprise solutions by request: agents built for the functions a company names, with a custom quote and no price.
 // EN and AR side by side; consumed by TiersSection via pages/Home.jsx.
 
 export const TIERS = [
@@ -44,10 +45,20 @@ export const TIERS = [
     key: 'apex',
     name: 'Apex',
     stage: 'Control',
-    available: false,
-    problem: 'Inquiries spread across staff and branches',
-    intro: 'For teams and branches that share one customer flow. In preparation: we will define it with the businesses that need it.',
-    cta: 'Ask about Apex',
+    available: true,
+    byRequest: true,
+    problem: 'Work spread across systems, staff and branches',
+    intro: 'Custom enterprise solutions: agents built for the functions your company names, connected to your systems, with your approvals. Quoted after we scope it with you.',
+    insideLabel: 'Agent functions we build',
+    inside: [
+      'Everything in Ascend',
+      { capability: 'erp', icon: 'box', title: 'ERP and Odoo connection', description: 'Agents read and update the records you agree, such as stock, orders, customers and draft quotes. Changes wait for your approval.' },
+      { capability: 'branches', icon: 'users', title: 'Branches and teams routing', description: 'One customer flow across branches and staff, with assignment and response times you can see.' },
+      { capability: 'workflows', icon: 'bot', title: 'Custom agent workflows', description: 'An agent for a job you name, with its own rules, steps and approvals.' },
+      { capability: 'channels', icon: 'phone', title: 'Voice and other channels', description: 'Phone, website chat and email, alongside WhatsApp and Instagram.' },
+    ],
+    cta: 'Request Apex',
+    whatsappCta: 'Ask about Apex on WhatsApp',
   },
 ];
 
@@ -92,9 +103,19 @@ export const TIERS_AR = [
     key: 'apex',
     name: 'أبيكس',
     stage: 'السيطرة',
-    available: false,
-    problem: 'استفسارات موزّعة بين الموظفين والفروع',
-    intro: 'للفرق والفروع التي تتشارك تدفق العملاء نفسه. قيد الإعداد: نحدّدها مع الأعمال التي تحتاجها.',
-    cta: 'اسأل عن أبيكس',
+    available: true,
+    byRequest: true,
+    problem: 'عمل موزّع بين الأنظمة والموظفين والفروع',
+    intro: 'حلول مخصّصة للشركات: وكلاء نبنيهم للمهام التي تحدّدها شركتك، مرتبطون بأنظمتك، وبموافقتك. نحدّد السعر بعد دراسة الاحتياج معك.',
+    insideLabel: 'مهام الوكلاء التي نبنيها',
+    inside: [
+      'كل ما في أسيند',
+      { capability: 'erp', icon: 'box', title: 'الربط مع Odoo وأنظمة ERP', description: 'يقرأ الوكلاء السجلات التي تتفق عليها ويحدّثونها، مثل المخزون والطلبات والعملاء ومسودات العروض. التغييرات تنتظر موافقتك.' },
+      { capability: 'branches', icon: 'users', title: 'توزيع العمل بين الفروع والفرق', description: 'تدفّق واحد للعملاء بين الفروع والموظفين، مع إسناد المهام وأوقات الرد أمامك.' },
+      { capability: 'workflows', icon: 'bot', title: 'وكلاء لمهام مخصّصة', description: 'وكيل لمهمة تحدّدها أنت، بقواعده وخطواته وموافقاته.' },
+      { capability: 'channels', icon: 'phone', title: 'الصوت وقنوات أخرى', description: 'الهاتف ومحادثة الموقع والبريد الإلكتروني، إلى جانب واتساب وإنستغرام.' },
+    ],
+    cta: 'اطلب أبيكس',
+    whatsappCta: 'اسأل عن أبيكس على واتساب',
   },
 ];

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { livePackSummaries } from '../../config/hasib-packs';
 import '../styles/owner.css';
 
-const labels = { catalyst: ['Catalyst · Layla only', 'كاتاليست · ليلى فقط'], ascend: ['Ascend · Layla + Hasib', 'أسيند · ليلى + حاسب'] };
+const labels = { catalyst: ['Catalyst · Layla only', 'كاتاليست · ليلى فقط'], ascend: ['Ascend · Layla + Hasib', 'أسيند · ليلى + حاسب'], apex: ['Apex · custom enterprise', 'أبيكس · حلول مخصّصة'] };
 
 export default function AccessAdmin({ lang = 'en' }) {
   const ar = lang === 'ar', prefix = ar ? '' : '/en', tr = (en, arabic) => (ar ? arabic : en);
@@ -65,10 +65,10 @@ export default function AccessAdmin({ lang = 'en' }) {
       <p>{tr('Only this account can grant or revoke access. New users can verify an email address, but receive no product access until granted.', 'هذا الحساب وحده يمنح الصلاحيات ويلغيها. يستطيع المستخدم الجديد تأكيد بريده، لكنه لا يحصل على أي منتج قبل المنح.')}</p>
     </header>
     {authorized && <>
-      <form className="owner-form" onSubmit={event => { event.preventDefault(); changeAccess('POST', { email, plan, note, ...(plan === 'ascend' && packId ? { packId } : {}) }); }}>
+      <form className="owner-form" onSubmit={event => { event.preventDefault(); changeAccess('POST', { email, plan, note, ...(['ascend', 'apex'].includes(plan) && packId ? { packId } : {}) }); }}>
         <label>{tr('Email', 'البريد')}<input required type="email" autoComplete="email" dir="ltr" value={email} onChange={event => setEmail(event.target.value)} /></label>
-        <label>{tr('Product', 'المنتج')}<select value={plan} onChange={event => setPlan(event.target.value)}><option value="catalyst">{tr('Catalyst', 'كاتاليست')}</option><option value="ascend">{tr('Ascend', 'أسيند')}</option></select></label>
-        {plan === 'ascend' && <label>{tr('Live sector (optional)', 'القطاع (اختياري)')}<select value={packId} onChange={event => setPackId(event.target.value)}><option value="">{tr('Keep existing sector', 'أبقِ القطاع الحالي')}</option>{livePackSummaries().map(pack => <option key={pack.id} value={pack.id}>{ar ? pack.ar : pack.en}</option>)}</select></label>}
+        <label>{tr('Product', 'المنتج')}<select value={plan} onChange={event => setPlan(event.target.value)}><option value="catalyst">{tr('Catalyst', 'كاتاليست')}</option><option value="ascend">{tr('Ascend', 'أسيند')}</option><option value="apex">{tr('Apex (custom enterprise)', 'أبيكس (حلول مخصّصة)')}</option></select></label>
+        {['ascend', 'apex'].includes(plan) && <label>{tr('Live sector (optional)', 'القطاع (اختياري)')}<select value={packId} onChange={event => setPackId(event.target.value)}><option value="">{tr('Keep existing sector', 'أبقِ القطاع الحالي')}</option>{livePackSummaries().map(pack => <option key={pack.id} value={pack.id}>{ar ? pack.ar : pack.en}</option>)}</select></label>}
         <label className="owner-form-wide">{tr('Internal note (optional)', 'ملاحظة داخلية (اختيارية)')}<input maxLength={200} value={note} onChange={event => setNote(event.target.value)} /></label>
         <div className="owner-form-wide"><button className="owner-primary" disabled={busy || !csrf} type="submit">{tr('Grant access', 'امنح الصلاحية')}</button></div>
       </form>

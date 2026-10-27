@@ -16,8 +16,18 @@ async function setup() {
   return { h, a, hasib };
 }
 
-test('Ascend includes Hasib; Catalyst and Apex do not', () => {
-  assert.deepEqual(HASIB_PLANS, ['ascend']);
+// Apex (custom enterprise, by request, 2026-10-27) holds everything Ascend has.
+test('Ascend and Apex include Hasib; Catalyst does not', () => {
+  assert.deepEqual(HASIB_PLANS, ['ascend', 'apex']);
+});
+
+test('an Apex grant opens Hasib in its sector, like Ascend, and sets the sign-up industry', async () => {
+  const { h, a, hasib } = await setup();
+  const r = await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'apex', packId: 'dental', note: 'enterprise client' }, h.m.now());
+  assert.equal(r.ok, true, r.reason);
+  const o = (await hasib('overview')).value;
+  assert.deepEqual([o.plan, o.pack.id, o.setupRequired], ['apex', 'dental', false]);
+  assert.equal(h.m.table('accounts').find(x => x._id === a.accountId).industry, 'dental');
 });
 
 test('an account without a plan grant cannot open Hasib at all', async () => {
@@ -48,7 +58,7 @@ test('grants refuse unknown accounts, plans and packs; revoking closes Hasib but
   const { h, hasib } = await setup();
   assert.equal((await grantPlan(h.m.ctx, { email: 'nobody@example.com', plan: 'ascend' }, h.m.now())).ok, true, 'pending email grants can precede signup');
   assert.equal((await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'catalyst' }, h.m.now())).reason, 'invalid_plan');
-  assert.equal((await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'apex' }, h.m.now())).reason, 'invalid_plan');
+  assert.equal((await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'enterprise' }, h.m.now())).reason, 'invalid_plan');
   assert.equal((await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'ascend', packId: 'beauty' }, h.m.now())).reason, 'pack_not_live');
   await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'ascend', packId: 'retail' }, h.m.now());
   await hasib('expense_create', { requestId: '0b6f6c7e-8f4a-4d3b-9c2e-1a2b3c4d5e6f', category: 'rent', amountMinor: 1000, method: 'cash', paidOn: '2027-01-15' });

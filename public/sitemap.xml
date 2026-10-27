@@ -164,6 +164,24 @@
       <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/audit" />
   </url>
   <url>
+    <loc>https://www.bznsflowai.com/apex</loc>
+    <lastmod>2026-10-27T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/apex" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/apex" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/apex" />
+  </url>
+  <url>
+    <loc>https://www.bznsflowai.com/en/apex</loc>
+    <lastmod>2026-10-27T00:00:00+00:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+      <xhtml:link rel="alternate" hreflang="ar" href="https://www.bznsflowai.com/apex" />
+      <xhtml:link rel="alternate" hreflang="en" href="https://www.bznsflowai.com/en/apex" />
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://www.bznsflowai.com/en/apex" />
+  </url>
+  <url>
     <loc>https://www.bznsflowai.com/playbook</loc>
     <lastmod>2026-09-11T00:00:00+00:00</lastmod>
     <changefreq>monthly</changefreq>

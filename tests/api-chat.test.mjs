@@ -154,11 +154,12 @@ t('pricing question hits §21', () =>
   assert.ok(pickSections('how much does it cost?').some((s) => s.id === '21')));
 t('a Catalyst question reaches the Catalyst section (§01)', () =>
   assert.ok(pickSections('what does Layla do on WhatsApp?').some((s) => s.id === '01')));
-t('Ascend and Apex questions reach the plans section (§03): Ascend’s three agents, set up with the team; Apex in preparation', () => {
+t('Ascend and Apex questions reach the plans section (§03): Ascend’s three agents, set up with the team; Apex by request at /apex', () => {
   assert.ok(pickSections('tell me about ascend').some((s) => s.id === '03'));
   assert.ok(pickSections('ما هي باقة أبيكس').some((s) => s.id === '03'));
   const plans = SECTIONS.find((s) => s.id === '03');
-  for (const part of ['Layla', 'Hasib', 'Adiba', 'set up with the team', 'Apex', 'in preparation']) assert.ok(plans.en.includes(part), part);
+  for (const part of ['Layla', 'Hasib', 'Adiba', 'set up with the team', 'Apex', 'by request', 'bznsflowai.com/apex']) assert.ok(plans.en.includes(part), part);
+  assert.ok(plans.ar.includes('حسب الطلب') && !plans.en.includes('in preparation'), 'Apex is by request, not in preparation (2026-10-27)');
   assert.doesNotMatch(`${plans.en} ${plans.ar}`, /OMR\s*\d|\d+\s*ر\.ع/, 'never a price');
 });
 t('no knowledge section offers voice, refunds or prices', () => {

@@ -11,6 +11,8 @@ export default [
 
   { file: "route-modules/audit.jsx", path: "audit" },
   { file: "route-modules/en-audit.jsx", path: "en/audit" },
+  { file: "route-modules/apex.jsx", path: "apex" },
+  { file: "route-modules/en-apex.jsx", path: "en/apex" },
   { file: "route-modules/refund.jsx", path: "refund" },
   { file: "route-modules/en-refund.jsx", path: "en/refund" },
   // Synthetic product draft: available only in the local development server.
@@ -54,6 +56,8 @@ export default [
   },
   { file: "route-modules/en-owner-websites.jsx", path: "en/owner/websites" },
   { file: "route-modules/owner-websites.jsx", path: "owner/websites" },
+  { file: "route-modules/en-owner-apex.jsx", path: "en/owner/apex" },
+  { file: "route-modules/owner-apex.jsx", path: "owner/apex" },
   {
     "file": "route-modules/layla-dashboard.jsx",
     "path": "layla/dashboard"

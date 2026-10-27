@@ -22,7 +22,7 @@ export async function settingsFor(ctx, accountId) {
   if (row) return { ...DEFAULT_SETTINGS, ...row };
   const account = await ctx.db.get(accountId);
   const grant = account?.email ? await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', account.email.trim().toLowerCase())).unique() : null;
-  return { ...DEFAULT_SETTINGS, ...(grantLive(grant) && grant.plan === 'ascend' && grant.packId ? { packId: grant.packId } : {}) };
+  return { ...DEFAULT_SETTINGS, ...(grantLive(grant) && ['ascend', 'apex'].includes(grant.plan) && grant.packId ? { packId: grant.packId } : {}) };
 }
 /** A legacy Hasib choice wins until the owner next saves the unified Business Setup. */
 export async function packFor(ctx, tenant) {

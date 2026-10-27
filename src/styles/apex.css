@@ -1,0 +1,35 @@
+/* The Apex request page (/apex). It reuses the audit page's frame and form (audit.css); these are the
+ * function choices and the WhatsApp row. Ledger rules: 4px radius, no blur or gradients. A chosen function
+ * is blue — something the visitor acts on (DESIGN.md Meaning Rule). Logical properties only. */
+
+.apex-functions { display: grid; gap: var(--space-2); margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+.apex-functions > legend { padding: 0; }
+.audit-form .apex-function {
+  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4);
+  font-weight: 400; cursor: pointer;
+  background: var(--bg-card); border: 1px solid var(--border-hover); border-radius: var(--radius-sm);
+  transition: border-color var(--transition), background-color var(--transition);
+}
+.audit-form .apex-function:hover { border-color: var(--text-primary); }
+.audit-form .apex-function:has(input:checked) { background: var(--blue-tint); border-color: var(--accent-blue); }
+.audit-form .apex-function:has(input:focus-visible) { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.audit-form .apex-function input { inline-size: 18px; block-size: 18px; flex: none; margin: 0; accent-color: var(--blue-ink); }
+.apex-function-icon { flex: none; color: var(--blue-ink); }
+.apex-function span { display: grid; gap: 2px; min-inline-size: 0; }
+.apex-function strong { color: var(--text-primary); }
+.apex-function small, .apex-hint { color: var(--text-muted); font-size: 0.85rem; font-weight: 400; }
+
+.apex-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+
+.apex-or {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3);
+  margin-block-start: var(--space-6); padding-block-start: var(--space-4); border-block-start: 1px solid var(--border);
+}
+.apex-or p { margin: 0; color: var(--text-secondary); }
+.apex-whatsapp { display: inline-flex; align-items: center; gap: var(--space-2); }
+.apex-done-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+@media (max-width: 600px) {
+  .apex-pair { grid-template-columns: 1fr; }
+  .apex-or .btn, .apex-done-actions .btn { inline-size: 100%; justify-content: center; }
+}

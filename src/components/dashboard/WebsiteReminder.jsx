@@ -6,7 +6,8 @@ import { loadBrief } from '../../lib/dashboard/website-brief';
 export function WebsiteReminder({ s, account, onGo }) {
   const [pending, setPending] = useState(false);
   useEffect(() => {
-    if (account?.accessPlan !== 'ascend') return undefined;
+    // Ascend's free website; Apex holds everything Ascend has (2026-10-27).
+    if (!['ascend', 'apex'].includes(account?.accessPlan)) return undefined;
     let live = true;
     loadBrief().then(({ brief }) => live && setPending(!brief.version)).catch(() => live && setPending(false));
     return () => { live = false; };

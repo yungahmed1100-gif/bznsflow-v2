@@ -26,7 +26,8 @@ export async function executeProductSetup(ctx, a, now = Date.now()) {
   if (membership?.status === 'active') return fail('manager_required');
   const admin = account.email.toLowerCase().trim() === 'ahmed@bznsflowai.com';
   const plan = await planFor(ctx, account._id);
-  if (!admin && (!plan || (a.product === 'ascend' && plan !== 'ascend'))) return fail('access_required');
+  // Apex holds everything Ascend has, including its setup (2026-10-27).
+  if (!admin && (!plan || (a.product === 'ascend' && !['ascend', 'apex'].includes(plan)))) return fail('access_required');
   if (!['catalyst', 'ascend'].includes(a.product)) return fail('invalid_product');
   const view = async (progress, settings) => { const fresh = await ctx.db.get(account._id); return { progress, settings, admin, plan: admin ? 'ascend' : plan, workspaceReady: !!fresh.draftHash, effectivePackId: (await effectivePack(ctx, fresh, settings)) || null }; };
   let progress = await ctx.db.query('productSetupProgress').withIndex('by_account_product', q => q.eq('accountId', account._id).eq('product', a.product)).unique();

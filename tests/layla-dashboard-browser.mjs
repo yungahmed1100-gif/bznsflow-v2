@@ -708,7 +708,8 @@ try {
       bzns: { markdown: '# Blue Studio', version: 1, publishedRevision: 1, publishedAt: now, unpublishedChanges: false },
       profile: { businessName: 'Blue Studio', sector: 'Photography', services: 'Portraits', prices: '', hours: '', location: '', humanContact: 'team@example.test', faqs: [], reviewed: true } };
     const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=chats', handler: api(fixture()),
-      authAccount: { id: 'a1', email: 'owner@example.test', accessPlan: 'ascend', profileComplete: true },
+      // The Arabic pass is an Apex holder: Apex has everything Ascend has, the free website included (2026-10-27).
+      authAccount: { id: 'a1', email: 'owner@example.test', accessPlan: lang === 'ar' ? 'apex' : 'ascend', profileComplete: true },
       extra: (surface, request) => {
         if (surface === 'website-brief') {
           const body = request.method() === 'POST' ? request.postDataJSON() : null;

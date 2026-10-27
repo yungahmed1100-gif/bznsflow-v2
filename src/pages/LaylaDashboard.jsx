@@ -76,7 +76,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const s = useMemo(() => createStrings(lang, packId), [lang, packId]);
   // Eight plain sections; Hasib's appear only when Business Setup selects a live pack.
   const map = useMemo(() => dashboardMap(hasibOverview, overview.data?.capabilities || hasibOverview?.capabilities, overview.data?.workspaceRole,
-    { email: !!overview.data?.rasilEnabled && !!overview.data?.capabilities?.email, website: account?.accessPlan === 'ascend', audits: !!overview.data?.founderPreview && !previewIndustry }),
+    { email: !!overview.data?.rasilEnabled && !!overview.data?.capabilities?.email, website: ['ascend', 'apex'].includes(account?.accessPlan), audits: !!overview.data?.founderPreview && !previewIndustry }),
     [hasibOverview, overview.data?.capabilities, overview.data?.workspaceRole, overview.data?.rasilEnabled, overview.data?.founderPreview, previewIndustry, account?.accessPlan]);
   const SixTabWorkspace = map.sixTab ? SIX_TAB_DASHBOARDS[map.packId] || RealEstateDashboard : null;
   const h = useMemo(() => createHasibStrings(lang, packId), [lang, packId]);

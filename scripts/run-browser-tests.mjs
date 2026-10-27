@@ -21,6 +21,7 @@ const SUITES = [
   'tests/brain-browser.mjs',
   'tests/home-browser.mjs',
   'tests/audit-browser.mjs',
+  'tests/apex-browser.mjs',
 ];
 
 const server = spawn(process.execPath, ['scripts/preview.mjs', '--port', String(PORT)], { stdio: 'ignore' });

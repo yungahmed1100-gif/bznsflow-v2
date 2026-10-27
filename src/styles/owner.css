@@ -74,3 +74,10 @@
 .owner-website-more .owner-form { padding-block: 12px; border: 0; }
 .owner-websites-live ul { padding: 0; list-style: none; display: grid; gap: 6px; }
 @media (max-width: 640px) { .owner-website-facts > div { grid-template-columns: 1fr; gap: 0; } .owner-website-due { margin-inline-start: 0; } }
+/* Apex requests (2026-10-27): the side mark follows the Meaning Rule — new is what matters next (orange),
+   contacted is in progress (yellow), scoped is done for now (green); closed carries no mark. */
+.owner-home .owner-apex-request[data-status=new] { box-shadow: inset calc(3px * var(--owner-x, 1)) 0 0 #f28c54; }
+.owner-home .owner-apex-request[data-status=contacted] { box-shadow: inset calc(3px * var(--owner-x, 1)) 0 0 #eeb462; }
+.owner-home .owner-apex-request[data-status=scoped] { box-shadow: inset calc(3px * var(--owner-x, 1)) 0 0 #3a9b5c; }
+.owner-apex-need { white-space: pre-wrap; overflow-wrap: anywhere; }
+.owner-form textarea { font: inherit; font-weight: 400; padding: 10px 12px; border: 1px solid rgba(0,0,0,.35); border-radius: 4px; background: #fff; color: #1a1a1a; width: 100%; }

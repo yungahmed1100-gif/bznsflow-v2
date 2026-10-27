@@ -52,6 +52,6 @@ try {
   }
   const llms = await (await fetch(`${base}/llms.txt`)).text();
   assert.ok(llms.includes('Ascend — available by owner-granted access')); count++;
-  assert.ok(llms.includes('Apex — in preparation')); count++;
+  assert.ok(llms.includes('Apex — by request, custom quote')); count++;
   console.log(`PASS: ${count} bilingual discovery, no-JS content, schema, social-image and keyboard checks.`);
 } finally { await browser.close(); }

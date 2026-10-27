@@ -165,6 +165,26 @@ http.route({path:'/audit-admin',method:'POST',handler:httpAction(async(ctx,reque
   } catch { return new Response(JSON.stringify({ok:false,reason:'audit_unavailable'}),{status:503,headers}); }
 })});
 
+// Apex requests (convex/apexState.js): the public request page and Ahmed's queue.
+http.route({path:'/apex',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text();if(raw.length>8000) return new Response(null,{status:413});
+    const result=await ctx.runMutation(internal.apex.execute,JSON.parse(raw));
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'apex_unavailable'}),{status:503,headers}); }
+})});
+http.route({path:'/apex-admin',method:'POST',handler:httpAction(async(ctx,request)=>{
+  if(!serviceAuthorized(request)) return new Response(null,{status:401});
+  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+  try {
+    const raw=await request.text();if(raw.length>4000) return new Response(null,{status:413});
+    const result=await ctx.runMutation(internal.apex.admin,JSON.parse(raw));
+    return new Response(JSON.stringify(result),{headers});
+  } catch { return new Response(JSON.stringify({ok:false,reason:'apex_unavailable'}),{status:503,headers}); }
+})});
+
 // Rasil (convex/rasilState.js): the owner's email campaigns, and the worker, webhook and public links.
 http.route({path:'/rasil',method:'POST',handler:httpAction(async(ctx,request)=>{
   if(!serviceAuthorized(request)) return new Response(null,{status:401});

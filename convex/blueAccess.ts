@@ -7,7 +7,7 @@ export const execute = internalMutation({
     operation: v.union(v.literal('list'), v.literal('grant'), v.literal('revoke')),
     sessionHash: v.string(),
     email: v.optional(v.string()),
-    plan: v.optional(v.union(v.literal('catalyst'), v.literal('ascend'))),
+    plan: v.optional(v.union(v.literal('catalyst'), v.literal('ascend'), v.literal('apex'))),
     note: v.optional(v.string()),
     packId: v.optional(v.string()),
   },
