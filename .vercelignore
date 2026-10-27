@@ -13,3 +13,5 @@ node_modules/
 # Development-only Codex instructions and tooling
 .codex/
 .agents/
+.claude/
+.impeccable/

@@ -29,4 +29,8 @@ Vercel inspection confirms the current READY Green production deployment is `dpl
 
 ## Deployment evidence
 
-Pending: isolated archive build, production candidate, promotion and public-domain checks. No deployment is claimed by this source record yet.
+The isolated committed archive passed a clean lockfile install and production build. The upload-manifest review found tracked Claude development tools in the legacy upload set; `.claude/` and `.impeccable/` are now excluded alongside the existing Codex exclusions.
+
+A fresh dependency audit reports 6 vulnerable packages (1 moderate, 5 high), from the already-recorded body-parser, fast-uri and zod advisories and their Vercel dependency chains. The lockfile is unchanged. These remain a follow-up; this release does not claim a clean dependency audit.
+
+Pending: production candidate, promotion and public-domain checks. No deployment is claimed by this source record yet.
