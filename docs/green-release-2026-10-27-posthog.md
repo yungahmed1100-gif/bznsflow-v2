@@ -49,11 +49,21 @@ The wizard only set up PostHog's MCP connection for Claude Code and Codex. It di
   - private pages starting PostHog.
 - PostHog drops events from headless browsers, so the browser test presents an ordinary Chrome user agent.
 
+## Deployment (2026-10-27)
+- **Lineage:** the live deployment `dpl_EGoay5ckiEsLtiH5AY3u99Y6xj23` was built from `cbbd063`, which master contains.
+- **Deployed:** master `eec9869`, from a clean `git archive` copy, as `dpl_G5ewEaqycsMWP52fQfPU3cZkaFpa`, aliased to www.bznsflowai.com.
+- **Rollback:** `dpl_EGoay5ckiEsLtiH5AY3u99Y6xj23`. No backend changed.
+- **Live checks:**
+  - `/`, `/en`, `/apex`, `/en/apex`, `/privacy`, `/layla/dashboard` and `/owner` return 200.
+  - The proxy serves `/ingest/array/<key>/config(.js)` and `/ingest/static/recorder.js` with 200.
+  - A POST to `/ingest/e/` gets a 308 to `/ingest/e`, and PostHog answers `{"status":"Ok"}`. That was one synthetic event, `ingest_proxy_check`.
+- **Live browser check:** run with a non-headless browser identity, because PostHog drops headless Chromium by its client hints as well as its user agent.
+  - `/en` and `/apex` sent events (308, then 200).
+  - `/en/layla/dashboard` and `/owner` sent nothing.
+- **Seen in PostHog:** a separate session using the PostHog MCP saw a live `/en` visit arrive as a `$pageview`.
+- **Replay is off at project level** (`session_recording_opt_in` false), so there are no recordings until it is switched on in PostHog.
+- **Test fix:** `tests/posthog-browser.mjs` now also overrides the client hints. Before that, its passing depended on the stubbed remote config.
+
 ## Not done
-- **Not deployed.** Before the deploy, check that the source contains the live commit.
-- **After the deploy:**
-  - the live home page posts to `/ingest/e/` and PostHog shows the events;
-  - `/layla/dashboard` sends nothing.
-  - `trailingSlash: false` makes Vercel redirect `/ingest/e/` to `/ingest/e` with a 308 that keeps the POST. Confirm that PostHog accepts it; if not, point `api_host` at `https://us.i.posthog.com` directly.
 - **No consent banner** (see `COOKIES.md`).
 - **Replay** only runs if it's enabled in PostHog project settings.

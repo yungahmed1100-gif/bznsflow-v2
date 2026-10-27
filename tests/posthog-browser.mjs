@@ -13,6 +13,8 @@ const PRIVATE = /^\/(?:en\/)?(?:owner|layla|catalyst|mcp|signin)(?:\/|$)/;
 // PostHog starts 3 s after load, then at idle, then batches events: wait long enough for one flush.
 const SETTLE_MS = 9000;
 const VISITOR_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
+const VISITOR_HINTS = { brands: [{ brand: 'Google Chrome', version: '141' }, { brand: 'Chromium', version: '141' }, { brand: 'Not?A_Brand', version: '24' }],
+  fullVersion: '141.0.0.0', platform: 'macOS', platformVersion: '15.0.0', architecture: 'arm', model: '', mobile: false };
 
 function decodeEvents(request) {
   const raw = request.postDataBuffer();
@@ -45,7 +47,10 @@ async function openSite(browser) {
     if (url.pathname.startsWith('/api/')) return route.fulfill({ status: 404, json: { ok: false } });
     return route.continue();
   });
-  return { context, ingest, page: await context.newPage() };
+  const page = await context.newPage();
+  // Headless Chromium also names itself in the client hints, which PostHog reads too.
+  await (await context.newCDPSession(page)).send('Emulation.setUserAgentOverride', { userAgent: VISITOR_UA, userAgentMetadata: VISITOR_HINTS });
+  return { context, ingest, page };
 }
 const pathOf = event => { try { return new URL(event.properties?.$current_url).pathname; } catch { return ''; } };
 const waitFor = async (check, label, deadline = Date.now() + 20000) => {
