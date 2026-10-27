@@ -33,4 +33,13 @@ The isolated committed archive passed a clean lockfile install and production bu
 
 A fresh dependency audit reports 6 vulnerable packages (1 moderate, 5 high), from the already-recorded body-parser, fast-uri and zod advisories and their Vercel dependency chains. The lockfile is unchanged. These remain a follow-up; this release does not claim a clean dependency audit.
 
-Pending: production candidate, promotion and public-domain checks. No deployment is claimed by this source record yet.
+- Runtime refactor commit: `eaf95255d4da6fa6cd4c2b07b4b3fae251ad8cf4`.
+- Released source commit, including upload exclusions: `cbbd0638002e803bf222f8b6ea5a52484e350fd4`. Vercel's deployment API confirms the same `sourceCommit` metadata.
+- READY candidate and promoted deployment: `dpl_EGoay5ckiEsLtiH5AY3u99Y6xj23`, `https://bznsflow-main-5bm63tgx9-yungahmed1100-7330s-projects.vercel.app`.
+- The final upload manifest contained 1,036 regular files, with no private env files, local tooling, work/test artifacts or the unrelated untracked logo.
+- Anonymous candidate inspection stopped at Vercel deployment protection. Authenticated CLI access supplied a temporary candidate cookie for browser verification; protection stayed enabled and the local cookie file was removed afterward.
+- Candidate browser checks passed for Arabic and English at 375, 768 and 1280px: four portraits loaded, disclosure expanded/collapsed, equal desktop heights, no horizontal overflow, request routes opened, and zero page errors.
+- The production baseline was rechecked immediately before promotion and still matched `dpl_HKxh1Y6QevjENmuikgwz3iMb9rZo`. Promotion succeeded, and inspection of `https://www.bznsflowai.com` resolves to the new READY deployment.
+- The same signed-out browser checks passed on the public domain without a protection cookie. No forms were submitted and no outbound messages or payments were made. Apex-holder routing was verified synthetically in the local suite, not by changing a real account.
+- Short post-release monitoring: 12/12 GETs returned HTTP 200 for `/`, `/en`, `/apex` and `/en/apex`, sampled three times from 11:07:38–11:07:58 UTC on 2026-10-27. This is a short smoke window, not a sustained uptime claim.
+- Logs, screenshots, deployment metadata and monitoring results are retained in ignored `work/apex-cards-release/`. Rollback remains the previous deployment identified above; no backend state changed.
