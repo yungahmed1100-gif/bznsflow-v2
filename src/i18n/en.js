@@ -214,6 +214,8 @@ export default {
   "tiers_note": "Pricing is shared on your free audit, together with the scope agreed for your business.",
   "tier_available": "Available now",
   "tier_soon": "In preparation",
+  "tier_show_details": "Show examples and ROI",
+  "tier_hide_details": "Hide examples and ROI",
   "tier_by_request": "By request",
   "tier_open_apex": "Open my workspace",
   "tier_custom_quote": "Custom quote after we scope it with you. No fixed price.",

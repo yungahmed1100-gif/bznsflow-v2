@@ -23,6 +23,42 @@ async function open(path, width, reducedMotion = 'no-preference') {
 const activeLabel = page => page.locator('.pipeline-step[data-state=active] .pipeline-node-label').textContent();
 const serious = async page => (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`);
 
+async function checkApexDisclosure(page, lang, width) {
+  const apex = page.locator('[data-tier="apex"]');
+  const toggle = apex.getByRole('button', { name: lang === 'ar' ? 'عرض الأمثلة والعائد' : 'Show examples and ROI', exact: true });
+  const details = apex.locator('.tier-capability-details, .tier-return');
+  assert.equal(await toggle.getAttribute('aria-expanded'), 'false'); count++;
+  assert.equal(await details.count(), 5); count++;
+  assert.equal(await details.evaluateAll(nodes => nodes.every(n => n.hidden && getComputedStyle(n).display === 'none')), true); count++;
+  assert.equal(await toggle.evaluate(button => button.getAttribute('aria-controls').split(' ').every(id => document.getElementById(id)?.hidden)), true); count++;
+  await apex.scrollIntoViewIfNeeded();
+  const portraits = apex.locator('.tier-capability-portrait');
+  for (const portrait of await portraits.all()) {
+    await portrait.scrollIntoViewIfNeeded();
+    await page.waitForFunction(image => image.complete && image.naturalWidth > 0, await portrait.elementHandle());
+  }
+  const sources = await portraits.evaluateAll(images => images.map(image => image.currentSrc));
+  const otherSources = await page.locator('.tier-agent-portrait').evaluateAll(images => images.map(image => image.src));
+  assert.equal(new Set(sources).size, 4); count++;
+  assert.ok(sources.every(src => !otherSources.includes(src))); count++;
+  assert.equal(await page.locator('.tier-agent-portrait, .tier-capability-portrait').evaluateAll(images => new Set(images.map(i => i.getBoundingClientRect().width)).size), 1); count++;
+  for (const [action, expected] of [['click', true], ['Enter', false], ['Space', true], ['click', false]]) {
+    if (action === 'click') await apex.locator('.tier-details-toggle').click();
+    else await apex.locator('.tier-details-toggle').press(action);
+    const expanded = await apex.locator('.tier-details-toggle').getAttribute('aria-expanded') === 'true';
+    assert.equal(expanded, expected); count++;
+    assert.equal(await details.evaluateAll((nodes, open) => nodes.every(n => n.hidden === !open), expanded), true); count++;
+    assert.equal(await apex.locator('.tier-capability-outcome:visible').count(), 4); count++;
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${lang} ${width}: disclosure does not overflow`); count++;
+    if (width > 1024) {
+      const heights = await page.locator('.pricing-card').evaluateAll(cards => cards.map(c => c.getBoundingClientRect().height));
+      assert.ok(Math.max(...heights) - Math.min(...heights) < 1, `${lang}: equal card heights`); count++;
+    }
+  }
+  assert.equal(await apex.locator('.tier-details-toggle').getAttribute('aria-expanded'), 'false'); count++;
+  if (width === 375 || width === 1280) await apex.screenshot({ path: `work/home-browser/apex-${lang}-${width}.png` });
+}
+
 try {
   for (const [lang, path, first, record] of [['en', '/en', 'A customer asks', 'Need'], ['ar', '/', 'العميل يسأل', 'الاحتياج']]) {
     // The pipeline cycles on its own, one step every few seconds.
@@ -61,6 +97,7 @@ try {
     assert.equal(await apex.locator('.pricing-btn').first().getAttribute('href'), lang === 'ar' ? '/apex' : '/en/apex'); count++;
     assert.match(await apex.locator('.tier-whatsapp').getAttribute('href'), /^https:\/\/wa\.me\//, `${lang}: the WhatsApp button stays under Request Apex`); count++;
     assert.equal(await apex.locator('.tier-whatsapp').evaluate(el => el.previousElementSibling?.classList.contains('pricing-btn')), true); count++;
+    await checkApexDisclosure(page, lang, 1440);
     const teamImage = page.locator('.about-art img');
     await teamImage.scrollIntoViewIfNeeded();
     await teamImage.waitFor({ state: 'visible' });
@@ -80,10 +117,12 @@ try {
     assert.equal(await activeLabel(still.page), first, `${lang}: no cycle under reduced motion`); count++;
     await still.page.locator('.pipeline-node').nth(1).click();
     assert.equal(await still.page.locator('.pipeline-bubble.is-out').count(), 1); count++;
-    for (const width of [320, 375, 768, 1024]) {
+    for (const width of [320, 375, 768, 1024, 1280]) {
       await still.page.setViewportSize({ width, height: 900 });
       assert.equal(await still.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `${lang} ${width}: no horizontal overflow`); count++;
+      if ([375, 768, 1280].includes(width)) await checkApexDisclosure(still.page, lang, width);
     }
+    await still.page.setViewportSize({ width: 375, height: 900 });
     assert.deepEqual(await serious(still.page), [], `${lang} 375 accessibility`); count++;
     await still.context.close();
   }
@@ -212,7 +251,25 @@ try {
     assert.deepEqual(checkouts.map(c => [c.plan, c.interval, c.packId]), [['ascend', 'monthly', 'retail']], `${lang}: the picked plan opens without asking again`); count++;
     await context.close();
   }
-  console.log(`${count} home page checks passed (live pipeline, colour meanings, reduced motion, pay block, visitor checkout, EN/AR, 320–1440).`);
+  // An existing Apex holder keeps the workspace action, with no subscription checkout.
+  for (const [lang, path] of [['en', '/en'], ['ar', '/']]) {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await context.newPage();
+    await page.route('**/*', route => {
+      const url = new URL(route.request().url());
+      if (url.origin !== new URL(base).origin) return route.abort();
+      if (url.pathname === '/api/auth-session') return route.fulfill({ json: { ok: true, account: { id: 'apex-holder', email: 'apex@example.com', name: 'Apex holder', accessPlan: 'apex', profileComplete: true } } });
+      return route.continue();
+    });
+    await page.goto(base + path);
+    const workspace = page.getByRole('link', { name: lang === 'ar' ? 'افتح مساحة عملي' : 'Open my workspace', exact: true });
+    await workspace.waitFor();
+    assert.equal(await workspace.getAttribute('href'), `${lang === 'ar' ? '' : '/en'}/layla/dashboard`); count++;
+    assert.equal(await page.locator('[data-tier="apex"] .tier-pay').count(), 0); count++;
+    assert.equal(await page.locator('[data-tier="apex"] .tier-whatsapp').count(), 1); count++;
+    await context.close();
+  }
+  console.log(`${count} home page checks passed (pipeline, pricing, Apex disclosure and holder, visitor checkout, EN/AR, 320–1440).`);
 } finally {
   await browser.close();
 }

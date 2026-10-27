@@ -213,6 +213,8 @@ export default {
   "tiers_note": "نشاركك السعر في التدقيق المجاني، مع النطاق المتفق عليه لنشاطك.",
   "tier_available": "متاح الآن",
   "tier_soon": "قيد الإعداد",
+  "tier_show_details": "عرض الأمثلة والعائد",
+  "tier_hide_details": "إخفاء الأمثلة والعائد",
   "tier_by_request": "حسب الطلب",
   "tier_open_apex": "افتح مساحة عملي",
   "tier_custom_quote": "سعر مخصّص بعد دراسة الاحتياج معك. لا يوجد سعر ثابت.",
