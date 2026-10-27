@@ -1,7 +1,8 @@
 // One event funnel.
 //
 // Every CTA on the site calls trackEvent(), which forwards to the Meta pixel so
-// conversion optimisation has something real to bid on. Keep the mapping HERE —
+// conversion optimisation has something real to bid on, and to PostHog under its
+// own name (src/lib/posthog.js) so the funnel can be read there too. Keep the mapping HERE —
 // scattering fbq() calls through components is how event names drift.
 //
 // A Plausible branch used to sit alongside it. No Plausible script is loaded
@@ -13,6 +14,7 @@
 // could only ever disagree.
 //
 // No-ops during SSG (no window) and when the script is blocked or absent.
+import { captureEvent } from './posthog';
 
 /** trackEvent name → Meta event. `custom` events go through trackCustom, which
  *  is what Meta requires for anything outside its standard vocabulary. */
@@ -55,6 +57,7 @@ function eventId() {
 
 export const trackEvent = (name, props) => {
   if (typeof window === 'undefined') return;
+  captureEvent(name, props);
   if (typeof window.fbq !== 'function') return;
 
   const meta = metaEventFor(name, props);

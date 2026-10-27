@@ -12,7 +12,7 @@
 //   - retention comes from the prune intervals in the migrations
 // If any of those change, this file is wrong and must change with them.
 
-export const PRIVACY_UPDATED_ISO = '2026-09-10';
+export const PRIVACY_UPDATED_ISO = '2026-10-27';
 
 /** Shared across both languages — a table of who else touches the data. */
 const PROCESSORS = [
@@ -42,6 +42,10 @@ const PROCESSORS = [
   {
     en: ['Meta (Facebook)', 'Measures our advertising. Receives a pseudonymous identifier, not your name.', 'United States / global'],
     ar: ['Meta (Facebook)', 'يقيس أداء إعلاناتنا. يستقبل معرّفاً مستعاراً لا اسمك.', 'الولايات المتحدة / عالمي'],
+  },
+  {
+    en: ['PostHog', 'Measures how visitors use our public pages: page views, clicks and session recordings with typed text hidden. Never on the dashboard or sign-in pages.', 'United States'],
+    ar: ['PostHog', 'يقيس كيف يستخدم الزوّار صفحاتنا العامة: الصفحات المعروضة والنقرات وتسجيلات الجلسات مع إخفاء ما يُكتب. لا يعمل أبداً في لوحة التحكم أو صفحات تسجيل الدخول.', 'الولايات المتحدة'],
   },
   {
     en: ['Google Fonts', 'Serves the typefaces. Your browser requests them directly, which exposes your IP address to Google.', 'United States / global'],
@@ -75,6 +79,10 @@ const COOKIES = [
     ar: ['_fbp, _fbc', 'تسويقي', '~٩٠ يوماً', 'يضعهما بيكسل Meta لقياس أداء إعلاناتنا.'],
   },
   {
+    en: ['ph_phc_…_posthog', 'Analytics', '1 year', 'Set by PostHog on our public pages to count visits and link the pages of one visit. Not your name or email.'],
+    ar: ['ph_phc_…_posthog', 'تحليلي', 'سنة واحدة', 'يضعه PostHog في صفحاتنا العامة لعدّ الزيارات وربط صفحات الزيارة الواحدة. لا يحمل اسمك ولا بريدك.'],
+  },
+  {
     en: ['bznsflow_chat_session, bf_playbook_seen, bf_uid', 'Browser storage', 'Until cleared', 'Keep your chat continuous, stop a pop-up repeating, and identify you to Meta pseudonymously.'],
     ar: ['bznsflow_chat_session, bf_playbook_seen, bf_uid', 'تخزين المتصفح', 'حتى تمسحها', 'تُبقي محادثتك متصلة، وتمنع تكرار نافذة منبثقة، وتعرّفك إلى Meta باسم مستعار.'],
   },
@@ -82,7 +90,7 @@ const COOKIES = [
 
 const en = {
   title: 'Privacy Policy',
-  updated: 'Last updated 10 September 2026',
+  updated: 'Last updated 27 October 2026',
   lead: 'This explains what BznsFlow collects when you use this website, why, who else sees it, and what you can ask us to do about it. It is written to be read, not to be survived.',
   processorsHead: ['Who', 'What they do', 'Where'],
   cookiesHead: ['Name', 'Type', 'Lasts', 'What it does'],
@@ -222,7 +230,7 @@ const en = {
 
 const ar = {
   title: 'سياسة الخصوصية',
-  updated: 'آخر تحديث ١٠ سبتمبر ٢٠٢٦',
+  updated: 'آخر تحديث ٢٧ أكتوبر ٢٠٢٦',
   lead: 'توضّح هذه الصفحة ما تجمعه BznsFlow عند استخدامك لهذا الموقع، ولماذا، ومن يطّلع عليه غيرنا، وما الذي يمكنك أن تطلبه منّا بشأنه. كُتبت لتُقرأ، لا لتُحتمل.',
   processorsHead: ['الجهة', 'ما تقوم به', 'أين'],
   cookiesHead: ['الاسم', 'النوع', 'المدة', 'وظيفته'],
