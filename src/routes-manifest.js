@@ -20,7 +20,7 @@ export const PAGES = [
   // Low priority, rarely changes — but indexable and in the sitemap on
   // purpose: it is linked from Google's and LinkedIn's consent screens, and a
   // privacy policy that hides from search looks like it has something to hide.
-  { path: '/privacy', changefreq: 'yearly', priority: 0.3, lastmod: '2026-09-10' },
+  { path: '/privacy', changefreq: 'yearly', priority: 0.3, lastmod: '2026-10-27' },
   // Linked from Meta's consent and app settings, like the privacy policy.
   { path: '/terms', changefreq: 'yearly', priority: 0.3, lastmod: '2026-10-12' },
   { path: '/data-deletion', changefreq: 'yearly', priority: 0.3, lastmod: '2026-09-23' },

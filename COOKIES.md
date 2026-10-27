@@ -42,17 +42,18 @@ and crawls from the US, so a cookie-driven redirect on `/` or `/en` would serve
 the crawler something other than the URL it requested — the standard way a site
 loses its hreflang pair from the index. The public routes stay deterministic.
 
-## Marketing — consent required, **currently NOT gated**
+## Marketing and analytics — consent required, **currently NOT gated**
 
 | Name | Type | Lifetime | Set by |
 |---|---|---|---|
 | `_fbp` | cookie | ~90 days | Meta Pixel, loaded in `index.html` |
 | `_fbc` | cookie | ~90 days | Meta Pixel, only when the visitor arrives on an `fbclid` link |
 | `bf_uid` | localStorage | until cleared | `index.html` — first-party id passed to Meta as `external_id` for advanced matching |
+| `ph_phc_…_posthog` | cookie + localStorage | 1 year | PostHog (`src/lib/posthog.js`) — anonymous visitor and session id for product analytics and session replay (typed text hidden). Public pages on www.bznsflowai.com only; never set on the dashboard, owner, setup, AI-connection or sign-in pages. |
 
 > **Known gap.** `index.html` calls `fbq('init')` and `fbq('track','PageView')`
 > unconditionally on load, so these are set for every visitor including in the
-> EU/UK, with no prior consent. Meanwhile `src/data/agents.js` markets
+> EU/UK, with no prior consent. PostHog (added 2026-10-27) has the same gap. Meanwhile `src/data/agents.js` markets
 > "GDPR (EU) + GCC regional compliance" as a product capability.
 >
 > Two ways to close it, neither implemented yet:
