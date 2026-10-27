@@ -224,5 +224,13 @@ t('every rewrite surface is registered in api/layla-meta.js', () => {
   }
 });
 
+t('every owner page route is prerendered (Vercel serves no SPA fallback for /owner/*)', () => {
+  // 2026-10-27: /owner/apex shipped in routes.ts but not in the prerender list and 404'd live.
+  const routes = read('src/routes.ts'), config = read('react-router.config.ts');
+  const owner = [...routes.matchAll(/path"?: ?"((?:en\/)?owner\/[a-z-]+)"/g)].map(m => `/${m[1]}`).filter(p => !p.includes('/preview'));
+  assert.ok(owner.includes('/owner/apex') && owner.includes('/en/owner/websites'), `found ${owner.join(', ')}`);
+  for (const path of owner) assert.ok(config.includes(`"${path}"`), `${path} is routed but not prerendered`);
+});
+
 console.log(`\n${fail ? '✗' : '✓'} contracts: ${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);
