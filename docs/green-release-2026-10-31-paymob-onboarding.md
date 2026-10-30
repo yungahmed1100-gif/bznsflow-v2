@@ -92,3 +92,28 @@ There are no fees and no dates in the step.
   - a form served without the access check;
   - documents kept on a no;
   - total size unchecked.
+
+## Release
+- **Lineage:** the live deployment `dpl_G5ewEaqycsMWP52fQfPU3cZkaFpa` came from `eec9869`, which master contains.
+- **Source:** commit `9f8c58b`, exported with `git archive` to a clean folder.
+- **Convex Green** (`prod:rare-fish-465`) went first. The push was additive and deleted no indexes; schema validation passed.
+- **Vercel production:** `dpl_6JwcyifTNSLtUM4eAkn1MNwJZHAY`, aliased to www.bznsflowai.com. Rollback is `dpl_G5ewEaqycsMWP52fQfPU3cZkaFpa`. The new Convex fields are optional, so the previous frontend still works with them.
+- **Release checks:**
+  - unit tests: 1,166 pass;
+  - `typecheck:convex` and the build pass;
+  - all 14 browser suites and the sector suites pass;
+  - `npm audit` still reports the 6 known findings (zod, body-parser, fast-uri), unchanged.
+- **Live checks:**
+  - `/`, `/en`, `/privacy`, `/en/privacy`, `/layla/dashboard` and `/en/owner/websites` return 200;
+  - the privacy page shows "Last updated 31 October 2026";
+  - signed out, `?form=application`, `?form=vat` and an unknown form all return 401 `sign_in_required`;
+  - `/api/_assets/paymob/*.pdf` returns 404, so the forms have no public URL.
+
+## Not verified live
+- **Not tested live:**
+  - a signed-in form download, which proves `includeFiles` bundled the PDFs;
+  - a real document upload;
+  - the brief email with attachments.
+  
+  No real documents were uploaded and no email was sent. Ahmed's test: on an Ascend account, open Website → Change my details → Online payments → Yes, download both forms, upload sample files and send. Then check the email attachments and the payments row in `/owner/websites`.
+- **Phase 2 is not built:** keys, payment notifications, pay buttons and links, Layla payment links, and orders marked paid.
