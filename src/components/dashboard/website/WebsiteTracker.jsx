@@ -1,6 +1,7 @@
 import React from 'react';
 import { WEBSITE_STAGES } from '../../../../config/website-brief.js';
 import { W } from './copy';
+import { PaymentsTrack } from './payments';
 
 const ZOHO_MAIL = 'https://mail.zoho.com';
 
@@ -37,6 +38,7 @@ export function WebsiteTracker({ s, project, emailOpen, onChange, onGo }) {
         {project.domain && <div><dt>{tr(W.domainChoice)}</dt><dd><bdi dir="ltr">{project.domain}</bdi></dd></div>}
         {project.mailbox && <div><dt>{tr(W.mailboxLocal)}</dt><dd><bdi dir="ltr">{project.mailbox}</bdi></dd></div>}
       </dl>
+      {project.payments && <PaymentsTrack payments={project.payments} tr={tr} date={date} />}
       <div className="ld-actions">
         {live && project.liveUrl && <a className="ld-button ld-primary" href={project.liveUrl} target="_blank" rel="noopener noreferrer">{tr(W.visit)}</a>}
         {live && project.mailbox && <a className="ld-button" href={ZOHO_MAIL} target="_blank" rel="noopener noreferrer">{tr(W.openMail)}</a>}

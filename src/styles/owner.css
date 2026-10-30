@@ -69,6 +69,8 @@
 .owner-website-actions { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
 .owner-website-actions label { display: grid; gap: 6px; font-weight: 600; font-size: 13px; flex: 1 1 260px; max-width: 420px; }
 .owner-website-actions input { font: inherit; font-weight: 400; min-height: 44px; padding: 10px 12px; border: 1px solid rgba(0,0,0,.35); border-radius: 4px; background: #fff; }
+.owner-website-payments { margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(0,0,0,.2); }
+.owner-website-docs { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
 .owner-website-more { margin-top: 12px; }
 .owner-website-more summary { cursor: pointer; font-weight: 600; min-height: 32px; }
 .owner-website-more .owner-form { padding-block: 12px; border: 0; }

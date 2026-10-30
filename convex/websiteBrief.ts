@@ -16,6 +16,8 @@ export const execute = internalMutation({
     fields: v.optional(v.any()),
     logoId: v.optional(v.union(v.string(), v.null())),
     photoIds: v.optional(v.array(v.string())),
+    docIds: v.optional(v.array(v.object({ kind: v.string(), id: v.string() }))),
+    name: v.optional(v.string()),
     emailId: v.optional(v.string()),
   },
   handler: (ctx, args) => executeWebsiteBrief(ctx, args),

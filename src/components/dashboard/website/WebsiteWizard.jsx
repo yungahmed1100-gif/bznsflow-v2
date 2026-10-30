@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { BRIEF_MAX_PHOTOS, normalizeBrief, websiteDomain } from '../../../../config/website-brief.js';
-import { briefAction, uploadBriefFile } from '../../../lib/dashboard/website-brief';
+import { BRIEF_MAX_PHOTOS, normalizeBrief, paymentDocsProblem, websiteDomain } from '../../../../config/website-brief.js';
+import { briefAction, uploadBriefDocument, uploadBriefFile } from '../../../lib/dashboard/website-brief';
 import { W, ERRORS } from './copy';
 import { BusinessStep, ContactStep, LookStep, SiteStep, ReviewStep } from './steps';
 import { DomainStep } from './domain';
+import { PaymentsStep } from './payments';
 
 const LOCAL_RE = /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/;
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
@@ -16,6 +17,10 @@ const STEPS = [
   { step: 'site', keys: ['pages', 'languages', 'notes'], missing: f => (!f.languages ? 'languages' : '') },
   { step: 'domain', keys: ['domainChoice', 'domainAlternates', 'mailboxLocal', 'recoveryEmail'],
     missing: f => (!websiteDomain(f.domainChoice || '') ? 'domainChoice' : !LOCAL_RE.test(f.mailboxLocal || '') ? 'mailboxLocal' : !EMAIL_RE.test(f.recoveryEmail || '') ? 'recoveryEmail' : '') },
+  // Optional Paymob onboarding: a "yes" needs a personal contact and every required document.
+  { step: 'payments', keys: ['payments', 'payContactName', 'payContactPhone'],
+    missing: (f, files) => (!f.payments ? 'payments' : f.payments !== 'yes' ? '' : !f.payContactName?.trim() ? 'payContactName'
+      : !f.payContactPhone?.trim() ? 'payContactPhone' : paymentDocsProblem(files.docs)) },
   { step: 'review', keys: [], missing: () => '' },
 ];
 
@@ -29,6 +34,7 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
   const [prefilled, setPrefilled] = useState(brief.prefilled || []);
   const [logo, setLogo] = useState(brief.logo);
   const [photos, setPhotos] = useState(brief.photos || []);
+  const [docs, setDocs] = useState(brief.docs || []);
   const [step, setStep] = useState(() => Math.min(brief.draft?.step ?? 0, STEPS.length - 1));
   const [busy, setBusy] = useState('');
   const [saved, setSaved] = useState(false);
@@ -56,12 +62,24 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
       }
     } catch (e) { fail(e.reason); } finally { setBusy(''); }
   };
-  const files = { logo, photos, busy, upload, removeLogo: () => setLogo(null), removePhoto: id => setPhotos(all => all.filter(p => p.id !== id)) };
+  const uploadDocs = async (kind, picked) => {
+    setBusy('upload'); fail('');
+    try {
+      for (const file of picked) {
+        const id = await uploadBriefDocument(csrf, kind, file);
+        setDocs(list => [...list, { id, kind, name: file.name }]);
+        touch([kind]);
+      }
+    } catch (e) { fail(e.reason, kind); } finally { setBusy(''); }
+  };
+  const files = { logo, photos, docs, busy, upload, removeLogo: () => setLogo(null), removePhoto: id => setPhotos(all => all.filter(p => p.id !== id)) };
+  const docSlots = { list: docs, busy, upload: uploadDocs, remove: id => setDocs(all => all.filter(d => d.id !== id)) };
+  const docIds = list => list.map(d => ({ kind: d.kind, id: d.id }));
 
   const go = next => { setStep(next); fail(''); requestAnimationFrame(() => heading.current?.focus()); };
   const save = async next => {
     setBusy('save');
-    try { await briefAction(csrf, 'save_draft', { step: next, fields, logoId: logo?.id || null, photoIds: photos.map(p => p.id) }); setSaved(true); return true; }
+    try { await briefAction(csrf, 'save_draft', { step: next, fields, logoId: logo?.id || null, photoIds: photos.map(p => p.id), docIds: docIds(docs) }); setSaved(true); return true; }
     catch (e) { fail(e.reason, e.field); return false; } finally { setBusy(''); }
   };
   const forward = async () => {
@@ -78,7 +96,8 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
     }
     setBusy('send'); fail('');
     try {
-      const result = await briefAction(csrf, 'submit', { version: brief.version, fields: checked.value, logoId: logo?.id || null, photoIds: photos.map(p => p.id) });
+      const result = await briefAction(csrf, 'submit', { version: brief.version, fields: checked.value, logoId: logo?.id || null, photoIds: photos.map(p => p.id),
+        docIds: checked.value.payments === 'yes' ? docIds(docs) : [] });
       onSent({ emailed: true, version: result.version });
     } catch (e) {
       if (e.reason === 'brief_email_failed') onSent({ emailed: false, version: brief.version + 1 });
@@ -92,6 +111,7 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
     : current.step === 'look' ? <LookStep form={form} files={files} />
     : current.step === 'site' ? <SiteStep form={form} />
     : current.step === 'domain' ? <DomainStep form={form} csrf={csrf} />
+    : current.step === 'payments' ? <PaymentsStep form={form} docs={docSlots} />
     : <ReviewStep form={form} files={files} groups={STEPS.slice(0, -1)} onEdit={go} />;
 
   return (

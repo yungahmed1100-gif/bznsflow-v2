@@ -8,7 +8,8 @@ export const W = {
   stepOf: ['Step {n} of {total}', 'الخطوة {n} من {total}'],
   steps: {
     business: ['Your business', 'نشاطك'], contact: ['Contact & location', 'التواصل والموقع'], look: ['Look & feel', 'الهوية البصرية'],
-    site: ['Pages & languages', 'الصفحات واللغات'], domain: ['Domain & email', 'النطاق والبريد'], review: ['Review & send', 'المراجعة والإرسال'],
+    site: ['Pages & languages', 'الصفحات واللغات'], domain: ['Domain & email', 'النطاق والبريد'], payments: ['Online payments', 'الدفع الإلكتروني'],
+    review: ['Review & send', 'المراجعة والإرسال'],
   },
   back: ['Back', 'السابق'], next: ['Next', 'التالي'], saving: ['Saving…', 'جارٍ الحفظ…'], saved: ['Saved. You can leave and come back.', 'تم الحفظ. يمكنك المغادرة والعودة لاحقًا.'],
   fromBrain: ['From your BznsBrain. Check it.', 'من BznsBrain الخاص بك. راجعه.'],
@@ -51,19 +52,51 @@ export const W = {
   },
   visit: ['Visit your website', 'زر موقعك'], openMail: ['Open Zoho Mail', 'افتح Zoho Mail'], toEmail: ['Send email campaigns', 'أرسل حملات بريدية'],
   change: ['Change my details', 'عدّل بياناتي'], cancelChange: ['Keep my sent details', 'أبقِ ما أرسلته'],
+
+  // Online payments through Paymob (Ahmed, 2026-10-31): optional; no fees and no dates are promised here.
+  payments: ['Do you want to take online payments (cards, Apple Pay, Maal) through Paymob?', 'هل تريد استقبال المدفوعات الإلكترونية (البطاقات وApple Pay ومال) عبر Paymob؟'],
+  payIntro: ['Payments go straight to your own bank account. We prepare your Paymob account, send your documents and connect it once Paymob approves. Paymob’s review sets the timing, and we’ll tell you at each step. Your website doesn’t wait for it.',
+    'تصل المدفوعات مباشرة إلى حسابك البنكي. نجهّز حسابك في Paymob ونرسل مستنداتك ونربطه بعد موافقة Paymob. توقيت المراجعة يحدده Paymob، وسنبلغك بكل خطوة. موقعك لا ينتظر ذلك.'],
+  payForms: ['1. Download Paymob’s two forms, fill them in and sign them', '١. حمّل نموذجي Paymob واملأهما ووقّعهما'],
+  formApplication: ['Paymob merchant application (PDF)', 'طلب التاجر من Paymob ‏(PDF)'], formVat: ['VAT declaration (PDF)', 'إقرار ضريبة القيمة المضافة ‏(PDF)'],
+  payContact: ['2. Your personal contact', '٢. بيانات تواصلك الشخصية'],
+  payContactHint: ['We handle your Paymob account until payments work, so we need a number that reaches you directly.', 'نتولى حسابك في Paymob حتى تعمل المدفوعات، لذلك نحتاج رقمًا يصل إليك مباشرة.'],
+  payContactName: ['Full name', 'الاسم الكامل'], payContactPhone: ['Personal mobile number', 'رقم الهاتف الشخصي'],
+  payDocs: ['3. Upload the documents (PDF, JPG or PNG, up to 8 MB each)', '٣. ارفع المستندات (PDF أو JPG أو PNG، حتى 8 ميغابايت لكل ملف)'],
+  optional: ['Optional', 'اختياري'], addFile: ['Add a file', 'أضف ملفًا'], filesCount: ['{n} file(s)', '{n} ملف'],
+  payNo: ['No online payments for now.', 'لا مدفوعات إلكترونية حاليًا.'],
+  payTrackTitle: ['Online payments', 'الدفع الإلكتروني'],
+  payTrackNote: ['Paymob reviews your documents, so there’s no fixed date. We’ll update you at each step.', 'يراجع Paymob مستنداتك، لذلك لا يوجد موعد ثابت. سنبلغك بكل خطوة.'],
+  payStage: {
+    received: ['Documents received', 'استلمنا المستندات'], submitted: ['Sent to Paymob', 'أُرسلت إلى Paymob'], approved: ['Approved by Paymob', 'وافق Paymob'],
+    connected: ['Connected', 'تم الربط'], live: ['Taking payments', 'تستقبل المدفوعات'],
+  },
+};
+
+/** The documents Paymob asks for, by slot: [label, hint]. Order and limits are PAYMENT_DOC_SLOTS. */
+export const DOC_SLOTS = {
+  doc_cr: [['Commercial register', 'السجل التجاري'], ['Valid, with your activity licensed', 'ساري، والنشاط مرخّص فيه']],
+  doc_id: [['ID cards of all partners and managers', 'بطاقات جميع الشركاء والمديرين'], ['Everyone named in the commercial register', 'كل من هو مذكور في السجل التجاري']],
+  doc_bank: [['Proof of bank account', 'إثبات الحساب البنكي'], ['A recent bank statement or bank letter', 'كشف حساب حديث أو خطاب بنكي حديث']],
+  doc_tax: [['Tax card', 'البطاقة الضريبية'], ['If you have one', 'إن وُجدت']],
+  doc_forms: [['Signed Paymob forms', 'نماذج Paymob الموقّعة'], ['The merchant application and the VAT declaration above', 'طلب التاجر وإقرار الضريبة أعلاه']],
+  doc_invoice: [['Invoices as proof of your service', 'فواتير كإثبات للخدمة'], ['Recent invoices to your customers', 'فواتير حديثة لعملائك']],
 };
 
 export const OPTIONS = {
   style: { modern: ['Modern', 'عصري'], classic: ['Classic', 'كلاسيكي'], playful: ['Playful', 'مرح'], minimal: ['Minimal', 'بسيط'], luxury: ['Luxury', 'فاخر'] },
   pages: { home: ['Home', 'الرئيسية'], about: ['About', 'من نحن'], services: ['Services', 'الخدمات'], gallery: ['Gallery', 'المعرض'], contact: ['Contact', 'تواصل معنا'], faq: ['FAQ', 'الأسئلة الشائعة'] },
   languages: { both: ['Arabic and English', 'العربية والإنجليزية'], ar: ['Arabic', 'العربية'], en: ['English', 'الإنجليزية'] },
+  payments: { yes: ['Yes, set up online payments', 'نعم، فعّلوا الدفع الإلكتروني'], no: ['Not now', 'ليس الآن'] },
 };
 
 export const ERRORS = {
   brief_required: ['Fill in the required fields.', 'أكمل الحقول المطلوبة.'], invalid_brief: ['Check the highlighted field.', 'راجع الحقل المحدد.'],
   brief_too_long: ['One of the fields is too long.', 'أحد الحقول طويل جدًا.'], brief_conflict: ['Your details changed in another tab. Reload the page first.', 'تغيّرت بياناتك في نافذة أخرى. أعد تحميل الصفحة أولًا.'],
   photo_type: ['Use a PNG, JPG or WebP image.', 'استخدم صورة PNG أو JPG أو WebP.'], photo_size: ['Use an image under 5 MB.', 'استخدم صورة أقل من 5 ميغابايت.'],
-  invalid_file: ['That file isn’t a valid image.', 'هذا الملف ليس صورة صالحة.'], upload_limit: ['Too many uploads today. Try again tomorrow.', 'رفعت صورًا كثيرة اليوم. حاول غدًا.'],
+  invalid_file: ['That file isn’t a valid image or PDF.', 'هذا الملف ليس صورة أو ملف PDF صالحًا.'],
+  doc_type: ['Use a PDF, JPG or PNG file.', 'استخدم ملف PDF أو JPG أو PNG.'], doc_size: ['Use a file under 8 MB.', 'استخدم ملفًا أقل من 8 ميغابايت.'],
+  docs_too_large: ['Your documents add up to more than 20 MB. Use smaller scans.', 'مجموع مستنداتك أكبر من 20 ميغابايت. استخدم نسخًا أصغر.'], upload_limit: ['Too many uploads today. Try again tomorrow.', 'رفعت صورًا كثيرة اليوم. حاول غدًا.'],
   too_many_files: ['Too many files. Remove one and try again.', 'ملفات كثيرة. احذف واحدًا وحاول مجددًا.'],
   too_many: ['Too many name checks. Try again in an hour, or type the exact name you want.', 'محاولات تحقق كثيرة. حاول بعد ساعة، أو اكتب الاسم الذي تريده بالضبط.'],
   brief_email_failed: ['Saved, but not sent yet. Try “Send again”.', 'تم الحفظ لكن لم يُرسل بعد. جرّب «أرسل مجددًا».'],

@@ -5,6 +5,11 @@ import { HASIB_LIVE_PACKS } from '../config/hasib-packs.js';
 import { hasibPreviewResponse, dashboardPreviewResponse } from '../api/_lib/hasib/preview.js';
 
 const base = process.argv[2] || 'http://127.0.0.1:5199';
+// Ahmed's website queue with one owner who asked for online payments (Paymob onboarding, 2026-10-31).
+const WEBSITES = { live: [], open: [{ id: 'p1', stage: 'live', stageAt: { received: 1 }, dueAt: Date.now() - 86400000, domain: 'nour.com', mailbox: 'info@nour.com',
+  liveUrl: 'https://nour.com', delayReason: '', note: '', createdAt: 1, email: 'owner@example.com', business: 'Nour Abayas', briefVersion: 2, alternates: [], phone: '+968 9000 0000',
+  payments: { stage: 'received', stageAt: { received: 1 } }, payContactName: 'Sara Al Balushi', payContactPhone: '+968 9123 4567',
+  docs: [{ id: 'd1', kind: 'doc_cr', name: 'cr.pdf', url: 'https://files.test/d1' }, { id: 'd2', kind: 'doc_id', name: 'id-sara.jpg', url: 'https://files.test/d2' }] }] };
 const browser = await chromium.launch();
 let checked = 0;
 async function open(path, width, access = 200) {
@@ -17,6 +22,10 @@ async function open(path, width, access = 200) {
     if (url.origin !== new URL(base).origin) return route.abort();
     if (!url.pathname.startsWith('/api/')) return route.continue();
     const reply = (data, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ ok: status === 200, csrfToken: 'a'.repeat(64), ...data }) });
+    if (url.pathname === '/api/access-admin' && url.searchParams.get('op') === 'websites') {
+      if (req.method() === 'POST') { writes.push(req.postDataJSON()); return reply({ project: {} }); }
+      return reply(WEBSITES);
+    }
     if (url.pathname === '/api/access-admin') {
       if (req.method() === 'POST') { writes.push(req.postDataJSON()); return reply({ email: req.postDataJSON().email, plan: req.postDataJSON().plan, status: 'active', hasAccount: false }); }
       // The 2026-10-07 mix-up: the signed-in address revoked, a near-identical one with no account granted.
@@ -60,6 +69,25 @@ try {
     assert.deepEqual(writes.at(-1), { email: 'owner@example.com', plan: 'catalyst' });
     const issues = (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact));
     assert.deepEqual(issues.map(v => v.id), [], `access page ${width} accessibility`);
+    assert.deepEqual(errors, []); await context.close(); checked++;
+  }
+  // Website queue: a live website whose payments are still being set up stays listed, with no overdue date,
+  // the owner's personal contact, the documents to forward to Paymob, and the next payments stage to mark.
+  for (const [path, width] of [['/en/owner/websites', 1280], ['/owner/websites', 375]]) {
+    const { page, context, errors, writes } = await open(path, width);
+    const en = path.startsWith('/en');
+    const row = page.locator('.owner-website').first();
+    await row.locator('.owner-website-payments').waitFor();
+    assert.match(await row.locator('.owner-website-due').textContent(), en ? /Website live; payments in progress/ : /الموقع منشور/);
+    assert.equal(await row.locator('a[href^="tel:"]').getAttribute('href'), 'tel:+96891234567');
+    assert.deepEqual(await row.locator('.owner-website-docs a').evaluateAll(a => a.map(x => x.getAttribute('href'))), ['https://files.test/d1', 'https://files.test/d2']);
+    await row.getByRole('button', { name: en ? 'Payments done: Sent to Paymob' : 'المدفوعات: أُرسلت إلى Paymob' }).click();
+    await page.getByRole('status').filter({ hasText: en ? /Saved/ : /تم الحفظ/ }).waitFor();
+    assert.deepEqual(writes.at(-1), { projectId: 'p1', action: 'payments_advance' });
+    assert.equal(await row.getByRole('button', { name: en ? /Mark done/ : /^تم:/ }).count(), 0, 'nothing left to mark on a live website');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${path} overflow`);
+    const issues = (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact));
+    assert.deepEqual(issues.map(v => v.id), [], `${path} accessibility`);
     assert.deepEqual(errors, []); await context.close(); checked++;
   }
   for (const lang of ['en', 'ar']) {

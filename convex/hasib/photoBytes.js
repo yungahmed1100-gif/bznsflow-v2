@@ -19,3 +19,17 @@ export async function checkPhotoBytes(ctx, storageId) {
   if (blob.size > PHOTO_MAX_BYTES) return 'bad';
   return photoKind(new Uint8Array(await blob.slice(0, 12).arrayBuffer())) ? 'ok' : 'bad';
 }
+
+/**
+ * 'ok' | 'bad' | 'missing' for a document an owner sends for Paymob: a PDF, JPEG or PNG under `maxBytes`,
+ * judged by its first bytes like the photos above.
+ */
+export async function checkDocumentBytes(ctx, storageId, maxBytes) {
+  let blob;
+  try { blob = await ctx.storage.get(storageId); } catch { return 'missing'; }
+  if (!blob) return 'missing';
+  if (blob.size > maxBytes) return 'bad';
+  const head = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+  const pdf = [0x25, 0x50, 0x44, 0x46, 0x2d].every((b, i) => head[i] === b); // %PDF-
+  return pdf || ['image/jpeg', 'image/png'].includes(photoKind(head)) ? 'ok' : 'bad';
+}

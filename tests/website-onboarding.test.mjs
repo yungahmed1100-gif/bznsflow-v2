@@ -95,7 +95,7 @@ test('each step saves a draft the owner resumes from, on any device', async () =
   assert.equal((await f.brief({ operation: 'save_draft', step: 2, fields: { nameEn: 'Nour', unknownKey: 'dropped', about: 'Abayas' }, photoIds: [] })).ok, true);
   const { value } = await f.brief({ operation: 'get' });
   assert.deepEqual([value.draft.step, value.fields, value.prefilled], [2, { nameEn: 'Nour', about: 'Abayas' }, []], 'the draft wins over the prefill, and unknown keys are not kept');
-  assert.equal((await f.brief({ operation: 'save_draft', step: 6, fields: {}, photoIds: [] })).reason, 'invalid_brief', 'there are six steps');
+  assert.equal((await f.brief({ operation: 'save_draft', step: 7, fields: {}, photoIds: [] })).reason, 'invalid_brief', 'there are seven steps');
   assert.equal((await f.brief({ operation: 'save_draft', step: 1, fields: { about: 'x'.repeat(2001) }, photoIds: [] })).reason, 'invalid_brief');
   assert.equal((await f.brief({ operation: 'save_draft', step: 1, fields: { about: { nested: true } }, photoIds: [] })).reason, 'invalid_brief');
   // A file id in a draft must be this owner's registered upload.

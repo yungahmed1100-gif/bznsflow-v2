@@ -3,7 +3,10 @@
 // emails to Ahmed (api/_lib/website-brief-api.js). Only an Ascend account's manager can use it.
 // Since 2026-10-23 it is filled in as a wizard: each step saves a draft, and the first submit starts the
 // website's delivery (websiteProjects), promised within three business days.
-import { BRIEF_MAX_PHOTOS, BRIEF_TEXT, addBusinessDays, normalizeBrief } from '../config/website-brief.js';
+// Since 2026-10-31 an owner can also ask for online payments: the documents Paymob needs are uploaded the
+// same way, sent to Ahmed with the brief, and a separate payments track starts (no date is promised).
+import { BRIEF_MAX_PHOTOS, BRIEF_TEXT, PAYMENT_DOCS_MAX, PAYMENT_DOCS_MAX_TOTAL, PAYMENT_DOC_KINDS, addBusinessDays, normalizeBrief,
+  paymentDocsProblem } from '../config/website-brief.js';
 import { planFor } from './hasib/plans.js';
 
 const ok = value => ({ ok: true, value }), fail = reason => ({ ok: false, reason });
@@ -12,10 +15,11 @@ const DAY = 86400000;
 const HOUR = 3600000;
 const UPLOADS_PER_DAY = 40;
 const DOMAIN_CHECKS_PER_HOUR = 30;
-const STEPS = 6;
-const DRAFT_KEYS = new Set([...Object.keys(BRIEF_TEXT), 'domainStatus', 'languages', 'style', 'colors', 'references', 'pages', 'designLogo', 'domainAlternates']);
-// Logo plus photos, with room to replace some before submitting.
-const MAX_FILES = 2 * (BRIEF_MAX_PHOTOS + 1);
+const STEPS = 7;
+const DRAFT_KEYS = new Set([...Object.keys(BRIEF_TEXT), 'domainStatus', 'languages', 'style', 'colors', 'references', 'pages', 'designLogo', 'domainAlternates', 'payments']);
+// Logo, photos and Paymob documents, with room to replace some before submitting.
+const MAX_FILES = 2 * (BRIEF_MAX_PHOTOS + 1 + PAYMENT_DOCS_MAX);
+const FILE_KINDS = ['logo', 'photo', ...PAYMENT_DOC_KINDS];
 
 async function ownerOf(ctx, sessionHash, now) {
   if (!/^[a-f0-9]{64}$/.test(sessionHash || '')) return { reason: 'sign_in_required' };
@@ -34,6 +38,12 @@ async function ownerOf(ctx, sessionHash, now) {
 const briefOf = (ctx, accountId) => ctx.db.query('websiteBriefs').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
 const filesOf = (ctx, accountId) => ctx.db.query('websiteBriefFiles').withIndex('by_account', q => q.eq('accountId', accountId)).take(MAX_FILES + 1);
 const fileUrl = async (ctx, id) => ({ id, url: await ctx.storage.getUrl(id), contentType: (await ctx.db.system.get(id))?.contentType || '' });
+/** A Paymob document as the owner and Ahmed see it: its slot, the name it was uploaded with, and a link. */
+async function docOf(ctx, { kind, id }) {
+  const row = await ctx.db.query('websiteBriefFiles').withIndex('by_storage', q => q.eq('storageId', id)).unique();
+  return { kind, name: row?.name || '', ...(await fileUrl(ctx, id)) };
+}
+export const docsOf = (ctx, docIds) => Promise.all((docIds || []).map(d => docOf(ctx, d)));
 const draftOf = (ctx, accountId) => ctx.db.query('websiteDrafts').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
 const projectOf = (ctx, accountId) => ctx.db.query('websiteProjects').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
 
@@ -45,9 +55,9 @@ async function spend(ctx, key, limit, ttl, now) {
   return true;
 }
 
-/** What the owner sees of their website's delivery. */
+/** What the owner sees of their website's delivery, and of their payments when they asked for them. */
 export const publicProject = p => p && ({ stage: p.stage, stageAt: p.stageAt, dueAt: p.dueAt, domain: p.domain || '', mailbox: p.mailbox || '',
-  liveUrl: p.liveUrl || '', delayReason: p.delayReason || '' });
+  liveUrl: p.liveUrl || '', delayReason: p.delayReason || '', ...(p.payments ? { payments: { stage: p.payments.stage, stageAt: p.payments.stageAt } } : {}) });
 
 export async function executeWebsiteBrief(ctx, a, now = Date.now()) {
   const owner = await ownerOf(ctx, a.sessionHash, now);
@@ -81,10 +91,10 @@ async function view(ctx, account) {
   const source = draft || brief;
   if (source) {
     return { ...base, fields: source.fields, prefilled: [], logo: source.logoId ? await fileUrl(ctx, source.logoId) : null,
-      photos: await Promise.all(source.photoIds.map(id => fileUrl(ctx, id))) };
+      photos: await Promise.all(source.photoIds.map(id => fileUrl(ctx, id))), docs: await docsOf(ctx, source.docIds) };
   }
   const prefill = await prefillOf(ctx, account);
-  return { ...base, fields: prefill, prefilled: Object.keys(prefill).filter(k => !['mailboxLocal', 'recoveryEmail'].includes(k)), logo: null, photos: [] };
+  return { ...base, fields: prefill, prefilled: Object.keys(prefill).filter(k => !['mailboxLocal', 'recoveryEmail'].includes(k)), logo: null, photos: [], docs: [] };
 }
 
 /** The BznsBrain details the owner already confirmed, and the approved catalog's names as the services. */
@@ -116,16 +126,26 @@ async function saveDraft(ctx, account, a, now) {
   const files = await filesOf(ctx, account._id);
   const mine = (id, kind) => files.some(f => f.storageId === id && f.kind === kind);
   if ((a.logoId && !mine(a.logoId, 'logo')) || !photoIds.every(id => mine(id, 'photo'))) return fail('invalid_file');
-  const next = { accountId: account._id, fields: kept, step: a.step, photoIds, updatedAt: now, ...(a.logoId ? { logoId: a.logoId } : {}) };
+  const docIds = docIdsOf(a);
+  if (!docIds) return fail('too_many_files');
+  if (!docIds.every(d => mine(d.id, d.kind))) return fail('invalid_file');
+  const next = { accountId: account._id, fields: kept, step: a.step, photoIds, docIds, updatedAt: now, ...(a.logoId ? { logoId: a.logoId } : {}) };
   const draft = await draftOf(ctx, account._id);
   if (draft) await ctx.db.replace(draft._id, next); else await ctx.db.insert('websiteDrafts', next);
   return ok({ step: a.step, updatedAt: now });
 }
 
+/** The Paymob documents a step or brief names, as { kind, id }; null when the list is malformed or too long. */
+function docIdsOf(a) {
+  const docIds = Array.isArray(a.docIds) ? a.docIds : [];
+  if (docIds.length > PAYMENT_DOCS_MAX || new Set(docIds.map(d => d?.id)).size !== docIds.length) return null;
+  return docIds.every(d => d && PAYMENT_DOC_KINDS.includes(d.kind) && typeof d.id === 'string') ? docIds.map(d => ({ kind: d.kind, id: d.id })) : null;
+}
+
 /** `fileCheck` is set by the HTTP route from the file's bytes, never by the client. */
 async function registerFile(ctx, account, a, now) {
   const id = typeof a.storageId === 'string' ? ctx.db.system.normalizeId('_storage', a.storageId) : null;
-  if (!id || !['logo', 'photo'].includes(a.kind)) return fail('invalid_file');
+  if (!id || !FILE_KINDS.includes(a.kind)) return fail('invalid_file');
   const claimed = await ctx.db.query('websiteBriefFiles').withIndex('by_storage', q => q.eq('storageId', id)).unique();
   if (claimed) return claimed.accountId === account._id ? ok({ fileId: id }) : fail('invalid_file');
   if (a.fileCheck !== 'ok') {
@@ -136,7 +156,8 @@ async function registerFile(ctx, account, a, now) {
     await ctx.storage.delete(id);
     return fail('too_many_files');
   }
-  await ctx.db.insert('websiteBriefFiles', { accountId: account._id, storageId: id, kind: a.kind, at: now });
+  const name = PAYMENT_DOC_KINDS.includes(a.kind) && typeof a.name === 'string' ? a.name.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 120) : '';
+  await ctx.db.insert('websiteBriefFiles', { accountId: account._id, storageId: id, kind: a.kind, at: now, ...(name ? { name } : {}) });
   return ok({ fileId: id });
 }
 
@@ -153,17 +174,30 @@ async function submit(ctx, account, a, now) {
   if (a.logoId !== undefined && a.logoId !== null && !mine(a.logoId, 'logo')) return fail('invalid_file');
   if (!photoIds.every(id => mine(id, 'photo'))) return fail('invalid_file');
   if (!a.logoId && !checked.value.designLogo) return { ok: false, reason: 'brief_required', field: 'logo' };
+  // Paymob's documents count only when the owner asked for payments; otherwise they are swept below.
+  const paying = checked.value.payments === 'yes';
+  const listed = docIdsOf(a);
+  if (!listed) return fail('too_many_files');
+  const docIds = paying ? listed : [];
+  if (!docIds.every(d => mine(d.id, d.kind))) return fail('invalid_file');
+  if (paying) {
+    const missing = paymentDocsProblem(docIds);
+    if (missing) return { ok: false, reason: 'brief_required', field: missing };
+    let total = 0;
+    for (const d of docIds) total += (await ctx.db.system.get(d.id))?.size || 0;
+    if (total > PAYMENT_DOCS_MAX_TOTAL) return fail('docs_too_large');
+  }
   // Files uploaded but left out of this brief are deleted now, not kept forever.
-  const used = new Set([a.logoId, ...photoIds].filter(Boolean));
+  const used = new Set([a.logoId, ...photoIds, ...docIds.map(d => d.id)].filter(Boolean));
   for (const f of files) if (!used.has(f.storageId)) { await ctx.db.delete(f._id); await ctx.storage.delete(f.storageId); }
   const version = (brief?.version || 0) + 1;
-  const next = { accountId: account._id, version, fields: checked.value, photoIds, submittedAt: now, ...(a.logoId ? { logoId: a.logoId } : {}) };
+  const next = { accountId: account._id, version, fields: checked.value, photoIds, docIds, submittedAt: now, ...(a.logoId ? { logoId: a.logoId } : {}) };
   if (brief) await ctx.db.replace(brief._id, next); else await ctx.db.insert('websiteBriefs', next);
   const draft = await draftOf(ctx, account._id);
   if (draft) await ctx.db.delete(draft._id);
   const project = await startProject(ctx, account._id, checked.value, now);
   return ok({ version, update: version > 1, account: { email: account.email, name: account.name || '' }, fields: checked.value, project: publicProject(project),
-    logo: a.logoId ? await fileUrl(ctx, a.logoId) : null, photos: await Promise.all(photoIds.map(id => fileUrl(ctx, id))) });
+    logo: a.logoId ? await fileUrl(ctx, a.logoId) : null, photos: await Promise.all(photoIds.map(id => fileUrl(ctx, id))), docs: await docsOf(ctx, docIds) });
 }
 
 /**
@@ -172,11 +206,15 @@ async function submit(ctx, account, a, now) {
  */
 async function startProject(ctx, accountId, fields, now) {
   const domain = fields.domainChoice, mailbox = `${fields.mailboxLocal}@${fields.domainChoice}`;
+  // The payments track starts with the first brief that asks for it, and is never undone by a later one.
+  const payments = fields.payments === 'yes' ? { stage: 'received', stageAt: { received: now } } : null;
   const project = await projectOf(ctx, accountId);
   if (!project) {
-    const id = await ctx.db.insert('websiteProjects', { accountId, stage: 'received', stageAt: { received: now }, dueAt: addBusinessDays(now), domain, mailbox, createdAt: now, updatedAt: now });
+    const id = await ctx.db.insert('websiteProjects', { accountId, stage: 'received', stageAt: { received: now }, dueAt: addBusinessDays(now), domain, mailbox,
+      ...(payments ? { payments } : {}), createdAt: now, updatedAt: now });
     return ctx.db.get(id);
   }
-  if (project.stage === 'received') await ctx.db.patch(project._id, { domain, mailbox, updatedAt: now });
+  const patch = { ...(project.stage === 'received' ? { domain, mailbox } : {}), ...(payments && !project.payments ? { payments } : {}) };
+  if (Object.keys(patch).length) await ctx.db.patch(project._id, { ...patch, updatedAt: now });
   return ctx.db.get(project._id);
 }

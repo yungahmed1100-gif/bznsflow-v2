@@ -16,6 +16,7 @@ export const BRIEF_TEXT = Object.freeze({
   instagram: [300, 'text'], facebook: [300, 'text'], tiktok: [300, 'text'], otherSocial: [300, 'text'],
   domain: [253, 'text'], fontNotes: [300, 'text'], notes: [2000, 'text'],
   domainChoice: [80, 'domain'], mailboxLocal: [64, 'local'], recoveryEmail: [254, 'email'],
+  payContactName: [120, 'text'], payContactPhone: [40, 'text'],
 });
 
 // Email labels, in the order Ahmed reads them.
@@ -27,6 +28,7 @@ export const BRIEF_LABELS = Object.freeze([
   ['mailboxLocal', 'Mailbox name'], ['recoveryEmail', 'Recovery email'], ['domainStatus', 'Domain'], ['domain', 'Domain name'], ['languages', 'Website languages'],
   ['style', 'Style'], ['colors', 'Brand colours'], ['fontNotes', 'Fonts'], ['references', 'Reference websites'],
   ['pages', 'Pages'], ['designLogo', 'Needs a simple logo designed'], ['notes', 'Anything else'],
+  ['payments', 'Online payments through Paymob'], ['payContactName', 'Paymob contact (personal)'], ['payContactPhone', 'Personal mobile'],
 ]);
 
 const URL_RE = /^https?:\/\/[^\s<>"']+$/i;
@@ -64,6 +66,7 @@ export function normalizeBrief(input) {
   if (!pick('domainStatus', BRIEF_DOMAIN)) return bad('domainStatus');
   if (!pick('languages', BRIEF_LANGUAGES)) return bad('languages');
   if (!pick('style', BRIEF_STYLES)) return bad('style');
+  if (!pick('payments', BRIEF_PAYMENTS)) return bad('payments');
   const list = (key, max, ok) => {
     const raw = input[key] ?? [];
     if (!Array.isArray(raw) || raw.length > max) return false;
@@ -86,7 +89,37 @@ export function normalizeBrief(input) {
   if (!value.languages) return bad('languages', 'brief_required');
   if (!value.domainChoice) return bad('domainChoice', 'brief_required');
   if (!value.mailboxLocal) return bad('mailboxLocal', 'brief_required');
+  // Paymob is optional; whoever asks for it gives a personal contact BznsFlow handles the account with.
+  if (value.payments === 'yes' && !value.payContactName) return bad('payContactName', 'brief_required');
+  if (value.payments === 'yes' && !value.payContactPhone) return bad('payContactPhone', 'brief_required');
+  if (value.payments !== 'yes') { delete value.payContactName; delete value.payContactPhone; }
   return { ok: true, value };
+}
+
+// ── Online payments through Paymob (Ahmed, 2026-10-31): optional, with the documents Paymob asks for ──
+// Each client becomes its own Paymob merchant; Ahmed submits the documents and runs the account until the
+// integration is production-ready. The documents reach him by email; nothing here promises a date.
+
+export const BRIEF_PAYMENTS = Object.freeze(['yes', 'no']);
+/** The documents Paymob needs, in the order the owner meets them: [kind, fewest, most]. */
+export const PAYMENT_DOC_SLOTS = Object.freeze([
+  ['doc_cr', 1, 2], ['doc_id', 1, 10], ['doc_bank', 1, 2], ['doc_tax', 0, 1], ['doc_forms', 1, 4], ['doc_invoice', 1, 3],
+].map(([kind, min, max]) => Object.freeze({ kind, min, max })));
+export const PAYMENT_DOC_KINDS = Object.freeze(PAYMENT_DOC_SLOTS.map(slot => slot.kind));
+export const PAYMENT_DOC_TYPES = Object.freeze(['application/pdf', 'image/jpeg', 'image/png']);
+export const PAYMENT_DOC_MAX_BYTES = 8 * 1024 * 1024;
+/** All documents together, so the email to Ahmed stays inside Resend's 40 MB limit with the logo and photos. */
+export const PAYMENT_DOCS_MAX_TOTAL = 20 * 1024 * 1024;
+export const PAYMENT_DOCS_MAX = PAYMENT_DOC_SLOTS.reduce((n, slot) => n + slot.max, 0);
+export const PAYMENT_STAGES = Object.freeze(['received', 'submitted', 'approved', 'connected', 'live']);
+
+/** The first slot with too few or too many documents, or '' when every slot is satisfied. */
+export function paymentDocsProblem(docs) {
+  for (const { kind, min, max } of PAYMENT_DOC_SLOTS) {
+    const count = docs.filter(d => d.kind === kind).length;
+    if (count < min || count > max) return kind;
+  }
+  return '';
 }
 
 // ── The domain and mailbox BznsFlow registers for the website (Ahmed, 2026-10-23) ──────────────

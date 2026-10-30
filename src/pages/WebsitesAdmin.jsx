@@ -1,10 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { WEBSITE_STAGES } from '../../config/website-brief.js';
+import { PAYMENT_STAGES, WEBSITE_STAGES } from '../../config/website-brief.js';
 import '../styles/owner.css';
 
 const STAGE = { received: ['Details received', 'استلمنا التفاصيل'], domain: ['Domain registered', 'تسجيل النطاق'], mailbox: ['Mailbox ready', 'تجهيز البريد'],
   building: ['Website built', 'بناء الموقع'], live: ['Live', 'منشور'] };
+// Paymob onboarding (2026-10-31): a separate track with no due date, moved one stage at a time.
+const PAY_STAGE = { received: ['Documents received', 'استلمنا المستندات'], submitted: ['Sent to Paymob', 'أُرسلت إلى Paymob'], approved: ['Approved by Paymob', 'وافق Paymob'],
+  connected: ['Connected', 'تم الربط'], live: ['Taking payments', 'تستقبل المدفوعات'] };
+const DOC = { doc_cr: ['Commercial register', 'السجل التجاري'], doc_id: ['ID card', 'بطاقة هوية'], doc_bank: ['Bank proof', 'إثبات بنكي'], doc_tax: ['Tax card', 'البطاقة الضريبية'],
+  doc_forms: ['Signed Paymob forms', 'نماذج Paymob الموقّعة'], doc_invoice: ['Invoice', 'فاتورة'] };
 const HOUR = 3600000;
 
 /**
@@ -26,7 +31,7 @@ export default function WebsitesAdmin({ lang = 'en' }) {
     const body = await response.json();
     if (!response.ok) { setData(null); setStatus(body.reason === 'admin_required' ? tr('This account cannot see the queue.', 'هذا الحساب لا يملك الوصول إلى القائمة.') : tr('Could not load the queue.', 'تعذّر تحميل القائمة.')); return; }
     setData(body);
-    setStatus(body.open.length ? '' : tr('Nothing waiting. Every website is live.', 'لا شيء بالانتظار. كل المواقع منشورة.'));
+    setStatus(body.open.length ? '' : tr('Nothing waiting. Every website is live and every payment set-up is done.', 'لا شيء بالانتظار. كل المواقع منشورة وكل المدفوعات مفعّلة.'));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { load().catch(() => setStatus(tr('Could not load the queue.', 'تعذّر تحميل القائمة.'))); }, [load]);
@@ -74,7 +79,8 @@ function WebsiteRow({ p, tr, ar, busy, onUpdate }) {
   const [liveUrl, setLiveUrl] = useState(p.domain ? `https://${p.domain}` : 'https://');
   const [due, setDue] = useState(''), [reason, setReason] = useState(''), [note, setNote] = useState(p.note);
   const next = WEBSITE_STAGES[WEBSITE_STAGES.indexOf(p.stage) + 1];
-  const left = p.dueAt - Date.now();
+  const live = p.stage === 'live';
+  const left = live ? Infinity : p.dueAt - Date.now();
   const when = new Intl.DateTimeFormat(ar ? 'ar-OM-u-nu-latn' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Muscat' }).format(new Date(p.dueAt));
   const urgency = left < 0 ? 'is-overdue' : left < 24 * HOUR ? 'is-soon' : '';
   const moveDate = () => {
@@ -86,7 +92,8 @@ function WebsiteRow({ p, tr, ar, busy, onUpdate }) {
       <div className="owner-website-head">
         <h2 id={`site-${p.id}`}>{p.business}</h2>
         <span className="owner-website-stage">{tr(...STAGE[p.stage])}</span>
-        <span className="owner-website-due">{left < 0 ? tr('Overdue since', 'متأخر منذ') : tr('Due', 'الموعد')} {when}</span>
+        {live ? <span className="owner-website-due">{tr('Website live; payments in progress', 'الموقع منشور؛ المدفوعات قيد التفعيل')}</span>
+          : <span className="owner-website-due">{left < 0 ? tr('Overdue since', 'متأخر منذ') : tr('Due', 'الموعد')} {when}</span>}
       </div>
       <dl className="owner-website-facts">
         <div><dt>{tr('Owner', 'صاحب النشاط')}</dt><dd dir="ltr">{p.email}{p.phone ? ` · ${p.phone}` : ''}</dd></div>
@@ -95,6 +102,7 @@ function WebsiteRow({ p, tr, ar, busy, onUpdate }) {
         <div><dt>{tr('Brief', 'الطلب')}</dt><dd>{tr(`Version ${p.briefVersion}, in your email`, `النسخة ${p.briefVersion}، في بريدك`)}</dd></div>
         {p.delayReason && <div><dt>{tr('Told the owner', 'أُبلغ صاحب النشاط')}</dt><dd>{p.delayReason}</dd></div>}
       </dl>
+      {p.payments && <PaymentsPart p={p} tr={tr} busy={busy} onUpdate={onUpdate} />}
       <div className="owner-website-actions">
         {next === 'live' && <label>{tr('Live address', 'رابط الموقع')}<input dir="ltr" type="url" value={liveUrl} onChange={e => setLiveUrl(e.target.value)} /></label>}
         {next && <button className="owner-primary" disabled={busy} onClick={() => onUpdate({ action: 'advance', ...(next === 'live' ? { liveUrl } : {}) })}>
@@ -112,5 +120,24 @@ function WebsiteRow({ p, tr, ar, busy, onUpdate }) {
         </div>
       </details>
     </section>
+  );
+}
+
+/** The owner's Paymob onboarding: their personal contact, the documents to forward, and the next stage to mark. */
+function PaymentsPart({ p, tr, busy, onUpdate }) {
+  const next = PAYMENT_STAGES[PAYMENT_STAGES.indexOf(p.payments.stage) + 1];
+  return (
+    <div className="owner-website-payments">
+      <dl className="owner-website-facts">
+        <div><dt>{tr('Payments (Paymob)', 'المدفوعات (Paymob)')}</dt><dd><span className="owner-website-stage">{tr(...PAY_STAGE[p.payments.stage])}</span></dd></div>
+        <div><dt>{tr('Personal contact', 'التواصل الشخصي')}</dt><dd><span dir="auto">{p.payContactName}</span> · <a href={`tel:${p.payContactPhone.replace(/[^+\d]/g, '')}`} dir="ltr">{p.payContactPhone}</a></dd></div>
+        <div><dt>{tr('Documents', 'المستندات')}</dt><dd><ul className="owner-website-docs">
+          {(p.docs || []).map(d => <li key={d.id}><a href={d.url} target="_blank" rel="noopener noreferrer">{tr(...(DOC[d.kind] || [d.kind, d.kind]))}</a>{d.name ? <> · <bdi dir="auto">{d.name}</bdi></> : null}</li>)}
+        </ul></dd></div>
+      </dl>
+      {next && <div className="owner-website-actions">
+        <button className="owner-primary" disabled={busy} onClick={() => onUpdate({ action: 'payments_advance' })}>{tr('Payments done: ', 'المدفوعات: ')}{tr(...PAY_STAGE[next])}</button>
+      </div>}
+    </div>
   );
 }

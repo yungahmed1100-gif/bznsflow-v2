@@ -25,7 +25,8 @@
       "maxDuration": 30
     },
     "api/layla-meta.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "api/_assets/paymob/**"
     },
     "api/layla-meta-webhook.js": {
       "maxDuration": 30

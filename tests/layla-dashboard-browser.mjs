@@ -695,9 +695,11 @@ try {
     assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`); count++;
     await context.close();
   }
-  // Ascend's free website (Ahmed, 2026-10-23): the reminder opens the Website tab, a six-step wizard
+  // Ascend's free website (Ahmed, 2026-10-23): the reminder opens the Website tab, a seven-step wizard
   // prefilled from BznsBrain that saves each step and resumes after a reload, a live domain search, a
   // review with edit links, then a tracker promising the site within 3 business days.
+  // Online payments through Paymob (2026-10-31) are optional: English says yes (forms, a personal contact and
+  // every required document, then a payments track); Arabic says not now.
   for (const [lang, width] of [['en', 1280], ['ar', 375]]) {
     const posts = [];
     const server = { version: 0, fields: { nameEn: 'Blue Studio', phone: '+968 9000 0000', mailboxLocal: 'info', recoveryEmail: 'owner@example.test' },
@@ -718,9 +720,12 @@ try {
           if (body.action === 'save_draft') { server.fields = body.fields; server.draft = { step: body.step, updatedAt: now }; return { status: 200, json: { ok: true, step: body.step } }; }
           if (body.action === 'domain_check') return { status: 200, json: { ok: true, results: [
             { domain: 'blue-studio.com', status: 'available' }, { domain: 'blue-studio.net', status: 'taken' }, { domain: 'blue-studio.co', status: 'unavailable' }] } };
+          if (body.action === 'upload_url') return { status: 200, json: { ok: true, url: `https://upload.convex.test/${posts.length}` } };
+          if (body.action === 'file_register') return { status: 200, json: { ok: true, fileId: body.storageId } };
           if (body.action === 'submit') {
             Object.assign(server, { version: 1, fields: body.fields, draft: null, project: { stage: 'received', stageAt: { received: now }, dueAt: addBusinessDays(now),
-              domain: body.fields.domainChoice, mailbox: `${body.fields.mailboxLocal}@${body.fields.domainChoice}`, liveUrl: '', delayReason: '' } });
+              domain: body.fields.domainChoice, mailbox: `${body.fields.mailboxLocal}@${body.fields.domainChoice}`, liveUrl: '', delayReason: '',
+              ...(body.fields.payments === 'yes' ? { payments: { stage: 'received', stageAt: { received: now } } } : {}) } });
             return { status: 200, json: { ok: true, version: 1, emailed: true } };
           }
           return { status: 400, json: { ok: false, reason: 'invalid_action' } };
@@ -732,10 +737,13 @@ try {
         return { status: 200, json: setup };
       } });
     const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
+    // Documents go straight to Convex storage; each upload gets a storage id back.
+    const uploads = [];
+    await page.route('https://upload.convex.test/**', route => { uploads.push(route.request().headers()['content-type']); return route.fulfill({ status: 200, json: { storageId: `kg2doc${String(uploads.length).padStart(6, '0')}` } }); });
     const wizard = page.locator('.ld-web');
     const next = () => wizard.getByRole('button', { name: t('Next', 'التالي'), exact: true }).click();
     const onStep = (n, name) => wizard.getByRole('heading', { name, exact: true }).waitFor().then(async () => {
-      assert.equal(await wizard.locator('.ld-web-step-count').textContent(), t(`Step ${n} of 6`, `الخطوة ${n} من 6`)); count++;
+      assert.equal(await wizard.locator('.ld-web-step-count').textContent(), t(`Step ${n} of 7`, `الخطوة ${n} من 7`)); count++;
     });
     const required = async what => { await wizard.getByText(t('Fill in the required fields.', 'أكمل الحقول المطلوبة.')).waitFor(); count++; assert.equal(posts.length, what, `${lang}: nothing saved while a required answer is missing`); count++; };
 
@@ -786,13 +794,57 @@ try {
     assert.equal(await wizard.locator('.ld-web-mailbox-row span').textContent(), '@blue-studio.com', `${lang}: the mailbox shows on the chosen domain`); count++;
     await page.screenshot({ path: `${OUT}/website-domain-${lang}-${width}.png`, fullPage: true });
     await next();
-    // 6 Review: every answer grouped by step, each with a way back.
-    await onStep(6, t('Review & send', 'المراجعة والإرسال'));
-    assert.equal(await wizard.locator('.ld-web-review').count(), 5); count++;
+    // 6 Online payments: optional, but an answer is required.
+    await onStep(6, t('Online payments', 'الدفع الإلكتروني'));
+    await next();
+    await required(6);
+    // A slot by its own label, not its hint (the ID slot's hint mentions the commercial register).
+    const docSlot = name => wizard.locator('.ld-web-doc').filter({ has: page.locator('.ld-field > span', { hasText: name }) }).locator('input[type="file"]');
+    if (ar) {
+      await wizard.getByRole('radio', { name: 'ليس الآن' }).check();
+      assert.equal(await wizard.locator('.ld-web-doc').count(), 0, 'ar: no documents asked for when payments are not wanted'); count++;
+    } else {
+      await wizard.getByRole('radio', { name: 'Yes, set up online payments' }).check();
+      // Paymob's two forms download from the signed-in API, not a public file.
+      assert.deepEqual(await wizard.locator('.ld-web-pay-forms a').evaluateAll(a => a.map(x => [x.getAttribute('href'), x.hasAttribute('download')])),
+        [['/api/layla-meta?surface=website-brief&form=application', true], ['/api/layla-meta?surface=website-brief&form=vat', true]]); count++;
+      assert.equal(await wizard.locator('.ld-web-doc').count(), 6, 'en: six document slots'); count++;
+      await next();
+      await required(6);
+      assert.equal(await wizard.getByLabel('Full name').getAttribute('aria-invalid'), 'true', 'en: the personal contact is asked for first'); count++;
+      await wizard.getByLabel('Full name').fill('Sara Al Balushi');
+      await wizard.getByLabel('Personal mobile number').fill('+968 9123 4567');
+      await next();
+      await required(6);
+      assert.match(await wizard.locator('.ld-web-doc.is-invalid').textContent(), /Commercial register/, 'en: the first missing document is pointed out'); count++;
+      const pdf = name => ({ name, mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7 synthetic') });
+      await docSlot('Commercial register').setInputFiles(pdf('cr.pdf'));
+      await wizard.locator('.ld-web-doc-files li', { hasText: 'cr.pdf' }).waitFor();
+      await docSlot('ID cards').setInputFiles([pdf('id-sara.pdf'), { name: 'id-ali.jpg', mimeType: 'image/jpeg', buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0]) }]);
+      await wizard.locator('.ld-web-doc-files li', { hasText: 'id-ali.jpg' }).waitFor();
+      await docSlot('Proof of bank account').setInputFiles(pdf('statement.pdf'));
+      await wizard.locator('.ld-web-doc-files li', { hasText: 'statement.pdf' }).waitFor();
+      await docSlot('Signed Paymob forms').setInputFiles(pdf('signed.pdf'));
+      await wizard.locator('.ld-web-doc-files li', { hasText: 'signed.pdf' }).waitFor();
+      await docSlot('Invoices').setInputFiles(pdf('invoice.pdf'));
+      await wizard.locator('.ld-web-doc-files li', { hasText: 'invoice.pdf' }).waitFor();
+      // The wrong kind of file is refused before it is uploaded.
+      await docSlot('Tax card').setInputFiles({ name: 'tax.exe', mimeType: 'application/x-msdownload', buffer: Buffer.from('MZ') });
+      await wizard.getByText('Use a PDF, JPG or PNG file.').waitFor(); count++;
+      assert.deepEqual(uploads, ['application/pdf', 'application/pdf', 'image/jpeg', 'application/pdf', 'application/pdf', 'application/pdf'], 'en: six documents uploaded as they are'); count++;
+      assert.deepEqual(posts.filter(p => p.action === 'file_register').map(p => [p.kind, p.name]), [['doc_cr', 'cr.pdf'], ['doc_id', 'id-sara.pdf'], ['doc_id', 'id-ali.jpg'],
+        ['doc_bank', 'statement.pdf'], ['doc_forms', 'signed.pdf'], ['doc_invoice', 'invoice.pdf']], 'en: each registered under its slot with its name'); count++;
+      await page.screenshot({ path: `${OUT}/website-payments-${lang}-${width}.png`, fullPage: true });
+    }
+    await next();
+    // 7 Review: every answer grouped by step, each with a way back.
+    await onStep(7, t('Review & send', 'المراجعة والإرسال'));
+    assert.equal(await wizard.locator('.ld-web-review').count(), 6); count++;
     assert.match(await wizard.locator('.ld-web-review').nth(4).textContent(), /info@blue-studio\.com/); count++;
+    if (!ar) { assert.match(await wizard.locator('.ld-web-review').nth(5).textContent(), /ID cards of all partners and managers: 2 file/); count++; }
     await wizard.getByRole('button', { name: `${t('Edit', 'تعديل')}: ${t('Look & feel', 'الهوية البصرية')}` }).click();
     await onStep(3, t('Look & feel', 'الهوية البصرية'));
-    for (const n of [4, 5, 6]) { await next(); await wizard.locator('.ld-web-step-count', { hasText: t(`Step ${n} of 6`, `الخطوة ${n} من 6`) }).waitFor(); }
+    for (const n of [4, 5, 6, 7]) { await next(); await wizard.locator('.ld-web-step-count', { hasText: t(`Step ${n} of 7`, `الخطوة ${n} من 7`) }).waitFor(); }
     count++;
     await page.screenshot({ path: `${OUT}/website-review-${lang}-${width}.png`, fullPage: true });
     await wizard.getByRole('button', { name: t('Send to BznsFlow', 'أرسل إلى BznsFlow') }).click();
@@ -801,12 +853,20 @@ try {
     await wizard.getByRole('heading', { name: t('Your website is on its way', 'موقعك في الطريق') }).waitFor(); count++;
     const submitted = posts.find(p => p.action === 'submit');
     assert.deepEqual(submitted.fields, { nameEn: 'Blue Studio', phone: '+968 9000 0000', mailboxLocal: 'info', recoveryEmail: 'owner@example.test',
-      designLogo: true, style: 'minimal', languages: 'both', domainChoice: 'blue-studio.com' }, `${lang}: the brief as entered`); count++;
+      designLogo: true, style: 'minimal', languages: 'both', domainChoice: 'blue-studio.com',
+      ...(ar ? { payments: 'no' } : { payments: 'yes', payContactName: 'Sara Al Balushi', payContactPhone: '+968 9123 4567' }) }, `${lang}: the brief as entered`); count++;
     assert.deepEqual([submitted.version, submitted.logoId, submitted.photoIds], [0, null, []]); count++;
+    assert.deepEqual(submitted.docIds.map(d => d.kind), ar ? [] : ['doc_cr', 'doc_id', 'doc_id', 'doc_bank', 'doc_forms', 'doc_invoice'], `${lang}: documents only with a yes`); count++;
     const due = new Intl.DateTimeFormat(ar ? 'ar-OM-u-nu-latn' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Muscat' }).format(new Date(addBusinessDays(now)));
     assert.equal(await wizard.locator('.ld-web-due').textContent(), t(`Ready by ${due}`, `جاهز بحلول ${due}`)); count++;
-    assert.deepEqual(await wizard.locator('.ld-web-stages li').evaluateAll(li => li.map(x => x.className)), ['is-done', 'is-current', '', '', ''], `${lang}: details received; the domain is underway`); count++;
+    assert.deepEqual(await wizard.locator('.ld-web-tracker > .ld-web-stages li').evaluateAll(li => li.map(x => x.className)), ['is-done', 'is-current', '', '', ''], `${lang}: details received; the domain is underway`); count++;
     assert.match(await wizard.locator('.ld-web-facts').textContent(), /info@blue-studio\.com/); count++;
+    // A yes adds the payments track: documents received, Paymob's review next, and no date promised.
+    assert.equal(await wizard.locator('.ld-web-pay-track').count(), ar ? 0 : 1); count++;
+    if (!ar) {
+      assert.deepEqual(await wizard.locator('.ld-web-pay-track li').evaluateAll(li => li.map(x => x.className)), ['is-done', 'is-current', '', '', ''], 'en: documents received; sending to Paymob is next'); count++;
+      assert.match(await wizard.locator('.ld-web-pay-track').textContent(), /no fixed date/); count++;
+    }
     const violations = (await new AxeBuilder({ page }).include('.ld-web').analyze()).violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
     assert.deepEqual(violations, [], `${lang} ${width}: website tracker accessibility`); count++;
     assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`); count++;

@@ -12,7 +12,7 @@
 //   - retention comes from the prune intervals in the migrations
 // If any of those change, this file is wrong and must change with them.
 
-export const PRIVACY_UPDATED_ISO = '2026-10-27';
+export const PRIVACY_UPDATED_ISO = '2026-10-31';
 
 /** Shared across both languages — a table of who else touches the data. */
 const PROCESSORS = [
@@ -42,6 +42,10 @@ const PROCESSORS = [
   {
     en: ['Meta (Facebook)', 'Measures our advertising. Receives a pseudonymous identifier, not your name.', 'United States / global'],
     ar: ['Meta (Facebook)', 'يقيس أداء إعلاناتنا. يستقبل معرّفاً مستعاراً لا اسمك.', 'الولايات المتحدة / عالمي'],
+  },
+  {
+    en: ['Paymob', 'Takes card payments for BznsFlow subscriptions. For an Ascend owner who asks for online payments, it also receives the business documents and personal contact we send to open their own merchant account.', 'Oman / global'],
+    ar: ['Paymob', 'يستقبل مدفوعات البطاقات لاشتراكات BznsFlow. ولصاحب نشاط في أسيند يطلب الدفع الإلكتروني، يستقبل أيضًا مستندات النشاط وبيانات التواصل الشخصية التي نرسلها لفتح حساب التاجر الخاص به.', 'عُمان / عالمي'],
   },
   {
     en: ['PostHog', 'Measures how visitors use our public pages: page views, clicks and session recordings with typed text hidden. Never on the dashboard or sign-in pages.', 'United States'],
@@ -90,7 +94,7 @@ const COOKIES = [
 
 const en = {
   title: 'Privacy Policy',
-  updated: 'Last updated 27 October 2026',
+  updated: 'Last updated 31 October 2026',
   lead: 'This explains what BznsFlow collects when you use this website, why, who else sees it, and what you can ask us to do about it. It is written to be read, not to be survived.',
   processorsHead: ['Who', 'What they do', 'Where'],
   cookiesHead: ['Name', 'Type', 'Lasts', 'What it does'],
@@ -230,7 +234,7 @@ const en = {
 
 const ar = {
   title: 'سياسة الخصوصية',
-  updated: 'آخر تحديث ٢٧ أكتوبر ٢٠٢٦',
+  updated: 'آخر تحديث ٣١ أكتوبر ٢٠٢٦',
   lead: 'توضّح هذه الصفحة ما تجمعه BznsFlow عند استخدامك لهذا الموقع، ولماذا، ومن يطّلع عليه غيرنا، وما الذي يمكنك أن تطلبه منّا بشأنه. كُتبت لتُقرأ، لا لتُحتمل.',
   processorsHead: ['الجهة', 'ما تقوم به', 'أين'],
   cookiesHead: ['الاسم', 'النوع', 'المدة', 'وظيفته'],

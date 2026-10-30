@@ -1,7 +1,9 @@
 // Ahmed's queue of free websites to deliver (Ahmed, 2026-10-23): every Ascend brief, soonest due first,
 // and the moves that the owner's tracker shows. Only the BznsFlow admin can read or change it.
-import { WEBSITE_STAGES } from '../config/website-brief.js';
-import { publicProject } from './websiteBriefState.js';
+// Since 2026-10-31 a row also carries the owner's Paymob onboarding: the personal contact, the documents and
+// a payments track Ahmed moves one stage at a time. A live website stays listed while its payments are open.
+import { PAYMENT_STAGES, WEBSITE_STAGES } from '../config/website-brief.js';
+import { docsOf, publicProject } from './websiteBriefState.js';
 
 const ok = value => ({ ok: true, value }), fail = reason => ({ ok: false, reason });
 const ADMIN = 'ahmed@bznsflowai.com';
@@ -22,7 +24,8 @@ async function row(ctx, project) {
   const [account, brief] = [await ctx.db.get(project.accountId), await ctx.db.query('websiteBriefs').withIndex('by_account', q => q.eq('accountId', project.accountId)).unique()];
   return { id: project._id, ...publicProject(project), note: project.note || '', createdAt: project.createdAt,
     email: account?.email || '', business: brief?.fields?.nameEn || brief?.fields?.nameAr || account?.email || '', briefVersion: brief?.version || 0,
-    alternates: brief?.fields?.domainAlternates || [], phone: brief?.fields?.phone || '' };
+    alternates: brief?.fields?.domainAlternates || [], phone: brief?.fields?.phone || '',
+    ...(project.payments ? { payContactName: brief?.fields?.payContactName || '', payContactPhone: brief?.fields?.payContactPhone || '', docs: await docsOf(ctx, brief?.docIds) } : {}) };
 }
 
 export async function executeWebsiteAdmin(ctx, a, now = Date.now()) {
@@ -33,8 +36,9 @@ export async function executeWebsiteAdmin(ctx, a, now = Date.now()) {
     const open = [];
     for (const stage of OPEN) open.push(...await ctx.db.query('websiteProjects').withIndex('by_stage_due', q => q.eq('stage', stage)).take(200));
     open.sort((x, y) => x.dueAt - y.dueAt);
-    const live = await ctx.db.query('websiteProjects').withIndex('by_stage_due', q => q.eq('stage', 'live')).order('desc').take(20);
-    return ok({ open: await Promise.all(open.map(p => row(ctx, p))), live: await Promise.all(live.map(p => row(ctx, p))) });
+    const live = await ctx.db.query('websiteProjects').withIndex('by_stage_due', q => q.eq('stage', 'live')).order('desc').take(200);
+    const paying = live.filter(p => p.payments && p.payments.stage !== 'live');
+    return ok({ open: await Promise.all([...open, ...paying].map(p => row(ctx, p))), live: await Promise.all(live.slice(0, 20).map(p => row(ctx, p))) });
   }
 
   if (a.operation === 'project_update') {
@@ -53,6 +57,11 @@ export async function executeWebsiteAdmin(ctx, a, now = Date.now()) {
       if (!Number.isSafeInteger(dueAt) || dueAt < now - DAY || dueAt > now + 60 * DAY) return fail('invalid_due');
       if (!reason) return fail('reason_required');
       patch = { dueAt, delayReason: reason };
+    } else if (a.action === 'payments_advance') {
+      // Paymob's review sets the pace, so this track has dates but no due date.
+      const next = project.payments && PAYMENT_STAGES[PAYMENT_STAGES.indexOf(project.payments.stage) + 1];
+      if (!next) return fail('invalid_state');
+      patch = { payments: { stage: next, stageAt: { ...project.payments.stageAt, [next]: now } } };
     } else if (a.action === 'note') {
       patch = { note: clip(a.note, 500) || undefined };
     } else return fail('invalid_action');

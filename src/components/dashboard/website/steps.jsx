@@ -1,6 +1,6 @@
 import React from 'react';
-import { BRIEF_MAX_PHOTOS, BRIEF_PAGES } from '../../../../config/website-brief.js';
-import { W, OPTIONS } from './copy';
+import { BRIEF_MAX_PHOTOS, BRIEF_PAGES, PAYMENT_DOC_SLOTS } from '../../../../config/website-brief.js';
+import { W, OPTIONS, DOC_SLOTS } from './copy';
 import { Choice, Text } from './fields';
 
 export function BusinessStep({ form }) {
@@ -88,7 +88,9 @@ export function ReviewStep({ form, files, groups, onEdit }) {
   return groups.map(({ step, keys }, index) => {
     const rows = keys.filter(k => fields[k] !== undefined && fields[k] !== '' && !(Array.isArray(fields[k]) && !fields[k].filter(Boolean).length));
     const extra = step === 'look' ? [files.logo ? tr(W.logoAdded) : fields.designLogo ? tr(W.designLogo) : null,
-      files.photos.length ? tr(W.photosAdded).replace('{n}', files.photos.length) : null].filter(Boolean) : [];
+      files.photos.length ? tr(W.photosAdded).replace('{n}', files.photos.length) : null].filter(Boolean)
+      : step === 'payments' && fields.payments === 'yes' ? PAYMENT_DOC_SLOTS.map(({ kind }) => [kind, files.docs.filter(d => d.kind === kind).length]).filter(([, n]) => n)
+        .map(([kind, n]) => `${tr(DOC_SLOTS[kind][0])}: ${tr(W.filesCount).replace('{n}', n)}`) : [];
     return (
       <section key={step} className="ld-web-review" aria-labelledby={`ld-web-review-${step}`}>
         <div className="ld-web-review-head">
