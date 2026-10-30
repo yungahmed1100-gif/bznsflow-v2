@@ -7,6 +7,9 @@ const ICONS = {
   trash: <><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /></>,
   undo: <><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></>,
   upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>,
+  download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
+  // A document: the Paymob forms and the files an owner sends for them.
+  file: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /></>,
   sliders: <><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></>,
   play: <polygon points="6 3 20 12 6 21 6 3" />,
   dumbbell: <><path d="M17.6 12.77a2 2 0 1 0 2.83-2.83l-1.77-1.77a2 2 0 0 0 2.83-2.83l-2.83-2.83a2 2 0 0 0-2.83 2.83l-1.77-1.77a2 2 0 1 0-2.83 2.83z" /><path d="m2.5 21.5 1.4-1.4" /><path d="m20.1 3.9 1.4-1.4" /><path d="M5.34 21.49a2 2 0 1 0 2.83-2.83l1.77 1.77a2 2 0 1 0 2.83-2.83l-6.36-6.36a2 2 0 1 0-2.83 2.83l1.77 1.77a2 2 0 0 0-2.83 2.83z" /><path d="m9.6 14.4 4.8-4.8" /></>,

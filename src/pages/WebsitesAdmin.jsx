@@ -135,9 +135,13 @@ function PaymentsPart({ p, tr, busy, onUpdate }) {
           {(p.docs || []).map(d => <li key={d.id}><a href={d.url} target="_blank" rel="noopener noreferrer">{tr(...(DOC[d.kind] || [d.kind, d.kind]))}</a>{d.name ? <> · <bdi dir="auto">{d.name}</bdi></> : null}</li>)}
         </ul></dd></div>
       </dl>
-      {next && <div className="owner-website-actions">
-        <button className="owner-primary" disabled={busy} onClick={() => onUpdate({ action: 'payments_advance' })}>{tr('Payments done: ', 'المدفوعات: ')}{tr(...PAY_STAGE[next])}</button>
-      </div>}
+      <div className="owner-website-actions">
+        {next && <button className="owner-primary" disabled={busy} onClick={() => onUpdate({ action: 'payments_advance' })}>{tr('Payments done: ', 'المدفوعات: ')}{tr(...PAY_STAGE[next])}</button>}
+        {/* The owner isn't going ahead: the track ends and their documents are deleted. */}
+        <button className="owner-secondary" disabled={busy} onClick={() => {
+          if (window.confirm(tr('Cancel this payments set-up? Their Paymob documents and personal contact are deleted.', 'إلغاء تفعيل المدفوعات؟ ستُحذف مستندات Paymob وبيانات التواصل الشخصية.'))) onUpdate({ action: 'payments_cancel' });
+        }}>{tr('Cancel payments set-up', 'إلغاء تفعيل المدفوعات')}</button>
+      </div>
     </div>
   );
 }

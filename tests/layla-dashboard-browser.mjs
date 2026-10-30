@@ -799,7 +799,7 @@ try {
     await next();
     await required(6);
     // A slot by its own label, not its hint (the ID slot's hint mentions the commercial register).
-    const docSlot = name => wizard.locator('.ld-web-doc').filter({ has: page.locator('.ld-field > span', { hasText: name }) }).locator('input[type="file"]');
+    const docSlot = name => wizard.locator('.ld-web-doc').filter({ has: page.locator('.ld-web-doc-label', { hasText: name }) }).locator('input[type="file"]');
     if (ar) {
       await wizard.getByRole('radio', { name: 'ليس الآن' }).check();
       assert.equal(await wizard.locator('.ld-web-doc').count(), 0, 'ar: no documents asked for when payments are not wanted'); count++;
@@ -830,7 +830,10 @@ try {
       await wizard.locator('.ld-web-doc-files li', { hasText: 'invoice.pdf' }).waitFor();
       // The wrong kind of file is refused before it is uploaded.
       await docSlot('Tax card').setInputFiles({ name: 'tax.exe', mimeType: 'application/x-msdownload', buffer: Buffer.from('MZ') });
-      await wizard.getByText('Use a PDF, JPG or PNG file.').waitFor(); count++;
+      await wizard.locator('.ld-web-doc.is-invalid .ld-inline-error', { hasText: 'Use a PDF, JPG or PNG file.' }).waitFor(); count++;
+      assert.match(await wizard.locator('.ld-web-doc.is-invalid .ld-web-doc-label').textContent(), /Tax card/, 'en: the refusal is shown in the slot it belongs to'); count++;
+      assert.equal(await wizard.locator('.ld-web-pay-progress').textContent(), '5 of 5 required documents added'); count++;
+      assert.equal(await wizard.locator('.ld-web-doc.is-added').count(), 5, 'en: every required slot is marked added'); count++;
       assert.deepEqual(uploads, ['application/pdf', 'application/pdf', 'image/jpeg', 'application/pdf', 'application/pdf', 'application/pdf'], 'en: six documents uploaded as they are'); count++;
       assert.deepEqual(posts.filter(p => p.action === 'file_register').map(p => [p.kind, p.name]), [['doc_cr', 'cr.pdf'], ['doc_id', 'id-sara.pdf'], ['doc_id', 'id-ali.jpg'],
         ['doc_bank', 'statement.pdf'], ['doc_forms', 'signed.pdf'], ['doc_invoice', 'invoice.pdf']], 'en: each registered under its slot with its name'); count++;

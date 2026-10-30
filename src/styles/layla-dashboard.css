@@ -586,17 +586,58 @@ a.ld-health:hover { text-decoration: underline; text-underline-offset: 4px; }
 .ld-web-facts > div { display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px; }
 .ld-web-facts dt { color: var(--ink-2); }
 .ld-web-facts dd { margin: 0; font-weight: 700; }
-/* Online payments through Paymob (payments.jsx): forms, a personal contact, then one slot per document. */
-.ld-web-pay-part { padding-block: 12px; border-top: 1px solid var(--rule); }
-.ld-web-pay-part h3 { margin: 0 0 6px; font-size: 15px; }
-.ld-web-pay-forms { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
-.ld-web-doc { padding-block: 8px; border-bottom: 1px solid var(--rule); }
-.ld-web-doc .ld-help { display: block; font-weight: 400; }
-.ld-web-doc.is-invalid { border-bottom-color: var(--coral); }
-.ld-web-doc.is-invalid .ld-field > span { color: var(--coral); }
-.ld-web-doc-files { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; }
-.ld-web-doc-files li { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; overflow-wrap: anywhere;
-  padding: 6px 10px; background: var(--paper-ruled); border-radius: 4px; box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--green-mark); }
+/* Online payments through Paymob (payments.jsx): a yes/no choice, how it works, two forms to download,
+   a personal contact, then one card per document. Blue = something to do, Green = done, Coral = a problem. */
+.ld-web-pay-choice { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.ld-web-pay-choice legend { padding: 0; margin-block-end: 10px; font-weight: 700; }
+.ld-brief > .ld-web-pay-choice { border-top: 0; padding: 0; margin: 0; }
+.ld-web-pay-choice label { position: relative; display: grid; gap: 4px; padding: 14px 16px; cursor: pointer; background: var(--card); border: 1px solid var(--rule-strong);
+  border-radius: 4px; transition: border-color .15s ease, box-shadow .15s ease; }
+.ld-web-pay-choice label:hover { border-color: var(--blue); }
+.ld-web-pay-choice label.is-chosen { border-color: var(--blue); box-shadow: inset calc(4px * var(--x-sign)) 0 0 var(--blue); }
+.ld-web-pay-choice label:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; }
+.ld-web-pay-choice input { position: absolute; inset-block-start: 16px; inset-inline-end: 16px; margin: 0; accent-color: var(--blue); }
+.ld-web-pay-choice-title { font-weight: 700; padding-inline-end: 28px; }
+.ld-web-pay-choice small { color: var(--ink-2); }
+.ld-web-pay-choice.is-invalid label { border-color: var(--coral); }
+.ld-web-pay-choice.is-invalid legend { color: var(--coral); }
+.ld-web-pay-how { list-style: none; margin: 16px 0 6px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.ld-web-pay-how li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--paper-ruled); border-radius: 4px; font-size: 14px; font-weight: 600; }
+.ld-web-pay-how .ld-num { display: inline-grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--card); border: 1px solid var(--rule-strong); font-size: 13px; }
+.ld-web-pay-part { padding-block: 14px; border-top: 1px solid var(--rule); }
+.ld-web-pay-part h3 { margin: 0 0 8px; font-size: 15px; }
+.ld-web-pay-forms { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.ld-web-pay-form { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 12px 14px; min-height: 56px; color: var(--blue);
+  background: var(--card); border: 1px solid var(--blue); border-radius: 4px; text-decoration: none; transition: background .15s ease; }
+.ld-web-pay-form:hover { background: var(--blue-tint); }
+.ld-web-pay-form:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.ld-web-pay-form span { display: grid; gap: 2px; min-width: 0; }
+.ld-web-pay-form strong { color: var(--ink); font-size: 14px; }
+.ld-web-pay-form small { color: var(--ink-2); font-size: 12px; }
+.ld-web-pay-progress { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 10px; padding: 4px 10px; border-radius: 4px; font-size: 13px; font-weight: 700;
+  background: var(--yellow-tint); }
+.ld-web-pay-progress.is-complete { background: var(--green-tint); color: var(--green); }
+.ld-web-docs { display: grid; gap: 10px; }
+.ld-web-doc { display: grid; gap: 6px; padding: 12px 14px; background: var(--card); border: 1px solid var(--rule-strong); border-radius: 4px; }
+.ld-web-doc.is-added { box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--green-mark); }
+.ld-web-doc.is-invalid { border-color: var(--coral); box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--coral-mark); }
+.ld-web-doc-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.ld-web-doc-label { font-weight: 700; }
+.ld-web-doc.is-invalid .ld-web-doc-label { color: var(--coral); }
+.ld-web-doc-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--paper-ruled); color: var(--ink-2); }
+.ld-web-doc-tag.is-optional { background: transparent; border: 1px solid var(--rule-strong); }
+.ld-web-doc-tag.is-added { background: var(--green-tint); color: var(--green); }
+.ld-web-doc .ld-help { margin: 0; }
+.ld-web-doc-files { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ld-web-doc-files li { display: flex; align-items: center; gap: 8px; min-height: 40px; padding-block: 4px; padding-inline: 10px 4px; background: var(--paper-ruled); border-radius: 4px; font-size: 14px; }
+.ld-web-doc-files svg { flex: none; color: var(--green); }
+.ld-web-doc-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-web-doc-size { flex: none; color: var(--ink-2); font-size: 12px; }
+.ld-web-doc-remove { flex: none; min-height: 32px; padding-block: 4px; font-size: 13px; }
+.ld-web-doc-add { justify-self: start; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--blue); border-color: var(--blue); }
+.ld-web-doc-add:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; }
+.ld-web-doc-add.is-disabled { cursor: progress; opacity: .6; }
+.ld-web-doc .ld-inline-error { margin: 0; }
 .ld-web-pay-track { margin-top: 16px; }
 .ld-web-pay-track h3 { margin: 0 0 6px; font-size: 16px; }
 @media (max-width: 640px) {

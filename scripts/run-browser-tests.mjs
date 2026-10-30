@@ -23,6 +23,7 @@ const SUITES = [
   'tests/audit-browser.mjs',
   'tests/apex-browser.mjs',
   'tests/posthog-browser.mjs',
+  'tests/paymob-e2e-browser.mjs',
 ];
 
 const server = spawn(process.execPath, ['scripts/preview.mjs', '--port', String(PORT)], { stdio: 'ignore' });

@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BRIEF_MAX_PHOTOS, normalizeBrief, paymentDocsProblem, websiteDomain } from '../../../../config/website-brief.js';
 import { briefAction, uploadBriefDocument, uploadBriefFile } from '../../../lib/dashboard/website-brief';
 import { W, ERRORS } from './copy';
 import { BusinessStep, ContactStep, LookStep, SiteStep, ReviewStep } from './steps';
 import { DomainStep } from './domain';
 import { PaymentsStep } from './payments';
+import { captureWizardEvent } from '../../../lib/posthog';
 
 const LOCAL_RE = /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/;
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
@@ -40,6 +41,8 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState({ reason: '', field: '' });
   const heading = useRef(null);
+  // The step the owner opens on (a new brief, or a draft resumed) starts the funnel.
+  useEffect(() => { captureWizardEvent('website_brief_step', { step: STEPS[step].step, index: step + 1 }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Editing a field ends its "from BznsBrain" note and the error it was flagged with.
   const touch = keys => {
@@ -48,7 +51,10 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
   };
   const set = (key, value) => { setFields(f => ({ ...f, [key]: value })); touch([key]); setSaved(false); };
   const setMany = patch => { setFields(f => ({ ...f, ...patch })); touch(Object.keys(patch)); setSaved(false); };
-  const fail = (reason, field = '') => setError({ reason, field });
+  const fail = (reason, field = '') => {
+    setError({ reason, field });
+    if (reason) captureWizardEvent('website_brief_error', { reason, field });
+  };
   const message = reason => tr(ERRORS[reason] || ['Something went wrong. Please try again.', 'حدث خطأ. حاول مجددًا.']);
   const form = { fields, set, setMany, error, tr, prefilled };
 
@@ -62,21 +68,29 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
       }
     } catch (e) { fail(e.reason); } finally { setBusy(''); }
   };
+  // Each document is uploaded as it is picked; the funnel counts the slot, never the file or its name.
   const uploadDocs = async (kind, picked) => {
-    setBusy('upload'); fail('');
+    setBusy(`upload:${kind}`); fail('');
     try {
       for (const file of picked) {
         const id = await uploadBriefDocument(csrf, kind, file);
-        setDocs(list => [...list, { id, kind, name: file.name }]);
+        setDocs(list => [...list, { id, kind, name: file.name, size: file.size }]);
         touch([kind]);
+        captureWizardEvent('website_brief_document_added', { slot: kind });
       }
-    } catch (e) { fail(e.reason, kind); } finally { setBusy(''); }
+    } catch (e) {
+      fail(e.reason, kind);
+      captureWizardEvent('website_brief_document_refused', { slot: kind, reason: e.reason || 'unknown' });
+    } finally { setBusy(''); }
   };
   const files = { logo, photos, docs, busy, upload, removeLogo: () => setLogo(null), removePhoto: id => setPhotos(all => all.filter(p => p.id !== id)) };
   const docSlots = { list: docs, busy, upload: uploadDocs, remove: id => setDocs(all => all.filter(d => d.id !== id)) };
   const docIds = list => list.map(d => ({ kind: d.kind, id: d.id }));
 
-  const go = next => { setStep(next); fail(''); requestAnimationFrame(() => heading.current?.focus()); };
+  const go = next => {
+    setStep(next); fail(''); requestAnimationFrame(() => heading.current?.focus());
+    captureWizardEvent('website_brief_step', { step: STEPS[next].step, index: next + 1 });
+  };
   const save = async next => {
     setBusy('save');
     try { await briefAction(csrf, 'save_draft', { step: next, fields, logoId: logo?.id || null, photoIds: photos.map(p => p.id), docIds: docIds(docs) }); setSaved(true); return true; }
@@ -98,6 +112,7 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
     try {
       const result = await briefAction(csrf, 'submit', { version: brief.version, fields: checked.value, logoId: logo?.id || null, photoIds: photos.map(p => p.id),
         docIds: checked.value.payments === 'yes' ? docIds(docs) : [] });
+      captureWizardEvent('website_brief_sent', { payments: checked.value.payments || 'unanswered', documents: checked.value.payments === 'yes' ? docs.length : 0, update: brief.version > 0 });
       onSent({ emailed: true, version: result.version });
     } catch (e) {
       if (e.reason === 'brief_email_failed') onSent({ emailed: false, version: brief.version + 1 });

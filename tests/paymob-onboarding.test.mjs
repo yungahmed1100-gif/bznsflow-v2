@@ -177,6 +177,26 @@ test('a website without payments has no payments track to move', async () => {
   assert.equal((await f.admin({ operation: 'project_update', projectId: row.id, action: 'payments_advance' })).reason, 'invalid_state');
 });
 
+test('cancelling a payments set-up ends the track and deletes the documents and personal contact; admin only', async () => {
+  const f = await fixture();
+  const docs = await f.pack();
+  const logo = await f.upload('logo');
+  await f.brief({ operation: 'submit', version: 0, fields: paying, logoId: logo.id, photoIds: [], docIds: docs });
+  const { value: { open: [row] } } = await f.admin({ operation: 'projects' });
+  const cancel = token => f.admin({ operation: 'project_update', projectId: row.id, action: 'payments_cancel' }, token);
+  assert.equal((await cancel(tokens.owner)).reason, 'admin_required');
+  const done = await cancel();
+  assert.equal(done.ok, true, done.reason);
+  assert.equal('payments' in done.value.project, false);
+  for (const d of docs) assert.ok(f.m.deletedFiles.includes(d.id), 'every document file is deleted');
+  assert.equal(f.m.deletedFiles.includes(logo.id), false, 'the logo stays');
+  assert.deepEqual(f.m.table('websiteBriefFiles').map(r => r.kind), ['logo']);
+  const [brief] = f.m.table('websiteBriefs');
+  assert.deepEqual([brief.docIds, brief.fields.payments, 'payContactName' in brief.fields, 'payContactPhone' in brief.fields], [[], 'no', false, false]);
+  assert.equal((await cancel()).reason, 'invalid_state', 'nothing left to cancel');
+  assert.equal('payments' in (await f.brief({ operation: 'get' })).value.project, false, 'the owner\'s tracker no longer shows payments');
+});
+
 // ── Email ────────────────────────────────────────────────────────────────────
 
 test('the email to Ahmed names the personal contact and attaches every document by what it is', () => {

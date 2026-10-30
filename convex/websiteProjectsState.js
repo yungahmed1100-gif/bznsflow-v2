@@ -28,6 +28,24 @@ async function row(ctx, project) {
     ...(project.payments ? { payContactName: brief?.fields?.payContactName || '', payContactPhone: brief?.fields?.payContactPhone || '', docs: await docsOf(ctx, brief?.docIds) } : {}) };
 }
 
+const withoutPayments = ({ _id, _creationTime, payments, ...rest }) => rest;
+const PAY_FIELDS = ['payContactName', 'payContactPhone'];
+
+/** Delete an owner's Paymob documents and personal contact from their brief and draft. */
+async function cancelPayments(ctx, accountId) {
+  const files = await ctx.db.query('websiteBriefFiles').withIndex('by_account', q => q.eq('accountId', accountId)).collect();
+  for (const f of files.filter(f => f.kind.startsWith('doc_'))) {
+    await ctx.db.delete(f._id);
+    if (await ctx.db.system.get(f.storageId)) await ctx.storage.delete(f.storageId);
+  }
+  for (const table of ['websiteBriefs', 'websiteDrafts']) {
+    const doc = await ctx.db.query(table).withIndex('by_account', q => q.eq('accountId', accountId)).unique();
+    if (!doc) continue;
+    const fields = Object.fromEntries(Object.entries(doc.fields).filter(([k]) => !PAY_FIELDS.includes(k)));
+    await ctx.db.patch(doc._id, { docIds: [], fields: { ...fields, ...(doc.fields.payments ? { payments: 'no' } : {}) } });
+  }
+}
+
 export async function executeWebsiteAdmin(ctx, a, now = Date.now()) {
   const refused = await admin(ctx, a.sessionHash, now);
   if (refused) return fail(refused);
@@ -62,6 +80,12 @@ export async function executeWebsiteAdmin(ctx, a, now = Date.now()) {
       const next = project.payments && PAYMENT_STAGES[PAYMENT_STAGES.indexOf(project.payments.stage) + 1];
       if (!next) return fail('invalid_state');
       patch = { payments: { stage: next, stageAt: { ...project.payments.stageAt, [next]: now } } };
+    } else if (a.action === 'payments_cancel') {
+      // The owner isn't going ahead with Paymob: the track ends and their documents are deleted now.
+      if (!project.payments) return fail('invalid_state');
+      await cancelPayments(ctx, project.accountId);
+      await ctx.db.replace(project._id, { ...withoutPayments(project), updatedAt: now });
+      return ok({ project: await row(ctx, await ctx.db.get(project._id)) });
     } else if (a.action === 'note') {
       patch = { note: clip(a.note, 500) || undefined };
     } else return fail('invalid_action');

@@ -48,8 +48,8 @@ const PROCESSORS = [
     ar: ['Paymob', 'يستقبل مدفوعات البطاقات لاشتراكات BznsFlow. ولصاحب نشاط في أسيند يطلب الدفع الإلكتروني، يستقبل أيضًا مستندات النشاط وبيانات التواصل الشخصية التي نرسلها لفتح حساب التاجر الخاص به.', 'عُمان / عالمي'],
   },
   {
-    en: ['PostHog', 'Measures how visitors use our public pages: page views, clicks and session recordings with typed text hidden. Never on the dashboard or sign-in pages.', 'United States'],
-    ar: ['PostHog', 'يقيس كيف يستخدم الزوّار صفحاتنا العامة: الصفحات المعروضة والنقرات وتسجيلات الجلسات مع إخفاء ما يُكتب. لا يعمل أبداً في لوحة التحكم أو صفحات تسجيل الدخول.', 'الولايات المتحدة'],
+    en: ['PostHog', 'Measures how visitors use our public pages: page views, clicks and session recordings with typed text hidden. On the dashboard, only anonymous counts of website-setup steps; never page content, recordings or what you type.', 'United States'],
+    ar: ['PostHog', 'يقيس كيف يستخدم الزوّار صفحاتنا العامة: الصفحات المعروضة والنقرات وتسجيلات الجلسات مع إخفاء ما يُكتب. في لوحة التحكم يعدّ فقط خطوات إعداد الموقع دون هوية؛ ولا يسجّل أبدًا محتوى الصفحة أو الجلسات أو ما تكتبه.', 'الولايات المتحدة'],
   },
   {
     en: ['Google Fonts', 'Serves the typefaces. Your browser requests them directly, which exposes your IP address to Google.', 'United States / global'],

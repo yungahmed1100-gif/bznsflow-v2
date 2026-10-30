@@ -85,6 +85,11 @@ try {
     await page.getByRole('status').filter({ hasText: en ? /Saved/ : /تم الحفظ/ }).waitFor();
     assert.deepEqual(writes.at(-1), { projectId: 'p1', action: 'payments_advance' });
     assert.equal(await row.getByRole('button', { name: en ? /Mark done/ : /^تم:/ }).count(), 0, 'nothing left to mark on a live website');
+    // Cancelling asks first, then ends the set-up.
+    page.once('dialog', dialog => { assert.match(dialog.message(), en ? /documents and personal contact are deleted/ : /ستُحذف/); dialog.accept(); });
+    await row.getByRole('button', { name: en ? 'Cancel payments set-up' : 'إلغاء تفعيل المدفوعات' }).click();
+    await page.getByRole('status').filter({ hasText: en ? /Saved/ : /تم الحفظ/ }).waitFor();
+    assert.deepEqual(writes.at(-1), { projectId: 'p1', action: 'payments_cancel' });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${path} overflow`);
     const issues = (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact));
     assert.deepEqual(issues.map(v => v.id), [], `${path} accessibility`);

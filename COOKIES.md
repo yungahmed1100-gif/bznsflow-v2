@@ -49,7 +49,7 @@ loses its hreflang pair from the index. The public routes stay deterministic.
 | `_fbp` | cookie | ~90 days | Meta Pixel, loaded in `index.html` |
 | `_fbc` | cookie | ~90 days | Meta Pixel, only when the visitor arrives on an `fbclid` link |
 | `bf_uid` | localStorage | until cleared | `index.html` — first-party id passed to Meta as `external_id` for advanced matching |
-| `ph_phc_…_posthog` | cookie + localStorage | 1 year | PostHog (`src/lib/posthog.js`) — anonymous visitor and session id for product analytics and session replay (typed text hidden). Public pages on www.bznsflowai.com only; never set on the dashboard, owner, setup, AI-connection or sign-in pages. |
+| `ph_phc_…_posthog` | cookie + localStorage | 1 year | PostHog (`src/lib/posthog.js`) — anonymous visitor and session id for product analytics and session replay (typed text hidden). Public pages on www.bznsflowai.com only; never set on the dashboard, owner, setup, AI-connection or sign-in pages. Since 2026-10-31 the dashboard's website brief sends anonymous step counts (no page views, clicks, replays or entered data) with PostHog in memory-only mode, which stores nothing. |
 
 > **Known gap.** `index.html` calls `fbq('init')` and `fbq('track','PageView')`
 > unconditionally on load, so these are set for every visitor including in the

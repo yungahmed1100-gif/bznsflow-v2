@@ -5,6 +5,7 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { gunzipSync } from 'node:zlib';
+import { capabilitiesFor } from '../convex/hasib/capabilities.js';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:5199';
 const { port } = new URL(BASE);
@@ -26,7 +27,7 @@ function decodeEvents(request) {
   return Array.isArray(body) ? body : body.batch || [body];
 }
 
-async function openSite(browser) {
+async function openSite(browser, api = null) {
   // PostHog drops events from headless and automated browsers, so the test browser presents as an ordinary one.
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce', userAgent: VISITOR_UA });
   await context.addInitScript(() => Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false }));
@@ -44,6 +45,8 @@ async function openSite(browser) {
       }
       return url.pathname.endsWith('.js') ? route.fulfill({ status: 200, contentType: 'text/javascript', body: '' }) : route.fulfill({ status: 200, json: {} });
     }
+    const answer = url.pathname.startsWith('/api/') && api?.(url, request);
+    if (answer) return route.fulfill({ status: 200, json: answer });
     if (url.pathname.startsWith('/api/')) return route.fulfill({ status: 404, json: { ok: false } });
     return route.continue();
   });
@@ -89,6 +92,52 @@ try {
     await page.goto(`${LIVE}/en/apex`);
     await waitFor(() => ingest.events.some(e => e.event === '$pageview' && pathOf(e) === '/en/apex'), 'the Apex page view');
     count++;
+    await context.close();
+  }
+  {
+    // The website brief on the dashboard (2026-10-31): PostHog starts in private mode for the wizard's funnel and
+    // nothing else. Only website_brief_* events leave, with allowlisted properties; no page view, click, replay,
+    // name, number or file; nothing is stored in the browser.
+    const csrfToken = 'a'.repeat(64);
+    const api = (url, request) => {
+      if (url.pathname === '/api/auth-session') return { ok: true, csrfToken, account: { id: 'a1', email: 'owner@example.test', accessPlan: 'ascend', profileComplete: true } };
+      const surface = url.searchParams.get('surface');
+      if (surface === 'website-brief' && request.method() === 'GET') return { ok: true, csrfToken, brief: { account: { email: 'owner@example.test', name: 'Sara' }, version: 0,
+        fields: { nameEn: 'Blue Studio', phone: '+968 9000 0000', mailboxLocal: 'info', recoveryEmail: 'owner@example.test' }, prefilled: [], draft: { step: 5, updatedAt: 1 },
+        project: null, logo: null, photos: [], docs: [] } };
+      if (surface === 'website-brief') return { ok: true, csrfToken, step: 6 };
+      if (surface === 'dashboard' && request.method() === 'GET') return { ok: true, csrfToken, account: { email: 'owner@example.test' }, plan: 'ascend', workspaceRole: 'manager',
+        capabilities: capabilitiesFor('ascend'), dashboardAvailable: true, broadcastEnabled: false, connected: true, founderPreview: false, business: { name: 'Blue Studio', sector: 'Retail', sectorId: 'retail' },
+        integration: { sender: '96890000000', path: 'coexistence', status: 'connected', checks: { routing: true, registered: true, path: true }, checkedAt: 1 },
+        messaging: { available: true, active: true, reason: '', broadcastAvailable: false, limits: { perMinute: 10, perDay: 100, usedToday: 0 } }, timezone: 'Asia/Muscat', migrationPending: false };
+      if (surface === 'customer') return { ok: true, csrfToken, available: true, status: 'connected', savedToAccount: true, profileVersion: 1,
+        bzns: { markdown: '# Blue Studio', version: 1, publishedRevision: 1, unpublishedChanges: false },
+        profile: { businessName: 'Blue Studio', sector: 'Retail', services: 'Abayas', prices: '', hours: '', location: '', humanContact: 'team@example.test', faqs: [], reviewed: true } };
+      return { ok: true, csrfToken, items: [] };
+    };
+    const { context, ingest, page } = await openSite(browser, api);
+    // Feature-flag requests post a body without an event name; only real events count here.
+    const events = () => ingest.events.filter(e => typeof e.event === 'string');
+    await page.goto(`${LIVE}/en/layla/dashboard?tab=website&conversation=c-secret`);
+    const wizard = page.locator('.ld-web');
+    await wizard.getByRole('heading', { name: 'Online payments', exact: true }).waitFor();
+    await wizard.getByRole('radio', { name: /Yes, set up online payments/ }).check();
+    await wizard.getByLabel('Full name').fill('Sara Al Balushi');
+    await wizard.getByLabel('Personal mobile number').fill('+968 9123 4567');
+    await wizard.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.mouse.click(600, 600);
+    await waitFor(() => ['website_brief_step', 'website_brief_payments_answer', 'website_brief_error'].every(name => events().some(e => e.event === name)), 'the wizard funnel events');
+    await page.waitForTimeout(4000);
+    assert.deepEqual([...new Set(events().map(e => e.event))].filter(name => !name.startsWith('website_brief_')), [], 'nothing but the wizard funnel leaves the dashboard'); count++;
+    const custom = events().flatMap(e => Object.keys(e.properties || {}).filter(k => !k.startsWith('$') && !['token', 'distinct_id'].includes(k)));
+    assert.deepEqual([...new Set(custom)].sort(), ['answer', 'field', 'index', 'reason', 'step'], 'only allowlisted properties'); count++;
+    assert.deepEqual([...new Set(events().map(e => e.properties.$current_url))], [`${LIVE}/en/layla/dashboard`], 'no query string, so no conversation id'); count++;
+    const sent = JSON.stringify(events());
+    for (const secret of ['Sara Al Balushi', '9123', 'owner@example.test', 'c-secret']) assert.equal(sent.includes(secret), false, `${secret} never leaves`);
+    count++;
+    assert.equal(events().find(e => e.event === 'website_brief_error').properties.field, 'doc_cr', 'the first missing document is counted by its slot'); count++;
+    const stored = await page.evaluate(() => [document.cookie.includes('ph_'), Object.keys(localStorage).some(k => k.startsWith('ph_') || k.includes('posthog'))]);
+    assert.deepEqual(stored, [false, false], 'private mode stores nothing in the browser'); count++;
     await context.close();
   }
   for (const path of ['/en/layla/dashboard', '/owner', '/en/owner/apex', '/signin', '/catalyst/setup']) {

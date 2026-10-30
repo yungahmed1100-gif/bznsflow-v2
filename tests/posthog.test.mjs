@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { isAnalyticsHost, isPrivatePath } from '../src/lib/posthog.js';
+import { WIZARD_EVENTS, isAnalyticsHost, isPrivatePath, privateEvent } from '../src/lib/posthog.js';
 
 const read = file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
 const routePaths = [...read('src/routes.ts').matchAll(/"?path"?:\s*["']([^"']+)["']/g)].map(([, path]) => `/${path}`);
@@ -55,4 +55,21 @@ test('PostHog is disclosed in COOKIES.md and in the privacy policy, in both lang
   const privacy = read('src/content/privacy.js');
   assert.equal(privacy.match(/\['PostHog'/g)?.length, 2, 'processor row in English and Arabic');
   assert.equal(privacy.match(/\['ph_phc_…_posthog'/g)?.length, 2, 'cookie row in English and Arabic');
+});
+
+test('on a private page only the website brief\'s funnel events leave, stripped to what they need', () => {
+  const location = { origin: 'https://www.bznsflowai.com', pathname: '/layla/dashboard' };
+  for (const event of ['$pageview', '$pageleave', '$autocapture', '$snapshot', '$exception', 'WhatsAppClick', 'website_brief_anything']) {
+    assert.equal(privateEvent({ event, properties: { $current_url: 'https://www.bznsflowai.com/layla/dashboard' } }, location), null, event);
+  }
+  const sent = privateEvent({ event: 'website_brief_document_added', $set: { email: 'owner@example.com' }, $set_once: { a: 1 },
+    properties: { slot: 'doc_id', name: 'id-sara.jpg', phone: '+968 9123 4567', reason: 'x'.repeat(41), token: 'phc_x', distinct_id: 'anon', $browser: 'Chrome',
+      $current_url: 'https://www.bznsflowai.com/layla/dashboard?tab=website&conversation=c1', $pathname: '/layla/dashboard', $referrer: 'https://mail.example/inbox', $referring_domain: 'mail.example',
+      $session_entry_url: 'https://www.bznsflowai.com/layla/dashboard?conversation=c1#m2' } }, location);
+  assert.deepEqual(sent, { event: 'website_brief_document_added', properties: { slot: 'doc_id', token: 'phc_x', distinct_id: 'anon', $browser: 'Chrome',
+    $current_url: 'https://www.bznsflowai.com/layla/dashboard', $pathname: '/layla/dashboard', $session_entry_url: 'https://www.bznsflowai.com/layla/dashboard' } },
+  'no file name, phone, long value, query string (in any URL property), referrer or person properties');
+  assert.ok(WIZARD_EVENTS.every(name => name.startsWith('website_brief_')));
+  const source = read('src/lib/posthog.js');
+  assert.match(source, /persistence: 'memory', disable_session_recording: true/, 'private mode stores nothing and records nothing');
 });
