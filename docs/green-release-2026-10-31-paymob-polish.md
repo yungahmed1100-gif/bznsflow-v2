@@ -76,10 +76,25 @@ Ahmed asked to polish the Payments step UI and test the workflow end to end usin
   Only allowlisted properties were sent, `$current_url` was `https://www.bznsflowai.com/en/layla/dashboard`, and none of the test values, email, filenames or domain appeared.
 - **Left behind:** the test brief and its website project (stage "received", due 3 November). There is no delete action; Ahmed can ignore it or mark it live.
 
+## PostHog funnel (built 2026-10-31, with Ahmed's personal API key in `.env.local`)
+- **Confirmed inside PostHog** (project 691003): the live run's 15 events arrived once each:
+  - 7 × `website_brief_step`;
+  - 5 × `website_brief_document_added`;
+  - 1 each of `website_brief_payments_answer`, `website_brief_form_downloaded` and `website_brief_sent`.
+- **Private pages:** across all time, the only events from `/layla`, `/owner` or `/signin` URLs are these wizard events. There are no `$pageview`, `$autocapture` or `$snapshot` events, and stored URLs (`$current_url`, `$session_entry_url`) carry no query string.
+- **Dashboard "Paymob onboarding"** (id 2284755) has 4 charts:
+  - **Website brief → Paymob** (`n4d6L5aq`), a funnel with a 14-day window:
+    1. opened the website brief;
+    2. chose online payments (answer = yes);
+    3. added a Paymob document;
+    4. sent with payments (payments = yes).
+
+    On the live data so far, the single test run passes all 4 steps.
+  - **Paymob documents added, by type** (`yn6kfZgt`), by slot.
+  - **Website brief problems** (`lTcde2WQ`): errors and refused documents, by reason.
+  - **Payments answer: yes vs not now** (`tlrq0aGX`).
+- **Test data:** the test account's events are in the data. Filter by date, or ignore 31 October.
+
 ## Not done
-- **PostHog MCP tools weren't loaded in this session**, so the events weren't confirmed inside PostHog and the funnel insight "Website brief → Paymob" isn't built. Do it from a session with the PostHog tools. The funnel steps are:
-  - `website_brief_step`;
-  - `website_brief_payments_answer` (answer = yes);
-  - `website_brief_document_added`;
-  - `website_brief_sent` (payments = yes).
+- **PostHog's Claude Code connection (MCP) still needs signing in.** The funnel was built through the REST API instead.
 - **Phase 2 is unchanged and not built.**
