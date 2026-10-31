@@ -56,3 +56,22 @@ Ahmed asked to polish the dashboard for phones, raise button contrast "so everyt
   - the keyboard focus ring is 3px.
 - **Selector update:** `tests/owner-browser.mjs` now finds phone links in More's drawer.
 - **Duplicate sections:** tab bar links use `data-tab`, so no page has two `data-section` elements for one section.
+
+## Release
+- **Release checks:**
+  - unit tests: 1,168;
+  - `typecheck:convex` and the build pass;
+  - all 15 browser suites pass (the dashboard suite now has 589 checks, including the phone pass);
+  - the Catalyst demo, retail, retail-tech, real estate, media, fitness, dental, construction/automotive and the Ascend end-to-end suites pass.
+- **Deploy:**
+  - Commit `1304ac3`, exported with `git archive`.
+  - Lineage: the live `dpl_6sqfzhyzqVszBHEVMnW2CrsWpKEo` came from `a24f400`, which master contains.
+  - Vercel only, because there's no back-end change: `dpl_4thNahZ1ySLurYJG97CimFZwkZw6`. Rollback is `dpl_6sqfzhyzqVszBHEVMnW2CrsWpKEo`.
+- **Live check (2026-10-31, about 12:30 UTC):**
+  - `/`, `/en`, `/apex`, `/privacy` and `/en/layla/dashboard` return 200.
+  - **Signed-in phone run:** on the test account (`yungahmed1100@gmail.com`, Dental) at 375px:
+    - the header is one row (65px);
+    - the tabs are Chats · Visits · Patients (open, green pill) · Broadcasts · More;
+    - "Add or import" is the Action Blue primary;
+    - More lists all seven sections plus العربية and AI Connections;
+    - Chats opens from the bar.
