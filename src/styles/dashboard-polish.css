@@ -1,0 +1,142 @@
+/* Owner dashboard polish (2026-10-31, DESIGN.md "Action Blue" amendment). Loaded last by LaylaDashboard.
+   1. Button roles that explain themselves: one solid Action Blue primary per screen, outlined secondaries,
+      coral for anything destructive, green for confirming something is done, links for rare actions.
+      Disabled is the same button faded, never a colour that could pass for a real one.
+   2. Every section carries its colour, and the open one is a tinted pill in that colour.
+   3. Phones: one-row header and a bottom tab bar in thumb reach; an open conversation gets the whole screen.
+   Patterns follow shadcn/ui and Radix (variant model, visible focus ring), Ionic and Material 3 (3–5 labelled
+   bottom tabs, safe-area padding) and GOV.UK Frontend (strong focus, large targets). */
+
+.ld, .ld-dialog {
+  --action: var(--blue-ink); --action-hover: #173d60; --on-action: #fff;
+  --focus-ring: 3px solid var(--blue-mark);
+}
+
+/* ── 1. Buttons ─────────────────────────────────────────────────────────── */
+.ld .ld-button { min-block-size: 44px; border: 1.5px solid var(--ink); background: var(--card); color: var(--ink); font-weight: 600; }
+.ld .ld-button:hover:not(:disabled) { background: var(--paper-ruled); }
+.ld .ld-button svg { flex: none; }
+.ld .ld-quiet { border-color: rgba(0, 0, 0, .35); background: var(--card); }
+
+/* Primary: the one thing this screen is for. Action Blue with white text (about 9:1), the Ledger's hard shadow. */
+.ld .ld-primary, .ld .ld-button.ld-primary { background: var(--action); border-color: var(--action); color: var(--on-action);
+  box-shadow: calc(3px * var(--x-sign)) 3px 0 var(--ink); }
+.ld .ld-primary:hover:not(:disabled) { background: var(--action-hover); border-color: var(--action-hover); color: var(--on-action);
+  transform: translate(calc(-1px * var(--x-sign)), -1px); box-shadow: calc(4px * var(--x-sign)) 4px 0 var(--ink); }
+.ld .ld-primary:active:not(:disabled) { transform: translate(calc(3px * var(--x-sign)), 3px); box-shadow: none; }
+
+/* Destructive: coral outline, and solid coral for the final confirm (.ld-danger.ld-primary). */
+.ld .ld-danger { border-color: var(--coral); color: var(--coral); background: var(--card); }
+.ld .ld-danger:hover:not(:disabled) { background: var(--coral-tint); color: var(--coral); }
+.ld .ld-danger.ld-primary { background: var(--coral); border-color: var(--coral); color: #fff; }
+.ld .ld-danger.ld-primary:hover:not(:disabled) { background: #7f242a; border-color: #7f242a; color: #fff; }
+
+/* Confirming that something is done or approved (green, even when it is the screen's primary). */
+.ld .ld-button.ld-success { background: var(--green); border-color: var(--green); color: #fff; }
+.ld .ld-button.ld-success:hover:not(:disabled) { background: #194a30; border-color: #194a30; color: #fff; }
+.ld .ld-button.ld-success:disabled { background: var(--green); border-color: var(--green); color: #fff; }
+
+/* Disabled: the same button, faded. A disabled Send still reads as Send, just not yet. */
+.ld .ld-button:disabled, .ld .ld-button[aria-disabled=true] { opacity: .45; cursor: not-allowed; box-shadow: none; transform: none; }
+.ld .ld-button:not(.ld-primary):not(.ld-danger):not(.ld-success):disabled { background: var(--card); color: var(--ink); border-color: var(--ink); }
+.ld .ld-primary:disabled { background: var(--action); border-color: var(--action); color: var(--on-action); }
+
+/* The sector Work kit's main action card is a primary too. */
+.ld .hb-action-card.is-primary { background: var(--action); border-color: var(--action); color: var(--on-action); }
+.ld .hb-action-card.is-primary:hover { background: var(--action-hover); }
+
+.ld .ld-link { color: var(--blue-ink); font-weight: 600; text-decoration-thickness: 1.5px; }
+.ld .ld-icon-button { inline-size: 44px; block-size: 44px; border: 1.5px solid rgba(0, 0, 0, .35); background: var(--card); }
+
+/* A focus ring nobody can miss (GOV.UK pattern, in Ledger blue). */
+.ld :focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+
+/* Status chips: darker words on their tint, so the colour and the text say the same thing. */
+.ld .ld-chip.is-green { color: var(--green); }
+.ld .ld-chip.is-coral { color: var(--coral); }
+.ld .ld-chip.is-yellow { color: var(--yellow-ink); }
+
+/* ── 2. Every section has its colour ────────────────────────────────────── */
+/* Zero-specificity default, so every section rule below (and the older sidebar rules) wins over it. */
+.ld :where(a[data-section], a[data-tab], .ld-tabbar-more) { --nav-tone: var(--ink-2); --nav-tint: var(--paper-ruled); --nav-mark: var(--ink-2); }
+.ld :is([data-section="today"], [data-tab="today"]), .ld :is([data-section="work"], [data-tab="work"]), .ld :is([data-section="website"], [data-tab="website"]), .ld :is([data-section="audits"], [data-tab="audits"]) { --nav-tone: var(--orange-ink); --nav-tint: var(--orange-tint); --nav-mark: var(--orange); }
+.ld :is([data-section="chats"], [data-tab="chats"]), .ld :is([data-section="team"], [data-tab="team"]) { --nav-tone: var(--blue-ink); --nav-tint: var(--blue-tint); --nav-mark: var(--blue-mark); }
+.ld :is([data-section="broadcasts"], [data-tab="broadcasts"]), .ld :is([data-section="email"], [data-tab="email"]) { --nav-tone: var(--yellow-ink); --nav-tint: var(--yellow-tint); --nav-mark: var(--yellow); }
+.ld :is(:is([data-section="customers"], [data-tab="customers"]), :is([data-section="orders"], [data-tab="orders"]), :is([data-section="stock"], [data-tab="stock"]), :is([data-section="service"], [data-tab="service"]), :is([data-section="money"], [data-tab="money"]), :is([data-section="insights"], [data-tab="insights"])) {
+  --nav-tone: var(--green); --nav-tint: var(--green-tint); --nav-mark: var(--green-mark); }
+.ld :is([data-section="settings"], [data-tab="settings"]) { --nav-tone: var(--ink); --nav-tint: var(--paper-ruled); --nav-mark: var(--ink-2); }
+.ld .ld-nav a svg { background: var(--nav-tint); color: var(--nav-tone); }
+.ld .ld-nav a { color: var(--ink); }
+
+/* The open section: a tinted pill in its own colour with a mark on the start edge, not a black slab. */
+.ld .ld-nav a[aria-current=page], .ld .ld-drawer-nav a[aria-current=page] { background: var(--nav-tint); color: var(--nav-tone);
+  font-weight: 700; box-shadow: inset calc(4px * var(--x-sign)) 0 0 var(--nav-mark); }
+.ld .ld-nav a[aria-current=page] svg, .ld .ld-drawer-nav a[aria-current=page] svg { background: var(--card); color: var(--nav-tone); }
+.ld .ld-drawer-nav a { min-block-size: 48px; align-items: center; gap: 12px; padding: 10px 12px; font-weight: 600; }
+.ld .ld-drawer-nav a svg { box-sizing: content-box; padding: 5px; border-radius: var(--radius); background: var(--nav-tint); color: var(--nav-tone); }
+.ld .ld-drawer-extras { list-style: none; margin: 16px 0 0; padding: 12px 0 0; border-block-start: 1px solid var(--rule-strong); display: grid; gap: 4px; }
+.ld .ld-drawer-extras a { display: flex; align-items: center; min-block-size: 44px; padding-inline: 12px; color: var(--blue-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+
+/* The bottom tab bar exists only on phones. */
+.ld .ld-tabbar-nav { display: none; }
+
+/* ── 3. Phones ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Header, content, tab bar: the page still never scrolls, so the bar is always in reach. */
+  .ld, .ld[lang=ar] { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .ld .ld-top { flex-wrap: nowrap; padding: 8px 12px; gap: 10px; min-block-size: 56px; }
+  .ld .ld-top > .ld-mcp-link, .ld .ld-brand, .ld .ld-lang, .ld .ld-owner-access { display: none; }
+  .ld .ld-header { flex-wrap: nowrap; order: 0; flex-basis: auto; flex: 1 1 auto; gap: 10px; }
+  .ld .ld-identity { flex: 1 1 auto; min-inline-size: 0; }
+  .ld .ld-identity strong { font-size: 15px; }
+  .ld .ld-header .ld-layla-switch { flex: 0 0 auto; order: 0; }
+  .ld .ld-header .ld-switch-text small { display: none; }
+  .ld .ld-header .ld-switch-text strong { font-size: 12px; white-space: nowrap; }
+  .ld .ld-header .ld-switch-note { position: absolute; inset-inline: 12px; inset-block-start: 56px; z-index: 6; background: var(--card); border: 1px solid var(--coral); padding: 8px 10px; }
+  /* A channel problem stays visible as a coral dot that opens the channel settings; the words are in the label. */
+  .ld .ld-health.is-warn { font-size: 0; gap: 0; min-inline-size: 44px; min-block-size: 44px; justify-content: center; }
+  .ld .ld-health.is-warn .ld-dot { inline-size: 14px; block-size: 14px; }
+
+  .ld .ld-nav { display: none; }
+  .ld .ld-tabbar-nav { display: block; grid-row: 3; grid-column: 1; border-block-start: 1px solid var(--rule-strong); background: var(--card);
+    padding-block-end: env(safe-area-inset-bottom, 0); z-index: 6; }
+  /* While More is open the menu is the only way to move, so the bar steps aside. */
+  .ld .ld-tabbar-nav:has(dialog[open]) .ld-tabbar { visibility: hidden; }
+  .ld .ld-main { grid-row: 2; }
+  .ld .ld-tabbar { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); list-style: none; margin: 0; padding: 4px 4px 2px; gap: 2px; }
+  .ld .ld-tabbar li { min-inline-size: 0; }
+  .ld .ld-tabbar a, .ld .ld-tabbar button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    inline-size: 100%; min-block-size: 56px; padding: 4px 2px; border: 0; border-radius: var(--radius); background: transparent; box-shadow: none;
+    font: inherit; font-size: 11.5px; font-weight: 600; line-height: 1.25; color: var(--ink-2); text-decoration: none; cursor: pointer; }
+  .ld[lang=ar] .ld-tabbar a, .ld[lang=ar] .ld-tabbar button { font-size: 12px; }
+  .ld .ld-tabbar span:not(.ld-nav-badge) { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ld .ld-tabbar-nav .ld-tabbar svg { inline-size: 22px; block-size: 22px; padding: 4px 14px; border-radius: 999px; box-sizing: content-box; background: transparent; color: var(--nav-tone); }
+  /* The open tab: its colour fills the icon pill and the label turns bold in the section's ink. */
+  .ld .ld-tabbar-nav .ld-tabbar [aria-current=page] { color: var(--nav-tone); font-weight: 700; background: transparent; box-shadow: none; }
+  .ld .ld-tabbar-nav .ld-tabbar [aria-current=page] svg { background: var(--nav-tint); box-shadow: inset 0 -2px 0 var(--nav-mark); }
+  .ld .ld-tabbar .ld-nav-badge { position: absolute; inset-block-start: 2px; inset-inline-start: calc(50% + 8px); margin: 0; }
+  .ld .ld-tabbar a:focus-visible, .ld .ld-tabbar button:focus-visible { outline-offset: -2px; }
+
+  /* An open conversation is full screen, like WhatsApp: no tab bar, the reply box pinned at the bottom. */
+  .ld:has(.ld-chats.has-thread) .ld-tabbar-nav { display: none; }
+  .ld:has(.ld-chats.has-thread) { grid-template-rows: auto minmax(0, 1fr); }
+
+  /* More opens as a bottom sheet, in thumb reach, rather than a box in the middle of the screen. */
+  .ld .ld-dialog:has(.ld-drawer-nav) { margin: auto 0 0; inline-size: 100vw; max-inline-size: 100vw; max-block-size: 85dvh;
+    border: 0; border-block-start: 1px solid var(--ink); border-radius: 8px 8px 0 0; padding-block-end: env(safe-area-inset-bottom, 0); }
+  .ld .ld-dialog:has(.ld-drawer-nav) .ld-dialog-body { max-block-size: 85dvh; }
+
+  /* Search and filters take the full width rather than sitting in a narrow box. */
+  .ld .ld-toolbar input, .ld .ld-toolbar select { flex: 1 1 100%; }
+  /* Touch targets: 48px on phones. */
+  .ld .ld-button { min-block-size: 48px; }
+  .ld .ld-composer .ld-button { min-inline-size: 72px; }
+}
+
+/* The narrowest phones (320–360px): five whole labels beat clipped ones. */
+@media (max-width: 360px) {
+  .ld .ld-tabbar { padding-inline: 2px; gap: 0; }
+  .ld .ld-tabbar a, .ld .ld-tabbar button { font-size: 10.5px; letter-spacing: -.01em; padding-inline: 0; }
+  .ld[lang=ar] .ld-tabbar a, .ld[lang=ar] .ld-tabbar button { font-size: 11px; letter-spacing: 0; }
+  .ld .ld-tabbar-nav .ld-tabbar svg { padding-inline: 10px; }
+}

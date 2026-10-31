@@ -882,5 +882,58 @@ try {
     assert.equal(await page.locator('.ld-website-reminder').count(), 0, `${lang}: no reminder once the details are sent`); count++;
     await context.close();
   }
+  // Phones (2026-10-31): a one-row header, a bottom tab bar in thumb reach with More for everything else, buttons
+  // big enough to tap, one solid primary per screen, colour contrast that passes, and a full-screen conversation.
+  for (const [lang, width] of [['en', 320], ['en', 375], ['ar', 375]]) {
+    const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en, tag = `${lang} ${width} phone`;
+    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=customers', handler: api(fixture()),
+      authAccount: { id: 'a1', email: 'owner@example.test', accessPlan: 'ascend', profileComplete: true } });
+    await page.locator('.ld-tabbar').waitFor();
+    await page.getByRole('heading', { name: t('Contacts', 'جهات الاتصال') }).waitFor();
+    const top = await page.locator('.ld-top').boundingBox();
+    assert.ok(top.height <= 64, `${tag}: the header is one row (${top.height}px)`); count++;
+    for (const hidden of ['.ld-mcp-link', '.ld-lang', '.ld-brand']) { assert.equal(await page.locator(hidden).isVisible(), false, `${tag}: ${hidden} moves into More`); count++; }
+    const bar = page.locator('.ld-tabbar');
+    const barBox = await bar.boundingBox();
+    assert.ok(barBox.y + barBox.height >= 900 - 2, `${tag}: the tab bar sits at the bottom of the screen`); count++;
+    const items = await bar.locator('a, button').evaluateAll(els => els.map(el => [el.textContent.trim(), el.getBoundingClientRect().height, el.getAttribute('aria-current')]));
+    assert.ok(items.length >= 3 && items.length <= 5, `${tag}: 3–5 tabs (${items.length})`); count++;
+    assert.ok(items.every(([label, h]) => label && h >= 48), `${tag}: every tab is labelled and at least 48px tall`); count++;
+    const clipped = await bar.locator('span:not(.ld-nav-badge)').evaluateAll(spans => spans.filter(x => x.scrollWidth > x.clientWidth + 1).map(x => x.textContent));
+    assert.deepEqual(clipped, [], `${tag}: no tab label is cut off`); count++;
+    assert.deepEqual(items.filter(([, , current]) => current === 'page').map(([label]) => label), [t('Customers', 'العملاء')], `${tag}: the open section is marked`); count++;
+    // Every visible button is big enough to tap, and the screen has exactly one solid primary.
+    const small = await page.locator('.ld-main .ld-button:visible').evaluateAll(els => els.filter(el => el.getBoundingClientRect().height < 44).map(el => el.textContent.trim()));
+    assert.deepEqual(small, [], `${tag}: no button under 44px`); count++;
+    assert.equal(await page.locator('.ld-main .ld-primary:visible').count(), 1, `${tag}: one primary action on the customer list`); count++;
+    const primary = await page.locator('.ld-main .ld-primary:visible').evaluate(el => [getComputedStyle(el).backgroundColor, getComputedStyle(el).color]);
+    assert.deepEqual(primary, ['rgb(31, 79, 122)', 'rgb(255, 255, 255)'], `${tag}: the primary is Action Blue with white text`); count++;
+    const contrast = (await new AxeBuilder({ page }).withRules(['color-contrast', 'target-size']).analyze()).violations.map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
+    assert.deepEqual(contrast, [], `${tag}: colour contrast and target size`); count++;
+    assert.equal(await noOverflow(page), true, `${tag}: no horizontal overflow`); count++;
+    // More opens every section plus the language and AI Connections.
+    await bar.getByRole('button', { name: t('More', 'المزيد') }).click();
+    const drawer = page.locator('.ld-drawer-nav');
+    await drawer.waitFor();
+    assert.equal(await drawer.locator('a[data-section]').count(), await page.locator('.ld-desktop-nav a[data-section]').count(), `${tag}: More lists every section`); count++;
+    assert.deepEqual(await drawer.locator('.ld-drawer-extras a').evaluateAll(a => a.map(x => x.textContent.trim())),
+      [t('العربية', 'English'), t('AI Connections', 'اتصالات الذكاء الاصطناعي')], `${tag}: language and AI Connections live in More`); count++;
+    await page.screenshot({ path: `${OUT}/phone-more-${lang}-${width}.png` });
+    await page.keyboard.press('Escape');
+    // Tapping a tab moves there; an open conversation then takes the whole screen.
+    await bar.getByRole('link', { name: t('Chats', 'المحادثات') }).click();
+    await page.getByRole('button', { name: /Aisha Al Balushi/ }).click();
+    await page.getByRole('heading', { name: 'Aisha Al Balushi' }).waitFor();
+    assert.equal(await bar.isVisible(), false, `${tag}: no tab bar inside a conversation`); count++;
+    const send = page.locator('.ld-composer .ld-primary');
+    assert.equal(await send.isDisabled(), true, `${tag}: Send waits for a message`); count++;
+    assert.equal(Number(await send.evaluate(el => getComputedStyle(el).opacity)) < 1, true, `${tag}: a disabled Send is the same blue, faded`); count++;
+    await page.screenshot({ path: `${OUT}/phone-thread-${lang}-${width}.png` });
+    // A keyboard user sees where they are.
+    await page.keyboard.press('Tab');
+    const ring = await page.evaluate(() => getComputedStyle(document.activeElement).outlineWidth);
+    assert.equal(ring, '3px', `${tag}: the focus ring is 3px`); count++;
+    await context.close();
+  }
   console.log(`${count} dashboard browser assertions passed at 320–1440px in English and Arabic. Synthetic API; no external network.`);
 } finally { await browser.close(); }

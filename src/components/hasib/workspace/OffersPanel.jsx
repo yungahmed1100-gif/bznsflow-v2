@@ -65,7 +65,7 @@ export function OffersPanel({ s, conversationId, compact = false, onChanged }) {
         {o.acceptance && <p className="ld-help">{tr('Accepted by', 'قبِله')} <bdi>{o.acceptance.by}</bdi> · {o.acceptance.evidence}</p>}
         {editable && <div className="ld-actions">
           <button type="button" className="ld-button" disabled={!!busy} onClick={() => savePrices(o)}>{tr('Save prices', 'حفظ الأسعار')}</button>
-          {o.status !== 'needs_price' && <button type="button" className="ld-button ld-primary" disabled={!!busy} onClick={() => run(o, 'adiba_offer_approve')}>{o.status === 'blocked' ? tr('Try sending again', 'أعد المحاولة') : tr('Approve and send', 'اعتماد وإرسال')}</button>}
+          {o.status !== 'needs_price' && <button type="button" className="ld-button ld-primary ld-success" disabled={!!busy} onClick={() => run(o, 'adiba_offer_approve')}>{o.status === 'blocked' ? tr('Try sending again', 'أعد المحاولة') : tr('Approve and send', 'اعتماد وإرسال')}</button>}
           <button type="button" className="ld-button ld-quiet" disabled={!!busy} onClick={() => run(o, 'adiba_offer_withdraw')}>{tr('Withdraw', 'سحب')}</button>
         </div>}
       </li>;

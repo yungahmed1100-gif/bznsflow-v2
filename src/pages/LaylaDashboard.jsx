@@ -58,6 +58,7 @@ import '../styles/fitness.css';
 import '../styles/dental.css';
 import '../styles/sector-records.css';
 import '../styles/product.css';
+import '../styles/dashboard-polish.css';
 
 export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const [params, setParams] = useSearchParams();
@@ -127,20 +128,27 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const data = overview.data;
   const workflow = hasibOverview?.pack ? hasibPack(hasibOverview.pack.id).ownerUi.workflow : 'orders';
   const unavailable = overview.error?.reason === 'dashboard_unavailable';
+  const founder = account?.email?.trim().toLowerCase() === 'ahmed@bznsflowai.com';
+  const langHref = `${s.ar ? '/en' : ''}${previewPack ? '/owner/preview/' + previewPack : '/layla/dashboard'}${params.toString() ? `?${params}` : ''}`;
 
   return (
     <div className="ld" dir={s.ar ? 'rtl' : 'ltr'} lang={lang}>
 
       <a className="ld-skip" href="#ld-main">{s.ar ? 'تخطَّ إلى المحتوى' : 'Skip to content'}</a>
       <header className="ld-top">
-        {!previewIndustry && <a href={lang === 'ar' ? '/mcp' : '/en/mcp'}>{s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections'}</a>}
+        {!previewIndustry && <a className="ld-mcp-link" href={lang === 'ar' ? '/mcp' : '/en/mcp'}>{s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections'}</a>}
         <a className="ld-brand" href={setupPath(lang)} aria-label="BznsFlow"><img src={logoImg} alt="" width="32" height="32" /><span>BznsFlow</span></a>
         {data && !previewIndustry && <DashboardHeader s={s} data={data} onChange={() => overview.refresh({ quiet: true })} onOpenChannels={() => go('settings', { view: 'channels' })} />}
-        {account?.email?.trim().toLowerCase() === 'ahmed@bznsflowai.com' && <a className="ld-button ld-owner-access" href={s.ar ? '/owner' : '/en/owner'}>{s.ar ? 'لوحة الإدارة' : 'Admin dashboard'}</a>}
-        <a className="ld-lang" href={`${s.ar ? '/en' : ''}${previewPack ? '/owner/preview/' + previewPack : '/layla/dashboard'}${params.toString() ? `?${params}` : ''}`} lang={s.ar ? 'en' : 'ar'}>{s.t('language')}</a>
+        {founder && <a className="ld-button ld-owner-access" href={s.ar ? '/owner' : '/en/owner'}>{s.ar ? 'لوحة الإدارة' : 'Admin dashboard'}</a>}
+        <a className="ld-lang" href={langHref} lang={s.ar ? 'en' : 'ar'}>{s.t('language')}</a>
       </header>
       <HasibProvider lang={lang} overview={hasibOverview} business={data?.business?.name || ''} timezone={data?.timezone} onChanged={refreshHasib}>
-      <DashboardNav packId={hasibOverview?.pack?.id} s={s} h={h} sections={map.sections} tab={tab} onSelect={go} search={params} business={data?.business?.name} preview={hasibOverview?.readOnly} badges={{ orders: hasibOverview?.counts?.laylaWaiting || 0, work: hasibOverview?.counts?.followupsActionable || 0 }} />
+      <DashboardNav packId={hasibOverview?.pack?.id} s={s} h={h} sections={map.sections} tab={tab} onSelect={go} search={params} business={data?.business?.name} preview={hasibOverview?.readOnly} badges={{ orders: hasibOverview?.counts?.laylaWaiting || 0, work: hasibOverview?.counts?.followupsActionable || 0 }}
+        extras={[
+          { href: langHref, label: s.t('language'), lang: s.ar ? 'en' : 'ar' },
+          ...(!previewIndustry ? [{ href: lang === 'ar' ? '/mcp' : '/en/mcp', label: s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections' }] : []),
+          ...(founder ? [{ href: s.ar ? '/owner' : '/en/owner', label: s.ar ? 'لوحة الإدارة' : 'Admin dashboard' }] : []),
+        ]} />
       <main id="ld-main" className={`ld-main ${hasibOverview?.readOnly ? 'hb-preview-mode' : ''}`} tabIndex={-1} data-tab={tab}>
         {!previewPack && <AccessNotice s={s} account={account} />}
         {!previewPack && tab !== 'website' && map.sections.includes('website') && <WebsiteReminder s={s} account={account} onGo={go} />}

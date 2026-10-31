@@ -22,9 +22,22 @@ const ICONS = {
   settings: 'M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4L10.7 6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5-2.1-1.6zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z',
 };
 const HASIB_LABELS = new Set(['orders', 'stock', 'service']);
+// Phones (2026-10-31): a bottom tab bar holds the sections owners open most, in thumb reach; the rest, the
+// language and the account links sit behind More. Four sections at most, picked in this order of need.
+const TAB_PRIORITY = ['chats', 'work', 'today', 'orders', 'service', 'customers', 'broadcasts', 'insights', 'settings'];
+const TAB_LIMIT = 4;
+/** The sections that get their own tab on a phone, in the order the sidebar shows them. */
+export function phoneTabs(sections) {
+  const picked = TAB_PRIORITY.filter(id => sections.includes(id)).slice(0, TAB_LIMIT);
+  return sections.filter(id => picked.includes(id));
+}
+const MORE_ICON = 'M5 10.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z';
 
-/** Labelled desktop sidebar, with the same destinations in a native mobile dialog. */
-export function DashboardNav({ s, h, sections, tab, onSelect, badges = {}, packId, business, preview, search = '' }) {
+/**
+ * Labelled desktop sidebar. On phones the same destinations become a bottom tab bar, and More opens a native
+ * dialog with every section plus the language and account links (`extras`, each { href, label, lang? }).
+ */
+export function DashboardNav({ s, h, sections, tab, onSelect, badges = {}, packId, business, preview, search = '', extras = [] }) {
   const [open, setOpen] = useState(false);
   const pack = hasibPack(packId);
   // A preview pack (Media in the local demo) names its sector too; it never reads "Catalyst" on Ascend.
@@ -32,23 +45,45 @@ export function DashboardNav({ s, h, sections, tab, onSelect, badges = {}, packI
   const label = id => id === 'team' ? (s.ar ? 'الفريق' : 'Team') : packId && ['orders', 'stock', 'work'].includes(id) ? pack.ownerUi[id === 'stock' ? 'stock' : 'work'][s.ar ? 'ar' : 'en'] : (HASIB_LABELS.has(id) ? h.t(id) : s.t(id));
   // Deals counts follow-ups that need someone now; Orders counts what Layla is waiting on.
   const badgeLabel = id => id === 'work' ? (s.ar ? 'متابعات تحتاج إجراء' : 'Follow-ups needing action') : h.t('laylaWaitingTile');
-  const links = <ul>
-        {sections.map(id => (
-          <li key={id}>
-            <a href={`?${dashboardSearch(search, id)}`} data-section={id} aria-current={tab === id ? 'page' : undefined} onClick={e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); onSelect(id); setOpen(false); }}>
-              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d={ICONS[id]} fill="currentColor" /></svg>
-              <span>{label(id)}</span>
-              {badges[id] > 0 && <span className="ld-nav-badge" aria-label={badgeLabel(id)}>{badges[id]}</span>}
-            </a>
-          </li>
-        ))}
-      </ul>;
+  // The sidebar and drawer links carry data-section; the phone tab bar's copies carry data-tab, so a page
+  // never has two elements answering to the same section.
+  const link = (id, attr = 'data-section') => (
+    <a href={`?${dashboardSearch(search, id)}`} {...{ [attr]: id }} aria-current={tab === id ? 'page' : undefined} onClick={e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); onSelect(id); setOpen(false); }}>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d={ICONS[id]} fill="currentColor" /></svg>
+      <span>{label(id)}</span>
+      {badges[id] > 0 && <span className="ld-nav-badge" aria-label={badgeLabel(id)}>{badges[id]}</span>}
+    </a>
+  );
+  const links = <ul>{sections.map(id => <li key={id}>{link(id)}</li>)}</ul>;
+  const tabs = phoneTabs(sections);
+  const inMore = tab && !tabs.includes(tab);
   return (
-    <nav className={`ld-nav ${sections.length > 4 ? 'has-hasib' : ''}`} aria-label={s.t('nav')}>
-      <div className="ld-workspace"><small>{preview ? (s.ar ? 'معاينة القطاع' : 'Sector preview') : (s.ar ? 'مساحة العمل' : 'Workspace')}</small><strong>{sector ? (s.ar ? sector.ar : sector.en) : 'Catalyst'}</strong>{business && <span>{business}</span>}</div>
-      <button type="button" className="ld-nav-trigger ld-button" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen(true)}><span aria-hidden="true">☰</span><span>{tab ? label(tab) : s.t('nav')}</span><span className="ld-nav-trigger-label">{s.ar ? 'التنقل' : 'Menu'}</span></button>
-      <div className="ld-desktop-nav">{links}</div>
-      {open && <Dialog s={s} title={s.t('nav')} onClose={() => setOpen(false)}><div className="ld-drawer-nav" dir={s.ar ? 'rtl' : 'ltr'}>{links}</div></Dialog>}
-    </nav>
+    <>
+      <nav className={`ld-nav ${sections.length > 4 ? 'has-hasib' : ''}`} aria-label={s.t('nav')}>
+        <div className="ld-workspace"><small>{preview ? (s.ar ? 'معاينة القطاع' : 'Sector preview') : (s.ar ? 'مساحة العمل' : 'Workspace')}</small><strong>{sector ? (s.ar ? sector.ar : sector.en) : 'Catalyst'}</strong>{business && <span>{business}</span>}</div>
+        <div className="ld-desktop-nav">{links}</div>
+      </nav>
+      {/* Phones only: its own landmark, so the sidebar's links are never counted twice. */}
+      <nav className="ld-tabbar-nav" aria-label={s.t('nav')}>
+        <ul className="ld-tabbar">
+          {tabs.map(id => <li key={id}>{link(id, 'data-tab')}</li>)}
+          <li>
+            {/* More keeps the ld-nav-trigger class: it is the phone's way into every section. When the open
+                section lives behind it, More takes that section's colour and name so the owner knows where they are. */}
+            <button type="button" className="ld-nav-trigger ld-tabbar-more" data-tab={inMore ? tab : undefined} aria-current={inMore ? 'page' : undefined}
+              aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen(true)}>
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d={inMore ? ICONS[tab] : MORE_ICON} fill="currentColor" /></svg>
+              <span>{inMore ? label(tab) : (s.ar ? 'المزيد' : 'More')}</span>
+            </button>
+          </li>
+        </ul>
+        {open && <Dialog s={s} title={s.t('nav')} onClose={() => setOpen(false)}>
+          <div className="ld-drawer-nav" dir={s.ar ? 'rtl' : 'ltr'}>
+            {links}
+            {extras.length > 0 && <ul className="ld-drawer-extras">{extras.map(x => <li key={x.href}><a href={x.href} lang={x.lang}>{x.label}</a></li>)}</ul>}
+          </div>
+        </Dialog>}
+      </nav>
+    </>
   );
 }

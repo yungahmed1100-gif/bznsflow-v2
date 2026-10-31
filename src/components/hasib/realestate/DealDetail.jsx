@@ -78,7 +78,7 @@ export function DealDetail({ deal, ar, h, s, timezone, manager, busy, viewings, 
       <b><Money h={h} minor={o.amountMinor} /></b> · {o.propertyLabel} <span className="ld-chip">{label('offer', o.status, ar)}</span>
       {o.decisionDueAt && <span className={o.decisionDueAt < Date.now() && ['approved', 'presented', 'countered'].includes(o.status) ? 'hb-warn' : 'ld-help'}> · {tr('decision by', 'القرار قبل')} {formatDateTime(o.decisionDueAt, s.lang, timezone)}</span>}<p>{o.terms}</p>
       <span className="ld-actions">
-        {manager && o.status === 'draft' && <button type="button" className="ld-button ld-primary" disabled={busy} onClick={() => act('offer_approve', { offerId: o.id, version: o.version }, null, tr('Approve this offer so it can be presented?', 'اعتماد هذا العرض ليُقدَّم؟'))}>{tr('Approve', 'اعتماد')}</button>}
+        {manager && o.status === 'draft' && <button type="button" className="ld-button ld-primary ld-success" disabled={busy} onClick={() => act('offer_approve', { offerId: o.id, version: o.version }, null, tr('Approve this offer so it can be presented?', 'اعتماد هذا العرض ليُقدَّم؟'))}>{tr('Approve', 'اعتماد')}</button>}
         {(OFFER_NEXT[o.status] || []).filter(st => st !== 'countered').map(st => <button key={st} type="button" className={`ld-button ${['rejected', 'withdrawn'].includes(st) ? 'ld-quiet' : ''}`} disabled={busy}
           onClick={() => act('offer_save', { offerId: o.id, version: o.version, workflow: { status: st } }, null, st === 'presented' ? null : tr(`Record this offer as ${label('offer', st, false).toLowerCase()}? This can’t be undone.`, `تسجيل العرض كـ«${label('offer', st, true)}»؟ لا يمكن التراجع.`))}>{label('offer', st, ar)}</button>)}
         {(OFFER_NEXT[o.status] || []).includes('countered') && <button type="button" className="ld-button" onClick={() => openForm('counter', { offerId: o.id, version: o.version, amount: o.amountMinor / 1000, terms: o.terms })}>{tr('Counter-offer', 'عرض مضاد')}</button>}
@@ -116,7 +116,7 @@ export function DealDetail({ deal, ar, h, s, timezone, manager, busy, viewings, 
     {open && <button type="button" className="ld-button" onClick={() => openForm('draft', { opportunityId: deal.id, lockedDeal: who, kind: 'follow_up' })}>{tr('Draft a message', 'مسودة رسالة')}</button>}
     {drafts.length ? <ul className="hb-re-list">{drafts.map(d => <li key={d.id}>
       <b>{label('draftKind', d.kind, ar)}</b> <span className="ld-chip">{label('draft', d.status, ar)}</span><p>{d.text}</p>
-      {manager && d.status === 'draft' && <button type="button" className="ld-button ld-primary" disabled={busy} onClick={() => act('draft_approve', { draftId: d.id, version: d.version }, null, tr('Send this message to the customer?', 'إرسال هذه الرسالة إلى العميل؟'))}>{tr('Approve and send', 'اعتماد وإرسال')}</button>}
+      {manager && d.status === 'draft' && <button type="button" className="ld-button ld-primary ld-success" disabled={busy} onClick={() => act('draft_approve', { draftId: d.id, version: d.version }, null, tr('Send this message to the customer?', 'إرسال هذه الرسالة إلى العميل؟'))}>{tr('Approve and send', 'اعتماد وإرسال')}</button>}
     </li>)}</ul> : <p className="ld-help">{tr('No messages drafted.', 'لا توجد رسائل.')}</p>}
 
     <h3 id="re-activity">{tr('Activity', 'النشاط')}</h3>

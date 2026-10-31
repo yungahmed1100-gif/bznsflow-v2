@@ -260,6 +260,22 @@ Isometric block forms from the brand system are permitted as illustration inside
 - **Active:** Pressed shadow — element translates into its shadow.
 - **Focus:** Blue outline, `2px` offset. Never removed, never replaced with a glow.
 
+#### Owner dashboard buttons — the Action Blue amendment (2026-10-31)
+Ahmed asked for buttons that explain themselves on a phone. Inside the owner dashboard (`src/styles/dashboard-polish.css`) the Annotation Rule's "never a fill" is lifted **for buttons only**, and each button role has one colour that means one thing (the model of shadcn/ui and Radix, in the Ledger's shape and shadow):
+
+| Role | Class | Look | Use |
+|---|---|---|---|
+| Primary | `.ld-primary` | Action Blue fill (`--blue-ink #1f4f7a`), white text (about 9:1), `3px` hard Ink shadow, no visible border | The one main action on a screen: Send, Add, Save, Next |
+| Secondary | `.ld-button` | Card fill, `1.5px` Ink border | Everything else that is still a button |
+| Destructive | `.ld-danger` | Coral outline and text; **solid Coral, white text** for the final confirm (`.ld-danger.ld-primary`) | Delete, stop, cancel |
+| Confirm done | `.ld-success` | Green fill, white text | Approve, mark done, mark paid |
+| Rare / navigation | `.ld-link` | Blue Ink underlined text | Secondary navigation, rare actions |
+| Disabled | any + `:disabled` | The same button at 45% opacity, `not-allowed` cursor | Never a colour that could pass for a real button |
+
+Rules: one Primary per screen state; every Primary has a verb label; buttons are at least `44px` tall (`48px` on phones); the focus ring is `3px` Blue Mark at `2px` offset. Hover lifts by `1px` and deepens the shadow to `4px`; active presses in.
+
+The dashboard's **section colours** follow the Meaning Rule: Chats and Team blue; Customers, Orders, Stock, Service, Money and Insights green; Work, Today, Website and Audits orange; Broadcasts and Email yellow; Settings ink. The open section is a **tint of its colour** with a `4px` mark on the start edge and bold text (replacing the solid Ink fill). On phones (`≤768px`) sections are a **bottom tab bar** of up to four labelled sections plus More, and the header is one row.
+
 ### Chips
 - **Style:** Paper Ruled fill, Ink Secondary text, Label typography, fully rounded, no border, no shadow.
 - **State:** A selected chip inverts to Ink fill with Paper text.

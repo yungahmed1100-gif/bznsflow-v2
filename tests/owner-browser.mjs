@@ -116,7 +116,8 @@ try {
         const link = page.locator(`.ld-nav a[href*="tab=${tab}"]`);
         if (!(await link.count())) continue;
         if (width <= 768) await page.locator('.ld-nav-trigger').click();
-        await page.locator(`.ld-nav a[href*="tab=${tab}"]:visible`).click(); await page.waitForTimeout(100);
+        // Desktop: the sidebar. Phones: More's drawer (the sidebar is replaced by the bottom tab bar).
+        await page.locator(`:is(.ld-nav, .ld-drawer-nav) a[href*="tab=${tab}"]:visible`).click(); await page.waitForTimeout(100);
         await page.locator('.ld-main .ld-state[role="status"]').waitFor({ state: 'hidden' });
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${pack} ${lang} ${width} ${tab} overflow`);
       }
