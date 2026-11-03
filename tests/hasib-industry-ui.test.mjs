@@ -30,7 +30,7 @@ test('all 16 built owner packs specify exactly three distinct bilingual measures
     assert.ok(!pack.orderFields.some(f => f.key === 'pickup_at'), 'fulfilment.dueAt owns pickup time');
   }
   assert.equal(HASIB_LIVE_PACKS.length + HASIB_PREVIEW_PACKS.length, 16);
-  assert.deepEqual(HASIB_LIVE_PACKS, ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness', 'media']);
+  assert.deepEqual(HASIB_LIVE_PACKS, ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness', 'media', 'hvac']);
 });
 
 test('every live dashboard exposes bilingual icon actions with valid destinations', () => {
@@ -43,7 +43,7 @@ test('every live dashboard exposes bilingual icon actions with valid destination
       assert.ok(actionId && en && ar && icon, `${id}:${actionId}`);
       // Six-tab packs (Real Estate's successors) point into their Work tab.
       assert.ok(['today', 'orders', 'stock', 'service', 'money', 'customers', 'work'].includes(go[0]), `${id}:${actionId}:${go[0]}`);
-      if (go[1]?.action) assert.ok(['product', 'import', 'repair', 'trade-in', 'warranty', 'setup', 'property', 'opportunity', 'viewing', 'offer', 'follow-up', 'project', 'progress', 'variation', 'commitment', 'appointment', 'vehicle', 'work-order', 'membership', 'class', 'visit', 'brief'].includes(go[1].action));
+      if (go[1]?.action) assert.ok(['product', 'import', 'repair', 'trade-in', 'warranty', 'setup', 'property', 'opportunity', 'viewing', 'offer', 'follow-up', 'project', 'progress', 'variation', 'commitment', 'appointment', 'vehicle', 'work-order', 'membership', 'class', 'visit', 'brief', 'job'].includes(go[1].action));
     }
   }
 });
