@@ -37,7 +37,7 @@ function fixture() {
   return { contacts, messages, campaigns: [], calls: [], bodies: [], takeover: {}, imported: new Map() };
 }
 
-function api(state, { overviewStatus = 200, overviewReason, founderPreview = false, broadcastEnabled = true, plan = 'ascend', connected = true, imageHeader = false } = {}) {
+function api(state, { overviewStatus = 200, overviewReason, founderPreview = false, broadcastEnabled = true, plan = 'ascend', connected = true, imageHeader = false, staleTemplates = false } = {}) {
   // The real overview always carries the plan's capabilities (convex/blueDashboardState.js); this owner is on Ascend unless a test says otherwise.
   const overview = { ok: true, csrfToken: 'a'.repeat(64), account: { email: 'owner@example.test' }, plan, workspaceRole: 'manager', capabilities: capabilitiesFor(plan), dashboardAvailable: true, broadcastEnabled, connected,
     founderPreview,
@@ -65,8 +65,14 @@ function api(state, { overviewStatus = 200, overviewReason, founderPreview = fal
       case 'thread': { const c = state.contacts.find(x => x.conversationId === body.conversationId);
         return ok({ contact: c, conversation: { id: c.conversationId, takeover: !!state.takeover[c.conversationId], optout: c.optout, windowOpenUntil: c.windowOpenUntil }, messages: state.messages[c.conversationId], before: null }); }
       case 'contacts': return ok({ items: state.contacts.map(c => ({ ...c, takeover: !!state.takeover[c.conversationId] })), cursor: null, migrationPending: false, qualification: pack });
-      case 'templates': return ok({ templates: imageHeader ? [template, { ...template, id: '222', name: 'clinics_1', language: 'ar', header: { format: 'IMAGE' }, body: 'مرحباً فريق {{1}}، كل رسالة من مريض قد تكون موعداً.',
-        variables: [{ key: '1', component: 'body', example: 'عيادة الابتسامة' }] }] : [template], syncedAt: now, broadcastAvailable: true });
+      case 'templates': case 'sync_templates': {
+        // A stale list holds clinics_1 as the pre-release rules judged it, until a sync.
+        if (body.action === 'sync_templates') state.synced = true;
+        const stale = staleTemplates && !state.synced;
+        const clinics = { ...template, id: '222', name: 'clinics_1', language: 'ar', header: { format: 'IMAGE' }, body: 'مرحباً فريق {{1}}، كل رسالة من مريض قد تكون موعداً.',
+          variables: [{ key: '1', component: 'body', example: 'عيادة الابتسامة' }], ...(stale ? { sendable: false, unsupportedReason: 'media_header' } : {}) };
+        return ok({ templates: imageHeader || staleTemplates ? [template, clinics] : [template], syncedAt: now, stale, broadcastAvailable: true });
+      }
       case 'campaign_media_upload_url': return ok({ url: 'https://upload.test/1' });
       case 'campaign_media_register': return ok({ media: { id: 'media1', format: body.format, contentType: 'image/png', size: 68 } });
       case 'campaigns': return ok({ items: state.campaigns, cursor: null });
@@ -483,6 +489,18 @@ try {
     await dialog.getByRole('button', { name: 'متابعة' }).click();
     await dialog.getByText(/سيستلمها/).waitFor();
     assert.equal(state.bodies.find(b => b.action === 'campaign_preview').headerMediaId, 'media1', 'the file rides on preview'); count++;
+    assert.equal(state.bodies.some(b => b.action === 'sync_templates'), false, 'fresh templates are not re-synced'); count++;
+    await context.close();
+  }
+
+  // Templates stored before a rule change: Broadcasts re-syncs them once, and clinics_1 becomes selectable. Arabic, phone width.
+  {
+    const state = fixture();
+    const { page, context } = await openPage(browser, { width: 375, lang: 'ar', path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state, { staleTemplates: true }) });
+    await page.locator('.ld-template:not(.is-disabled)', { hasText: 'clinics_1' }).waitFor(); count++;
+    assert.equal(state.bodies.filter(b => b.action === 'sync_templates').length, 1, 'one automatic sync'); count++;
+    await page.getByRole('button', { name: 'رفع قائمة' }).click();
+    assert.equal(await page.getByRole('dialog').getByRole('radio', { name: /clinics_1/ }).isDisabled(), false, 'clinics_1 can be chosen'); count++;
     await context.close();
   }
 

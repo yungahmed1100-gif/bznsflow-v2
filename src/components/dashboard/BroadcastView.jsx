@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { dashboard } from '../../lib/dashboard/api';
 import { formatDateTime } from '../../lib/dashboard/format';
@@ -20,6 +20,14 @@ export function BroadcastView({ s, overview, onTimezone }) {
     setBusy(label); setError('');
     try { await task(); } catch (e) { setError(s.reason(e.reason)); } finally { setBusy(''); }
   };
+  const sync = () => run('sync', async () => { templates.setData(await dashboard('sync_templates', {}, { timeout: 60000 })); });
+  // Templates stored under older rules can be wrongly greyed out; refresh them once.
+  const resynced = useRef(false);
+  useEffect(() => {
+    if (!templates.data?.stale || !sending || resynced.current) return;
+    resynced.current = true;
+    sync();
+  }, [templates.data, sending]);
   const list = templates.data?.templates || [];
   const ready = list.some(t => t.sendable);
   const start = (
@@ -84,7 +92,7 @@ export function BroadcastView({ s, overview, onTimezone }) {
         <div className="ld-section-head">
           <h2 id="ld-templates">{s.t('templates')}</h2>
           <p className="ld-help">{templates.data?.syncedAt ? s.t('lastSynced', { time: formatDateTime(templates.data.syncedAt, s.lang, overview.timezone) }) : s.t('neverSynced')}</p>
-          <button type="button" className="ld-button" disabled={!!busy} onClick={() => run('sync', async () => { templates.setData(await dashboard('sync_templates', {}, { timeout: 60000 })); })}>{busy === 'sync' ? s.t('syncing') : s.t('syncTemplates')}</button>
+          <button type="button" className="ld-button" disabled={!!busy} onClick={sync}>{busy === 'sync' ? s.t('syncing') : s.t('syncTemplates')}</button>
           <a className="ld-link" href={MANAGER_URL} target="_blank" rel="noopener noreferrer">{s.t('manageTemplates')}</a>
         </div>
         {!list.length ? <p className="ld-state">{s.t('noTemplates')}</p> : (

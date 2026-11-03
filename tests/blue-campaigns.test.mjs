@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { sanitizeTemplate, renderTemplate, templateComponents, mediaHeaderOf, resolveParameters, cleanParameter, templateSendResult, messagingAllowance, validMapping, validRecipientValues } from '../config/layla-templates.js';
+import { sanitizeTemplate, renderTemplate, templateComponents, mediaHeaderOf, resolveParameters, cleanParameter, templateSendResult, messagingAllowance, validMapping, validRecipientValues, TEMPLATE_RULES } from '../config/layla-templates.js';
 import { zonedLocalToUtc, validTimezone } from '../api/_lib/layla/timezone.js';
 import { runCampaignSend, runCampaignStart } from '../api/_lib/layla/campaign-worker.js';
 import { fetchApprovedTemplates } from '../api/_lib/layla/templates.js';
@@ -358,6 +358,21 @@ test('an image, video or PDF header is sendable and goes out as a link to the ow
   assert.deepEqual(templateComponents(pdf, body, { link: 'https://files.test/b', filename: 'offer.pdf' })[0],
     { type: 'header', parameters: [{ type: 'document', document: { link: 'https://files.test/b', filename: 'offer.pdf' } }] });
   assert.equal(mediaHeaderOf(sanitizeTemplate(approved)), null, 'a text header needs no file');
+});
+
+test('templates synced under older rules are reported stale until the next sync', async () => {
+  const { h, t } = await campaignTenant({ contacts: 0 });
+  const list = () => h.campaigns('templates', { sessionHash: t.sessionHash }).then(r => r.value);
+  assert.equal(sanitizeTemplate(approved).rules, TEMPLATE_RULES);
+  assert.equal((await list()).stale, false, 'rows from the current rules are fresh');
+  const { rules, ...old } = sanitizeTemplate(imageTemplate);
+  const before = [{ ...old, sendable: false, unsupportedReason: 'media_header' }];
+  await h.campaigns('replace_templates', { sessionHash: t.sessionHash, integrationId: t.integration.id, templates: before });
+  assert.deepEqual([(await list()).stale, (await list()).templates[0].sendable], [true, false], 'a row without a rules version is stale');
+  await h.campaigns('replace_templates', { sessionHash: t.sessionHash, integrationId: t.integration.id, templates: [{ ...old, rules: TEMPLATE_RULES - 1 }] });
+  assert.equal((await list()).stale, true, 'an older rules version is stale');
+  await h.campaigns('replace_templates', { sessionHash: t.sessionHash, integrationId: t.integration.id, templates: [sanitizeTemplate(imageTemplate)] });
+  assert.deepEqual([(await list()).stale, (await list()).templates[0].sendable], [false, true], 'a sync under the current rules clears it');
 });
 
 async function imageTenant() {

@@ -58,3 +58,24 @@ After the change, an ExcelJS write/read round trip and `checkly --version` still
   - The first real use is Ahmed's: sync templates, choose `clinics_1`, add the image.
   - Recipients still need recorded consent.
 - **Abandoned uploads:** a file uploaded but never registered (wizard closed mid-upload) is not swept.
+
+## Addendum: stale template verdicts (same day)
+**Symptom:** after the release, `clinics_1` still showed "Unsupported header" in New broadcast.
+
+**Cause:**
+- The account's templates were last synced at 10:11 Muscat, before the release went live at 11:05.
+- `sendable` is computed once, at sync time, so the stored rows kept the old rules' verdict (`media_header`). The live sanitiser was correct.
+
+**Fix now:**
+- Re-synced Ahmed's templates through the BznsFlow connector.
+- Read back afterwards: `clinics_1` and `a_quick_tip_for_your_whatsapp` are `sendable: true`.
+
+**Guard:**
+- `config/layla-templates.js` exports `TEMPLATE_RULES` (now 2), and every synced row stores it (`blueTemplates.rules`, optional).
+- The `templates` read returns `stale` when any row has an older or missing version.
+- Broadcasts re-syncs once automatically. The chat-thread wizard does the same before listing templates and keeps the stored list if that sync fails.
+- **Bump `TEMPLATE_RULES` whenever a sanitiser change could flip `sendable`.**
+
+**Tests:**
+- unit test "templates synced under older rules are reported stale until the next sync";
+- browser test: a stale list is re-synced exactly once, and `clinics_1` becomes selectable; fresh lists are never re-synced (600 assertions).

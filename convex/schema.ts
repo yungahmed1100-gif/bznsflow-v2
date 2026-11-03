@@ -144,7 +144,7 @@ export default defineSchema({
   blueBusinessSettings: defineTable({accountId:v.id('accounts'),timezone:v.string(),updatedAt:v.number()}).index('by_account',['accountId']),
   blueTemplates: defineTable({accountId:v.id('accounts'),integrationId:v.string(),templateId:v.string(),name:v.string(),language:v.string(),category:v.string(),status:v.string(),parameterFormat:v.string(),
     header:v.optional(v.object({format:v.string(),text:v.optional(v.string())})),body:v.string(),footer:v.optional(v.string()),buttons:v.array(v.object({type:v.string(),text:v.string()})),
-    variables:v.array(v.object({key:v.string(),component:v.string(),example:v.optional(v.string())})),sendable:v.boolean(),unsupportedReason:v.optional(v.string()),syncedAt:v.number()})
+    variables:v.array(v.object({key:v.string(),component:v.string(),example:v.optional(v.string())})),sendable:v.boolean(),unsupportedReason:v.optional(v.string()),rules:v.optional(v.number()),syncedAt:v.number()})
     .index('by_account_template',['accountId','templateId']).index('by_account_synced',['accountId','syncedAt']),
   blueCampaigns: defineTable({mcpConnectionId:v.optional(v.id('mcpConnections')),mcpRunId:v.optional(v.id('mcpRuns')),accountId:v.id('accounts'),integrationId:v.string(),requestId:v.string(),name:v.string(),origin:v.union(v.literal('broadcast'),v.literal('chat')),
     template:v.object({templateId:v.string(),name:v.string(),language:v.string(),category:v.string(),parameterFormat:v.string(),body:v.string(),header:v.optional(v.object({format:v.string(),text:v.optional(v.string())})),footer:v.optional(v.string())}),

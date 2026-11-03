@@ -9,7 +9,7 @@ import { DAY, displayName } from './blueContacts.js';
 import { marketingEligibility, recordUndeliverable } from './blueAudienceState.js';
 import { messagingReady } from './blueMessagingState.js';
 import { formatPhone } from '../src/lib/dashboard/phone.js';
-import { resolveParameters, validMapping, validTemplateRecord, validRecipientValues, recipientValueMap, mediaHeaderOf, headerMediaProblem } from '../config/layla-templates.js';
+import { resolveParameters, validMapping, validTemplateRecord, validRecipientValues, recipientValueMap, mediaHeaderOf, headerMediaProblem, TEMPLATE_RULES } from '../config/layla-templates.js';
 
 export const MAX_RECIPIENTS = 100;
 export const CAMPAIGN_PER_MINUTE = 20;
@@ -71,7 +71,9 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
   if (a.operation === 'templates') {
     const rows = await ctx.db.query('blueTemplates').withIndex('by_account_synced', q => q.eq('accountId', accountId)).order('desc').take(250);
     const current = rows.filter(t => t.integrationId === integration?.id);
-    return ok({ templates: current.map(publicTemplate), syncedAt: current[0]?.syncedAt || null, broadcastAvailable: await broadcastEnabled(ctx) });
+    // Rows synced under older rules may carry an outdated `sendable`; the dashboard re-syncs them.
+    const stale = current.some(t => (t.rules ?? 1) < TEMPLATE_RULES);
+    return ok({ templates: current.map(publicTemplate), syncedAt: current[0]?.syncedAt || null, stale, broadcastAvailable: await broadcastEnabled(ctx) });
   }
   if (a.operation === 'replace_templates') {
     if (!integration || a.integrationId !== integration.id || !Array.isArray(a.templates) || a.templates.length > 250 || !a.templates.every(validTemplateRecord)) return fail('invalid_templates');

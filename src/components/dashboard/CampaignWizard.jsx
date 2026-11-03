@@ -25,7 +25,12 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
   const [consent, setConsent] = useState({ how: '', other: '', date: today(), attested: false });
   const [media, setMedia] = useState(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [created, setCreated] = useState(null);
-  useEffect(() => { if (!templates) dashboard('templates').then(r => setTemplates(r.templates)).catch(e => setError(s.reason(e.reason))); }, []);
+  // Templates stored under older rules are re-synced so a newly supported one isn't greyed out.
+  useEffect(() => {
+    if (templates) return;
+    dashboard('templates').then(r => r.stale && overview?.broadcastEnabled ? dashboard('sync_templates', {}, { timeout: 60000 }).catch(() => r) : r)
+      .then(r => setTemplates(r.templates)).catch(e => setError(s.reason(e.reason)));
+  }, []);
   const template = templates?.find(t => t.id === templateId);
   const current = STEPS[step];
 

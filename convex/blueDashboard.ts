@@ -11,7 +11,7 @@ const field = v.object({ key: v.string(), value: v.union(v.string(), v.null()) }
 const templateRecord = v.object({ templateId: v.string(), name: v.string(), language: v.string(), category: v.string(), status: v.string(), parameterFormat: v.string(),
   header: v.optional(v.object({ format: v.string(), text: v.optional(v.string()) })), body: v.string(), footer: v.optional(v.string()),
   buttons: v.array(v.object({ type: v.string(), text: v.string() })), variables: v.array(v.object({ key: v.string(), component: v.string(), example: v.optional(v.string()) })),
-  sendable: v.boolean(), unsupportedReason: v.optional(v.string()) });
+  sendable: v.boolean(), unsupportedReason: v.optional(v.string()), rules: v.optional(v.number()) });
 
 // Every call is resolved to one tenant from sessionHash inside the executors.
 export const execute = internalMutation({
