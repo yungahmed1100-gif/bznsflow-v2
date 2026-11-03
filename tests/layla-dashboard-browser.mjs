@@ -37,7 +37,7 @@ function fixture() {
   return { contacts, messages, campaigns: [], calls: [], bodies: [], takeover: {}, imported: new Map() };
 }
 
-function api(state, { overviewStatus = 200, overviewReason, founderPreview = false, broadcastEnabled = true, plan = 'ascend', connected = true } = {}) {
+function api(state, { overviewStatus = 200, overviewReason, founderPreview = false, broadcastEnabled = true, plan = 'ascend', connected = true, imageHeader = false } = {}) {
   // The real overview always carries the plan's capabilities (convex/blueDashboardState.js); this owner is on Ascend unless a test says otherwise.
   const overview = { ok: true, csrfToken: 'a'.repeat(64), account: { email: 'owner@example.test' }, plan, workspaceRole: 'manager', capabilities: capabilitiesFor(plan), dashboardAvailable: true, broadcastEnabled, connected,
     founderPreview,
@@ -65,7 +65,10 @@ function api(state, { overviewStatus = 200, overviewReason, founderPreview = fal
       case 'thread': { const c = state.contacts.find(x => x.conversationId === body.conversationId);
         return ok({ contact: c, conversation: { id: c.conversationId, takeover: !!state.takeover[c.conversationId], optout: c.optout, windowOpenUntil: c.windowOpenUntil }, messages: state.messages[c.conversationId], before: null }); }
       case 'contacts': return ok({ items: state.contacts.map(c => ({ ...c, takeover: !!state.takeover[c.conversationId] })), cursor: null, migrationPending: false, qualification: pack });
-      case 'templates': return ok({ templates: [template], syncedAt: now, broadcastAvailable: true });
+      case 'templates': return ok({ templates: imageHeader ? [template, { ...template, id: '222', name: 'clinics_1', language: 'ar', header: { format: 'IMAGE' }, body: 'مرحباً فريق {{1}}، كل رسالة من مريض قد تكون موعداً.',
+        variables: [{ key: '1', component: 'body', example: 'عيادة الابتسامة' }] }] : [template], syncedAt: now, broadcastAvailable: true });
+      case 'campaign_media_upload_url': return ok({ url: 'https://upload.test/1' });
+      case 'campaign_media_register': return ok({ media: { id: 'media1', format: body.format, contentType: 'image/png', size: 68 } });
       case 'campaigns': return ok({ items: state.campaigns, cursor: null });
       case 'campaign_detail': return ok({ campaign: state.campaigns.find(c => c.id === body.campaignId) });
       case 'import_contacts': {
@@ -454,6 +457,32 @@ try {
     const sent = state.bodies.find(b => b.action === 'campaign_create');
     assert.deepEqual(sent.values.map(v => v.values.find(x => x.key === 'body:2').text), ['20%', '15%', '10%']); count++;
     assert.equal(state.bodies.find(b => b.action === 'import_contacts').consent.source, 'They signed up in store'); count++;
+    await context.close();
+  }
+
+  // An image-header template: Continue waits for the owner's image, which then rides on preview. Arabic, phone width.
+  {
+    const state = fixture();
+    const { page, context } = await openPage(browser, { width: 375, lang: 'ar', path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state, { imageHeader: true }) });
+    await page.route('https://upload.test/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ storageId: 'kg2test' }) }));
+    await page.getByRole('button', { name: 'رفع قائمة' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('radio', { name: /clinics_1/ }).check();
+    await dialog.getByText('صورة الرأس').waitFor(); count++;
+    assert.equal(await dialog.getByRole('button', { name: 'متابعة' }).isDisabled(), true, 'an image header needs its file first'); count++;
+    const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4b80000000049454e44ae426082', 'hex');
+    await dialog.locator('.ld-header-media input[type=file]').setInputFiles({ name: 'clinic.png', mimeType: 'image/png', buffer: png });
+    await dialog.getByText('أُضيف').waitFor(); count++;
+    assert.deepEqual(state.bodies.find(b => b.action === 'campaign_media_register'), { action: 'campaign_media_register', storageId: 'kg2test', format: 'IMAGE', filename: 'clinic.png' }); count++;
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'file step fits 375'); count++;
+    assert.deepEqual(await axe(page), []); count++;
+    await page.screenshot({ path: `${OUT}/broadcast-image-header-ar-375.png` });
+    await dialog.getByRole('button', { name: 'متابعة' }).click();
+    await dialog.getByRole('tab', { name: 'جهات محفوظة' }).click();
+    await dialog.getByRole('checkbox', { name: /محمد/ }).check();
+    await dialog.getByRole('button', { name: 'متابعة' }).click();
+    await dialog.getByText(/سيستلمها/).waitFor();
+    assert.equal(state.bodies.find(b => b.action === 'campaign_preview').headerMediaId, 'media1', 'the file rides on preview'); count++;
     await context.close();
   }
 

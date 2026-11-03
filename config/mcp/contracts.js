@@ -656,6 +656,14 @@ for (const op of ["connect", "disconnect"])
     path: "/catalyst/setup",
     capability: "channelsSetup",
   });
+// A template's image, video or PDF header file is chosen in the browser broadcast wizard.
+for (const op of ["campaign_media_upload_url", "campaign_media_register"])
+  add("dashboard", op, "read", {}, [], {
+    disposition: "handoff",
+    path: "/layla/dashboard",
+    capability: "broadcasts",
+    description: "Add the header image, video or PDF in the website's broadcast wizard.",
+  });
 for (const op of ["get", "save"])
   add("onboarding", op, "read", {}, [], {
     disposition: "handoff",

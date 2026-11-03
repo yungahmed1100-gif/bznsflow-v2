@@ -133,7 +133,8 @@ export function createDashboardApi({ env = process.env, fetcher = fetch, now = D
         const limit = await allowance({ c, integration, token, fetcher });
         const mapping = Array.isArray(body.mapping) ? body.mapping.slice(0, 20).map(m => ({ key: String(m?.key || '').slice(0, 60), source: String(m?.source || '').slice(0, 50), value: String(m?.value ?? '').slice(0, 1024) })) : [];
         const contactIds = Array.isArray(body.contactIds) ? body.contactIds.slice(0, 500).map(id).filter(Boolean) : [];
-        const args = { sessionHash, actorAccountId: account.id, templateId: optionalString(body.templateId, 30) || '', mapping, contactIds, ...(values ? { values } : {}), allowance: Number.isFinite(limit) ? Math.min(limit, 1e9) : 1e9 };
+        const args = { sessionHash, actorAccountId: account.id, templateId: optionalString(body.templateId, 30) || '', mapping, contactIds, ...(values ? { values } : {}),
+          ...(id(body.headerMediaId) ? { headerMediaId: body.headerMediaId } : {}), allowance: Number.isFinite(limit) ? Math.min(limit, 1e9) : 1e9 };
         if (action === 'campaign_preview') return reply(await store('campaign_preview', args));
         const timezone = body.schedule?.timezone;
         if (!validTimezone(timezone)) throw new PilotError('invalid_timezone');
@@ -144,6 +145,12 @@ export function createDashboardApi({ env = process.env, fetcher = fetch, now = D
         // The browser's request id makes a double-clicked confirmation create one campaign.
         return reply(await store('campaign_create', { ...args, requestId: uuid(body.requestId) || '', confirm: body.confirm === true, scheduledAt, timezone,
           name: optionalString(body.name, 80) || '', origin: body.origin === 'chat' ? 'chat' : 'broadcast' }));
+      }
+      // An image, video or PDF for a template's header: the browser uploads it straight to storage, then registers it.
+      if (action === 'campaign_media_upload_url') return reply(await store('campaign_media_upload_url', { sessionHash, actorAccountId: account.id }));
+      if (action === 'campaign_media_register') {
+        const filename = optionalString(body.filename, 120);
+        return reply(await store('campaign_media_register', { sessionHash, actorAccountId: account.id, storageId: id(body.storageId) || '', format: optionalString(body.format, 10) || '', ...(filename ? { filename } : {}) }));
       }
       if (action === 'campaign_cancel') return reply(await store('campaign_cancel', { sessionHash, actorAccountId: account.id, campaignId: id(body.campaignId) || '' }));
       throw new PilotError('invalid_action');

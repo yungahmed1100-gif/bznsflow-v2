@@ -2,6 +2,7 @@
 // approved no-variable utility template outside it; an opted-out customer is never messaged.
 // Sector tables are named by the caller, so every workspace shares one send path.
 import { owned } from '../../blueTenant.js';
+import { mediaHeaderOf } from '../../../config/layla-templates.js';
 import { openTaskOnce } from './tasks.js';
 import { audit } from '../workspaceState.js';
 
@@ -37,7 +38,7 @@ export async function sendApprovedDraft(ctx, tenant, { draft, keyPrefix, message
   } else if (draft.templateId && conversation && contactId) {
     const template = await ctx.db.query('blueTemplates').withIndex('by_account_template', q => q.eq('accountId', tenant.accountId).eq('templateId', draft.templateId)).unique();
     const contact = await owned(ctx, contactId, tenant.accountId, 'blueContacts');
-    if (template?.integrationId === conversation.integrationId && template.status === 'APPROVED' && template.category === 'UTILITY' && template.sendable && template.variables.length === 0
+    if (template?.integrationId === conversation.integrationId && template.status === 'APPROVED' && template.category === 'UTILITY' && template.sendable && !mediaHeaderOf(template) && template.variables.length === 0
       && contact?.state === 'active' && !contact.optout && contact.waId && contact.numberHash && tenant.row?.integration?.id === conversation.integrationId) {
       const campaignId = await ctx.db.insert('blueCampaigns', { accountId: tenant.accountId, integrationId: conversation.integrationId, requestId: `${keyPrefix}:${draft._id}`,
         name: template.name, origin: 'chat', template: { templateId: template.templateId, name: template.name, language: template.language, category: template.category,

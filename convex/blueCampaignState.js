@@ -9,7 +9,7 @@ import { DAY, displayName } from './blueContacts.js';
 import { marketingEligibility, recordUndeliverable } from './blueAudienceState.js';
 import { messagingReady } from './blueMessagingState.js';
 import { formatPhone } from '../src/lib/dashboard/phone.js';
-import { resolveParameters, validMapping, validTemplateRecord, validRecipientValues, recipientValueMap } from '../config/layla-templates.js';
+import { resolveParameters, validMapping, validTemplateRecord, validRecipientValues, recipientValueMap, mediaHeaderOf, headerMediaProblem } from '../config/layla-templates.js';
 
 export const MAX_RECIPIENTS = 100;
 export const CAMPAIGN_PER_MINUTE = 20;
@@ -17,6 +17,9 @@ export const MAX_ATTEMPTS = 3;
 export const RETRY_BACKOFF_MS = [30000, 120000, 480000];
 export const STALE_ATTEMPT_MS = 120000;
 export const MAX_SCHEDULE_AHEAD_MS = 30 * DAY;
+// A header file is registered within minutes of its upload, so no older file in storage can be adopted.
+export const MEDIA_UPLOAD_WINDOW_MS = 15 * 60000;
+const ENDED = ['completed', 'cancelled', 'blocked'];
 const ACCEPTED = ['submitted', 'sent', 'delivered', 'read'];
 const STATUSES = ['pending', 'queued', 'attempting', 'submitted', 'sent', 'delivered', 'read', 'failed', 'ambiguous', 'blocked', 'cancelled'];
 const ok = value => ({ ok: true, value }), fail = reason => ({ ok: false, reason });
@@ -83,6 +86,24 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
     return ok({ count: a.templates.length });
   }
 
+  if (a.operation === 'campaign_media_upload_url') {
+    if (!integration) return fail('connection_not_ready');
+    return ok({ url: await ctx.storage.generateUploadUrl() });
+  }
+  if (a.operation === 'campaign_media_register') {
+    if (!integration) return fail('connection_not_ready');
+    const storageId = typeof a.storageId === 'string' ? ctx.db.system.normalizeId('_storage', a.storageId) : null;
+    const file = storageId ? await ctx.db.system.get(storageId) : null;
+    if (!file || file._creationTime < now - MEDIA_UPLOAD_WINDOW_MS) return fail('header_media_invalid');
+    if (await ctx.db.query('blueCampaignMedia').withIndex('by_storage', q => q.eq('storageId', storageId)).first()) return fail('header_media_invalid');
+    const format = String(a.format || '');
+    const problem = headerMediaProblem(format, file);
+    if (problem) return fail(problem);
+    const filename = typeof a.filename === 'string' ? a.filename.replace(/[^\p{L}\p{N} ._-]/gu, '').trim().slice(0, 80) : '';
+    const mediaId = await ctx.db.insert('blueCampaignMedia', { accountId, storageId, format, contentType: file.contentType, size: file.size, ...(filename ? { filename } : {}), createdAt: now });
+    return ok({ media: { id: mediaId, format, contentType: file.contentType, size: file.size } });
+  }
+
   if (['campaign_preview', 'campaign_create'].includes(a.operation)) {
     if (!integration || !tenant.connected || !messagingReady(row, now)) return fail('connection_not_ready');
     // Preview sends nothing, so an owner can build and check a broadcast before sending is switched on.
@@ -90,6 +111,11 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
     const template = await ctx.db.query('blueTemplates').withIndex('by_account_template', q => q.eq('accountId', accountId).eq('templateId', String(a.templateId || ''))).unique();
     if (!template || template.integrationId !== integration.id || !template.sendable || template.status !== 'APPROVED' || template.category !== 'MARKETING') return fail('template_not_sendable');
     if (!validMapping(template, a.mapping || [])) return fail('invalid_mapping');
+    // An image, video or PDF header is filled by the one file the owner added for this broadcast.
+    const format = mediaHeaderOf(template);
+    const media = format && a.headerMediaId ? await owned(ctx, a.headerMediaId, accountId, 'blueCampaignMedia') : null;
+    if (format && !media) return fail('header_media_required');
+    if (media && media.format !== format) return fail('header_media_invalid');
     if (!Array.isArray(a.contactIds) || !a.contactIds.length || a.contactIds.length > 500) return fail('invalid_recipients');
     if (a.values !== undefined && !validRecipientValues(a.values)) return fail('invalid_recipients');
     const own = recipientValueMap(a.values);
@@ -113,6 +139,7 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
     const prior = await ctx.db.query('blueCampaigns').withIndex('by_account_request', q => q.eq('accountId', accountId).eq('requestId', a.requestId)).unique();
     if (prior) return ok({ campaign: await publicCampaign(ctx, prior) });
     if (a.confirm !== true) return fail('confirmation_required');
+    if (media?.campaignId) return fail('header_media_invalid');
     if (!eligible.length) return fail('no_eligible_recipients');
     if (eligible.length > cap) return fail(eligible.length > MAX_RECIPIENTS ? 'recipient_limit' : 'messaging_limit');
     const scheduledAt = Number(a.scheduledAt);
@@ -122,7 +149,8 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
     const campaignId = await ctx.db.insert('blueCampaigns', { accountId, integrationId: integration.id, requestId: a.requestId, name, origin: a.origin === 'chat' ? 'chat' : 'broadcast',
       template: { templateId: template.templateId, name: template.name, language: template.language, category: template.category, parameterFormat: template.parameterFormat,
         body: template.body, ...(template.header ? { header: template.header } : {}), ...(template.footer ? { footer: template.footer } : {}) },
-      mapping: a.mapping, status: 'scheduled', scheduledAt: Math.max(now, scheduledAt), timezone: a.timezone, recipientCount: eligible.length, createdAt: now, updatedAt: now });
+      ...(media ? { headerMediaId: media._id } : {}), mapping: a.mapping, status: 'scheduled', scheduledAt: Math.max(now, scheduledAt), timezone: a.timezone, recipientCount: eligible.length, createdAt: now, updatedAt: now });
+    if (media) await ctx.db.patch(media._id, { campaignId });
     for (const e of eligible) {
       await ctx.db.insert('blueCampaignRecipients', { campaignId, accountId, integrationId: integration.id, contactId: e.contact._id, numberHash: e.contact.numberHash,
         waId: e.contact.waId, name: displayName(e.contact).name, parameters: e.parameters, status: 'pending', attempts: 0, nextAttemptAt: Math.max(now, scheduledAt),
@@ -194,6 +222,7 @@ async function jobBlockReason(ctx, job, campaign, now) {
   const eligibility = campaign.origin === 'chat' ? (!contact || contact.state !== 'active' ? 'contact_inactive' : contact.optout ? 'contact_opted_out' : null) : marketingEligibility(contact);
   if (eligibility) return eligibility;
   if (contact.numberHash !== job.numberHash || !job.waId) return 'contact_changed';
+  if (campaign.headerMediaId && !await ctx.db.get(campaign.headerMediaId)) return 'header_media_missing';
   return null;
 }
 
@@ -231,7 +260,7 @@ export async function executeCampaignWorker(ctx, a, now = Date.now()) {
     const reason = await jobBlockReason(ctx, job, campaign, now);
     if (reason) {
       await ctx.db.patch(job._id, { status: 'blocked', reason, updatedAt: now });
-      if (['broadcast_paused', 'connection_not_ready'].includes(reason) && campaign?.status === 'processing') await blockCampaign(ctx, campaign, reason, now);
+      if (['broadcast_paused', 'connection_not_ready', 'header_media_missing'].includes(reason) && campaign?.status === 'processing') await blockCampaign(ctx, campaign, reason, now);
       else if (campaign) await nextQueued(ctx, a, campaign._id, now);
       if (campaign) await finishIfDone(ctx, await ctx.db.get(campaign._id), now);
       return ok(null);
@@ -244,8 +273,16 @@ export async function executeCampaignWorker(ctx, a, now = Date.now()) {
     }
     if (rate) await ctx.db.patch(rate._id, { count: rate.count + 1 }); else await ctx.db.insert('blueMessageRates', { key, count: 1, expiresAt: now + 120000 });
     const row = await accountRow(ctx, job.accountId, job.integrationId);
+    const file = campaign.headerMediaId ? await ctx.db.get(campaign.headerMediaId) : null;
+    const link = file ? await ctx.storage.getUrl(file.storageId) : null;
+    if (campaign.headerMediaId && !link) {
+      await ctx.db.patch(job._id, { status: 'blocked', reason: 'header_media_missing', updatedAt: now });
+      await blockCampaign(ctx, campaign, 'header_media_missing', now);
+      return ok(null);
+    }
     await ctx.db.patch(job._id, { status: 'attempting', intent: a.intent, attemptAt: now, attempts: job.attempts + 1, updatedAt: now });
-    return ok({ jobId: job._id, intent: a.intent, waId: job.waId, parameters: job.parameters, template: campaign.template, integration: row.integration, sessionHash: row.sessionHash });
+    return ok({ jobId: job._id, intent: a.intent, waId: job.waId, parameters: job.parameters, template: campaign.template, integration: row.integration, sessionHash: row.sessionHash,
+      ...(link ? { media: { link, ...(file.filename ? { filename: file.filename } : {}) } } : {}) });
   }
   if (a.operation === 'gate') {
     const job = await ctx.db.get(a.jobId);
@@ -294,4 +331,12 @@ export async function maintainCampaigns(ctx, a, now = Date.now()) {
   for (const c of processing) await finishIfDone(ctx, c, now);
   const expired = await ctx.db.query('blueCampaignRecipients').withIndex('by_expiry', q => q.lt('expiresAt', now)).take(100);
   for (const r of expired) if (!['attempting', 'queued', 'pending'].includes(r.status)) await ctx.db.delete(r._id);
+  // Header files: an unused one goes after a day, a used one a day after its campaign ended.
+  const media = await ctx.db.query('blueCampaignMedia').withIndex('by_created', q => q.lt('createdAt', now - DAY)).take(50);
+  for (const m of media) {
+    const campaign = m.campaignId ? await ctx.db.get(m.campaignId) : null;
+    if (campaign && !(ENDED.includes(campaign.status) && campaign.updatedAt < now - DAY)) continue;
+    if (await ctx.db.system.get(m.storageId)) await ctx.storage.delete(m.storageId);
+    await ctx.db.delete(m._id);
+  }
 }

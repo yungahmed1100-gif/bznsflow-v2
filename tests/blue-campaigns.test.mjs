@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { sanitizeTemplate, renderTemplate, templateComponents, resolveParameters, cleanParameter, templateSendResult, messagingAllowance, validMapping, validRecipientValues } from '../config/layla-templates.js';
+import { sanitizeTemplate, renderTemplate, templateComponents, mediaHeaderOf, resolveParameters, cleanParameter, templateSendResult, messagingAllowance, validMapping, validRecipientValues } from '../config/layla-templates.js';
 import { zonedLocalToUtc, validTimezone } from '../api/_lib/layla/timezone.js';
 import { runCampaignSend, runCampaignStart } from '../api/_lib/layla/campaign-worker.js';
 import { fetchApprovedTemplates } from '../api/_lib/layla/templates.js';
@@ -21,7 +21,7 @@ test('only approved marketing templates with plain text parameters are sendable'
   assert.deepEqual(t.variables, [{ key: '1', component: 'header' }, { key: '1', component: 'body', example: 'Sara' }, { key: '2', component: 'body', example: '10%' }]);
   const cases = [
     [{ ...approved, category: 'UTILITY' }, 'not_marketing'], [{ ...approved, status: 'PAUSED' }, 'not_approved'],
-    [{ ...approved, components: [{ type: 'HEADER', format: 'IMAGE' }, approved.components[1]] }, 'media_header'],
+    [{ ...approved, components: [{ type: 'HEADER', format: 'LOCATION' }, approved.components[1]] }, 'media_header'],
     [{ ...approved, components: [approved.components[1], { type: 'BUTTONS', buttons: [{ type: 'URL', text: 'Go', url: 'https://x.com/{{1}}' }] }] }, 'dynamic_button'],
     [{ ...approved, components: [{ type: 'CAROUSEL' }, approved.components[1]] }, 'unsupported_component'],
     [{ ...approved, components: [{ type: 'BODY', text: 'Hi {{2}}' }] }, 'invalid_variables'],
@@ -340,4 +340,91 @@ test('a number WhatsApp could not deliver to (131026) is skipped by later broadc
   h.m.advance(1000);
   await h.inbound(t, { from: jobs[0].waId, text: 'Hi', reply: null });
   assert.equal((await preview()).eligible.length, 2);
+});
+
+const imageTemplate = { id: '222', name: 'clinics_1', language: 'ar', status: 'APPROVED', category: 'MARKETING', parameter_format: 'POSITIONAL', components: [
+  { type: 'HEADER', format: 'IMAGE', example: { header_handle: ['https://scontent.example/sample.jpg'] } },
+  { type: 'BODY', text: 'مرحباً فريق {{1}}', example: { body_text: [['عيادة الابتسامة']] } },
+  { type: 'FOOTER', text: 'لإيقاف الرسائل اضغط «إيقاف»' }] };
+
+test('an image, video or PDF header is sendable and goes out as a link to the owner’s file', () => {
+  const t = sanitizeTemplate(imageTemplate);
+  assert.deepEqual([t.sendable, mediaHeaderOf(t), t.variables], [true, 'IMAGE', [{ key: '1', component: 'body', example: 'عيادة الابتسامة' }]]);
+  const body = [{ key: '1', component: 'body', text: 'Smile' }];
+  assert.deepEqual(templateComponents(t, body, { link: 'https://files.test/a' }), [
+    { type: 'header', parameters: [{ type: 'image', image: { link: 'https://files.test/a' } }] },
+    { type: 'body', parameters: [{ type: 'text', text: 'Smile' }] }]);
+  const pdf = sanitizeTemplate({ ...imageTemplate, components: [{ type: 'HEADER', format: 'DOCUMENT' }, imageTemplate.components[1]] });
+  assert.deepEqual(templateComponents(pdf, body, { link: 'https://files.test/b', filename: 'offer.pdf' })[0],
+    { type: 'header', parameters: [{ type: 'document', document: { link: 'https://files.test/b', filename: 'offer.pdf' } }] });
+  assert.equal(mediaHeaderOf(sanitizeTemplate(approved)), null, 'a text header needs no file');
+});
+
+async function imageTenant() {
+  const base = await campaignTenant({ contacts: 2 });
+  const { h, t } = base;
+  await h.campaigns('replace_templates', { sessionHash: t.sessionHash, integrationId: t.integration.id, templates: [sanitizeTemplate(approved), sanitizeTemplate(imageTemplate)] });
+  const mapping = [{ key: 'body:1', source: 'contact_name', value: 'there' }];
+  const register = (file, format = 'IMAGE') => h.campaigns('campaign_media_register', { sessionHash: t.sessionHash, storageId: file, format, filename: 'clinic offer.jpg' });
+  const createImage = (extra = {}) => base.create({ templateId: '222', mapping, ...extra });
+  return { ...base, mapping, register, createImage };
+}
+
+test('a media-header broadcast needs the owner’s own fresh file of the right type and size', async () => {
+  const { h, t, ids, mapping, register, createImage } = await imageTenant();
+  assert.equal((await h.campaigns('campaign_media_upload_url', { sessionHash: t.sessionHash })).ok, true);
+  assert.equal((await h.campaigns('campaign_preview', { sessionHash: t.sessionHash, templateId: '222', mapping, contactIds: ids, allowance: 250 })).reason, 'header_media_required');
+  assert.equal((await register(h.m.putFile({ contentType: 'application/pdf' }))).reason, 'header_media_type');
+  assert.equal((await register(h.m.putFile({ size: 6 * 1024 * 1024 }))).reason, 'header_media_size');
+  assert.equal((await register(h.m.putFile(), 'LOCATION')).reason, 'header_media_invalid');
+  const stale = h.m.putFile();
+  h.m.advance(16 * 60000);
+  assert.equal((await register(stale)).reason, 'header_media_invalid', 'an older stored file cannot be adopted');
+  const file = h.m.putFile();
+  const media = (await register(file)).value.media;
+  assert.equal((await register(file)).reason, 'header_media_invalid', 'a file is registered once');
+  // Another tenant cannot use this account's file.
+  const other = await seedTenant(h.m, { name: 'other' });
+  await h.messaging('activate', { sessionHash: other.sessionHash });
+  await h.campaigns('replace_templates', { sessionHash: other.sessionHash, integrationId: other.integration.id, templates: [sanitizeTemplate(imageTemplate)] });
+  assert.equal((await h.campaigns('campaign_preview', { sessionHash: other.sessionHash, templateId: '222', headerMediaId: media.id, mapping, contactIds: [], allowance: 250 })).reason, 'header_media_required');
+  const created = await createImage({ headerMediaId: media.id });
+  assert.equal(created.ok, true);
+  const campaign = h.m.table('blueCampaigns').find(c => c._id === created.value.campaign.id);
+  assert.equal(campaign.headerMediaId, media.id);
+  assert.equal((await createImage({ headerMediaId: media.id })).reason, 'header_media_invalid', 'one file belongs to one campaign');
+});
+
+test('the worker sends the file link; a missing file stops the campaign; files are swept after use', async () => {
+  const { h, register, createImage } = await imageTenant();
+  const unused = (await register(h.m.putFile())).value.media;
+  const usedFile = h.m.putFile();
+  const used = (await register(usedFile)).value.media;
+  const campaign = (await createImage({ headerMediaId: used.id })).value.campaign;
+  await h.maintain();
+  await h.worker('start_result', { campaignId: campaign.id, ready: true, allowance: 250 });
+  const [first, second] = h.m.table('blueCampaignRecipients');
+  const claim = await h.worker('claim', { jobId: first._id, intent: randomUUID() });
+  assert.deepEqual(claim.value.media, { link: `https://files.test/${usedFile}`, filename: 'clinic offer.jpg' });
+  await h.worker('result', { jobId: first._id, intent: claim.value.intent, status: 'submitted', providerId: 'wamid.1' });
+  h.m.advance(86400000 + 1);
+  await h.maintain();
+  assert.equal(await h.m.db.get(unused.id), null, 'an unused file goes after a day');
+  assert.ok(await h.m.db.get(used.id), 'a file stays while its campaign is still sending');
+  await h.m.db.delete(used.id);
+  assert.equal((await h.worker('claim', { jobId: second._id, intent: randomUUID() })).value, null);
+  assert.equal((await h.m.db.get(campaign.id)).status, 'blocked');
+  assert.equal((await h.m.db.get(campaign.id)).reason, 'header_media_missing');
+});
+
+test('a used file is deleted a day after its campaign ends', async () => {
+  const { h, t, register, createImage } = await imageTenant();
+  const file = h.m.putFile();
+  const media = (await register(file)).value.media;
+  const campaign = (await createImage({ headerMediaId: media.id, scheduledAt: h.m.now() + 3600000 })).value.campaign;
+  await h.campaigns('campaign_cancel', { sessionHash: t.sessionHash, campaignId: campaign.id });
+  h.m.advance(86400000 + 1);
+  await h.maintain();
+  assert.equal(await h.m.db.get(media.id), null);
+  assert.ok(h.m.deletedFiles.includes(file));
 });

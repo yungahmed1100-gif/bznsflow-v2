@@ -27,6 +27,7 @@ export const execute = internalMutation({
     mapping: v.optional(v.array(v.object({ key: v.string(), source: v.string(), value: v.string() }))), contactIds: v.optional(v.array(v.string())),
     values: v.optional(v.array(v.object({ contactId: v.string(), values: v.array(v.object({ key: v.string(), text: v.string() })) }))),
     allowance: v.optional(v.number()), scheduledAt: v.optional(v.number()), name: v.optional(v.string()), campaignId: v.optional(v.string()),
+    storageId: v.optional(v.string()), format: v.optional(v.string()), filename: v.optional(v.string()), headerMediaId: v.optional(v.string()),
   },
   handler: async (ctx, args): Result => {
     return executeAuthorizedDashboard(ctx, args);

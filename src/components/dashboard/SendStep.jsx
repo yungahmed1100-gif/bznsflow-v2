@@ -8,14 +8,14 @@ import { ConsentForm, consentComplete } from './ConsentForm';
 import { META_PRICING_URL } from './MetaBillingNotice';
 
 /** Step 3: each customer's own message, who is left out and why, then send now or later. */
-export function SendStep({ s, overview, template, rules, rows, single, onTimezone, onCreated, onBack }) {
+export function SendStep({ s, overview, template, headerMediaId, rules, rows, single, onTimezone, onCreated, onBack }) {
   const mapping = useMemo(() => serverMapping(rules), [rules]);
   const values = useMemo(() => recipientValues(rows, rules), [rows, rules]);
   const contactIds = useMemo(() => rows.map(r => r.contactId).filter(Boolean), [rows]);
   const [preview, setPreview] = useState(null), [index, setIndex] = useState(0), [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const [schedule, setSchedule] = useState({ mode: 'now', local: '', timezone: overview.timezone || browserTimezone() });
   const [requestId] = useState(() => crypto.randomUUID());
-  const load = () => { setError(''); return dashboard('campaign_preview', { templateId: template.id, mapping, contactIds, values }).then(p => { setPreview(p); setIndex(0); }).catch(e => setError(s.reason(e.reason))); };
+  const load = () => { setError(''); return dashboard('campaign_preview', { templateId: template.id, headerMediaId, mapping, contactIds, values }).then(p => { setPreview(p); setIndex(0); }).catch(e => setError(s.reason(e.reason))); };
   useEffect(() => { load(); }, []);
 
   const sending = overview.broadcastEnabled && preview?.sendingAvailable !== false;
@@ -24,7 +24,7 @@ export function SendStep({ s, overview, template, rules, rows, single, onTimezon
   const create = async () => {
     setBusy(true); setError('');
     try {
-      const r = await dashboard('campaign_create', { requestId, templateId: template.id, mapping, values, contactIds: eligible.map(e => e.contactId), confirm: true,
+      const r = await dashboard('campaign_create', { requestId, templateId: template.id, headerMediaId, mapping, values, contactIds: eligible.map(e => e.contactId), confirm: true,
         origin: single ? 'chat' : 'broadcast', name: single ? `${template.name} · ${single.name}` : template.name,
         schedule: schedule.mode === 'now' ? { mode: 'now', timezone: schedule.timezone } : { mode: 'later', local: schedule.local, timezone: schedule.timezone } });
       onCreated(r.campaign);

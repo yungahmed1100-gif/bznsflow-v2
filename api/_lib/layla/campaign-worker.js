@@ -52,7 +52,7 @@ export async function runCampaignSend({ jobId, env, store, fetcher, inspect = in
         const response = await fetcher(`https://graph.facebook.com/${GRAPH.version}/${job.integration.phone}/messages`, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(10000),
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: job.waId, type: 'template', biz_opaque_callback_data: job.intent,
-            template: { name: job.template.name, language: { code: job.template.language }, components: templateComponents(job.template, job.parameters) } }) });
+            template: { name: job.template.name, language: { code: job.template.language }, components: templateComponents(job.template, job.parameters, job.media) } }) });
         let body = null;
         try { body = await response.json(); } catch { body = null; }
         outcome = templateSendResult(response.status, body);

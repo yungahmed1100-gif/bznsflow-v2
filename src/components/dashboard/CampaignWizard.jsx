@@ -5,6 +5,8 @@ import { defaultRules, rowFromContact, rowMissing, MAX_BROADCAST } from '../../l
 import { RecipientsStep, consentReady, consentRecord } from './RecipientsStep';
 import { SendStep } from './SendStep';
 import { TemplateBody } from './TemplateBody';
+import { HeaderMediaField } from './HeaderMediaField';
+import { mediaHeaderOf } from '../../../config/layla-templates.js';
 
 const STEPS = ['template', 'recipients', 'send'];
 const today = () => new Date().toISOString().slice(0, 10);
@@ -21,6 +23,7 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
   const [rows, setRows] = useState(() => single ? [rowFromContact(single)] : []);
   const [headers, setHeaders] = useState([]);
   const [consent, setConsent] = useState({ how: '', other: '', date: today(), attested: false });
+  const [media, setMedia] = useState(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [created, setCreated] = useState(null);
   useEffect(() => { if (!templates) dashboard('templates').then(r => setTemplates(r.templates)).catch(e => setError(s.reason(e.reason))); }, []);
   const template = templates?.find(t => t.id === templateId);
@@ -29,11 +32,13 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
   const chooseTemplate = id => {
     const t = templates.find(x => x.id === id);
     setTemplateId(id);
+    setMedia(null);
     setRules(defaultRules(t, headers, rows.map(r => r.cells || [])));
   };
   const unsaved = rows.filter(r => !r.contactId);
   const incomplete = rows.filter(r => rowMissing(r, rules).length).length;
-  const canContinue = current === 'template' ? !!template?.sendable
+  const mediaFormat = mediaHeaderOf(template);
+  const canContinue = current === 'template' ? !!template?.sendable && (!mediaFormat || !!media?.id)
     : rows.length > 0 && rows.length <= MAX_BROADCAST && !incomplete && (!unsaved.length || consentReady(consent));
 
   // New numbers become contacts with the owner's consent record before anything is previewed.
@@ -72,6 +77,7 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
                   <span><strong dir="ltr">{t.name}</strong> <span className="ld-chip">{t.language}</span>{!t.sendable && <span className="ld-chip is-muted">{s.t(`unsupported_${t.unsupportedReason}`)}</span>}<TemplateBody template={t} /></span>
                 </label>
               ))}
+              {mediaFormat && <HeaderMediaField s={s} format={mediaFormat} media={media} onChange={setMedia} />}
             </fieldset>
           )}
           {current === 'recipients' && template && (
@@ -80,7 +86,7 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
               consent={consent} setConsent={setConsent} needsConsent={unsaved.length > 0} incomplete={incomplete} />
           )}
           {current === 'send' && template && (
-            <SendStep s={s} overview={overview} template={template} rules={rules} rows={rows} single={single}
+            <SendStep s={s} overview={overview} template={template} headerMediaId={media?.id} rules={rules} rows={rows} single={single}
               onTimezone={onTimezone} onCreated={setCreated} onBack={() => setStep(1)} />
           )}
         </div>
