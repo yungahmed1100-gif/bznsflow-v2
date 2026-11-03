@@ -191,7 +191,7 @@ async function seedCatalyst() {
   await say('96891234502', 'And what are your opening hours?', 'Salma Al Harthy', 1);
 }
 
-let realEstate = null, media = null, fitness = null, dental = null;
+let realEstate = null, media = null, fitness = null, dental = null, hvac = null;
 if (CATALYST) await seedCatalyst();
 else if (PACK === 'dental') dental = await (await import('./hasib-demo-dental.mjs')).seedDental({ m, tenant, call, hasib, executeMessaging, DAY, HOUR });
 else if (PACK === 'retail-tech') await (await import('./hasib-demo-tech.mjs')).seedTech({ m, tenant, call, hasib, executeMessaging, DAY, HOUR });
@@ -206,6 +206,7 @@ else if (PACK === 'media') {
     subjectId: `${conversation._id}:drone`, contactId: conversation.contactId, conversationId: conversation._id, lang: 'en', lines: [{ key: 'l1', name: 'Drone footage', catalogPrices: [{ type: 'quote', label: 'Price on request (quote)' }] }] }, m.now());
 }
 else if (PACK === 'fitness') fitness = await (await import('./hasib-demo-fitness.mjs')).seedFitness({ m, tenant, hasib, DAY, HOUR });
+else if (PACK === 'hvac') hvac = await (await import('./hasib-demo-hvac.mjs')).seedHvac({ m, tenant, call, hasib, executeMessaging, automationRun, SECRET, DAY, HOUR });
 else {
   await hasib('settings_update', { packId: PACK });
   await (await import('./hasib-demo-industries.mjs')).seedIndustry({ m, tenant, hasib, pack: hasibPack(PACK) });
@@ -214,6 +215,7 @@ else {
 if (EMPLOYEE && realEstate) actorAccountId = realEstate.agentId; // the agency's seeded agent
 else if (EMPLOYEE && media) actorAccountId = media.producerId; // the studio's seeded producer
 else if (EMPLOYEE && fitness) actorAccountId = fitness.coachId; // the gym's seeded coach
+else if (EMPLOYEE && hvac) actorAccountId = hvac.technicianId; // the AC business's seeded technician
 else if (EMPLOYEE && !CATALYST) {
   // An invited, verified employee of the seeded business.
   const member = await hasib('team_invite', { email: 'staff@noor.example' });
@@ -376,5 +378,5 @@ createServer(async (req, res) => {
     return await staticFile(res, url.pathname === '/' ? '/layla/dashboard' : url.pathname);
   } catch (e) { json(res, 500, { ok: false, reason: 'demo_error', detail: String(e.message).slice(0, 200) }); }
 }).listen(PORT, '127.0.0.1', () => {
-  console.log(`Hasib demo (${PACK === 'dental' ? 'Bayan Dental Clinic' : PACK === 'retail-tech' ? 'Muscat Mobile' : PACK === 'real-estate' ? 'Bayt Muscat Properties' : 'Noor Abayas'}${EMPLOYEE ? ', signed in as an employee' : ''}) → http://localhost:${PORT}/layla/dashboard?tab=insights   ·   English: http://localhost:${PORT}/en/layla/dashboard?tab=insights`);
+  console.log(`Hasib demo (${PACK === 'dental' ? 'Bayan Dental Clinic' : PACK === 'retail-tech' ? 'Muscat Mobile' : PACK === 'real-estate' ? 'Bayt Muscat Properties' : PACK === 'hvac' ? 'Barid Cooling' : 'Noor Abayas'}${EMPLOYEE ? ', signed in as an employee' : ''}) → http://localhost:${PORT}/layla/dashboard?tab=insights   ·   English: http://localhost:${PORT}/en/layla/dashboard?tab=insights`);
 });

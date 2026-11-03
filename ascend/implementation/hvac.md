@@ -1,6 +1,6 @@
 # Air conditioning: agent build specification
 
-Task **B08** · sector ID `hvac` · status **not_started** · source inspection 2026-10-10.
+Task **B08** · sector ID `hvac` · status **verified_locally** (2026-11-03; evidence in [evidence/B08-hvac.md](evidence/B08-hvac.md)) · source inspection 2026-10-10.
 Current registry: **preview**; current owner workflow `jobs`; implementation family: **field job + equipment**.
 Dependencies: **F01–F06 + F08 synthetic ingress + F07**. Follow the [queue](README.md), [foundation contracts](shared-foundation.md), [test runbook](agent-runbook.md) and [engineering gates](engineering-pack.md).
 

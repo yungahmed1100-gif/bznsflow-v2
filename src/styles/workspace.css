@@ -82,6 +82,8 @@
 /* ---- Follow-ups ---- */
 .hb-followup-filters label[data-tone] input:checked + span { box-shadow: inset 0 -3px 0 var(--tone); }
 .hb-followup-filters b { margin-inline-start: 4px; color: var(--ink-2); }
+/* On the selected (dark) filter the count takes the label's colour, so it stays readable. */
+.hb-followup-filters input:checked + span b { color: inherit; }
 .hb-followups > li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; border-inline-start: 4px solid var(--rule-strong); }
 .hb-followups > li > div:first-child { flex: 1 1 320px; min-inline-size: 0; }
 .hb-followups > li p { margin: 4px 0 0; }

@@ -103,6 +103,19 @@ const fitness = v.object({
   days: v.optional(v.number()), end: v.optional(v.boolean()), text: v.optional(v.string()), templateId: v.optional(v.string()),
 });
 
+// AC service payload: typed fields only; Convex re-checks every value in hvacJobs.js and hvacAssets.js.
+const hvac = v.object({
+  jobType: v.optional(v.string()), source: v.optional(v.string()), unitIds: v.optional(v.array(v.string())), area: v.optional(v.string()), urgent: v.optional(v.boolean()), reportedSymptom: v.optional(v.string()),
+  repeatOfId: v.optional(v.string()), technicianAccountId: v.optional(v.string()), contractId: v.optional(v.string()), contractVisitIndex: v.optional(v.number()),
+  partsLabel: v.optional(v.string()), partsExpectedAt: v.optional(v.number()), startsAt: v.optional(v.number()), endsAt: v.optional(v.number()), outcome: v.optional(v.string()),
+  lines: v.optional(v.array(v.object({ kind: v.string(), name: v.string(), variantId: v.optional(v.string()), qty: v.number(), unitPriceMinor: v.number() }))),
+  checklist: v.optional(v.array(v.object({ text: v.string(), result: v.string() }))), findings: v.optional(v.string()),
+  costs: v.optional(v.array(v.object({ kind: v.string(), label: v.string(), amountMinor: v.number() }))), costsComplete: v.optional(v.boolean()),
+  label: v.optional(v.string()), unitType: v.optional(v.string()), brand: v.optional(v.string()), capacityBtu: v.optional(v.number()), serial: v.optional(v.string()), siteLabel: v.optional(v.string()),
+  retired: v.optional(v.boolean()), nextServiceAt: v.optional(v.number()), clearService: v.optional(v.boolean()),
+  visitsPerYear: v.optional(v.number()), priceMinor: v.optional(v.number()), renewedFromId: v.optional(v.string()), text: v.optional(v.string()), templateId: v.optional(v.string()),
+});
+
 export const hasibEntryArgs = {
     ...bookingArgs,
     fromAt:v.optional(v.number()),toAt:v.optional(v.number()),
@@ -131,6 +144,9 @@ export const hasibEntryArgs = {
       revisionAllowance: v.optional(v.number()), depositPercent: v.optional(v.number()), extraRoundPriceMinor: v.optional(v.number()), autoQuoteLimitMinor: v.optional(v.number()), resourceHoursPerDay: v.optional(v.number()), holdHours: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     fitness: v.optional(fitness), planId: v.optional(v.string()), classId: v.optional(v.string()), seatId: v.optional(v.string()),
     dental: v.optional(dental), visitId: v.optional(v.string()),
+    hvac: v.optional(hvac), unitId: v.optional(v.string()), contractId: v.optional(v.string()),
+    hvacSettings: v.optional(v.object({ arrivalGraceMinutes: v.optional(v.number()), repeatWindowDays: v.optional(v.number()), estimateWindowDays: v.optional(v.number()), bookingWindowDays: v.optional(v.number()),
+      renewalHorizonDays: v.optional(v.number()), renewalGraceDays: v.optional(v.number()), amcVisitLeadDays: v.optional(v.number()), autoQuoteLimitMinor: v.optional(v.number()), serviceAreas: v.optional(v.array(v.string())), rules: v.optional(v.array(mediaRule)) })),
     dentalSettings: v.optional(v.object({ visitMinutes: v.optional(v.number()), lateCancelHours: v.optional(v.number()), balanceDueDays: v.optional(v.number()), recallWindowDays: v.optional(v.number()), chairDayMinutes: v.optional(v.number()), openDaysPerWeek: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     retailSettings: v.optional(v.object({ readyUncollectedHours: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),
     retailTechSettings: v.optional(v.object({ readyUncollectedHours: v.optional(v.number()), rules: v.optional(v.array(mediaRule)) })),

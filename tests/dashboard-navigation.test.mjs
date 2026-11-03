@@ -108,6 +108,19 @@ test('a dental clinic: the six Ascend tabs with Visits as Work, and old links la
   assert.deepEqual(dashboardMap(retail).views.customers, ['contacts', 'broadcast']);
 });
 
+test('an AC business: the six Ascend tabs with Jobs as Work (Contracts its fifth view), and old links land in Jobs', () => {
+  const hvac = { modules: ['orders', 'stock', 'expenses', 'insights'], setupRequired: false, pack: { id: 'hvac' }, workspaceRole: 'manager' };
+  const map = dashboardMap(hvac);
+  assert.deepEqual(map.sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
+  assert.deepEqual(map.views.work, ['schedule', 'jobs', 'contracts', 'units', 'followups']);
+  assert.deepEqual(map.views.settings, ['brain', 'rules', 'team', 'business', 'channels', 'accounts']);
+  assert.deepEqual(resolveTab('orders', null, map), { tab: 'work', view: 'jobs' });
+  assert.deepEqual(resolveTab('stock', null, map), { tab: 'work', view: 'units' });
+  assert.deepEqual(resolveTab('today', null, map), { tab: 'work', view: 'schedule' });
+  assert.deepEqual(resolveTab('work', 'contracts', map), { tab: 'work', view: 'contracts' });
+  assert.deepEqual(dashboardMap({ ...hvac, workspaceRole: 'employee' }).sections, ['chats', 'work', 'customers'], 'technicians and advisors: three tabs');
+});
+
 test('Accounts and VAT appear in Settings once an industry is set', () => {
   assert.deepEqual(dashboardMap(retail).views.settings, ['channels', 'business', 'accounts']);
   assert.deepEqual(dashboardMap(null, { operations: true }).views.settings, ['channels', 'business']);

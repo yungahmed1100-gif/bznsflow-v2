@@ -55,6 +55,13 @@ const DENTAL_VIEWS = Object.freeze({
   settings: ['brain', 'rules', 'team', 'business', 'channels', 'accounts'],
 });
 const DENTAL_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'schedule'], orders: ['work', 'visits'], stock: ['work', 'services'] };
+// AC service: Jobs as Work, with Schedule · Jobs · Contracts · Units · Follow-ups (ascend/hvac.md). Contracts is a
+// fifth view on Ahmed's instruction (2026-11-03): maintenance contracts are an AC business's steady income.
+const HVAC_VIEWS = Object.freeze({
+  work: ['schedule', 'jobs', 'contracts', 'units', 'followups'],
+  settings: ['brain', 'rules', 'team', 'business', 'channels', 'accounts'],
+});
+const HVAC_ALIASES = { ...REAL_ESTATE_ALIASES, today: ['work', 'schedule'], orders: ['work', 'jobs'], stock: ['work', 'units'] };
 // Automotive workshops: Workshop as Work, with Board · Schedule · Parts · Follow-ups (ascend/automotive.md).
 const AUTOMOTIVE_VIEWS = Object.freeze({
   work: ['board', 'schedule', 'parts', 'followups'],
@@ -78,7 +85,7 @@ const TECH_ALIASES = { ...RETAIL_ALIASES, today: ['work', 'repairs'], service: [
 // Packs whose Ascend workspace is the six tabs, with their Work views and old-link aliases.
 const SIX_TAB_PACKS = Object.freeze({ 'real-estate': { views: REAL_ESTATE_VIEWS, aliases: REAL_ESTATE_ALIASES }, media: { views: MEDIA_VIEWS, aliases: MEDIA_ALIASES },
   fitness: { views: FITNESS_VIEWS, aliases: FITNESS_ALIASES }, dental: { views: DENTAL_VIEWS, aliases: DENTAL_ALIASES },
-  automotive: { views: AUTOMOTIVE_VIEWS, aliases: AUTOMOTIVE_ALIASES }, construction: { views: CONSTRUCTION_VIEWS, aliases: CONSTRUCTION_ALIASES },
+  automotive: { views: AUTOMOTIVE_VIEWS, aliases: AUTOMOTIVE_ALIASES }, construction: { views: CONSTRUCTION_VIEWS, aliases: CONSTRUCTION_ALIASES }, hvac: { views: HVAC_VIEWS, aliases: HVAC_ALIASES },
   retail: { views: RETAIL_VIEWS, aliases: RETAIL_ALIASES }, 'retail-tech': { views: TECH_VIEWS, aliases: TECH_ALIASES } });
 export const isSixTabPack = id => !!SIX_TAB_PACKS[id];
 /** Which BznsBrain tab a URL opens: `part`, else the old Services & prices links open the catalog. */
@@ -89,13 +96,13 @@ export function brainPart(params) {
 }
 // Rasil's Email tab is the same in every Ascend industry: campaigns, subscribers, then the domain and website form.
 export const EMAIL_VIEWS = Object.freeze(['campaigns', 'subscribers', 'setup']);
-const TEAM_PACKS = ['retail', 'retail-tech', 'dental', 'real-estate', 'media', 'fitness', 'clinic', 'construction', 'automotive'];
+const TEAM_PACKS = ['retail', 'retail-tech', 'dental', 'real-estate', 'media', 'fitness', 'clinic', 'construction', 'automotive', 'hvac'];
 export const SECTION_ORDER = ['today', 'chats', 'audits', 'broadcasts', 'email', 'orders', 'stock', 'service', 'money', 'customers', 'team', 'website', 'settings'];
 
 /** Preserve caller-owned URL parameters while clearing record state when changing sections. */
 export function dashboardSearch(current, tab, extra = {}) {
   const params = new URLSearchParams(current);
-  for (const key of ['tab', 'view', 'part', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'production', 'member', 'visit', 'patient', 'day', 'stage', 'filter', 'metric', 'segment', 'period', 'from', 'quick']) params.delete(key);
+  for (const key of ['tab', 'view', 'part', 'chat', 'queue', 'order', 'ledger', 'repair', 'create', 'action', 'low', 'deal', 'production', 'member', 'visit', 'patient', 'day', 'stage', 'filter', 'metric', 'segment', 'period', 'from', 'quick', 'job', 'unit', 'contract', 'customer']) params.delete(key);
   params.set('tab', tab);
   for (const [key, value] of Object.entries(extra)) params.set(key, value);
   return params;

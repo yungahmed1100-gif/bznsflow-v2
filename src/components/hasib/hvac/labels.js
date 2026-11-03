@@ -1,0 +1,81 @@
+// AC service labels, EN and AR. Codes stay as stored; only the words change. Symptoms are what the
+// customer said, never a diagnosis.
+import { labelsFrom, BUCKET_TONE } from '../workspace/labels.js';
+
+const L = {
+  status: { requested: ['Request', 'طلب جديد'], triaged: ['Triaged', 'تم الفرز'], estimate_pending: ['Estimate with customer', 'التسعيرة لدى العميل'], approved: ['Approved', 'معتمد'],
+    scheduled: ['Visit booked', 'زيارة محجوزة'], on_site: ['On site', 'في الموقع'], repairing: ['Repairing', 'قيد الإصلاح'], waiting_parts: ['Waiting for parts', 'بانتظار القطع'],
+    on_hold: ['On hold', 'معلّق'], tested: ['Tested', 'تم الاختبار'], completed: ['Completed', 'مكتمل'], cancelled: ['Cancelled', 'ملغى'] },
+  jobType: { repair: ['Repair', 'تصليح'], gas_refill: ['Gas refill', 'تعبئة غاز'], cleaning: ['Cleaning', 'تنظيف'], install: ['Installation', 'تركيب'], inspection: ['Inspection', 'فحص'],
+    amc_visit: ['Contract visit', 'زيارة عقد'] },
+  unitType: { split: ['Split', 'سبليت'], ducted: ['Ducted', 'دكت'], central: ['Central', 'مركزي'], window: ['Window', 'شباك'], cassette: ['Cassette', 'كاسيت'], package: ['Package', 'باكيج'], other: ['Other', 'أخرى'] },
+  symptom: { not_cooling: ['Not cooling', 'لا يبرد'], leak: ['Leaking', 'تسريب'], noise: ['Noise', 'صوت'], not_working: ['Not working', 'لا يعمل'], other: ['Other', 'أخرى'] },
+  source: { layla: ['Layla (chat)', 'ليلى (المحادثة)'], phone: ['Phone', 'الهاتف'], walk_in: ['Walk-in', 'حضور مباشر'], contract: ['Maintenance contract', 'عقد الصيانة'], staff: ['Team', 'الفريق'] },
+  next: { triage: ['Triage the request', 'فرز الطلب'], estimate_or_schedule: ['Estimate or book a visit', 'سعّر أو احجز زيارة'], issue_estimate: ['Send the estimate', 'أرسل التسعيرة'],
+    await_customer: ['Waiting for the customer’s yes', 'بانتظار موافقة العميل'], schedule: ['Book the visit', 'احجز الزيارة'], visit_booked: ['Visit booked', 'الزيارة محجوزة'],
+    record_arrival: ['Record the arrival', 'سجّل الوصول'], start_work: ['Start the work', 'ابدأ العمل'], record_findings: ['Record findings and estimate', 'سجّل الملاحظات والتسعيرة'],
+    test: ['Test and record checks', 'اختبر وسجّل الفحوص'], parts: ['Waiting for parts', 'بانتظار القطع'], resume: ['Resume the job', 'استئناف العمل'], complete: ['Mark completed', 'تسجيل الاكتمال'],
+    collect_balance: ['Balance to collect', 'رصيد للتحصيل'] },
+  visit: { scheduled: ['Booked', 'محجوزة'], arrived: ['Arrived', 'وصل الفني'], done: ['Done', 'انتهت'], missed: ['Missed', 'فائتة'], cancelled: ['Cancelled', 'ملغاة'] },
+  outcome: { fixed: ['Fixed', 'تم الإصلاح'], needs_parts: ['Needs parts', 'يحتاج قطعاً'], needs_return: ['Needs a return visit', 'يحتاج زيارة أخرى'], no_access: ['No access', 'تعذّر الدخول'] },
+  estimate: { draft: ['Draft', 'مسودة'], issued: ['Sent to customer', 'أُرسلت للعميل'], approved: ['Approved', 'معتمدة'], rejected: ['Declined', 'مرفوضة'], superseded: ['Replaced', 'استُبدلت'], expired: ['Expired', 'منتهية'] },
+  contract: { draft: ['Draft', 'مسودة'], active: ['Active', 'سارٍ'], expired: ['Expired', 'منتهٍ'], renewed: ['Renewed', 'مجدد'], cancelled: ['Cancelled', 'ملغى'] },
+  payment: { none: ['No charge', 'بلا رسوم'], unpaid: ['Unpaid', 'غير مدفوع'], part_paid: ['Part paid', 'مدفوع جزئياً'], paid: ['Paid', 'مدفوع'] },
+  check: { pass: ['Pass', 'سليم'], fail: ['Fail', 'غير سليم'], na: ['Not applicable', 'لا ينطبق'] },
+  line: { service: ['Service', 'خدمة'], labour: ['Labour', 'أجرة عمل'], part: ['Part', 'قطعة'], gas: ['Gas', 'غاز'], other: ['Other', 'أخرى'] },
+  cost: { parts: ['Parts', 'قطع'], gas: ['Gas', 'غاز'], labour: ['Labour', 'أجرة'], subcontract: ['Subcontractor', 'مقاول باطن'], other: ['Other', 'أخرى'] },
+  cancel: { customer_request: ['Customer asked', 'بطلب العميل'], duplicate: ['Duplicate', 'مكرر'], out_of_area: ['Outside our areas', 'خارج مناطقنا'], no_access: ['No access to the site', 'تعذّر الوصول للموقع'],
+    declined_estimate: ['Customer declined the estimate', 'رفض العميل التسعيرة'], other_operational: ['Other (operational)', 'سبب تشغيلي آخر'] },
+  contractCancel: { customer_request: ['Customer asked', 'بطلب العميل'], non_payment: ['Not paid', 'لم يُدفع'], units_removed: ['Units removed', 'أُزيلت الوحدات'], duplicate: ['Duplicate', 'مكرر'],
+    other_operational: ['Other (operational)', 'سبب تشغيلي آخر'] },
+  evidence: { in_person: ['In person', 'حضورياً'], phone: ['By phone', 'بالهاتف'], whatsapp: ['WhatsApp', 'واتساب'], instagram: ['Instagram', 'إنستغرام'], email: ['Email', 'البريد'], signed: ['Signed', 'موقّع'] },
+  method: { cash: ['Cash', 'نقداً'], card: ['Card', 'بطاقة'], bank_transfer: ['Bank transfer', 'تحويل بنكي'], payment_link: ['Payment link', 'رابط دفع'], other: ['Other', 'أخرى'] },
+  quick: { all: ['All jobs', 'كل الأعمال'], today: ['Today', 'اليوم'], unassigned: ['Not booked', 'بلا موعد'], partsNeeded: ['Parts needed', 'تحتاج قطعاً'], serviceDue: ['Contract visits due', 'زيارات عقود مستحقة'],
+    followupDue: ['Follow-up due', 'متابعة مستحقة'] },
+  bucket: { today: ['Today', 'اليوم'], overdue: ['Overdue', 'متأخرة'], scheduled: ['Scheduled', 'مجدولة'], waiting: ['Waiting', 'بالانتظار'], decision: ['Needs decision', 'تحتاج قراراً'],
+    blocked: ['Blocked / failed', 'متعثرة / فشلت'], completed: ['Completed', 'مكتملة'] },
+  task: { triage_request: ['Triage the request', 'فرز الطلب'], schedule_job: ['Book the visit', 'حجز الزيارة'], arrival_unrecorded: ['Record the arrival', 'تسجيل الوصول'],
+    repeat_fault: ['Review a repeat visit', 'مراجعة زيارة متكررة'], rule_parts_delay: ['Parts are late', 'القطع متأخرة'], rule_visit_unrecorded: ['Visit not recorded', 'زيارة غير مسجلة'],
+    rule_visit_reminder: ['Visit reminder', 'تذكير بالزيارة'], rule_job_complete: ['Completion notice', 'إشعار الإنجاز'], rule_estimate_followup: ['Estimate follow-up', 'متابعة التسعيرة'],
+    rule_service_due: ['Service reminder', 'تذكير بالصيانة'], rule_amc_renewal: ['Contract renewal', 'تجديد العقد'], rule_balance_due: ['Balance reminder', 'تذكير بالرصيد'],
+    template_required: ['Approved template needed', 'يلزم قالب معتمد'], send_failed: ['Message failed', 'تعذّر الإرسال'] },
+  draftKind: { visit_reminder: ['Visit reminder', 'تذكير بالزيارة'], job_complete: ['Completion notice', 'إشعار الإنجاز'], estimate_followup: ['Estimate follow-up', 'متابعة التسعيرة'],
+    service_due: ['Service reminder', 'تذكير بالصيانة'], amc_renewal: ['Contract renewal', 'تجديد العقد'], balance_due: ['Balance reminder', 'تذكير بالرصيد'] },
+  draft: { draft: ['Waiting for approval', 'بانتظار الموافقة'], queued: ['Sending', 'قيد الإرسال'], queued_template: ['Sending as template', 'يُرسل كقالب'], provider_submitted: ['Sent', 'أُرسلت'], delivered: ['Delivered', 'وصلت'],
+    read: ['Read', 'قُرئت'], blocked: ['Blocked (opted out)', 'محظورة (ألغى الاشتراك)'], template_required: ['Needs an approved template', 'تحتاج قالباً معتمداً'], failed: ['Failed', 'فشلت'], cancelled: ['Withdrawn', 'سُحبت'] },
+  rule: { visit_reminder: ['Visit reminder', 'تذكير بالزيارة'], job_complete: ['Job completed', 'إنجاز العمل'], estimate_followup: ['Estimate follow-up', 'متابعة التسعيرة'], service_due: ['Service due', 'موعد الصيانة'],
+    amc_renewal: ['Contract renewal', 'تجديد العقد'], balance_due: ['Outstanding balance', 'الرصيد المستحق'], parts_delay: ['Parts late', 'تأخر القطع'], visit_unrecorded: ['Visit not recorded', 'زيارة غير مسجلة'] },
+  note: { unrecorded: ['No arrival recorded', 'لم يُسجل الوصول'], missed: ['Missed', 'فائتة'], window_open: ['Window still open', 'النافذة لم تُغلق بعد'], costs_missing: ['Costs not complete', 'التكاليف غير مكتملة'],
+    not_visited: ['Not visited yet', 'لم تتم الزيارة بعد'], cancelled: ['Cancelled', 'ملغى'], contract_visit: ['Contract visit', 'زيارة عقد'], window_passed: ['Visit window passed', 'مرّ وقت الزيارة'],
+    parts_late: ['Parts late', 'القطع متأخرة'], '0_30': ['0–30 days', '٠–٣٠ يوماً'], '31_60': ['31–60 days', '٣١–٦٠ يوماً'], '60_plus': ['Over 60 days', 'أكثر من ٦٠ يوماً'] },
+  segment: { job_type: ['Job type', 'نوع العمل'], unit_type: ['Unit type', 'نوع الوحدة'], area: ['Area', 'المنطقة'], contract: ['Contract vs one-off', 'عقد أم مرة واحدة'], urgency: ['Urgent vs routine', 'عاجل أم اعتيادي'], month: ['Month', 'الشهر'] },
+  segmentKey: { contract: ['Contract', 'عقد'], one_off: ['One-off', 'مرة واحدة'], urgent: ['Urgent', 'عاجل'], routine: ['Routine', 'اعتيادي'], unknown: ['Not recorded', 'غير مسجل'], not_applicable: ['—', '—'] },
+  activity: { requested: ['Request received', 'استُلم الطلب'], triaged: ['Triaged', 'فُرز'], approved: ['Approved by contract', 'معتمد بالعقد'], edited: ['Edited', 'عُدّل'], visit_booked: ['Visit booked', 'حُجزت زيارة'],
+    visit_moved: ['Visit moved', 'نُقلت الزيارة'], visit_arrived: ['Technician arrived', 'وصل الفني'], visit_missed: ['Visit missed', 'فاتت الزيارة'], visit_cancelled: ['Visit cancelled', 'أُلغيت الزيارة'],
+    estimate_issued: ['Estimate sent', 'أُرسلت التسعيرة'], estimate_approved: ['Estimate approved', 'اعتُمدت التسعيرة'], estimate_pending: ['Estimate with customer', 'التسعيرة لدى العميل'],
+    repairing: ['Repair started', 'بدأ الإصلاح'], waiting_parts: ['Waiting for parts', 'بانتظار القطع'], on_hold: ['Put on hold', 'عُلّق'], tested: ['Tested', 'اختُبر'], completed: ['Completed', 'اكتمل'],
+    cancelled: ['Cancelled', 'أُلغي'], checklist_saved: ['Checks recorded', 'سُجلت الفحوص'], check_failed: ['A check failed: back to repair', 'فشل فحص: العودة للإصلاح'] },
+};
+
+export const { label, options } = labelsFrom(L);
+/** "resumed:repairing" and similar history entries read as their kind. */
+export const activityLabel = (kind, ar) => kind.startsWith('resumed:') ? `${ar ? 'استُؤنف' : 'Resumed'} (${label('status', kind.slice(8), ar)})` : label('activity', kind, ar);
+
+// Colour keeps its meaning: blue the customer, yellow in progress, orange needs the team, green done, coral a problem.
+export const STATUS_TONE = { requested: 'blue', triaged: 'blue', estimate_pending: 'yellow', approved: 'orange', scheduled: 'yellow', on_site: 'orange', repairing: 'orange',
+  waiting_parts: 'coral', on_hold: undefined, tested: 'green', completed: 'green', cancelled: undefined };
+export const CONTRACT_TONE = { draft: 'yellow', active: 'green', expired: 'coral', renewed: 'blue', cancelled: undefined };
+export const PAYMENT_TONE = { none: undefined, unpaid: 'coral', part_paid: 'yellow', paid: 'green' };
+export { BUCKET_TONE };
+export const QUICK = ['all', 'today', 'unassigned', 'partsNeeded', 'serviceDue', 'followupDue'];
+// The checks a technician starts from; they edit, add or mark each one before saving.
+const DEFAULT_CHECKS = [['Pressure within range', 'الضغط ضمن الحد'], ['Cooling at the vent', 'التبريد عند المخرج'], ['Drain clear', 'التصريف سليم'], ['Electrical connections tight', 'التوصيلات الكهربائية سليمة']];
+export const defaultChecks = ar => DEFAULT_CHECKS.map(([en, arabic]) => ({ text: ar ? arabic : en, result: 'pass' }));
+export const HVAC_FILTERS = ['today', 'overdue', 'scheduled', 'waiting', 'decision', 'blocked', 'completed'];
+// Closed by a recorded fact (a triage, a booked visit, an arrival); marking them done would only hide the cause.
+export const SELF_CLOSING = new Set(['triage_request', 'schedule_job', 'arrival_unrecorded']);
+// The moves a person records from a job's current state (scheduling, arrival and approval have their own steps).
+export const MOVES = { requested: ['triaged'], triaged: [], estimate_pending: [], approved: [], scheduled: [], on_site: ['repairing', 'tested'], repairing: ['tested'],
+  waiting_parts: ['resume'], on_hold: ['resume'], tested: ['completed'] };
+export const MOVE_VERB = { triaged: ['Mark triaged', 'تم الفرز'], repairing: ['Start repair', 'بدء الإصلاح'], tested: ['Mark tested', 'تم الاختبار'], completed: ['Mark completed', 'تسجيل الاكتمال'],
+  resume: ['Resume', 'استئناف'] };

@@ -344,7 +344,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         catch(err) { console.error('fitness_turn_failed',err?.message); }
         try { await dentalTurn(ctx,{row,contact:applied.contact,now,secret:a.hashSecret}); }
         catch(err) { console.error('dental_turn_failed',err?.message); }
-        try { await industryTurns(ctx,{row,contact:applied.contact,text:e.text,now,secret:a.hashSecret}); }
+        try { await industryTurns(ctx,{row,person,contact:applied.contact,text:e.text,now,secret:a.hashSecret}); }
         catch(err) { console.error('industry_turn_failed',err?.message); }
         try { adiba=await adibaTurn(ctx,{row,person,contact:applied.contact,text:e.text,messageKey:msgKey,catalog:catalog || [],stockMatched:Boolean(commerce),now,secret:a.hashSecret}); }
         catch(err) { console.error('adiba_turn_failed',err?.message); }

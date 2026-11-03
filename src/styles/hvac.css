@@ -1,0 +1,28 @@
+/* AC service's own pieces; the day schedule and visit panels are shared with dental (dental.css) and the
+   workspace lives in workspace.css. Colour keeps its meaning: blue a new request, yellow with the
+   customer or booked, orange needs the team (approved, on site, repairing), green tested or done,
+   coral a problem (urgent, no arrival recorded, parts late, money past due). No gradients. */
+
+/* The dispatch board: technicians' columns, then the jobs still waiting for a time. */
+.hb-hvac-board .hb-unscheduled { padding: 12px; border: 1px dashed var(--rule-strong); border-radius: 6px; background: var(--paper); }
+.hb-hvac-board .hb-unscheduled .hb-visit { border-inline-start-style: dashed; }
+
+/* Unit pickers in the job and contract forms. */
+.hb-check-list { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 6px; }
+.hb-check-list legend { padding-inline: 4px; font-weight: 600; }
+.hb-action-fields .hb-span { grid-column: 1 / -1; margin: 0; }
+
+/* The contract book and money owed: a row of figures that wraps on a phone. */
+.hb-kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; }
+.hb-kpi-row > div { padding: 10px 12px; border: 1px solid var(--rule); border-inline-start: 4px solid var(--tone, var(--rule-strong)); border-radius: 6px; background: var(--card, var(--paper)); }
+.hb-kpi-row dt { font-size: .875rem; color: var(--ink-2, inherit); }
+.hb-kpi-row dd { margin: 4px 0 0; font-size: 1.25rem; font-weight: 600; }
+
+/* A job's record: estimate versions and failed checks stand out by their state, never by colour alone. */
+.hb-hvac-record [data-result="fail"] { font-weight: 600; }
+.hb-hvac-record [data-estimate] > ul { margin-block: 4px; padding-inline-start: 18px; }
+
+@media (max-width: 767px) {
+  .hb-kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hb-check-list { flex-direction: column; }
+}

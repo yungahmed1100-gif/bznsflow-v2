@@ -1,6 +1,6 @@
 // End to end, in a real browser, against the real-logic demo (production Convex state code on an
 // in-memory database): every function Releases A and B added, for Automotive, Construction, Retail
-// and Phones & electronics. A customer writes in, the records move, Hasib runs on his schedule (the
+// and Phones & electronics, and the Air-conditioning workspace. A customer writes in, the records move, Hasib runs on his schedule (the
 // demo's clock is moved past each rule's delay), Adiba's offers are approved in the dashboard, the
 // customer's yes comes back through Layla, and each result is checked where the owner sees it.
 // Usage: npm run build && node tests/ascend-e2e-browser.mjs [sector …]
@@ -13,8 +13,8 @@ import { randomUUID } from 'node:crypto';
 
 const OUT = process.env.ASCEND_E2E_OUT || 'work/ascend-e2e';
 await mkdir(OUT, { recursive: true });
-const SECTORS = process.argv.slice(2).length ? process.argv.slice(2) : ['retail', 'retail-tech', 'automotive', 'construction'];
-const PORTS = { retail: 5451, 'retail-tech': 5453, automotive: 5455, construction: 5457 };
+const SECTORS = process.argv.slice(2).length ? process.argv.slice(2) : ['retail', 'retail-tech', 'automotive', 'construction', 'hvac'];
+const PORTS = { retail: 5451, 'retail-tech': 5453, automotive: 5455, construction: 5457, hvac: 5459 };
 
 function demo(port, ...flags) {
   const child = spawn(process.execPath, ['scripts/hasib-demo.mjs', String(port), ...flags], { stdio: ['ignore', 'pipe', 'inherit'] });
@@ -289,7 +289,69 @@ async function construction(d) {
   await closeClean(s, 'construction manager');
 }
 
-const FLOWS = { retail, 'retail-tech': tech, automotive, construction };
+// ── Air conditioning ──────────────────────────────────────────────────────
+async function hvac(d) {
+  const s = await session(d);
+  await s.go('?tab=work');
+  const DAY = 86400000, HOUR = 3600000, from = '96899500101', name = 'Hamdan Al Mahrouqi';
+  // The owner wants to approve every estimate himself, so Hasib sends none on his own.
+  await s.hasib('settings_update', { hvacSettings: { autoQuoteLimitMinor: 0 } });
+  await s.say(from, 'السلام عليكم، المكيف ما يبرد', name);
+  const hamdan = await s.contact(name);
+  let job = (await s.hasib('hvac_jobs', { contactId: hamdan.id })).items[0];
+  eq([job.status, job.source, job.urgent, job.reportedSymptom], ['requested', 'layla', true, 'not_cooling'], 'Layla turned his message into one urgent request, nothing booked or priced');
+  ok((await queue(s, 'today')).includes('Triage the request') || (await queue(s, 'overdue')).includes('Triage the request'), 'the request waits in Follow-ups to be triaged');
+  job = await s.hasib('hvac_job_status', { jobId: job.id, version: job.version, status: 'triaged' });
+  const unit = await s.hasib('hvac_unit_save', { requestId: uuid(), contactId: hamdan.id, hvac: { label: 'Majlis split', unitType: 'split', area: 'Seeb' } });
+  job = await s.hasib('hvac_job_save', { jobId: job.id, version: job.version, hvac: { unitIds: [unit.id] } });
+  const gas = (await s.hasib('items', { limit: 50 })).items.find(i => i.nameEn === 'Gas refill R410A').variants[0];
+  await s.hasib('hvac_estimate_save', { requestId: uuid(), jobId: job.id, hvac: { lines: [{ kind: 'service', name: 'Gas refill R410A', variantId: gas.id, qty: 1, unitPriceMinor: gas.priceMinor }] } });
+  await s.run();
+  // Adiba offers the estimate in his chat at the catalog price; the owner approves it there.
+  const offer = await approveInChat(s, name);
+  eq([offer.subjectType, offer.status, offer.lines[0].priceSource, offer.totalMinor], ['hvac_estimate', 'sent', 'catalog_fixed', 15000], 'the estimate went out at the catalog price after the owner approved');
+  await s.say(from, 'نعم', name);
+  job = await s.hasib('hvac_job', { jobId: job.id });
+  ok(job.status === 'approved' && job.estimates[0].status === 'approved' && job.estimates[0].evidenceSource === 'whatsapp' && job.estimates[0].approvedBy.endsWith(offer.ref), 'his yes approved that estimate version, recorded as WhatsApp evidence');
+  // A window starting shortly: the reminder goes by itself; the technician arrives on time and finishes.
+  const team = (await s.hasib('hvac_schedule', { fromAt: Date.now(), toAt: Date.now() + DAY })).technicians, rahul = team.find(t => t.name === 'rahul');
+  const visit = await s.hasib('hvac_visit_save', { requestId: uuid(), jobId: job.id, hvac: { technicianAccountId: rahul.accountId, startsAt: Date.now() + 15 * 60000, endsAt: Date.now() + 135 * 60000 } });
+  await s.run();
+  ok((await s.thread(name)).text.includes(`#${job.number}`), 'the visit reminder reached him by itself, with the job number and window');
+  await s.hasib('hvac_visit_status', { visitId: visit.id, version: visit.version, status: 'arrived' });
+  for (const status of ['repairing']) job = await s.hasib('hvac_job_status', { jobId: job.id, version: (await s.hasib('hvac_job', { jobId: job.id })).version, status });
+  await s.hasib('hvac_checklist_save', { jobId: job.id, version: (await s.hasib('hvac_job', { jobId: job.id })).version, hvac: { checklist: [{ text: 'Pressure within range', result: 'pass' }], findings: 'Topped up 0.8 kg' } });
+  for (const status of ['tested', 'completed']) await s.hasib('hvac_job_status', { jobId: job.id, version: (await s.hasib('hvac_job', { jobId: job.id })).version, status });
+  job = await s.hasib('hvac_job', { jobId: job.id });
+  eq([job.status, job.money.totalMinor], ['completed', 15000], 'completed and charged the approved estimate');
+  await s.hasib('hvac_unit_service', { unitId: unit.id, version: job.units[0].version, hvac: { nextServiceAt: Date.now() + 90 * DAY } });
+  await s.later(31);
+  await s.run();
+  ok(/تم إنجاز طلب|is complete/.test((await s.thread(name)).text), 'the completion notice followed by itself, with the balance');
+  const onTime = (await s.hasib('hvac_metric_records', { metric: 'on_time_arrival', period: '7d' })).items.find(r => r.jobId === job.id);
+  eq(onTime?.inNumerator, true, 'Insights counts his visit as on time');
+  // A maintenance contract: activated on his yes, its first visit opened as a job exactly once.
+  const c = await s.hasib('hvac_contract_save', { requestId: uuid(), contactId: hamdan.id, hvac: { unitIds: [unit.id], visitsPerYear: 4, priceMinor: 60000 } });
+  await s.hasib('hvac_contract_status', { contractId: c.id, version: c.version, status: 'active', evidenceSource: 'whatsapp' });
+  await s.run(); await s.run();
+  eq((await s.hasib('hvac_contract', { contractId: c.id })).visits.filter(v => v.jobId).length, 1, 'Hasib opened exactly one job for the visit due now');
+  // An older contract ends soon: the renewal waits for the owner, then goes out when approved.
+  const old = await s.hasib('hvac_contract_save', { requestId: uuid(), contactId: hamdan.id, hvac: { unitIds: [unit.id], visitsPerYear: 2, priceMinor: 50000, startsAt: Date.now() - 340 * DAY, endsAt: Date.now() + 20 * DAY } });
+  await s.hasib('hvac_contract_status', { contractId: old.id, version: old.version, status: 'active', evidenceSource: 'signed' });
+  await s.run();
+  ok(!(await s.thread(name)).text.includes(old.reference), 'the renewal is not sent by itself');
+  await s.go('?tab=work&view=followups&filter=decision');
+  const renewal = s.page.locator('.hb-followups > li', { hasText: old.reference }).first();
+  await renewal.waitFor();
+  await renewal.getByRole('button', { name: 'Approve and send' }).click();
+  await s.page.getByRole('alertdialog').getByRole('button', { name: 'Yes, continue' }).click();
+  await s.page.locator('.hb-followups > li', { hasText: old.reference }).first().waitFor({ state: 'detached' }).catch(() => {});
+  ok((await s.thread(name)).text.includes(old.reference), 'approved, the renewal reached him in his chat');
+  await rulesRoundTrip(s, 'hvac', 'visit_reminder', 'Visit reminder', 'draft');
+  await closeClean(s, 'hvac manager');
+}
+
+const FLOWS = { retail, 'retail-tech': tech, automotive, construction, hvac };
 try {
   for (const sector of SECTORS) {
     const manager = demo(PORTS[sector], `--pack=${sector}`), employee = demo(PORTS[sector] + 1, `--pack=${sector}`, '--role=employee');

@@ -499,9 +499,50 @@ const dentalReasons = {
   visit_not_completed: ['Set a recall date on a completed visit.', 'حدد موعد المراجعة على زيارة مكتملة.'],
   invalid_recall: ['Enter the future date the clinician gave (within 3 years).', 'أدخل التاريخ القادم الذي حدده الطبيب (خلال ٣ سنوات).'],
 };
+const hvacReasons = {
+  task_closes_itself: WORKSPACE_REASONS.task_closes_itself,
+  job_not_found: ['That job is no longer available.', 'هذا العمل لم يعد متاحاً.'],
+  job_conflict: ['Someone changed this job. It has been reloaded; try again.', 'عدّل شخص آخر هذا العمل. أعد المحاولة بعد التحديث.'],
+  job_locked: ['This job is closed or not at that step.', 'هذا العمل مغلق أو ليس في هذه المرحلة.'],
+  invalid_job: ['Check the job type, units and area.', 'راجع نوع العمل والوحدات والمنطقة.'],
+  invalid_repeat: ['Link a repeat to a completed job of the same customer.', 'اربط العودة بعمل مكتمل لنفس العميل.'],
+  invalid_transition: ['That step isn’t possible for this job now.', 'لا يمكن تنفيذ هذه الخطوة على العمل الآن.'],
+  estimate_not_approved: ['Record the customer’s yes to the latest estimate first.', 'سجّل موافقة العميل على آخر تسعيرة أولاً.'],
+  visit_not_started: ['Record this once the technician is on site.', 'سجّل هذا عند وصول الفني إلى الموقع.'],
+  checklist_required: ['Record the checks before marking it tested.', 'سجّل الفحوص قبل تسجيل الاختبار.'],
+  check_failed: ['A check failed. Repair and re-check before completing.', 'فشل أحد الفحوص. أصلح وأعد الفحص قبل الإكمال.'],
+  parts_label_required: ['Say which part the job is waiting for.', 'حدد القطعة التي ينتظرها العمل.'],
+  cancellation_reason_required: ['Choose the reason for cancelling.', 'اختر سبب الإلغاء.'],
+  technician_not_found: ['Choose a technician from your team.', 'اختر فنياً من فريقك.'],
+  technician_busy: ['The technician is booked at that time. Choose another window or technician.', 'الفني محجوز في هذا الوقت. اختر نافذة أو فنياً آخر.'],
+  invalid_visit: ['Check the visit window (15 minutes to 12 hours).', 'راجع نافذة الزيارة (من ١٥ دقيقة إلى ١٢ ساعة).'],
+  visit_exists: ['This job already has a visit booked. Move it instead.', 'لهذا العمل زيارة محجوزة. انقلها بدلاً من ذلك.'],
+  job_not_schedulable: ['Triage the job or approve its estimate before booking a visit.', 'افرز العمل أو اعتمد تسعيرته قبل حجز زيارة.'],
+  visit_not_found: ['That visit is no longer available.', 'هذه الزيارة لم تعد متاحة.'],
+  visit_conflict: ['Someone changed this visit. Try again.', 'عدّل شخص آخر هذه الزيارة. أعد المحاولة.'],
+  visit_locked: ['Only a booked visit can be moved.', 'لا تُنقل إلا الزيارة المحجوزة.'],
+  visit_not_finished: ['Record a missed visit after its window has passed.', 'سجّل الزيارة الفائتة بعد مرور نافذتها.'],
+  invalid_estimate: ['Each line needs a name, a quantity and a price.', 'كل بند يحتاج اسماً وكمية وسعراً.'],
+  estimate_not_found: ['That estimate is no longer available.', 'هذه التسعيرة لم تعد متاحة.'],
+  estimate_changed: ['A newer estimate was sent. Record the yes to that one.', 'أُرسلت تسعيرة أحدث. سجّل الموافقة عليها.'],
+  estimate_expired: ['This estimate has expired. Send a new version.', 'انتهت صلاحية هذه التسعيرة. أرسل نسخة جديدة.'],
+  invalid_estimate_transition: ['Only the latest draft can be sent.', 'لا تُرسل إلا آخر مسودة.'],
+  approval_evidence_required: ['Say who agreed and how.', 'حدد من وافق وكيف.'],
+  invalid_checklist: ['Each check needs a line and a result.', 'كل فحص يحتاج بنداً ونتيجة.'],
+  invalid_cost: ['Each cost needs a kind, a description and an amount.', 'كل تكلفة تحتاج نوعاً وبياناً ومبلغاً.'],
+  payment_exceeds_balance: ['That is more than the balance.', 'المبلغ أكبر من الرصيد.'],
+  invalid_unit: ['Give the unit a name and a type.', 'أدخل اسماً ونوعاً للوحدة.'],
+  unit_not_found: ['That unit is no longer available.', 'هذه الوحدة لم تعد متاحة.'],
+  invalid_service_date: ['Enter the future date the technician gave (within 3 years).', 'أدخل التاريخ القادم الذي حدده الفني (خلال ٣ سنوات).'],
+  invalid_contract: ['Choose the customer’s units, 1–12 visits a year, a term of at least 30 days and a price.', 'اختر وحدات العميل، و١–١٢ زيارة سنوياً، ومدة ٣٠ يوماً على الأقل، وسعراً.'],
+  contract_not_found: ['That contract is no longer available.', 'هذا العقد لم يعد متاحاً.'],
+  contract_locked: ['Only a draft contract can be edited.', 'لا تُعدّل إلا مسودة العقد.'],
+  invalid_contract_transition: ['That step isn’t possible for this contract now.', 'لا يمكن تنفيذ هذه الخطوة على العقد الآن.'],
+  invalid_renewal: ['This contract can’t be renewed from here.', 'لا يمكن تجديد هذا العقد من هنا.'],
+};
 // Each sector's words apply on its own pack only, so a shared code keeps each sector's own wording.
 const byLang = table => ({ en: Object.fromEntries(Object.entries(table).map(([k, [e]]) => [k, e])), ar: Object.fromEntries(Object.entries(table).map(([k, [, a]]) => [k, a])) });
-const PACK_REASONS = { media: byLang(mediaReasons), fitness: byLang(fitnessReasons), dental: byLang(dentalReasons) };
+const PACK_REASONS = { media: byLang(mediaReasons), fitness: byLang(fitnessReasons), dental: byLang(dentalReasons), hvac: byLang(hvacReasons) };
 
 const GROUPED = new Intl.NumberFormat('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 

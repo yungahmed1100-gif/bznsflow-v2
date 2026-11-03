@@ -1,4 +1,4 @@
-import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS, ADIBA_OPERATIONS, STORE_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
+import { BOOKING_OPERATIONS, JOB_OPERATIONS, REAL_ESTATE_OPERATIONS, TEAM_OPERATIONS, CLINIC_OPERATIONS, CONSTRUCTION_OPERATIONS, AUTOMOTIVE_OPERATIONS, MEDIA_OPERATIONS, FITNESS_OPERATIONS, DENTAL_OPERATIONS, HVAC_OPERATIONS, ADIBA_OPERATIONS, STORE_OPERATIONS } from '../../../config/hasib-workflow-operations.js';
 // Per-action argument allow-lists for the Hasib API. Unknown keys are dropped,
 // strings are length-bounded, numbers must already be integers (money is sent
 // in minor units and never coerced from a string). Convex re-validates all of it.
@@ -218,6 +218,25 @@ const dentalShape = b => ({ requestId: uuid(b.requestId), version: int(b.version
   lines: list(b.lines, 20, x => compact({ variantId: id(x?.variantId), qty: int(x?.qty), unitPriceMinor: int(x?.unitPriceMinor) })), dental: dentalPayload(b.dental) });
 const DENTAL_REQUEST = { dental_resource_save: null, dental_visit_book: null, dental_charge: null, dental_payment_record: null };
 registerSector(DENTAL_OPERATIONS, dentalShape, DENTAL_REQUEST);
+// Air conditioning: one typed payload; ids are checked as ids and Convex re-checks every value.
+const hvacPayload = h => h && typeof h === 'object' ? compact({
+  jobType: str(h.jobType, 20), source: str(h.source, 20), unitIds: list(h.unitIds, 20, id), area: str(h.area, 60), urgent: flag(h.urgent), reportedSymptom: str(h.reportedSymptom, 20),
+  repeatOfId: id(h.repeatOfId), technicianAccountId: id(h.technicianAccountId), contractId: id(h.contractId), contractVisitIndex: int(h.contractVisitIndex),
+  partsLabel: str(h.partsLabel, 80), partsExpectedAt: int(h.partsExpectedAt), startsAt: int(h.startsAt), endsAt: int(h.endsAt), outcome: str(h.outcome, 20),
+  lines: list(h.lines, 30, x => compact({ kind: str(x?.kind, 20), name: str(x?.name, 120), variantId: id(x?.variantId), qty: int(x?.qty), unitPriceMinor: int(x?.unitPriceMinor) })),
+  checklist: list(h.checklist, 20, x => compact({ text: str(x?.text, 120), result: str(x?.result, 10) })), findings: str(h.findings, 500),
+  costs: list(h.costs, 20, x => compact({ kind: str(x?.kind, 20), label: str(x?.label, 80), amountMinor: int(x?.amountMinor) })), costsComplete: flag(h.costsComplete),
+  label: str(h.label, 60), unitType: str(h.unitType, 20), brand: str(h.brand, 40), capacityBtu: int(h.capacityBtu), serial: str(h.serial, 40), siteLabel: str(h.siteLabel, 60),
+  retired: flag(h.retired), nextServiceAt: int(h.nextServiceAt), clearService: flag(h.clearService),
+  visitsPerYear: int(h.visitsPerYear), priceMinor: int(h.priceMinor), renewedFromId: id(h.renewedFromId), text: str(h.text, 4000), templateId: str(h.templateId, 80),
+}) : undefined;
+const hvacShape = b => ({ requestId: uuid(b.requestId), version: int(b.version), jobId: id(b.jobId), visitId: id(b.visitId), estimateId: id(b.estimateId), unitId: id(b.unitId), contractId: id(b.contractId),
+  contactId: id(b.contactId), conversationId: id(b.conversationId), draftId: id(b.draftId), taskId: id(b.taskId), status: str(b.status, 30), reason: str(b.reason, 200),
+  approvedBy: str(b.approvedBy, 100), evidenceSource: str(b.evidenceSource, 20), amountMinor: int(b.amountMinor), method: str(b.method, 20), reference: str(b.reference, 80),
+  dueAt: int(b.dueAt), fromAt: int(b.fromAt), toAt: int(b.toAt), metric: str(b.metric, 40), segment: str(b.segment, 80), period: str(b.period, 12), filter: str(b.filter, 20), search: str(b.search, 40),
+  hvac: hvacPayload(b.hvac) });
+const HVAC_REQUEST = { hvac_job_save: 'jobId', hvac_visit_save: 'visitId', hvac_estimate_save: null, hvac_payment_record: null, hvac_unit_save: 'unitId', hvac_contract_save: 'contractId' };
+registerSector(HVAC_OPERATIONS, hvacShape, HVAC_REQUEST);
 // Adiba's offers: the owner fills prices and approves; staff may record a customer's acceptance.
 const adibaShape = b => ({ version: int(b.version), offerId: id(b.offerId), status: str(b.status, 30), contactId: id(b.contactId), conversationId: id(b.conversationId),
   adiba: b.adiba && typeof b.adiba === 'object' ? compact({ lines: list(b.adiba.lines, 20, x => compact({ key: str(x?.key, 20), unitPriceMinor: int(x?.unitPriceMinor), qty: int(x?.qty), name: str(x?.name, 120) })),
@@ -233,7 +252,9 @@ const baseSettings = SHAPES.settings_update;
 const AUTOMOTIVE_SETTING_KEYS = ['approvalWaitHours', 'readyUncollectedHours', 'autoQuoteLimitMinor'];
 const CONSTRUCTION_SETTING_KEYS = ['approvalWaitDays', 'materialsLeadDays'];
 const STORE_SETTING_KEYS = ['readyUncollectedHours'];
-const SECTOR_SETTINGS = { retailSettings: sectorSettings(STORE_SETTING_KEYS, 3), retailTechSettings: sectorSettings(STORE_SETTING_KEYS, 4), constructionSettings: sectorSettings(CONSTRUCTION_SETTING_KEYS, 4), automotiveSettings: sectorSettings(AUTOMOTIVE_SETTING_KEYS, 4), mediaSettings: sectorSettings(MEDIA_SETTING_KEYS, 3), fitnessSettings: sectorSettings(FITNESS_SETTING_KEYS, 3), dentalSettings: sectorSettings(DENTAL_SETTING_KEYS, 4) };
+const HVAC_SETTING_KEYS = ['arrivalGraceMinutes', 'repeatWindowDays', 'estimateWindowDays', 'bookingWindowDays', 'renewalHorizonDays', 'renewalGraceDays', 'amcVisitLeadDays', 'autoQuoteLimitMinor'];
+const hvacSettingsShape = v => { const base = sectorSettings(HVAC_SETTING_KEYS, 8)(v); return base && Array.isArray(v.serviceAreas) ? { ...base, serviceAreas: list(v.serviceAreas, 30, x => str(x, 60)).filter(Boolean) } : base; };
+const SECTOR_SETTINGS = { retailSettings: sectorSettings(STORE_SETTING_KEYS, 3), retailTechSettings: sectorSettings(STORE_SETTING_KEYS, 4), constructionSettings: sectorSettings(CONSTRUCTION_SETTING_KEYS, 4), automotiveSettings: sectorSettings(AUTOMOTIVE_SETTING_KEYS, 4), mediaSettings: sectorSettings(MEDIA_SETTING_KEYS, 3), fitnessSettings: sectorSettings(FITNESS_SETTING_KEYS, 3), dentalSettings: sectorSettings(DENTAL_SETTING_KEYS, 4), hvacSettings: hvacSettingsShape };
 SHAPES.settings_update = b => ({ ...baseSettings(b), ...Object.fromEntries(Object.entries(SECTOR_SETTINGS).map(([arg, shape]) => [arg, shape(b[arg])])) });
 
 export const HASIB_ACTIONS = Object.keys(SHAPES);

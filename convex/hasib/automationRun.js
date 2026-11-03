@@ -9,10 +9,11 @@ import { runMediaAutomation } from './mediaAutomation.js';
 import { runAutomotiveAutomation } from './automotiveAutomation.js';
 import { runConstructionAutomation } from './constructionAutomation.js';
 import { runRetailAutomation } from './retailAutomation.js';
+import { runHvacAutomation } from './hvacAutomation.js';
 
 export const RUN_EVERY_MS = 5 * 60000;
 export const SWEEP_LIMIT = 20;
-const RUNNERS = { media: runMediaAutomation, automotive: runAutomotiveAutomation, construction: runConstructionAutomation, retail: runRetailAutomation, 'retail-tech': runRetailAutomation };
+const RUNNERS = { media: runMediaAutomation, automotive: runAutomotiveAutomation, construction: runConstructionAutomation, hvac: runHvacAutomation, retail: runRetailAutomation, 'retail-tech': runRetailAutomation };
 export { ensureAutomation } from './workspace/schedule.js';
 
 /** The cron: claims up to SWEEP_LIMIT due accounts (oldest first) and schedules one run for each. */
@@ -42,5 +43,5 @@ export async function automationRun(ctx, { accountId, workerFunction, secret }, 
   const runner = RUNNERS[tenant.pack.id];
   if (!runner) { if (schedule) await ctx.db.patch(schedule._id, { enabled: false, updatedAt: now }); return done('no_runner'); }
   const result = await runner(ctx, tenant, now);
-  return done(`sent:${result.sent} skipped:${result.skipped}${result.quoted !== undefined ? ` quoted:${result.quoted}` : ''}`);
+  return done(`sent:${result.sent} skipped:${result.skipped}${result.quoted !== undefined ? ` quoted:${result.quoted}` : ''}${result.opened ? ` opened:${result.opened}` : ''}`);
 }

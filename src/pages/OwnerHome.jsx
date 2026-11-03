@@ -11,6 +11,7 @@ const WORK = {
   'real-estate': ['Opportunities, viewings and deals', 'الفرص والمعاينات والصفقات'],
   construction: ['Projects, procurement and receivables', 'المشاريع والمشتريات والمستحقات'],
   automotive: ['Approvals, workshop and collection', 'الموافقات والورشة والاستلام'],
+  hvac: ['AC jobs, visits and maintenance contracts', 'أعمال التكييف والزيارات وعقود الصيانة'],
 };
 
 export function OwnerGate({ lang = 'en', children }) {

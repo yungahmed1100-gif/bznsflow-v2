@@ -9,6 +9,7 @@ import {
   MEDIA_OPERATIONS,
   FITNESS_OPERATIONS,
   DENTAL_OPERATIONS,
+  HVAC_OPERATIONS,
   STORE_OPERATIONS,
 } from "../hasib-workflow-operations.js";
 export const AREAS = [
@@ -142,6 +143,7 @@ const sectorGroups = [
   [MEDIA_OPERATIONS, ["media"]],
   [FITNESS_OPERATIONS, ["fitness"]],
   [DENTAL_OPERATIONS, ["dental"]],
+  [HVAC_OPERATIONS, ["hvac"]],
   [STORE_OPERATIONS, ["retail", "retail-tech"]],
 ];
 for (const [operation, policy] of Object.entries(HASIB_POLICY)) {

@@ -77,6 +77,13 @@ const SECTOR = {
     modules: { appointments: 'off', plans: 'off', batches: 'planned' },
   },
   clinic: { modules: { batches: 'planned' } },
+  // AC jobs charge their approved estimate on a Hasib order. Services and their prices come from Layla's
+  // catalog (fixed prices let Hasib quote by himself); parts and gas are the business's own stock.
+  hvac: {
+    labels: { orders: 'jobs', stock: 'supplies', customers: 'customers' },
+    sensitive: false, noOrderNotes: false, fulfilment: ['in_store'], internalStock: true, serviceItems: true,
+    expenseCategories: extra(t('refrigerant', 'Refrigerant gas', 'غاز التبريد'), t('spare_parts', 'Spare parts', 'قطع الغيار'), t('vehicle_fuel', 'Van fuel', 'وقود المركبات')),
+  },
   automotive: { modules: { jobCards: 'available' }, orderFields: [{ key: 'plate', en: 'Plate number', ar: 'رقم اللوحة', type: 'text', max: 20 }, { key: 'mileage', en: 'Mileage (km)', ar: 'العداد (كم)', type: 'number' }] },
   education: { modules: { enrolments: 'available', appointments: 'available' } },
   'real-estate': { modules: { plans: 'off', quotes: 'off' }, expenseCategories: extra(t('commission', 'Agent commission', 'عمولة الوسطاء'), t('portal_fees', 'Listing portal fees', 'رسوم منصات الإعلانات')) },
@@ -139,6 +146,12 @@ const PRESENTATION = {
     ['progress', 'Record progress', 'تسجيل التقدم', 'bar-chart', ['orders', { action: 'progress' }]],
     ['variation', 'Draft variation', 'مسودة تغيير', 'receipt', ['orders', { action: 'variation' }]],
     ['procurement', 'Add commitment', 'إضافة التزام شراء', 'box', ['stock', { action: 'commitment' }]],
+  ] },
+  hvac: { icon: 'snowflake', actions: [
+    ['job', 'New job', 'عمل جديد', 'wrench', ['work', { view: 'jobs', action: 'job' }]],
+    ['schedule', 'Today’s schedule', 'جدول اليوم', 'calendar', ['work', { view: 'schedule' }]],
+    ['contract', 'Maintenance contracts', 'عقود الصيانة', 'receipt', ['work', { view: 'contracts' }]],
+    ['followups', 'Follow-ups', 'المتابعات', 'message-circle', ['work', { view: 'followups' }]],
   ] },
   fitness: { icon: 'dumbbell', actions: [
     ['membership', 'Add membership', 'إضافة عضوية', 'users', ['work', { action: 'membership' }]],

@@ -39,7 +39,7 @@ This order validates repairs first, reuses a mature deal pipeline second, then p
 | B05 | [Beauty & salons](beauty.md) | preview | F01–F06 + F08 synthetic ingress | not_started |
 | B06 | [Dental clinics](dental.md) | enabled | F01–F06 + F08 synthetic ingress | not_started |
 | B07 | [Medical clinics](clinic.md) | preview | F01–F06 + F08 synthetic ingress | not_started |
-| B08 | [Air conditioning](hvac.md) | preview | F01–F06 + F08 synthetic ingress + F07 | not_started |
+| B08 | [Air conditioning](hvac.md) | preview | F01–F06 + F08 synthetic ingress + F07 | verified_locally (2026-11-03) |
 | B09 | [Cleaning & facilities](cleaning.md) | preview | F01–F06 + F08 synthetic ingress + F07 | not_started |
 | B10 | [Automotive](automotive.md) | enabled | F01–F06 + F08 synthetic ingress | not_started |
 | B11 | [Construction](construction.md) | enabled | F01–F06 + F08 synthetic ingress | not_started |

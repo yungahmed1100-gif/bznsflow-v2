@@ -42,9 +42,10 @@ import { RealEstateDashboard } from '../components/hasib/RealEstateDashboard';
 import { MediaDashboard } from '../components/hasib/MediaDashboard';
 import { FitnessDashboard } from '../components/hasib/FitnessDashboard';
 import { DentalDashboard } from '../components/hasib/DentalDashboard';
+import { HvacDashboard } from '../components/hasib/HvacDashboard';
 
 // The six-tab sectors' Work, Insights and rules/team screens, by pack (Real Estate is the default).
-const SIX_TAB_DASHBOARDS = { 'real-estate': RealEstateDashboard, media: MediaDashboard, fitness: FitnessDashboard, dental: DentalDashboard, automotive: AutomotiveWorkspace, construction: ConstructionWorkspace, retail: StoreWorkspace, 'retail-tech': StoreWorkspace };
+const SIX_TAB_DASHBOARDS = { 'real-estate': RealEstateDashboard, media: MediaDashboard, fitness: FitnessDashboard, dental: DentalDashboard, hvac: HvacDashboard, automotive: AutomotiveWorkspace, construction: ConstructionWorkspace, retail: StoreWorkspace, 'retail-tech': StoreWorkspace };
 import { ClinicDashboard } from '../components/hasib/ClinicDashboard';
 import { ConstructionWorkspace } from '../components/hasib/ConstructionWorkspace';
 import { AutomotiveWorkspace } from '../components/hasib/AutomotiveWorkspace';
@@ -56,6 +57,7 @@ import '../styles/real-estate.css';
 import '../styles/media.css';
 import '../styles/fitness.css';
 import '../styles/dental.css';
+import '../styles/hvac.css';
 import '../styles/sector-records.css';
 import '../styles/product.css';
 import '../styles/dashboard-polish.css';

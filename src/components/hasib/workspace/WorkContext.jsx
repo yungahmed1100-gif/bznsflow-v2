@@ -4,6 +4,7 @@ import { DealContext } from '../realestate/DealContext.jsx';
 import { MediaContext } from '../media/MediaContext.jsx';
 import { FitnessContext } from '../fitness/FitnessContext.jsx';
 import { DentalContext } from '../dental/DentalContext.jsx';
+import { HvacContext } from '../hvac/HvacContext.jsx';
 import { AutomotiveContext } from '../automotive/AutomotiveContext.jsx';
 import { ConstructionContext } from '../construction/ConstructionContext.jsx';
 import { StoreContext } from '../store/StoreContext.jsx';
@@ -14,6 +15,7 @@ export function WorkContext(props) {
   if (pack === 'media') return <MediaContext {...props} />;
   if (pack === 'fitness') return <FitnessContext {...props} />;
   if (pack === 'dental') return <DentalContext {...props} />;
+  if (pack === 'hvac') return <HvacContext {...props} />;
   if (pack === 'automotive') return <AutomotiveContext {...props} />;
   if (pack === 'construction') return <ConstructionContext {...props} />;
   if (pack === 'retail' || pack === 'retail-tech') return <StoreContext {...props} packId={pack} />;

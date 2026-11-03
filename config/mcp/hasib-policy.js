@@ -684,6 +684,122 @@ export const HASIB_POLICY = {
     "category": "read",
     "disposition": "tool"
   },
+  "hvac_approval_record": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_checklist_save": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_context": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_contract": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_contract_renew": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_contract_save": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_contract_status": {
+    "category": "finance",
+    "disposition": "tool"
+  },
+  "hvac_contracts": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_cost_save": {
+    "category": "finance",
+    "disposition": "tool"
+  },
+  "hvac_draft_approve": {
+    "category": "messages",
+    "disposition": "tool"
+  },
+  "hvac_estimate_save": {
+    "category": "finance",
+    "disposition": "tool"
+  },
+  "hvac_estimate_status": {
+    "category": "finance",
+    "disposition": "tool"
+  },
+  "hvac_followups": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_insights": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_job": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_job_save": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_job_status": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_jobs": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_metric_records": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_overview": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_payment_record": {
+    "category": "finance",
+    "disposition": "tool"
+  },
+  "hvac_schedule": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_task_resolve": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_task_snooze": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_unit_save": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_unit_service": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_units": {
+    "category": "read",
+    "disposition": "tool"
+  },
+  "hvac_visit_save": {
+    "category": "edit",
+    "disposition": "tool"
+  },
+  "hvac_visit_status": {
+    "category": "edit",
+    "disposition": "tool"
+  },
   "insights": {
     "category": "read",
     "disposition": "tool"

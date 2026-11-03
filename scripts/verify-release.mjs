@@ -16,8 +16,10 @@ const checks = [
   ['node', ['tests/fitness-browser.mjs']],
   // Dental clinics: the six-tab Visits workspace (ascend/dental.md) replaced the old dental screens and their suite.
   ['node', ['tests/dental-browser.mjs']],
+  // Air conditioning: the six-tab Jobs workspace (ascend/hvac.md) with contracts, a technician's limits and Insights.
+  ['node', ['tests/hvac-browser.mjs']],
   ['node', ['tests/hasib-industries-browser.mjs', 'construction', 'automotive']],
-  // End to end on the real-logic demo: rules that send themselves, Adiba's offers and the customer's yes, Layla's intake (Releases A and B).
+  // End to end on the real-logic demo: rules that send themselves, Adiba's offers and the customer's yes, Layla's intake (Releases A and B, and Air conditioning).
   ['node', ['tests/ascend-e2e-browser.mjs']],
 ];
 for (const [command, args] of checks) {

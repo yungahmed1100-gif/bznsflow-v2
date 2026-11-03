@@ -59,6 +59,14 @@ export function hasibPreviewResponse(packId, operation) {
   if (operation === 'dental_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, coverage: { chargesWithoutVisit: 0, complete: true } };
   if (operation === 'dental_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
   if (['dental_visits', 'dental_resources', 'dental_context', 'dental_metric_records'].includes(operation)) return { items: [] };
+  if (operation === 'hvac_overview') return { synthetic: true, today: { visits: 0, arrived: 0, openJobs: 0 }, attention: { requests: 0, unscheduled: 0, pastWindow: 0, partsWaiting: 0, estimatesOut: 0, outOfArea: 0, approvals: 0, renewalsDue: 0, balancesOverdue: 0 },
+    contracts: { active: 0, units: 0, visitsDue30d: 0, renewalsDue: 0, annualValueMinor: 0 }, setup: { technicians: 0, services: 0, units: 0 }, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
+  if (operation === 'hvac_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, revenuePerTechDay: { value: null, numerator: 0, denominator: 0 },
+    contracts: { active: 0, units: 0, visitsDue30d: 0, renewalsDue: 0, annualValueMinor: 0 }, receivables: { '0_30': 0, '31_60': 0, '60_plus': 0 }, coverage: { olderJobs: 0, complete: true } };
+  if (operation === 'hvac_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
+  if (operation === 'hvac_schedule') return { visits: [], unscheduled: [], technicians: [] };
+  if (operation === 'hvac_contracts') return { items: [], book: { active: 0, units: 0, visitsDue30d: 0, renewalsDue: 0, annualValueMinor: 0 } };
+  if (['hvac_jobs', 'hvac_units', 'hvac_context', 'hvac_metric_records'].includes(operation)) return { items: [] };
   if (operation === 'today') return today(packId);
   if (operation === 'clinic_overview') return { synthetic:true, governance:{status:'review_required',permitStatus:'unknown',approved:false}, activationReady:false,
     metrics:[{id:'unconfirmed_48h',value:0},{id:'missed_today',value:0},{id:'outstanding_minor',value:0}], requests:[], bookings:[], tasks:[], workspaceRole:'manager' };

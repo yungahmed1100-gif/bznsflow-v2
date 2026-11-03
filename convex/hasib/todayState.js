@@ -155,7 +155,8 @@ export async function executeToday(ctx, tenant, a, now) {
   const { accountId, pack } = tenant;
   const tz = await businessTimezone(ctx, accountId);
   const today = periodRange('today', now, tz), month = periodRange('month', now, tz);
-  if (pack.serviceItems) return clinicToday(ctx, tenant, now, tz, today, month);
+  // A dental clinic's Today counts its visits; AC jobs (also priced from the catalog) keep the shared job measures.
+  if (pack.id === 'dental') return clinicToday(ctx, tenant, now, tz, today, month);
   const [orders, stock] = [await waitingOrders(ctx, accountId), await lowStock(ctx, accountId)];
   let repairsReady = null;
   if (pack.modules.repairs === 'available') {

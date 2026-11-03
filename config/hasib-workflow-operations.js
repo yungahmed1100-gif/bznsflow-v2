@@ -36,3 +36,5 @@ export const STORE_OPERATIONS = ['store_overview','store_followups','store_task_
 
 // Adiba (every sector): the quotes and offers she drafts for the owner's approval.
 export const ADIBA_OPERATIONS = ['adiba_offers', 'adiba_offer', 'adiba_offer_price', 'adiba_offer_approve', 'adiba_offer_withdraw', 'adiba_offer_accept_record'];
+// Air conditioning (ascend/hvac.md): jobs with numbered estimates, technician visits, units, maintenance contracts, follow-ups and Insights.
+export const HVAC_OPERATIONS = ['hvac_overview','hvac_schedule','hvac_jobs','hvac_job','hvac_units','hvac_contracts','hvac_contract','hvac_job_save','hvac_job_status','hvac_visit_save','hvac_visit_status','hvac_estimate_save','hvac_estimate_status','hvac_approval_record','hvac_checklist_save','hvac_cost_save','hvac_payment_record','hvac_unit_save','hvac_unit_service','hvac_contract_save','hvac_contract_status','hvac_contract_renew','hvac_followups','hvac_task_resolve','hvac_task_snooze','hvac_draft_approve','hvac_context','hvac_insights','hvac_metric_records'];

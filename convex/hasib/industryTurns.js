@@ -3,6 +3,11 @@
 // count as intent; nothing the customer wrote is copied, and nothing is booked or priced here.
 import { sectorTurnPack } from './workspace/turn.js';
 import { openTaskOnce } from './workspace/tasks.js';
+import { automationActor } from './workspace/automation.js';
+import { stableRequestId } from './workspace/records.js';
+import { workspaceForManager } from './workspaceState.js';
+import { jobSave } from './hvacJobs.js';
+import { OPEN_JOB } from './hvacDomain.js';
 
 const fieldsOf = contact => new Map((contact.fields || []).map(field => [field.key, field.value]));
 
@@ -51,9 +56,32 @@ async function repairTurn(ctx, { row, contact, text, now, secret }) {
   return { contactId: contact._id };
 }
 
+// An AC customer: Layla's validated need, or a fixed word list on the message. What the customer said is
+// kept only as a fixed symptom ("not cooling" makes the request urgent, never a diagnosis); the team
+// triages, prices and books. A customer with a job already open is talking about that job.
+const HVAC_WORDS = /\b(a\/?c|aircon|air ?condition\w*|hvac|split unit|not cooling|gas refill|compressor)\b|مكيف|مكيّف|المكيف|تكييف|ما يبرد|مو يبرد|لا يبرد|ما يبرّد|تعبئة غاز|شحن فريون|فريون|كمبروسر|تسريب غاز|تنظيف مكيفات|صيانة مكيفات/i;
+const NOT_COOLING = /not cooling|no cold|ما يبرد|مو يبرد|لا يبرد|ما يبرّد|ما فيه برودة/i, LEAK = /leak|dripping|تسريب|يقطر|ينقط/i;
+const NEED_TYPES = { installation: 'install', repair: 'repair', maintenance: 'inspection', cleaning: 'cleaning' };
+const DAY = 86400000;
+
+async function hvacTurn(ctx, { row, person, contact, text, now, secret }) {
+  const fields = fieldsOf(contact), need = fields.get('need');
+  if (!need && !(text && HVAC_WORDS.test(text))) return null;
+  if (!await sectorTurnPack(ctx, { row, secret, packId: 'hvac' })) return null;
+  const open = (await ctx.db.query('hvacJobs').withIndex('by_contact', q => q.eq('contactId', contact._id)).take(50)).filter(j => j.accountId === row.accountId && OPEN_JOB.has(j.status));
+  if (open.length) return null;
+  const symptom = text && NOT_COOLING.test(text) ? 'not_cooling' : text && LEAK.test(text) ? 'leak' : undefined;
+  const actor = automationActor(await workspaceForManager(ctx, row.accountId, now), row.accountId, 'layla');
+  const made = await jobSave(ctx, { accountId: row.accountId, row, secret }, actor, { requestId: stableRequestId(`layla-hvac:${contact._id}:${Math.floor(now / DAY)}`), contactId: contact._id,
+    ...(person?._id ? { conversationId: person._id } : {}),
+    hvac: { source: 'layla', jobType: NEED_TYPES[need] || (symptom ? 'repair' : 'inspection'), ...(symptom ? { reportedSymptom: symptom } : {}), ...(fields.get('area') ? { area: String(fields.get('area')).slice(0, 60) } : {}) } }, now);
+  return made.ok ? { contactId: contact._id, jobId: made.value.id } : null;
+}
+
 /** Every intake; each runs only for its own sector. */
 export async function industryTurns(ctx, args) {
   await automotiveTurn(ctx, args);
+  await hvacTurn(ctx, args);
   await constructionTurn(ctx, args);
   await repairTurn(ctx, args);
 }

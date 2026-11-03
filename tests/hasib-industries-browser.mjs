@@ -16,9 +16,9 @@ const API_PORT = Number(process.env.INDUSTRY_BROWSER_API_PORT || 5399);
 const BASE = `http://127.0.0.1:${API_PORT}`;
 const journeysOnly = process.argv.includes('--journeys-only');
 const requested = process.argv.slice(2).filter(arg => !arg.startsWith('--'));
-// Real Estate and Fitness have their own dashboards and suites (tests/real-estate-browser.mjs,
-// tests/fitness-browser.mjs); their generic scenarios are retired.
-const packs = (requested.length ? requested : industryCatalog().map(p => p.id)).filter(id => !['real-estate', 'fitness'].includes(id));
+// Real Estate, Fitness and Air conditioning have their own dashboards and suites (tests/real-estate-browser.mjs,
+// tests/fitness-browser.mjs, tests/hvac-browser.mjs); their generic scenarios are retired.
+const packs = (requested.length ? requested : industryCatalog().map(p => p.id)).filter(id => !['real-estate', 'fitness', 'hvac'].includes(id));
 const results = [];
 await mkdir(OUT, { recursive: true });
 
