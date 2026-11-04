@@ -144,6 +144,7 @@
 .ld-name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .ld-conversation-top time { font-size: 12px; color: var(--ink-2); flex: none; }
 .ld-preview { color: var(--ink-2); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-preview-label { flex: none; color: var(--orange-ink, var(--ink)); font-size: 13px; font-weight: 600; }
 .ld-conversation-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
 .ld-conversation-tags:empty { display: none; }
 .ld-thread-pane { min-width: 0; min-height: 0; display: flex; }
@@ -178,6 +179,8 @@
 .ld-bubble.is-template { box-shadow: inset calc(3px * var(--x-sign)) 0 0 var(--orange); }
 .ld-bubble p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .ld-bubble .ld-expired { color: var(--ink-2); font-style: italic; }
+.ld-bubble-media { display: block; margin-block-end: 6px; }
+.ld-bubble-media img, video.ld-bubble-media { display: block; inline-size: 100%; max-inline-size: 320px; block-size: auto; border: 1px solid var(--rule-strong); border-radius: calc(var(--radius) - 2px); background: var(--paper); }
 .ld[lang=ar] .ld-bubble .ld-expired { font-style: normal; }
 .ld-bubble-author { display: block; font-size: 11px; font-weight: 700; color: var(--ink-2); margin-bottom: 2px; }
 .ld-bubble-meta { display: flex; justify-content: flex-end; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-2); margin-top: 2px; }

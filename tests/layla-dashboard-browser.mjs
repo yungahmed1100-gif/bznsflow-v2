@@ -1004,5 +1004,24 @@ try {
     assert.equal(ring, '3px', `${tag}: the focus ring is 3px`); count++;
     await context.close();
   }
+  // A chat opened by a broadcast: the list says so, and the thread shows the image the template carried. Arabic, phone and desktop.
+  for (const width of [375, 1280]) {
+    const state = fixture();
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+    state.messages['c-k1'] = [{ id: 'b1', direction: 'template', templateName: 'clinics_1', text: 'مرحباً فريق عيادة الابتسامة، احجزوا تدقيقاً مجانياً.', status: 'read', at: now - HOUR,
+      media: { kind: 'image', url: png } }];
+    const { page, context } = await openPage(browser, { width, lang: 'ar', path: '/layla/dashboard?tab=chats', handler: api(state) });
+    const row = page.getByRole('button', { name: /Aisha Al Balushi/ });
+    await row.getByText('بث ·').waitFor(); count++;
+    await row.click();
+    const bubble = page.locator('.ld-bubble.is-template');
+    await bubble.getByText('قالب · clinics_1').waitFor(); count++;
+    assert.equal(await bubble.locator('img').getAttribute('src'), png, 'the header image shows in the bubble'); count++;
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `broadcast chat fits ${width}`); count++;
+    assert.deepEqual(await axe(page), []); count++;
+    await page.screenshot({ path: `${OUT}/broadcast-chat-ar-${width}.png` });
+    await context.close();
+  }
+
   console.log(`${count} dashboard browser assertions passed at 320–1440px in English and Arabic. Synthetic API; no external network.`);
 } finally { await browser.close(); }

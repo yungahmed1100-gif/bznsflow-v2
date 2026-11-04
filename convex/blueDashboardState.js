@@ -6,7 +6,8 @@ import { resolveTenant, ownsIntegration, owned, encodeCursor, decodeCursor, afte
 import { DAY, GENERAL_SECTOR, catalogForFields, deleteContact, laylaSectorFor, linkConversation, ownerContactPatch, publicContact } from './blueContacts.js';
 import { messagingReady, executeMessaging, stopQueuedJobs, RATE_LIMITS } from './blueMessagingState.js';
 import { packDescription } from '../config/layla-qualification.js';
-import { renderTemplate } from '../config/layla-templates.js';
+import { mediaHeaderOf } from '../config/layla-templates.js';
+import { templateSendsFor, sentText } from './blueTemplateSends.js';
 import { planFor } from './hasib/plans.js';
 import { actorWorkspace } from './hasib/workspaceState.js';
 import { capabilitiesFor, effectivePlan } from './hasib/capabilities.js';
@@ -20,10 +21,19 @@ function publicMessage(m, now) {
   return { id: m._id, direction: m.direction, text: m.textExpiresAt > now ? m.text : null, textExpired: !(m.textExpiresAt > now),
     status: m.status, reason: m.reason || null, errorCode: m.errorCode ?? null, manual: !!m.manual, at: m.at };
 }
-function publicTemplateSend(r, campaign, now) {
-  const retained = !!r.waId && r.expiresAt > now;
-  return { id: r._id, direction: 'template', templateName: campaign?.template.name || '', text: retained && campaign ? renderTemplate(campaign.template, r.parameters) : null,
-    textExpired: !retained, status: r.status, reason: r.reason || null, errorCode: r.errorCode ?? null, manual: true, at: r.at };
+// The header file a broadcast sent, shown in the bubble while the campaign still keeps it.
+async function headerMedia(ctx, campaign) {
+  const format = mediaHeaderOf(campaign.template);
+  if (!format) return null;
+  const file = campaign.headerMediaId ? await ctx.db.get(campaign.headerMediaId) : null;
+  const url = file ? await ctx.storage.getUrl(file.storageId) : null;
+  return { kind: format.toLowerCase(), url: url || null, ...(file?.filename ? { filename: file.filename } : {}) };
+}
+async function publicTemplateSend(ctx, { send: r, campaign }, now) {
+  const text = sentText({ send: r, campaign }, now);
+  const media = text === null ? null : await headerMedia(ctx, campaign);
+  return { id: r._id, direction: 'template', templateName: campaign.template.name || '', text, textExpired: text === null, ...(media ? { media } : {}),
+    status: r.status, reason: r.reason || null, errorCode: r.errorCode ?? null, manual: true, at: r.at };
 }
 
 async function messagingState(ctx, tenant, now) {
@@ -39,8 +49,14 @@ async function messagingState(ctx, tenant, now) {
     limits: { perMinute: RATE_LIMITS.perMinute, perDay: RATE_LIMITS.perDay, usedToday: rate?.count || 0 } };
 }
 
-async function lastMessage(ctx, conversationId, now) {
+// The chat's latest line: a message, or the broadcast that opened or last touched the chat.
+async function lastMessage(ctx, conversationId, contactId, now) {
   const [m] = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', conversationId)).order('desc').take(1);
+  const [sent] = await templateSendsFor(ctx, contactId, { since: m ? m.at + 1 : 0, limit: 1 });
+  if (sent) {
+    const text = sentText(sent, now);
+    return { direction: 'template', templateName: sent.campaign.template.name || '', text: text === null ? null : text.slice(0, 140), status: sent.send.status, at: sent.send.at };
+  }
   return m ? { direction: m.direction, text: m.textExpiresAt > now ? String(m.text || '').slice(0, 140) : null, status: m.status, at: m.at } : null;
 }
 function handoffFor(person) {
@@ -49,7 +65,7 @@ function handoffFor(person) {
 }
 async function conversationItem(ctx, person, tenant, now) {
   const contact = await linkConversation(ctx, person, { sectorId: await laylaSectorFor(ctx, tenant.row), now, secret: tenant.secret });
-  return { id: person._id, channel:person.channel || 'whatsapp', contact: publicContact(contact, person), lastMessage: await lastMessage(ctx, person._id, now),
+  return { id: person._id, channel:person.channel || 'whatsapp', contact: publicContact(contact, person), lastMessage: await lastMessage(ctx, person._id, contact._id, now),
     updatedAt: person.updatedAt, takeover: person.takeover, handoff: handoffFor(person), optout: person.optout || contact.optout, windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0 };
 }
 
@@ -79,13 +95,8 @@ async function conversationFor(ctx, contact) {
 async function threadMessages(ctx, person, contact, before, limit, now) {
   const query = ctx.db.query('blueMessages').withIndex('by_conversation_at', q => before ? q.eq('conversationId', person._id).lt('at', before) : q.eq('conversationId', person._id));
   const messages = (await query.order('desc').take(limit)).map(m => publicMessage(m, now));
-  const sends = contact ? await ctx.db.query('blueCampaignRecipients').withIndex('by_contact_at', q => before ? q.eq('contactId', contact._id).lt('at', before) : q.eq('contactId', contact._id)).order('desc').take(limit) : [];
-  const campaigns = new Map();
   const templates = [];
-  for (const r of sends.filter(s => !['pending', 'cancelled'].includes(s.status))) {
-    if (!campaigns.has(r.campaignId)) campaigns.set(r.campaignId, await ctx.db.get(r.campaignId));
-    templates.push(publicTemplateSend(r, campaigns.get(r.campaignId), now));
-  }
+  for (const sent of await templateSendsFor(ctx, contact?._id, { before, limit })) templates.push(await publicTemplateSend(ctx, sent, now));
   const merged = [...messages, ...templates].sort((a, b) => b.at - a.at).slice(0, limit);
   return { messages: merged.reverse(), before: merged.length === limit ? merged[0].at : null };
 }
@@ -108,7 +119,7 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
   if (a.operation === 'overview') {
     const settings = await ctx.db.query('blueBusinessSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
     const unlinked = (await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).order('desc').take(500)).some(r => !r.contactId);
-    const open = await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).order('desc').take(125);
+    const open = await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).order('desc').take(400);
     const handoffsOpen = open.filter(p => p.takeover && !['resolved', 'returned'].includes(p.handoffState) && ownsIntegration(tenant, p.integrationId)).length;
     // What the owner still has to add after going live: approved services and a person customers can reach.
     const services = !!(await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved')).first());

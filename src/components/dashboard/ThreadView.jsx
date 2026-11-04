@@ -110,6 +110,7 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
             {(i === 0 || !sameDay(messages[i - 1].at, m.at, overview.timezone)) && <li className="ld-day" aria-label={formatDay(m.at, s.lang, overview.timezone)}><span aria-hidden="true">{formatDay(m.at, s.lang, overview.timezone)}</span></li>}
             <li className={`ld-bubble is-${m.direction === 'in' ? 'in' : 'out'} ${m.direction === 'template' ? 'is-template' : ''}`}>
               <span className="ld-bubble-author">{m.direction === 'in' ? s.t('customer') : m.direction === 'human' ? s.t('yourTeamApp') : m.direction === 'template' ? `${s.t('template')} · ${m.templateName}` : m.manual ? s.t('you') : s.t('layla')}</span>
+              {m.direction === 'template' && m.media && <TemplateHeader s={s} media={m.media} />}
               {m.text === null ? <p className="ld-expired" title={clinical ? s.t('textClearedHelp') : undefined}>{clinical ? s.t('textCleared') : s.t('textExpired')}</p> : <p dir="auto">{m.text}</p>}
               <span className="ld-bubble-meta">
                 <time dateTime={new Date(m.at).toISOString()} className="ld-num">{formatTime(m.at, s.lang, overview.timezone)}</time>
@@ -147,4 +148,12 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
       )}
     </article>
   );
+}
+
+/** The image, video or PDF a template message carried, while the business still keeps the file. */
+function TemplateHeader({ s, media }) {
+  if (!media.url) return <p className="ld-bubble-media is-missing"><span className="ld-chip">{s.t(`headerExpired_${media.kind}`)}</span></p>;
+  if (media.kind === 'image') return <a className="ld-bubble-media" href={media.url} target="_blank" rel="noopener noreferrer"><img src={media.url} alt={s.t('headerExpired_image')} loading="lazy" width="320" height="200" /></a>;
+  if (media.kind === 'video') return <video className="ld-bubble-media" src={media.url} controls preload="metadata" aria-label={s.t('headerExpired_video')} />;
+  return <p className="ld-bubble-media"><a className="ld-link" href={media.url} target="_blank" rel="noopener noreferrer">{media.filename || s.t('headerExpired_document')} · {s.t('openFile')}</a></p>;
 }

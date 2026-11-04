@@ -70,7 +70,9 @@ function truePrice(item, amount, sentence) {
  */
 export function untracedAmount(reply, ctx) {
   const items = (ctx.catalog || []).map(priced), cited = (ctx.cited || []).map(priced);
-  const live = new Set([...(ctx.facts || []), ...(ctx.acks || [])].flatMap(numbersIn));
+  // Live facts, order lines and the business's own message to this customer state amounts the owner approved.
+  const owned = (ctx.history || []).filter(h => h.role === 'business').map(h => h.text);
+  const live = new Set([...(ctx.facts || []), ...(ctx.acks || []), ...owned].flatMap(numbersIn));
   const lastCustomer = (ctx.history || []).filter(h => h.role === 'customer').at(-1)?.text || '';
   const sentences = sentencesOf(reply);
   for (const [i, sentence] of sentences.entries()) {

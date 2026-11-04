@@ -1,6 +1,7 @@
 import { mcpEffectAllowed } from './mcp/access.js';
 import { rolloutAllows } from './greenRollout.js';
 import { SECTOR_DRAFT_FIELDS } from './hasib/workspace/sectors.js';
+import { openTemplateChat } from './blueTemplateSends.js';
 // Broadcast campaigns: approved marketing templates sent to consented contacts.
 // Separate tables, rate counters and failure state from Layla's conversational
 // replies, so a broadcast can never pause or duplicate a chat response.
@@ -19,6 +20,7 @@ export const STALE_ATTEMPT_MS = 120000;
 export const MAX_SCHEDULE_AHEAD_MS = 30 * DAY;
 // A header file is registered within minutes of its upload, so no older file in storage can be adopted.
 export const MEDIA_UPLOAD_WINDOW_MS = 15 * 60000;
+export const SENT_MEDIA_RETENTION_MS = 30 * DAY;
 const ENDED = ['completed', 'cancelled', 'blocked'];
 const ACCEPTED = ['submitted', 'sent', 'delivered', 'read'];
 const STATUSES = ['pending', 'queued', 'attempting', 'submitted', 'sent', 'delivered', 'read', 'failed', 'ambiguous', 'blocked', 'cancelled'];
@@ -306,6 +308,7 @@ export async function executeCampaignWorker(ctx, a, now = Date.now()) {
         const status = a.status === 'retry' ? 'failed' : a.status;
         if (status === 'failed') await recordUndeliverable(ctx, job, a.errorCode, now);
         await ctx.db.patch(job._id, { status, ...(a.providerId ? { providerId: a.providerId } : {}), ...(a.reason ? { reason: String(a.reason).slice(0, 60) } : {}), ...code, updatedAt: now });
+        if (status === 'submitted') await openTemplateChat(ctx, job, now);
       }
     } else if (a.providerId && !job.providerId) await ctx.db.patch(job._id, { providerId: a.providerId, updatedAt: now });
     for (const field of SECTOR_DRAFT_FIELDS) if (job[field]) await ctx.db.patch(job[field], { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
@@ -335,11 +338,12 @@ export async function maintainCampaigns(ctx, a, now = Date.now()) {
   for (const c of processing) await finishIfDone(ctx, c, now);
   const expired = await ctx.db.query('blueCampaignRecipients').withIndex('by_expiry', q => q.lt('expiresAt', now)).take(100);
   for (const r of expired) if (!['attempting', 'queued', 'pending'].includes(r.status)) await ctx.db.delete(r._id);
-  // Header files: an unused one goes after a day, a used one a day after its campaign ended.
-  const media = await ctx.db.query('blueCampaignMedia').withIndex('by_created', q => q.lt('createdAt', now - DAY)).take(50);
+  // Header files: an unused one goes after a day. A used one stays as long as the chats show what was
+  // sent (the recipients' 30-day text retention), counted from the end of its campaign.
+  const media = await ctx.db.query('blueCampaignMedia').withIndex('by_created', q => q.lt('createdAt', now - DAY)).take(200);
   for (const m of media) {
     const campaign = m.campaignId ? await ctx.db.get(m.campaignId) : null;
-    if (campaign && !(ENDED.includes(campaign.status) && campaign.updatedAt < now - DAY)) continue;
+    if (campaign && !(ENDED.includes(campaign.status) && campaign.updatedAt < now - SENT_MEDIA_RETENTION_MS)) continue;
     if (await ctx.db.system.get(m.storageId)) await ctx.storage.delete(m.storageId);
     await ctx.db.delete(m._id);
   }

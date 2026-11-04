@@ -66,7 +66,7 @@ export function catalogLines(catalog = [], ids = null) {
  *   teamContact?: string, sections?: Array<{key?:string, heading:string, body:string}>, catalog?: Array<object>,
  *   knowledge?: Array<{title:string, text:string}>, facts?: string[], acks?: string[],
  *   customer?: { name?: string, fields?: Array<{label:string, value:string}> }, ask?: { key: string, en: string, ar: string } | null,
- *   firstReply?: boolean, history?: Array<{ role: 'customer'|'layla'|'team', text: string }>, notes?: { media?: boolean, tooLong?: boolean },
+ *   firstReply?: boolean, afterBusinessMessage?: boolean, history?: Array<{ role: 'customer'|'layla'|'team'|'business', text: string }>, notes?: { media?: boolean, tooLong?: boolean },
  *   fieldKeys?: string[], fieldOptions?: Record<string, Array<{id:string, words:string[]}>>, lang?: 'en'|'ar',
  *   mode?: 'brain', handoffNote?: string, reception?: boolean, override?: 'human'|'clinical'|null,
  * }} TurnContext
@@ -93,6 +93,9 @@ export function profileSections(profile = {}) {
 }
 
 /** The system prompt and the chat turns for one reply. */
+/** How the business's own template message is marked in the chat the model reads. */
+export const BUSINESS_MARK = "[your business's WhatsApp message to this customer]";
+
 export function buildMessages(ctx) {
   const tone = toneOf(ctx.tone);
   const kind = SECTOR_KIND[ctx.business?.sectorId];
@@ -108,17 +111,21 @@ export function buildMessages(ctx) {
   const facts = budget([...(ctx.facts || [])], LIMITS.facts, f => `- ${f}`);
   const acks = (ctx.acks || []).filter(Boolean);
   const known = (ctx.customer?.fields || []).filter(f => f.value).map(f => `${f.label}: ${f.value}`);
+  // The business wrote to this customer first (a broadcast or a template): their reply answers it.
+  const business = !!ctx.afterBusinessMessage;
   const rules = [
     `You are Layla, the front-office assistant of "${ctx.business?.name || 'this business'}"${ctx.business?.sector ? ` (${ctx.business.sector})` : ''}, replying to a customer on ${ctx.channel === 'instagram' ? 'Instagram' : 'WhatsApp'}.`,
     'You handle every conversation yourself. Answer ONLY from BUSINESS DATA below. Never invent prices, availability, stock, opening times, addresses, policies, people or promises.',
     `If BUSINESS DATA does not answer the question, or the customer asks for a person, negotiates price, complains, or needs advice you must not give: say so politely in one short sentence and give the team contact exactly as written: ${ctx.teamContact || '(none — say the team will get back to them)'}. Set "needs_team": true. Keep helping with anything else.`,
-    'Prices: quote only the price labels in CATALOG or the lines in LIVE FACTS, copied exactly. If a price is "not listed", say you do not have it and give the team contact.',
+    `Prices: quote only the price labels in CATALOG or the lines in LIVE FACTS${business ? ', or a price written in YOUR BUSINESS\'S MESSAGE' : ''}, copied exactly. If a price is "not listed", say you do not have it and give the team contact.`,
+    business ? `YOUR BUSINESS'S MESSAGE: the chat contains a message your business sent this customer, marked ${BUSINESS_MARK}. The customer's latest message may answer it: read "details", "yes", "how much", "interested" and similar as replies to that message, and answer them in its context. What it says, including its prices and links, is approved by the owner: you may repeat it exactly. Everything else still comes only from BUSINESS DATA.` : '',
     acks.length ? `ORDER LINES below must appear in your reply word for word. Never say an order, booking or appointment is confirmed except by including those lines.` : 'Never say an order, booking or appointment is confirmed or placed; the team confirms those.',
     facts ? 'LIVE FACTS are current stock or listings: include the relevant lines word for word.' : '',
     kind ? SENSITIVE[kind] : '',
     `LANGUAGE: reply in the same language as the customer's latest message. Arabic message → Arabic reply (match Gulf dialect if they use it). English → English. Arabic written in Latin letters (e.g. "kam el si3r") → reply in Arabic script. Style: ${toneLabel?.en || tone} — ${TONE_GUIDE[tone]}`,
-    `Keep it short: at most ${ctx.channel === 'instagram' ? 500 : 600} characters, plain text, no markdown headings, no links unless they appear in BUSINESS DATA.`,
-    ctx.firstReply ? `This is your first reply in this chat: start by greeting them and introducing yourself as Layla from ${ctx.business?.name || 'the business'}, in one short line.` : 'Do not greet or introduce yourself again.',
+    `Keep it short: at most ${ctx.channel === 'instagram' ? 500 : 600} characters, plain text, no markdown headings, no links unless they appear in BUSINESS DATA${business ? ' or in YOUR BUSINESS\'S MESSAGE' : ''}.`,
+    ctx.firstReply && business ? `This is your first reply, to someone your business messaged first: introduce yourself in a few words as Layla from ${ctx.business?.name || 'the business'}, then answer their reply to that message straight away. Never ask how you can help or what they need, as if they had written out of the blue.`
+      : ctx.firstReply ? `This is your first reply in this chat: start by greeting them and introducing yourself as Layla from ${ctx.business?.name || 'the business'}, in one short line.` : 'Do not greet or introduce yourself again.',
     ctx.ask ? `If it fits naturally, end with ONE short question asking for ${ctx.ask.en} (Arabic: ${ctx.ask.ar}), and set "asked_field": "${ctx.ask.key}". Ask nothing else.` : 'Do not ask the customer for personal details.',
     brain ? 'Always answer the customer\'s own question first. If they ask for a person, or describe a health problem, ask them nothing: give the team contact and set "asked_field": null.' : '',
     brain && ctx.reception ? 'The customer wants an appointment. Tell them reception will contact them to arrange it, and give the team contact. Never say it is booked, confirmed or scheduled.' : '',
@@ -147,7 +154,8 @@ export function buildMessages(ctx) {
     const text = clip(turn.text, 1000);
     if (!text || used + text.length > LIMITS.history) break;
     used += text.length;
-    turns.unshift(turn.role === 'customer' ? { role: 'user', content: text } : { role: 'assistant', content: turn.role === 'team' ? `[team member replied] ${text}` : text });
+    turns.unshift(turn.role === 'customer' ? { role: 'user', content: text }
+      : { role: 'assistant', content: turn.role === 'team' ? `[team member replied] ${text}` : turn.role === 'business' ? `${BUSINESS_MARK} ${text}` : text });
   }
   if (!turns.length || turns.at(-1).role !== 'user') turns.push({ role: 'user', content: '(no text)' });
   return [{ role: 'system', content: `${rules}\n\n${data}` }, ...turns];

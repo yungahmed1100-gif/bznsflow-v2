@@ -12,10 +12,13 @@ import { effectiveBehaviour } from '../config/layla-behaviour.js';
 import { parseBzns } from '../src/lib/bzns-doc.js';
 import { approvedKnowledge, publishedSections } from './knowledgeSourceState.js';
 import { HASIB_PLANS, planFor } from './hasib/plans.js';
+import { templateSendsFor, sentText, UNSENT } from './blueTemplateSends.js';
 
 // Debounce: a customer's quick run of messages gets one answer.
 export const REPLY_DEBOUNCE_MS = 2500;
 const DAY = 86400000;
+// The last few template messages the business sent this contact; older ones add nothing to a reply.
+const BUSINESS_MESSAGES = 3;
 // AI intents that Today's reception counts read from the inbound message's topic.
 export const TOPIC_FOR_INTENT = Object.freeze({ prices: 'prices', services: 'services', hours: 'hours', location: 'location', booking: 'disabled', human: 'human' });
 
@@ -45,11 +48,19 @@ export async function catalogForTurn(ctx, ownerKey, limit = 200, variant = 'publ
   return [...approved.map(row => (row.pending ? { ...row, ...row.pending } : row)), ...drafts].sort((a, b) => a.sortOrder - b.sortOrder).slice(0, limit).map(catalogShape);
 }
 
-/** The chat so far, oldest first: only messages whose text is still retained. */
-export async function transcript(ctx, conversationId, now, limit = 30) {
-  const rows = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', conversationId).gte('at', now - 7 * DAY)).order('desc').take(limit);
-  return rows.reverse().filter(m => typeof m.text === 'string' && m.text.trim() && m.status !== 'blocked')
-    .map(m => ({ role: m.direction === 'in' ? 'customer' : m.direction === 'human' || m.manual ? 'team' : 'layla', text: m.text }));
+/**
+ * The chat so far, oldest first: only messages whose text is still retained. The business's own
+ * template messages to this contact (a broadcast, say) are part of it, so a customer answering one
+ * is read as an answer to it.
+ */
+export async function transcript(ctx, conversationId, now, limit = 30, contactId = null) {
+  const since = now - 7 * DAY;
+  const rows = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', conversationId).gte('at', since)).order('desc').take(limit);
+  const said = rows.filter(m => typeof m.text === 'string' && m.text.trim() && m.status !== 'blocked')
+    .map(m => ({ role: m.direction === 'in' ? 'customer' : m.direction === 'human' || m.manual ? 'team' : 'layla', text: m.text, at: m.at }));
+  const sent = (await templateSendsFor(ctx, contactId, { since, limit: BUSINESS_MESSAGES, skip: UNSENT }))
+    .map(s => ({ role: 'business', text: sentText(s, now), at: s.send.at })).filter(s => s.text);
+  return [...said, ...sent].sort((a, b) => a.at - b.at).map(({ role, text }) => ({ role, text }));
 }
 
 const sectionsOf = markdown => parseBzns(markdown || '').sections.filter(s => String(s.body || '').trim() && !/\[[^\]\n]{2,80}\]/.test(s.body)).map(({ key, heading, body }) => ({ key, heading, body }));
@@ -95,7 +106,7 @@ export function composeTurnContext({ row, sectorId, sources, history, contact, p
       fields: (contact?.fields || []).filter(f => f.value).map(f => ({ label: pack.fields.find(x => x.key === f.key)?.en || f.key, value: f.value })),
     },
     ask: askField ? { key: askField.key, en: askField.ask.en, ar: askField.ask.ar } : null,
-    firstReply: !!pending.firstReply, history, notes: pending.notes || {},
+    firstReply: !!pending.firstReply, afterBusinessMessage: history.some(h => h.role === 'business'), history, notes: pending.notes || {},
     fieldKeys: [NAME_FIELD.key, ...pack.fields.map(f => f.key)],
     fieldOptions: Object.fromEntries(pack.fields.filter(f => f.options?.length).map(f => [f.key, f.options.map(o => ({ id: o.id, words: o.match || [o.en, o.ar] }))])),
     lang: langOf(latest),
@@ -108,7 +119,7 @@ export function composeTurnContext({ row, sectorId, sources, history, contact, p
  * @returns {Promise<import('../config/layla-ai.js').TurnContext>}
  */
 export async function turnContext(ctx, { row, person, contact, pending, sectorId, now }) {
-  const [sources, history] = await Promise.all([loadTurnSources(ctx, row, { sectorId }), transcript(ctx, person._id, now)]);
+  const [sources, history] = await Promise.all([loadTurnSources(ctx, row, { sectorId }), transcript(ctx, person._id, now, 30, contact?._id)]);
   return composeTurnContext({ row, sectorId, sources, history, contact, pending });
 }
 

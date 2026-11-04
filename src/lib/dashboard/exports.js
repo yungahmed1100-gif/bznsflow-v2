@@ -7,7 +7,7 @@ const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&'
 const safeName = value => String(value || 'contact').replace(/[^\p{L}\p{N}+ _-]/gu, '').trim().slice(0, 40) || 'contact';
 
 export function chatCsv(chat) {
-  return toCsv([['time', 'direction', 'template', 'status', 'text'], ...chat.messages.map(m => [m.at, m.direction, m.template, m.status, m.text])]);
+  return toCsv([['time', 'direction', 'template', 'status', 'text'], ...chat.messages.map(m => [m.at, m.direction, m.templateName || '', m.status, m.text])]);
 }
 export function contactsCsv(items, fieldKeys = []) {
   const keys = [...new Set([...fieldKeys, ...items.flatMap(c => Object.keys(c.fields || {}))])];
@@ -18,7 +18,7 @@ export function contactsCsv(items, fieldKeys = []) {
 }
 export function chatHtml(chat, { lang, business }) {
   const ar = lang === 'ar';
-  const rows = chat.messages.map(m => `<tr><td>${escapeHtml(new Date(m.at).toLocaleString(ar ? 'ar-OM-u-nu-latn' : 'en-GB'))}</td><td>${escapeHtml(m.direction === 'in' ? (ar ? 'العميل' : 'Customer') : m.template ? `${ar ? 'قالب' : 'Template'}: ${m.template}` : (ar ? 'النشاط' : 'Business'))}</td><td dir="auto">${escapeHtml(m.text)}</td><td>${escapeHtml(m.status)}</td></tr>`).join('');
+  const rows = chat.messages.map(m => `<tr><td>${escapeHtml(new Date(m.at).toLocaleString(ar ? 'ar-OM-u-nu-latn' : 'en-GB'))}</td><td>${escapeHtml(m.direction === 'in' ? (ar ? 'العميل' : 'Customer') : m.direction === 'template' ? `${ar ? 'قالب' : 'Template'}: ${m.templateName}` : (ar ? 'النشاط' : 'Business'))}</td><td dir="auto">${escapeHtml(m.text)}</td><td>${escapeHtml(m.status)}</td></tr>`).join('');
   return `<!doctype html><html lang="${lang}" dir="${ar ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${escapeHtml(chat.contact.name)}</title>
 <style>body{font:14px/1.6 ${ar ? "'IBM Plex Sans Arabic'," : ''}Poppins,Arial,sans-serif;color:#1a1a1a;margin:32px}h1{font-size:20px;margin:0}p{color:#4b5563;margin:4px 0 20px}table{width:100%;border-collapse:collapse}th,td{text-align:start;vertical-align:top;border-bottom:1px solid rgba(0,0,0,.15);padding:8px}td:nth-child(3){white-space:pre-wrap;overflow-wrap:anywhere}th{font-size:12px}</style></head>
 <body><h1>${escapeHtml(chat.contact.name)} · ${escapeHtml(chat.contact.channel==='instagram'?`Instagram ${chat.contact.instagramId || ''}`:chat.contact.number)}</h1><p>${escapeHtml(business)}</p><table><thead><tr><th>${ar ? 'الوقت' : 'Time'}</th><th>${ar ? 'من' : 'From'}</th><th>${ar ? 'الرسالة' : 'Message'}</th><th>${ar ? 'الحالة' : 'Status'}</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;

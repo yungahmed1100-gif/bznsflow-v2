@@ -67,6 +67,23 @@ test('phone numbers, emails and links must exist in the setup or the chat', () =
   assert.equal(validateReply(out('Yes, we work on 52 Way Street as you said: 4521.'), ctx({ history: [{ role: 'customer', text: 'my building is 4521' }] })).ok, true, 'the customer’s own numbers may be repeated');
 });
 
+// After a broadcast the customer is answering the business's own message: Layla reads it, and its
+// owner-approved price and link may be repeated; anything else still needs BUSINESS DATA.
+test('a business message in the chat is read as context, and its price and link may be quoted', () => {
+  const broadcast = { role: 'business', text: 'مرحباً فريق عيادة الابتسامة، الاشتراك 9 ريال عماني شهرياً. احجزوا تدقيقاً مجانياً: https://www.bznsflowai.com/audit' };
+  const after = ctx({ firstReply: true, afterBusinessMessage: true, history: [broadcast, { role: 'customer', text: 'أرسلوا التفاصيل' }] });
+  const [system, ...turns] = buildMessages(after);
+  assert.deepEqual(turns, [{ role: 'assistant', content: `[your business's WhatsApp message to this customer] ${broadcast.text}` }, { role: 'user', content: 'أرسلوا التفاصيل' }]);
+  assert.match(system.content, /YOUR BUSINESS'S MESSAGE: .*"details", "yes", "how much"/);
+  assert.match(system.content, /first reply, to someone your business messaged first: .*Never ask how you can help/);
+  assert.doesNotMatch(system.content, /start by greeting them/);
+  assert.match(buildMessages(ctx({ firstReply: true }))[0].content, /start by greeting them/, 'a chat the customer started keeps the usual greeting');
+  assert.doesNotMatch(buildMessages(ctx())[0].content, /YOUR BUSINESS'S MESSAGE/, 'no business message, no extra rule');
+  assert.equal(validateReply(out('أنا ليلى. الاشتراك 9 ريال عماني شهرياً، واحجزوا التدقيق هنا: https://www.bznsflowai.com/audit'), after).ok, true);
+  assert.deepEqual(validateReply(out('أنا ليلى. الاشتراك 12 ريال عماني شهرياً.'), after), { ok: false, problem: 'untraced_price' }, 'a different price is still refused');
+  assert.deepEqual(validateReply(out('زوروا https://evil.example/x'), after), { ok: false, problem: 'untraced_link' });
+});
+
 test('orders and bookings are never confirmed by the model; order lines go out verbatim', () => {
   assert.deepEqual(validateReply(out('Your booking is confirmed for Sunday!'), ctx()), { ok: false, problem: 'unconfirmed_order' });
   assert.deepEqual(validateReply(out('تم تأكيد حجزك يوم الأحد'), ctx({ history: [{ role: 'customer', text: 'ابي موعد' }] })), { ok: false, problem: 'unconfirmed_order' });

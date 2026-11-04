@@ -8,6 +8,7 @@ import { fetchApprovedTemplates } from '../api/_lib/layla/templates.js';
 import { sealToken, credentialContext } from '../api/_lib/layla/customer-meta.js';
 import { MAX_RECIPIENTS, MAX_ATTEMPTS, RETRY_BACKOFF_MS } from '../convex/blueCampaignState.js';
 import { blueHarness, seedTenant } from './helpers/blue-tenant.mjs';
+import { runReplyTurn } from '../convex/laylaRespond.js';
 
 const approved = { id: '111', name: 'autumn_offer', language: 'en', status: 'APPROVED', category: 'MARKETING', parameter_format: 'POSITIONAL', components: [
   { type: 'HEADER', format: 'TEXT', text: 'Hi {{1}}' },
@@ -433,7 +434,7 @@ test('the worker sends the file link; a missing file stops the campaign; files a
   assert.equal((await h.m.db.get(campaign.id)).reason, 'header_media_missing');
 });
 
-test('a used file is deleted a day after its campaign ends', async () => {
+test('a used file stays while the chats show it, and goes 30 days after its campaign ends', async () => {
   const { h, t, register, createImage } = await imageTenant();
   const file = h.m.putFile();
   const media = (await register(file)).value.media;
@@ -441,6 +442,66 @@ test('a used file is deleted a day after its campaign ends', async () => {
   await h.campaigns('campaign_cancel', { sessionHash: t.sessionHash, campaignId: campaign.id });
   h.m.advance(86400000 + 1);
   await h.maintain();
+  assert.ok(await h.m.db.get(media.id), 'a day later the chats still show the header');
+  h.m.advance(30 * 86400000);
+  await h.maintain();
   assert.equal(await h.m.db.get(media.id), null);
   assert.ok(h.m.deletedFiles.includes(file));
+});
+
+// A send that reached WhatsApp belongs in the contact's chat: the owner sees it, and Layla reads it before answering.
+async function sentTo(base, index = 0) {
+  const { h } = base;
+  const campaign = (await base.create()).value.campaign;
+  await h.maintain();
+  await h.worker('start_result', { campaignId: campaign.id, ready: true, allowance: 250 });
+  const job = h.m.table('blueCampaignRecipients').filter(r => r.campaignId === campaign.id)[index];
+  const claim = await h.worker('claim', { jobId: job._id, intent: randomUUID() });
+  return { campaign, job, claim };
+}
+
+test('an accepted template send opens the contact’s chat, with the broadcast as its latest line', async () => {
+  const base = await campaignTenant({ contacts: 2 });
+  const { h, t } = base;
+  const { job, claim } = await sentTo(base);
+  assert.equal(h.m.table('blueConversations').length, 0, 'nothing opens before WhatsApp accepts the send');
+  await h.worker('result', { jobId: job._id, intent: claim.value.intent, status: 'submitted', providerId: 'wamid.open' });
+  const chats = h.m.table('blueConversations');
+  assert.deepEqual(chats.map(c => [c.number, String(c.contactId), c.lastInbound, c.takeover]), [[job.waId, String(job.contactId), 0, false]]);
+  const list = (await h.dashboard('conversations', { sessionHash: t.sessionHash })).value.items;
+  assert.equal(list.length, 1);
+  assert.deepEqual([list[0].lastMessage.direction, list[0].lastMessage.templateName, list[0].lastMessage.text], ['template', 'autumn_offer', 'Hi Lead 0\n\nHello Lead 0, enjoy 10% off this week.\n\nReply STOP to opt out']);
+  const thread = (await h.dashboard('thread', { sessionHash: t.sessionHash, conversationId: chats[0]._id })).value;
+  assert.deepEqual(thread.messages.map(m => m.direction), ['template']);
+  // The customer answers: the same chat is used, and their reply becomes its latest line.
+  await h.inbound(t, { from: job.waId, text: 'Details please', turn: false });
+  assert.equal(h.m.table('blueConversations').length, 1, 'the reply lands in the chat the broadcast opened');
+  assert.equal((await h.dashboard('conversations', { sessionHash: t.sessionHash })).value.items[0].lastMessage.direction, 'in');
+});
+
+test('a failed or blocked send opens no chat', async () => {
+  const base = await campaignTenant({ contacts: 1 });
+  const { job, claim } = await sentTo(base);
+  await base.h.worker('result', { jobId: job._id, intent: claim.value.intent, status: 'failed', errorCode: 131026, reason: 'provider_rejected' });
+  assert.equal(base.h.m.table('blueConversations').length, 0);
+});
+
+test('Layla reads the broadcast a customer is answering and may quote its price', async () => {
+  const base = await campaignTenant({ contacts: 1 });
+  const { h, t } = base;
+  const { job, claim } = await sentTo(base);
+  await h.worker('result', { jobId: job._id, intent: claim.value.intent, status: 'submitted', providerId: 'wamid.ctx' });
+  h.m.advance(60000);
+  await h.inbound(t, { from: job.waId, text: 'Send the details', turn: false });
+  h.m.advance(5000);
+  const seen = [];
+  const generate = async messages => { seen.push(messages); return { text: JSON.stringify({ reply: 'I am Layla. The offer is 10% off this week.', intent: 'answer' }), usage: { input: 1, output: 1 }, ms: 1, model: 'test-model' }; };
+  const person = h.m.table('blueConversations')[0];
+  const turn = await runReplyTurn({ exec: h.messaging, conversationId: person._id, key: person.pendingReply.key, generate });
+  const [system, ...turns] = seen[0];
+  assert.deepEqual(turns.map(x => x.role), ['assistant', 'user'], 'the broadcast comes before the customer’s reply');
+  assert.match(turns[0].content, /^\[your business's WhatsApp message to this customer\] Hi Lead 0/);
+  assert.match(system.content, /first reply, to someone your business messaged first/);
+  assert.doesNotMatch(system.content, /start by greeting them/);
+  assert.equal(turn.ai.fallback, undefined, 'the 10% from the broadcast passes the price check');
 });

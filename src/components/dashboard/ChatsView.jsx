@@ -69,6 +69,7 @@ export function ChatsView({ s, overview, selected, onSelect, reminder = null }) 
                     </span>
                     <span className="ld-conversation-bottom">
                       {item.lastMessage && item.lastMessage.direction !== 'in' && <StatusTicks s={s} status={item.lastMessage.status} channel={item.contact.channel} />}
+                      {item.lastMessage?.direction === 'template' && <span className="ld-preview-label">{s.t('broadcastLabel')} ·</span>}
                       <span className="ld-preview" dir="auto">{item.lastMessage?.text ?? (item.lastMessage ? s.t('textExpired') : '')}</span>
                     </span>
                     <span className="ld-conversation-tags"><span className="ld-chip is-blue">{item.channel==='instagram'?'Instagram':'WhatsApp'}</span>
