@@ -51,5 +51,7 @@ Ahmed (2026-11-04), on the "صورة الرأس" (header image) step: "why do i 
   - the live bundle contains the new EN/AR copy and no longer contains "أضف ملفاً".
 
 ## Not done
-- **No live send yet:** no live broadcast has used Meta's sample. The first real check is Ahmed's: choose `clinics_1`, add no file, and send to a consented contact.
+- **First live use (2026-11-04, 15:49 Muscat):** the `clinics_1` broadcast to 100 recipients was created without an owner file.
+  - 6 sends went out: 1 delivered and 5 read. Meta accepted the template's own sample as the header.
+  - Meta then returned 131042 (payment issue) on 2 sends, so the campaign stopped as designed (`payment_method_required`) with 92 not sent. That is the WABA billing problem from 2026-10-11, not this release.
 - **MCP:** `campaign_create` through the MCP still cannot send image, video or PDF header templates. It has no file argument and no sample step; this predates the release.
