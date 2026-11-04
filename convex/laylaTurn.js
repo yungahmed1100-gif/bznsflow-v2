@@ -56,7 +56,8 @@ export async function catalogForTurn(ctx, ownerKey, limit = 200, variant = 'publ
 export async function transcript(ctx, conversationId, now, limit = 30, contactId = null) {
   const since = now - 7 * DAY;
   const rows = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', conversationId).gte('at', since)).order('desc').take(limit);
-  const said = rows.filter(m => typeof m.text === 'string' && m.text.trim() && m.status !== 'blocked')
+  // Oldest first before merging: messages that share a timestamp keep the order they arrived in.
+  const said = rows.reverse().filter(m => typeof m.text === 'string' && m.text.trim() && m.status !== 'blocked')
     .map(m => ({ role: m.direction === 'in' ? 'customer' : m.direction === 'human' || m.manual ? 'team' : 'layla', text: m.text, at: m.at }));
   const sent = (await templateSendsFor(ctx, contactId, { since, limit: BUSINESS_MESSAGES, skip: UNSENT }))
     .map(s => ({ role: 'business', text: sentText(s, now), at: s.send.at })).filter(s => s.text);
