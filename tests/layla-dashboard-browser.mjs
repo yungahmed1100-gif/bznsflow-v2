@@ -475,7 +475,8 @@ try {
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('radio', { name: /clinics_1/ }).check();
     await dialog.getByText('صورة الرأس').waitFor(); count++;
-    assert.equal(await dialog.getByRole('button', { name: 'متابعة' }).isDisabled(), true, 'an image header needs its file first'); count++;
+    assert.equal(await dialog.getByRole('button', { name: 'متابعة' }).isDisabled(), false, 'the approved template image is sent as is; a file is optional'); count++;
+    await dialog.getByText(/تُرسل الصورة المعتمدة مع هذا القالب/).waitFor(); count++;
     const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4b80000000049454e44ae426082', 'hex');
     await dialog.locator('.ld-header-media input[type=file]').setInputFiles({ name: 'clinic.png', mimeType: 'image/png', buffer: png });
     await dialog.getByText('أُضيف').waitFor(); count++;
@@ -489,7 +490,28 @@ try {
     await dialog.getByRole('button', { name: 'متابعة' }).click();
     await dialog.getByText(/سيستلمها/).waitFor();
     assert.equal(state.bodies.find(b => b.action === 'campaign_preview').headerMediaId, 'media1', 'the file rides on preview'); count++;
+    await dialog.getByText('الرأس: ملفك clinic.png').waitFor(); count++;
     assert.equal(state.bodies.some(b => b.action === 'sync_templates'), false, 'fresh templates are not re-synced'); count++;
+    await context.close();
+  }
+
+  // The same template sent as is: no file added, the review step names the approved image. Arabic, phone width.
+  {
+    const state = fixture();
+    const { page, context } = await openPage(browser, { width: 375, lang: 'ar', path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state, { imageHeader: true }) });
+    await page.getByRole('button', { name: 'رفع قائمة' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('radio', { name: /clinics_1/ }).check();
+    await dialog.getByRole('button', { name: 'متابعة' }).click();
+    await dialog.getByRole('tab', { name: 'جهات محفوظة' }).click();
+    await dialog.getByRole('checkbox', { name: /محمد/ }).check();
+    await dialog.getByRole('button', { name: 'متابعة' }).click();
+    await dialog.getByText('الرأس: الصورة المعتمدة مع هذا القالب في واتساب.').waitFor(); count++;
+    assert.equal('headerMediaId' in state.bodies.find(b => b.action === 'campaign_preview'), false, 'no file is sent when the approved image is used'); count++;
+    assert.equal(state.bodies.some(b => b.action === 'campaign_media_upload_url'), false, 'nothing is uploaded from the browser'); count++;
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'review step fits 375'); count++;
+    assert.deepEqual(await axe(page), []); count++;
+    await page.screenshot({ path: `${OUT}/broadcast-image-header-as-is-ar-375.png` });
     await context.close();
   }
 

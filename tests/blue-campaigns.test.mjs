@@ -385,10 +385,11 @@ async function imageTenant() {
   return { ...base, mapping, register, createImage };
 }
 
-test('a media-header broadcast needs the owner’s own fresh file of the right type and size', async () => {
+test('a media-header broadcast is created with one fresh stored file of the right type and size', async () => {
   const { h, t, ids, mapping, register, createImage } = await imageTenant();
   assert.equal((await h.campaigns('campaign_media_upload_url', { sessionHash: t.sessionHash })).ok, true);
-  assert.equal((await h.campaigns('campaign_preview', { sessionHash: t.sessionHash, templateId: '222', mapping, contactIds: ids, allowance: 250 })).reason, 'header_media_required');
+  assert.equal((await h.campaigns('campaign_preview', { sessionHash: t.sessionHash, templateId: '222', mapping, contactIds: ids, allowance: 250 })).ok, true, 'preview needs no file: the template sample fills it');
+  assert.equal((await createImage()).reason, 'header_media_required', 'a campaign is never created without a stored header file');
   assert.equal((await register(h.m.putFile({ contentType: 'application/pdf' }))).reason, 'header_media_type');
   assert.equal((await register(h.m.putFile({ size: 6 * 1024 * 1024 }))).reason, 'header_media_size');
   assert.equal((await register(h.m.putFile(), 'LOCATION')).reason, 'header_media_invalid');
@@ -402,7 +403,7 @@ test('a media-header broadcast needs the owner’s own fresh file of the right t
   const other = await seedTenant(h.m, { name: 'other' });
   await h.messaging('activate', { sessionHash: other.sessionHash });
   await h.campaigns('replace_templates', { sessionHash: other.sessionHash, integrationId: other.integration.id, templates: [sanitizeTemplate(imageTemplate)] });
-  assert.equal((await h.campaigns('campaign_preview', { sessionHash: other.sessionHash, templateId: '222', headerMediaId: media.id, mapping, contactIds: [], allowance: 250 })).reason, 'header_media_required');
+  assert.equal((await h.campaigns('campaign_preview', { sessionHash: other.sessionHash, templateId: '222', headerMediaId: media.id, mapping, contactIds: [], allowance: 250 })).reason, 'header_media_invalid');
   const created = await createImage({ headerMediaId: media.id });
   assert.equal(created.ok, true);
   const campaign = h.m.table('blueCampaigns').find(c => c._id === created.value.campaign.id);

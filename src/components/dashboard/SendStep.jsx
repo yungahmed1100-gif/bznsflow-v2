@@ -3,19 +3,20 @@ import { dashboard } from '../../lib/dashboard/api';
 import { mayBeUsNumber } from '../../lib/dashboard/phone';
 import { browserTimezone, localInputValue, timezoneOptions } from '../../lib/dashboard/format';
 import { recipientValues, serverMapping } from '../../lib/dashboard/broadcast';
-import { renderTemplate } from '../../../config/layla-templates.js';
+import { mediaHeaderOf, renderTemplate } from '../../../config/layla-templates.js';
 import { ConsentForm, consentComplete } from './ConsentForm';
 import { META_PRICING_URL } from './MetaBillingNotice';
 
 /** Step 3: each customer's own message, who is left out and why, then send now or later. */
-export function SendStep({ s, overview, template, headerMediaId, rules, rows, single, onTimezone, onCreated, onBack }) {
+export function SendStep({ s, overview, template, media, rules, rows, single, onTimezone, onCreated, onBack }) {
+  const headerFormat = mediaHeaderOf(template);
   const mapping = useMemo(() => serverMapping(rules), [rules]);
   const values = useMemo(() => recipientValues(rows, rules), [rows, rules]);
   const contactIds = useMemo(() => rows.map(r => r.contactId).filter(Boolean), [rows]);
   const [preview, setPreview] = useState(null), [index, setIndex] = useState(0), [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const [schedule, setSchedule] = useState({ mode: 'now', local: '', timezone: overview.timezone || browserTimezone() });
   const [requestId] = useState(() => crypto.randomUUID());
-  const load = () => { setError(''); return dashboard('campaign_preview', { templateId: template.id, headerMediaId, mapping, contactIds, values }).then(p => { setPreview(p); setIndex(0); }).catch(e => setError(s.reason(e.reason))); };
+  const load = () => { setError(''); return dashboard('campaign_preview', { templateId: template.id, headerMediaId: media?.id, mapping, contactIds, values }).then(p => { setPreview(p); setIndex(0); }).catch(e => setError(s.reason(e.reason))); };
   useEffect(() => { load(); }, []);
 
   const sending = overview.broadcastEnabled && preview?.sendingAvailable !== false;
@@ -24,7 +25,7 @@ export function SendStep({ s, overview, template, headerMediaId, rules, rows, si
   const create = async () => {
     setBusy(true); setError('');
     try {
-      const r = await dashboard('campaign_create', { requestId, templateId: template.id, headerMediaId, mapping, values, contactIds: eligible.map(e => e.contactId), confirm: true,
+      const r = await dashboard('campaign_create', { requestId, templateId: template.id, headerMediaId: media?.id, mapping, values, contactIds: eligible.map(e => e.contactId), confirm: true,
         origin: single ? 'chat' : 'broadcast', name: single ? `${template.name} · ${single.name}` : template.name,
         schedule: schedule.mode === 'now' ? { mode: 'now', timezone: schedule.timezone } : { mode: 'later', local: schedule.local, timezone: schedule.timezone } });
       onCreated(r.campaign);
@@ -52,6 +53,7 @@ export function SendStep({ s, overview, template, headerMediaId, rules, rows, si
           <small dir="ltr" className="ld-num">{current.number}</small>
         </figure>
       )}
+      {headerFormat && <p className="ld-help">{media ? <>{s.t('headerSendsOwn')} <bdi>{media.name}</bdi></> : s.t(`headerSendsSample_${headerFormat.toLowerCase()}`)}</p>}
       {!!preview.excluded.length && <ul className="ld-issues">{preview.excluded.map(e => <li key={e.contactId}><bdi>{e.name || '—'}</bdi> <bdi dir="ltr">{e.number}</bdi> · {s.t(`reason_${e.reason}`)}</li>)}</ul>}
       {single && preview.excluded.length > 0 && <SingleConsent s={s} contact={single} onRefresh={load} />}
       <p className="ld-help ld-num">{s.t('cap', { cap: preview.cap, allowance: preview.allowance >= 1e9 ? '∞' : preview.allowance })}</p>

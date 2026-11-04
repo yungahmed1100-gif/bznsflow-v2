@@ -10,7 +10,7 @@ import { PilotError } from './config.js';
 import { broadcastMessagingEnabled } from '../green-config.js';
 import { credentialContext, openToken } from './customer-meta.js';
 import { dashboardStore } from './dashboard-store.js';
-import { fetchApprovedTemplates, fetchMessagingAllowance } from './templates.js';
+import { fetchApprovedTemplates, fetchMessagingAllowance, fetchTemplateSample, storeTemplateSample } from './templates.js';
 import { validTimezone, zonedLocalToUtc } from './timezone.js';
 import { normalizePhone } from '../../../src/lib/dashboard/phone.js';
 import { dashboardPreviewResponse } from '../hasib/preview.js';
@@ -54,7 +54,7 @@ export function importRows(rows) {
 }
 
 export function createDashboardApi({ env = process.env, fetcher = fetch, now = Date.now, accounts = blueAuthStore({ env, fetcher }), store = dashboardStore({ env, fetcher }), reviews = reviewStore({ env, fetcher }),
-  templates = fetchApprovedTemplates, allowance = fetchMessagingAllowance } = {}) {
+  templates = fetchApprovedTemplates, allowance = fetchMessagingAllowance, templateSample = fetchTemplateSample } = {}) {
   async function graphContext(sessionHash) {
     const row = await reviews('get', { sessionHash });
     if (!row?.integration || !['connected', 'paused'].includes(row.status)) throw new PilotError('connection_not_ready', 409);
@@ -142,8 +142,12 @@ export function createDashboardApi({ env = process.env, fetcher = fetch, now = D
         if (body.schedule?.mode === 'later') {
           try { scheduledAt = zonedLocalToUtc(body.schedule.local, timezone); } catch { throw new PilotError('invalid_schedule'); }
         } else if (body.schedule?.mode !== 'now') throw new PilotError('invalid_schedule');
+        // Without the owner's own file, an image, video or PDF header sends the template's approved
+        // sample, as WhatsApp Manager does. It is copied now so a scheduled send never depends on Meta's link.
+        const sample = !args.headerMediaId && body.confirm === true ? await templateSample({ c, templateId: args.templateId, token, fetcher }) : null;
+        const headerMediaId = sample ? await storeTemplateSample({ sample, store, sessionHash, actorAccountId: account.id, fetcher }) : args.headerMediaId;
         // The browser's request id makes a double-clicked confirmation create one campaign.
-        return reply(await store('campaign_create', { ...args, requestId: uuid(body.requestId) || '', confirm: body.confirm === true, scheduledAt, timezone,
+        return reply(await store('campaign_create', { ...args, ...(headerMediaId ? { headerMediaId } : {}), requestId: uuid(body.requestId) || '', confirm: body.confirm === true, scheduledAt, timezone,
           name: optionalString(body.name, 80) || '', origin: body.origin === 'chat' ? 'chat' : 'broadcast' }));
       }
       // An image, video or PDF for a template's header: the browser uploads it straight to storage, then registers it.

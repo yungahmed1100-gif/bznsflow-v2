@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { acceptFor, uploadHeaderMedia } from '../../lib/dashboard/header-media';
 
-/** The file a template's image, video or PDF header sends with every message of this broadcast. */
+/** Optional: replaces the approved sample a template's image, video or PDF header otherwise sends. */
 export function HeaderMediaField({ s, format, media, onChange }) {
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [preview, setPreview] = useState('');
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);

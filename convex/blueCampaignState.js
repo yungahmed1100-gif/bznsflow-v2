@@ -113,10 +113,12 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
     const template = await ctx.db.query('blueTemplates').withIndex('by_account_template', q => q.eq('accountId', accountId).eq('templateId', String(a.templateId || ''))).unique();
     if (!template || template.integrationId !== integration.id || !template.sendable || template.status !== 'APPROVED' || template.category !== 'MARKETING') return fail('template_not_sendable');
     if (!validMapping(template, a.mapping || [])) return fail('invalid_mapping');
-    // An image, video or PDF header is filled by the one file the owner added for this broadcast.
+    // An image, video or PDF header is filled by one stored file: the owner's own, or the template's
+    // approved sample that the dashboard API copies from WhatsApp just before creating the campaign.
     const format = mediaHeaderOf(template);
     const media = format && a.headerMediaId ? await owned(ctx, a.headerMediaId, accountId, 'blueCampaignMedia') : null;
-    if (format && !media) return fail('header_media_required');
+    if (a.headerMediaId && !media) return fail('header_media_invalid');
+    if (format && !media && a.operation === 'campaign_create') return fail('header_media_required');
     if (media && media.format !== format) return fail('header_media_invalid');
     if (!Array.isArray(a.contactIds) || !a.contactIds.length || a.contactIds.length > 500) return fail('invalid_recipients');
     if (a.values !== undefined && !validRecipientValues(a.values)) return fail('invalid_recipients');

@@ -43,7 +43,7 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
   const unsaved = rows.filter(r => !r.contactId);
   const incomplete = rows.filter(r => rowMissing(r, rules).length).length;
   const mediaFormat = mediaHeaderOf(template);
-  const canContinue = current === 'template' ? !!template?.sendable && (!mediaFormat || !!media?.id)
+  const canContinue = current === 'template' ? !!template?.sendable
     : rows.length > 0 && rows.length <= MAX_BROADCAST && !incomplete && (!unsaved.length || consentReady(consent));
 
   // New numbers become contacts with the owner's consent record before anything is previewed.
@@ -91,7 +91,7 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
               consent={consent} setConsent={setConsent} needsConsent={unsaved.length > 0} incomplete={incomplete} />
           )}
           {current === 'send' && template && (
-            <SendStep s={s} overview={overview} template={template} headerMediaId={media?.id} rules={rules} rows={rows} single={single}
+            <SendStep s={s} overview={overview} template={template} media={media} rules={rules} rows={rows} single={single}
               onTimezone={onTimezone} onCreated={setCreated} onBack={() => setStep(1)} />
           )}
         </div>
