@@ -111,7 +111,8 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
             <li className={`ld-bubble is-${m.direction === 'in' ? 'in' : 'out'} ${m.direction === 'template' ? 'is-template' : ''}`}>
               <span className="ld-bubble-author">{m.direction === 'in' ? s.t('customer') : m.direction === 'human' ? s.t('yourTeamApp') : m.direction === 'template' ? `${s.t('template')} · ${m.templateName}` : m.manual ? s.t('you') : s.t('layla')}</span>
               {m.direction === 'template' && m.media && <TemplateHeader s={s} media={m.media} />}
-              {m.text === null ? <p className="ld-expired" title={clinical ? s.t('textClearedHelp') : undefined}>{clinical ? s.t('textCleared') : s.t('textExpired')}</p> : <p dir="auto">{m.text}</p>}
+              {m.direction !== 'template' && m.media && <MessageMedia s={s} media={m.media} />}
+              {m.text === null ? <p className="ld-expired" title={clinical ? s.t('textClearedHelp') : undefined}>{clinical ? s.t('textCleared') : s.t('textExpired')}</p> : m.text || !m.media ? <p dir="auto">{m.text}</p> : null}
               <span className="ld-bubble-meta">
                 <time dateTime={new Date(m.at).toISOString()} className="ld-num">{formatTime(m.at, s.lang, overview.timezone)}</time>
                 {m.direction !== 'in' && m.direction !== 'human' && <StatusTicks s={s} status={m.status} channel={contact.channel} />}
@@ -148,6 +149,32 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
       )}
     </article>
   );
+}
+
+export const mediaLabel = (s, media) => s.t(media.kind === 'audio' ? (media.voice ? 'media_voice' : 'media_audio') : `media_${media.kind}`);
+const fileSize = bytes => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
+
+/**
+ * A customer's photo, voice note, video or file (or Layla's product photo), playable in the chat, with what it
+ * says: a voice note's transcript, or what Layla saw in a photo. Nothing shows once the text retention has passed.
+ */
+function MessageMedia({ s, media }) {
+  const label = mediaLabel(s, media);
+  if (media.status === 'expired') return null;
+  if (!media.url) {
+    const state = media.status === 'pending' ? 'mediaPending' : media.status === 'too_large' ? 'mediaTooLarge' : 'mediaFailed';
+    return <p className="ld-bubble-media is-missing"><span className="ld-chip">{label}</span> <span className="ld-help" role={media.status === 'pending' ? 'status' : undefined}>{s.t(state)}</span></p>;
+  }
+  const reading = media.text ? (
+    <p className="ld-media-text" dir="auto"><span className="ld-media-text-label">{s.t(media.kind === 'audio' ? 'mediaTranscript' : 'mediaSeen')}</span> {media.text}</p>
+  ) : media.status === 'unread' && ['audio', 'image', 'sticker'].includes(media.kind) ? <p className="ld-media-text ld-help">{s.t('mediaUnread')}</p> : null;
+  if (media.kind === 'image' || media.kind === 'sticker') return <>
+    <a className="ld-bubble-media" href={media.url} target="_blank" rel="noopener noreferrer"><img src={media.url} alt={media.text || label} loading="lazy" width="320" height="240" /></a>{reading}
+  </>;
+  if (media.kind === 'audio') return <div className="ld-bubble-media ld-voice"><audio src={media.url} controls preload="none" aria-label={label} />{reading}</div>;
+  if (media.kind === 'video') return <video className="ld-bubble-media" src={media.url} controls preload="metadata" aria-label={label} />;
+  return <p className="ld-bubble-media"><a className="ld-link" href={media.url} target="_blank" rel="noopener noreferrer" download={media.filename || undefined}>
+    {media.filename || label}{media.size ? ` · ${fileSize(media.size)}` : ''} · {s.t('openFile')}</a></p>;
 }
 
 /** The image, video or PDF a template message carried, while the business still keeps the file. */

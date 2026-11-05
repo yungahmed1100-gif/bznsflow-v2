@@ -6,6 +6,8 @@ import { ingestBlueEnvelope, ingestInstagramEnvelope, messagingStore } from './_
 import { instagramConfig } from './_lib/layla/instagram.js';
 import { greenDataReady, instagramMessagingEnabled, isGreenConvexConfigured } from './_lib/green-config.js';
 import { createRasilWebhook } from './_lib/rasil-public.js';
+import { processInboundMedia } from './_lib/layla/inbound-media.js';
+import { waitUntil } from '@vercel/functions';
 
 export const config = { api: { bodyParser: false } };
 
@@ -19,7 +21,9 @@ function secretsFor(env) {
   return { whatsapp: [env.LAYLA_META_APP_SECRET].filter(Boolean), instagram: [...instagram, env.LAYLA_META_APP_SECRET].filter(Boolean) };
 }
 
-export function createHandler({ env = process.env, fetcher = fetch, messaging = messagingStore({ env, fetcher }), rasil = createRasilWebhook({ env, fetcher, raw: rawBody }) } = {}) {
+// `defer` runs work after the response: photos and voice notes are fetched and read once Meta has its 200.
+export function createHandler({ env = process.env, fetcher = fetch, messaging = messagingStore({ env, fetcher }), rasil = createRasilWebhook({ env, fetcher, raw: rawBody }), defer = waitUntil } = {}) {
+  const readMedia = ({ media = [] } = {}) => { if (media.length) defer(processInboundMedia(media, { store: messaging, env, fetcher })); };
   return async (req, res) => {
     // Resend's delivery events for Rasil share this function's raw body (vercel.json: /api/rasil-webhook), since the plan allows 12 functions.
     if (new URL(req.url || '/', 'https://callback.invalid').searchParams.get('source') === 'resend') return rasil(req, res);
@@ -50,13 +54,15 @@ export function createHandler({ env = process.env, fetcher = fetch, messaging = 
       // Convex send gates control sending independently of webhook acceptance.
       if (envelope?.object === 'instagram') {
         if (!signedBy('instagram')) throw new PilotError('signature', 403);
-        await ingestInstagramEnvelope(envelope, { store: messaging, app: instagramConfig(env, false).app, env, fetcher, suppressAutomation: !instagramMessagingEnabled(env) });
-        return send(res, 200, { ok: true, accepted: true });
+        const result = await ingestInstagramEnvelope(envelope, { store: messaging, app: instagramConfig(env, false).app, env, fetcher, suppressAutomation: !instagramMessagingEnabled(env) });
+        send(res, 200, { ok: true, accepted: true });
+        return readMedia(result);
       }
       if (!signedBy('whatsapp')) throw new PilotError('signature', 403);
       if (envelope?.object !== 'whatsapp_business_account' || !Array.isArray(envelope.entry)) throw new PilotError('invalid_envelope');
-      await ingestBlueEnvelope(envelope, { store: messaging, sendingEnabled: env.GREEN_WHATSAPP_ENABLED === 'true' });
-      return send(res, 200, { ok: true, accepted: true });
+      const result = await ingestBlueEnvelope(envelope, { store: messaging, sendingEnabled: env.GREEN_WHATSAPP_ENABLED === 'true' });
+      send(res, 200, { ok: true, accepted: true });
+      return readMedia(result);
     } catch (error) {
       return sendPilotError(res, error, { fallback: 'unavailable' });
     }

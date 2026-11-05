@@ -19,7 +19,8 @@ import { SECTOR_DRAFT_FIELDS, markDraftDelivered } from './hasib/workspace/secto
 import { phrase, langOf } from '../config/layla-tones.js';
 import { byteLength } from '../api/_lib/layla/reply-guard.js';
 import { INSTAGRAM_MAX_BYTES, conversationHistory, runawayChat } from './laylaReply.js';
-import { REPLY_DEBOUNCE_MS, TOPIC_FOR_INTENT, turnContext, turnMode } from './laylaTurn.js';
+import { MEDIA_WAIT_MS, REPLY_DEBOUNCE_MS, TOPIC_FOR_INTENT, turnContext, turnMode } from './laylaTurn.js';
+import { attachedMedia, expireInboundMedia } from './blueInboundMedia.js';
 import { effectiveBehaviour } from '../config/layla-behaviour.js';
 import { recordGap } from './brainState.js';
 import { NAME_FIELD, mergeFields, qualificationStatus, validateFieldValue } from '../config/layla-qualification.js';
@@ -231,7 +232,19 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     const active=enabled && control?.active===true && ready(row);
     return ok({available:enabled,active,reason:!enabled?'messaging_unavailable':active?'':control?.reason || (control?.active?'activation_not_ready':'not_activated'),limits:{perMinute:RATE_LIMITS.perMinute,perDay:RATE_LIMITS.perDay,usedToday:rate?.count || 0},conversations:people.map(p=>({id:p._id,number:p.number,takeover:p.takeover,optout:p.optout,lastInbound:p.lastInbound})),messages:msgs.reverse().map(m=>({id:m._id,conversationId:m.conversationId,direction:m.direction,text:m.textExpiresAt>now?m.text:undefined,status:m.status,reason:m.reason,at:m.at}))});
   }
-  if(a.operation==='ingest') {
+  // A customer's photo or voice note, part 1 (Vercel, after Meta is answered): the sealed credential to fetch it
+  // with, and the business's own words so a voice note is heard as this business's customers speak.
+  if(a.operation==='media_context' || a.operation==='media_upload_url') {
+    const control=await controls(a.integrationId);
+    const row=await rowForControl(control) || await find('blueReviewSessions','by_integration','integration.id',a.integrationId) || await rowForInstagram(a.integrationId);
+    if(!row?.accountId || row.expiresAt<=now || row.integration?.id!==a.integrationId) return a.operation==='media_context' ? ok(null) : fail('integration_not_ready');
+    if(a.operation==='media_upload_url') return ok({url:await ctx.storage.generateUploadUrl()});
+    const names=(await approvedCatalog(row.accountId,200)).flatMap(c=>[c.nameEn,c.nameAr]).filter(Boolean);
+    return ok({integration:row.integration,sessionHash:row.sessionHash,business:row.profile?.businessName || '',catalog:[...new Set(names)].slice(0,150)});
+  }
+  // Part 2 (media_attach): the stored file and what it says re-enter the inbound path below, so a voice
+  // note is captured and answered like typed words and Layla's held reply goes ahead.
+  if(a.operation==='ingest' || a.operation==='media_attach') {
     const control=await controls(a.integrationId);
     // Before activation there is no control: WhatsApp resolves through the setup row, Instagram
     // through its connection. Either way the messages are kept; nothing is answered until activation.
@@ -240,6 +253,17 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
     if(a.profileVersion!==undefined && a.profileVersion!==(row.profileVersion || 1)) return fail('profile_changed');
     // Takeover and opt-out events are applied before any message in this batch.
     let incoming=a.events;
+    if(a.operation==='media_attach') {
+      const original=await message(`incoming:${a.integrationId}:${a.attach.messageId}`);
+      const person=original && await ctx.db.get(original.conversationId);
+      // Only a message still waiting for its file takes one; a late or repeated report changes nothing.
+      if(!person || original.direction!=='in' || original.media?.status!=='pending') {
+        const id=a.attach.storageId && ctx.db.system.normalizeId('_storage',a.attach.storageId);
+        if(id && await ctx.db.system.get(id) && !(await ctx.db.query('blueMessages').withIndex('by_media_storage',q=>q.eq('media.storageId',id)).first())) await ctx.storage.delete(id);
+        return ok(null);
+      }
+      incoming=[{kind:'message',id:a.attach.messageId,from:person.number,at:original.at,text:original.text || '',attach:a.attach}];
+    }
     if(row.integration.channel==='instagram') {
       const kept=[];
       for(const e of incoming) {
@@ -268,7 +292,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
           await ctx.db.insert('blueMessages',{key:`incoming:${a.integrationId}:${e.id}`,integrationId:a.integrationId,accountId:row.accountId,conversationId:person._id,direction:'in',at:now,expiresAt:now+MESSAGE_RETENTION_MS,textExpiresAt:Number.MAX_SAFE_INTEGER,status:'deleted'});
         }
         if(original) {
-          await ctx.db.patch(original._id,{text:undefined,textExpiresAt:Number.MAX_SAFE_INTEGER});
+          await ctx.db.patch(original._id,{text:undefined,textExpiresAt:Number.MAX_SAFE_INTEGER,...await expireInboundMedia(ctx,original)});
           const person=await ctx.db.get(original.conversationId);
           if(person) {await stopQueued(a.integrationId,person._id,'message_deleted');await ctx.db.patch(person._id,{version:(person.version || 0)+1});}
         }
@@ -305,25 +329,37 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       }
       if(e.kind!=='message' && e.kind!=='echo') continue;
       const msgKey=`incoming:${a.integrationId}:${e.id}`;
-      if(await message(msgKey)) continue;
-      await ctx.db.insert('blueMessages',{key:msgKey,integrationId:a.integrationId,accountId:row.accountId,conversationId:person._id,direction:e.kind==='echo'?'human':'in',text:e.text,...(e.kind==='message'&&MESSAGE_TOPICS.has(e.intent)?{topic:e.intent}:{}),at:e.at,expiresAt:now+MESSAGE_RETENTION_MS,textExpiresAt:e.medicalContentWithheld?Number.MAX_SAFE_INTEGER:now+textKeep,status:'received'});
+      // What the rest of this turn reads as the customer's words: their text, or a voice note's transcript.
+      let text=e.text || '';
+      const held=e.kind==='message' && e.media && typeof e.media==='object' && !e.attach;
+      if(e.attach) {
+        const original=await message(msgKey);
+        const {media,mediaText}=await attachedMedia(ctx,original,e.attach,now);
+        await ctx.db.patch(original._id,{media,...(mediaText?{mediaText}:{})});
+        // Only a voice note's words are the customer's own; a photo's reading is not something they said.
+        text=media.kind==='audio' && mediaText ? mediaText : '';
+      } else {
+        if(await message(msgKey)) continue;
+        await ctx.db.insert('blueMessages',{key:msgKey,integrationId:a.integrationId,accountId:row.accountId,conversationId:person._id,direction:e.kind==='echo'?'human':'in',text:e.text,...(e.kind==='message'&&MESSAGE_TOPICS.has(e.intent)?{topic:e.intent}:{}),
+          ...(held?{media:{...e.media,status:'pending'}}:{}),at:e.at,expiresAt:now+MESSAGE_RETENTION_MS,textExpiresAt:e.medicalContentWithheld?Number.MAX_SAFE_INTEGER:now+textKeep,status:'received'});
+      }
       if(e.kind==='echo') {
         await ctx.db.patch(person._id,{takeover:true,...nativeHandling(person,e,now),updatedAt:now,version:(person.version || 0)+1});
         await stopQueued(a.integrationId,person._id,'native_reply');
         await ctx.db.patch(contact._id,{lastActivityAt:Math.max(contact.lastActivityAt || 0,e.at || now),updatedAt:now});
         continue;
       }
-      const tone=row.profile?.tone, lang=langOf(e.text);
+      const tone=row.profile?.tone, lang=langOf(text);
       // Layla's own recent replies in this chat: the first reply welcomes, and a runaway chat stops.
       const history=await conversationHistory(ctx,person._id,now);
       let applied=null;
-      if(e.intent!=='optout') {
+      if(e.intent!=='optout' && text.trim()) {
         catalog ??= await approvedCatalog(row.accountId);
         // Fields are captured even while a person has taken over the chat. The words come from the model;
         // which detail to ask for next is decided here, one at a time.
         // Catalyst's BznsBrain mode reads the owner's behaviour settings; Ascend keeps its own flow.
         if(!brain) { const mode=await turnMode(ctx,row); brain={mode,behaviour:mode==='brain'?effectiveBehaviour(row,sectorId):null}; }
-        applied=await applyInbound(ctx,contact,{text:e.text,intent:e.intent || 'ai',handoff:false,at:e.at,now,sectorId,catalog,tone,mode:brain.mode,behaviour:brain.behaviour});
+        applied=await applyInbound(ctx,contact,{text,intent:e.intent || 'ai',handoff:false,at:e.at,now,sectorId,catalog,tone,mode:brain.mode,behaviour:brain.behaviour});
       }
       // Paused ingress keeps messages, contacts and opt-outs without creating work to replay.
       const automate=!a.suppressAutomation && rolloutAllows(global,row.accountId,person.number,now) && !!control?.active;
@@ -334,19 +370,19 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         try { await recordDemand(ctx,{accountId:row.accountId,contact:applied.contact,conversationId:person._id,updates:applied.updates,intent:e.intent,at:e.at}); }
         catch(err) { console.error('hasib_demand_failed',err?.message); }
         // Stock, orders and listings stay deterministic: their lines reach the customer word for word.
-        try { commerce=await commerceTurn(ctx,{row,person,contact:applied.contact,text:e.text,intent:e.intent,now,secret:a.hashSecret}); }
+        try { commerce=await commerceTurn(ctx,{row,person,contact:applied.contact,text,intent:e.intent,now,secret:a.hashSecret}); }
         catch(err) { console.error('hasib_order_failed',err?.message); }
-        try { realEstate=await realEstateTurn(ctx,{row,person,contact:applied.contact,text:e.text,now,secret:a.hashSecret}); }
+        try { realEstate=await realEstateTurn(ctx,{row,person,contact:applied.contact,text,now,secret:a.hashSecret}); }
         catch(err) { console.error('real_estate_turn_failed',err?.message); }
-        try { await mediaTurn(ctx,{row,person,contact:applied.contact,now,secret:a.hashSecret,text:e.text,catalog:catalog || []}); }
+        try { await mediaTurn(ctx,{row,person,contact:applied.contact,now,secret:a.hashSecret,text,catalog:catalog || []}); }
         catch(err) { console.error('media_turn_failed',err?.message); }
         try { await fitnessTurn(ctx,{row,contact:applied.contact,now,secret:a.hashSecret}); }
         catch(err) { console.error('fitness_turn_failed',err?.message); }
         try { await dentalTurn(ctx,{row,contact:applied.contact,now,secret:a.hashSecret}); }
         catch(err) { console.error('dental_turn_failed',err?.message); }
-        try { await industryTurns(ctx,{row,person,contact:applied.contact,text:e.text,now,secret:a.hashSecret}); }
+        try { await industryTurns(ctx,{row,person,contact:applied.contact,text,now,secret:a.hashSecret}); }
         catch(err) { console.error('industry_turn_failed',err?.message); }
-        try { adiba=await adibaTurn(ctx,{row,person,contact:applied.contact,text:e.text,messageKey:msgKey,catalog:catalog || [],stockMatched:Boolean(commerce),now,secret:a.hashSecret}); }
+        try { adiba=await adibaTurn(ctx,{row,person,contact:applied.contact,text,messageKey:msgKey,catalog:catalog || [],stockMatched:Boolean(commerce),now,secret:a.hashSecret}); }
         catch(err) { console.error('adiba_turn_failed',err?.message); }
       }
       if(e.intent==='optout') await stopQueued(a.integrationId,person._id,'contact_opted_out');
@@ -356,7 +392,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       if(!automate) continue;
       if(!enabled || !control.active || !ready(row) || person.optout || person.takeover || contact.optout || now-e.at>=DAY) continue;
       // Safety net, not a conversation limit: a bot loop or flood stops Layla in this chat after one notice.
-      if(runawayChat(history,e.text)) {
+      if(text.trim() && runawayChat(history,text)) {
         // Stop older queued replies first, then send the one notice under the new version so its fence holds.
         await stopQueued(a.integrationId,person._id,'human_takeover');
         await ctx.db.patch(person._id,{takeover:true,handoffState:'open',handoffReason:'reply_limit',handoffOpenedAt:now,updatedAt:now,version:version+1,pendingReply:undefined});
@@ -369,17 +405,21 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       // One pending reply per chat: a quick run of messages is answered once, with every fact it produced.
       const prev=person.pendingReply?.version===version ? person.pendingReply : null;
       const liveFacts=[realEstate?.facts || commerce?.facts, ...(adiba?.facts || [])].filter(Boolean).join('\n');
-      const pending={key:`reply:${a.integrationId}:${e.id}`,inboundKey:msgKey,version,profileVersion:row.profileVersion || 1,inboundAt:e.at,
+      // A photo or voice note holds the reply until it is read (media_attach), never past MEDIA_WAIT_MS. Once read,
+      // the reply already waiting goes ahead; if it has gone, the reading gets its own reply under its own key.
+      const awaitMedia=[...(prev?.awaitMedia || []).filter(k=>k!==msgKey),...(held?[msgKey]:[])];
+      const own={key:`reply:${a.integrationId}:${e.id}${e.attach?':media':''}`,inboundKey:msgKey,inboundAt:e.at};
+      const pending={...(e.attach && prev ? {key:prev.key,inboundKey:prev.inboundKey,inboundAt:prev.inboundAt} : own),version,profileVersion:row.profileVersion || 1,awaitMedia,
         firstReply:prev ? prev.firstReply : history.firstReply,
         facts:[...(prev?.facts || []),...(liveFacts?[liveFacts]:[])].slice(-4),
         acks:[...(prev?.acks || []),...(commerce?.ack?[commerce.ack]:[]),...(adiba?.ack?[adiba.ack]:[])].slice(-3),
         photos:[...(prev?.photos || []),...(commerce?.photo?[commerce.photo]:[])].slice(-2),
         realEstate:realEstate?.opportunityId || realEstate?.handoff ? {opportunityId:realEstate.opportunityId,handoff:!!realEstate.handoff} : prev?.realEstate,
-        askKey:applied?.plan?.keys?.[0] || null,
+        askKey:applied ? applied.plan?.keys?.[0] || null : prev?.askKey ?? null,
         ...(applied?.override?{override:applied.override}:{}),...(applied?.reception || prev?.reception?{reception:true}:{}),
-        notes:{media:!!(e.media || prev?.notes?.media),tooLong:!!(e.tooLong || prev?.notes?.tooLong)}};
+        notes:{media:!!(e.media===true || prev?.notes?.media),tooLong:!!(e.tooLong || prev?.notes?.tooLong)}};
       await ctx.db.patch(person._id,{pendingReply:pending});
-      if(a.replyFunction) await ctx.scheduler.runAfter(REPLY_DEBOUNCE_MS,a.replyFunction,{conversationId:person._id,key:pending.key});
+      if(a.replyFunction) await ctx.scheduler.runAfter(awaitMedia.length?MEDIA_WAIT_MS:REPLY_DEBOUNCE_MS,a.replyFunction,{conversationId:person._id,key:pending.key});
     }
     return ok(null);
   }

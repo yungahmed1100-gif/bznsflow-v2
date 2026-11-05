@@ -15,6 +15,9 @@ const attachedTo = async (ctx, id) => [
   ...(await ctx.db.query('automotiveInspectionPhotos').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
   // Ascend website brief uploads (convex/websiteBriefState.js) are not orphans either.
   ...(await ctx.db.query('websiteBriefFiles').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
+  // A customer's photo or voice note on their message, and a broadcast's header file, are kept by their own rules.
+  ...(await ctx.db.query('blueMessages').withIndex('by_media_storage', q => q.eq('media.storageId', id)).take(2)),
+  ...(await ctx.db.query('blueCampaignMedia').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
 ];
 const registration = (ctx, id) => ctx.db.query('hasibPhotoUploads').withIndex('by_storage', q => q.eq('storageId', id)).unique();
 

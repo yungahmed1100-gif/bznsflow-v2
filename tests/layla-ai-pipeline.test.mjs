@@ -2,7 +2,8 @@
 // webhook → Convex ingest (deterministic) → debounced AI turn → checks → commit under fences → worker.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { business, fixtureBusiness, scriptedModel, lastCustomer } from './helpers/layla-conversation.mjs';
+import { business, fixtureBusiness, scriptedModel, lastCustomer, env } from './helpers/layla-conversation.mjs';
+import { processInboundMedia } from '../api/_lib/layla/inbound-media.js';
 
 const CONTACT = 'WhatsApp +968 9100 2000 (Sara)';
 const system = messages => messages[0].content;
@@ -124,13 +125,110 @@ test('stock lines are live facts in the prompt; order lines always go out word f
   assert.match(reply, /^Great choice!\n\nOrder #\d+ (is )?confirmed/, reply);
 });
 
-test('a photo or voice note is described to the model, which says what it cannot open', async () => {
-  const model = scriptedModel(() => ({ reply: 'I can only read text here.', needs_team: true }));
+// Photos and voice notes: the real webhook path keeps the media id, then processInboundMedia (run after Meta
+// is answered in production) fetches the file from a fake Meta, stores it and reads it with a fake Qwen.
+const aiEnv = { ...env, QWEN_API_KEY: 'test-key', QWEN_BASE_URL: 'https://qwen.test' };
+function mediaWorld(b, { transcript = '', photo = null, refuse = false, type = 'audio/ogg' } = {}) {
+  const calls = [];
+  const fetcher = async (url, init = {}) => {
+    const u = new URL(url);
+    if (u.hostname === 'graph.facebook.com') return new Response(JSON.stringify({ url: `https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=${u.pathname.split('/').pop()}`, mime_type: type, file_size: 900 }));
+    if (u.hostname === 'lookaside.fbsbx.com') return new Response(new Uint8Array(900), { headers: { 'content-type': type } });
+    if (u.hostname === 'upload.test') return new Response(JSON.stringify({ storageId: b.h.m.putFile({ contentType: init.headers['Content-Type'], size: init.body.length }) }));
+    if (u.hostname === 'qwen.test') {
+      const body = JSON.parse(init.body);
+      calls.push(body);
+      if (refuse) return new Response(JSON.stringify({ code: 'insufficient_quota' }), { status: 403 });
+      const content = body.model === 'qwen3-asr-flash' ? transcript : JSON.stringify(photo);
+      return new Response(JSON.stringify({ model: body.model, choices: [{ message: { content } }], usage: { prompt_tokens: 50, completion_tokens: 10 } }));
+    }
+    return b.fetcher(url, init);
+  };
+  return { calls, read: media => processInboundMedia(media, { store: b.store, env: aiEnv, fetcher }) };
+}
+const say = async (b, from, message) => { b.h.m.advance(1000); return b.ingest(b.envelope(from, message)); };
+const answer = async b => { const before = b.sent.length; await b.turns(); await b.flush(); return b.sent.slice(before).map(x => x.text); };
+const thread = async (b, from) => (await b.h.dashboard('thread', { sessionHash: b.tenant.sessionHash, conversationId: b.conversation(from)._id })).value.messages;
+
+test('a voice note is transcribed and answered in the language it was spoken', async () => {
+  const model = scriptedModel(() => ({ reply: 'نعم، المعاينة مجانية دائماً.' }));
   const b = await business({ model });
-  const [reply] = await b.say('96891110012', { type: 'audio', audio: { id: 'media1' } });
-  assert.equal(reply, `I can only read text here. Please contact our team directly: ${CONTACT}`);
-  assert.match(system(model.calls[0]), /photo, voice note or file you cannot open/);
-  assert.equal(lastCustomer(model.calls[0]), '[The customer sent a photo, voice note or file]');
+  const world = mediaWorld(b, { transcript: 'هل المعاينة مجانية؟' });
+  const { media } = await say(b, '96891110012', { type: 'audio', audio: { id: 'media1', mime_type: 'audio/ogg; codecs=opus', voice: true } });
+  assert.deepEqual(media.map(j => [j.kind, j.ref, j.voice]), [['audio', 'media1', true]]);
+  assert.equal(b.conversation('96891110012').pendingReply.awaitMedia.length, 1, 'Layla waits for the note to be read');
+  await world.read(media);
+  const [reply] = await answer(b);
+  assert.equal(reply, 'نعم، المعاينة مجانية دائماً.');
+  assert.equal(model.calls.length, 1);
+  assert.equal(lastCustomer(model.calls[0]), '[voice note] هل المعاينة مجانية؟');
+  assert.match(system(model.calls[0]), /PHOTOS AND VOICE NOTES/);
+  assert.doesNotMatch(system(model.calls[0]), /can only read text|location, contact card/, 'a readable note is never "can only read text"');
+  // The business's own words steer recognition; recognition answers in plain text.
+  assert.equal(world.calls[0].model, 'qwen3-asr-flash');
+  assert.match(world.calls[0].messages[0].content[0].text, /Qurum Coast Properties/);
+  assert.match(world.calls[0].messages.at(-1).content[0].input_audio.data, /^data:audio\/ogg;base64,/);
+  assert.equal(world.calls[0].response_format, undefined);
+  // The owner hears it and reads what was said.
+  const [note] = await thread(b, '96891110012');
+  assert.deepEqual([note.media.kind, note.media.voice, note.media.status, note.media.text, note.text], ['audio', true, 'ready', 'هل المعاينة مجانية؟', '']);
+  assert.match(note.media.url, /^https:\/\/files\.test\//);
+});
+
+test('a photo is described; a price in it is the customer\'s, never quoted as the business\'s', async () => {
+  const model = scriptedModel(() => ({ reply: 'السعر 9 ريال عماني.' }));
+  const b = await business({ model });
+  const world = mediaWorld(b, { type: 'image/jpeg', photo: { summary: 'A screenshot of a price list.', text_in_image: 'تنظيف 9 ر.ع', kind: 'screenshot', catalog_match: 'Not in the catalog' } });
+  const { media } = await say(b, '96891110013', { type: 'image', image: { id: 'media2', mime_type: 'image/jpeg', caption: 'كم السعر عندكم؟' } });
+  await world.read(media);
+  const [reply] = await answer(b);
+  assert.equal(lastCustomer(model.calls[0]), '[photo: A screenshot of a price list. Text in the photo: "تنظيف 9 ر.ع"]\nكم السعر عندكم؟');
+  assert.doesNotMatch(reply, /9 ريال/, 'the screenshot\'s price is refused');
+  assert.equal(model.calls.length, 2, 'refused once, retried, then the safe fallback');
+  assert.equal(world.calls[0].model, 'qwen3-vl-plus');
+  assert.match(world.calls[0].messages[1].content[0].image_url.url, /^data:image\/jpeg;base64,/);
+  assert.deepEqual(world.calls[0].response_format, { type: 'json_object' });
+  const [photo] = await thread(b, '96891110013');
+  assert.deepEqual([photo.media.kind, photo.media.status, photo.text], ['image', 'ready', 'كم السعر عندكم؟']);
+  assert.doesNotMatch(photo.media.text, /Looks like/, 'a catalog match that is not in the catalog is dropped');
+});
+
+test('a photo the model cannot read is kept for the owner; Layla asks the customer to describe it', async () => {
+  const model = scriptedModel(() => ({ reply: 'Thanks for the photo. Could you tell me what you would like to know about it?' }));
+  const b = await business({ model });
+  const world = mediaWorld(b, { type: 'image/jpeg', refuse: true });
+  const { media } = await say(b, '96891110014', { type: 'image', image: { id: 'media3', mime_type: 'image/jpeg' } });
+  await world.read(media);
+  const [reply] = await answer(b);
+  assert.equal(reply, 'Thanks for the photo. Could you tell me what you would like to know about it?', 'no team contact for an unreadable photo alone');
+  assert.equal(lastCustomer(model.calls[0]), '[photo that could not be read]');
+  const [photo] = await thread(b, '96891110014');
+  assert.deepEqual([photo.media.status, !!photo.media.url, photo.media.text], ['unread', true, undefined]);
+});
+
+test('Layla never waits forever for a file; a late reading is answered under its own key', async () => {
+  const model = scriptedModel(q => (q.includes('could not be read') ? 'Sorry, I could not hear that. Could you type your question?' : 'Yes, viewings are always free.'));
+  const b = await business({ model });
+  const { media } = await say(b, '96891110015', { type: 'audio', audio: { id: 'media4', mime_type: 'audio/ogg', voice: true } });
+  // The fallback reply fires before the note is read.
+  assert.deepEqual(await answer(b), ['Sorry, I could not hear that. Could you type your question?']);
+  await mediaWorld(b, { transcript: 'Are viewings free?' }).read(media);
+  assert.deepEqual(await answer(b), ['Yes, viewings are always free.'], 'the reading gets its own answer');
+  assert.equal(new Set(b.h.m.table('blueMessages').filter(m => m.direction === 'out').map(m => m.key)).size, 2, 'two replies, two keys');
+});
+
+test('a photo and a question sent together get one answer that reads both', async () => {
+  const model = scriptedModel(() => 'Yes, it is available for viewing.');
+  const b = await business({ model });
+  const world = mediaWorld(b, { type: 'image/jpeg', photo: { summary: 'A white villa with a pool.', text_in_image: '', kind: 'place', catalog_match: '' } });
+  const { media } = await say(b, '96891110016', { type: 'image', image: { id: 'media5', mime_type: 'image/jpeg' } });
+  await say(b, '96891110016', 'Is this one available?');
+  assert.equal(b.conversation('96891110016').pendingReply.awaitMedia.length, 1, 'the text keeps waiting for the photo');
+  await world.read(media);
+  assert.equal((await answer(b)).length, 1);
+  assert.equal(model.calls.length, 1);
+  const users = model.calls[0].filter(m => m.role === 'user').map(m => m.content);
+  assert.deepEqual(users.slice(-2), ['[photo: A white villa with a pool.]', 'Is this one available?']);
 });
 
 test('Instagram goes through the same turn and keeps within 1000 bytes', async () => {

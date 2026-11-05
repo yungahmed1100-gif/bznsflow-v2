@@ -55,13 +55,17 @@ test('a retry skips the forced Instagram login so a dropped sign-in can finish',
   assert.notEqual(retry.searchParams.get('state'),first.searchParams.get('state'));
   assert.deepEqual(calls.map(c=>c.op),['begin','begin','begin']);
 });
-test('Instagram webhook routes by server-bound account; a photo is flagged so Layla says she cannot open it',async()=>{
+test('Instagram webhook routes by server-bound account; a photo is kept to be read, a share is flagged',async()=>{
   const calls=[];const binding={channel:'instagram',app:'1234',igAccount:'178414000000001',integrationId:'connection',profileVersion:1};
-  await ingestInstagramEnvelope({object:'instagram',entry:[{id:binding.igAccount,messaging:[{sender:{id:'178900000000001'},recipient:{id:binding.igAccount},timestamp:1000,message:{mid:'mid.1',attachments:[{type:'image'}]}}]}]}, {app:'1234',now:()=>1000,store:async(op,args)=>{calls.push({op,args});return op==='binding'?binding:null;}});
-  const [event]=calls[1].args.events;
-  assert.deepEqual([event.media,event.text],[true,'[The customer sent a photo, voice note or file]']);
-  assert.ok(!event.reply,'nothing is answered inside the webhook');
-  assert.equal(event.nonText,undefined,'parser hints never reach Convex');
+  const item=(mid,attachment)=>({sender:{id:'178900000000001'},recipient:{id:binding.igAccount},timestamp:1000,message:{mid,attachments:[attachment]}});
+  const {media}=await ingestInstagramEnvelope({object:'instagram',entry:[{id:binding.igAccount,messaging:[item('mid.1',{type:'image',payload:{url:'https://scontent.cdninstagram.com/v/p.jpg'}}),item('mid.2',{type:'share',payload:{url:'https://www.instagram.com/p/x'}})]}]},
+    {app:'1234',now:()=>1000,store:async(op,args)=>{calls.push({op,args});return op==='binding'?binding:null;}});
+  const [photo,share]=calls[1].args.events;
+  assert.deepEqual([photo.text,photo.media,photo.handoff,photo.intent,photo.attachment],['',{kind:'image'},undefined,undefined,undefined],'a photo is read, not handed off');
+  assert.deepEqual(media.map(j=>[j.messageId,j.channel,j.kind,j.ref]),[['mid.1','instagram','image','https://scontent.cdninstagram.com/v/p.jpg']],'only the server keeps the link');
+  assert.deepEqual([share.media,share.text],[true,'[The customer sent a location, contact card or message type you cannot read]']);
+  assert.ok(!share.reply,'nothing is answered inside the webhook');
+  assert.equal(share.nonText,undefined,'parser hints never reach Convex');
   assert.equal(calls[0].args.channel,'instagram');
 });
 test('Instagram send result never invents delivery or retries uncertain responses',()=>{

@@ -9,6 +9,7 @@ import { PilotError } from './config.js';
 import { credentialContext, openToken } from './customer-meta.js';
 import { inspectReviewConnection } from './review-api.js';
 import { parseEvents } from './webhook.js';
+import { instagramMedia, storedMedia, whatsappMedia } from './inbound-media.js';
 import { providerResult } from './gateway.js';
 import { campaignStore } from './dashboard-store.js';
 import { runCampaignSend, runCampaignStart } from './campaign-worker.js';
@@ -32,8 +33,9 @@ export const instagramMessage=job=>job.imageUrl ? {attachment:{type:'image',payl
 // Everything Layla says is written later by the model, from the business's own setup
 // (convex/laylaRespond.js); prices, stock and orders stay deterministic in Convex.
 export const inboundDecision = text => (isOptOut(text) ? {intent:'optout',reply:null,handoff:false} : {});
-// What Layla cannot open: the model is told, and offers the team contact.
-const MEDIA_TEXT='[The customer sent a photo, voice note or file]';
+// What Layla cannot read at all (a location, a contact card, an unsupported type): the model is told and asks
+// for it in words. Photos, voice notes, videos and files are kept and read instead (inbound-media.js).
+const MEDIA_TEXT='[The customer sent a location, contact card or message type you cannot read]';
 // WhatsApp profile names keyed by wa_id. Only ever used as a display fallback.
 export function profileNames(value) {
   const names=new Map();
@@ -61,24 +63,32 @@ async function instagramUsernames(binding,senders,{env,fetcher}) {
   const found=await Promise.all(senders.slice(0,10).map(async id=>[id,await instagramUsername(c,id,token,fetcher)]));
   return new Map(found.filter(([,name])=>name));
 }
+// Both ingest functions return the media messages still to fetch and read: {media:[job]}, run after Meta is answered.
 export async function ingestInstagramEnvelope(envelope,{store=messagingStore(),now=Date.now,app,env=process.env,fetcher=fetch,suppressAutomation=false}={}) {
   if(envelope.object!=='instagram' || !Array.isArray(envelope.entry) || envelope.entry.length>100) throw new PilotError('invalid_envelope');
-  let total=0;
+  let total=0;const jobs=[];
   for(const entry of envelope.entry) {
     if(!/^\d{1,30}$/.test(entry?.id || '')) throw new PilotError('invalid_envelope');
     const binding=await store('binding',{channel:'instagram',igAccount:entry.id});
     if(!binding || binding.app!==app) {console.warn('webhook_unbound',JSON.stringify({channel:'instagram',igAccount:entry.id}));continue;}
     const parsed=parseEvents(Buffer.from(JSON.stringify({object:'instagram',entry:[entry]})),binding,now());
     const names=await instagramUsernames(binding,[...new Set(parsed.filter(e=>e.kind==='message').map(e=>e.from))],{env,fetcher});
-    const events=parsed.map(({nonText,sample,...e})=>{
+    const events=parsed.map(({nonText,sample,attachment,...e})=>{
       const named=e.kind==='message' && names.get(e.from)?{...e,profileName:names.get(e.from)}:e;
       if(nonText==='too_long') return {...named,text:String(sample || named.text || '').slice(0,1000),tooLong:true};
+      const media=nonText==='media' && instagramMedia(attachment);
+      if(media) {
+        jobs.push({integrationId:binding.integrationId,messageId:named.id,channel:'instagram',...media});
+        const {handoff,reply,intent,...plain}=named;
+        return {...plain,text:'',media:storedMedia(media)};
+      }
       if(nonText) return {...named,text:MEDIA_TEXT,media:true};
       return named.kind==='message' ? {...named,...inboundDecision(named.text)}:named;
     });
     total+=events.length;if(total>100) throw new PilotError('too_many_events',413);
     if(events.length) await store('ingest',{integrationId:binding.integrationId,profileVersion:binding.profileVersion,events,suppressAutomation});
   }
+  return {media:jobs};
 }
 // This function receives only an envelope whose raw signature was verified.
 export async function ingestBlueEnvelope(envelope,{store=messagingStore(),now=Date.now,sendingEnabled=true}={}) {
@@ -96,7 +106,7 @@ export async function ingestBlueEnvelope(envelope,{store=messagingStore(),now=Da
     }
   }
   if(groups.size>10) throw new PilotError('too_many_bindings',413);
-  let total=0;
+  let total=0;const jobs=[];
   for(const group of groups.values()) {
     const binding=await store('binding',{waba:group.waba,phone:group.phone});
     if(!binding || binding.app!=='1388038082832745') {console.warn('webhook_unbound',JSON.stringify({channel:'whatsapp',waba:group.waba,phone:group.phone}));continue;}
@@ -122,14 +132,24 @@ export async function ingestBlueEnvelope(envelope,{store=messagingStore(),now=Da
           events.push({kind:'message',id:m.id,from:m.from,at:Number(m.timestamp)*1000,text:title,intent:'optout',reply:null,handoff:false,...profile});
           continue;
         }
-        // A tapped button is text; media and over-long text are flagged so Layla can say what she can't read.
+        // A reaction is a 👍 on an earlier message: nothing to answer.
+        if(m.type==='reaction') continue;
+        // A tapped button is text; a photo, voice note, video or file is kept and read after Meta is answered.
         const tooLong=m.type==='text' && typeof m.text?.body==='string';
+        const media=!title && !tooLong ? whatsappMedia(m) : null;
+        if(media) {
+          events.push({kind:'message',id:m.id,from:m.from,at:Number(m.timestamp)*1000,text:media.caption,media:storedMedia(media),...profile});
+          jobs.push({integrationId:binding.integrationId,messageId:m.id,channel:'whatsapp',...media});
+          continue;
+        }
+        // Over-long text and anything unreadable are flagged so Layla can say what she can't read.
         events.push({kind:'message',id:m.id,from:m.from,at:Number(m.timestamp)*1000,...(title ? {text:title} : tooLong ? {text:m.text.body.slice(0,1000),tooLong:true} : {text:MEDIA_TEXT,media:true}),...profile});
       }
     }
     total+=events.length;if(total>100) throw new PilotError('too_many_events',413);
     if(events.length) await store('ingest',{integrationId:binding.integrationId,profileVersion:binding.profileVersion,events,suppressAutomation:!sendingEnabled});
   }
+  return {media:jobs};
 }
 
 const MANAGER_ACTIONS=['disconnect','activate','pause','check_connection'];

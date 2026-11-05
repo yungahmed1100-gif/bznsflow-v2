@@ -4,7 +4,7 @@ import { dashboard } from '../../lib/dashboard/api';
 import { formatPhone } from '../../lib/dashboard/phone';
 import { initials, listTimestamp } from '../../lib/dashboard/format';
 import { exportAccount } from '../../lib/dashboard/exports';
-import { ThreadView } from './ThreadView';
+import { ThreadView, mediaLabel } from './ThreadView';
 import { StatusTicks, QualificationChip } from './Badges';
 import { dashboardPermissions } from '../../lib/dashboard/permissions';
 
@@ -70,6 +70,7 @@ export function ChatsView({ s, overview, selected, onSelect, reminder = null }) 
                     <span className="ld-conversation-bottom">
                       {item.lastMessage && item.lastMessage.direction !== 'in' && <StatusTicks s={s} status={item.lastMessage.status} channel={item.contact.channel} />}
                       {item.lastMessage?.direction === 'template' && <span className="ld-preview-label">{s.t('broadcastLabel')} ·</span>}
+                      {item.lastMessage?.media && <span className="ld-preview-label">{mediaLabel(s, item.lastMessage.media)}{item.lastMessage.text ? ' ·' : ''}</span>}
                       <span className="ld-preview" dir="auto">{item.lastMessage?.text ?? (item.lastMessage ? s.t('textExpired') : '')}</span>
                     </span>
                     <span className="ld-conversation-tags"><span className="ld-chip is-blue">{item.channel==='instagram'?'Instagram':'WhatsApp'}</span>

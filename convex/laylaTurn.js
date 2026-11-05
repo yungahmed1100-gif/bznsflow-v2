@@ -13,9 +13,12 @@ import { parseBzns } from '../src/lib/bzns-doc.js';
 import { approvedKnowledge, publishedSections } from './knowledgeSourceState.js';
 import { HASIB_PLANS, planFor } from './hasib/plans.js';
 import { templateSendsFor, sentText, UNSENT } from './blueTemplateSends.js';
+import { mediaLine } from '../config/media-understanding.js';
 
 // Debounce: a customer's quick run of messages gets one answer.
 export const REPLY_DEBOUNCE_MS = 2500;
+// A photo or voice note holds the reply while it is fetched and read; past this, Layla answers without it.
+export const MEDIA_WAIT_MS = 20000;
 const DAY = 86400000;
 // The last few template messages the business sent this contact; older ones add nothing to a reply.
 const BUSINESS_MESSAGES = 3;
@@ -57,11 +60,25 @@ export async function transcript(ctx, conversationId, now, limit = 30, contactId
   const since = now - 7 * DAY;
   const rows = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', conversationId).gte('at', since)).order('desc').take(limit);
   // Oldest first before merging: messages that share a timestamp keep the order they arrived in.
-  const said = rows.reverse().filter(m => typeof m.text === 'string' && m.text.trim() && m.status !== 'blocked')
-    .map(m => ({ role: m.direction === 'in' ? 'customer' : m.direction === 'human' || m.manual ? 'team' : 'layla', text: m.text, at: m.at }));
+  const said = rows.reverse().filter(m => m.status !== 'blocked').map(m => turnOf(m, now)).filter(Boolean);
   const sent = (await templateSendsFor(ctx, contactId, { since, limit: BUSINESS_MESSAGES, skip: UNSENT }))
     .map(s => ({ role: 'business', text: sentText(s, now), at: s.send.at })).filter(s => s.text);
-  return [...said, ...sent].sort((a, b) => a.at - b.at).map(({ role, text }) => ({ role, text }));
+  return [...said, ...sent].sort((a, b) => a.at - b.at).map(({ at, ...turn }) => turn);
+}
+
+/**
+ * One retained message as Layla reads it. A customer's photo or voice note becomes its line (what it shows,
+ * or their words) above any caption; `words` is only what they typed or said, which sets the reply language.
+ */
+function turnOf(m, now) {
+  const role = m.direction === 'in' ? 'customer' : m.direction === 'human' || m.manual ? 'team' : 'layla';
+  const typed = typeof m.text === 'string' ? m.text.trim() : '';
+  const media = role === 'customer' && m.media && m.media.status !== 'expired' && m.textExpiresAt > now ? m.media : null;
+  const line = media ? mediaLine(media, m.mediaText) : '';
+  if (!typed && !line) return null;
+  if (!media) return { role, text: m.text, at: m.at };
+  const words = [media.kind === 'audio' ? m.mediaText : '', typed].filter(Boolean).join(' ');
+  return { role, text: [line, typed].filter(Boolean).join('\n'), at: m.at, media: true, words };
 }
 
 const sectionsOf = markdown => parseBzns(markdown || '').sections.filter(s => String(s.body || '').trim() && !/\[[^\]\n]{2,80}\]/.test(s.body)).map(({ key, heading, body }) => ({ key, heading, body }));
@@ -94,7 +111,9 @@ export function composeTurnContext({ row, sectorId, sources, history, contact, p
   const askField = pending.askKey === NAME_FIELD.key ? NAME_FIELD : pack.fields.find(f => f.key === pending.askKey);
   // Accounts set up before bzns.md: their reviewed profile is the document (prices stay catalog-only).
   const document = sources.sections.length ? sources.sections : profileSections(row.profile);
-  const latest = history.filter(h => h.role === 'customer').at(-1)?.text || '';
+  // The customer's own words set the language: a photo's reading is written in English whatever they speak.
+  const latest = history.filter(h => h.role === 'customer' && (h.words ?? h.text)).at(-1);
+  const latestWords = latest ? latest.words ?? latest.text : '';
   return {
     // The general (Catalyst) pack names no industry in the prompt.
     business: { name: row.profile?.businessName || '', sector: sectorId === 'other' ? '' : row.profile?.sector || '', sectorId },
@@ -110,7 +129,7 @@ export function composeTurnContext({ row, sectorId, sources, history, contact, p
     firstReply: !!pending.firstReply, afterBusinessMessage: history.some(h => h.role === 'business'), history, notes: pending.notes || {},
     fieldKeys: [NAME_FIELD.key, ...pack.fields.map(f => f.key)],
     fieldOptions: Object.fromEntries(pack.fields.filter(f => f.options?.length).map(f => [f.key, f.options.map(o => ({ id: o.id, words: o.match || [o.en, o.ar] }))])),
-    lang: langOf(latest),
+    lang: langOf(latestWords),
     ...(brain ? { mode: 'brain', handoffNote: sources.behaviour.handoffNote, reception: !!pending.reception, override: pending.override || null } : {}),
   };
 }

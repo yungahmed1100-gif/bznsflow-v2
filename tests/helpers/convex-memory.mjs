@@ -27,7 +27,8 @@ export function convexMemory({ start = 1_800_000_000_000 } = {}) {
       const filters = [];
       let orderField = '_seq', descending = false, search = null;
       const range = {
-        eq(k, v) { filters.push(r => r[k] === v); return range; },
+        // Dotted fields (an index on 'media.storageId') read the nested value, as Convex does.
+        eq(k, v) { filters.push(r => (k.includes('.') ? k.split('.').reduce((o, p) => o?.[p], r) : r[k]) === v); return range; },
         lt(k, v) { filters.push(r => r[k] < v); orderField = k; return range; },
         lte(k, v) { filters.push(r => r[k] <= v); orderField = k; return range; },
         gt(k, v) { filters.push(r => r[k] > v); orderField = k; return range; },

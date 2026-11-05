@@ -1,6 +1,7 @@
 // Tenant contact records, shared by messaging ingest, the dashboard and campaigns.
 // Every helper takes an explicit accountId; nothing here trusts a client id.
 import { numberHash } from './hash.js';
+import { expireInboundMedia } from './blueInboundMedia.js';
 import { grantLive } from './grantStatus.js';
 import { anonymizeContactOrders } from './hasib/contactLink.js';
 import { langOf } from '../config/layla-tones.js';
@@ -259,7 +260,7 @@ export async function deleteContact(ctx, contact, now) {
     for (const m of messages) {
       if (['attempting', 'ambiguous'].includes(m.status)) await ctx.db.patch(m._id, { text: undefined, textExpiresAt: Number.MAX_SAFE_INTEGER });
       else if (m.status === 'queued') await ctx.db.patch(m._id, { status: 'blocked', reason: 'contact_deleted', text: undefined, textExpiresAt: Number.MAX_SAFE_INTEGER });
-      else await ctx.db.delete(m._id);
+      else { await expireInboundMedia(ctx, m); await ctx.db.delete(m._id); }
     }
     await ctx.db.delete(person._id);
   }

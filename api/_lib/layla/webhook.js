@@ -145,8 +145,11 @@ function instagramEvents(body, c, now) {
       // the wrapper acknowledges once in the business's style (as on WhatsApp) and the team takes over.
       if (typeof message.text !== 'string' || !message.text.trim() || message.text.length > 1000) {
         const tooLong = typeof message.text === 'string' && message.text.length > 1000;
+        // The first attachment's type and link travel with it: a photo or voice note is fetched and read (inbound-media.js).
+        const first=!tooLong && Array.isArray(message.attachments) ? message.attachments[0] : null;
+        const attachment=typeof first?.type==='string' && typeof first?.payload?.url==='string' ? {type:first.type.slice(0,40),payload:{url:first.payload.url.slice(0,2000)}} : null;
         events.push({kind:'message',id:message.mid,from:senderId,at:timestamp(item.timestamp),text:'[Message needs human attention]',handoff:true,reply:null,intent:'human',
-          nonText:tooLong?'too_long':'media',...(tooLong?{sample:message.text.slice(0,200)}:{})});
+          nonText:tooLong?'too_long':'media',...(tooLong?{sample:message.text.slice(0,200)}:{}),...(attachment?{attachment}:{})});
         continue;
       }
       events.push({ kind: 'message', id: message.mid, from: senderId, at: timestamp(item.timestamp), text: message.text });

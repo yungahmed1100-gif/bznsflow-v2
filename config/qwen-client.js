@@ -33,15 +33,17 @@ export class QwenError extends Error {
  *   fetcher?: typeof fetch, timeoutMs?: number, maxTokens?: number, temperature?: number, now?: () => number }} input
  * @returns {Promise<{ text: string, usage: { input: number, output: number }, ms: number, model: string }>}
  */
-export async function qwenChat({ config, messages, fetcher = globalThis.fetch, timeoutMs = TIMEOUT_MS, maxTokens = 400, temperature = 0.3, now = Date.now }) {
+export async function qwenChat({ config, messages, fetcher = globalThis.fetch, timeoutMs = TIMEOUT_MS, maxTokens = 400, temperature = 0.3, json = true, now = Date.now }) {
   if (!config) throw new QwenError('ai_not_configured');
   const started = now();
   let response;
   try {
+    // Speech recognition answers in plain text; every other call must return a JSON object.
+    const body = json ? { model: config.model, messages, temperature, max_tokens: maxTokens, response_format: { type: 'json_object' } } : { model: config.model, messages };
     response = await fetcher(completionsUrl(config.baseUrl), {
       method: 'POST', redirect: 'error', signal: AbortSignal.timeout(timeoutMs),
       headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: config.model, messages, temperature, max_tokens: maxTokens, response_format: { type: 'json_object' } }),
+      body: JSON.stringify(body),
     });
   } catch (e) {
     throw new QwenError(e?.name === 'TimeoutError' || e?.name === 'AbortError' ? 'ai_timeout' : 'ai_network');

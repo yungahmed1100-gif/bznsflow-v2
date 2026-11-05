@@ -1026,6 +1026,40 @@ try {
     await page.screenshot({ path: `${OUT}/broadcast-chat-ar-${width}.png` });
     await context.close();
   }
+  // What customers send: a photo with what Layla saw, a voice note with its transcript, a file, one still loading and one that failed.
+  for (const [width, lang] of [[375, 'ar'], [1280, 'ar'], [375, 'en'], [1440, 'en']]) {
+    const state = fixture();
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+    const wav = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+    state.messages['c-k1'] = [
+      { id: 'p1', direction: 'in', text: 'هل هذه متوفرة؟', status: 'received', at: now - 5 * 60000, media: { kind: 'image', status: 'ready', url: png, text: 'A white villa with a pool.' } },
+      { id: 'v1', direction: 'in', text: '', status: 'received', at: now - 4 * 60000, media: { kind: 'audio', voice: true, status: 'ready', url: wav, text: 'عندكم فلل للإيجار في السيب؟' } },
+      { id: 'd1', direction: 'in', text: '', status: 'received', at: now - 3 * 60000, media: { kind: 'document', status: 'ready', url: 'https://files.test/q.pdf', filename: 'quote.pdf', size: 245760 } },
+      { id: 'w1', direction: 'in', text: '', status: 'received', at: now - 2 * 60000, media: { kind: 'image', status: 'pending', url: null } },
+      { id: 'f1', direction: 'in', text: '', status: 'received', at: now - 60000, media: { kind: 'audio', voice: true, status: 'failed', url: null } },
+    ];
+    const t = (en, ar) => (lang === 'ar' ? ar : en), tag = `media ${lang} ${width}`;
+    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=chats', handler: api(state) });
+    await page.getByRole('button', { name: /Aisha Al Balushi/ }).click();
+    const bubbles = page.locator('.ld-messages .ld-bubble');
+    await bubbles.first().waitFor();
+    assert.equal(await bubbles.nth(0).locator('img').getAttribute('src'), png, `${tag}: the photo shows`); count++;
+    assert.equal(await bubbles.nth(0).locator('img').getAttribute('alt'), 'A white villa with a pool.', `${tag}: the photo is described for screen readers`); count++;
+    await bubbles.nth(0).getByText(t('What Layla saw', 'ما رأته ليلى')).waitFor(); count++;
+    await bubbles.nth(0).getByText('هل هذه متوفرة؟').waitFor(); count++;
+    const audio = bubbles.nth(1).locator('audio');
+    assert.deepEqual([await audio.getAttribute('src'), await audio.getAttribute('controls'), await audio.getAttribute('aria-label')], [wav, '', t('Voice note', 'رسالة صوتية')], `${tag}: the voice note plays`); count++;
+    assert.ok((await audio.boundingBox()).height >= 44, `${tag}: the player is a 44px target`); count++;
+    await bubbles.nth(1).getByText('عندكم فلل للإيجار في السيب؟').waitFor(); count++;
+    assert.match(await bubbles.nth(2).locator('a').textContent(), /quote\.pdf · 240 KB/, `${tag}: a file shows its name and size`); count++;
+    await bubbles.nth(3).getByText(t('Loading…', 'جارٍ التحميل…')).waitFor(); count++;
+    await bubbles.nth(4).getByText(t('Couldn’t load this file', 'تعذّر تحميل الملف')).waitFor(); count++;
+    assert.equal(await page.locator('.ld-messages').getByText(/The customer sent/).count(), 0, `${tag}: no placeholder text`); count++;
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `${tag}: fits`); count++;
+    assert.deepEqual(await axe(page), [], tag); count++;
+    await page.screenshot({ path: `${OUT}/customer-media-${lang}-${width}.png`, fullPage: false });
+    await context.close();
+  }
 
   console.log(`${count} dashboard browser assertions passed at 320–1440px in English and Arabic. Synthetic API; no external network.`);
 } finally { await browser.close(); }

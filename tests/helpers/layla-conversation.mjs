@@ -143,7 +143,7 @@ export async function business(options = {}) {
     const r = await executeReview(h.m.ctx, { operation: 'bzns_publish', sessionHash: tenant.sessionHash, markdown, version: current.bznsDraft?.version || 0 }, h.m.now());
     assert.equal(r.ok, true, JSON.stringify(r));
   };
-  return { h, tenant, integration, hasib, say, envelope, ingest, turns, flush, runJob, queued, conversation, contact, sent, republish, model, channel: instagram ? 'instagram' : 'whatsapp' };
+  return { h, tenant, integration, hasib, say, envelope, ingest, turns, flush, runJob, queued, conversation, contact, sent, republish, model, store, fetcher, channel: instagram ? 'instagram' : 'whatsapp' };
 }
 
 /** Connect an Instagram professional account to the tenant, with a real sealed token. */

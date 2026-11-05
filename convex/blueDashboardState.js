@@ -17,9 +17,19 @@ const ok = value => ({ ok: true, value }), fail = reason => ({ ok: false, reason
 const clampLimit = (value, max) => Math.min(max, Math.max(1, Number.isSafeInteger(value) ? value : max));
 export const TIMEZONE_PATTERN = /^(?:UTC|[A-Za-z]+(?:[/_+-][A-Za-z0-9]+){1,3})$/;
 
-function publicMessage(m, now) {
-  return { id: m._id, direction: m.direction, text: m.textExpiresAt > now ? m.text : null, textExpired: !(m.textExpiresAt > now),
+async function publicMessage(ctx, m, now) {
+  const kept = m.textExpiresAt > now;
+  const media = m.media ? await messageMedia(ctx, m, kept) : null;
+  return { id: m._id, direction: m.direction, text: kept ? m.text : null, textExpired: !kept, ...(media ? { media } : {}),
     status: m.status, reason: m.reason || null, errorCode: m.errorCode ?? null, manual: !!m.manual, at: m.at };
+}
+// A message's photo, voice note, video or file, and what it says (a transcript or what the photo shows),
+// while the message's text is kept. Layla's product photos show the same way.
+async function messageMedia(ctx, m, kept) {
+  const { kind, status = 'ready', mimeType, size, filename, voice } = m.media;
+  const url = kept && m.media.storageId ? await ctx.storage.getUrl(m.media.storageId) : null;
+  return { kind, status: kept ? (url || status !== 'ready' ? status : 'failed') : 'expired', url: url || null, ...(mimeType ? { mimeType } : {}), ...(size ? { size } : {}),
+    ...(filename ? { filename } : {}), ...(voice ? { voice: true } : {}), ...(kept && m.mediaText ? { text: m.mediaText } : {}) };
 }
 // The header file a broadcast sent, shown in the bubble while the campaign still keeps it.
 async function headerMedia(ctx, campaign) {
@@ -57,7 +67,7 @@ async function lastMessage(ctx, conversationId, contactId, now) {
     const text = sentText(sent, now);
     return { direction: 'template', templateName: sent.campaign.template.name || '', text: text === null ? null : text.slice(0, 140), status: sent.send.status, at: sent.send.at };
   }
-  return m ? { direction: m.direction, text: m.textExpiresAt > now ? String(m.text || '').slice(0, 140) : null, status: m.status, at: m.at } : null;
+  return m ? { direction: m.direction, text: m.textExpiresAt > now ? String(m.text || '').slice(0, 140) : null, ...(m.media ? { media: { kind: m.media.kind, ...(m.media.voice ? { voice: true } : {}) } } : {}), status: m.status, at: m.at } : null;
 }
 function handoffFor(person) {
   return { state: person.handoffState || (person.takeover ? 'open' : 'none'), reason: person.handoffReason || (person.takeover ? 'human_attention' : ''), openedAt: person.handoffOpenedAt || null,
@@ -94,7 +104,7 @@ async function conversationFor(ctx, contact) {
 
 async function threadMessages(ctx, person, contact, before, limit, now) {
   const query = ctx.db.query('blueMessages').withIndex('by_conversation_at', q => before ? q.eq('conversationId', person._id).lt('at', before) : q.eq('conversationId', person._id));
-  const messages = (await query.order('desc').take(limit)).map(m => publicMessage(m, now));
+  const messages = await Promise.all((await query.order('desc').take(limit)).map(m => publicMessage(ctx, m, now)));
   const templates = [];
   for (const sent of await templateSendsFor(ctx, contact?._id, { before, limit })) templates.push(await publicTemplateSend(ctx, sent, now));
   const merged = [...messages, ...templates].sort((a, b) => b.at - a.at).slice(0, limit);
@@ -175,7 +185,7 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
       if (!person.takeover || ['resolved', 'returned'].includes(person.handoffState) || !ownsIntegration(tenant, person.integrationId) || (a.channel && (person.channel || 'whatsapp') !== a.channel)) continue;
       const item = await conversationItem(ctx, person, tenant, now);
       const [last] = await ctx.db.query('blueMessages').withIndex('by_conversation_direction_at', q => q.eq('conversationId', person._id).eq('direction', 'in')).order('desc').take(1);
-      item.lastCustomerMessage = last ? publicMessage(last, now) : null;
+      item.lastCustomerMessage = last ? await publicMessage(ctx, last, now) : null;
       items.push(item);
       if (items.length >= limit) break;
     }
