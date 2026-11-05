@@ -60,3 +60,17 @@ This is Release 1 of the approved plan; the plan's Release 2 (customer media) an
 - **Layla in context:** not yet observed on a real reply; the next customer reply to a broadcast is the live check.
 - **Customer media:** Dento Surg sent a photo, voice note or file at 18:26 Muscat on 2026-11-04. It is still discarded at the webhook; that is Release 2.
 - **MCP:** `messaging_state` does not list template sends, and `campaign_create` still cannot send image, video or PDF header templates.
+
+## Follow-up: no blank space when scrolling past the chat (`4861add`)
+- **Report:** Ahmed (2026-11-05), with a screenshot of blank paper under the reply box: "still the empty space when scrolling down".
+- **Cause:**
+  - In a browser at 1280×720, 1440×900 and 375×740, the dashboard shell fits the screen exactly: the page's scroll height equals the window. That holds with the founder bar too.
+  - Nothing set `overscroll-behavior`, so on macOS scrolling past the end of the messages or the chat list chained to the page. The page rubber-banded the whole shell up and showed blank paper.
+- **Change:** `html` and `body` on the dashboard no longer overscroll. `.ld-main`, `.ld-nav`, `.ld-conversations` and `.ld-messages` each contain their own scroll.
+- **Verification:**
+  - `tests/layla-dashboard-browser.mjs` checks the overscroll rules and that the page never scrolls, at 1440, 1024, 768, 375 and 320 px (627 assertions).
+  - Full `npm run test:release` passed.
+  - Headless Chromium has no elastic scrolling, so the bounce itself was not reproduced; this needs Ahmed's check on his Mac.
+- **Release:** Vercel only; no Convex change since `f39432c`.
+  - Deployed by Claude from a clean `git archive` as `dpl_CxiEGsE5UNGhohh5MoRguPaBKnBZ`; rollback is `dpl_4EX2zd4PoUAsqCVZkhDLmP8dqNnf`.
+  - The live CSS contains `html:has(.ld),html:has(.ld) body{overscroll-behavior:none}`, and the main pages return 200.
