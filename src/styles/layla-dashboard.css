@@ -22,6 +22,10 @@
 .ld *, .ld *::before, .ld *::after, .ld-dialog * { box-sizing: border-box; }
 /* App shell: the page never scrolls; panes do. Bottom padding clears the fixed Blue banner. */
 .ld { background: var(--paper); height: 100dvh; overflow: hidden; overflow: clip; padding-bottom: var(--banner); display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); grid-template-rows: var(--top) minmax(0, 1fr); }
+/* The shell fits the screen, so scrolling past the end of a list must not bounce the page: macOS
+   rubber-banding lifted the whole dashboard and showed blank paper under the chat. Each pane keeps its scroll. */
+html:has(.ld), html:has(.ld) body { overscroll-behavior: none; }
+.ld-main, .ld-nav, .ld-conversations, .ld-messages { overscroll-behavior: contain; }
 .ld[lang=ar] { --rail: 104px; }
 .ld-num { font-variant-numeric: tabular-nums; }
 .ld-visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

@@ -372,6 +372,10 @@ try {
     const listVisible = await page.locator('.ld-list').isVisible();
     assert.equal(listVisible, width > 768, `list beside thread at ${width}`); count++;
     assert.match(await page.locator('.ld-messages').textContent(), /Text removed after 30 days/); count++;
+    // Scrolling past the end of a pane never bounces the page and shows blank paper under the shell.
+    assert.deepEqual(await page.evaluate(() => [document.documentElement, document.body, ...document.querySelectorAll('.ld-main, .ld-messages, .ld-conversations')]
+      .map(e => getComputedStyle(e).overscrollBehaviorY)), ['none', 'none', 'contain', 'contain', 'contain'], `no page bounce at ${width}`); count++;
+    assert.equal(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight), true, `the page itself never scrolls at ${width}`); count++;
     await page.getByRole('switch', { name: /Layla is live in this chat/ }).click();
     await page.getByRole('switch', { name: /Layla is stopped in this chat/ }).waitFor();
     assert.ok(state.calls.some(c => c.action === 'takeover_handoff')); count++;
