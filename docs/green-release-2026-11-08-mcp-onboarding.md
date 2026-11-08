@@ -1,5 +1,7 @@
 # Green MCP and onboarding release — 8 November 2026
 
+**Scope subsequently corrected to MCP only by the owner.** See [the corrective release](green-release-2026-11-08-mcp-only.md). This document records the earlier deployment, not the final authorized scope.
+
 ## Authorization and source
 
 The owner explicitly requested verification followed by production deployment and confirmed:

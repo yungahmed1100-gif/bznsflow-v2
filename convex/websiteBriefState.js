@@ -63,7 +63,7 @@ export async function executeWebsiteBrief(ctx, a, now = Date.now()) {
   const owner = await ownerOf(ctx, a.sessionHash, now);
   if (!owner.account) return fail(owner.reason);
   const { account } = owner;
-  if (a.operation === 'get') return ok(await view(ctx, account, a.submittedOnly === true));
+  if (a.operation === 'get') return ok(await view(ctx, account));
   if (a.operation === 'upload_url') {
     if (!await spend(ctx, `website-brief:${account._id}:${Math.floor(now / DAY)}`, UPLOADS_PER_DAY, 2 * DAY, now)) return fail('upload_limit');
     return ok({ url: await ctx.storage.generateUploadUrl() });
@@ -83,13 +83,11 @@ export async function executeWebsiteBrief(ctx, a, now = Date.now()) {
 }
 
 /** The saved brief, or a start prefilled from the business details the owner already confirmed. */
-async function view(ctx, account, submittedOnly = false) {
-  const [brief, draft, project] = [await briefOf(ctx, account._id), submittedOnly ? null : await draftOf(ctx, account._id), await projectOf(ctx, account._id)];
-  // New submissions retain the email's display context. Older records fall back to current metadata.
-  const emailContext = submittedOnly ? brief?.emailContext : null;
-  const base = { account: emailContext?.account || { email: account.email, name: account.name || '' }, version: brief?.version || 0, submittedAt: brief?.submittedAt || null,
-    emailedAt: brief?.emailedAt || null, project: publicProject(project && emailContext ? { ...project, dueAt: emailContext.dueAt } : project), draft: draft ? { step: draft.step, updatedAt: draft.updatedAt } : null };
-  // The editor resumes the draft; email retries read only the submitted version and its files.
+async function view(ctx, account) {
+  const [brief, draft, project] = [await briefOf(ctx, account._id), await draftOf(ctx, account._id), await projectOf(ctx, account._id)];
+  const base = { account: { email: account.email, name: account.name || '' }, version: brief?.version || 0, submittedAt: brief?.submittedAt || null,
+    emailedAt: brief?.emailedAt || null, project: publicProject(project), draft: draft ? { step: draft.step, updatedAt: draft.updatedAt } : null };
+  // A draft in progress wins; then the last brief sent; then a start from what the owner already confirmed.
   const source = draft || brief;
   if (source) {
     return { ...base, fields: source.fields, prefilled: [], logo: source.logoId ? await fileUrl(ctx, source.logoId) : null,
@@ -193,13 +191,12 @@ async function submit(ctx, account, a, now) {
   const used = new Set([a.logoId, ...photoIds, ...docIds.map(d => d.id)].filter(Boolean));
   for (const f of files) if (!used.has(f.storageId)) { await ctx.db.delete(f._id); await ctx.storage.delete(f.storageId); }
   const version = (brief?.version || 0) + 1;
-  const project = await startProject(ctx, account._id, checked.value, now);
-  const emailContext = { account: { email: account.email, name: account.name || '' }, dueAt: project.dueAt };
-  const next = { accountId: account._id, version, fields: checked.value, photoIds, docIds, submittedAt: now, emailContext, ...(a.logoId ? { logoId: a.logoId } : {}) };
+  const next = { accountId: account._id, version, fields: checked.value, photoIds, docIds, submittedAt: now, ...(a.logoId ? { logoId: a.logoId } : {}) };
   if (brief) await ctx.db.replace(brief._id, next); else await ctx.db.insert('websiteBriefs', next);
   const draft = await draftOf(ctx, account._id);
   if (draft) await ctx.db.delete(draft._id);
-  return ok({ version, update: version > 1, account: emailContext.account, fields: checked.value, project: publicProject(project),
+  const project = await startProject(ctx, account._id, checked.value, now);
+  return ok({ version, update: version > 1, account: { email: account.email, name: account.name || '' }, fields: checked.value, project: publicProject(project),
     logo: a.logoId ? await fileUrl(ctx, a.logoId) : null, photos: await Promise.all(photoIds.map(id => fileUrl(ctx, id))), docs: await docsOf(ctx, docIds) });
 }
 

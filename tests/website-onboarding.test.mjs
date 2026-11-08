@@ -57,14 +57,6 @@ test('a registrar answer is offered only when free, not premium and within the p
   await assert.rejects(searchDomains(['nour.com'], { env: {}, fetcher: async () => new Response('', { status: 500 }) }), e => e.code === 'domain_check_unavailable');
 });
 
-test('an available domain still needs an explicit nonnegative numeric price', async () => {
-  const prices = [null, '', '   ', false, [], -1, 'not-a-price', undefined, 0, '11.25'];
-  const names = prices.map((_, i) => `nour-${i}.com`);
-  const fetcher = async () => Response.json({ results: prices.map((price, i) => ({ domain: names[i], available: true, price, premium: false })) });
-  const results = await searchDomains(names, { env: {}, fetcher });
-  assert.deepEqual(results.map(r => r.status), [...Array(8).fill('unavailable'), 'available', 'available']);
-});
-
 // ── Convex: drafts, the delivery project, Ahmed's queue ──────────────────────
 
 const tokens = { owner: 'a'.repeat(64), admin: 'e'.repeat(64), other: 'f'.repeat(64) };
@@ -191,54 +183,6 @@ const csrf = 'b'.repeat(64);
 const request = (method, body, url = '/api/layla-meta?surface=website-brief', token = tokens.owner) => ({ method, body, url,
   headers: { host: 'www.bznsflowai.com', origin: GREEN_ORIGIN, cookie: `bf_session=${token}; bf_csrf=${csrf}`, 'x-csrf-token': csrf } });
 const response = () => ({ headers: {}, setHeader(k, v) { this.headers[k] = v; }, getHeader(k) { return this.headers[k]; }, status(n) { this.statusCode = n; }, end(v) { this.body = JSON.parse(v); } });
-
-test('retrying a failed brief email sends the submitted snapshot while preserving the unfinished draft', async () => {
-  const f = await fixture();
-  const photo = f.m.putFile({ contentType: 'image/png' });
-  await f.brief({ operation: 'file_register', storageId: photo, kind: 'photo', fileCheck: 'ok' });
-  const sent = [];
-  let failEmail = true;
-  const store = async (operation, args) => {
-    const result = await executeWebsiteBrief(f.m.ctx, { operation, ...args }, f.m.now());
-    if (!result.ok) throw new PilotError(result.reason, 400);
-    return result.value;
-  };
-  const handler = createWebsiteBriefApi({ env: { ...env, RESEND_API_KEY: 're_test', AUTH_FROM: 'test@example.test' }, store,
-    fetcher: async (url, init) => {
-      assert.equal(url, 'https://api.resend.com/emails');
-      sent.push({ body: JSON.parse(init.body), key: init.headers['Idempotency-Key'] });
-      return failEmail ? Response.json({}, { status: 500 }) : Response.json({ id: 'synthetic-email' });
-    } });
-  const initial = response();
-  await handler(request('POST', { action: 'submit', version: 0, fields, photoIds: [photo] }), initial);
-  assert.deepEqual([initial.statusCode, initial.body.reason], [502, 'brief_email_failed']);
-  await f.brief({ operation: 'save_draft', step: 1, fields: { nameEn: 'Unsubmitted changes' }, photoIds: [] });
-  failEmail = false;
-  const retry = response();
-  await handler(request('POST', { action: 'resend' }), retry);
-  assert.equal(retry.statusCode, 200);
-  assert.deepEqual(sent[1], sent[0], 'the same submitted fields and attachments must use the same idempotency key');
-  assert.equal(f.m.table('websiteBriefs')[0].emailId, 'synthetic-email');
-  assert.equal((await f.brief({ operation: 'get' })).value.fields.nameEn, 'Unsubmitted changes', 'resend leaves the working draft intact');
-  const noRepeat = response();
-  await handler(request('POST', { action: 'resend' }), noRepeat);
-  assert.equal(noRepeat.body.emailed, true);
-  assert.equal(sent.length, 2, 'an acknowledged version is not sent again');
-});
-
-test('a brief email retry keeps its original account name and due date after delivery metadata changes', async () => {
-  const f = await fixture();
-  const submitted = (await f.brief({ operation: 'submit', version: 0, fields, photoIds: [] })).value;
-  await f.m.db.patch(f.accountId, { name: 'Changed profile name' });
-  const project = f.m.table('websiteProjects')[0];
-  await f.admin({ operation: 'project_update', projectId: project._id, action: 'set_due', dueAt: muscat('2026-11-02T17:00'), reason: 'Waiting for photos' });
-  const retry = (await f.brief({ operation: 'get', submittedOnly: true })).value;
-  assert.deepEqual(retry.account, submitted.account, 'the email idempotency key must keep the submitted identity');
-  assert.equal(retry.project.dueAt, submitted.project.dueAt, 'the same email key must retain the original message date');
-  const editor = (await f.brief({ operation: 'get' })).value;
-  assert.equal(editor.project.dueAt, muscat('2026-11-02T17:00'), 'the normal delivery tracker still shows the current date');
-  assert.equal(editor.account.name, 'Changed profile name');
-});
 
 test('a domain lookup asks Convex for the allowance first, and Latin-less text costs nothing', async () => {
   const calls = [], lookups = [];
