@@ -254,6 +254,7 @@ for (const requestedScope of [
         }),
     );
     assert.equal(privateMetadata.status, 400);
+    assert.match(await privateMetadata.text(), /alt="BznsFlow"/);
     const reg = await request("/oauth/reg", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -391,14 +392,15 @@ for (const requestedScope of [
     // Clients show this name and icon, so the owner can recognise the connector.
     const identity = sdkClient.getServerVersion();
     assert.equal(identity.title, "BznsFlow");
+    assert.match(identity.description, /permissions and approvals/);
+    assert.match(sdkClient.getInstructions(), /approval_required/);
     assert.equal(
       new URL(identity.icons[0].src).href,
       new URL("/mcp/bznsflow-icon.png", resource).href,
     );
-    assert.equal(
-      (await sdkClient.listTools()).tools[0].name,
-      "bznsflow_business_state",
-    );
+    const discovered = (await sdkClient.listTools()).tools;
+    assert.equal(discovered[0].name, "bznsflow_business_state");
+    assert.deepEqual(discovered[0].icons, identity.icons, 'server and tool identities share the BznsFlow mark');
     const answer = await sdkClient.callTool({
       name: "bznsflow_business_state",
       arguments: {},

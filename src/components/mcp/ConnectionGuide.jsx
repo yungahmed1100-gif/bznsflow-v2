@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { MCP_ICON_PATH } from "../../../config/mcp/identity.js";
 
 const CLIENTS = [
   { id: "claude", name: "Claude", logo: "/mcp/claude.svg" },
@@ -7,7 +8,7 @@ const CLIENTS = [
   { id: "codex", name: "Codex", logo: "/mcp/openai.png" },
 ];
 const BROWSER_CLIENTS = new Set(["claude", "chatgpt"]);
-export const BZNSFLOW_ICON = "/mcp/bznsflow-icon.png";
+export const BZNSFLOW_ICON = MCP_ICON_PATH;
 
 // The logo of the AI app behind a connection, from its registered name or
 // client ID (a CIMD client ID is the app's own URL). Unknown apps get none.
@@ -144,17 +145,17 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
       : client === "chatgpt"
         ? [
             [
-              tr("Turn on Developer mode", "فعّل وضع المطوّر"),
+              tr("Open ChatGPT Plugins", "افتح Plugins في ChatGPT"),
               tr(
-                "In ChatGPT, open Settings → Apps & Connectors → Advanced settings and turn on Developer mode. On a Business or Enterprise workspace, an admin may need to allow it first.",
-                "في ChatGPT، افتح Settings ثم \u2066Apps & Connectors\u2069 ثم \u2066Advanced settings\u2069 وفعّل \u2066Developer mode\u2069. في حسابات Business أو Enterprise، قد يحتاج المسؤول إلى السماح به أولًا.",
+                "Open Plugins, select +, then Add custom MCP server. Current ChatGPT does not require Developer mode for this flow. Your account or workspace must allow custom MCP connections.",
+                "افتح Plugins، ثم +، ثم \u2066Add custom MCP server\u2069. لا يتطلب هذا المسار الحالي تفعيل وضع المطوّر. يجب أن يسمح حسابك أو مساحة عملك بالاتصالات المخصّصة.",
               ),
             ],
             [
               tr("Create the BznsFlow connector", "أنشئ اتصال BznsFlow"),
               tr(
-                "In Apps & Connectors choose Create. Name it BznsFlow, add the BznsFlow icon below, paste the address into the MCP server URL field and choose OAuth. You do not need an API key.",
-                "في \u2066Apps & Connectors\u2069 اختر Create. سمّه BznsFlow، وأضف أيقونة BznsFlow أدناه، والصق الرابط في خانة \u2066MCP server URL\u2069 واختر OAuth. لا تحتاج إلى مفتاح API.",
+                "Name it BznsFlow, paste the HTTPS address below and choose OAuth. Review the warning before creating the plugin. If an icon field is offered, use the BznsFlow icon below. Older ChatGPT layouts may use Settings → Apps → Create or Scan Tools.",
+                "سمّه BznsFlow، والصق رابط HTTPS أدناه، واختر OAuth. راجع التنبيه قبل إنشاء الاتصال. إذا ظهرت خانة للأيقونة، استخدم أيقونة BznsFlow أدناه. قد تعرض الواجهات السابقة Settings ثم Apps ثم Create أو \u2066Scan Tools\u2069.",
               ),
             ],
             [
@@ -170,8 +171,8 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
             [
               tr("Use BznsFlow in a chat", "استخدم BznsFlow في المحادثة"),
               tr(
-                "Start a new chat, open + → Developer mode and turn on BznsFlow. Try the sample request below, then check that your connection is verified on this page.",
-                "ابدأ محادثة جديدة، وافتح + ثم \u2066Developer mode\u2069 وفعّل BznsFlow. جرّب الطلب أدناه، ثم تأكّد من ظهور اتصال مؤكّد في هذه الصفحة.",
+                "Wait for tool discovery to finish, then start a new chat with BznsFlow enabled. Try the read-only request below. After a server update, open the plugin connection and use Refresh before starting a new chat.",
+                "انتظر اكتمال اكتشاف الأدوات، ثم ابدأ محادثة جديدة مع تفعيل BznsFlow. جرّب طلب القراءة أدناه. بعد تحديث الخادم، افتح إعدادات الاتصال واختر Refresh قبل بدء محادثة جديدة.",
               ),
             ],
           ]
@@ -277,7 +278,7 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
                 {c.id === "claude"
                   ? tr("Browser · easiest start", "المتصفح · البداية الأسهل")
                   : c.id === "chatgpt"
-                    ? tr("Browser · Developer mode", "المتصفح · وضع المطوّر")
+                    ? tr("Browser · Plugins", "المتصفح · Plugins")
                     : c.id === "codex"
                       ? tr("OpenAI · command line", "OpenAI · سطر الأوامر")
                       : tr("Advanced · command line", "متقدم · سطر الأوامر")}
@@ -363,8 +364,8 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
                 <h3>{tr("BznsFlow icon", "أيقونة BznsFlow")}</h3>
                 <p>
                   {tr(
-                    "Add it to the connector so you can spot BznsFlow in ChatGPT.",
-                    "أضفها إلى الاتصال لتتعرّف على BznsFlow بسهولة في ChatGPT.",
+                    "BznsFlow advertises this logo with its server and tools. If ChatGPT offers a custom icon field, upload it there. Display depends on the client; existing connections may need Refresh.",
+                    "يرسل BznsFlow هذه الأيقونة ضمن بيانات الخادم والأدوات. إذا عرض ChatGPT خانة لأيقونة مخصّصة، ارفعها هناك. يعتمد عرضها على التطبيق؛ وقد يحتاج الاتصال الحالي إلى Refresh.",
                   )}
                 </p>
                 <a
@@ -395,8 +396,8 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
               rel="noopener noreferrer"
             >
               {tr(
-                "OpenAI’s Developer mode guide ↗",
-                "دليل وضع المطوّر من OpenAI ↗",
+                "OpenAI’s connection guide ↗",
+                "دليل الاتصال من OpenAI ↗",
               )}
             </a>
           )}
@@ -491,8 +492,8 @@ export function McpHelp({ ar }) {
           "راجع إعدادات Connectors ونوع حسابك. في حسابات الفرق والمؤسسات، قد يحتاج مالك المؤسسة إلى إضافة الاتصال أولًا. راجع دليل Claude أعلاه لمعرفة الخيارات المتاحة لحسابك.",
         ],
         [
-          "لا يظهر Create أو وضع المطوّر في ChatGPT",
-          "وضع المطوّر متاح على ChatGPT في المتصفح. الاتصالات الكاملة التي تعدّل البيانات متاحة لباقات Business وEnterprise وEdu، وقد يحتاج مسؤول المساحة إلى تفعيل وضع المطوّر لك أولًا. في الباقات الأخرى قد يقتصر الاتصال على القراءة. راجع دليل OpenAI أعلاه.",
+          "لا يظهر خيار إضافة MCP في ChatGPT",
+          "في الواجهة الحالية، افتح Plugins ثم + ثم Add custom MCP server. لا يلزم وضع المطوّر لهذا المسار. تعتمد الإتاحة على نوع الحساب وصلاحيات مساحة العمل. قد يحتاج المسؤول إلى السماح بإنشاء الاتصالات. راجع دليل OpenAI أعلاه، أو Settings ثم Apps في الواجهات السابقة.",
         ],
         [
           "انتهى طلب الاتصال أو فتح حسابًا آخر",
@@ -517,8 +518,8 @@ export function McpHelp({ ar }) {
           "Check Connectors settings and your account type. On Team and Enterprise accounts, an organization owner may need to add the connector first. See Claude’s guide above for the options available to your account.",
         ],
         [
-          "I can’t find Create or Developer mode in ChatGPT",
-          "Developer mode is on ChatGPT for the web. Full connectors that can make changes are available on Business, Enterprise and Edu plans, and a workspace admin may need to turn on Developer mode for you first. Other plans may be limited to reading. See OpenAI’s guide above.",
+          "I can’t find the add-MCP option in ChatGPT",
+          "In the current layout, open Plugins → + → Add custom MCP server. Developer mode is not required for this flow. Availability depends on your account and workspace permissions; an admin may need to allow custom connections. See OpenAI’s guide above, or Settings → Apps in older layouts.",
         ],
         [
           "The connection expired or opened the wrong account",

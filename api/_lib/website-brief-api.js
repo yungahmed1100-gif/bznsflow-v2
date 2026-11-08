@@ -44,8 +44,9 @@ export async function searchDomains(names, { env = process.env, fetcher = fetch 
   return names.map(domain => {
     const r = results.get(domain);
     const free = r?.available === true || r?.available === 'true';
-    const price = Number(r?.price);
-    const status = !r ? 'unknown' : !free ? 'taken' : r.premium || !Number.isFinite(price) || price > cap ? 'unavailable' : 'available';
+    const explicitPrice = typeof r?.price === 'number' || (typeof r?.price === 'string' && r.price.trim() !== '');
+    const price = explicitPrice ? Number(r.price) : NaN;
+    const status = !r ? 'unknown' : !free ? 'taken' : r.premium || !Number.isFinite(price) || price < 0 || price > cap ? 'unavailable' : 'available';
     return { domain, status };
   });
 }
@@ -108,7 +109,7 @@ export function createWebsiteBriefApi({ env = process.env, fetcher = fetch, stor
         return send(res, 200, { ok: true, results: await searchDomains(names, { env, fetcher }) }, { vary: 'Cookie' });
       }
       if (body.action === 'resend') {
-        const brief = await store('get', { sessionHash });
+        const brief = await store('get', { sessionHash, submittedOnly: true });
         if (!brief.version || brief.emailedAt) return send(res, 200, { ok: true, version: brief.version, emailed: !!brief.emailedAt }, { vary: 'Cookie' });
         await email(sessionHash, { ...brief, update: brief.version > 1 });
         return send(res, 200, { ok: true, version: brief.version, emailed: true }, { vary: 'Cookie' });

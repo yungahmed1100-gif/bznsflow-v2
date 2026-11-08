@@ -31,7 +31,8 @@
     "diagnose:global": "node scripts/check-global-reachability.mjs",
     "monitoring:test": "checkly test",
     "monitoring:deploy": "checkly deploy",
-    "gen:mcp": "node scripts/gen-mcp-contracts.mjs"
+    "gen:mcp": "node scripts/gen-mcp-contracts.mjs",
+    "mcp:health": "node scripts/check-mcp-health.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",

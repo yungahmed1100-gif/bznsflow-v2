@@ -2,6 +2,10 @@
 
 Status (16 October 2026, afternoon): **integrated onto the live Green source and accepted on the isolated candidate. Ready for the Green deploy, which Ahmed authorized and runs.** Branch `release/mcp-integration-2026-10-16`. See [the 16 October integrated acceptance](#integrated-acceptance-16-october-2026) below and the [Green release record](../green-release-2026-10-16-mcp.md). The sections that follow it record the earlier, pre-integration evidence from branch `feat/bznsflow-mcp` (base `9f3a6a4`).
 
+## Verification recheck — 8 November 2026
+
+See [the current local and public-boundary verification](verification-2026-11-08.md). It adds a protocol-to-domain regression journey and read-only checks of production discovery, anonymous admission, signing-key metadata and CORS. It does not establish a new production deployment or signed-in real-client acceptance. The dated release records below remain historical observations.
+
 ## Connection flow and activity fixes (16 October 2026, night)
 
 Found in Ahmed's first live ChatGPT connection:
