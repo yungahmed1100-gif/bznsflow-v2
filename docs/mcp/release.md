@@ -4,7 +4,7 @@ Status (16 October 2026, afternoon): **integrated onto the live Green source and
 
 ## Verification recheck — 8 November 2026
 
-The owner subsequently authorized the scoped MCP/onboarding release. Source `05f9c65` is live on Green as `dpl_BW2tkHS94bmny6SpPYXnsJoUfpDV`, with the additive Convex update deployed first. Public MCP health passed 13/13 after promotion. Earlier hero/visual/messaging changes were excluded. See [the production release record](../green-release-2026-11-08-mcp-onboarding.md); signed-in ChatGPT acceptance remains the owner's follow-up.
+The owner's final scope is **MCP only**. Source `63fb0da` is live on Green as `dpl_HENxf5PXasHe8Eudb2AVDoMpEUm6`; onboarding API/functions/schema were restored to baseline. Public MCP health passed 13/13 after correction. See [the MCP-only production record](../green-release-2026-11-08-mcp-only.md). The [earlier MCP/onboarding deployment](../green-release-2026-11-08-mcp-onboarding.md) is superseded. Signed-in ChatGPT acceptance remains the owner's follow-up.
 
 See [the current local and public-boundary verification](verification-2026-11-08.md). It adds a protocol-to-domain regression journey and read-only checks of production discovery, anonymous admission, signing-key metadata and CORS. It does not establish a new production deployment or signed-in real-client acceptance. The dated release records below remain historical observations.
 
