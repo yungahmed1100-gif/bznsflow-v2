@@ -354,12 +354,22 @@ try {
       ]);
       assert.ok(consented);
       checks++;
+      // The approval reads as an action with its values, not as raw JSON.
+      const card = page.locator("#approval-run-1");
+      assert.match(await card.locator("h3").innerText(), lang === "ar" ? /المراسلة · pause/ : /Messaging · pause/);
+      assert.equal(await card.locator("pre").isVisible(), false, "the exact request is folded away");
+      checks++;
       await page
         .getByRole("button", {
           name: lang === "ar" ? "الموافقة على الإجراء" : "Approve this action",
           exact: true,
         })
         .click();
+      await page
+        .getByText(lang === "ar" ? /تمت الموافقة\. اطلب من مساعدك/ : /Approved\. Ask your assistant to retry/)
+        .first()
+        .waitFor();
+      checks++;
       await page
         .getByText(
           lang === "ar"
@@ -421,8 +431,16 @@ try {
           exact: true,
         })
         .click();
+      assert.equal(revoked, false, "disconnecting asks first");
       await page
-        .getByText(lang === "ar" ? "غير متصل" : "Disconnected", { exact: true })
+        .getByRole("button", {
+          name: lang === "ar" ? "نعم، اقطع الاتصال" : "Yes, disconnect",
+          exact: true,
+        })
+        .click();
+      await page
+        .getByText(lang === "ar" ? "الاتصالات السابقة" : "Past connections")
+        .first()
         .waitFor();
       assert.ok(revoked);
       checks++;

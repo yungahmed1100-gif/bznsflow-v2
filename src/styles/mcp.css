@@ -689,3 +689,88 @@
 .mcp-hero-compact .mcp-hero-note {
   display: none;
 }
+
+/* Approvals: what changes first, the exact request on demand. */
+.mcp-approval.is-target {
+  border-color: var(--orange-ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--orange-ink) 22%, transparent);
+}
+.mcp-approval h3:focus-visible {
+  outline: 2px solid var(--green-ink);
+  outline-offset: 4px;
+}
+.mcp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.mcp-tags li {
+  padding: 2px 10px;
+  border: 1px solid var(--orange-ink);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+.mcp-fields {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  gap: 6px 16px;
+  margin: 0 0 12px;
+}
+.mcp-fields > div {
+  display: contents;
+}
+.mcp-fields dt {
+  color: var(--text-secondary);
+  text-align: start;
+}
+.mcp-fields dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .mcp-fields {
+    grid-template-columns: 1fr;
+  }
+  .mcp-fields dd {
+    margin-block-end: 6px;
+  }
+}
+.mcp-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.mcp-danger {
+  background: var(--coral-ink);
+  border-color: var(--coral-ink);
+  color: var(--bg-primary);
+}
+.mcp-past {
+  margin-block-start: 16px;
+}
+.mcp-past summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.mcp-past ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mcp-past li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-hover);
+}
+.mcp-result[data-tone="neutral"] {
+  color: var(--text-secondary);
+}

@@ -9,6 +9,7 @@ import {
   ClientMark,
   BZNSFLOW_ICON,
 } from "../components/mcp/ConnectionGuide";
+import { ApprovalCard } from "../components/mcp/ApprovalCard";
 const COPIED_MS = 2500;
 const SAVED_MS = 4000;
 // While the owner is mid-connection (a new connection not yet verified, or an
@@ -32,7 +33,15 @@ const DOMAINS = {
   onboarding: ["Onboarding", "الإعداد"],
   requests: ["Requests", "الطلبات"],
   setup: ["Setup", "الإعداد"],
+  workspace: ["Workspace", "مساحة العمل"],
+  tools: ["Tools", "الأدوات"],
+  website: ["Website", "الموقع"],
+  email: ["Email", "البريد"],
+  billing: ["Billing", "الفوترة"],
 };
+const DAY_MS = 86400000;
+const RENEW_SOON_DAYS = 5;
+const isActive = (c) => !c.revokedAt && c.expiresAt > Date.now();
 const sameSet = (a = [], b = []) =>
   a.length === b.length && a.every((v) => b.includes(v));
 function readPendingPolicy() {
@@ -77,6 +86,12 @@ const RESULT_LABELS = {
   submitted: ["Submitted", "تم الإرسال إلى المزوّد"],
   policy_changed: ["Permissions updated", "تم تحديث الصلاحيات"],
   revoked: ["Disconnected", "تم قطع الاتصال"],
+  approval_expired: ["Approval expired", "انتهت مهلة الموافقة"],
+  invalid_arguments: ["Refused: invalid request", "مرفوض: طلب غير صالح"],
+  tool_not_allowed: ["Refused: not permitted", "مرفوض: غير مسموح"],
+  rate_limited: ["Refused: too many calls", "مرفوض: طلبات كثيرة"],
+  approval_rejected: ["Refused: you rejected it", "مرفوض: رفضته"],
+  request_cancelled: ["Refused: request cancelled", "مرفوض: الطلب ملغى"],
 };
 const RESULT_TONES = {
   completed: "green",
@@ -86,6 +101,8 @@ const RESULT_TONES = {
   approval_required: "yellow",
   ready: "yellow",
   submitted: "yellow",
+  cancelled: "neutral",
+  revoked: "neutral",
 };
 function activityName(tool, ar) {
   if (tool === "connection") return ar ? "الاتصال" : "Connection";
@@ -93,6 +110,15 @@ function activityName(tool, ar) {
   const area = DOMAINS[domain]?.[ar ? 1 : 0] || domain;
   return { area, action: rest.join(" ") };
 }
+const DONE = {
+  policy: ["Permissions saved.", "تم حفظ الصلاحيات."],
+  approve: [
+    "Approved. Ask your assistant to retry the same request now.",
+    "تمت الموافقة. اطلب من مساعدك إعادة المحاولة بالطلب نفسه الآن.",
+  ],
+  reject: ["Rejected. Nothing was changed.", "تم الرفض. لم يتغيّر شيء."],
+  revoke: ["Disconnected. The assistant can no longer reach your workspace.", "تم قطع الاتصال. لم يعد بإمكان المساعد الوصول إلى مساحة عملك."],
+};
 const CATEGORIES = {
   messages: ["Messages and campaigns", "الرسائل والحملات"],
   finance: ["Prices and financial approvals", "الأسعار والموافقات المالية"],
@@ -142,12 +168,57 @@ const ERRORS = {
     "The connection service is not ready yet.",
     "خدمة الاتصال غير جاهزة بعد.",
   ],
+  connection_limit: [
+    "You already have 10 active connections. Disconnect one before adding another.",
+    "لديك ١٠ اتصالات فعّالة. اقطع أحدها قبل إضافة اتصال جديد.",
+  ],
+  approval_limit: [
+    "Too many requests are waiting. Approve or reject some first.",
+    "هناك طلبات كثيرة بانتظارك. وافق على بعضها أو ارفضها أولًا.",
+  ],
+  approval_not_found: [
+    "This approval was already handled or has expired.",
+    "تمت معالجة هذا الطلب أو انتهت صلاحيته.",
+  ],
+  connection_revoked: [
+    "This connection is no longer active. Reconnect from your assistant.",
+    "هذا الاتصال لم يعد فعّالًا. أعد الربط من مساعدك.",
+  ],
+  connection_not_found: [
+    "This connection was not found. Reload the page.",
+    "لم يُعثر على هذا الاتصال. أعد تحميل الصفحة.",
+  ],
+  reauthorization_required: [
+    "To allow changes, reconnect from your assistant and grant change access.",
+    "للسماح بالتعديلات، أعد الربط من مساعدك وامنح صلاحية التعديل.",
+  ],
+  access_changed: [
+    "Your plan or permissions no longer include this action.",
+    "لم تعد باقتك أو صلاحياتك تشمل هذا الإجراء.",
+  ],
+  rate_limited: [
+    "Too many attempts. Wait a minute and try again.",
+    "محاولات كثيرة. انتظر دقيقة ثم حاول مجددًا.",
+  ],
+  csrf: [
+    "Your page session expired. Reload the page and try again.",
+    "انتهت جلسة الصفحة. أعد تحميلها وحاول مجددًا.",
+  ],
+  sign_in_required: [
+    "Sign in again to continue.",
+    "سجّل الدخول مجددًا للمتابعة.",
+  ],
+  unavailable: [
+    "BznsFlow could not be reached. Check your connection and try again.",
+    "تعذّر الوصول إلى BznsFlow. تحقّق من الاتصال وحاول مجددًا.",
+  ],
   mcp_pilot_only: [
     "AI connections are temporarily limited. Please try again later.",
     "اتصالات الذكاء الاصطناعي محدودة مؤقتًا. حاول مرة أخرى لاحقًا.",
   ],
 };
 function Connection({ connection: c, ar, busy, saved, onSave, onRevoke }) {
+  const [confirming, setConfirming] = useState(false);
   const [areas, setAreas] = useState(c.areas || Object.keys(AREAS)),
     [direct, setDirect] = useState(c.direct),
     [write, setWrite] = useState(c.scopes.includes("workspace:write"));
@@ -195,7 +266,23 @@ function Connection({ connection: c, ar, busy, saved, onSave, onRevoke }) {
       <p>
         {ar ? "ينتهي: " : "Expires: "}
         {new Date(c.expiresAt).toLocaleDateString(ar ? "ar-OM" : "en-GB")}
+        {!inactive && (
+          <span className="mcp-muted">
+            {" · "}
+            {(() => {
+              const days = Math.max(0, Math.ceil((c.expiresAt - Date.now()) / DAY_MS));
+              return ar ? `بعد ${days} يوم` : `in ${days} day${days === 1 ? "" : "s"}`;
+            })()}
+          </span>
+        )}
       </p>
+      {!inactive && c.expiresAt - Date.now() < RENEW_SOON_DAYS * DAY_MS && (
+        <p className="mcp-notice">
+          {ar
+            ? "ينتهي هذا الاتصال قريبًا. أعد الربط من مساعدك لمتابعة الاستخدام."
+            : "This connection ends soon. Reconnect from your assistant to keep using it."}
+        </p>
+      )}
       {!inactive && (
         <>
           <fieldset disabled={busy}>
@@ -276,13 +363,25 @@ function Connection({ connection: c, ar, busy, saved, onSave, onRevoke }) {
                   ? "حفظ الصلاحيات"
                   : "Save permissions"}
             </button>
-            <button
-              className="mcp-secondary"
-              disabled={busy}
-              onClick={() => onRevoke(c.id)}
-            >
-              {ar ? "قطع الاتصال" : "Disconnect"}
-            </button>
+            {confirming ? (
+              <span className="mcp-confirm" role="group" aria-label={ar ? "تأكيد قطع الاتصال" : "Confirm disconnect"}>
+                <span>{ar ? `قطع ${c.clientName}؟` : `Disconnect ${c.clientName}?`}</span>
+                <button className="mcp-danger" disabled={busy} onClick={() => onRevoke(c.id)}>
+                  {ar ? "نعم، اقطع الاتصال" : "Yes, disconnect"}
+                </button>
+                <button className="mcp-secondary" disabled={busy} onClick={() => setConfirming(false)}>
+                  {ar ? "تراجع" : "Keep connected"}
+                </button>
+              </span>
+            ) : (
+              <button
+                className="mcp-secondary"
+                disabled={busy}
+                onClick={() => setConfirming(true)}
+              >
+                {ar ? "قطع الاتصال" : "Disconnect"}
+              </button>
+            )}
           </div>
         </>
       )}
@@ -303,6 +402,8 @@ export default function McpConnections({ lang = "ar" }) {
     [busy, setBusy] = useState(false),
     [copied, setCopied] = useState(""),
     [saved, setSaved] = useState(false),
+    [done, setDone] = useState(""),
+    [target, setTarget] = useState(""),
     [savedId, setSavedId] = useState(""),
     [consentAreas, setConsentAreas] = useState(Object.keys(AREAS));
   // Confirmations are brief; errors and copy guidance stay until the next action.
@@ -378,6 +479,7 @@ export default function McpConnections({ lang = "ar" }) {
       return;
     }
     setEndpoint(`${window.location.origin}/api/mcp`);
+    setTarget(new URLSearchParams(window.location.search).get("approval") || "");
     let live = true;
     load()
       .then(() => {
@@ -462,6 +564,7 @@ export default function McpConnections({ lang = "ar" }) {
         return;
       }
       setSaved(true);
+      setDone(body.action);
       if (body.action === "policy") setSavedId(body.connectionId);
       await load();
     } catch {
@@ -502,7 +605,7 @@ export default function McpConnections({ lang = "ar" }) {
       <McpHero ar={ar} compact={!!consent || !!data?.approvals?.length} />
       <div role="status" aria-live="polite">
         {status}
-        {saved && tr("Saved.", "تم الحفظ.")}
+        {saved && (DONE[done] || DONE.policy)[ar ? 1 : 0]}
         {copied && (
           <span className="sr-only">
             {tr(`${copied} copied.`, `تم نسخ ${copied}.`)}
@@ -629,8 +732,14 @@ export default function McpConnections({ lang = "ar" }) {
             )}
           </p>
           <div className="mcp-actions">
+            {!consentAreas.length && (
+              <p className="mcp-muted" id="mcp-consent-empty">
+                {tr("Choose at least one area to continue.", "اختر مجالًا واحدًا على الأقل للمتابعة.")}
+              </p>
+            )}
             <button
-              disabled={busy}
+              disabled={busy || !consentAreas.length}
+              aria-describedby={consentAreas.length ? undefined : "mcp-consent-empty"}
               onClick={() =>
                 action({
                   action: "consent",
@@ -667,64 +776,33 @@ export default function McpConnections({ lang = "ar" }) {
                 {tr("No pending approvals.", "لا توجد طلبات بانتظار الموافقة.")}
               </p>
             )}
-            {data.approvals.map((a) => (
-              <article id={`approval-${a.id}`} className="mcp-panel" key={a.id}>
-                <h3 dir="ltr">
-                  {a.tool.replace(/^bznsflow_/, "").replaceAll("_", " ")}
-                </h3>
-                <p>
-                  {tr(
-                    "Review the exact changes below. After approving, ask your assistant to retry the same request.",
-                    "راجع التعديلات أدناه. بعد الموافقة اطلب من مساعدك إعادة المحاولة بالطلب نفسه.",
-                  )}
-                </p>
-                <p>
-                  {tr("Expires: ", "ينتهي: ")}
-                  {new Date(a.expiresAt).toLocaleTimeString(
-                    ar ? "ar-OM" : "en-GB",
-                  )}
-                </p>
-                <pre dir="auto">{JSON.stringify(a.args, null, 2)}</pre>
-                {a.preview && (
-                  <details>
-                    <summary>
-                      {tr(
-                        "Included records and permissions",
-                        "السجلات والصلاحيات المشمولة",
-                      )}
-                    </summary>
-                    <pre dir="auto">{JSON.stringify(a.preview, null, 2)}</pre>
-                  </details>
-                )}
-                <div className="mcp-actions">
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      action({
-                        action: "approve",
-                        connectionId: a.connectionId,
-                        runId: a.id,
-                      })
-                    }
-                  >
-                    {tr("Approve this action", "الموافقة على الإجراء")}
-                  </button>
-                  <button
-                    className="mcp-secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      action({
-                        action: "reject",
-                        connectionId: a.connectionId,
-                        runId: a.id,
-                      })
-                    }
-                  >
-                    {tr("Reject", "رفض")}
-                  </button>
-                </div>
-              </article>
-            ))}
+            {target && !data.approvals.some((a) => a.id === target) && (
+              <p className="mcp-notice" role="status">
+                {message("approval_not_found")}
+              </p>
+            )}
+            {data.approvals.map((a) => {
+              const name = activityName(a.tool, ar);
+              return (
+                <ApprovalCard
+                  key={a.id}
+                  approval={a}
+                  ar={ar}
+                  busy={busy}
+                  target={a.id === target}
+                  title={`${name.area} · ${name.action}`}
+                  categories={(a.preview?.categories || [])
+                    .filter((c) => CATEGORIES[c])
+                    .map((c) => CATEGORIES[c][ar ? 1 : 0])}
+                  onApprove={() =>
+                    action({ action: "approve", connectionId: a.connectionId, runId: a.id })
+                  }
+                  onReject={() =>
+                    action({ action: "reject", connectionId: a.connectionId, runId: a.id })
+                  }
+                />
+              );
+            })}
           </section>
           <section className="mcp-section">
             <h2>{tr("Your connections", "اتصالاتك")}</h2>
@@ -738,7 +816,7 @@ export default function McpConnections({ lang = "ar" }) {
                 "يُؤكّد الاتصال بعد وصول مساعدك بنجاح إلى BznsFlow.",
               )}
             </p>
-            {!data.connections.length && (
+            {!data.connections.some(isActive) && (
               <p className="mcp-panel">
                 {tr(
                   "No assistants connected yet. Follow the setup guide below.",
@@ -747,7 +825,7 @@ export default function McpConnections({ lang = "ar" }) {
               </p>
             )}
             <div className="mcp-grid">
-              {data.connections.map((c) => (
+              {data.connections.filter(isActive).map((c) => (
                 <Connection
                   key={`${c.id}-${c.version}`}
                   connection={c}
@@ -771,6 +849,30 @@ export default function McpConnections({ lang = "ar" }) {
                 />
               ))}
             </div>
+            {data.connections.some((c) => !isActive(c)) && (
+              <details className="mcp-past">
+                <summary>
+                  {tr("Past connections", "الاتصالات السابقة")} (
+                  {data.connections.filter((c) => !isActive(c)).length})
+                </summary>
+                <ul>
+                  {data.connections
+                    .filter((c) => !isActive(c))
+                    .map((c) => (
+                      <li key={c.id}>
+                        <ClientMark name={c.clientName} id={c.clientId} size={24} />
+                        <span>{c.clientName}</span>
+                        <span className="mcp-muted">
+                          {c.revokedAt
+                            ? tr("Disconnected ", "قُطع في ")
+                            : tr("Expired ", "انتهى في ")}
+                          {new Date(c.revokedAt || c.expiresAt).toLocaleDateString(ar ? "ar-OM" : "en-GB")}
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              </details>
+            )}
           </section>
           <section className="mcp-section">
             <h2>{tr("Recent activity", "النشاط الأخير")}</h2>
