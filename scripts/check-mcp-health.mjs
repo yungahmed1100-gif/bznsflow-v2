@@ -46,7 +46,8 @@ await Promise.all([
     return { status: response.status, resource: value.resource };
   }),
   check('unauthenticated_admission', async () => {
-    const { response } = await json('/api/mcp', 401);
+    // Clients start with a POST (initialize); that is where the OAuth challenge must appear.
+    const { response } = await json('/api/mcp', 401, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'bznsflow-health', version: '1' } } }) });
     const challenge = response.headers.get('www-authenticate') || '';
     assert.ok(challenge.includes(`resource_metadata="${origin}/.well-known/oauth-protected-resource/api/mcp"`));
     assert.match(challenge, /workspace:read/);

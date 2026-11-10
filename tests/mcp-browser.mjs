@@ -24,6 +24,7 @@ try {
         consented = false,
         // The first consent is refused like a stale sign-in, as on 10 November.
         consentRefusals = 1,
+        codesSent = 0,
         policy = false;
       const connection = {
         id: "synthetic-connection",
@@ -55,6 +56,16 @@ try {
             contentType: "application/json",
             body: JSON.stringify(body),
           });
+        // The in-place identity check: one emailed code, then a fresh session.
+        if (url.pathname === "/api/auth-code") {
+          assert.equal(route.request().postDataJSON().email, "synthetic@example.com");
+          codesSent++;
+          return json({ ok: true });
+        }
+        if (url.pathname === "/api/auth-session" && route.request().method() === "POST")
+          return route.request().postDataJSON().code === "123456"
+            ? json({ ok: true, account: { email: "synthetic@example.com" } })
+            : json({ ok: false, reason: "code_invalid" }, 409);
         if (url.pathname === "/api/auth-session")
           return json({
             ok: true,
@@ -342,38 +353,37 @@ try {
       );
       assert.deepEqual(axe.violations, [], `${lang} ${width} accessibility`);
       checks++;
-      // A refused consent is explained next to the button, in view, with the way forward.
+      // A stale sign-in is confirmed inside the card with an emailed code, then the same
+      // consent continues by itself; the owner is never sent away to sign in again.
       await page
         .getByRole("button", {
           name: lang === "ar" ? "المتابعة بهذا الحساب" : "Continue with this account",
           exact: true,
         })
         .click();
-      const refusal = page.locator(".mcp-consent [role=alert]");
-      await refusal.waitFor();
-      await page.waitForTimeout(600);
-      assert.ok(await refusal.isVisible());
-      const box = await refusal.boundingBox(),
+      const codeInput = page.locator(".mcp-consent #mcp-identity-code");
+      await codeInput.waitFor();
+      await page.getByRole("button", { name: lang === "ar" ? "تأكيد ومتابعة" : "Confirm and continue", exact: true }).isEnabled();
+      await page.waitForFunction(() => document.activeElement?.id === "mcp-identity-code");
+      const box = await codeInput.boundingBox(),
         viewport = page.viewportSize();
-      assert.ok(box && box.y >= 0 && box.y + box.height <= viewport.height, `${lang} ${width} refusal is in view`);
-      assert.ok(await refusal.getByRole("link", { name: lang === "ar" ? "التحقق من الحساب" : "Verify account" }).isVisible());
-      assert.equal(await page.locator("[role=alert]").count(), 1, "one alert, not two");
+      assert.ok(box && box.y >= 0 && box.y + box.height <= viewport.height, `${lang} ${width} code field is in view`);
+      assert.equal(codesSent, 1, "one code is sent when the step opens");
+      assert.equal(await page.getByText(lang === "ar" ? "التحقق من الحساب" : "Verify account").count(), 0, "no detour to sign-in");
       checks++;
+      await codeInput.fill("000000");
+      await page.getByRole("button", { name: lang === "ar" ? "تأكيد ومتابعة" : "Confirm and continue", exact: true }).click();
+      await page.locator("#mcp-identity-problem").waitFor();
+      assert.equal(consented, false, "a wrong code does not connect");
+      checks++;
+      await codeInput.fill("123456");
       await Promise.all([
         page.waitForResponse(
           (response) =>
             response.url().includes("/api/mcp/manage") &&
             response.request().method() === "GET",
         ),
-        page
-          .getByRole("button", {
-            name:
-              lang === "ar"
-                ? "المتابعة بهذا الحساب"
-                : "Continue with this account",
-            exact: true,
-          })
-          .click(),
+        page.getByRole("button", { name: lang === "ar" ? "تأكيد ومتابعة" : "Confirm and continue", exact: true }).click(),
       ]);
       assert.ok(consented);
       checks++;
@@ -432,21 +442,12 @@ try {
       assert.equal(await save.isDisabled(), false);
       checks++;
       await save.click();
-      await page
-        .getByRole("link", {
-          name: lang === "ar" ? "التحقق من الحساب" : "Verify account",
-          exact: true,
-        })
-        .waitFor();
+      // A permission change on a stale sign-in asks for the code in place too.
+      await page.locator(".mcp-section #mcp-identity-code").waitFor();
       assert.ok(policy);
       checks++;
-      const href = await page
-        .getByRole("link", {
-          name: lang === "ar" ? "التحقق من الحساب" : "Verify account",
-          exact: true,
-        })
-        .getAttribute("href");
-      assert.ok(href.includes("fresh=1"));
+      await page.getByRole("button", { name: lang === "ar" ? "إلغاء" : "Cancel", exact: true }).click();
+      assert.equal(await page.locator("#mcp-identity-code").count(), 0);
       checks++;
       await page
         .getByRole("button", {

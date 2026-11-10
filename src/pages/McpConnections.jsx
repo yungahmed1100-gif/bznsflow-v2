@@ -10,6 +10,7 @@ import {
   BZNSFLOW_ICON,
 } from "../components/mcp/ConnectionGuide";
 import { ApprovalCard } from "../components/mcp/ApprovalCard";
+import { ConfirmIdentity } from "../components/mcp/ConfirmIdentity";
 const COPIED_MS = 2500;
 const SAVED_MS = 4000;
 // While the owner is mid-connection (a new connection not yet verified, or an
@@ -403,6 +404,8 @@ export default function McpConnections({ lang = "ar" }) {
     [copied, setCopied] = useState(""),
     [saved, setSaved] = useState(false),
     [done, setDone] = useState(""),
+    // The action waiting for the owner to confirm it's them with an emailed code.
+    [confirming, setConfirming] = useState(null),
     [target, setTarget] = useState(""),
     [savedId, setSavedId] = useState(""),
     [consentAreas, setConsentAreas] = useState(Object.keys(AREAS));
@@ -545,6 +548,11 @@ export default function McpConnections({ lang = "ar" }) {
         }),
         value = await r.json();
       if (!r.ok) {
+        if (value.reason === "fresh_sign_in_required" && account?.email) {
+          // Confirm in place, then run the same action again.
+          setConfirming(body);
+          return;
+        }
         if (
           body.action === "policy" &&
           value.reason === "fresh_sign_in_required"
@@ -734,6 +742,19 @@ export default function McpConnections({ lang = "ar" }) {
             )}
           </p>
           {error && errorNotice}
+          {confirming?.action === "consent" ? (
+            <ConfirmIdentity
+              ar={ar}
+              email={account.email}
+              csrf={csrf}
+              onConfirmed={() => {
+                const body = confirming;
+                setConfirming(null);
+                void action(body);
+              }}
+              onCancel={() => setConfirming(null)}
+            />
+          ) : (
           <div className="mcp-actions">
             {!consentAreas.length && (
               <p className="mcp-muted" id="mcp-consent-empty">
@@ -771,6 +792,7 @@ export default function McpConnections({ lang = "ar" }) {
               {tr("Decline", "رفض")}
             </button>
           </div>
+          )}
         </section>
       )}
       {data && (
@@ -829,6 +851,21 @@ export default function McpConnections({ lang = "ar" }) {
                   "لم يُربط أي مساعد بعد. اتبع دليل الربط أدناه.",
                 )}
               </p>
+            )}
+            {confirming && confirming.action !== "consent" && (
+              <div className="mcp-panel">
+                <ConfirmIdentity
+              ar={ar}
+              email={account.email}
+              csrf={csrf}
+              onConfirmed={() => {
+                const body = confirming;
+                setConfirming(null);
+                void action(body);
+              }}
+              onCancel={() => setConfirming(null)}
+            />
+              </div>
             )}
             <div className="mcp-grid">
               {data.connections.filter(isActive).map((c) => (
