@@ -38,6 +38,7 @@ test('OAuth connection → SDK discovery → domain writes/approval/replay → r
   t.after(() => new Promise(resolve => { server.closeAllConnections(); server.close(resolve); }));
   const origin = `http://127.0.0.1:${server.address().port}`, resource = `${origin}/api/mcp`;
   const env = { NODE_ENV: 'test', PUBLIC_SITE_ORIGIN: origin, MCP_ENABLED: 'true', MCP_COOKIE_KEYS: 'k'.repeat(48), MCP_OAUTH_ENCRYPTION_KEY: 'a'.repeat(64), MCP_OAUTH_JWKS: JSON.stringify({ keys: [jwk] }), CONVEX_CLOUD_URL: GREEN_CLOUD, CONVEX_SITE_URL: GREEN_SITE, CONVEX_SERVICE_SECRET: GREEN_SECRET, LAYLA_CREDENTIAL_ENCRYPTION_KEY: 'b'.repeat(64), LAYLA_META_APP_SECRET: 'synthetic-secret' };
+  env.RASIL_TEST_EMAILS = (await h.m.db.get(owner.accountId)).email;
   const providerToken = 'synthetic-meta-token-for-local-tests';
   await h.m.db.patch(owner.rowId, { integration: { ...owner.integration, credential: sealToken(providerToken, credentialContext(owner.sessionHash, owner.integration), env) } });
   let providerHealthy = true, providerReads = 0, providerNameStatus = 'APPROVED';
@@ -107,10 +108,12 @@ test('OAuth connection → SDK discovery → domain writes/approval/replay → r
   const transport = new StreamableHTTPClientTransport(new URL(resource), { fetch: (url, init) => fetch(url, { ...init, headers: { ...Object.fromEntries(new Headers(init?.headers)), Authorization: `Bearer ${bearer}` } }) });
   await sdk.connect(transport);
   const names = [];
-  let cursor;
+  let cursor, discoveryBytes = 0;
   do {
     const page = await sdk.listTools(cursor ? { cursor } : {});
     assert.ok(page.tools.length <= 60);
+    discoveryBytes += JSON.stringify(page.tools).length;
+    for (const tool of page.tools) assert.ok(!/ in the owner's /.test(tool.description), `${tool.name} has a real description`);
     names.push(...page.tools.map(tool => tool.name));
     cursor = page.nextCursor;
   } while (cursor);
@@ -118,7 +121,12 @@ test('OAuth connection → SDK discovery → domain writes/approval/replay → r
   assert.ok(names.includes('bznsflow_business_state'));
   assert.ok(names.includes('bznsflow_hasib_overview'));
   assert.ok(!names.includes('bznsflow_hasib_dental_visits'));
+  // Real estate is among the largest sectors; it was 384 KB before schemas were summarised.
+  assert.ok(discoveryBytes < 130000, `tool discovery is ${discoveryBytes} bytes`);
+  for (const name of ['bznsflow_workspace_summary', 'bznsflow_tools_describe', 'bznsflow_requests_list', 'bznsflow_onboarding_get', 'bznsflow_website_state', 'bznsflow_email_state', 'bznsflow_billing_state'])
+    assert.ok(names.includes(name), `${name} is discoverable`);
   const call = (name, args = {}) => sdk.callTool({ name, arguments: args });
+  const errorOf = response => (assert.equal(response.isError, true, JSON.stringify(response)), response.structuredContent.error);
   const read = await call('bznsflow_business_state');
   assert.equal(read.structuredContent.result.profile.businessName, 'Blue Studio');
   assert.ok(!JSON.stringify(read).includes(owner.sessionHash), 'setup authority never reaches the client');
@@ -130,8 +138,8 @@ test('OAuth connection → SDK discovery → domain writes/approval/replay → r
   assert.equal(h.m.table('blueBusinessSettings').find(row => row.accountId === owner.accountId).timezone, 'Asia/Muscat');
   assert.equal((await call('bznsflow_dashboard_set_timezone', writeArgs)).structuredContent.replay, true);
   const conflict = await call('bznsflow_dashboard_set_timezone', { ...writeArgs, timezone: 'UTC' });
-  assert.equal(conflict.isError, true);
-  assert.equal(conflict.content[0].text, 'idempotency_conflict');
+  assert.equal(errorOf(conflict).code, 'idempotency_conflict');
+  assert.ok(errorOf(conflict).hint);
   const pauseArgs = { requestId: randomUUID(), confirm: true };
   const proposed = (await call('bznsflow_messaging_pause', pauseArgs)).structuredContent;
   assert.equal(proposed.status, 'approval_required');
@@ -151,8 +159,7 @@ test('OAuth connection → SDK discovery → domain writes/approval/replay → r
   assert.equal((await h.m.db.get(owner.rowId)).operation, undefined);
   assert.equal(h.m.table('blueMessagingControls')[0].active, false, 'checking a connection never overrides the owner pause');
   const throttled = await call('bznsflow_messaging_check_connection');
-  assert.equal(throttled.isError, true);
-  assert.equal(throttled.content[0].text, 'refresh_throttled');
+  assert.equal(errorOf(throttled).code, 'refresh_throttled');
   assert.equal(providerReads, 3, 'an immediate repeat performs no extra provider requests');
   await h.m.db.patch(owner.rowId, { checkedAt: Date.now() - 6000 });
   providerHealthy = false;
@@ -173,9 +180,53 @@ test('OAuth connection → SDK discovery → domain writes/approval/replay → r
   const status = await call('bznsflow_requests_status', { runId: proposed.runId });
   assert.equal(status.structuredContent.result.status, 'completed');
   const invalid = await call('bznsflow_dashboard_set_timezone', { requestId: randomUUID(), timezone: 'UTC', accountId: 'foreign' });
-  assert.equal(invalid.isError, true);
-  assert.equal(invalid.content[0].text, 'invalid_arguments');
-  assert.equal((await call('bznsflow_execute_arbitrary_sql')).isError, true);
+  assert.deepEqual([errorOf(invalid).code, errorOf(invalid).field], ['invalid_arguments', 'accountId']);
+  assert.equal(errorOf(await call('bznsflow_execute_arbitrary_sql')).code, 'tool_not_allowed');
+  // Orientation and self-correction.
+  const summary = (await call('bznsflow_workspace_summary')).structuredContent.result;
+  assert.equal(summary.workspace.plan, 'ascend');
+  assert.equal(summary.connection.canWrite, true);
+  assert.ok(summary.toolGroups.hasib > 0 && summary.toolGroups.email > 0);
+  const described = (await call('bznsflow_tools_describe', { name: 'bznsflow_hasib_opportunity_save' })).structuredContent;
+  assert.ok(Object.keys(described.inputSchema.properties).length > 10, 'describe returns the full schema');
+  assert.equal(errorOf(await call('bznsflow_tools_describe', { name: 'bznsflow_hasib_dental_visits' })).code, 'tool_not_allowed');
+  const missing = errorOf(await call('bznsflow_dashboard_thread', {}));
+  assert.deepEqual([missing.field, missing.message], ['conversationId', 'conversationId is required.']);
+  const upper = await call('bznsflow_dashboard_set_timezone', { requestId: randomUUID().toUpperCase(), timezone: 'Asia/Dubai' });
+  assert.equal(upper.structuredContent.status, 'completed', 'an upper-case requestId is accepted');
+  // Approval lifecycle: list, cancel, reject.
+  const publishArgs = { requestId: randomUUID() };
+  const waiting = (await call('bznsflow_catalog_publish', publishArgs)).structuredContent;
+  assert.equal(waiting.status, 'approval_required');
+  assert.match(waiting.approvalUrl, /\/mcp\?approval=/);
+  const listed = (await call('bznsflow_requests_list', { status: 'approval_required' })).structuredContent.result.items;
+  assert.ok(listed.some(item => item.runId === waiting.runId && item.approvalUrl === waiting.approvalUrl));
+  const cancelled = await call('bznsflow_requests_cancel', { requestId: randomUUID(), runId: waiting.runId });
+  assert.equal(cancelled.structuredContent.result.status, 'cancelled');
+  assert.equal(errorOf(await call('bznsflow_catalog_publish', publishArgs)).code, 'request_cancelled');
+  assert.equal((await call('bznsflow_requests_status', { runId: waiting.runId })).structuredContent.result.status, 'cancelled');
+  const rejectArgs = { requestId: randomUUID() };
+  const toReject = (await call('bznsflow_catalog_publish', rejectArgs)).structuredContent;
+  await manage({ action: 'reject', connectionId: connection._id, runId: toReject.runId });
+  assert.equal(errorOf(await call('bznsflow_catalog_publish', rejectArgs)).code, 'approval_rejected');
+  // Setup progress, website brief, email and billing.
+  const progress = (await call('bznsflow_onboarding_get', { product: 'ascend' })).structuredContent.result.progress;
+  const saved = await call('bznsflow_onboarding_save', { requestId: randomUUID(), product: 'ascend', step: 1, version: progress.version });
+  assert.equal(saved.structuredContent.result.progress.step, 1, JSON.stringify(saved));
+  assert.equal(errorOf(await call('bznsflow_onboarding_save', { requestId: randomUUID(), product: 'ascend', step: 2, version: progress.version })).code, 'setup_conflict');
+  const draft = await call('bznsflow_website_save_draft', { requestId: randomUUID(), step: 1, fields: { about: 'A synthetic studio.' } });
+  assert.equal(draft.structuredContent.status, 'completed', JSON.stringify(draft));
+  const site = (await call('bznsflow_website_state')).structuredContent.result;
+  assert.equal(site.fields.about, 'A synthetic studio.');
+  assert.ok(!JSON.stringify(site).includes('"url"'), 'storage links never reach the assistant');
+  const emailState = await call('bznsflow_email_state');
+  assert.equal(emailState.structuredContent.status, 'completed', JSON.stringify(emailState));
+  const emailPreview = (await call('bznsflow_email_campaign_preview', { subject: 'News', body: 'Hello from the studio.' })).structuredContent.result;
+  assert.equal(emailPreview.ready, false);
+  const billing = (await call('bznsflow_billing_state')).structuredContent.result;
+  assert.equal(billing.plan, 'ascend');
+  const handoff = (await call('bznsflow_billing_checkout')).structuredContent.result;
+  assert.equal(handoff.url, `${origin}/#tiers`);
   const refreshed = await tokenRequest({ grant_type: 'refresh_token', refresh_token: tokens.refresh_token, scope: 'openid workspace:read workspace:write' });
   assert.equal(refreshed.status, 200, await refreshed.clone().text());
   const rotated = await refreshed.json();

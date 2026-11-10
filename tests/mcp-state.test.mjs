@@ -702,3 +702,57 @@ test("active employee membership can be revoked by its owner, never another work
   );
   assert.equal((await m.db.get(memberId)).status, "revoked");
 });
+test("email campaign receipts come from delivery counts, and revoked access stops its sends", async () => {
+  const { m, a, c } = await fixture();
+  const campaignId = await m.db.insert("emailCampaigns", {
+    accountId: a.accountId, status: "processing", recipientCount: 3, counts: { queued: 3 },
+    mcpConnectionId: c.id,
+  });
+  const runId = await m.db.insert("mcpRuns", {
+    accountId: a.accountId, connectionId: c.id, tool: "bznsflow_email_campaign_create", status: "pending",
+    effects: [{ id: campaignId, table: "emailCampaigns" }], expiresAt: m.now() + 86400000,
+  });
+  const principal = await connectionOwner(m.ctx, c.id, m.now());
+  const status = () => requestStatus(m.ctx, principal, runId, m.now());
+  let result = await status();
+  assert.equal(result.status, "pending");
+  assert.equal(result.effects[0].kind, "email_campaign");
+  assert.match(result.next, /not confirmed/);
+  await m.db.patch(campaignId, { status: "completed", counts: { submitted: 3 } });
+  assert.equal((await status()).status, "pending", "a finished worker is not delivery");
+  await m.db.patch(campaignId, { counts: { delivered: 2, complained: 1 } });
+  assert.equal((await status()).status, "completed");
+  await m.db.patch(campaignId, { counts: { delivered: 2, bounced: 1 } });
+  assert.equal((await status()).status, "failed", "a bounce is exposed");
+  await m.db.patch(campaignId, { counts: { delivered: 2 } });
+  assert.equal((await status()).status, "outcome_unknown", "missing receipts cannot imply success");
+  const campaign = await m.db.get(campaignId);
+  assert.equal(await mcpEffectAllowed(m.ctx, campaign, m.now()), true);
+  await manage(m.ctx, { operation: "revoke", tokenHash: "1".repeat(64), connectionId: c.id }, m.now());
+  assert.equal(await mcpEffectAllowed(m.ctx, campaign, m.now()), false, "the Rasil worker blocks sends after revocation");
+});
+test("expired, rejected and cancelled approvals tell the assistant what to do next", async () => {
+  const { m, a, c, call } = await fixture();
+  const args = { requestId: randomUUID() };
+  const waiting = await call("bznsflow_catalog_publish", args);
+  assert.equal(waiting.status, "approval_required");
+  const principal = await connectionOwner(m.ctx, c.id, m.now());
+  assert.match((await requestStatus(m.ctx, principal, waiting.runId, m.now())).next, /owner to approve/);
+  const later = m.now() + 16 * 60000;
+  const expired = await requestStatus(m.ctx, principal, waiting.runId, later);
+  assert.equal(expired.status, "approval_expired");
+  await assert.rejects(
+    () => prepare(m.ctx, { connectionId: c.id, tool: "bznsflow_catalog_publish", args }, later),
+    /approval_expired/,
+  );
+  const listed = await executeApplication(
+    m.ctx,
+    { connectionId: c.id, tool: "bznsflow_requests_list", args: {} },
+    {},
+    later,
+  );
+  const item = listed.result.items.find((i) => i.runId === waiting.runId);
+  assert.equal(item.status, "approval_expired");
+  assert.equal(item.args, undefined, "listing never returns stored arguments");
+  assert.ok(a.accountId);
+});

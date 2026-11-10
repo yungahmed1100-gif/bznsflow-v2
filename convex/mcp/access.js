@@ -90,6 +90,7 @@ export function toolAllowed(tool, p) {
     (tool.requiredAreas || []).every((a) => p.connection.areas?.includes(a)) &&
     tool.disposition !== "unavailable" &&
     p.capabilities[tool.capability] &&
+    (!tool.plans || tool.plans.includes(p.plan)) &&
     (!tool.packs || tool.packs.includes(p.packId)) &&
     (tool.domain !== "hasib" || (p.hasibAvailable && isLivePack(p.packId))) &&
     (tool.category === "read" ||

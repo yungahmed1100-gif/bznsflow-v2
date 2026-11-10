@@ -6,6 +6,9 @@ import {
   CallToolRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { TOOL_BY_NAME } from "../../../config/mcp/contracts.js";
+import { explain, normalizeKeys } from "../../../config/mcp/validation.js";
+import { toolError } from "../../../config/mcp/errors.js";
+import { rasilOpen } from "../rasil-api.js";
 import { MCP_NAME, MCP_DESCRIPTION, MCP_INSTRUCTIONS, mcpIcons } from "../../../config/mcp/identity.js";
 import {
   createOAuth,
@@ -46,6 +49,62 @@ async function body(req) {
 }
 const reason = (e) =>
   /^[a-z_]{3,60}$/.test(e?.code || "") ? e.code : "mcp_unavailable";
+// Bump when tool names, schemas or descriptions change, so clients refresh their cache.
+export const SERVER_VERSION = "1.1.0";
+// Large shared sector shapes are advertised by top-level field only; validation still
+// uses the full schema, and bznsflow_tools_describe returns it.
+const ADVERTISED_SCHEMA_BYTES = 2500;
+const brief = (schema) =>
+  schema.type
+    ? {
+        type: schema.type,
+        ...(schema.enum ? { enum: schema.enum } : {}),
+        ...(schema.type === "string" && schema.maxLength ? { maxLength: schema.maxLength } : {}),
+      }
+    : schema.enum
+      ? { enum: schema.enum }
+      : schema.const !== undefined
+        ? { const: schema.const }
+        : {};
+const CORE_FIELDS = new Set(["requestId", "idempotencyKey", "version", "cursor", "limit", "status"]);
+export function advertisedSchema(tool) {
+  const full = tool.inputSchema;
+  // Sector tools share one large field set per sector. Advertise the fields every call
+  // uses; the assistant reads the rest with bznsflow_tools_describe. Validation is unchanged.
+  const shared = tool.domain === "hasib" && !!tool.packs && Object.keys(full.properties).length > 8;
+  if (!shared && JSON.stringify(full).length <= ADVERTISED_SCHEMA_BYTES) return full;
+  const required = full.required || [];
+  const keep = Object.entries(full.properties).filter(
+    ([k]) => !shared || required.includes(k) || CORE_FIELDS.has(k),
+  );
+  return {
+    type: "object",
+    properties: Object.fromEntries(keep.map(([k, v]) => [k, brief(v)])),
+    required,
+    additionalProperties: shared,
+    ...(shared
+      ? { description: "More fields: bznsflow_tools_describe with this tool's name." }
+      : {}),
+  };
+}
+export function describeTool(tool) {
+  return {
+    name: tool.name,
+    title: tool.title,
+    description: tool.description,
+    category: tool.category,
+    approvalCategories:
+      tool.category === "read" ? [] : tool.categories || [tool.category],
+    required: tool.inputSchema.required || [],
+    inputSchema: tool.inputSchema,
+    ...(tool.disposition === "handoff" ? { websitePath: tool.path } : {}),
+  };
+}
+const errorResult = (error) => ({
+  isError: true,
+  content: [{ type: "text", text: JSON.stringify({ error }) }],
+  structuredContent: { error },
+});
 export function createMcpHandler({
   env = process.env,
   store = mcpStore({ env }),
@@ -274,17 +333,20 @@ export function createMcpHandler({
       connectionId = access.connectionId;
       lease = randomUUID();
       const context = await store("admit", { connectionId, lease });
+      // Email campaigns stay limited to the accounts the website's Rasil switch admits.
+      const emailOpen = rasilOpen(env, context.email);
       const names = context.tools.filter(
         (name) =>
-          TOOL_BY_NAME.get(name).category === "read" ||
-          access.scopes.includes("workspace:write"),
+          (TOOL_BY_NAME.get(name).category === "read" ||
+            access.scopes.includes("workspace:write")) &&
+          (emailOpen || TOOL_BY_NAME.get(name).domain !== "email"),
       );
       const server = new Server(
         {
           name: "bznsflow",
           title: MCP_NAME,
           description: MCP_DESCRIPTION,
-          version: "1.0.0",
+          version: SERVER_VERSION,
           websiteUrl: origin,
           // Shown by clients next to the connector so the owner can recognise it.
           icons: mcpIcons(origin),
@@ -302,18 +364,18 @@ export function createMcpHandler({
             const t = TOOL_BY_NAME.get(name);
             return {
               name: t.name,
+              title: t.title,
               icons: mcpIcons(origin),
               description: t.description,
-              inputSchema: t.inputSchema,
+              inputSchema: advertisedSchema(t),
               annotations: {
                 readOnlyHint: t.category === "read",
-                destructiveHint: ["bulk", "publish", "team"].includes(
-                  t.category,
-                ),
-                idempotentHint: t.category !== "read",
-                openWorldHint: ["messages", "team", "publish"].includes(
-                  t.category,
-                ),
+                destructiveHint: ["bulk", "team"].includes(t.category) ||
+                  /delete|archive|revoke|disconnect|void|cancel/.test(t.operation),
+                // Reads repeat safely; writes dedupe on their requestId.
+                idempotentHint: true,
+                openWorldHint: ["messages", "team"].includes(t.category) ||
+                  (t.categories || []).includes("messages"),
               },
             };
           }),
@@ -324,20 +386,46 @@ export function createMcpHandler({
       });
       server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!names.includes(request.params.name))
-          return {
-            isError: true,
-            content: [{ type: "text", text: "tool_not_allowed" }],
-          };
+          return errorResult(toolError("tool_not_allowed"));
         const started = Date.now();
         let outcome = "failed";
+        const tool = TOOL_BY_NAME.get(request.params.name),
+          args = normalizeKeys(request.params.arguments || {});
+        const problem = explain(tool.inputSchema, args);
+        if (problem) {
+          outcome = "invalid_arguments";
+          await store("metric", {
+            connectionId,
+            tool: tool.name,
+            status: outcome,
+            durationMs: Date.now() - started,
+          }).catch(() => console.warn("mcp_metric_unavailable"));
+          return errorResult(toolError("invalid_arguments", problem));
+        }
         try {
+          // Answered from this connection's own tool list; no workspace data involved.
+          if (tool.domain === "tools") {
+            const target = TOOL_BY_NAME.get(args.name);
+            if (!target || !names.includes(target.name))
+              throw new McpError("tool_not_allowed", 403);
+            outcome = "completed";
+            const value = describeTool(target);
+            return {
+              content: [{ type: "text", text: JSON.stringify(value) }],
+              structuredContent: value,
+            };
+          }
           const result = await execute({
             connectionId,
             tool: request.params.name,
-            args: request.params.arguments || {},
+            args,
             env,
             store,
           });
+          if (result.status === "website_required" || result.result?.status === "website_required") {
+            const handoff = result.result?.status ? result.result : result;
+            handoff.url = new URL(handoff.path, origin).href;
+          }
           outcome = result.status || "completed";
           if (result.workspacePath || result.recordLinks?.length)
             result.links = [
@@ -361,7 +449,7 @@ export function createMcpHandler({
           };
         } catch (e) {
           outcome = reason(e);
-          return { isError: true, content: [{ type: "text", text: outcome }] };
+          return errorResult(toolError(outcome));
         } finally {
           await store("metric", {
             connectionId,

@@ -455,6 +455,13 @@ export async function prepare(ctx, a, now = Date.now()) {
     .unique();
   if (old) {
     demand(old.fingerprint === fingerprint, "idempotency_conflict");
+    demand(old.status !== "rejected", "approval_rejected");
+    demand(old.status !== "cancelled", "request_cancelled");
+    demand(
+      !["approval_required", "approved", "ready"].includes(old.status) ||
+        old.expiresAt > now,
+      "approval_expired",
+    );
     return {
       runId: old._id,
       status: old.status,
@@ -627,8 +634,32 @@ export async function finish(
             "Queued work is not confirmed delivery. Use bznsflow_requests_status to check outcomes.",
         }
       : {}),
-    workspacePath: state.tool.domain === "hasib" ? "/layla/dashboard" : "/mcp",
+    workspacePath: workspacePath(state.tool),
   };
+}
+const DOMAIN_TABS = {
+  hasib: "",
+  dashboard: "chats",
+  messaging: "chats",
+  catalog: "catalog",
+  brain: "bzns",
+  business: "bzns",
+  knowledge: "bzns",
+  website: "website",
+  email: "email",
+  onboarding: "settings",
+  files: "customers",
+};
+/** The dashboard tab where the owner sees what this tool changed. */
+function workspacePath(tool) {
+  if (tool.domain === "dashboard" && /campaign|template/.test(tool.operation))
+    return "/layla/dashboard?tab=broadcasts";
+  if (tool.domain === "dashboard" && /contact/.test(tool.operation))
+    return "/layla/dashboard?tab=customers";
+  if (!Object.hasOwn(DOMAIN_TABS, tool.domain)) return "/mcp";
+  return DOMAIN_TABS[tool.domain]
+    ? `/layla/dashboard?tab=${DOMAIN_TABS[tool.domain]}`
+    : "/layla/dashboard";
 }
 export async function admit(ctx, a, now = Date.now()) {
   const p = await connectionOwner(ctx, a.connectionId, now);
@@ -659,6 +690,8 @@ export async function admit(ctx, a, now = Date.now()) {
     packId: p.packId,
     capabilities: p.capabilities,
     scopes: p.connection.scopes,
+    // Server-side only: the API checks it against the Rasil allow-list.
+    email: p.account.email,
     tools: toolsFor({ ...p, scopes: p.connection.scopes }).map((t) => t.name),
   };
 }
@@ -667,8 +700,9 @@ const PENDING_EFFECTS = new Set([
   "queued", "pending", "scheduled", "starting", "processing", "attempting",
   "submitted", "sending", "sent",
 ]);
-const FAILED_EFFECTS = new Set(["failed", "blocked", "cancelled"]);
-const COMPLETED_EFFECTS = new Set(["completed", "delivered", "read"]);
+const FAILED_EFFECTS = new Set(["failed", "blocked", "cancelled", "bounced"]);
+// A complaint is reported after delivery; it is a delivered email marked as spam.
+const COMPLETED_EFFECTS = new Set(["completed", "delivered", "read", "complained"]);
 function effectOutcome(statuses) {
   if (statuses.some(status =>
     !PENDING_EFFECTS.has(status) && !FAILED_EFFECTS.has(status) && !COMPLETED_EFFECTS.has(status)
@@ -699,15 +733,45 @@ async function campaignOutcome(ctx, campaign) {
   };
 }
 
+// Email campaigns reach up to 2,000 people, so their receipts are the campaign's own counts.
+function emailCampaignOutcome(campaign) {
+  const counts = campaign.counts || {};
+  const statuses = Object.keys(counts).filter((k) => counts[k] > 0);
+  const total = Object.values(counts).reduce((sum, n) => sum + (Number(n) || 0), 0);
+  if (campaign.status !== "completed") statuses.push(campaign.status);
+  return {
+    status: total === campaign.recipientCount ? effectOutcome(statuses) : "outcome_unknown",
+    processingStatus: campaign.status,
+    counts,
+  };
+}
 export async function requestStatus(ctx, p, runId, now = Date.now()) {
-  const run = await ctx.db.get(runId);
+  let run;
+  try {
+    run = await ctx.db.get(runId);
+  } catch {
+    run = null;
+  }
   demand(
     run &&
       run.connectionId === p.connection._id &&
-      run.accountId === p.account._id &&
-      run.expiresAt > now,
+      run.accountId === p.account._id,
     "run_not_found",
   );
+  if (run.expiresAt <= now) {
+    // Waiting approvals expire in 15 minutes but stay readable until cleanup.
+    demand(["approval_required", "approved", "ready"].includes(run.status), "run_not_found");
+    return {
+      runId: run._id,
+      tool: run.tool,
+      status: "approval_expired",
+      reason: null,
+      result: null,
+      effects: [],
+      expiresAt: run.expiresAt,
+      next: NEXT.approval_expired,
+    };
+  }
   demand(toolAllowed(TOOL_BY_NAME.get(run.tool), p), "tool_not_allowed");
   const effects = [];
   for (const ref of run.effects || []) {
@@ -725,9 +789,12 @@ export async function requestStatus(ctx, p, runId, now = Date.now()) {
           ? "message"
           : ref.table === "blueCampaigns"
             ? "campaign"
-            : "invitation",
+            : ref.table === "emailCampaigns"
+              ? "email_campaign"
+              : "invitation",
       status,
       ...(row && ref.table === "blueCampaigns" ? await campaignOutcome(ctx, row) : {}),
+      ...(row && ref.table === "emailCampaigns" ? emailCampaignOutcome(row) : {}),
       reason: row?.reason || null,
     });
   }
@@ -735,10 +802,65 @@ export async function requestStatus(ctx, p, runId, now = Date.now()) {
   if (effects.length) status = effectOutcome(effects.map(e => e.status));
   return {
     runId: run._id,
+    tool: run.tool,
     reason: run.reason || null,
     status,
     result: run.result ?? null,
     effects,
     expiresAt: run.expiresAt,
+    ...(NEXT[status] ? { next: NEXT[status] } : {}),
   };
+}
+const NEXT = {
+  approval_required: "Waiting for the owner to approve it on the BznsFlow website.",
+  approved: "Approved. Retry the same tool with the same arguments and requestId now.",
+  ready: "Prepared. Retry the same tool with the same arguments and requestId to run it.",
+  pending: "Accepted and queued. Delivery is not confirmed yet; check again later.",
+  outcome_unknown: "The result could not be confirmed. Do not repeat the action; ask the owner to check the workspace.",
+  approval_expired: "The approval window passed. Prepare a new request with a new requestId.",
+  rejected: "The owner rejected it. Do not retry.",
+  cancelled: "Cancelled. Nothing ran.",
+};
+const LISTED_STATUSES = ["approval_required", "approved", "ready", "pending", "completed", "failed", "outcome_unknown", "rejected", "cancelled"];
+/** This connection's recent requests, newest first, without their stored arguments. */
+export async function listRequests(ctx, p, args, now = Date.now()) {
+  demand(!args.status || LISTED_STATUSES.includes(args.status), "invalid_arguments");
+  const limit = Math.min(50, args.limit || 20);
+  const rows = await ctx.db
+    .query("mcpRuns")
+    .withIndex("by_connection", (q) => q.eq("connectionId", p.connection._id))
+    .order("desc")
+    .take(200);
+  const items = [];
+  for (const run of rows) {
+    if (args.status && run.status !== args.status) continue;
+    const expired = run.expiresAt <= now && ["approval_required", "approved", "ready"].includes(run.status);
+    if (run.expiresAt <= now && !expired) continue;
+    const status = expired ? "approval_expired" : run.status;
+    items.push({
+      runId: run._id,
+      tool: run.tool,
+      status,
+      createdAt: run.createdAt,
+      expiresAt: run.expiresAt,
+      ...(NEXT[status] ? { next: NEXT[status] } : {}),
+    });
+    if (items.length >= limit) break;
+  }
+  return { items };
+}
+/** Withdraw one of this connection's own requests that has not run. */
+export async function cancelRequest(ctx, p, runId, now = Date.now()) {
+  let run;
+  try {
+    run = await ctx.db.get(runId);
+  } catch {
+    run = null;
+  }
+  demand(run && run.connectionId === p.connection._id && run.accountId === p.account._id, "run_not_found");
+  if (run.status === "cancelled") return { runId: run._id, status: "cancelled", replay: true };
+  demand(["approval_required", "approved", "ready"].includes(run.status), "request_not_cancellable");
+  await ctx.db.patch(run._id, { status: "cancelled", args: undefined, exportPreview: undefined, finishedAt: now });
+  await audit(ctx, p, run.tool, "cancelled", now, run._id);
+  return { runId: run._id, status: "cancelled", tool: run.tool };
 }

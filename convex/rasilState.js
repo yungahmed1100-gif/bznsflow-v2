@@ -1,6 +1,7 @@
 // Rasil: Ascend email campaigns to consenting subscribers, from the owner's own domain.
 // Same shape as WhatsApp broadcasts (blueCampaignState.js): a frozen recipient list, one send at a time,
 // a worker that never sends twice. Counts live on the campaign because a list can reach 2,000.
+import { mcpEffectAllowed } from './mcp/access.js';
 import { resolveTenant, owned, encodeCursor, decodeCursor, afterCursor } from './blueTenant.js';
 import { planFor } from './hasib/plans.js';
 import { capabilitiesFor, effectivePlan } from './hasib/capabilities.js';
@@ -312,6 +313,7 @@ async function claim(ctx, a, now) {
   const domain = await domainFor(ctx, campaign.accountId);
   if (!senderReady(domain) || domain.domain !== campaign.sender.domain) { await blockCampaign(ctx, campaign, 'domain_not_verified', now); return ok(null); }
   if (!await entitled(ctx, campaign.accountId, now)) { await blockCampaign(ctx, campaign, 'plan_required', now); return ok(null); }
+  if (!await mcpEffectAllowed(ctx, campaign, now)) { await blockCampaign(ctx, campaign, 'mcp_connection_revoked', now); return ok(null); }
   // Suppression is read again right before every send.
   const subscriber = await ctx.db.get(job.subscriberId);
   if (subscriber?.status !== 'subscribed') {

@@ -10,6 +10,8 @@ const bindings = {
   "api/_lib/layla/blue-messaging.js": (op) => `bznsflow_messaging_${op}`,
   "api/_lib/knowledge-api.js": (op) => `bznsflow_knowledge_${op}`,
   "api/_lib/layla/instagram.js": (op) => `bznsflow_instagram_${op}`,
+  "api/_lib/website-brief-api.js": (op) => `bznsflow_website_${op}`,
+  "api/_lib/rasil-api.js": (op) => `bznsflow_email_${op}`,
   "api/_lib/layla/review-api.js": (op) => {
     const aliases = {
       brain_state: "brain_state",
@@ -42,15 +44,23 @@ for (const [path, resolve] of Object.entries(bindings))
   });
 test("onboarding, authentication and provider credentials stay in explicit website flows", () => {
   for (const name of [
-    "onboarding_get",
-    "onboarding_save",
     "setup_begin",
     "setup_finish",
     "instagram_connect",
     "instagram_disconnect",
     "files_import",
+    "website_upload_url",
+    "website_submit",
+    "email_domain_connect",
+    "billing_checkout",
   ])
     assert.equal(TOOL_BY_NAME.get(`bznsflow_${name}`).disposition, "handoff");
+});
+test("setup progress is a real tool and cannot change the sector or VAT", () => {
+  for (const name of ["onboarding_get", "onboarding_save"])
+    assert.equal(TOOL_BY_NAME.get(`bznsflow_${name}`).disposition, "tool");
+  const save = TOOL_BY_NAME.get("bznsflow_onboarding_save").inputSchema.properties;
+  for (const field of ["packId", "vat", "stockPolicy"]) assert.equal(save[field], undefined);
 });
 test("every Hasib operation the validators accept has an explicit MCP policy", () => {
   // Generated from the live validators, so a new sector operation cannot ship

@@ -1,52 +1,40 @@
 // Generated from the existing Hasib validators. Run npm run gen:mcp.
 export const HASIB_FIELDS = {
   "resourceId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "resourceIds": {
     "type": "array",
     "items": {
-      "type": "string",
-      "maxLength": 100000
-    },
-    "maxItems": 500
+      "type": "string"
+    }
   },
   "serviceId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "bookingId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "waitlistId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "membershipId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "guardianId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "creditId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "followupId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "kind": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "name": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "capacity": {
     "type": "number"
@@ -68,8 +56,7 @@ export const HASIB_FIELDS = {
         "endsAt"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "durationMinutes": {
     "type": "number"
@@ -93,8 +80,7 @@ export const HASIB_FIELDS = {
     "type": "number"
   },
   "replacementForId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "linkedType": {
     "anyOf": [
@@ -122,8 +108,7 @@ export const HASIB_FIELDS = {
     ]
   },
   "linkedId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "fromAt": {
     "type": "number"
@@ -132,8 +117,7 @@ export const HASIB_FIELDS = {
     "type": "number"
   },
   "approvedBy": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "checklist": {
     "type": "array",
@@ -141,8 +125,7 @@ export const HASIB_FIELDS = {
       "type": "object",
       "properties": {
         "text": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "done": {
           "type": "boolean"
@@ -153,37 +136,30 @@ export const HASIB_FIELDS = {
         "done"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "workflow": {
     "type": "object",
     "properties": {
       "title": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "kind": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "label": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "identifier": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "location": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "availability": {
         "anyOf": [
           {
-            "type": "string",
-            "maxLength": 100000
+            "type": "string"
           },
           {
             "type": "array",
@@ -202,58 +178,45 @@ export const HASIB_FIELDS = {
                 "endsAt"
               ],
               "additionalProperties": false
-            },
-            "maxItems": 500
+            }
           }
         ]
       },
       "status": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "viewingOutcome": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "approvedBy": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "contactId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "conversationId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "assignedAccountId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "equipmentId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "repeatOfId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "propertyId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "opportunityId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "variantId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "orderId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "dueAt": {
         "type": "number"
@@ -292,76 +255,58 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "reference": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "transactionType": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "propertyType": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "area": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "pricePeriod": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "description": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "authorityStatus": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "source": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "need": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "financeReadiness": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "decisionMakerReadiness": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "timeline": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "nextAction": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "lostReason": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "outcome": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "terms": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "text": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "templateId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "budgetMinMinor": {
         "type": "number"
@@ -405,62 +350,47 @@ export const HASIB_FIELDS = {
       "areas": {
         "type": "array",
         "items": {
-          "type": "string",
-          "maxLength": 100000
-        },
-        "maxItems": 500
+          "type": "string"
+        }
       },
       "propertyTypes": {
         "type": "array",
         "items": {
-          "type": "string",
-          "maxLength": 100000
-        },
-        "maxItems": 500
+          "type": "string"
+        }
       },
       "mustHaves": {
         "type": "array",
         "items": {
-          "type": "string",
-          "maxLength": 100000
-        },
-        "maxItems": 500
+          "type": "string"
+        }
       },
       "features": {
         "type": "array",
         "items": {
-          "type": "string",
-          "maxLength": 100000
-        },
-        "maxItems": 500
+          "type": "string"
+        }
       },
       "photoIds": {
         "type": "array",
         "items": {
-          "type": "string",
-          "maxLength": 100000
-        },
-        "maxItems": 500
+          "type": "string"
+        }
       },
       "identityStatus": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "financingStatus": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "agreementStatus": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "completionStatus": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "contractType": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "originalContractMinor": {
         "type": "number"
@@ -481,12 +411,10 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "projectId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "milestoneId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "weightBps": {
         "type": "number"
@@ -519,8 +447,7 @@ export const HASIB_FIELDS = {
         "type": "boolean"
       },
       "reason": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "contractDeltaMinor": {
         "type": "number"
@@ -532,12 +459,10 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "supplier": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "package": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "requiredAt": {
         "type": "number"
@@ -576,8 +501,7 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "severity": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "probability": {
         "type": "number"
@@ -586,8 +510,7 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "mitigation": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "costsComplete": {
         "type": "boolean"
@@ -597,10 +520,8 @@ export const HASIB_FIELDS = {
           {
             "type": "array",
             "items": {
-              "type": "string",
-              "maxLength": 100000
-            },
-            "maxItems": 500
+              "type": "string"
+            }
           },
           {
             "type": "array",
@@ -608,8 +529,7 @@ export const HASIB_FIELDS = {
               "type": "object",
               "properties": {
                 "text": {
-                  "type": "string",
-                  "maxLength": 100000
+                  "type": "string"
                 },
                 "done": {
                   "type": "boolean"
@@ -620,8 +540,7 @@ export const HASIB_FIELDS = {
                 "done"
               ],
               "additionalProperties": false
-            },
-            "maxItems": 500
+            }
           }
         ]
       },
@@ -631,15 +550,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "label": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "amountMinor": {
               "type": "number"
             },
             "expenseId": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             }
           },
           "required": [
@@ -647,8 +564,7 @@ export const HASIB_FIELDS = {
             "amountMinor"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       "milestones": {
         "type": "array",
@@ -656,8 +572,7 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "label": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "amountMinor": {
               "type": "number"
@@ -669,8 +584,7 @@ export const HASIB_FIELDS = {
               "type": "boolean"
             },
             "orderId": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             }
           },
           "required": [
@@ -680,8 +594,7 @@ export const HASIB_FIELDS = {
             "withheld"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       "extras": {
         "type": "array",
@@ -689,8 +602,7 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "label": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "amountMinor": {
               "type": "number"
@@ -699,8 +611,7 @@ export const HASIB_FIELDS = {
               "type": "boolean"
             },
             "approvedBy": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "approvedAt": {
               "type": "number"
@@ -712,8 +623,7 @@ export const HASIB_FIELDS = {
             "approved"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       "lines": {
         "type": "array",
@@ -721,16 +631,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "kind": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "name": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "variantId": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "qty": {
               "type": "number"
@@ -747,63 +654,49 @@ export const HASIB_FIELDS = {
             "unitPriceMinor"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       "vehicleId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "serviceId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "bayId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "appointmentId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "technicianAccountId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "assignedAdvisorAccountId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "name": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "category": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "plate": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "vin": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "make": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "model": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "year": {
         "type": "number"
       },
       "powertrain": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "odometerKm": {
         "type": "number"
@@ -833,12 +726,10 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "concern": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "warrantyDisposition": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "items": {
         "type": "array",
@@ -846,24 +737,19 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "category": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "condition": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "note": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "photoIds": {
               "type": "array",
               "items": {
-                "type": "string",
-                "maxLength": 100000
-              },
-              "maxItems": 500
+                "type": "string"
+              }
             }
           },
           "required": [
@@ -871,151 +757,116 @@ export const HASIB_FIELDS = {
             "condition"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
     "additionalProperties": false
   },
   "jobId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "equipmentId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "propertyId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "enquiryId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "productRequestId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "opportunityId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "matchId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "viewingId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "offerId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "draftId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "commissionId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "memberId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "email": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "operationalRole": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "commissionMinor": {
     "type": "number"
   },
   "appointmentRequestId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "notificationId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "waitlistOfferId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "taskId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "assignedAccountId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "projectId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "milestoneId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "variationId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "commitmentId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "claimId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "qualityId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "riskId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "vehicleId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "bayId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "appointmentId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "workOrderId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "estimateId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "laborEntryId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "partAllocationId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "source": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "preferredFrom": {
     "type": "number"
@@ -1030,27 +881,22 @@ export const HASIB_FIELDS = {
     "type": "number"
   },
   "preferenceStatus": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "evidenceSource": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "evidenceAt": {
     "type": "number"
   },
   "notificationKind": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "idempotencyKey": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "templateId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "outsideServiceWindow": {
     "type": "boolean"
@@ -1059,51 +905,40 @@ export const HASIB_FIELDS = {
     "type": "number"
   },
   "experienceReason": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "weekStart": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "governance": {
     "type": "object",
     "properties": {
       "status": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "jurisdiction": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "permitStatus": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "controller": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "processor": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "approvedRegions": {
         "type": "array",
         "items": {
-          "type": "string",
-          "maxLength": 100000
-        },
-        "maxItems": 500
+          "type": "string"
+        }
       },
       "subprocessors": {
         "type": "array",
         "items": {
-          "type": "string",
-          "maxLength": 100000
-        },
-        "maxItems": 500
+          "type": "string"
+        }
       },
       "retentionDays": {
         "type": "number"
@@ -1112,20 +947,16 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "supportAccess": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "incidentOwner": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "rightsOwner": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "crossBorderStatus": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       }
     },
     "required": [
@@ -1146,73 +977,58 @@ export const HASIB_FIELDS = {
     "additionalProperties": false
   },
   "requestId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "cursor": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "limit": {
     "type": "number"
   },
   "search": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "status": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "itemId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "variantId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "orderId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "contactId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "conversationId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "item": {
     "type": "object",
     "properties": {
       "kind": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "nameAr": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "nameEn": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "category": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "unit": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "trackStock": {
         "type": "boolean"
       },
       "catalogEntryKey": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "serialized": {
         "type": "boolean"
@@ -1221,12 +1037,10 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "warrantyBy": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "photoId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       }
     },
     "required": [
@@ -1245,12 +1059,10 @@ export const HASIB_FIELDS = {
       "type": "object",
       "properties": {
         "variantId": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "sku": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "options": {
           "type": "array",
@@ -1258,12 +1070,10 @@ export const HASIB_FIELDS = {
             "type": "object",
             "properties": {
               "key": {
-                "type": "string",
-                "maxLength": 100000
+                "type": "string"
               },
               "value": {
-                "type": "string",
-                "maxLength": 100000
+                "type": "string"
               }
             },
             "required": [
@@ -1271,8 +1081,7 @@ export const HASIB_FIELDS = {
               "value"
             ],
             "additionalProperties": false
-          },
-          "maxItems": 500
+          }
         },
         "priceMinor": {
           "type": "number"
@@ -1293,26 +1102,22 @@ export const HASIB_FIELDS = {
         "priceMinor"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "delta": {
     "type": "number"
   },
   "reason": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "unitCostMinor": {
     "type": "number"
   },
   "note": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "channel": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "lines": {
     "anyOf": [
@@ -1322,12 +1127,10 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "variantId": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "name": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "qty": {
               "type": "number"
@@ -1341,26 +1144,21 @@ export const HASIB_FIELDS = {
             "serials": {
               "type": "array",
               "items": {
-                "type": "string",
-                "maxLength": 100000
-              },
-              "maxItems": 500
+                "type": "string"
+              }
             },
             "modifierKeys": {
               "type": "array",
               "items": {
-                "type": "string",
-                "maxLength": 100000
-              },
-              "maxItems": 500
+                "type": "string"
+              }
             }
           },
           "required": [
             "qty"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       {
         "type": "array",
@@ -1368,8 +1166,7 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "variantId": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "qty": {
               "type": "number"
@@ -1378,8 +1175,7 @@ export const HASIB_FIELDS = {
               "type": "number"
             },
             "useBy": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             }
           },
           "required": [
@@ -1388,8 +1184,7 @@ export const HASIB_FIELDS = {
             "unitCostMinor"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     ]
   },
@@ -1403,12 +1198,10 @@ export const HASIB_FIELDS = {
     "type": "object",
     "properties": {
       "type": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "area": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "dueAt": {
         "type": "number"
@@ -1425,12 +1218,10 @@ export const HASIB_FIELDS = {
       "type": "object",
       "properties": {
         "key": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "value": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         }
       },
       "required": [
@@ -1438,20 +1229,16 @@ export const HASIB_FIELDS = {
         "value"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "notes": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "customerName": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "to": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "version": {
     "type": "number"
@@ -1460,12 +1247,10 @@ export const HASIB_FIELDS = {
     "type": "number"
   },
   "method": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "reference": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "vat": {
     "type": "object",
@@ -1480,8 +1265,7 @@ export const HASIB_FIELDS = {
         "type": "boolean"
       },
       "vatin": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       }
     },
     "required": [
@@ -1530,15 +1314,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "enabled": {
               "type": "boolean"
             },
             "mode": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "offsetMinutes": {
               "type": "number"
@@ -1551,8 +1333,7 @@ export const HASIB_FIELDS = {
             "offsetMinutes"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
@@ -1562,23 +1343,19 @@ export const HASIB_FIELDS = {
     "type": "object",
     "properties": {
       "title": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "productionType": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "purpose": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "budgetMinor": {
         "type": "number"
       },
       "dateNeeded": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "deliverables": {
         "type": "array",
@@ -1586,12 +1363,10 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "format": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "aspectRatio": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "durationSeconds": {
               "type": "number"
@@ -1600,8 +1375,7 @@ export const HASIB_FIELDS = {
               "type": "number"
             },
             "language": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             }
           },
           "required": [
@@ -1609,8 +1383,7 @@ export const HASIB_FIELDS = {
             "quantity"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       "shootStartsAt": {
         "type": "number"
@@ -1619,8 +1392,7 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "location": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "deliveryDueAt": {
         "type": "number"
@@ -1629,8 +1401,7 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "producerId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "revisionAllowance": {
         "type": "number"
@@ -1639,43 +1410,35 @@ export const HASIB_FIELDS = {
         "type": "object",
         "properties": {
           "territory": {
-            "type": "string",
-            "maxLength": 100000
+            "type": "string"
           },
           "channels": {
             "type": "array",
             "items": {
-              "type": "string",
-              "maxLength": 100000
-            },
-            "maxItems": 500
+              "type": "string"
+            }
           },
           "termEndsAt": {
             "type": "number"
           },
           "clearance": {
-            "type": "string",
-            "maxLength": 100000
+            "type": "string"
           }
         },
         "required": [],
         "additionalProperties": false
       },
       "nextAction": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "contactId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "conversationId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "source": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "quoteMinor": {
         "type": "number"
@@ -1687,57 +1450,46 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "acceptedBy": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "evidenceSource": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "key": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "verified": {
         "type": "boolean"
       },
       "note": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "mediaReceived": {
         "type": "boolean"
       },
       "label": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "assetRef": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "approverName": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "decisionDueAt": {
         "type": "number"
       },
       "decision": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "feedback": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "kind": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "description": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "priceMinor": {
         "type": "number"
@@ -1746,12 +1498,10 @@ export const HASIB_FIELDS = {
         "type": "object",
         "properties": {
           "format": {
-            "type": "string",
-            "maxLength": 100000
+            "type": "string"
           },
           "aspectRatio": {
-            "type": "string",
-            "maxLength": 100000
+            "type": "string"
           },
           "durationSeconds": {
             "type": "number"
@@ -1760,8 +1510,7 @@ export const HASIB_FIELDS = {
             "type": "number"
           },
           "language": {
-            "type": "string",
-            "maxLength": 100000
+            "type": "string"
           }
         },
         "required": [
@@ -1771,16 +1520,13 @@ export const HASIB_FIELDS = {
         "additionalProperties": false
       },
       "customerApproval": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "name": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "category": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "active": {
         "type": "boolean"
@@ -1801,65 +1547,53 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "expenseId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "changeOrderId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "extraScope": {
         "type": "boolean"
       },
       "costKind": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "incurredAt": {
         "type": "number"
       },
       "link": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "final": {
         "type": "boolean"
       },
       "text": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "templateId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       }
     },
     "required": [],
     "additionalProperties": false
   },
   "productionId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "cutId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "changeOrderId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "mediaResourceId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "reservationId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "costId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "mediaSettings": {
     "type": "object",
@@ -1900,15 +1634,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "enabled": {
               "type": "boolean"
             },
             "mode": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "offsetMinutes": {
               "type": "number"
@@ -1921,8 +1653,7 @@ export const HASIB_FIELDS = {
             "offsetMinutes"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
@@ -1932,12 +1663,10 @@ export const HASIB_FIELDS = {
     "type": "object",
     "properties": {
       "name": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "kind": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "termDays": {
         "type": "number"
@@ -1961,12 +1690,10 @@ export const HASIB_FIELDS = {
         "type": "boolean"
       },
       "title": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "classType": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "startsAt": {
         "type": "number"
@@ -1978,12 +1705,10 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "coachId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "coachName": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "cancel": {
         "type": "boolean"
@@ -1992,16 +1717,13 @@ export const HASIB_FIELDS = {
         "type": "boolean"
       },
       "source": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "sourceEventId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "assignedAccountId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "days": {
         "type": "number"
@@ -2010,58 +1732,47 @@ export const HASIB_FIELDS = {
         "type": "boolean"
       },
       "text": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "templateId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       }
     },
     "required": [],
     "additionalProperties": false
   },
   "planId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "classId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "seatId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "dental": {
     "type": "object",
     "properties": {
       "resourceId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "kind": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "name": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "active": {
         "type": "boolean"
       },
       "providerId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "chairId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "serviceItemId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "startsAt": {
         "type": "number"
@@ -2073,16 +1784,13 @@ export const HASIB_FIELDS = {
         "type": "boolean"
       },
       "guardianContactId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "source": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "replacementForId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "recallDueAt": {
         "type": "number"
@@ -2094,69 +1802,56 @@ export const HASIB_FIELDS = {
         "type": "boolean"
       },
       "text": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "templateId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       }
     },
     "required": [],
     "additionalProperties": false
   },
   "visitId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "hvac": {
     "type": "object",
     "properties": {
       "jobType": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "source": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "unitIds": {
         "type": "array",
         "items": {
-          "type": "string",
-          "maxLength": 100000
-        },
-        "maxItems": 500
+          "type": "string"
+        }
       },
       "area": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "urgent": {
         "type": "boolean"
       },
       "reportedSymptom": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "repeatOfId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "technicianAccountId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "contractId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "contractVisitIndex": {
         "type": "number"
       },
       "partsLabel": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "partsExpectedAt": {
         "type": "number"
@@ -2168,8 +1863,7 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "outcome": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "lines": {
         "type": "array",
@@ -2177,16 +1871,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "kind": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "name": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "variantId": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "qty": {
               "type": "number"
@@ -2202,8 +1893,7 @@ export const HASIB_FIELDS = {
             "unitPriceMinor"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       "checklist": {
         "type": "array",
@@ -2211,12 +1901,10 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "text": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "result": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             }
           },
           "required": [
@@ -2224,12 +1912,10 @@ export const HASIB_FIELDS = {
             "result"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       "findings": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "costs": {
         "type": "array",
@@ -2237,12 +1923,10 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "kind": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "label": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "amountMinor": {
               "type": "number"
@@ -2254,34 +1938,28 @@ export const HASIB_FIELDS = {
             "amountMinor"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       "costsComplete": {
         "type": "boolean"
       },
       "label": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "unitType": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "brand": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "capacityBtu": {
         "type": "number"
       },
       "serial": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "siteLabel": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "retired": {
         "type": "boolean"
@@ -2299,28 +1977,23 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "renewedFromId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "text": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "templateId": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       }
     },
     "required": [],
     "additionalProperties": false
   },
   "unitId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "contractId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "hvacSettings": {
     "type": "object",
@@ -2352,10 +2025,8 @@ export const HASIB_FIELDS = {
       "serviceAreas": {
         "type": "array",
         "items": {
-          "type": "string",
-          "maxLength": 100000
-        },
-        "maxItems": 500
+          "type": "string"
+        }
       },
       "rules": {
         "type": "array",
@@ -2363,15 +2034,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "enabled": {
               "type": "boolean"
             },
             "mode": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "offsetMinutes": {
               "type": "number"
@@ -2384,8 +2053,7 @@ export const HASIB_FIELDS = {
             "offsetMinutes"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
@@ -2418,15 +2086,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "enabled": {
               "type": "boolean"
             },
             "mode": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "offsetMinutes": {
               "type": "number"
@@ -2439,8 +2105,7 @@ export const HASIB_FIELDS = {
             "offsetMinutes"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
@@ -2458,15 +2123,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "enabled": {
               "type": "boolean"
             },
             "mode": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "offsetMinutes": {
               "type": "number"
@@ -2479,8 +2142,7 @@ export const HASIB_FIELDS = {
             "offsetMinutes"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
@@ -2498,15 +2160,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "enabled": {
               "type": "boolean"
             },
             "mode": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "offsetMinutes": {
               "type": "number"
@@ -2519,8 +2179,7 @@ export const HASIB_FIELDS = {
             "offsetMinutes"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
@@ -2541,15 +2200,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "enabled": {
               "type": "boolean"
             },
             "mode": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "offsetMinutes": {
               "type": "number"
@@ -2562,8 +2219,7 @@ export const HASIB_FIELDS = {
             "offsetMinutes"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
@@ -2587,15 +2243,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "enabled": {
               "type": "boolean"
             },
             "mode": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "offsetMinutes": {
               "type": "number"
@@ -2608,8 +2262,7 @@ export const HASIB_FIELDS = {
             "offsetMinutes"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
@@ -2636,15 +2289,13 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "id": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "enabled": {
               "type": "boolean"
             },
             "mode": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "offsetMinutes": {
               "type": "number"
@@ -2657,24 +2308,20 @@ export const HASIB_FIELDS = {
             "offsetMinutes"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       }
     },
     "required": [],
     "additionalProperties": false
   },
   "metric": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "segment": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "filter": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "channelCostMinor": {
     "type": "number"
@@ -2688,8 +2335,7 @@ export const HASIB_FIELDS = {
           "type": "object",
           "properties": {
             "key": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "unitPriceMinor": {
               "type": "number"
@@ -2698,20 +2344,17 @@ export const HASIB_FIELDS = {
               "type": "number"
             },
             "name": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             }
           },
           "required": [
             "key"
           ],
           "additionalProperties": false
-        },
-        "maxItems": 500
+        }
       },
       "text": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "depositMinor": {
         "type": "number"
@@ -2720,20 +2363,17 @@ export const HASIB_FIELDS = {
         "type": "number"
       },
       "acceptedBy": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       },
       "evidenceSource": {
-        "type": "string",
-        "maxLength": 100000
+        "type": "string"
       }
     },
     "required": [],
     "additionalProperties": false
   },
   "stockPolicy": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "products": {
     "type": "array",
@@ -2741,38 +2381,31 @@ export const HASIB_FIELDS = {
       "type": "object",
       "properties": {
         "requestId": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "item": {
           "type": "object",
           "properties": {
             "kind": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "nameAr": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "nameEn": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "category": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "unit": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "trackStock": {
               "type": "boolean"
             },
             "catalogEntryKey": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "serialized": {
               "type": "boolean"
@@ -2781,12 +2414,10 @@ export const HASIB_FIELDS = {
               "type": "number"
             },
             "warrantyBy": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             },
             "photoId": {
-              "type": "string",
-              "maxLength": 100000
+              "type": "string"
             }
           },
           "required": [
@@ -2805,8 +2436,7 @@ export const HASIB_FIELDS = {
             "type": "object",
             "properties": {
               "sku": {
-                "type": "string",
-                "maxLength": 100000
+                "type": "string"
               },
               "options": {
                 "type": "array",
@@ -2814,12 +2444,10 @@ export const HASIB_FIELDS = {
                   "type": "object",
                   "properties": {
                     "key": {
-                      "type": "string",
-                      "maxLength": 100000
+                      "type": "string"
                     },
                     "value": {
-                      "type": "string",
-                      "maxLength": 100000
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -2827,8 +2455,7 @@ export const HASIB_FIELDS = {
                     "value"
                   ],
                   "additionalProperties": false
-                },
-                "maxItems": 500
+                }
               },
               "priceMinor": {
                 "type": "number"
@@ -2845,10 +2472,8 @@ export const HASIB_FIELDS = {
               "serials": {
                 "type": "array",
                 "items": {
-                  "type": "string",
-                  "maxLength": 100000
-                },
-                "maxItems": 500
+                  "type": "string"
+                }
               }
             },
             "required": [
@@ -2857,8 +2482,7 @@ export const HASIB_FIELDS = {
               "priceMinor"
             ],
             "additionalProperties": false
-          },
-          "maxItems": 500
+          }
         }
       },
       "required": [
@@ -2867,16 +2491,13 @@ export const HASIB_FIELDS = {
         "variants"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "storageId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "photoId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "lineSerials": {
     "type": "array",
@@ -2884,16 +2505,13 @@ export const HASIB_FIELDS = {
       "type": "object",
       "properties": {
         "variantId": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "serials": {
           "type": "array",
           "items": {
-            "type": "string",
-            "maxLength": 100000
-          },
-          "maxItems": 500
+            "type": "string"
+          }
         }
       },
       "required": [
@@ -2901,39 +2519,31 @@ export const HASIB_FIELDS = {
         "serials"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "serials": {
     "type": "array",
     "items": {
-      "type": "string",
-      "maxLength": 100000
-    },
-    "maxItems": 500
+      "type": "string"
+    }
   },
   "serial": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "costMinor": {
     "type": "number"
   },
   "repairId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "device": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "fault": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "accessories": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "quoteMinor": {
     "type": "number"
@@ -2947,8 +2557,7 @@ export const HASIB_FIELDS = {
       "type": "object",
       "properties": {
         "variantId": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "qty": {
           "type": "number"
@@ -2962,8 +2571,7 @@ export const HASIB_FIELDS = {
         "qty"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "dueAt": {
     "type": "number"
@@ -2974,12 +2582,10 @@ export const HASIB_FIELDS = {
       "type": "object",
       "properties": {
         "key": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "label": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "priceMinor": {
           "type": "number"
@@ -2990,15 +2596,13 @@ export const HASIB_FIELDS = {
             "type": "object",
             "properties": {
               "variantId": {
-                "type": "string",
-                "maxLength": 100000
+                "type": "string"
               },
               "qty": {
                 "type": "number"
               },
               "unit": {
-                "type": "string",
-                "maxLength": 100000
+                "type": "string"
               }
             },
             "required": [
@@ -3007,8 +2611,7 @@ export const HASIB_FIELDS = {
               "unit"
             ],
             "additionalProperties": false
-          },
-          "maxItems": 500
+          }
         }
       },
       "required": [
@@ -3018,12 +2621,10 @@ export const HASIB_FIELDS = {
         "ingredients"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "menuVariantId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "yieldQty": {
     "type": "number"
@@ -3034,15 +2635,13 @@ export const HASIB_FIELDS = {
       "type": "object",
       "properties": {
         "variantId": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "qty": {
           "type": "number"
         },
         "unit": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         }
       },
       "required": [
@@ -3051,8 +2650,7 @@ export const HASIB_FIELDS = {
         "unit"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "qty": {
     "type": "number"
@@ -3061,16 +2659,13 @@ export const HASIB_FIELDS = {
     "type": "number"
   },
   "invoiceNumber": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "receivedOn": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "outputVariantId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "outputQty": {
     "type": "number"
@@ -3081,15 +2676,13 @@ export const HASIB_FIELDS = {
       "type": "object",
       "properties": {
         "variantId": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         },
         "qty": {
           "type": "number"
         },
         "unit": {
-          "type": "string",
-          "maxLength": 100000
+          "type": "string"
         }
       },
       "required": [
@@ -3097,46 +2690,37 @@ export const HASIB_FIELDS = {
         "qty"
       ],
       "additionalProperties": false
-    },
-    "maxItems": 500
+    }
   },
   "producedOn": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "useBy": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "days": {
     "type": "number"
   },
   "disposition": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "expenseId": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "category": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "vatMinor": {
     "type": "number"
   },
   "vendor": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "paidOn": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   },
   "period": {
-    "type": "string",
-    "maxLength": 100000
+    "type": "string"
   }
 };
 export const HASIB_FIELDS_BY_OPERATION = {
@@ -10288,4 +9872,25 @@ export const HASIB_FIELDS_BY_OPERATION = {
     "reason",
     "note"
   ]
+};
+export const HASIB_REQUIRED_BY_OPERATION = {
+  "batch_create": "outputVariantId",
+  "contact_summary": "contactId",
+  "conversation_orders": "conversationId",
+  "expense_void": "expenseId",
+  "item_archive": "itemId",
+  "item_photo": "itemId",
+  "order": "orderId",
+  "order_status": "orderId",
+  "payment_record": "orderId",
+  "recipe_save": "menuVariantId",
+  "repair": "repairId",
+  "repair_status": "repairId",
+  "repair_update": "repairId",
+  "serials": "variantId",
+  "stock_count": "variantId",
+  "stock_move": "variantId",
+  "stock_moves": "variantId",
+  "trade_in": "variantId",
+  "waste_create": "variantId"
 };

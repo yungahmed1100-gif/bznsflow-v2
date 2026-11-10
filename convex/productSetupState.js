@@ -22,6 +22,12 @@ export async function executeProductSetup(ctx, a, now = Date.now()) {
   if (!session || session.expiresAt <= now) return fail('sign_in_required');
   const account = await ctx.db.get(session.accountId);
   if (!account) return fail('sign_in_required');
+  return executeProductSetupForAccount(ctx, account, a, now);
+}
+
+/** The same setup rules for an account already authenticated another way (an MCP connection). */
+export async function executeProductSetupForAccount(ctx, account, a, now = Date.now()) {
+  const fail = reason => ({ ok: false, reason });
   const membership = await ctx.db.query('ascendWorkspaceMembers').withIndex('by_account', q => q.eq('accountId', account._id)).unique();
   if (membership?.status === 'active') return fail('manager_required');
   const admin = account.email.toLowerCase().trim() === 'ahmed@bznsflowai.com';

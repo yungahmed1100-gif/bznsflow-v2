@@ -27,6 +27,10 @@ async function ownerOf(ctx, sessionHash, now) {
   if (!session || session.expiresAt <= now) return { reason: 'sign_in_required' };
   const account = await ctx.db.get(session.accountId);
   if (!account) return { reason: 'sign_in_required' };
+  return accountOwner(ctx, account, now);
+}
+
+async function accountOwner(ctx, account, now) {
   const membership = await ctx.db.query('ascendWorkspaceMembers').withIndex('by_account', q => q.eq('accountId', account._id)).unique();
   if (membership?.status === 'active') return { reason: 'manager_required' };
   const admin = String(account.email).toLowerCase().trim() === ADMIN;
@@ -62,7 +66,27 @@ export const publicProject = p => p && ({ stage: p.stage, stageAt: p.stageAt, du
 export async function executeWebsiteBrief(ctx, a, now = Date.now()) {
   const owner = await ownerOf(ctx, a.sessionHash, now);
   if (!owner.account) return fail(owner.reason);
-  const { account } = owner;
+  return briefFor(ctx, owner.account, a, now);
+}
+
+/** The brief operations for an account authenticated another way (an MCP connection). */
+export async function executeWebsiteBriefForAccount(ctx, accountId, a, now = Date.now()) {
+  const account = await ctx.db.get(accountId);
+  if (!account) return fail('sign_in_required');
+  const owner = await accountOwner(ctx, account, now);
+  if (!owner.account) return fail(owner.reason);
+  return briefFor(ctx, owner.account, a, now);
+}
+
+/** The current draft's files, so a text-only edit keeps the logo, photos and documents. */
+export async function websiteDraftFiles(ctx, accountId) {
+  const source = (await draftOf(ctx, accountId)) || (await briefOf(ctx, accountId));
+  return source
+    ? { fields: source.fields || {}, photoIds: source.photoIds || [], docIds: source.docIds || [], ...(source.logoId ? { logoId: source.logoId } : {}) }
+    : { fields: {}, photoIds: [], docIds: [] };
+}
+
+async function briefFor(ctx, account, a, now) {
   if (a.operation === 'get') return ok(await view(ctx, account));
   if (a.operation === 'upload_url') {
     if (!await spend(ctx, `website-brief:${account._id}:${Math.floor(now / DAY)}`, UPLOADS_PER_DAY, 2 * DAY, now)) return fail('upload_limit');

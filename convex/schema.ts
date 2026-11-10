@@ -179,7 +179,9 @@ export default defineSchema({
   emailCampaigns: defineTable({accountId:v.id('accounts'),requestId:v.string(),name:v.string(),subject:v.string(),body:v.string(),lang:v.union(v.literal('ar'),v.literal('en')),
     sender:v.object({domain:v.string(),fromName:v.string(),fromLocal:v.string(),replyTo:v.optional(v.string())}),
     status:v.string(),reason:v.optional(v.string()),scheduledAt:v.number(),timezone:v.string(),recipientCount:v.number(),counts:v.record(v.string(),v.number()),
-    createdAt:v.number(),updatedAt:v.number(),startedAt:v.optional(v.number()),completedAt:v.optional(v.number()),cancelledAt:v.optional(v.number())})
+    createdAt:v.number(),updatedAt:v.number(),startedAt:v.optional(v.number()),completedAt:v.optional(v.number()),cancelledAt:v.optional(v.number()),
+    // Set when an MCP connection created the campaign; the worker re-checks that access before each send.
+    mcpConnectionId:v.optional(v.id('mcpConnections')),mcpRunId:v.optional(v.id('mcpRuns'))})
     .index('by_account_request',['accountId','requestId']).index('by_account_created',['accountId','createdAt']).index('by_status_scheduled',['status','scheduledAt']),
   emailCampaignRecipients: defineTable({campaignId:v.id('emailCampaigns'),accountId:v.id('accounts'),subscriberId:v.id('emailSubscribers'),email:v.string(),name:v.optional(v.string()),
     status:v.string(),attempts:v.number(),nextAttemptAt:v.number(),intent:v.optional(v.string()),attemptAt:v.optional(v.number()),providerId:v.optional(v.string()),reason:v.optional(v.string()),

@@ -277,3 +277,8 @@ export function hasibArgs(action, body) {
   if (action === 'item_save' && !args.itemId && !args.requestId) throw new PilotError('invalid_request');
   return args;
 }
+
+/** The id argument an action refuses to run without, for the MCP contract generator. */
+export function hasibRequiredField(action) {
+  return REQUIRED[action] || null;
+}

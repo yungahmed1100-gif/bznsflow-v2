@@ -12,6 +12,8 @@ import {
   recordMetric,
 } from "./mcp/state.js";
 import { executeApplication } from "./mcp/application.js";
+import { executeRasil } from "./rasilState.js";
+import { executeWebsiteBriefForAccount } from "./websiteBriefState.js";
 import { transfer } from "./mcp/transfers.js";
 import {
   connectionOwner,
@@ -116,6 +118,31 @@ export const execute = internalMutation({
       );
       if ("reason" in r) throw Error(r.reason || "test_unavailable");
       return r.value;
+    }
+    // Data an API-side preparation step needs, after the same run checks as the commit.
+    if (operation === "service_context") {
+      const s = await resolveRun(ctx, input, now);
+      const base = {
+        sessionHash: s.p.account.draftHash,
+        actorAccountId: s.p.account._id,
+      };
+      const need = `${s.tool.domain}_${s.tool.operation}`;
+      if (input.need === "email_draft" && need === "email_draft") {
+        const r: any = await executeRasil(ctx, { ...base, operation: "draft_context" }, now);
+        if (!r.ok) throw Error(r.reason || "draft_unavailable");
+        return r.value;
+      }
+      if (input.need === "email_domain" && need === "email_domain_check") {
+        const r: any = await executeRasil(ctx, { ...base, operation: "domain_context" }, now);
+        if (!r.ok) throw Error(r.reason || "domain_not_found");
+        return r.value;
+      }
+      if (input.need === "website_domain" && need === "website_domain_check") {
+        const r: any = await executeWebsiteBriefForAccount(ctx, s.p.account._id, { operation: "domain_rate" }, now);
+        if (!r.ok) throw Error(r.reason || "too_many");
+        return null;
+      }
+      throw Error("tool_not_allowed");
     }
     if (operation === "context") {
       const p = await connectionOwner(ctx, input.connectionId, now);

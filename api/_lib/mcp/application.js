@@ -19,6 +19,11 @@ import {
 } from "../green-config.js";
 import { TOOL_BY_NAME } from "../../../config/mcp/contracts.js";
 import { McpError, mcpStore } from "./store.js";
+import { draftEmail } from "../rasil-api.js";
+import { checkDomain } from "../rasil-resend.js";
+import { searchDomains } from "../website-brief-api.js";
+import { domainCandidates } from "../../../config/website-brief.js";
+import { normalizeKeys } from "../../../config/mcp/validation.js";
 import { mcpOrigin } from "./oauth.js";
 export function runtimeGate(tool, args, env) {
   if (env.MCP_ENABLED !== "true") throw new McpError("mcp_disabled", 503);
@@ -50,9 +55,11 @@ export async function runTool({
   store = mcpStore({ env }),
   fetcher = fetch,
   generate = qwenGenerator(env, fetcher),
+  emailGenerate = qwenGenerator(env, fetcher, { maxTokens: 900, timeoutMs: 30000 }),
 }) {
   const tool = TOOL_BY_NAME.get(name);
   if (!tool) throw new McpError("tool_not_allowed", 403);
+  args = normalizeKeys(args);
   runtimeGate(
     tool,
     tool.operation === "manual_reply" ? { ...args, channel: "defer" } : args,
@@ -66,9 +73,9 @@ export async function runTool({
   if (preparedRun.status === "approval_required")
     return {
       ...preparedRun,
-      approvalUrl: `${mcpOrigin(env)}/mcp?approval=${encodeURIComponent(preparedRun.runId)}`,
+      approvalUrl: approvalUrl(env, preparedRun.runId),
       message:
-        "Review this exact action in BznsFlow. After approval, retry the same tool and requestId.",
+        "Waiting for the owner. Send them the approvalUrl; after they approve, retry this tool with the same arguments and requestId.",
     };
   if (!["ready", "approved"].includes(preparedRun.status))
     return preparedRun.runId &&
@@ -93,7 +100,9 @@ export async function runTool({
     if (context.replay) return store("run", input);
     const row = context.row,
       callArgs = context.args;
-    if (tool.domain === "brain" && tool.operation === "test") {
+    if (tool.domain === "email" || tool.domain === "website")
+      prepared = await prepareService(tool, callArgs, input, { env, fetcher, store, emailGenerate });
+    else if (tool.domain === "brain" && tool.operation === "test") {
       const latest = callArgs.history
         .filter((h) => h.role === "customer")
         .at(-1)
@@ -234,7 +243,8 @@ export async function runTool({
   if (tool.domain === "dashboard" && tool.operation === "import_contacts")
     prepared.rows = importRows(args.rows);
   try {
-    return await store("run", { ...input, prepared });
+    const done = await store("run", { ...input, prepared });
+    return tool.domain === "requests" ? withApprovalUrls(done, env) : done;
   } catch (error) {
     if (input.runId && error.status === 503)
       return {
@@ -251,4 +261,56 @@ export async function runTool({
       }).catch(() => {});
     throw error;
   }
+}
+
+const approvalUrl = (env, runId) =>
+  `${mcpOrigin(env)}/mcp?approval=${encodeURIComponent(runId)}`;
+/** Requests waiting for the owner carry the link the owner opens to approve them. */
+function withApprovalUrls(done, env) {
+  const add = (item) =>
+    item?.status === "approval_required" ? { ...item, approvalUrl: approvalUrl(env, item.runId) } : item;
+  const value = done?.result;
+  if (!value) return done;
+  return {
+    ...done,
+    result: Array.isArray(value.items) ? { ...value, items: value.items.map(add) } : add(value),
+  };
+}
+/**
+ * External calls a tool needs before its Convex commit: the email writer, the email
+ * domain's DNS check, a domain search, or a schedule time. The commit re-checks access.
+ */
+async function prepareService(tool, args, input, { env, fetcher, store, emailGenerate }) {
+  if (tool.domain === "email" && tool.operation === "campaign_create") {
+    const schedule = args.schedule;
+    if (!validTimezone(schedule.timezone)) throw new McpError("invalid_timezone", 400);
+    if (schedule.mode === "now") return { scheduledAt: Date.now() };
+    try {
+      return { scheduledAt: zonedLocalToUtc(schedule.local, schedule.timezone) };
+    } catch {
+      throw new McpError("invalid_schedule", 400);
+    }
+  }
+  if (tool.domain === "email" && tool.operation === "draft") {
+    const context = await store("service_context", { ...input, need: "email_draft" });
+    try {
+      return {
+        draft: await draftEmail({ context, brief: args.brief, lang: args.lang, generate: emailGenerate }),
+      };
+    } catch {
+      throw new McpError("draft_unavailable", 503);
+    }
+  }
+  if (tool.domain === "email" && tool.operation === "domain_check") {
+    const context = await store("service_context", { ...input, need: "email_domain" });
+    const result = await checkDomain({ env, fetcher, resendDomainId: context.resendDomainId });
+    return { domainStatus: { status: result.status, records: result.records } };
+  }
+  if (tool.domain === "website" && tool.operation === "domain_check") {
+    const names = domainCandidates(args.query);
+    if (!names.length) return { domains: [] };
+    await store("service_context", { ...input, need: "website_domain" });
+    return { domains: await searchDomains(names, { env, fetcher }) };
+  }
+  return {};
 }

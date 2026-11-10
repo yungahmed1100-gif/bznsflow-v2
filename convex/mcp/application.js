@@ -9,8 +9,12 @@ import { executeBrain } from "../brainState.js";
 import { executeReview } from "../reviewState.js";
 import { executeKnowledgeForAccount } from "../knowledgeSourceState.js";
 import { prepareForPublish } from "../../src/lib/bzns-doc.js";
-import { resolveRun, finish, requestStatus } from "./state.js";
+import { resolveRun, finish, requestStatus, listRequests, cancelRequest } from "./state.js";
 import { demand } from "./access.js";
+import { executeProductSetupForAccount } from "../productSetupState.js";
+import { executeWebsiteBriefForAccount, websiteDraftFiles } from "../websiteBriefState.js";
+import { executeRasil } from "../rasilState.js";
+import { workspaceSummary, billingState } from "./workspace.js";
 
 // All domain writes and their MCP receipt share a Convex transaction. Only newly
 // queued effects are stamped; unrelated browser/automation work is never adopted.
@@ -21,7 +25,7 @@ function effectContext(ctx, connectionId, runId, effects) {
       get(target, key) {
         if (key === "insert")
           return async (table, row) => {
-            const tracked = ["blueMessages", "blueCampaigns"].includes(table);
+            const tracked = ["blueMessages", "blueCampaigns", "emailCampaigns"].includes(table);
             const id = await target.insert(
               table,
               tracked
@@ -74,7 +78,91 @@ export async function executeApplication(
   };
   let result;
   if (tool.domain === "requests")
-    result = { ok: true, value: await requestStatus(ctx, p, args.runId, now) };
+    result = {
+      ok: true,
+      value:
+        tool.operation === "list"
+          ? await listRequests(ctx, p, args, now)
+          : tool.operation === "cancel"
+            ? await cancelRequest(ctx, p, args.runId, now)
+            : await requestStatus(ctx, p, args.runId, now),
+    };
+  else if (tool.domain === "workspace")
+    result = { ok: true, value: await workspaceSummary(ctx, p, now) };
+  else if (tool.domain === "billing" && tool.disposition === "tool")
+    result = { ok: true, value: await billingState(ctx, p, now) };
+  else if (tool.domain === "onboarding") {
+    const product = args.product || (["ascend", "apex"].includes(p.plan) ? "ascend" : "catalyst");
+    result = await executeProductSetupForAccount(
+      ctx,
+      p.account,
+      tool.operation === "get"
+        ? { operation: "get", product }
+        : {
+            operation: "save",
+            product,
+            step: args.step,
+            version: args.version,
+            requestId: args.requestId,
+            ...(args.completed !== undefined ? { completed: args.completed } : {}),
+          },
+      now,
+    );
+  } else if (tool.domain === "website" && tool.disposition === "tool") {
+    if (tool.operation === "state") {
+      result = await executeWebsiteBriefForAccount(ctx, p.account._id, { operation: "get" }, now);
+      if (result.ok) result = { ok: true, value: websiteForAssistant(result.value) };
+    } else if (tool.operation === "save_draft") {
+      const current = await websiteDraftFiles(ctx, p.account._id);
+      result = await executeWebsiteBriefForAccount(
+        ctx,
+        p.account._id,
+        {
+          operation: "save_draft",
+          step: args.step,
+          fields: { ...current.fields, ...args.fields },
+          photoIds: current.photoIds,
+          docIds: current.docIds,
+          ...(current.logoId ? { logoId: current.logoId } : {}),
+        },
+        now,
+      );
+    } else {
+      demand(Array.isArray(a.prepared?.domains), "invalid_preparation");
+      result = { ok: true, value: { results: a.prepared.domains } };
+    }
+  } else if (tool.domain === "email") {
+    const prepared = a.prepared || {};
+    const input = { ...base, operation: tool.operation };
+    const email = (operation, extra = {}) => executeRasil(domainCtx, { ...input, ...extra, operation }, now);
+    if (tool.operation === "draft") {
+      demand(prepared.draft, "draft_unavailable");
+      result = { ok: true, value: { draft: prepared.draft } };
+    } else if (tool.operation === "domain_check") {
+      demand(prepared.domainStatus, "invalid_preparation");
+      result = await email("domain_status", prepared.domainStatus);
+    } else if (tool.operation === "campaign_create") {
+      demand(Number.isSafeInteger(prepared.scheduledAt), "invalid_schedule");
+      const { schedule, ...rest } = args;
+      result = await email("campaign_create", {
+        ...rest,
+        lang: rest.lang === "en" ? "en" : "ar",
+        scheduledAt: prepared.scheduledAt,
+        timezone: schedule.timezone,
+      });
+    } else if (tool.operation === "campaign_preview")
+      result = await email("campaign_preview", { ...args, lang: args.lang === "en" ? "en" : "ar" });
+    else if (tool.operation === "subscribers_import")
+      result = await email("subscribers_import", {
+        rows: args.rows,
+        origin: args.origin === "manual" ? "manual" : "import",
+        consent: args.consent,
+      });
+    else {
+      const { requestId: _r, ...rest } = args;
+      result = await email(tool.operation, rest);
+    }
+  }
   else if (tool.domain === "files" && tool.disposition === "tool") {
     if (tool.operation === "upload_contacts")
       result = {
@@ -285,4 +373,17 @@ export async function executeApplication(
     };
   }
   return finish(ctx, state, result, now, effects);
+}
+
+// Storage links are capability URLs; the assistant gets what the brief says and which files exist.
+function websiteForAssistant(view) {
+  const { logo, photos, docs, ...rest } = view || {};
+  return {
+    ...rest,
+    files: {
+      logo: !!logo,
+      photos: (photos || []).length,
+      paymentDocuments: (docs || []).map((d) => d.kind),
+    },
+  };
 }
