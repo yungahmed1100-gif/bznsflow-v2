@@ -756,3 +756,12 @@ test("expired, rejected and cancelled approvals tell the assistant what to do ne
   assert.equal(item.args, undefined, "listing never returns stored arguments");
   assert.ok(a.accountId);
 });
+test("every handoff answers with its website path, including ones inside product domains", async () => {
+  const { call } = await fixture();
+  for (const tool of ["bznsflow_email_domain_connect", "bznsflow_website_submit", "bznsflow_billing_checkout"]) {
+    const result = await call(tool);
+    assert.equal(result.status, "completed", tool);
+    assert.equal(result.result.status, "website_required", tool);
+    assert.ok(result.result.path.startsWith("/"), tool);
+  }
+});
