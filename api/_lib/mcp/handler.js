@@ -422,6 +422,15 @@ export function createMcpHandler({
             env,
             store,
           });
+          // Count only the tools this connection actually sees (the email allow-list is applied here).
+          if (tool.domain === "workspace" && result.result?.toolGroups) {
+            const groups = {};
+            for (const name of names) {
+              const domain = TOOL_BY_NAME.get(name).domain;
+              groups[domain] = (groups[domain] || 0) + 1;
+            }
+            result.result.toolGroups = groups;
+          }
           if (result.status === "website_required" || result.result?.status === "website_required") {
             const handoff = result.result?.status ? result.result : result;
             handoff.url = new URL(handoff.path, origin).href;
