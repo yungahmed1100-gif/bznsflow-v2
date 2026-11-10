@@ -33,9 +33,10 @@ The transport tests fail against the previous handler (GET hangs) and pass on th
 | 2 | Vercel `dpl_HtTadLCz2NYHdmDRmUwkXi9PLT3F` | `e533415` |
 | 3 | Vercel `dpl_CmcWhhxDn18fNsNHtmri9ZGevKyJ` | `9129fa3` |
 | 4 | Vercel `dpl_AEpa5yhu9DFNXnUPJ39vvGcmbTJz` | `2a13e88` |
-| 5 | Vercel `dpl_MMgBFkNJ6CwdPeyat6fpWiHTXfjd` (current) | `afb3604` |
+| 5 | Vercel `dpl_MMgBFkNJ6CwdPeyat6fpWiHTXfjd` | `afb3604` |
+| 6 | Convex `prod:rare-fish-465` (module layout only) and Vercel `dpl_8nDdNzkBMf9noVhoUoAUGQzwtv1y` (current) | `04c934d` |
 
-Each website deploy was built from a clean `git archive`, staged with `--skip-domain`, checked (pages 200, private headers, temporary-host refusal) and promoted. Rollback: promote `dpl_HENxf5PXasHe8Eudb2AVDoMpEUm6`; keep the additive Convex fields; `MCP_ENABLED=false` in both runtimes stops MCP.
+Each website deploy was built from a clean `git archive`, staged with `--skip-domain`, checked (pages 200, private headers, temporary-host refusal) and promoted. Rollback: promote `dpl_MMgBFkNJ6CwdPeyat6fpWiHTXfjd` (pre-refactor, same behaviour) or `dpl_HENxf5PXasHe8Eudb2AVDoMpEUm6` (before this release); keep the additive Convex fields; `MCP_ENABLED=false` in both runtimes stops MCP.
 
 ## Evidence
 
@@ -50,3 +51,17 @@ Each website deploy was built from a clean `git archive`, staged with `--skip-do
 - The in-place code confirmation was tested with synthetic sign-in responses; Ahmed's next real connection is its first live use.
 - Writes beyond the reversible ones above, email sends, website submission and real ChatGPT/Claude client runs with the new tools.
 - Setup tools that need the browser (`setup_*` provider steps, file pickers, website submit/upload, Paymob payment) remain handoffs.
+
+## Refactor and push (10 November 2026, afternoon)
+
+Ahmed asked to refactor the release and push it. Behaviour is unchanged: the tool registry and every advertised schema are byte-identical to the pre-refactor commit (snapshot of all 433 tools).
+
+- Connection page: 1,001 → 441 lines; `copy.js`, `pending-policy.js`, `ConnectionCard`, `ConsentCard`, `ActivityList`/`PastConnections`.
+- Convex: `executeApplication` dispatches through `domains/core.js` and `domains/product.js` (longest handler 32 lines); request lifecycle in `requests.js`; activity helper in `audit.js`; `state.js` 866 → 690 lines.
+- Registry: product tools in `config/mcp/product-tools.js`, one function per area; `contracts.js` 820 → 695 lines.
+- Handler: `discovery.js` (tool list) and `calls.js` (tools/call, no mutation of store results); `handler.js` 538 → 369 lines.
+- Fixed while refactoring: `bznsflow_email_domain_connect` was routed to Rasil instead of returning its website link; handoffs are now answered before their domain (regression test added).
+
+Evidence: 1,241 unit tests, Convex typecheck, build, 0 vulnerabilities, MCP browser 272, and every shared and sector browser suite passed in the full release check except `tests/home-browser.mjs`, which timed out once waiting 6 s for the home pipeline animation (2.6 s step) and then passed twice on rerun. That suite is a known timing flake to replace with a controlled clock; the home page is not part of this release. MCP tests at the final commit: 43 across the touched suites. Production after promotion: health 15/15, pages 200, unauthenticated POST 401, GET 405, no errors or timeouts in the deployment's logs.
+
+`origin/master` fast-forwarded from `e2fd10c` to `04c934d` (45 commits, no force push); branch `release/mcp-control-2026-11-10` pushed. The main checkout's local `master` still points at `aecd3f2` with uncommitted work; update it with `git pull --ff-only` after committing or setting that work aside.
