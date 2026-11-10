@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { blueHarness, seedTenant } from "./helpers/blue-tenant.mjs";
-import { manage, prepare, admit, recordMetric } from "../convex/mcp/state.js";
+import { manage, prepare, admit, recordMetric, requestStatus } from "../convex/mcp/state.js";
 import { executeApplication } from "../convex/mcp/application.js";
 import { connectionOwner, mcpEffectAllowed } from "../convex/mcp/access.js";
 import { TOOLS, toolsFor } from "../config/mcp/contracts.js";
@@ -546,12 +546,57 @@ test("manual replies retain pending delivery and revocation stops the queued pro
   assert.equal(message.mcpConnectionId, c.id);
   assert.equal(message.mcpRunId, p.runId);
   assert.equal(message.status, "queued");
+  for (const [receipt, expected] of [
+    ["submitted", "pending"], ["sent", "pending"],
+    ["delivered", "completed"], ["read", "completed"],
+    ["failed", "failed"], ["ambiguous", "outcome_unknown"],
+    ["future_provider_state", "outcome_unknown"],
+  ]) {
+    await m.db.patch(message._id, { status: receipt });
+    const outcome = await call("bznsflow_requests_status", { runId: p.runId });
+    assert.equal(outcome.result.status, expected, receipt);
+  }
+  await m.db.patch(message._id, { status: "queued" });
   await manage(
     m.ctx,
     { operation: "revoke", tokenHash: "1".repeat(64), connectionId: c.id },
     m.now(),
   );
   assert.equal(await mcpEffectAllowed(m.ctx, message, m.now()), false);
+});
+test("campaign receipts reflect recipient delivery rather than worker completion", async () => {
+  const { m, a, c } = await fixture();
+  const campaignId = await m.db.insert("blueCampaigns", {
+    accountId: a.accountId, status: "completed", recipientCount: 2,
+  });
+  const recipientIds = await Promise.all([0, 1].map(() => m.db.insert("blueCampaignRecipients", {
+    accountId: a.accountId, campaignId, status: "submitted",
+  })));
+  const runId = await m.db.insert("mcpRuns", {
+    accountId: a.accountId, connectionId: c.id,
+    tool: "bznsflow_dashboard_campaign_create", status: "pending",
+    effects: [{ id: campaignId, table: "blueCampaigns" }],
+    expiresAt: m.now() + 86400000,
+  });
+  const principal = await connectionOwner(m.ctx, c.id, m.now());
+  const status = () => requestStatus(m.ctx, principal, runId, m.now());
+  assert.equal((await status()).status, "pending", "submission is not delivery");
+  await m.db.patch(recipientIds[0], { status: "delivered" });
+  await m.db.patch(recipientIds[1], { status: "failed" });
+  let result = await status();
+  assert.equal(result.status, "failed", "partial delivery must expose the failure");
+  assert.equal(result.effects[0].counts.delivered, 1);
+  assert.equal(result.effects[0].counts.failed, 1);
+  await m.db.patch(recipientIds[1], { status: "ambiguous" });
+  assert.equal((await status()).status, "outcome_unknown");
+  await m.db.patch(recipientIds[1], { status: "read" });
+  assert.equal((await status()).status, "completed");
+  await m.db.patch(recipientIds[1], { status: "future_provider_state" });
+  assert.equal((await status()).status, "outcome_unknown", "unknown states cannot imply success");
+  await m.db.delete(recipientIds[1]);
+  assert.equal((await status()).status, "outcome_unknown", "missing delivery evidence cannot imply success");
+  await m.db.patch(campaignId, { recipientCount: 101 });
+  assert.equal((await status()).status, "outcome_unknown", "an oversized campaign cannot use a partial receipt set");
 });
 for (const packId of [
   "retail",

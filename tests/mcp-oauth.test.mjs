@@ -194,14 +194,22 @@ for (const requestedScope of [
       MCP_OAUTH_ENCRYPTION_KEY: "a".repeat(64),
       MCP_OAUTH_JWKS: JSON.stringify({ keys: [jwk] }),
     };
+    let browserFresh = true;
+    const store = async (op, args) => {
+      if (op === "browser_identity" && args.fresh && !browserFresh)
+        throw new McpError("fresh_sign_in_required", 409);
+      if (op === "manage" && args.operation === "list")
+        return { connections: [...durable.connections.values()] };
+      return durable.call(op, args);
+    };
     const providers = [
-      createOAuth({ env, store: durable.call }),
-      createOAuth({ env, store: durable.call }),
+      createOAuth({ env, store }),
+      createOAuth({ env, store }),
     ];
     const handlers = providers.map((provider) =>
       createMcpHandler({
         env,
-        store: durable.call,
+        store,
         provider,
         execute: async () => ({
           status: "completed",
@@ -311,6 +319,32 @@ for (const requestedScope of [
         }),
       });
       assert.equal(tampered.status, 409);
+      // Re-verification returns to /mcp without the interaction query string.
+      // The pending request must survive the rejected attempt in its cookie.
+      browserFresh = false;
+      const staleConsent = await request("/api/mcp/manage", {
+        method: "POST",
+        headers: {
+          Origin: origin,
+          "Content-Type": "application/json",
+          "x-csrf-token": "c".repeat(64),
+        },
+        body: JSON.stringify({
+          action: "consent",
+          allow: true,
+          interactionUid: details.interaction.uid,
+        }),
+      });
+      assert.equal(staleConsent.status, 409);
+      assert.equal((await staleConsent.json()).reason, "fresh_sign_in_required");
+      assert.equal(durable.connections.size, 0, "stale sign-in creates no connection");
+      browserFresh = true;
+      const resumed = await request("/api/mcp/manage");
+      assert.equal(resumed.status, 200);
+      assert.equal((await resumed.json()).resume, true, "sign-in return resumes consent");
+      const resumedView = await request("/api/mcp/manage?interaction=true");
+      assert.equal(resumedView.status, 200);
+      assert.equal((await resumedView.json()).interaction.uid, details.interaction.uid);
       const consent = await request("/api/mcp/manage", {
         method: "POST",
         headers: {

@@ -2,6 +2,10 @@
 
 Status (16 October 2026, afternoon): **integrated onto the live Green source and accepted on the isolated candidate. Ready for the Green deploy, which Ahmed authorized and runs.** Branch `release/mcp-integration-2026-10-16`. See [the 16 October integrated acceptance](#integrated-acceptance-16-october-2026) below and the [Green release record](../green-release-2026-10-16-mcp.md). The sections that follow it record the earlier, pre-integration evidence from branch `feat/bznsflow-mcp` (base `9f3a6a4`).
 
+## Live verification — 9 November 2026
+
+The MCP-only production deployment passed public health and a real, explicitly authorized read-only OAuth/SDK journey, including four business-state reads, refresh rotation and revocation. A consent-return bug after fresh sign-in was reproduced and repaired locally with a failing-before/passing-after regression; the repair is not deployed. Actual ChatGPT client acceptance remains outstanding. See [the live verification report](../live-verification-2026-11-09.md) for exact scope, website findings, cleanup and remaining gaps.
+
 ## Verification recheck — 8 November 2026
 
 The owner's final scope is **MCP only**. Source `63fb0da` is live on Green as `dpl_HENxf5PXasHe8Eudb2AVDoMpEUm6`; onboarding API/functions/schema were restored to baseline. Public MCP health passed 13/13 after correction. See [the MCP-only production record](../green-release-2026-11-08-mcp-only.md). The [earlier MCP/onboarding deployment](../green-release-2026-11-08-mcp-onboarding.md) is superseded. Signed-in ChatGPT acceptance remains the owner's follow-up.

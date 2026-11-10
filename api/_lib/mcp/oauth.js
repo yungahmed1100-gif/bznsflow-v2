@@ -407,18 +407,18 @@ export async function completeInteraction(
   );
   if (interaction.uid !== interactionUid)
     throw new McpError("authorization_changed", 409);
-  // One owner decision finishes the request: the page never shows it again.
-  appendCookie(
-    res,
-    serializeCookie("bf_mcp_resume", "", { maxAge: 0, httpOnly: true }),
-  );
   if (!allow) {
-    return provider.interactionResult(
+    const redirect = await provider.interactionResult(
       req,
       res,
       { error: "access_denied", error_description: "Owner declined access" },
       { mergeWithLastSubmission: false },
     );
+    appendCookie(
+      res,
+      serializeCookie("bf_mcp_resume", "", { maxAge: 0, httpOnly: true }),
+    );
+    return redirect;
   }
   const identity = await store("browser_identity", {
     tokenHash: tokenHash(req),
@@ -464,7 +464,7 @@ export async function completeInteraction(
     accountId: identity.accountId,
     grantId: hash(grantId),
   });
-  return provider.interactionResult(
+  const redirect = await provider.interactionResult(
     req,
     res,
     {
@@ -475,4 +475,11 @@ export async function completeInteraction(
     },
     { mergeWithLastSubmission: !signingIn },
   );
+  // Clear only after the decision completes. A fresh-sign-in challenge must
+  // retain this cookie so returning to /mcp restores the pending consent.
+  appendCookie(
+    res,
+    serializeCookie("bf_mcp_resume", "", { maxAge: 0, httpOnly: true }),
+  );
+  return redirect;
 }

@@ -663,6 +663,42 @@ export async function admit(ctx, a, now = Date.now()) {
   };
 }
 
+const PENDING_EFFECTS = new Set([
+  "queued", "pending", "scheduled", "starting", "processing", "attempting",
+  "submitted", "sending", "sent",
+]);
+const FAILED_EFFECTS = new Set(["failed", "blocked", "cancelled"]);
+const COMPLETED_EFFECTS = new Set(["completed", "delivered", "read"]);
+function effectOutcome(statuses) {
+  if (statuses.some(status =>
+    !PENDING_EFFECTS.has(status) && !FAILED_EFFECTS.has(status) && !COMPLETED_EFFECTS.has(status)
+  )) return "outcome_unknown";
+  if (statuses.some(status => PENDING_EFFECTS.has(status))) return "pending";
+  if (statuses.some(status => FAILED_EFFECTS.has(status))) return "failed";
+  return "completed";
+}
+
+async function campaignOutcome(ctx, campaign) {
+  // Campaigns admit at most 100 recipients. Read one extra to detect drift,
+  // rather than reporting success from a truncated or expired receipt set.
+  const recipients = await ctx.db.query("blueCampaignRecipients")
+    .withIndex("by_campaign_status", q => q.eq("campaignId", campaign._id))
+    .take(101);
+  const counts = Object.fromEntries([...new Set(recipients.map(r => r.status))]
+    .map(status => [status, recipients.filter(r => r.status === status).length]));
+  const completeEvidence = Number.isInteger(campaign.recipientCount) &&
+    campaign.recipientCount > 0 && campaign.recipientCount <= 100 &&
+    recipients.length === campaign.recipientCount;
+  // "completed" means the worker has no more attempts, not that Meta delivered.
+  const statuses = recipients.map(r => r.status);
+  if (campaign.status !== "completed") statuses.push(campaign.status);
+  return {
+    status: completeEvidence ? effectOutcome(statuses) : "outcome_unknown",
+    processingStatus: campaign.status,
+    counts,
+  };
+}
+
 export async function requestStatus(ctx, p, runId, now = Date.now()) {
   const run = await ctx.db.get(runId);
   demand(
@@ -691,33 +727,12 @@ export async function requestStatus(ctx, p, runId, now = Date.now()) {
             ? "campaign"
             : "invitation",
       status,
+      ...(row && ref.table === "blueCampaigns" ? await campaignOutcome(ctx, row) : {}),
       reason: row?.reason || null,
     });
   }
   let status = run.status;
-  if (effects.length) {
-    const pending = [
-      "queued",
-      "pending",
-      "scheduled",
-      "starting",
-      "processing",
-      "attempting",
-      "submitted",
-      "sending",
-    ];
-    if (
-      effects.some((e) => ["ambiguous", "outcome_unknown"].includes(e.status))
-    )
-      status = "outcome_unknown";
-    else if (effects.some((e) => pending.includes(e.status)))
-      status = "pending";
-    else if (
-      effects.some((e) => ["failed", "blocked", "cancelled"].includes(e.status))
-    )
-      status = "failed";
-    else status = "completed";
-  }
+  if (effects.length) status = effectOutcome(effects.map(e => e.status));
   return {
     runId: run._id,
     reason: run.reason || null,
