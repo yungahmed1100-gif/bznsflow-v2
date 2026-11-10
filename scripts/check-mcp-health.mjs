@@ -68,6 +68,15 @@ await Promise.all([
     assert.equal(bytes.readUInt32BE(20), 256);
     return { url: new URL(MCP_ICON_PATH, origin).href, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') };
   }),
+  // A stateless MCP endpoint must refuse the optional GET stream at once; a held GET
+  // ran to Vercel's 60-second limit in production on 10 November 2026.
+  ...['GET', 'DELETE'].map(method => check(`method:${method}`, async () => {
+    const started = Date.now();
+    const response = await request('/api/mcp', { method, headers: { Accept: 'text/event-stream' }, signal: AbortSignal.timeout(5000) });
+    assert.equal(response.status, 405);
+    assert.equal(response.headers.get('allow'), 'POST, OPTIONS');
+    return { status: response.status, ms: Date.now() - started };
+  })),
   ...['https://chatgpt.com', 'https://claude.ai', 'https://claude.com', 'https://untrusted.invalid'].map(from => check(`cors:${from}`, async () => {
     const response = await request('/api/mcp', { method: 'OPTIONS', headers: { Origin: from, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,content-type,mcp-protocol-version' } });
     const trusted = from !== 'https://untrusted.invalid';

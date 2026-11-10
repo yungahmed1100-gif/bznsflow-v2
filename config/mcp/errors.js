@@ -27,6 +27,7 @@ export const ERRORS = {
   dashboard_unavailable: E("The workspace is temporarily unavailable.", "Try again shortly."),
   mcp_disabled: E("AI connections are turned off.", null),
   mcp_unavailable: E("BznsFlow could not complete the call.", "Retry once with the same requestId; if it repeats, check bznsflow_requests_status."),
+  request_timeout: E("The call took longer than BznsFlow allows.", "Do not repeat a change. Check bznsflow_requests_list or bznsflow_requests_status for its outcome first."),
   result_too_large: E("The result is too large to return.", "Use a smaller limit or a cursor."),
   foreign_record: E("A referenced record does not belong to this workspace.", "Use ids returned by this workspace's tools."),
   confirmation_required: E("This action needs confirm: true.", "Show the owner what will happen, then call again with confirm: true."),

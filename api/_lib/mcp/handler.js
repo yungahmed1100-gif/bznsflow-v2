@@ -49,6 +49,11 @@ async function body(req) {
 }
 const reason = (e) =>
   /^[a-z_]{3,60}$/.test(e?.code || "") ? e.code : "mcp_unavailable";
+// Every MCP request answers before Vercel's 60-second limit, so a slow call can never
+// be killed mid-flight while it holds a concurrency lease (each store call is capped at 20 s).
+export const MCP_REQUEST_DEADLINE_MS = 45000;
+// Stateless Streamable HTTP: no server-initiated stream and no sessions to delete.
+const MCP_METHODS = "POST, OPTIONS";
 // Bump when tool names, schemas or descriptions change, so clients refresh their cache.
 export const SERVER_VERSION = "1.1.0";
 // Large shared sector shapes are advertised by top-level field only; validation still
@@ -110,6 +115,7 @@ export function createMcpHandler({
   store = mcpStore({ env }),
   provider: provided,
   execute = runTool,
+  deadlineMs = MCP_REQUEST_DEADLINE_MS,
 } = {}) {
   let cached = provided;
   const provider = () => cached || (cached = createOAuth({ env, store }));
@@ -118,6 +124,7 @@ export function createMcpHandler({
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Robots-Tag", "noindex, nofollow");
     res.setHeader("Referrer-Policy", "no-referrer");
+    const requestStarted = Date.now();
     let lease, connectionId;
     try {
       const origin = mcpOrigin(env),
@@ -322,12 +329,15 @@ export function createMcpHandler({
           "Access-Control-Allow-Headers",
           "Authorization, Content-Type, MCP-Protocol-Version, MCP-Session-Id",
         );
-        res.setHeader(
-          "Access-Control-Allow-Methods",
-          "POST, GET, DELETE, OPTIONS",
-        );
+        res.setHeader("Access-Control-Allow-Methods", MCP_METHODS);
         res.statusCode = 204;
         return res.end();
+      }
+      // The MCP transport lets a stateless server refuse the optional GET stream with 405.
+      // Accepting it held a function and a lease open until Vercel killed it at 60 s.
+      if (req.method !== "POST") {
+        res.setHeader("Allow", MCP_METHODS);
+        throw new McpError("method_not_allowed", 405);
       }
       const access = await accessToken(provider(), store, req, env);
       connectionId = access.connectionId;
@@ -335,8 +345,11 @@ export function createMcpHandler({
       const context = await store("admit", { connectionId, lease });
       // Email campaigns stay limited to the accounts the website's Rasil switch admits.
       const emailOpen = rasilOpen(env, context.email);
+      // Convex and the website deploy separately. A name this build does not know
+      // (a newer backend) is skipped rather than failing every call during the gap.
       const names = context.tools.filter(
         (name) =>
+          TOOL_BY_NAME.has(name) &&
           (TOOL_BY_NAME.get(name).category === "read" ||
             access.scopes.includes("workspace:write")) &&
           (emailOpen || TOOL_BY_NAME.get(name).domain !== "email"),
@@ -479,11 +492,22 @@ export function createMcpHandler({
         void transport.close().catch(() => {});
         void server.close().catch(() => {});
       });
-      await transport.handleRequest(
-        req,
-        res,
-        req.method === "POST" ? await body(req) : undefined,
-      );
+      let timer;
+      const deadline = new Promise((_, reject) => {
+        // Counted from arrival, so token checks and admission share the same budget.
+        timer = setTimeout(
+          () => reject(new McpError("request_timeout", 504)),
+          Math.max(1000, deadlineMs - (Date.now() - requestStarted)),
+        );
+      });
+      try {
+        const handling = transport.handleRequest(req, res, await body(req));
+        // After a timeout the abandoned call may still finish or fail; it must not crash the instance.
+        handling.catch(() => {});
+        await Promise.race([handling, deadline]);
+      } finally {
+        clearTimeout(timer);
+      }
     } catch (error) {
       const status = error instanceof McpError ? error.status : 503;
       if (status === 401)
@@ -492,6 +516,17 @@ export function createMcpHandler({
           `Bearer resource_metadata="${mcpOrigin(env)}/.well-known/oauth-protected-resource/api/mcp", scope="workspace:read workspace:write", error="invalid_token"`,
         );
       if (status === 429) res.setHeader("Retry-After", "60");
+      if (error?.code === "request_timeout" && !res.headersSent) {
+        res.statusCode = 504;
+        res.setHeader("Content-Type", "application/json");
+        return res.end(
+          JSON.stringify({
+            ok: false,
+            reason: "request_timeout",
+            hint: "The call took too long. Do not repeat a change; check bznsflow_requests_list or bznsflow_requests_status first.",
+          }),
+        );
+      }
       if (!res.headersSent)
         json(res, status, { ok: false, reason: reason(error) });
     } finally {
