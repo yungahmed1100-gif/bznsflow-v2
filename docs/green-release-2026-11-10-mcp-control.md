@@ -1,0 +1,52 @@
+# Green MCP control release — 10 November 2026
+
+Ahmed asked to improve the MCP connection, functions and flow, fix UI and backend bugs, test end to end, deploy to production and add functions so BznsFlow can be fully controlled via MCP. Scope confirmed: **MCP only**; live testing on his workspace limited to reads and writes that leave data as it was.
+
+Branch `release/mcp-control-2026-11-10`, built on the live MCP-only line (`2f96092`, runtime `63fb0da`). Other uncommitted work in the main checkout (hero, onboarding, legal, messaging) is not included.
+
+## What changed
+
+- **Discovery.** Real descriptions and titles for every tool; per-tool schemas with required fields; sector tools advertise their key fields and `bznsflow_tools_describe` returns the full schema. Real estate discovery fell from 384 KB to ~123 KB; every sector is budget-tested (≤140 KB, Catalyst ≤65 KB).
+- **Errors.** `{ code, message, hint, field }`, e.g. `conversationId is required.` Upper-case request ids accepted.
+- **Approvals.** Rejected, cancelled and expired requests explain the next step; `/mcp?approval=<id>` opens and highlights the request; approval cards show the action, records and values with the raw request folded away.
+- **New tools.** `workspace_summary`, `tools_describe`, `requests_list`, `requests_cancel`, `onboarding_get/save`, `website_state/save_draft/domain_check`, 12 Rasil email tools (Rasil allow-list unchanged), `billing_state`. Inventory: [capabilities-2026-11-10](mcp/capabilities-2026-11-10.md).
+- **Email effects.** MCP-created email campaigns are tagged; `requests_status` reports delivery from receipts; the Rasil worker blocks a campaign after revocation (optional schema fields `mcpConnectionId`, `mcpRunId` on `emailCampaigns`).
+- **Carried fixes.** Pending consent survives fresh sign-in; campaign "completed" is no longer reported as delivered.
+
+## Problems found in production and fixed structurally
+
+| Problem | Fix | Guard |
+| --- | --- | --- |
+| Continue on the consent card looked dead: the fresh-sign-in refusal showed only at the top of the page | Errors render beside the action and scroll into view | `tests/mcp-browser.mjs` refused-consent step |
+| A signed-in owner was told to verify again and sent away to sign in | Code emailed and confirmed inside the card, then the same consent or permission change continues; 5-minute rule kept | browser test: wrong code, right code, auto-continue |
+| `GET /api/mcp` held open until Vercel's 60 s kill, keeping a concurrency lease | GET/DELETE answer 405 before any token check or lease | `tests/mcp-transport.test.mjs`; health `method:GET/DELETE` |
+| A request could run into the platform limit | 45 s budget from arrival; `request_timeout` with "do not repeat"; lease released | transport test |
+| Convex deployed before the website: the old website failed every call on unknown tool names (the few minutes between the Convex and website deploys) | Unknown names are skipped, so either deploy order works | transport test |
+
+The transport tests fail against the previous handler (GET hangs) and pass on the new one.
+
+## Deployments
+
+| Order | Target | Source |
+| --- | --- | --- |
+| 1 | Convex `prod:rare-fish-465` (additive optional fields; no index deleted) | `e533415` |
+| 2 | Vercel `dpl_HtTadLCz2NYHdmDRmUwkXi9PLT3F` | `e533415` |
+| 3 | Vercel `dpl_CmcWhhxDn18fNsNHtmri9ZGevKyJ` | `9129fa3` |
+| 4 | Vercel `dpl_AEpa5yhu9DFNXnUPJ39vvGcmbTJz` | `2a13e88` |
+| 5 | Vercel `dpl_MMgBFkNJ6CwdPeyat6fpWiHTXfjd` (current) | `afb3604` |
+
+Each website deploy was built from a clean `git archive`, staged with `--skip-domain`, checked (pages 200, private headers, temporary-host refusal) and promoted. Rollback: promote `dpl_HENxf5PXasHe8Eudb2AVDoMpEUm6`; keep the additive Convex fields; `MCP_ENABLED=false` in both runtimes stops MCP.
+
+## Evidence
+
+- Before release: `npm run test:release` passed — 1,237 unit tests, Convex typecheck, build, 0 vulnerabilities, all 15 shared browser suites and every sector suite.
+- MCP suites at the final commit: 50 unit/integration tests; MCP browser 272 checks (Arabic/English, 320/768/1440, axe).
+- Production health: 15/15 (adds GET/DELETE refusal; admission probed with POST).
+- **Live journey on Ahmed's Ascend retail workspace, 40/40 checks:** OAuth PKCE, version 1.1.0, discovery 156 tools / 112 KB / 3 pages; reads in every group (workspace, business, conversations, customers, broadcasts, messaging, catalog, knowledge, BznsBrain, setup, billing, requests, Hasib, website, email preview); readable argument error; timezone written with its current value; setup progress re-saved at its current step (step 0); one approval cancelled by the assistant; one rejected by Ahmed on the deep-linked page and refused on retry with guidance; refresh rotation; after disconnect the access token got 401 and the refresh token was refused.
+- Nothing was sent, published or paid. The first live run stopped on an over-broad test assertion (the response's own dashboard link) and was repeated with a second temporary connection, which Ahmed disconnected along with the first.
+
+## Not verified
+
+- The in-place code confirmation was tested with synthetic sign-in responses; Ahmed's next real connection is its first live use.
+- Writes beyond the reversible ones above, email sends, website submission and real ChatGPT/Claude client runs with the new tools.
+- Setup tools that need the browser (`setup_*` provider steps, file pickers, website submit/upload, Paymob payment) remain handoffs.

@@ -206,3 +206,7 @@ Stop rollout for any foreign-record access, unauthorized consequential action, r
   - discovery returns 200;
   - `home-browser`: 44 checks passed.
 - **Rollback.** Promote `dpl_BMyTxmVPYjrrXRr9k3GB2cejNWFd`.
+
+## MCP control release (10 November 2026)
+
+Live on Green as `dpl_MMgBFkNJ6CwdPeyat6fpWiHTXfjd` with Convex `rare-fish-465`: real tool descriptions and smaller discovery, readable errors, approval deep links, workspace summary, request listing/cancelling, setup progress, website brief, Rasil email and billing tools, in-place identity confirmation, and transport guards (GET 405, 45-second request budget, version-skew tolerance). Live journey 40/40 on the owner's workspace. See [the release record](../green-release-2026-11-10-mcp-control.md).
