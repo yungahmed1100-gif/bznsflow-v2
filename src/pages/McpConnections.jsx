@@ -573,6 +573,28 @@ export default function McpConnections({ lang = "ar" }) {
       setBusy(false);
     }
   }
+  // A refusal is shown where the owner is looking: inside the consent card, or
+  // scrolled into view, never only at the top of a long page.
+  const errorRef = useRef(null);
+  useEffect(() => {
+    if (!error || !errorRef.current) return;
+    errorRef.current.scrollIntoView({ block: "center", behavior: "smooth" });
+    errorRef.current.focus({ preventScroll: true });
+  }, [error]);
+  const errorNotice = error && (
+    <div className="mcp-notice" role="alert" ref={errorRef} tabIndex={-1}>
+      {message(error)}{" "}
+      {error === "fresh_sign_in_required" ? (
+        <a href={`${signIn}&fresh=1`}>{tr("Verify account", "التحقق من الحساب")}</a>
+      ) : error === "access_required" ? (
+        <a href={`${prefix || ""}/#tiers`}>{tr("See plans", "اطّلع على الباقات")}</a>
+      ) : (
+        <button className="mcp-secondary" onClick={() => load().catch(() => setError("unavailable"))}>
+          {tr("Try again", "حاول مجددًا")}
+        </button>
+      )}
+    </div>
+  );
   async function copy(label, value) {
     try {
       await navigator.clipboard.writeText(value);
@@ -614,27 +636,7 @@ export default function McpConnections({ lang = "ar" }) {
         {account === undefined &&
           tr("Loading your account…", "جارٍ تحميل حسابك…")}
       </div>
-      {error && (
-        <div className="mcp-notice" role="alert">
-          {message(error)}{" "}
-          {error === "fresh_sign_in_required" ? (
-            <a href={`${signIn}&fresh=1`}>
-              {tr("Verify account", "التحقق من الحساب")}
-            </a>
-          ) : error === "access_required" ? (
-            <a href={`${prefix || ""}/#tiers`}>
-              {tr("See plans", "اطّلع على الباقات")}
-            </a>
-          ) : (
-            <button
-              className="mcp-secondary"
-              onClick={() => load().catch(() => setError("unavailable"))}
-            >
-              {tr("Try again", "حاول مجددًا")}
-            </button>
-          )}
-        </div>
-      )}
+      {error && !consent && errorNotice}
       {account === null && (
         <section className="mcp-panel">
           <h2>
@@ -731,6 +733,7 @@ export default function McpConnections({ lang = "ar" }) {
               "يستمر الوصول لمدة تصل إلى ٣٠ يومًا مع تجديد تلقائي خلالها. يمكنك تعديل الصلاحيات أو قطع الاتصال في أي وقت.",
             )}
           </p>
+          {error && errorNotice}
           <div className="mcp-actions">
             {!consentAreas.length && (
               <p className="mcp-muted" id="mcp-consent-empty">
@@ -748,8 +751,11 @@ export default function McpConnections({ lang = "ar" }) {
                   interactionUid: consent.uid,
                 })
               }
+              aria-busy={busy || undefined}
             >
-              {tr("Continue with this account", "المتابعة بهذا الحساب")}
+              {busy
+                ? tr("Connecting…", "جارٍ الربط…")
+                : tr("Continue with this account", "المتابعة بهذا الحساب")}
             </button>
             <button
               className="mcp-secondary"

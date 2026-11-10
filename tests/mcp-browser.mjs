@@ -22,6 +22,8 @@ try {
         revoked = false,
         approved = false,
         consented = false,
+        // The first consent is refused like a stale sign-in, as on 10 November.
+        consentRefusals = 1,
         policy = false;
       const connection = {
         id: "synthetic-connection",
@@ -73,6 +75,10 @@ try {
             );
             if (body.action === "revoke") revoked = true;
             if (body.action === "approve") approved = true;
+            if (body.action === "consent" && consentRefusals > 0) {
+              consentRefusals--;
+              return json({ ok: false, reason: "fresh_sign_in_required" }, 409);
+            }
             if (body.action === "consent") {
               assert.equal(body.interactionUid, "synthetic");
               assert.equal(body.allow, true);
@@ -335,6 +341,23 @@ try {
         JSON.stringify(axe.violations, null, 2),
       );
       assert.deepEqual(axe.violations, [], `${lang} ${width} accessibility`);
+      checks++;
+      // A refused consent is explained next to the button, in view, with the way forward.
+      await page
+        .getByRole("button", {
+          name: lang === "ar" ? "المتابعة بهذا الحساب" : "Continue with this account",
+          exact: true,
+        })
+        .click();
+      const refusal = page.locator(".mcp-consent [role=alert]");
+      await refusal.waitFor();
+      await page.waitForTimeout(600);
+      assert.ok(await refusal.isVisible());
+      const box = await refusal.boundingBox(),
+        viewport = page.viewportSize();
+      assert.ok(box && box.y >= 0 && box.y + box.height <= viewport.height, `${lang} ${width} refusal is in view`);
+      assert.ok(await refusal.getByRole("link", { name: lang === "ar" ? "التحقق من الحساب" : "Verify account" }).isVisible());
+      assert.equal(await page.locator("[role=alert]").count(), 1, "one alert, not two");
       checks++;
       await Promise.all([
         page.waitForResponse(
