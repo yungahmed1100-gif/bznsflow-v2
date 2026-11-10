@@ -4,8 +4,8 @@
 // descriptions are identical to having them inline.
 const ASCEND = ["ascend", "apex"];
 
-/** @param {Function} add the registry's add(domain, operation, category, properties, required, extra) */
-export function registerProductTools(add, { s, b, arr, obj, id, version }) {
+/** Workspace summary, tool descriptions, request tracking and setup progress. */
+function registerOrientation(add, { s, b, id, version }) {
   add("workspace", "summary", "read", {}, [], { capability: "businessDetails" });
   add("tools", "describe", "read", { name: s(120) }, ["name"], { capability: "businessDetails" });
   add("requests", "list", "read", { status: s(40), limit: { type: "integer", minimum: 1, maximum: 50 } }, [], {
@@ -28,6 +28,10 @@ export function registerProductTools(add, { s, b, arr, obj, id, version }) {
     ["product", "step", "version"],
     { capability: "businessDetails" },
   );
+}
+
+/** The Ascend website brief; files, submit and resend stay on the website. */
+function registerWebsite(add, { s, b, arr }) {
   add("website", "state", "read", {}, [], { capability: "businessDetails", plans: ASCEND });
   add(
     "website",
@@ -72,6 +76,10 @@ export function registerProductTools(add, { s, b, arr, obj, id, version }) {
     description:
       "Submitting the website brief happens on the website, where the owner checks the logo, photos and payment documents before sending.",
   });
+}
+
+/** Rasil email campaigns, behind the same allow-list as the Email tab. */
+function registerEmail(add, { s, b, arr, obj, id }) {
   const consent = obj({ source: s(120), date: s(10), purpose: s(200), attested: b }, [
     "source",
     "date",
@@ -124,6 +132,10 @@ export function registerProductTools(add, { s, b, arr, obj, id, version }) {
     plans: ASCEND,
     description: "Connecting a sending domain happens in the Email tab, where the DNS records are shown.",
   });
+}
+
+/** Plan status; paying happens on Paymob's page. */
+function registerBilling(add) {
   add("billing", "state", "read", {}, [], { capability: "businessDetails" });
   add("billing", "checkout", "read", {}, [], {
     disposition: "handoff",
@@ -131,4 +143,12 @@ export function registerProductTools(add, { s, b, arr, obj, id, version }) {
     capability: "businessDetails",
     description: "Paying or renewing the plan happens on the BznsFlow website through Paymob's secure page.",
   });
+}
+
+/** @param {Function} add the registry's add(domain, operation, category, properties, required, extra) */
+export function registerProductTools(add, shapes) {
+  registerOrientation(add, shapes);
+  registerWebsite(add, shapes);
+  registerEmail(add, shapes);
+  registerBilling(add, shapes);
 }
