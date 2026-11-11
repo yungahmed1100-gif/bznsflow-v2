@@ -65,3 +65,16 @@ Ahmed asked to refactor the release and push it. Behaviour is unchanged: the too
 Evidence: 1,241 unit tests, Convex typecheck, build, 0 vulnerabilities, MCP browser 272, and every shared and sector browser suite passed in the full release check except `tests/home-browser.mjs`, which timed out once waiting 6 s for the home pipeline animation (2.6 s step) and then passed twice on rerun. That suite is a known timing flake to replace with a controlled clock; the home page is not part of this release. MCP tests at the final commit: 43 across the touched suites. Production after promotion: health 15/15, pages 200, unauthenticated POST 401, GET 405, no errors or timeouts in the deployment's logs.
 
 `origin/master` fast-forwarded from `e2fd10c` to `04c934d` (45 commits, no force push); branch `release/mcp-control-2026-11-10` pushed. The main checkout's local `master` still points at `aecd3f2` with uncommitted work; update it with `git pull --ff-only` after committing or setting that work aside.
+
+## Production-readiness verification (11 November 2026)
+
+Ahmed asked to verify all changes. Independent re-check of `58c06a3` (HEAD = `origin/master` = release branch, clean tree):
+
+- **Source gates:** clean `git archive` + `npm ci` + `npm run test:release` passed with exit 0 and no reruns: 1,241/1,241 unit tests, Convex typecheck, build, contracts/KB/sitemap checks, 0 vulnerabilities, all 15 shared browser suites (MCP 272, dashboard 679, home 364), every sector suite and Ascend end-to-end 107. `npm audit --omit=dev`: 0.
+- **Refactor parity:** canonical snapshot of all 433 tools plus advertised schemas at `b8c6912` and `58c06a3`: byte-identical (1,537,120 bytes, same SHA-256).
+- **Production equals source:** www serves `dpl_8nDdNzkBMf9noVhoUoAUGQzwtv1y`; all 17 content-hashed assets on `/mcp` exist in a local build of `58c06a3`. Convex `rare-fish-465` dry run: no function, index or schema changes.
+- **Live health:** 15/15; 38 public pages 200 (`owner/ascend-draft` is development-only by design); `.well-known` OAuth documents 200; POST without token 401; GET 405 with `Allow: POST, OPTIONS`; DELETE 405; HSTS, `nosniff`, `X-Frame-Options: DENY`, referrer and permissions policies present.
+- **Logs:** no MCP errors or timeouts since the deploy; the only error-level lines are the known DEP0169 `url.parse` deprecation warning.
+- **Security review of the release diff (`aecd3f2..58c06a3`):** the five-minute fresh sign-in is enforced in Convex (`convex/mcp/access.js`), so the in-place code step cannot bypass it; the resume cookie is cleared only after a decision (`Path=/`, `Secure`, `HttpOnly`); billing checkout, website submit/upload and email domain connect are link-only handoffs; email campaign create/cancel need owner approval unless the owner allowed messages directly; website and email tools are Ascend/Apex only; no secrets or `console.log` added.
+
+Open items, none blocking: `src/styles/mcp.css` is 804 lines (split it the next time it changes); `/api/layla-meta` logged 9 platform 60 s timeouts between 8 and 10 November on an earlier deployment (Layla webhook, outside this release; worth its own investigation); the in-place code confirmation still awaits its first real use; Rasil sending stays gated.
