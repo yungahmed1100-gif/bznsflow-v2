@@ -54,6 +54,10 @@
 - An unauthenticated `/api/layla-meta?surface=rasil` returns 401 `sign_in_required`.
 - Green Convex logs show `rasil:maintain` running every minute from 21:42 Muscat time, at 16–26 ms. There were no errors in the last 300 log lines.
 
+## Opened to every Ascend account (11 November 2026)
+
+Ahmed chose to open Rasil before the real-domain test. `RASIL_ENABLED=true` has been live since `dpl_3cDKiCnD4yVUv69DZRxREwWFCVtS`, and the copy no longer says "coming soon". The Resend key can manage customer domains: the new `rasil-status` health check reports `ready`. Gap 4 below is still open; the first real campaign is that test. Record: `docs/green-release-2026-11-11-ops-hardening.md`.
+
 ## Remaining gaps
 
 1. **Not seen signed in.** Nobody has opened the Email tab on production yet. Ahmed has to sign in to confirm it appears on his Ascend account.
