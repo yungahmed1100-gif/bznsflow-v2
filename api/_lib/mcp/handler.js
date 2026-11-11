@@ -6,6 +6,7 @@ import {
   CallToolRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { rasilOpen } from "../rasil-api.js";
+import { raceDeadline } from "../deadline.js";
 import {
   SERVER_VERSION,
   advertisedSchema,
@@ -323,22 +324,13 @@ export function createMcpHandler({
         void transport.close().catch(() => {});
         void server.close().catch(() => {});
       });
-      let timer;
-      const deadline = new Promise((_, reject) => {
-        // Counted from arrival, so token checks and admission share the same budget.
-        timer = setTimeout(
-          () => reject(new McpError("request_timeout", 504)),
-          Math.max(1000, deadlineMs - (Date.now() - requestStarted)),
-        );
-      });
-      try {
-        const handling = transport.handleRequest(req, res, await body(req));
-        // After a timeout the abandoned call may still finish or fail; it must not crash the instance.
-        handling.catch(() => {});
-        await Promise.race([handling, deadline]);
-      } finally {
-        clearTimeout(timer);
-      }
+      // Counted from arrival, so token checks and admission share the same budget. After a
+      // timeout the abandoned call may still settle; raceDeadline absorbs a late failure.
+      await raceDeadline(
+        transport.handleRequest(req, res, await body(req)),
+        Math.max(1000, deadlineMs - (Date.now() - requestStarted)),
+        "mcp",
+      );
     } catch (error) {
       const status = error instanceof McpError ? error.status : 503;
       if (status === 401)

@@ -39,6 +39,9 @@
     },
     "api/paymob-webhook.js": {
       "maxDuration": 30
+    },
+    "api/access-admin.js": {
+      "maxDuration": 30
     }
   },
   "regions": [

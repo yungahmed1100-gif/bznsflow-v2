@@ -5,6 +5,7 @@
 import { PilotError } from './config.js';
 import { credentialContext, metaRequest, openToken } from './customer-meta.js';
 import { ASR_MAX_BYTES, MEDIA_KINDS, describePhoto, mediaAllowed, mimeOf, photoText, transcribeVoice, understandingConfig } from '../../../config/media-understanding.js';
+import { raceDeadline } from '../deadline.js';
 
 const META = { version: 'v25.0' };
 const MEDIA_HOSTS = ['.whatsapp.net', '.fbcdn.net', '.fbsbx.com', '.cdninstagram.com'];
@@ -96,17 +97,23 @@ async function understand(job, file, context, { env, fetcher }) {
 
 const reasonOf = e => String(e?.reason || e?.message || 'media_failed').replace(/[^a-z0-9_]/g, '').slice(0, 40) || 'media_failed';
 
+// Fetching, keeping and reading share one budget well inside the webhook's 60 s, so the
+// result is always recorded and Layla always wakes, even when Meta, storage or Qwen stall.
+export const MEDIA_BUDGET_MS = 40000;
+
 /** One media message: fetch, keep, read, then hand the result to Convex, which wakes Layla. */
-export async function processMediaJob(job, { store, env = process.env, fetcher = fetch }) {
+export async function processMediaJob(job, { store, env = process.env, fetcher = fetch, budgetMs = MEDIA_BUDGET_MS }) {
+  const ends = Date.now() + budgetMs;
+  const inTime = work => raceDeadline(work, ends - Date.now(), 'inbound-media', 'media_deadline');
   let attach;
   try {
-    const context = await store('media_context', { integrationId: job.integrationId });
+    const context = await inTime(store('media_context', { integrationId: job.integrationId }));
     if (!context) attach = { status: 'failed', error: 'not_connected' };
     else {
-      const file = job.channel === 'instagram' ? await fetchMetaFile(job.ref, { kind: job.kind, fetcher }) : await downloadWhatsapp(job, context, { env, fetcher });
-      const storageId = await upload(file, { store, integrationId: job.integrationId, fetcher });
+      const file = await inTime(job.channel === 'instagram' ? fetchMetaFile(job.ref, { kind: job.kind, fetcher }) : downloadWhatsapp(job, context, { env, fetcher }));
+      const storageId = await inTime(upload(file, { store, integrationId: job.integrationId, fetcher }));
       let reading;
-      try { reading = await understand(job, file, context, { env, fetcher }); }
+      try { reading = await inTime(understand(job, file, context, { env, fetcher })); }
       catch (e) { reading = { status: 'unread', error: reasonOf(e) }; }
       attach = { storageId, mimeType: file.contentType, size: file.bytes.length, ...reading };
     }

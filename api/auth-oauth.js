@@ -23,8 +23,9 @@ import {
 import { randomToken, setOauthCookie } from './_lib/cookies.js';
 import { NEXT_PATH } from '../config/signin-destination.js';
 import { send, redirect } from './_lib/http.js';
+import { deadlineFor, withDeadline } from './_lib/deadline.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (String(req.method || '').toUpperCase() !== 'GET') {
     res.setHeader('Allow', 'GET');
     return send(res, 405, { ok: false, reason: 'method' });
@@ -70,3 +71,7 @@ export default async function handler(req, res) {
   setOauthCookie(res, { p: provider.id, s: state, n: nonce, v: verifier, l: lang, ...(resume ? { x: resume } : {}) });
   return redirect(res, target);
 }
+
+// vercel.json maxDuration is 10 s; answer before the platform stops this function.
+export const DEADLINE_MS = deadlineFor(10);
+export default withDeadline(handler, { ms: DEADLINE_MS, label: 'auth-oauth' });

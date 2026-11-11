@@ -29,12 +29,13 @@ import { blueAuthStore } from './_lib/blue-auth.js';
 import { convexServiceSecret } from './_lib/green-config.js';
 import { send, redirect } from './_lib/http.js';
 import { signinDestination } from '../config/signin-destination.js';
+import { deadlineFor, withDeadline } from './_lib/deadline.js';
 
 // A completed round trip costs the visitor a consent screen, so the per-IP
 // allowance is looser than sending codes — but still bounded, because this is
 // the endpoint that mints sessions. Matches VERIFY_IP_MULTIPLIER in
 // api/auth-session.js, and for the same reason.
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (String(req.method || '').toUpperCase() !== 'GET') {
     res.setHeader('Allow', 'GET');
     return send(res, 405, { ok: false, reason: 'method' });
@@ -158,3 +159,7 @@ export default async function handler(req, res) {
   if (destination) return redirect(res, destination);
   return redirect(res, `${signinPath(lang)}?welcome=1`);
 }
+
+// vercel.json maxDuration is 30 s; answer before the platform stops this function.
+export const DEADLINE_MS = deadlineFor(30);
+export default withDeadline(handler, { ms: DEADLINE_MS, label: 'auth-callback' });

@@ -5,6 +5,7 @@ import { isAllowedOrigin } from './_lib/guard.js';
 import { readBody, send } from './_lib/http.js';
 
 import { isLivePack } from '../config/hasib-packs.js';
+import { deadlineFor, withDeadline } from './_lib/deadline.js';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 
@@ -83,4 +84,6 @@ return async function handler(req, res) {
 }
 
 }
-export default createAccessAdmin();
+// vercel.json maxDuration is 30 s; answer before the platform stops this function.
+export const DEADLINE_MS = deadlineFor(30);
+export default withDeadline(createAccessAdmin(), { ms: DEADLINE_MS, label: 'access-admin' });

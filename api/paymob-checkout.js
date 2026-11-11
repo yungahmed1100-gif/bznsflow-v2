@@ -7,6 +7,7 @@ import { readBody, send, sendPilotError } from './_lib/http.js';
 import { PilotError } from './_lib/layla/config.js';
 import { createIntention, paymentsOpen, paymobConfig } from './_lib/paymob.js';
 import { billingPrice } from '../config/billing-plans.js';
+import { deadlineFor, withDeadline } from './_lib/deadline.js';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const ITEM = { catalyst: 'BznsFlow Catalyst', ascend: 'BznsFlow Ascend' };
@@ -50,4 +51,6 @@ export function createCheckout({ env = process.env, fetcher = fetch, store = bil
   };
 }
 
-export default createCheckout();
+// vercel.json maxDuration is 30 s; answer before the platform stops this function.
+export const DEADLINE_MS = deadlineFor(30);
+export default withDeadline(createCheckout(), { ms: DEADLINE_MS, label: 'paymob-checkout' });

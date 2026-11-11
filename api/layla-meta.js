@@ -10,6 +10,10 @@ import { createWebsiteBriefApi } from './_lib/website-brief-api.js';
 import { createRasilApi } from './_lib/rasil-api.js';
 import { createConfirm, createSubscribe, createUnsubscribe } from './_lib/rasil-public.js';
 import { createReviewHandler, reviewAvailable } from './_lib/layla/review-api.js';
+import { deadlineFor, withDeadline } from './_lib/deadline.js';
+
+// vercel.json maxDuration is 60 s; MCP keeps its own 45 s budget inside this one.
+export const DEADLINE_MS = deadlineFor(60);
 
 export function requestSurface(req) {
   const params = new URL(req.url || '/', 'https://internal.invalid').searchParams;
@@ -24,7 +28,7 @@ export function requestSurface(req) {
 const INSTAGRAM_SURFACES = ['instagram', 'instagram-callback', 'instagram-deauthorize', 'instagram-delete', 'instagram-deletion-status'];
 export const SURFACES = ['mcp','dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', 'website-brief', 'rasil', 'rasil-subscribe', 'rasil-unsubscribe', 'rasil-confirm', ...INSTAGRAM_SURFACES, 'customer-status']; // retired pilot surfaces (activation, test, open, eligibility) fall through to 410
 
-export function createHandler({ env = process.env, fetcher = fetch, surfaces = {} } = {}) {
+export function createHandler({ env = process.env, fetcher = fetch, surfaces = {}, deadlineMs = DEADLINE_MS } = {}) {
   const customer = createReviewHandler({ env, fetcher, reviewMode: false });
   const review = createReviewHandler({ env, fetcher, reviewMode: true });
   let mcp;
@@ -45,7 +49,7 @@ export function createHandler({ env = process.env, fetcher = fetch, surfaces = {
     'rasil-confirm': createConfirm({ env, fetcher }),
   };
   Object.assign(handlers, surfaces);
-  return async (req, res) => {
+  return withDeadline(async (req, res) => {
     try {
       if ((isGreenRuntime(env) || env.GREEN_CONVEX_CUTOVER === 'true') && !greenDataReady(env)) {
         return send(res, 503, { ok: false, reason: 'green_state_migration_required' });
@@ -66,6 +70,6 @@ export function createHandler({ env = process.env, fetcher = fetch, surfaces = {
     } catch (error) {
       return sendPilotError(res, error, { fallback: 'unavailable', vary: 'Cookie' });
     }
-  };
+  }, { ms: deadlineMs, label: 'layla-meta' });
 }
 export default createHandler();

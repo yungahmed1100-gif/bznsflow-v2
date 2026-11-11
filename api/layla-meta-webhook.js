@@ -8,8 +8,11 @@ import { greenDataReady, instagramMessagingEnabled, isGreenConvexConfigured } fr
 import { createRasilWebhook } from './_lib/rasil-public.js';
 import { processInboundMedia } from './_lib/layla/inbound-media.js';
 import { waitUntil } from '@vercel/functions';
+import { deadlineFor, withDeadline } from './_lib/deadline.js';
 
 export const config = { api: { bodyParser: false } };
+// vercel.json maxDuration is 60 s. Media read after the answer has its own budget (inbound-media.js).
+export const DEADLINE_MS = deadlineFor(60);
 
 // One URL serves both channels; the payload's own `object` decides the route.
 // WhatsApp payloads must carry the parent app's signature. Instagram Login webhooks
@@ -24,7 +27,7 @@ function secretsFor(env) {
 // `defer` runs work after the response: photos and voice notes are fetched and read once Meta has its 200.
 export function createHandler({ env = process.env, fetcher = fetch, messaging = messagingStore({ env, fetcher }), rasil = createRasilWebhook({ env, fetcher, raw: rawBody }), defer = waitUntil } = {}) {
   const readMedia = ({ media = [] } = {}) => { if (media.length) defer(processInboundMedia(media, { store: messaging, env, fetcher })); };
-  return async (req, res) => {
+  return withDeadline(async (req, res) => {
     // Resend's delivery events for Rasil share this function's raw body (vercel.json: /api/rasil-webhook), since the plan allows 12 functions.
     if (new URL(req.url || '/', 'https://callback.invalid').searchParams.get('source') === 'resend') return rasil(req, res);
     try {
@@ -66,6 +69,6 @@ export function createHandler({ env = process.env, fetcher = fetch, messaging = 
     } catch (error) {
       return sendPilotError(res, error, { fallback: 'unavailable' });
     }
-  };
+  }, { ms: DEADLINE_MS, label: 'layla-meta-webhook' });
 }
 export default createHandler();

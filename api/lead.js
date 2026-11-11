@@ -31,6 +31,7 @@ import { pushLead } from './_lib/mailer.js';
 import { send, readBody } from './_lib/http.js';
 import { createAuditApi } from './_lib/audit-api.js';
 import { createApexApi } from './_lib/apex-api.js';
+import { deadlineFor, withDeadline } from './_lib/deadline.js';
 
 const SITE = 'https://www.bznsflowai.com';
 
@@ -66,7 +67,7 @@ const audit = createAuditApi();
 // ?op=apex: the Apex request page (api/_lib/apex-api.js).
 const apex = createApexApi();
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const op = new URL(req.url || '/', 'https://x.invalid').searchParams.get('op');
   if (op === 'audit') return audit(req, res);
   if (op === 'apex') return apex(req, res);
@@ -161,3 +162,7 @@ export default async function handler(req, res) {
     return send(res, 502, { ok: false, reason: 'capture_failed' });
   }
 }
+
+// vercel.json maxDuration is 30 s; answer before the platform stops this function.
+export const DEADLINE_MS = deadlineFor(30);
+export default withDeadline(handler, { ms: DEADLINE_MS, label: 'lead' });

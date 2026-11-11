@@ -3,6 +3,7 @@ import { send, sendPilotError } from './_lib/http.js';
 import { PilotError } from './_lib/layla/config.js';
 import { rawBody } from './_lib/layla/webhook.js';
 import { paymobConfig, transactionHmacValid } from './_lib/paymob.js';
+import { deadlineFor, withDeadline } from './_lib/deadline.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -50,4 +51,6 @@ export function createPaymobWebhook({ env = process.env, fetcher = fetch, store 
   };
 }
 
-export default createPaymobWebhook();
+// vercel.json maxDuration is 30 s; answer before the platform stops this function.
+export const DEADLINE_MS = deadlineFor(30);
+export default withDeadline(createPaymobWebhook(), { ms: DEADLINE_MS, label: 'paymob-webhook' });

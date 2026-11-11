@@ -20,6 +20,7 @@ import { checkRate, startTurn, finishTurn } from './_lib/db.js';
 import { detectLang, buildSystemMessage } from './_lib/prompt.js';
 import { complete } from './_lib/llm.js';
 import { send, readBody, limit } from './_lib/http.js';
+import { deadlineFor, withDeadline } from './_lib/deadline.js';
 
 const HISTORY_TURNS = 20;
 
@@ -36,7 +37,7 @@ function reply(res, status, text, { sessionId = '', handoff = false, context = '
   });
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return reply(res, 405, replies.METHOD_NOT_ALLOWED);
@@ -126,3 +127,7 @@ export default async function handler(req, res) {
     context: answer.handoff_context,
   });
 }
+
+// vercel.json maxDuration is 30 s; answer before the platform stops this function.
+export const DEADLINE_MS = deadlineFor(30);
+export default withDeadline(handler, { ms: DEADLINE_MS, label: 'chat' });
