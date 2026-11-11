@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import "../styles/mcp.css";
+import "../styles/mcp-approvals.css";
 import {
   McpHero,
   ConnectionGuide,
