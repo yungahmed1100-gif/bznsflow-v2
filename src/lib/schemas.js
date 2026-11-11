@@ -123,8 +123,8 @@ export function buildSchemas(t, lang) {
     name: isAr ? 'أسيند' : 'Ascend',
     serviceType: isAr ? 'عمليات الأعمال حسب القطاع' : 'Sector-specific business operations',
     description: isAr
-      ? 'يشمل أسيند موقعاً مجانياً لجمع بيانات العملاء المحتملين كهدية، وليلى للاستفسارات، وحاسب لتتبّع العمل والتذكيرات المفعّلة، وأديبة للعروض التي تعتمدها. قريباً: راسل للنشرات والتسويق عبر البريد الإلكتروني للمشتركين والعملاء الموافقين، بحملات وسلاسل متابعة معتمدة. الوصول يمنحه الفريق، والأتمتة تعتمد على القطاع والإعداد المتفق عليه.'
-      : 'Ascend includes a free lead capture website as a gift, Layla for inquiries, Hasib for sector work and enabled reminders, and Adiba for owner-approved offers. Coming soon: Rasil for email newsletters and marketing to subscribers and consenting customers, using approved campaigns and follow-up sequences. Access is granted by the team. Automation depends on the sector and agreed setup.',
+      ? 'يشمل أسيند موقعاً مجانياً لجمع بيانات العملاء المحتملين كهدية، وليلى للاستفسارات، وحاسب لتتبّع العمل والتذكيرات المفعّلة، وأديبة للعروض التي تعتمدها، وراسل لحملات البريد الإلكتروني التي تعتمدها، تُرسل من نطاقك الخاص إلى المشتركين والعملاء الموافقين. الوصول يمنحه الفريق، والأتمتة تعتمد على القطاع والإعداد المتفق عليه.'
+      : 'Ascend includes a free lead capture website as a gift, Layla for inquiries, Hasib for sector work and enabled reminders, and Adiba for owner-approved offers. Rasil sends owner-approved email campaigns from the business’s own domain to subscribers and consenting customers. Access is granted by the team. Automation depends on the sector and agreed setup.',
     provider: { '@id': `${SITE}/#organization` },
     areaServed: ['Oman', 'GCC'],
     url: `${urlFor('/', lang)}#tiers`,

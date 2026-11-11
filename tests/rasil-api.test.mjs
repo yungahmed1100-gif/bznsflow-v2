@@ -176,3 +176,43 @@ test('confirming a sign-up takes a click on the page, not just opening the link'
   await createUnsubscribe({ env, store: missing.store })({ method: 'POST', url: `/email/unsubscribe?t=${signLink(env, 'unsubscribe', 'sub12345')}`, headers: {} }, gone);
   assert.equal(gone.statusCode, 200, 'a deleted subscriber still sees that they are off the list');
 });
+
+test('readiness says whether customers can connect a domain, without exposing the key', async () => {
+  const { rasilReadiness } = await import('../api/_lib/rasil-resend.js');
+  const env = { GREEN_RUNTIME: 'true', RESEND_API_KEY: 're_full', VERCEL_ENV: 'production' };
+  const answer = (status, body) => async (url, init) => {
+    assert.equal(new URL(url).pathname, '/domains');
+    assert.equal(init.method, 'GET');
+    return new Response(JSON.stringify(body), { status });
+  };
+  assert.equal(await rasilReadiness({ env: {}, fetcher: answer(200, {}) }), 'unconfigured');
+  assert.equal(await rasilReadiness({ env, fetcher: answer(200, { data: [] }) }), 'ready');
+  assert.equal(await rasilReadiness({ env, fetcher: answer(401, { name: 'restricted_api_key', message: 'This API key is restricted to only send emails' }) }), 'sending_only');
+  assert.equal(await rasilReadiness({ env, fetcher: answer(401, { name: 'validation_error', message: 'API key is invalid' }) }), 'key_refused');
+  assert.equal(await rasilReadiness({ env, fetcher: async () => { throw new Error('down'); } }), 'provider_unavailable');
+});
+
+test('the public status reports open and readiness, and asks Resend at most every five minutes', async () => {
+  const { createRasilStatus } = await import('../api/_lib/rasil-api.js');
+  let calls = 0, clock = 0;
+  const status = createRasilStatus({ env: { RASIL_ENABLED: 'true' }, readiness: async () => { calls++; return 'ready'; }, now: () => clock });
+  const reply = async (method = 'GET') => {
+    const out = { headers: {} };
+    const res = { statusCode: 200, status(n) { this.statusCode = n; return this; }, setHeader: (k, v) => { out.headers[k.toLowerCase()] = v; }, end: (b) => { out.body = b; } };
+    await status({ method, headers: {} }, res);
+    return { ...out, status: res.statusCode, json: out.body ? JSON.parse(out.body) : null };
+  };
+  const first = await reply();
+  assert.deepEqual(first.json, { ok: true, open: true, domains: 'ready' });
+  assert.match(first.headers['cache-control'], /no-store/);
+  await reply();
+  assert.equal(calls, 1, 'cached');
+  clock += 5 * 60000 + 1;
+  await reply();
+  assert.equal(calls, 2, 'refreshed after five minutes');
+  assert.equal((await reply('POST')).status, 405);
+  const closed = createRasilStatus({ env: {}, readiness: async () => 'ready', now: () => 0 });
+  const res = { statusCode: 200, status(n) { this.statusCode = n; return this; }, setHeader() {}, end(b) { this.body = b; } };
+  await closed({ method: 'GET', headers: {} }, res);
+  assert.equal(JSON.parse(res.body).open, false);
+});

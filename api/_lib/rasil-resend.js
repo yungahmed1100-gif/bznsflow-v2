@@ -25,6 +25,23 @@ async function call(env, fetcher, method, path, body, headers = {}) {
   return { status: response.status, json };
 }
 
+/**
+ * Whether customers can connect a sending domain: `ready`, `sending_only` (a key restricted to
+ * sending gets 401 `restricted_api_key` on /domains), `key_refused`, `unconfigured` or
+ * `provider_unavailable`. Read-only.
+ */
+export async function rasilReadiness({ env = process.env, fetcher = fetch } = {}) {
+  if (!rasilKey(env)) return 'unconfigured';
+  try {
+    const { status, json } = await call(env, fetcher, 'GET', '/domains');
+    if (status >= 200 && status < 300) return 'ready';
+    if (status === 401 || status === 403) return /restricted/i.test(`${json?.name || ''} ${json?.message || ''}`) ? 'sending_only' : 'key_refused';
+    return 'provider_unavailable';
+  } catch {
+    return 'provider_unavailable';
+  }
+}
+
 const STATUS = { verified: 'verified', failed: 'failed', temporary_failure: 'failed' };
 /** Resend's records as the owner adds them, plus the recommended DMARC record. */
 export function publicDomain(json) {

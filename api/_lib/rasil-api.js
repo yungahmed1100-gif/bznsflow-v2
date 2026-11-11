@@ -12,7 +12,7 @@ import { isSameSite } from './guard.js';
 import { readBody, send, sendPilotError } from './http.js';
 import { PilotError } from './layla/config.js';
 import { validTimezone, zonedLocalToUtc } from './layla/timezone.js';
-import { createDomain, checkDomain } from './rasil-resend.js';
+import { createDomain, checkDomain, rasilReadiness } from './rasil-resend.js';
 import { qwenGenerator, QwenError } from '../../config/qwen-client.js';
 import { untracedAmount } from '../../config/layla-prices.js';
 import { IMPORT_MAX, campaignContent, normalizeDomain, validDomain } from '../../config/rasil.js';
@@ -26,6 +26,26 @@ export function rasilOpen(env, email) {
   if (env.RASIL_ENABLED === 'true') return true;
   const testers = String(env.RASIL_TEST_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
   return !!email && testers.includes(String(email).toLowerCase());
+}
+
+const READINESS_TTL_MS = 5 * 60000;
+
+/**
+ * GET /api/layla-meta?surface=rasil-status: whether Rasil is open to every Ascend account and
+ * whether customers can connect a domain. Checked by scripts/check-mcp-health.mjs, so a key
+ * downgraded to sending-only is caught. Says nothing about any account; Resend is asked at
+ * most every five minutes per instance.
+ */
+export function createRasilStatus({ env = process.env, fetcher = fetch, readiness = () => rasilReadiness({ env, fetcher }), now = Date.now } = {}) {
+  let cached = null;
+  return async (req, res) => {
+    if (req.method !== 'GET') {
+      res.setHeader('Allow', 'GET');
+      return send(res, 405, { ok: false, reason: 'method' });
+    }
+    if (!cached || now() - cached.at > READINESS_TTL_MS) cached = { at: now(), domains: await readiness() };
+    return send(res, 200, { ok: true, open: env.RASIL_ENABLED === 'true', domains: cached.domains });
+  };
 }
 
 /** Adiba writes a first draft from the published bzns.md; the owner edits and approves it. Prices only from the catalog. */

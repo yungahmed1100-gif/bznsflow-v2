@@ -78,6 +78,13 @@ await Promise.all([
     assert.equal(response.headers.get('allow'), 'POST, OPTIONS');
     return { status: response.status, ms: Date.now() - started };
   })),
+  // Once Rasil is open to every Ascend account, its key must still manage customer domains.
+  check('rasil_readiness', async () => {
+    const { value } = await json('/api/layla-meta?surface=rasil-status');
+    assert.equal(value.ok, true);
+    if (value.open) assert.equal(value.domains, 'ready', `Rasil is open but domains are ${value.domains}`);
+    return { open: value.open, domains: value.domains };
+  }),
   ...['https://chatgpt.com', 'https://claude.ai', 'https://claude.com', 'https://untrusted.invalid'].map(from => check(`cors:${from}`, async () => {
     const response = await request('/api/mcp', { method: 'OPTIONS', headers: { Origin: from, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,content-type,mcp-protocol-version' } });
     const trusted = from !== 'https://untrusted.invalid';

@@ -7,7 +7,7 @@ import { createHasibApi } from './_lib/hasib/hasib-api.js';
 import { createProductSetupApi } from './_lib/product-setup-api.js';
 import { createKnowledgeApi } from './_lib/knowledge-api.js';
 import { createWebsiteBriefApi } from './_lib/website-brief-api.js';
-import { createRasilApi } from './_lib/rasil-api.js';
+import { createRasilApi, createRasilStatus } from './_lib/rasil-api.js';
 import { createConfirm, createSubscribe, createUnsubscribe } from './_lib/rasil-public.js';
 import { createReviewHandler, reviewAvailable } from './_lib/layla/review-api.js';
 import { deadlineFor, withDeadline } from './_lib/deadline.js';
@@ -26,7 +26,7 @@ export function requestSurface(req) {
 // All active surfaces use authenticated Convex clients. Retired pilot routes
 // return 410 instead of falling back to another database.
 const INSTAGRAM_SURFACES = ['instagram', 'instagram-callback', 'instagram-deauthorize', 'instagram-delete', 'instagram-deletion-status'];
-export const SURFACES = ['mcp','dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', 'website-brief', 'rasil', 'rasil-subscribe', 'rasil-unsubscribe', 'rasil-confirm', ...INSTAGRAM_SURFACES, 'customer-status']; // retired pilot surfaces (activation, test, open, eligibility) fall through to 410
+export const SURFACES = ['mcp','dashboard', 'hasib', 'messaging', 'customer', 'customer-review', 'product-setup', 'knowledge', 'website-brief', 'rasil', 'rasil-status', 'rasil-subscribe', 'rasil-unsubscribe', 'rasil-confirm', ...INSTAGRAM_SURFACES, 'customer-status']; // retired pilot surfaces (activation, test, open, eligibility) fall through to 410
 
 export function createHandler({ env = process.env, fetcher = fetch, surfaces = {}, deadlineMs = DEADLINE_MS } = {}) {
   const customer = createReviewHandler({ env, fetcher, reviewMode: false });
@@ -44,6 +44,7 @@ export function createHandler({ env = process.env, fetcher = fetch, surfaces = {
     'website-brief': createWebsiteBriefApi({ env, fetcher }),
     // Rasil's email campaigns, and the public links a subscriber clicks (/email/… in vercel.json).
     rasil: createRasilApi({ env, fetcher }),
+    'rasil-status': createRasilStatus({ env, fetcher }),
     'rasil-subscribe': createSubscribe({ env, fetcher }),
     'rasil-unsubscribe': createUnsubscribe({ env, fetcher }),
     'rasil-confirm': createConfirm({ env, fetcher }),
