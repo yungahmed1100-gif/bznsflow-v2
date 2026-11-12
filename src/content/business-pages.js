@@ -1,4 +1,4 @@
-import { localePath } from '../lib/paths';
+import { localePath } from '../lib/paths.js';
 
 // Public service information. Legal identity and standard support/billing details
 // require the owner's confirmation before release; do not infer them from service area.

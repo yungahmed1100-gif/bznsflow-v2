@@ -124,7 +124,7 @@ try {
     );
     const plans = box.getByRole('link', { name: lang === 'en' ? 'Choose a plan' : 'اختر خطة' });
     assert.equal(await plans.count(), 1, `${lang}: one next action, choosing a plan`);
-    assert.equal(await plans.getAttribute('href'), lang === 'en' ? '/en' : '/', `${lang}: the plan cards`);
+    assert.equal(await plans.getAttribute('href'), lang === 'en' ? '/en#tiers' : '/#tiers', `${lang}: the plan cards`);
     assert.equal(
       await box.getByRole('link', { name: /^(Sign in|تسجيل الدخول)$/ }).count(),
       0,

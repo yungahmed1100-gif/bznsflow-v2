@@ -14,7 +14,7 @@
 // could only ever disagree.
 //
 // No-ops during SSG (no window) and when the script is blocked or absent.
-import { captureEvent } from './posthog';
+import { captureEvent } from './posthog.js';
 
 /** trackEvent name → Meta event. `custom` events go through trackCustom, which
  *  is what Meta requires for anything outside its standard vocabulary. */

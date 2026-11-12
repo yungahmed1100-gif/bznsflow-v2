@@ -111,3 +111,16 @@ test('the admin home describes every live sector it previews', () => {
   for (const { id } of livePackSummaries())
     assert.ok(work.includes(`'${id}':`) || work.includes(`${id}:`), `${id} has no description on the admin home`);
 });
+
+test('plain JS modules in src/ import with file extensions, so Node can load them too', () => {
+  const missing = sourceFiles()
+    .filter(file => file.endsWith('.js'))
+    .flatMap(file => {
+      const text = readSource(relative(fileURLToPath(new URL('../', import.meta.url)), file));
+      return [...text.matchAll(/^(?:import|export)\b[^;]*?from '(\.{1,2}\/[^']*)'/gm)]
+        .map(m => m[1])
+        .filter(spec => !/\.(js|jsx|json|css|png|webp|avif|svg|ts)$/.test(spec))
+        .map(spec => `${relative(SRC, file)}: ${spec}`);
+    });
+  assert.deepEqual(missing, []);
+});

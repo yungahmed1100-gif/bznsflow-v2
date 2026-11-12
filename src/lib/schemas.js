@@ -1,4 +1,4 @@
-import { SITE, urlFor } from '../routes-manifest';
+import { SITE, urlFor } from '../routes-manifest.js';
 
 // Per-locale homepage SEO copy (en/ar are the prerendered locales).
 export const HOME_SEO = {

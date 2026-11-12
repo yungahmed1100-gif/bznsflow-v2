@@ -1,6 +1,6 @@
 // The image, video or PDF a broadcast sends as its template's header. The browser
 // uploads the file straight to storage, then registers it for this account.
-import { dashboard, DashboardError } from './api';
+import { dashboard, DashboardError } from './api.js';
 import { MEDIA_HEADERS } from '../../../config/layla-templates.js';
 
 /** File-picker `accept` value for a header format. */
