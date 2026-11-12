@@ -42,7 +42,11 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  transition: background-color var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
+  transition:
+    background-color var(--transition),
+    border-color var(--transition),
+    color var(--transition),
+    transform var(--transition);
 }
 
 .social-link:hover {
@@ -137,7 +141,9 @@
 }
 
 @media (max-width: 860px) {
-  .footer { padding-block-end: calc(220px + env(safe-area-inset-bottom, 0px)); }
+  .footer {
+    padding-block-end: calc(220px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .footer-legal a {
@@ -189,7 +195,9 @@
   color: var(--text-primary);
   border: 1px solid var(--text-primary);
   box-shadow: calc(4px * var(--x-sign, 1)) 4px 0 var(--text-primary);
-  transition: box-shadow var(--transition), transform var(--transition);
+  transition:
+    box-shadow var(--transition),
+    transform var(--transition);
 }
 
 .whatsapp-float a:hover .whatsapp-icon {
@@ -212,7 +220,9 @@
   border-radius: var(--radius-sm);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--transition), transform var(--transition);
+  transition:
+    opacity var(--transition),
+    transform var(--transition);
 }
 
 .whatsapp-tooltip::after {
@@ -240,7 +250,9 @@
    hydration fails after the gate opened.
  ============================================================ */
 [data-reveal] {
-  transition: opacity 500ms var(--ease-out-expo), transform 500ms var(--ease-out-expo);
+  transition:
+    opacity 500ms var(--ease-out-expo),
+    transform 500ms var(--ease-out-expo);
 }
 
 html.js-reveal [data-reveal]:not(.is-visible) {

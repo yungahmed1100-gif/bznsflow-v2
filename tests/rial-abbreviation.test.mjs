@@ -13,14 +13,16 @@ import { extractCatalogFacts } from '../api/_lib/layla/website-import.js';
 
 const ADDRESS = 'مبنى الريان، شارع 18 نوفمبر، الخوير، مسقط';
 const PRICE = 'شقة غرفتين 350 ر.ع شهرياً';
-const doc = location => `---\nname: دار الريان\nsector: real-estate\n---\n# دار الريان\n## خدماتنا\n- شقق للإيجار\n## الموقع\n${location}\n`;
+const doc = location =>
+  `---\nname: دار الريان\nsector: real-estate\n---\n# دار الريان\n## خدماتنا\n- شقق للإيجار\n## الموقع\n${location}\n`;
 const money = markdown => validateBzns(markdown).errors.some(e => e.code === 'bzns_money');
 
 test('bzns.md: a street number is not a price; a rial amount still is', () => {
   assert.equal(money(doc(ADDRESS)), false);
   assert.equal(money(doc('شارع ٢٣، بوشر')), false, 'Arabic digits too');
   assert.equal(money(doc('شارع رقم 4512، الموج')), false);
-  for (const priced of [PRICE, 'الإيجار ر.ع 350', 'رسوم المعاينة 5 ر ع', '350 رع', '20 OMR', 'ريال 40']) assert.equal(money(doc(priced)), true, priced);
+  for (const priced of [PRICE, 'الإيجار ر.ع 350', 'رسوم المعاينة 5 ر ع', '350 رع', '20 OMR', 'ريال 40'])
+    assert.equal(money(doc(priced)), true, priced);
 });
 
 test('catalog and website imports do not read an address as a price', () => {
@@ -39,7 +41,11 @@ test('Hasib stock import does not take a street number for a price', () => {
 test('Layla: an address in a reply or a handoff note is not an untraced amount', () => {
   assert.equal(untracedAmount(`مكتبنا في ${ADDRESS}.`, { catalog: [] }), null);
   assert.ok(untracedAmount('الإيجار 350 ر.ع شهرياً.', { catalog: [] }), 'a real amount is still caught');
-  const behaviour = note => validateBehaviour({ tone: 'informative', askName: true, appointmentPreferences: false, ask: [], handoffNote: note }, 'real-estate');
+  const behaviour = note =>
+    validateBehaviour(
+      { tone: 'informative', askName: true, appointmentPreferences: false, ask: [], handoffNote: note },
+      'real-estate',
+    );
   assert.equal(behaviour(`زورونا في ${ADDRESS}`).ok, true);
   assert.equal(behaviour('رسوم المعاينة 20 ر.ع').reason, 'handoff_note_money');
 });

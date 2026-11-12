@@ -17,9 +17,12 @@ export const MAX_SENDS_PER_RUN = 10;
  */
 export async function sendAutoRuleDrafts(ctx, tenant, { drafts, rules, keyPrefix, links, actor }, now) {
   const auto = new Set(rules.filter(r => r.enabled && r.mode === 'auto').map(r => r.id));
-  let sent = 0, skipped = 0;
+  let sent = 0,
+    skipped = 0;
   if (!auto.size) return { sent, skipped };
-  const waiting = drafts.filter(d => d.status === 'draft' && auto.has(d.ruleId)).sort((a, b) => a.createdAt - b.createdAt);
+  const waiting = drafts
+    .filter(d => d.status === 'draft' && auto.has(d.ruleId))
+    .sort((a, b) => a.createdAt - b.createdAt);
   for (const draft of waiting) {
     if (sent >= MAX_SENDS_PER_RUN) break;
     const result = await sendAutomatedDraft(ctx, tenant, { draft, keyPrefix, messageLinks: links(draft) }, now);
@@ -28,7 +31,13 @@ export async function sendAutoRuleDrafts(ctx, tenant, { drafts, rules, keyPrefix
       if (draft.autoSkip !== result.skip) await ctx.db.patch(draft._id, { autoSkip: result.skip, updatedAt: now });
       continue;
     }
-    await ctx.db.patch(draft._id, { status: 'queued', sentBy: 'automation', autoSkip: undefined, version: draft.version + 1, updatedAt: now });
+    await ctx.db.patch(draft._id, {
+      status: 'queued',
+      sentBy: 'automation',
+      autoSkip: undefined,
+      version: draft.version + 1,
+      updatedAt: now,
+    });
     await audit(ctx, tenant, actor, 'draft_auto_sent', 'draft', draft._id, now, `rule:${draft.ruleId}`);
     sent++;
   }

@@ -16,8 +16,14 @@ export async function uploadHeaderMedia(format, file) {
   try {
     const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': file.type }, body: file });
     storageId = response.ok ? (await response.json().catch(() => null))?.storageId : null;
-  } catch { storageId = null; }
+  } catch {
+    storageId = null;
+  }
   if (!storageId) throw new DashboardError('header_media_upload_failed', 0);
-  const { media } = await dashboard('campaign_media_register', { storageId, format, filename: String(file.name || '').slice(0, 120) });
+  const { media } = await dashboard('campaign_media_register', {
+    storageId,
+    format,
+    filename: String(file.name || '').slice(0, 120),
+  });
   return media;
 }

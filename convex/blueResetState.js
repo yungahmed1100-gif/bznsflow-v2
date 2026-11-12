@@ -10,41 +10,96 @@ export async function resetAccount(ctx, a) {
   const email = typeof a.email === 'string' ? a.email.trim().toLowerCase() : '';
   if (!email) return fail('email_required');
   if (a.confirm !== true && a.dryRun !== true) return fail('confirmation_required');
-  const account = await ctx.db.query('accounts').withIndex('by_email', q => q.eq('email', email)).unique();
+  const account = await ctx.db
+    .query('accounts')
+    .withIndex('by_email', q => q.eq('email', email))
+    .unique();
   if (!account) return fail('account_not_found');
-  const accountId = account._id, owner = String(accountId);
-  const session = account.draftHash ? await ctx.db.query('blueReviewSessions').withIndex('by_hash', q => q.eq('sessionHash', account.draftHash)).unique() : null;
+  const accountId = account._id,
+    owner = String(accountId);
+  const session = account.draftHash
+    ? await ctx.db
+        .query('blueReviewSessions')
+        .withIndex('by_hash', q => q.eq('sessionHash', account.draftHash))
+        .unique()
+    : null;
   const sessionHash = session?.sessionHash || account.draftHash;
 
-  const messages = await ctx.db.query('blueMessages').withIndex('by_account_at', q => q.eq('accountId', accountId)).take(BATCH);
+  const messages = await ctx.db
+    .query('blueMessages')
+    .withIndex('by_account_at', q => q.eq('accountId', accountId))
+    .take(BATCH);
   if (messages.some(m => OPEN_SENDS.includes(m.status))) return fail('send_in_progress');
-  const campaigns = await ctx.db.query('blueCampaigns').withIndex('by_account_created', q => q.eq('accountId', accountId)).take(BATCH);
+  const campaigns = await ctx.db
+    .query('blueCampaigns')
+    .withIndex('by_account_created', q => q.eq('accountId', accountId))
+    .take(BATCH);
   const recipients = [];
-  for (const c of campaigns) recipients.push(...await ctx.db.query('blueCampaignRecipients').withIndex('by_campaign_status', q => q.eq('campaignId', c._id)).take(BATCH));
+  for (const c of campaigns)
+    recipients.push(
+      ...(await ctx.db
+        .query('blueCampaignRecipients')
+        .withIndex('by_campaign_status', q => q.eq('campaignId', c._id))
+        .take(BATCH)),
+    );
   const claims = [];
   for (const field of ['phone', 'waba']) {
     const value = session?.integration?.[field];
-    const claim = value && await ctx.db.query('blueAssetClaims').withIndex(`by_${field}`, q => q.eq(field, value)).unique();
+    const claim =
+      value &&
+      (await ctx.db
+        .query('blueAssetClaims')
+        .withIndex(`by_${field}`, q => q.eq(field, value))
+        .unique());
     if (claim && claim.sessionHash === sessionHash && !claims.some(c => c._id === claim._id)) claims.push(claim);
   }
   // Controls have no account index and stay small; match them by accountId.
   const controls = (await ctx.db.query('blueMessagingControls').collect()).filter(c => String(c.accountId) === owner);
 
   const rows = {
-    blueInstagramConnections: await ctx.db.query('blueInstagramConnections').withIndex('by_account', q => q.eq('accountId', accountId)).take(BATCH),
-    blueInstagramAttempts: sessionHash ? await ctx.db.query('blueInstagramAttempts').withIndex('by_session', q => q.eq('sessionHash', sessionHash)).take(BATCH) : [],
+    blueInstagramConnections: await ctx.db
+      .query('blueInstagramConnections')
+      .withIndex('by_account', q => q.eq('accountId', accountId))
+      .take(BATCH),
+    blueInstagramAttempts: sessionHash
+      ? await ctx.db
+          .query('blueInstagramAttempts')
+          .withIndex('by_session', q => q.eq('sessionHash', sessionHash))
+          .take(BATCH)
+      : [],
     blueMessagingControls: controls,
     blueMessages: messages,
-    blueConversations: await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).take(BATCH),
-    blueContacts: await ctx.db.query('blueContacts').withIndex('by_account_state_activity', q => q.eq('accountId', accountId)).take(BATCH),
+    blueConversations: await ctx.db
+      .query('blueConversations')
+      .withIndex('by_account_updated', q => q.eq('accountId', accountId))
+      .take(BATCH),
+    blueContacts: await ctx.db
+      .query('blueContacts')
+      .withIndex('by_account_state_activity', q => q.eq('accountId', accountId))
+      .take(BATCH),
     blueCampaignRecipients: recipients,
     blueCampaigns: campaigns,
-    blueTemplates: await ctx.db.query('blueTemplates').withIndex('by_account_template', q => q.eq('accountId', accountId)).take(BATCH),
+    blueTemplates: await ctx.db
+      .query('blueTemplates')
+      .withIndex('by_account_template', q => q.eq('accountId', accountId))
+      .take(BATCH),
     blueAssetClaims: claims,
-    blueCatalogEntries: await ctx.db.query('blueCatalogEntries').withIndex('by_owner_key', q => q.eq('ownerKey', owner)).take(BATCH),
-    blueCatalogMeta: await ctx.db.query('blueCatalogMeta').withIndex('by_owner', q => q.eq('ownerKey', owner)).take(BATCH),
-    blueBusinessSettings: await ctx.db.query('blueBusinessSettings').withIndex('by_account', q => q.eq('accountId', accountId)).take(BATCH),
-    blueConsentBatches: await ctx.db.query('blueConsentBatches').withIndex('by_account_request', q => q.eq('accountId', accountId)).take(BATCH),
+    blueCatalogEntries: await ctx.db
+      .query('blueCatalogEntries')
+      .withIndex('by_owner_key', q => q.eq('ownerKey', owner))
+      .take(BATCH),
+    blueCatalogMeta: await ctx.db
+      .query('blueCatalogMeta')
+      .withIndex('by_owner', q => q.eq('ownerKey', owner))
+      .take(BATCH),
+    blueBusinessSettings: await ctx.db
+      .query('blueBusinessSettings')
+      .withIndex('by_account', q => q.eq('accountId', accountId))
+      .take(BATCH),
+    blueConsentBatches: await ctx.db
+      .query('blueConsentBatches')
+      .withIndex('by_account_request', q => q.eq('accountId', accountId))
+      .take(BATCH),
     blueReviewSessions: session ? [session] : [],
   };
   const counts = Object.fromEntries(Object.entries(rows).map(([table, list]) => [table, list.length]));
@@ -65,16 +120,31 @@ export async function resetMessages(ctx, a) {
   const email = typeof a.email === 'string' ? a.email.trim().toLowerCase() : '';
   if (!email) return fail('email_required');
   if (a.confirm !== true && a.dryRun !== true) return fail('confirmation_required');
-  const account = await ctx.db.query('accounts').withIndex('by_email', q => q.eq('email', email)).unique();
+  const account = await ctx.db
+    .query('accounts')
+    .withIndex('by_email', q => q.eq('email', email))
+    .unique();
   if (!account) return fail('account_not_found');
   const accountId = account._id;
-  const messages = await ctx.db.query('blueMessages').withIndex('by_account_at', q => q.eq('accountId', accountId)).take(BATCH);
+  const messages = await ctx.db
+    .query('blueMessages')
+    .withIndex('by_account_at', q => q.eq('accountId', accountId))
+    .take(BATCH);
   if (messages.some(m => OPEN_SENDS.includes(m.status))) return fail('send_in_progress');
   const rows = {
     blueMessages: messages,
-    blueHandoffAudit: await ctx.db.query('blueHandoffAudit').withIndex('by_account_at', q => q.eq('accountId', accountId)).take(BATCH),
-    blueConversations: await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).take(BATCH),
-    blueContacts: await ctx.db.query('blueContacts').withIndex('by_account_state_activity', q => q.eq('accountId', accountId)).take(BATCH),
+    blueHandoffAudit: await ctx.db
+      .query('blueHandoffAudit')
+      .withIndex('by_account_at', q => q.eq('accountId', accountId))
+      .take(BATCH),
+    blueConversations: await ctx.db
+      .query('blueConversations')
+      .withIndex('by_account_updated', q => q.eq('accountId', accountId))
+      .take(BATCH),
+    blueContacts: await ctx.db
+      .query('blueContacts')
+      .withIndex('by_account_state_activity', q => q.eq('accountId', accountId))
+      .take(BATCH),
   };
   const counts = Object.fromEntries(Object.entries(rows).map(([table, list]) => [table, list.length]));
   if (a.dryRun === true) return { ok: true, value: { dryRun: true, counts } };

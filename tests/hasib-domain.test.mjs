@@ -36,9 +36,22 @@ test('minor units format with three decimals', () => {
 });
 
 test('totals without VAT sum lines, discounts and delivery exactly', () => {
-  const t = orderTotals({ lines: [{ qty: 2, unitPriceMinor: 12500 }, { qty: 1, unitPriceMinor: 3000, discountMinor: 500 }], deliveryFeeMinor: 1500, vat: VAT_OFF });
-  assert.deepEqual([t.subtotalMinor, t.discountMinor, t.vatMinor, t.deliveryMinor, t.totalMinor], [28000, 500, 0, 1500, 29000]);
-  assert.deepEqual(t.lines.map(l => l.netMinor), [25000, 2500]);
+  const t = orderTotals({
+    lines: [
+      { qty: 2, unitPriceMinor: 12500 },
+      { qty: 1, unitPriceMinor: 3000, discountMinor: 500 },
+    ],
+    deliveryFeeMinor: 1500,
+    vat: VAT_OFF,
+  });
+  assert.deepEqual(
+    [t.subtotalMinor, t.discountMinor, t.vatMinor, t.deliveryMinor, t.totalMinor],
+    [28000, 500, 0, 1500, 29000],
+  );
+  assert.deepEqual(
+    t.lines.map(l => l.netMinor),
+    [25000, 2500],
+  );
 });
 
 test('VAT on top of prices rounds half up per line and taxes delivery', () => {
@@ -63,11 +76,25 @@ test('an exempt line (rate 0) carries no VAT even for a registered business', ()
 });
 
 test('invalid lines are rejected, never clamped', () => {
-  for (const lines of [[], [{ qty: 0, unitPriceMinor: 1 }], [{ qty: 1.5, unitPriceMinor: 1 }], [{ qty: 1, unitPriceMinor: -1 }],
-    [{ qty: 1, unitPriceMinor: 100, discountMinor: 101 }], [{ qty: 10001, unitPriceMinor: 1 }], Array.from({ length: 51 }, () => ({ qty: 1, unitPriceMinor: 1 }))]) {
-    assert.throws(() => orderTotals({ lines, vat: VAT_OFF }), /invalid_order_lines/, JSON.stringify(lines).slice(0, 60));
+  for (const lines of [
+    [],
+    [{ qty: 0, unitPriceMinor: 1 }],
+    [{ qty: 1.5, unitPriceMinor: 1 }],
+    [{ qty: 1, unitPriceMinor: -1 }],
+    [{ qty: 1, unitPriceMinor: 100, discountMinor: 101 }],
+    [{ qty: 10001, unitPriceMinor: 1 }],
+    Array.from({ length: 51 }, () => ({ qty: 1, unitPriceMinor: 1 })),
+  ]) {
+    assert.throws(
+      () => orderTotals({ lines, vat: VAT_OFF }),
+      /invalid_order_lines/,
+      JSON.stringify(lines).slice(0, 60),
+    );
   }
-  assert.throws(() => orderTotals({ lines: [{ qty: 1, unitPriceMinor: 1 }], deliveryFeeMinor: -5, vat: VAT_OFF }), /invalid_delivery_fee/);
+  assert.throws(
+    () => orderTotals({ lines: [{ qty: 1, unitPriceMinor: 1 }], deliveryFeeMinor: -5, vat: VAT_OFF }),
+    /invalid_delivery_fee/,
+  );
 });
 
 test('payment status follows paid versus total', () => {
@@ -85,12 +112,16 @@ test('order state machine allows exactly the documented transitions', () => {
     ready: ['out_for_delivery', 'completed', 'cancelled'],
     out_for_delivery: ['delivered', 'failed_delivery'],
     failed_delivery: ['out_for_delivery', 'cancelled'],
-    delivered: ['returned'], completed: ['returned'], cancelled: [], returned: [],
+    delivered: ['returned'],
+    completed: ['returned'],
+    cancelled: [],
+    returned: [],
   };
   assert.deepEqual(Object.keys(allowed).sort(), [...STATUSES].sort());
-  for (const from of STATUSES) for (const to of STATUSES) {
-    assert.equal(canTransition(from, to), allowed[from].includes(to), `${from} → ${to}`);
-  }
+  for (const from of STATUSES)
+    for (const to of STATUSES) {
+      assert.equal(canTransition(from, to), allowed[from].includes(to), `${from} → ${to}`);
+    }
   assert.deepEqual(nextStatuses('pending'), ['confirmed', 'cancelled']);
   assert.equal(canTransition('nope', 'confirmed'), false);
 });
@@ -108,7 +139,12 @@ test('stock is deducted once on confirmation and restored on cancel or return', 
 test('stock policy warns or blocks when a sale exceeds what is on hand', () => {
   assert.deepEqual(applyStockPolicy({ onHand: 5, delta: -3, policy: 'block' }), { ok: true, onHand: 2, short: false });
   assert.deepEqual(applyStockPolicy({ onHand: 1, delta: -3, policy: 'warn' }), { ok: true, onHand: -2, short: true });
-  assert.deepEqual(applyStockPolicy({ onHand: 1, delta: -3, policy: 'block' }), { ok: false, reason: 'insufficient_stock', onHand: 1, short: true });
+  assert.deepEqual(applyStockPolicy({ onHand: 1, delta: -3, policy: 'block' }), {
+    ok: false,
+    reason: 'insufficient_stock',
+    onHand: 1,
+    short: true,
+  });
   // Restocking is never blocked, even from a negative balance.
   assert.deepEqual(applyStockPolicy({ onHand: -2, delta: 4, policy: 'block' }), { ok: true, onHand: 2, short: false });
 });
@@ -117,13 +153,22 @@ test('every Layla sector has a valid Hasib pack; retail is the first full pack',
   for (const id of [...PRIMARY_SECTOR_IDS, 'other']) {
     const pack = hasibPack(id);
     assert(pack, id);
-    for (const core of ['orders', 'stock', 'expenses', 'insights']) assert.equal(pack.modules[core], 'available', `${id} ${core}`);
-    assert.equal(pack.modules.demand, pack.archetype === 'catalog' ? 'available' : 'planned', `${id} demand follows Layla's item capture`);
+    for (const core of ['orders', 'stock', 'expenses', 'insights'])
+      assert.equal(pack.modules[core], 'available', `${id} ${core}`);
+    assert.equal(
+      pack.modules.demand,
+      pack.archetype === 'catalog' ? 'available' : 'planned',
+      `${id} demand follows Layla's item capture`,
+    );
     for (const f of pack.variantOptions) assert(f.key && f.en && f.ar, `${id} variant option`);
     for (const c of pack.expenseCategories) assert(c.key && c.en && c.ar, `${id} expense category`);
-    for (const [k, v] of Object.entries(pack.modules)) assert(['available', 'planned', 'off'].includes(v), `${id} ${k}=${v}`);
+    for (const [k, v] of Object.entries(pack.modules))
+      assert(['available', 'planned', 'off'].includes(v), `${id} ${k}=${v}`);
   }
-  assert.deepEqual(hasibPack('retail').variantOptions.map(o => o.key), ['size', 'length', 'colour']);
+  assert.deepEqual(
+    hasibPack('retail').variantOptions.map(o => o.key),
+    ['size', 'length', 'colour'],
+  );
   assert.equal(hasibPack('dental').modules.appointments, 'off', 'dental records visits as orders, not bookings');
   assert.equal(hasibPack('real-estate').modules.stock, 'available');
   assert.equal(hasibPack('unknown-sector').id, 'other');

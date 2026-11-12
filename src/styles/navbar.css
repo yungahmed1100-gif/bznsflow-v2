@@ -9,7 +9,9 @@
   height: var(--navbar-height);
   display: flex;
   align-items: center;
-  transition: background-color var(--transition), border-color var(--transition);
+  transition:
+    background-color var(--transition),
+    border-color var(--transition);
   background: transparent;
 }
 
@@ -81,7 +83,9 @@
   color: var(--text-secondary);
   padding: 8px 14px;
   border-radius: var(--radius-sm);
-  transition: color var(--transition), background var(--transition);
+  transition:
+    color var(--transition),
+    background var(--transition);
 }
 
 .nav-link:hover {
@@ -172,7 +176,10 @@ button.nav-account {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
-  transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
+  transition:
+    opacity var(--transition),
+    visibility var(--transition),
+    transform var(--transition);
   z-index: 100;
 }
 
@@ -234,7 +241,9 @@ button.nav-account {
   height: 2px;
   background: var(--text-primary);
   border-radius: 2px;
-  transition: transform var(--transition), opacity var(--transition);
+  transition:
+    transform var(--transition),
+    opacity var(--transition);
   transform-origin: center;
 }
 

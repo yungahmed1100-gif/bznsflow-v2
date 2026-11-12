@@ -47,9 +47,18 @@ export function extractJson(text) {
   for (let i = start; i < text.length; i++) {
     const ch = text[i];
 
-    if (escaped) { escaped = false; continue; }
-    if (ch === '\\') { escaped = true; continue; }
-    if (ch === '"') { inString = !inString; continue; }
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
     if (inString) continue;
 
     if (ch === '{') depth++;
@@ -82,9 +91,7 @@ export function parseReply(raw) {
     reply: reply.slice(0, MAX_REPLY_CHARS),
     handoff: obj.handoff === true || obj.handoff === 'true',
     handoff_context:
-      typeof obj.handoff_context === 'string'
-        ? obj.handoff_context.trim().slice(0, MAX_CONTEXT_CHARS)
-        : '',
+      typeof obj.handoff_context === 'string' ? obj.handoff_context.trim().slice(0, MAX_CONTEXT_CHARS) : '',
   };
 }
 
@@ -101,26 +108,30 @@ export async function complete(systemMessage, userMessage) {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Error('OPENAI_API_KEY is not configured');
 
-  const res = await fetchWithTimeout(ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
+  const res = await fetchWithTimeout(
+    ENDPOINT,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
+        temperature: TEMPERATURE,
+        max_tokens: MAX_TOKENS,
+        // JSON mode requires the literal word "JSON" somewhere in the messages.
+        // The persona prompt carries it — see the OUTPUT line in
+        // web-chatbot/system-prompt-web-bznsflow.md. Do not remove it.
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: userMessage },
+        ],
+      }),
     },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
-      temperature: TEMPERATURE,
-      max_tokens: MAX_TOKENS,
-      // JSON mode requires the literal word "JSON" somewhere in the messages.
-      // The persona prompt carries it — see the OUTPUT line in
-      // web-chatbot/system-prompt-web-bznsflow.md. Do not remove it.
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemMessage },
-        { role: 'user', content: userMessage },
-      ],
-    }),
-  }, { label: 'OpenAI', timeoutMs: TIMEOUT_MS });
+    { label: 'OpenAI', timeoutMs: TIMEOUT_MS },
+  );
 
   if (!res.ok) throw await httpError('OpenAI', res);
 

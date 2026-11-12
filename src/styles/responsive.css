@@ -8,7 +8,9 @@
     text-align: center;
     gap: 40px;
   }
-  .hero-text-block { max-width: 620px; }
+  .hero-text-block {
+    max-width: 620px;
+  }
 
   .hero-subheadline {
     margin: 0 auto 48px;
@@ -25,7 +27,6 @@
   }
 
   .benefits-grid,
-
   .about-wrapper {
     grid-template-columns: 260px 1fr;
     gap: 48px;

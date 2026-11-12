@@ -6,12 +6,30 @@ import { sectorTurnPack } from './workspace/turn.js';
 import { openTaskOnce } from './workspace/tasks.js';
 
 export async function dentalTurn(ctx, { row, contact, now, secret }) {
-  if (!await sectorTurnPack(ctx, { row, secret, packId: 'dental' })) return null;
+  if (!(await sectorTurnPack(ctx, { row, secret, packId: 'dental' }))) return null;
   const fields = new Map((contact.fields || []).map(field => [field.key, field.value]));
   if (!fields.get('service') && !fields.get('preferred_time')) return null;
-  const visits = await ctx.db.query('dentalVisits').withIndex('by_contact', q => q.eq('contactId', contact._id)).take(50);
-  if (visits.some(v => v.accountId === row.accountId && ['booked', 'confirmed', 'arrived'].includes(v.status) && v.endsAt > now)) return null;
-  await openTaskOnce(ctx, 'dentalTasks', { accountId: row.accountId, kind: 'visit_request', entityType: 'contact', entityId: contact._id,
-    reason: 'Visit request from Layla: book a time' }, now);
+  const visits = await ctx.db
+    .query('dentalVisits')
+    .withIndex('by_contact', q => q.eq('contactId', contact._id))
+    .take(50);
+  if (
+    visits.some(
+      v => v.accountId === row.accountId && ['booked', 'confirmed', 'arrived'].includes(v.status) && v.endsAt > now,
+    )
+  )
+    return null;
+  await openTaskOnce(
+    ctx,
+    'dentalTasks',
+    {
+      accountId: row.accountId,
+      kind: 'visit_request',
+      entityType: 'contact',
+      entityId: contact._id,
+      reason: 'Visit request from Layla: book a time',
+    },
+    now,
+  );
   return { contactId: contact._id };
 }

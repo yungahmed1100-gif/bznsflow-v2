@@ -41,12 +41,30 @@ export function finishTurn(conversationId, reply, handoff) {
  * view and playbook-mail transport, but it is no longer the only copy.
  */
 export function captureWebsiteLead({
-  email, name, phone, country, industry, lang, sourceUrl, sourceCta,
-  sourceKey = 'website_form', verified = false,
+  email,
+  name,
+  phone,
+  country,
+  industry,
+  lang,
+  sourceUrl,
+  sourceCta,
+  sourceKey = 'website_form',
+  verified = false,
 }) {
-  return coreStore()('capture_website_lead', { email, name, phone, country, industry, lang, sourceKey, sourceUrl, sourceCta, verified: !!verified });
+  return coreStore()('capture_website_lead', {
+    email,
+    name,
+    phone,
+    country,
+    industry,
+    lang,
+    sourceKey,
+    sourceUrl,
+    sourceCta,
+    verified: !!verified,
+  });
 }
-
 
 export async function getSession(tokenHash) {
   const account = await blueAuthStore()('session', { tokenHash });

@@ -6,7 +6,20 @@ import { ok, settingsFor } from './shared.js';
 import { businessTimezone } from './expensesState.js';
 import { periodRange } from './period.js';
 import { displayName } from '../blueContacts.js';
-import { draftBuckets, taskRows, taskTiming, taskBase, taskTail, draftRow, datedFollowups, datedBucket, queueSelection, resolveTask, snoozeTask, contextContact } from './workspace/followups.js';
+import {
+  draftBuckets,
+  taskRows,
+  taskTiming,
+  taskBase,
+  taskTail,
+  draftRow,
+  datedFollowups,
+  datedBucket,
+  queueSelection,
+  resolveTask,
+  snoozeTask,
+  contextContact,
+} from './workspace/followups.js';
 import { loadGym, describeMembers } from './fitnessGym.js';
 import { fitnessSettings } from './fitnessSettings.js';
 
@@ -27,56 +40,120 @@ function ownerOf(gym, t) {
 }
 
 async function queueRows(ctx, tenant, actor, now) {
-  const accountId = tenant.accountId, today = periodRange('today', now, await businessTimezone(ctx, accountId));
-  const gym = await loadGym(ctx, accountId, now), rows = [];
+  const accountId = tenant.accountId,
+    today = periodRange('today', now, await businessTimezone(ctx, accountId));
+  const gym = await loadGym(ctx, accountId, now),
+    rows = [];
   for (const t of await taskRows(ctx, 'fitnessTasks', accountId)) {
-    const contactId = ownerOf(gym, t), klass = t.entityType === 'class' ? gym.classById.get(t.entityId) : null;
+    const contactId = ownerOf(gym, t),
+      klass = t.entityType === 'class' ? gym.classById.get(t.entityId) : null;
     if (!contactId && !klass) continue;
     // Staff see their own assigned work and everything unassigned.
-    if (actor.role === 'employee' && t.assignedAccountId && String(t.assignedAccountId) !== String(actor.actorAccountId)) continue;
+    if (
+      actor.role === 'employee' &&
+      t.assignedAccountId &&
+      String(t.assignedAccountId) !== String(actor.actorAccountId)
+    )
+      continue;
     const { due, bucket } = taskTiming(t, now, today, { waiting: WAITING_TASKS });
-    rows.push({ ...taskBase(t, due, bucket), contactId: contactId ? String(contactId) : null, classId: klass ? klass._id : null, classTitle: klass?.title || null,
-      assignedAccountId: t.assignedAccountId || null, version: t.updatedAt, selfClosing: SELF_CLOSING.has(t.kind), ...taskTail(t) });
+    rows.push({
+      ...taskBase(t, due, bucket),
+      contactId: contactId ? String(contactId) : null,
+      classId: klass ? klass._id : null,
+      classTitle: klass?.title || null,
+      assignedAccountId: t.assignedAccountId || null,
+      version: t.updatedAt,
+      selfClosing: SELF_CLOSING.has(t.kind),
+      ...taskTail(t),
+    });
   }
-  if (actor.role === 'manager') for (const d of gym.drafts) {
-    const row = draftRow(d, rows, DRAFT_BUCKET, d.kind, { contactId: String(d.contactId) });
-    if (row) rows.push(row);
-  }
-  for (const f of await datedFollowups(ctx, accountId, 'membership')) rows.push({ id: f._id, source: 'followup', kind: 'followup', reason: f.reason, bucket: datedBucket(f, now, today), dueAt: f.dueAt,
-    entityType: 'membership', entityId: String(f.linkedId), contactId: String(f.contactId), version: f.version });
+  if (actor.role === 'manager')
+    for (const d of gym.drafts) {
+      const row = draftRow(d, rows, DRAFT_BUCKET, d.kind, { contactId: String(d.contactId) });
+      if (row) rows.push(row);
+    }
+  for (const f of await datedFollowups(ctx, accountId, 'membership'))
+    rows.push({
+      id: f._id,
+      source: 'followup',
+      kind: 'followup',
+      reason: f.reason,
+      bucket: datedBucket(f, now, today),
+      dueAt: f.dueAt,
+      entityType: 'membership',
+      entityId: String(f.linkedId),
+      contactId: String(f.contactId),
+      version: f.version,
+    });
   return { rows, gym };
 }
 
 export async function fitnessFollowupQueue(ctx, tenant, actor, a, now) {
   const { rows } = await queueRows(ctx, tenant, actor, now);
-  const { counts, chosen, actionable } = queueSelection(rows, { filters: FITNESS_FILTERS, order: ORDER, filter: a.filter, match: r => !a.contactId || r.contactId === String(a.contactId),
-    actionable: ['today', 'overdue', 'decision', 'blocked'] });
+  const { counts, chosen, actionable } = queueSelection(rows, {
+    filters: FITNESS_FILTERS,
+    order: ORDER,
+    filter: a.filter,
+    match: r => !a.contactId || r.contactId === String(a.contactId),
+    actionable: ['today', 'overdue', 'decision', 'blocked'],
+  });
   const names = new Map();
-  for (const id of new Set(chosen.map(r => r.contactId).filter(Boolean))) { const c = await owned(ctx, id, tenant.accountId, 'blueContacts'); names.set(id, c?.state === 'active' ? displayName(c).name : null); }
-  return ok({ items: chosen.map(r => ({ ...r, contactName: r.contactId ? names.get(r.contactId) : null })), counts, actionable });
+  for (const id of new Set(chosen.map(r => r.contactId).filter(Boolean))) {
+    const c = await owned(ctx, id, tenant.accountId, 'blueContacts');
+    names.set(id, c?.state === 'active' ? displayName(c).name : null);
+  }
+  return ok({
+    items: chosen.map(r => ({ ...r, contactName: r.contactId ? names.get(r.contactId) : null })),
+    counts,
+    actionable,
+  });
 }
 
 async function visibleTask(ctx, tenant, actor, id) {
   const task = await owned(ctx, id, tenant.accountId, 'fitnessTasks');
   if (!task) return null;
-  if (actor.role === 'employee' && task.assignedAccountId && String(task.assignedAccountId) !== String(actor.actorAccountId)) return null;
+  if (
+    actor.role === 'employee' &&
+    task.assignedAccountId &&
+    String(task.assignedAccountId) !== String(actor.actorAccountId)
+  )
+    return null;
   return task;
 }
 
-export const resolveFitnessTask = async (ctx, tenant, actor, a, now) => resolveTask(ctx, tenant, actor, await visibleTask(ctx, tenant, actor, a.taskId), a, now, SELF_CLOSING);
-export const snoozeFitnessTask = async (ctx, tenant, actor, a, now) => snoozeTask(ctx, tenant, actor, await visibleTask(ctx, tenant, actor, a.taskId), a, now);
+export const resolveFitnessTask = async (ctx, tenant, actor, a, now) =>
+  resolveTask(ctx, tenant, actor, await visibleTask(ctx, tenant, actor, a.taskId), a, now, SELF_CLOSING);
+export const snoozeFitnessTask = async (ctx, tenant, actor, a, now) =>
+  snoozeTask(ctx, tenant, actor, await visibleTask(ctx, tenant, actor, a.taskId), a, now);
 
 /** A customer's membership, next class and open follow-ups, for Chats and Customers. */
 export async function fitnessContext(ctx, tenant, actor, a, now) {
   const contactId = await contextContact(ctx, tenant, a);
   if (!contactId) return ok({ items: [] });
   const { rows, gym } = await queueRows(ctx, tenant, actor, now);
-  const known = gym.membershipsOf.has(String(contactId)) || gym.seatsByContact.has(String(contactId)) || rows.some(r => r.contactId === String(contactId));
+  const known =
+    gym.membershipsOf.has(String(contactId)) ||
+    gym.seatsByContact.has(String(contactId)) ||
+    rows.some(r => r.contactId === String(contactId));
   if (!known) return ok({ items: [] });
   const s = fitnessSettings(await settingsFor(ctx, tenant.accountId));
   const [card] = await describeMembers(ctx, tenant.accountId, actor, gym, [String(contactId)], now, s);
-  const next = (gym.seatsByContact.get(String(contactId)) || []).filter(x => x.status === 'confirmed').map(x => ({ seat: x, klass: gym.classById.get(String(x.classId)) }))
-    .filter(x => x.klass && x.klass.startsAt > now).sort((x, y) => x.klass.startsAt - y.klass.startsAt)[0];
+  const next = (gym.seatsByContact.get(String(contactId)) || [])
+    .filter(x => x.status === 'confirmed')
+    .map(x => ({ seat: x, klass: gym.classById.get(String(x.classId)) }))
+    .filter(x => x.klass && x.klass.startsAt > now)
+    .sort((x, y) => x.klass.startsAt - y.klass.startsAt)[0];
   const followups = rows.filter(r => r.contactId === String(contactId) && r.bucket !== 'completed');
-  return ok({ items: card ? [{ ...card, nextClass: next ? { title: next.klass.title, startsAt: next.klass.startsAt, trial: next.seat.trial } : null, followups: followups.slice(0, 3), openFollowups: followups.length }] : [] });
+  return ok({
+    items: card
+      ? [
+          {
+            ...card,
+            nextClass: next ? { title: next.klass.title, startsAt: next.klass.startsAt, trial: next.seat.trial } : null,
+            followups: followups.slice(0, 3),
+            openFollowups: followups.length,
+          },
+        ]
+      : [],
+  });
 }

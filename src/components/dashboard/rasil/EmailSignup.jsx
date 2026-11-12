@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { LangSwitch } from './LangSwitch';
 
-const escape = text => String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const escape = text =>
+  String(text).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 /**
  * The HTML a website needs to collect subscribers: a plain form, so it works on any site without
@@ -21,19 +22,40 @@ export function signupSnippet({ origin, formKey, business, lang }) {
 }
 
 export function EmailSignup({ s, domain, business }) {
-  const [lang, setLang] = useState(s.ar ? 'ar' : 'en'), [copied, setCopied] = useState(false);
-  const code = domain?.ready ? signupSnippet({ origin: window.location.origin, formKey: domain.formKey, business: business.name, lang }) : '';
+  const [lang, setLang] = useState(s.ar ? 'ar' : 'en'),
+    [copied, setCopied] = useState(false);
+  const code = domain?.ready
+    ? signupSnippet({ origin: window.location.origin, formKey: domain.formKey, business: business.name, lang })
+    : '';
   return (
     <section className="ld-section ld-email-card" aria-labelledby="ld-email-signup">
       <h2 id="ld-email-signup">{s.t('rasil_signup_title')}</h2>
-      {!domain?.ready ? <p className="ld-help">{s.t('rasil_signup_later')}</p> : <>
-        <p className="ld-help">{s.t('rasil_signup_intro')}</p>
-        <LangSwitch s={s} lang={lang} onChange={setLang} />
-        <pre className="ld-code" dir="ltr" tabIndex={0}><code>{code}</code></pre>
-        <button type="button" className="ld-button" onClick={async () => { try { await navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* selectable */ } }}>
-          {copied ? s.t('rasil_copied') : s.t('rasil_copy')}
-        </button>
-      </>}
+      {!domain?.ready ? (
+        <p className="ld-help">{s.t('rasil_signup_later')}</p>
+      ) : (
+        <>
+          <p className="ld-help">{s.t('rasil_signup_intro')}</p>
+          <LangSwitch s={s} lang={lang} onChange={setLang} />
+          <pre className="ld-code" dir="ltr" tabIndex={0}>
+            <code>{code}</code>
+          </pre>
+          <button
+            type="button"
+            className="ld-button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(code);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              } catch {
+                /* selectable */
+              }
+            }}
+          >
+            {copied ? s.t('rasil_copied') : s.t('rasil_copy')}
+          </button>
+        </>
+      )}
     </section>
   );
 }

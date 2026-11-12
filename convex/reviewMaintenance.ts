@@ -9,7 +9,11 @@ export const downgradeJourneyStep = internalMutation({
   handler: async (ctx, args) => {
     const page = await ctx.db.query('blueReviewSessions').paginate({ numItems: BATCH, cursor: args.cursor ?? null });
     let updated = 0;
-    for (const row of page.page) if (row.journeyStep === 4) { await ctx.db.patch(row._id, { journeyStep: 1 }); updated++; }
+    for (const row of page.page)
+      if (row.journeyStep === 4) {
+        await ctx.db.patch(row._id, { journeyStep: 1 });
+        updated++;
+      }
     return { updated, isDone: page.isDone, continueCursor: page.continueCursor };
   },
 });

@@ -16,7 +16,15 @@ import { BroadcastView } from '../components/dashboard/BroadcastView';
 import { EmailView } from '../components/dashboard/rasil/EmailView';
 import { AuditsView } from '../components/dashboard/audits/AuditsView';
 import { usePolling } from '../hooks/usePolling';
-import { dashboard, hasib, loadOverview, loadHasib, setHasibPreviewIndustry, setupPath, DashboardError } from '../lib/dashboard/api';
+import {
+  dashboard,
+  hasib,
+  loadOverview,
+  loadHasib,
+  setHasibPreviewIndustry,
+  setupPath,
+  DashboardError,
+} from '../lib/dashboard/api';
 import { createHasibStrings } from '../lib/hasib/strings';
 import { HasibProvider } from '../components/hasib/HasibContext';
 import { hasibPack } from '../../config/hasib-packs';
@@ -45,7 +53,17 @@ import { DentalDashboard } from '../components/hasib/DentalDashboard';
 import { HvacDashboard } from '../components/hasib/HvacDashboard';
 
 // The six-tab sectors' Work, Insights and rules/team screens, by pack (Real Estate is the default).
-const SIX_TAB_DASHBOARDS = { 'real-estate': RealEstateDashboard, media: MediaDashboard, fitness: FitnessDashboard, dental: DentalDashboard, hvac: HvacDashboard, automotive: AutomotiveWorkspace, construction: ConstructionWorkspace, retail: StoreWorkspace, 'retail-tech': StoreWorkspace };
+const SIX_TAB_DASHBOARDS = {
+  'real-estate': RealEstateDashboard,
+  media: MediaDashboard,
+  fitness: FitnessDashboard,
+  dental: DentalDashboard,
+  hvac: HvacDashboard,
+  automotive: AutomotiveWorkspace,
+  construction: ConstructionWorkspace,
+  retail: StoreWorkspace,
+  'retail-tech': StoreWorkspace,
+};
 import { ClinicDashboard } from '../components/hasib/ClinicDashboard';
 import { ConstructionWorkspace } from '../components/hasib/ConstructionWorkspace';
 import { AutomotiveWorkspace } from '../components/hasib/AutomotiveWorkspace';
@@ -78,9 +96,28 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const packId = hasibOverview?.setupRequired ? undefined : hasibOverview?.pack?.id;
   const s = useMemo(() => createStrings(lang, packId), [lang, packId]);
   // Eight plain sections; Hasib's appear only when Business Setup selects a live pack.
-  const map = useMemo(() => dashboardMap(hasibOverview, overview.data?.capabilities || hasibOverview?.capabilities, overview.data?.workspaceRole,
-    { email: !!overview.data?.rasilEnabled && !!overview.data?.capabilities?.email, website: ['ascend', 'apex'].includes(account?.accessPlan), audits: !!overview.data?.founderPreview && !previewIndustry }),
-    [hasibOverview, overview.data?.capabilities, overview.data?.workspaceRole, overview.data?.rasilEnabled, overview.data?.founderPreview, previewIndustry, account?.accessPlan]);
+  const map = useMemo(
+    () =>
+      dashboardMap(
+        hasibOverview,
+        overview.data?.capabilities || hasibOverview?.capabilities,
+        overview.data?.workspaceRole,
+        {
+          email: !!overview.data?.rasilEnabled && !!overview.data?.capabilities?.email,
+          website: ['ascend', 'apex'].includes(account?.accessPlan),
+          audits: !!overview.data?.founderPreview && !previewIndustry,
+        },
+      ),
+    [
+      hasibOverview,
+      overview.data?.capabilities,
+      overview.data?.workspaceRole,
+      overview.data?.rasilEnabled,
+      overview.data?.founderPreview,
+      previewIndustry,
+      account?.accessPlan,
+    ],
+  );
   const SixTabWorkspace = map.sixTab ? SIX_TAB_DASHBOARDS[map.packId] || RealEstateDashboard : null;
   const h = useMemo(() => createHasibStrings(lang, packId), [lang, packId]);
   // The prerendered shell has no URL, so resolving the tab before mount bakes "chats" into
@@ -88,10 +125,15 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   // Six-tab sectors map old links (?tab=today) through their own aliases, so wait for
   // Hasib before resolving; otherwise the generic map briefly shows Chats instead.
   const hasibPending = hasibAllowed && !hasibState.data && !hasibState.error;
-  const { tab, view } = ready && !hasibPending ? resolveTab(params.get('tab'), params.get('view'), map) : { tab: null, view: null };
+  const { tab, view } =
+    ready && !hasibPending ? resolveTab(params.get('tab'), params.get('view'), map) : { tab: null, view: null };
 
   // Client-only: the prerendered HTML is a neutral loading shell.
-  useEffect(() => { setHasibPreviewIndustry(previewPack); setReady(true); return () => setHasibPreviewIndustry(''); }, [previewPack]);
+  useEffect(() => {
+    setHasibPreviewIndustry(previewPack);
+    setReady(true);
+    return () => setHasibPreviewIndustry('');
+  }, [previewPack]);
   useEffect(() => {
     const error = overview.error;
     if (!(error instanceof DashboardError)) return;
@@ -100,7 +142,10 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   }, [overview.error, lang]);
   useEffect(() => {
     // The business timezone starts as the owner's browser zone and stays editable.
-    if (overview.data?.connected && !overview.data.timezone && overview.data.workspaceRole !== 'employee') dashboard('set_timezone', { timezone: browserTimezone() }).then(() => overview.refresh({ quiet: true })).catch(() => {});
+    if (overview.data?.connected && !overview.data.timezone && overview.data.workspaceRole !== 'employee')
+      dashboard('set_timezone', { timezone: browserTimezone() })
+        .then(() => overview.refresh({ quiet: true }))
+        .catch(() => {});
   }, [overview.data?.connected, overview.data?.timezone, overview.data?.workspaceRole]);
 
   const go = (next, extra = {}) => {
@@ -118,7 +163,9 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   };
   // The founder's real sector, remembered while a preview replaces the Hasib overview.
   const [livePack, setLivePack] = useState('');
-  useEffect(() => { if (!previewIndustry && hasibOverview?.pack?.id && !hasibOverview.readOnly) setLivePack(hasibOverview.pack.id); }, [previewIndustry, hasibOverview]);
+  useEffect(() => {
+    if (!previewIndustry && hasibOverview?.pack?.id && !hasibOverview.readOnly) setLivePack(hasibOverview.pack.id);
+  }, [previewIndustry, hasibOverview]);
   const changeLive = async packId => {
     setHasibPreviewIndustry('');
     setPreviewIndustry('');
@@ -135,72 +182,385 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
 
   return (
     <div className="ld" dir={s.ar ? 'rtl' : 'ltr'} lang={lang}>
-
-      <a className="ld-skip" href="#ld-main">{s.ar ? 'تخطَّ إلى المحتوى' : 'Skip to content'}</a>
+      <a className="ld-skip" href="#ld-main">
+        {s.ar ? 'تخطَّ إلى المحتوى' : 'Skip to content'}
+      </a>
       <header className="ld-top">
-        {!previewIndustry && <a className="ld-mcp-link" href={lang === 'ar' ? '/mcp' : '/en/mcp'}>{s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections'}</a>}
-        <a className="ld-brand" href={setupPath(lang)} aria-label="BznsFlow"><img src={logoImg} alt="" width="32" height="32" /><span>BznsFlow</span></a>
-        {data && !previewIndustry && <DashboardHeader s={s} data={data} onChange={() => overview.refresh({ quiet: true })} onOpenChannels={() => go('settings', { view: 'channels' })} />}
-        {founder && <a className="ld-button ld-owner-access" href={s.ar ? '/owner' : '/en/owner'}>{s.ar ? 'لوحة الإدارة' : 'Admin dashboard'}</a>}
-        <a className="ld-lang" href={langHref} lang={s.ar ? 'en' : 'ar'}>{s.t('language')}</a>
+        {!previewIndustry && (
+          <a className="ld-mcp-link" href={lang === 'ar' ? '/mcp' : '/en/mcp'}>
+            {s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections'}
+          </a>
+        )}
+        <a className="ld-brand" href={setupPath(lang)} aria-label="BznsFlow">
+          <img src={logoImg} alt="" width="32" height="32" />
+          <span>BznsFlow</span>
+        </a>
+        {data && !previewIndustry && (
+          <DashboardHeader
+            s={s}
+            data={data}
+            onChange={() => overview.refresh({ quiet: true })}
+            onOpenChannels={() => go('settings', { view: 'channels' })}
+          />
+        )}
+        {founder && (
+          <a className="ld-button ld-owner-access" href={s.ar ? '/owner' : '/en/owner'}>
+            {s.ar ? 'لوحة الإدارة' : 'Admin dashboard'}
+          </a>
+        )}
+        <a className="ld-lang" href={langHref} lang={s.ar ? 'en' : 'ar'}>
+          {s.t('language')}
+        </a>
       </header>
-      <HasibProvider lang={lang} overview={hasibOverview} business={data?.business?.name || ''} timezone={data?.timezone} onChanged={refreshHasib}>
-      <DashboardNav packId={hasibOverview?.pack?.id} s={s} h={h} sections={map.sections} tab={tab} onSelect={go} search={params} business={data?.business?.name} preview={hasibOverview?.readOnly} badges={{ orders: hasibOverview?.counts?.laylaWaiting || 0, work: hasibOverview?.counts?.followupsActionable || 0 }}
-        extras={[
-          { href: langHref, label: s.t('language'), lang: s.ar ? 'en' : 'ar' },
-          ...(!previewIndustry ? [{ href: lang === 'ar' ? '/mcp' : '/en/mcp', label: s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections' }] : []),
-          ...(founder ? [{ href: s.ar ? '/owner' : '/en/owner', label: s.ar ? 'لوحة الإدارة' : 'Admin dashboard' }] : []),
-        ]} />
-      <main id="ld-main" className={`ld-main ${hasibOverview?.readOnly ? 'hb-preview-mode' : ''}`} tabIndex={-1} data-tab={tab}>
-        {!previewPack && <AccessNotice s={s} account={account} />}
-        {!previewPack && tab !== 'website' && map.sections.includes('website') && <WebsiteReminder s={s} account={account} onGo={go} />}
-        {!ready || (overview.loading && !data) || hasibPending ? <p className="ld-state" role="status">{s.t('loading')}</p>
-          : unavailable ? <div className="ld-state"><p>{s.t('dashboardUnavailable')}</p><a className="ld-button" href={setupPath(lang)}>{s.t('setup')}</a></div>
-          : overview.error && !data ? <div className="ld-state" role="alert"><p>{s.reason(overview.error.reason)}</p>{overview.error.reason === 'access_required'
-            ? <a className="ld-button ld-primary" href={s.ar ? '/' : '/en'}>{s.t('choosePlan')}</a>
-            : <button className="ld-button" onClick={() => overview.refresh()}>{s.t('retry')}</button>}</div>
-          : data && (data.connected || data.capabilities?.operations || data.founderPreview) ? (
+      <HasibProvider
+        lang={lang}
+        overview={hasibOverview}
+        business={data?.business?.name || ''}
+        timezone={data?.timezone}
+        onChanged={refreshHasib}
+      >
+        <DashboardNav
+          packId={hasibOverview?.pack?.id}
+          s={s}
+          h={h}
+          sections={map.sections}
+          tab={tab}
+          onSelect={go}
+          search={params}
+          business={data?.business?.name}
+          preview={hasibOverview?.readOnly}
+          badges={{
+            orders: hasibOverview?.counts?.laylaWaiting || 0,
+            work: hasibOverview?.counts?.followupsActionable || 0,
+          }}
+          extras={[
+            { href: langHref, label: s.t('language'), lang: s.ar ? 'en' : 'ar' },
+            ...(!previewIndustry
+              ? [
+                  {
+                    href: lang === 'ar' ? '/mcp' : '/en/mcp',
+                    label: s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections',
+                  },
+                ]
+              : []),
+            ...(founder
+              ? [{ href: s.ar ? '/owner' : '/en/owner', label: s.ar ? 'لوحة الإدارة' : 'Admin dashboard' }]
+              : []),
+          ]}
+        />
+        <main
+          id="ld-main"
+          className={`ld-main ${hasibOverview?.readOnly ? 'hb-preview-mode' : ''}`}
+          tabIndex={-1}
+          data-tab={tab}
+        >
+          {!previewPack && <AccessNotice s={s} account={account} />}
+          {!previewPack && tab !== 'website' && map.sections.includes('website') && (
+            <WebsiteReminder s={s} account={account} onGo={go} />
+          )}
+          {!ready || (overview.loading && !data) || hasibPending ? (
+            <p className="ld-state" role="status">
+              {s.t('loading')}
+            </p>
+          ) : unavailable ? (
+            <div className="ld-state">
+              <p>{s.t('dashboardUnavailable')}</p>
+              <a className="ld-button" href={setupPath(lang)}>
+                {s.t('setup')}
+              </a>
+            </div>
+          ) : overview.error && !data ? (
+            <div className="ld-state" role="alert">
+              <p>{s.reason(overview.error.reason)}</p>
+              {overview.error.reason === 'access_required' ? (
+                <a className="ld-button ld-primary" href={s.ar ? '/' : '/en'}>
+                  {s.t('choosePlan')}
+                </a>
+              ) : (
+                <button className="ld-button" onClick={() => overview.refresh()}>
+                  {s.t('retry')}
+                </button>
+              )}
+            </div>
+          ) : data && (data.connected || data.capabilities?.operations || data.founderPreview) ? (
             <>
-              {!previewPack && data.founderPreview && hasibOverview && <FounderIndustryPreview s={s} h={h} industries={hasibOverview.industries} livePack={livePack} current={previewIndustry} onLive={changeLive} onPreview={changePreview} />}
-              {hasibOverview?.readOnly && <p className="hb-preview-banner" role="status">{s.ar ? 'معاينة للقراءة فقط — جميع إجراءات الحفظ محظورة.' : 'Read-only preview — all save actions are blocked.'}</p>}
-              {!(map.sixTab && tab === 'work') && <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} />}
-              {hasibOverview?.readOnly && (tab === 'settings' || (tab === 'stock' && view === 'services')) ? <p className="ld-state">{s.ar ? 'إعدادات تجريبية للقراءة فقط. لا توجد قناة مراسلة مرتبطة بهذه المعاينة.' : 'Read-only sample settings. This preview has no connected messaging channel.'}</p>
-                : hasibOverview?.pack?.id === 'clinic' && ['today','orders','money','team'].includes(tab) ? <ClinicDashboard mode={({today:'today',orders:'visits',money:'money',team:'team'})[tab]} s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''} />
-                : map.sixTab && (tab === 'work' || tab === 'insights' || (tab === 'settings' && ['rules', 'team', 'workshop', 'site'].includes(view))) ? <SixTabWorkspace section={tab} view={view} s={s} h={h} overview={hasibOverview} timezone={data.timezone} connections={data} onChanged={refreshHasib} onGo={go} initialAction={params.get('action') || ''}
-                    tabs={tab === 'work' ? <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} /> : null} />
-                : tab === 'today' ? <TodayView s={s} h={h} hasibOverview={hasibOverview} connected={!!data.connected} onGo={go} />
-                : tab === 'orders' && (params.get('order') || params.get('ledger')) ? <OrdersView s={s} h={h} overview={hasibOverview} business={data.business.name} timezone={data.timezone} initialOrderId={params.get('order')} initialCreate={params.get('create') === '1'} onChanged={refreshHasib} />
-                : tab === 'orders' && ['bookings', 'lessons', 'memberships'].includes(workflow) ? <BookingWorkView s={s} h={h} overview={hasibOverview} timezone={data.timezone} initialCreate={params.get('create') === '1'} initialAction={params.get('action') || ''} onChanged={refreshHasib} />
-                : tab === 'orders' && workflow === 'jobs' ? <JobsWorkView s={s} h={h} overview={hasibOverview} timezone={data.timezone} initialCreate={params.get('create') === '1'} onChanged={refreshHasib} />
-                : tab === 'orders' ? <OrdersView initialCreate={params.get('create') === '1' || params.get('action') === 'charge'} s={s} h={h} overview={hasibOverview} business={data.business.name} timezone={data.timezone} onChanged={refreshHasib} />
-                : tab === 'stock' && view === 'products' ? <StockView timezone={data.timezone} s={s} h={h} overview={hasibOverview} initialLow={params.get('low') === '1'} initialAction={params.get('action') || ''} onChanged={refreshHasib} />
-                : tab === 'stock' ? <BusinessDetails s={s} section="services" onSaved={refreshHasib} />
-                : tab === 'service' ? <ServiceView initialRepairId={params.get('repair')} initialAction={params.get('action') || ''} s={s} h={h} timezone={data.timezone} staff={hasibOverview?.workspaceRole === 'employee'} onClearLink={() => setParams(new URLSearchParams({ tab: 'service' }), { replace: true })} onChanged={refreshHasib} />
-                : tab === 'money' && view === 'expenses' ? <ExpensesView s={s} h={h} overview={hasibOverview} timezone={data.timezone} initialCreate={params.get('action') === 'expense'} />
-                : tab === 'money' ? <InsightsView s={s} h={h} overview={hasibOverview} onGo={go} />
-                : tab === 'audits' ? <AuditsView s={s} />
-                : tab === 'website' ? <WebsiteOnboarding s={s} emailOpen={map.sections.includes('email')} onGo={go} />
-                : tab === 'email' ? <EmailView s={s} overview={data} view={view} explicitView={params.has('view')} onGo={(next, extra) => setParams(dashboardSearch(params, next, extra), { replace: true })} />
-                : (tab === 'customers' && view === 'broadcast') || tab === 'broadcasts' ? (data.integration ? <BroadcastView s={s} overview={data} onTimezone={() => overview.refresh({ quiet: true })} /> : <div className="ld-state"><p>{s.t('broadcastWhatsAppOnly')}</p>{map.sections.includes('settings') && <button type="button" className="ld-button" onClick={() => go('settings', { view: 'channels' })}>{s.t('connectChannel')}</button>}</div>)
-                : tab === 'customers' ? <>{hasibOverview?.pack && (!map.sixTab || ['retail', 'retail-tech'].includes(hasibOverview.pack.id)) && <FollowupView s={s} h={h} packId={hasibOverview.pack.id} timezone={data.timezone} />}<ContactsView s={s} overview={data} onOpenChat={id => go('chats', { chat: id })} /></>
-                : tab === 'settings' && view === 'accounts' ? <AccountsSettings s={s} h={h} overview={hasibOverview} timezone={data.timezone} onChanged={() => { refreshHasib(); overview.refresh({ quiet: true }); }} />
-                : tab === 'settings' && view === 'brain' ? <BrainPage lang={lang} part={brainPart(params)} onPart={part => setParams(dashboardSearch(params, 'settings', { view: 'brain', part }), { replace: true })}
-                    channel={!!data.connected} active={!!data.messaging?.active} onGo={go} />
-                : tab === 'settings' && view === 'services' ? <BusinessDetails s={s} section="services" catalyst={!!map.catalyst} onSaved={() => overview.refresh({ quiet: true })} />
-                : tab === 'settings' && view === 'business' ? <><BusinessDetails s={s} catalyst={!!map.catalyst} section={map.catalyst || map.sections.includes('stock') ? 'details' : 'all'} initialIndustryId={hasibOverview?.readOnly ? undefined : hasibOverview?.legacyIndustryId || undefined} next={data?.connected ? { label: lang === 'ar' ? 'التالي: المحادثات' : 'Next: Chats', go: () => go('chats') } : { label: lang === 'ar' ? 'التالي: اربط قناة' : 'Next: Connect a channel', go: () => go('settings', { view: 'channels' }) }} onSaved={map.catalyst ? () => overview.refresh({ quiet: true }) : refreshHasib} />
-                    {!hasibOverview?.readOnly && hasibOverview?.pack && <IndustrySetup selection={false} heading={false} s={s} h={h} livePacks={hasibOverview.livePacks} industries={hasibOverview.industries} current={hasibOverview.pack.id} settings={hasibOverview.settings} onChosen={refreshHasib} />}
-                    {/* A sign-up sector that is not live yet: the owner picks a live one here (docs/product-design.md). */}
-                    {!hasibOverview?.readOnly && !hasibOverview?.pack && hasibOverview?.setupRequired && <IndustrySetup s={s} h={h} livePacks={hasibOverview.livePacks} industries={hasibOverview.industries} current={hasibOverview.selectedIndustryId} settings={hasibOverview.settings} onChosen={refreshHasib} />}</>
-                : tab === 'team' ? <TeamView s={s} h={h} />
-                : tab === 'settings' ? <ChannelConnections s={s} data={data} onChange={() => overview.refresh({ quiet: true })} />
-                : <ChatsView s={s} overview={data} reminder={map.catalyst && data.workspaceRole !== 'employee' ? <SetupReminder s={s} setup={data.setup} onGo={go} /> : null} selected={params.get('chat')} onSelect={id => go('chats', id ? { chat: id } : {})} />}
+              {!previewPack && data.founderPreview && hasibOverview && (
+                <FounderIndustryPreview
+                  s={s}
+                  h={h}
+                  industries={hasibOverview.industries}
+                  livePack={livePack}
+                  current={previewIndustry}
+                  onLive={changeLive}
+                  onPreview={changePreview}
+                />
+              )}
+              {hasibOverview?.readOnly && (
+                <p className="hb-preview-banner" role="status">
+                  {s.ar
+                    ? 'معاينة للقراءة فقط — جميع إجراءات الحفظ محظورة.'
+                    : 'Read-only preview — all save actions are blocked.'}
+                </p>
+              )}
+              {!(map.sixTab && tab === 'work') && (
+                <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} />
+              )}
+              {hasibOverview?.readOnly && (tab === 'settings' || (tab === 'stock' && view === 'services')) ? (
+                <p className="ld-state">
+                  {s.ar
+                    ? 'إعدادات تجريبية للقراءة فقط. لا توجد قناة مراسلة مرتبطة بهذه المعاينة.'
+                    : 'Read-only sample settings. This preview has no connected messaging channel.'}
+                </p>
+              ) : hasibOverview?.pack?.id === 'clinic' && ['today', 'orders', 'money', 'team'].includes(tab) ? (
+                <ClinicDashboard
+                  mode={{ today: 'today', orders: 'visits', money: 'money', team: 'team' }[tab]}
+                  s={s}
+                  h={h}
+                  overview={hasibOverview}
+                  timezone={data.timezone}
+                  onChanged={refreshHasib}
+                  onGo={go}
+                  initialAction={params.get('action') || ''}
+                />
+              ) : map.sixTab &&
+                (tab === 'work' ||
+                  tab === 'insights' ||
+                  (tab === 'settings' && ['rules', 'team', 'workshop', 'site'].includes(view))) ? (
+                <SixTabWorkspace
+                  section={tab}
+                  view={view}
+                  s={s}
+                  h={h}
+                  overview={hasibOverview}
+                  timezone={data.timezone}
+                  connections={data}
+                  onChanged={refreshHasib}
+                  onGo={go}
+                  initialAction={params.get('action') || ''}
+                  tabs={
+                    tab === 'work' ? (
+                      <SectionTabs s={s} tab={tab} views={map.views[tab]} view={view} onSelect={go} />
+                    ) : null
+                  }
+                />
+              ) : tab === 'today' ? (
+                <TodayView s={s} h={h} hasibOverview={hasibOverview} connected={!!data.connected} onGo={go} />
+              ) : tab === 'orders' && (params.get('order') || params.get('ledger')) ? (
+                <OrdersView
+                  s={s}
+                  h={h}
+                  overview={hasibOverview}
+                  business={data.business.name}
+                  timezone={data.timezone}
+                  initialOrderId={params.get('order')}
+                  initialCreate={params.get('create') === '1'}
+                  onChanged={refreshHasib}
+                />
+              ) : tab === 'orders' && ['bookings', 'lessons', 'memberships'].includes(workflow) ? (
+                <BookingWorkView
+                  s={s}
+                  h={h}
+                  overview={hasibOverview}
+                  timezone={data.timezone}
+                  initialCreate={params.get('create') === '1'}
+                  initialAction={params.get('action') || ''}
+                  onChanged={refreshHasib}
+                />
+              ) : tab === 'orders' && workflow === 'jobs' ? (
+                <JobsWorkView
+                  s={s}
+                  h={h}
+                  overview={hasibOverview}
+                  timezone={data.timezone}
+                  initialCreate={params.get('create') === '1'}
+                  onChanged={refreshHasib}
+                />
+              ) : tab === 'orders' ? (
+                <OrdersView
+                  initialCreate={params.get('create') === '1' || params.get('action') === 'charge'}
+                  s={s}
+                  h={h}
+                  overview={hasibOverview}
+                  business={data.business.name}
+                  timezone={data.timezone}
+                  onChanged={refreshHasib}
+                />
+              ) : tab === 'stock' && view === 'products' ? (
+                <StockView
+                  timezone={data.timezone}
+                  s={s}
+                  h={h}
+                  overview={hasibOverview}
+                  initialLow={params.get('low') === '1'}
+                  initialAction={params.get('action') || ''}
+                  onChanged={refreshHasib}
+                />
+              ) : tab === 'stock' ? (
+                <BusinessDetails s={s} section="services" onSaved={refreshHasib} />
+              ) : tab === 'service' ? (
+                <ServiceView
+                  initialRepairId={params.get('repair')}
+                  initialAction={params.get('action') || ''}
+                  s={s}
+                  h={h}
+                  timezone={data.timezone}
+                  staff={hasibOverview?.workspaceRole === 'employee'}
+                  onClearLink={() => setParams(new URLSearchParams({ tab: 'service' }), { replace: true })}
+                  onChanged={refreshHasib}
+                />
+              ) : tab === 'money' && view === 'expenses' ? (
+                <ExpensesView
+                  s={s}
+                  h={h}
+                  overview={hasibOverview}
+                  timezone={data.timezone}
+                  initialCreate={params.get('action') === 'expense'}
+                />
+              ) : tab === 'money' ? (
+                <InsightsView s={s} h={h} overview={hasibOverview} onGo={go} />
+              ) : tab === 'audits' ? (
+                <AuditsView s={s} />
+              ) : tab === 'website' ? (
+                <WebsiteOnboarding s={s} emailOpen={map.sections.includes('email')} onGo={go} />
+              ) : tab === 'email' ? (
+                <EmailView
+                  s={s}
+                  overview={data}
+                  view={view}
+                  explicitView={params.has('view')}
+                  onGo={(next, extra) => setParams(dashboardSearch(params, next, extra), { replace: true })}
+                />
+              ) : (tab === 'customers' && view === 'broadcast') || tab === 'broadcasts' ? (
+                data.integration ? (
+                  <BroadcastView s={s} overview={data} onTimezone={() => overview.refresh({ quiet: true })} />
+                ) : (
+                  <div className="ld-state">
+                    <p>{s.t('broadcastWhatsAppOnly')}</p>
+                    {map.sections.includes('settings') && (
+                      <button type="button" className="ld-button" onClick={() => go('settings', { view: 'channels' })}>
+                        {s.t('connectChannel')}
+                      </button>
+                    )}
+                  </div>
+                )
+              ) : tab === 'customers' ? (
+                <>
+                  {hasibOverview?.pack &&
+                    (!map.sixTab || ['retail', 'retail-tech'].includes(hasibOverview.pack.id)) && (
+                      <FollowupView s={s} h={h} packId={hasibOverview.pack.id} timezone={data.timezone} />
+                    )}
+                  <ContactsView s={s} overview={data} onOpenChat={id => go('chats', { chat: id })} />
+                </>
+              ) : tab === 'settings' && view === 'accounts' ? (
+                <AccountsSettings
+                  s={s}
+                  h={h}
+                  overview={hasibOverview}
+                  timezone={data.timezone}
+                  onChanged={() => {
+                    refreshHasib();
+                    overview.refresh({ quiet: true });
+                  }}
+                />
+              ) : tab === 'settings' && view === 'brain' ? (
+                <BrainPage
+                  lang={lang}
+                  part={brainPart(params)}
+                  onPart={part =>
+                    setParams(dashboardSearch(params, 'settings', { view: 'brain', part }), { replace: true })
+                  }
+                  channel={!!data.connected}
+                  active={!!data.messaging?.active}
+                  onGo={go}
+                />
+              ) : tab === 'settings' && view === 'services' ? (
+                <BusinessDetails
+                  s={s}
+                  section="services"
+                  catalyst={!!map.catalyst}
+                  onSaved={() => overview.refresh({ quiet: true })}
+                />
+              ) : tab === 'settings' && view === 'business' ? (
+                <>
+                  <BusinessDetails
+                    s={s}
+                    catalyst={!!map.catalyst}
+                    section={map.catalyst || map.sections.includes('stock') ? 'details' : 'all'}
+                    initialIndustryId={
+                      hasibOverview?.readOnly ? undefined : hasibOverview?.legacyIndustryId || undefined
+                    }
+                    next={
+                      data?.connected
+                        ? { label: lang === 'ar' ? 'التالي: المحادثات' : 'Next: Chats', go: () => go('chats') }
+                        : {
+                            label: lang === 'ar' ? 'التالي: اربط قناة' : 'Next: Connect a channel',
+                            go: () => go('settings', { view: 'channels' }),
+                          }
+                    }
+                    onSaved={map.catalyst ? () => overview.refresh({ quiet: true }) : refreshHasib}
+                  />
+                  {!hasibOverview?.readOnly && hasibOverview?.pack && (
+                    <IndustrySetup
+                      selection={false}
+                      heading={false}
+                      s={s}
+                      h={h}
+                      livePacks={hasibOverview.livePacks}
+                      industries={hasibOverview.industries}
+                      current={hasibOverview.pack.id}
+                      settings={hasibOverview.settings}
+                      onChosen={refreshHasib}
+                    />
+                  )}
+                  {/* A sign-up sector that is not live yet: the owner picks a live one here (docs/product-design.md). */}
+                  {!hasibOverview?.readOnly && !hasibOverview?.pack && hasibOverview?.setupRequired && (
+                    <IndustrySetup
+                      s={s}
+                      h={h}
+                      livePacks={hasibOverview.livePacks}
+                      industries={hasibOverview.industries}
+                      current={hasibOverview.selectedIndustryId}
+                      settings={hasibOverview.settings}
+                      onChosen={refreshHasib}
+                    />
+                  )}
+                </>
+              ) : tab === 'team' ? (
+                <TeamView s={s} h={h} />
+              ) : tab === 'settings' ? (
+                <ChannelConnections s={s} data={data} onChange={() => overview.refresh({ quiet: true })} />
+              ) : (
+                <ChatsView
+                  s={s}
+                  overview={data}
+                  reminder={
+                    map.catalyst && data.workspaceRole !== 'employee' ? (
+                      <SetupReminder s={s} setup={data.setup} onGo={go} />
+                    ) : null
+                  }
+                  selected={params.get('chat')}
+                  onSelect={id => go('chats', id ? { chat: id } : {})}
+                />
+              )}
             </>
-          ) : data ? <div className="ld-state ld-empty-channel">
-            {/* Loaded, but no channel yet (a Catalyst workspace has nothing to show without one). */}
-            <p>{s.ar ? 'اربط واتساب أو إنستغرام لتبدأ ليلى بالرد على عملائك.' : 'Connect WhatsApp or Instagram and Layla starts answering your customers.'}</p>
-            <a className="ld-button ld-primary" href={setupPath(lang)}>{s.ar ? 'اربط قناة' : 'Connect a channel'}</a>
-          </div> : <p className="ld-state" role="status">{s.t('loading')}</p>}
-      </main>
+          ) : data ? (
+            <div className="ld-state ld-empty-channel">
+              {/* Loaded, but no channel yet (a Catalyst workspace has nothing to show without one). */}
+              <p>
+                {s.ar
+                  ? 'اربط واتساب أو إنستغرام لتبدأ ليلى بالرد على عملائك.'
+                  : 'Connect WhatsApp or Instagram and Layla starts answering your customers.'}
+              </p>
+              <a className="ld-button ld-primary" href={setupPath(lang)}>
+                {s.ar ? 'اربط قناة' : 'Connect a channel'}
+              </a>
+            </div>
+          ) : (
+            <p className="ld-state" role="status">
+              {s.t('loading')}
+            </p>
+          )}
+        </main>
       </HasibProvider>
     </div>
   );

@@ -3,12 +3,18 @@ import { RulesForm } from '../workspace/RulesForm.jsx';
 import { label } from './labels.js';
 
 const RULE_HELP = {
-  prep_request: ['Opens this long before a booked shoot while client inputs (assets, talent releases) are still missing, as one request for all of them. Stops when they are verified, the plan changes or the production is cancelled.',
-    'تُفتح قبل التصوير المحجوز بهذه المدة إذا كانت مدخلات العميل (الملفات، موافقات الظهور) ما زالت ناقصة، في طلب واحد لها جميعاً. تتوقف عند التحقق منها أو تغيير الخطة أو إلغاء الإنتاج.'],
-  cut_approval: ['Opens this long before the current cut’s decision is due. A new version replaces it; a decision, feedback or hold ends it. Never for an obsolete cut.',
-    'تُفتح قبل موعد قرار النسخة الحالية بهذه المدة. النسخة الجديدة تستبدلها، والقرار أو الملاحظات أو التوقف ينهيها. لا تتابع نسخة قديمة أبداً.'],
-  delivery_balance: ['Opens this long after acceptance while the handoff is missing, or after delivery while a balance is owed. Before usage rights end it opens an internal task. It never asserts licensing to the customer.',
-    'تُفتح بعد الاعتماد بهذه المدة إذا لم يتم التسليم، أو بعد التسليم إذا بقي رصيد مستحق. قبل انتهاء حقوق الاستخدام تفتح مهمة داخلية. لا تؤكد الترخيص للعميل أبداً.'],
+  prep_request: [
+    'Opens this long before a booked shoot while client inputs (assets, talent releases) are still missing, as one request for all of them. Stops when they are verified, the plan changes or the production is cancelled.',
+    'تُفتح قبل التصوير المحجوز بهذه المدة إذا كانت مدخلات العميل (الملفات، موافقات الظهور) ما زالت ناقصة، في طلب واحد لها جميعاً. تتوقف عند التحقق منها أو تغيير الخطة أو إلغاء الإنتاج.',
+  ],
+  cut_approval: [
+    'Opens this long before the current cut’s decision is due. A new version replaces it; a decision, feedback or hold ends it. Never for an obsolete cut.',
+    'تُفتح قبل موعد قرار النسخة الحالية بهذه المدة. النسخة الجديدة تستبدلها، والقرار أو الملاحظات أو التوقف ينهيها. لا تتابع نسخة قديمة أبداً.',
+  ],
+  delivery_balance: [
+    'Opens this long after acceptance while the handoff is missing, or after delivery while a balance is owed. Before usage rights end it opens an internal task. It never asserts licensing to the customer.',
+    'تُفتح بعد الاعتماد بهذه المدة إذا لم يتم التسليم، أو بعد التسليم إذا بقي رصيد مستحق. قبل انتهاء حقوق الاستخدام تفتح مهمة داخلية. لا تؤكد الترخيص للعميل أبداً.',
+  ],
 };
 const WINDOWS = [
   ['quoteWindowDays', 'Quote-to-booked window (days)', 'نافذة التحويل من عرض إلى حجز (أيام)', 1, 365],
@@ -22,17 +28,72 @@ const WINDOWS = [
 ];
 /** Settings → Follow-up rules for Media: the three rules, their mode and timing, and the windows the KPIs use. */
 export function RulesView({ ar, h, settings, busy, onSave }) {
-  return <RulesForm ar={ar} h={h} settings={settings} busy={busy} onSave={onSave} settingsKey="media" argKey="mediaSettings" ruleLabel={id => label('rule', id, ar)}
-    ruleHelp={RULE_HELP} windows={WINDOWS} modeOrder={['auto', 'draft', 'task']} taskLabel={['Opens a task for the producer', 'تفتح مهمة للمنتج']}
-    description={['Each rule sends its message by itself (built only from the records), writes a draft you approve, or opens a task. Automatic messages go out only inside WhatsApp’s 24-hour window, at most three a day per customer, and never while you handle the chat.', 'كل قاعدة إما تُرسل رسالتها تلقائياً (من السجلات فقط)، أو تكتب مسودة تعتمدها، أو تفتح مهمة. الرسائل التلقائية تُرسل فقط ضمن نافذة واتساب ٢٤ ساعة، بحد أقصى ثلاث يومياً لكل عميل، وأبداً أثناء تولّيك المحادثة.']}
-    offsetLabel={rule => rule.id === 'delivery_balance' ? ['After', 'بعد'] : ['Before', 'قبل']}
-    ruleNote={['One attempt per event. Assigned to the production’s producer, or the manager when unassigned.', 'محاولة واحدة لكل حدث. تُسند لمنتج العمل، أو للمدير إن لم يُسند.']}
-    legend={['Measurement windows and production defaults', 'نوافذ القياس وإعدادات الإنتاج']}
-    extra={{ init: (s, initial) => ({ extraRoundPrice: (initial?.extraRoundPriceMinor || 0) / 1000, autoQuoteLimit: (initial?.autoQuoteLimitMinor || 0) / 1000 }),
-      inner: form => ({ extraRoundPriceMinor: Math.round(Number(form.extraRoundPrice) * 1000), autoQuoteLimitMinor: Math.round(Number(form.autoQuoteLimit) * 1000) }),
-      fields: (form, setForm, tr) => <>
-        <label className="ld-field">{tr('Price of an extra revision round (OMR)', 'سعر جولة تعديل إضافية (ر.ع.)')}<input type="number" required min="0" step="0.001" value={form.extraRoundPrice} onChange={e => setForm(f => ({ ...f, extraRoundPrice: e.target.value }))} /></label>
-        <label className="ld-field">{tr('Hasib quotes by himself up to (OMR, 0 = off)', 'يسعّر حاسب تلقائياً حتى (ر.ع، ٠ = متوقف)')}<input type="number" required min="0" step="0.001" value={form.autoQuoteLimit} onChange={e => setForm(f => ({ ...f, autoQuoteLimit: e.target.value }))} />
-          <small>{tr('Only when every line has a fixed catalog price. Anything else is drafted by Adiba for you to price and approve.', 'فقط عندما يكون لكل بند سعر ثابت في الكتالوج. وما عدا ذلك تُعدّه أديبة لتسعّره وتعتمده.')}</small></label>
-      </> }} />;
+  return (
+    <RulesForm
+      ar={ar}
+      h={h}
+      settings={settings}
+      busy={busy}
+      onSave={onSave}
+      settingsKey="media"
+      argKey="mediaSettings"
+      ruleLabel={id => label('rule', id, ar)}
+      ruleHelp={RULE_HELP}
+      windows={WINDOWS}
+      modeOrder={['auto', 'draft', 'task']}
+      taskLabel={['Opens a task for the producer', 'تفتح مهمة للمنتج']}
+      description={[
+        'Each rule sends its message by itself (built only from the records), writes a draft you approve, or opens a task. Automatic messages go out only inside WhatsApp’s 24-hour window, at most three a day per customer, and never while you handle the chat.',
+        'كل قاعدة إما تُرسل رسالتها تلقائياً (من السجلات فقط)، أو تكتب مسودة تعتمدها، أو تفتح مهمة. الرسائل التلقائية تُرسل فقط ضمن نافذة واتساب ٢٤ ساعة، بحد أقصى ثلاث يومياً لكل عميل، وأبداً أثناء تولّيك المحادثة.',
+      ]}
+      offsetLabel={rule => (rule.id === 'delivery_balance' ? ['After', 'بعد'] : ['Before', 'قبل'])}
+      ruleNote={[
+        'One attempt per event. Assigned to the production’s producer, or the manager when unassigned.',
+        'محاولة واحدة لكل حدث. تُسند لمنتج العمل، أو للمدير إن لم يُسند.',
+      ]}
+      legend={['Measurement windows and production defaults', 'نوافذ القياس وإعدادات الإنتاج']}
+      extra={{
+        init: (s, initial) => ({
+          extraRoundPrice: (initial?.extraRoundPriceMinor || 0) / 1000,
+          autoQuoteLimit: (initial?.autoQuoteLimitMinor || 0) / 1000,
+        }),
+        inner: form => ({
+          extraRoundPriceMinor: Math.round(Number(form.extraRoundPrice) * 1000),
+          autoQuoteLimitMinor: Math.round(Number(form.autoQuoteLimit) * 1000),
+        }),
+        fields: (form, setForm, tr) => (
+          <>
+            <label className="ld-field">
+              {tr('Price of an extra revision round (OMR)', 'سعر جولة تعديل إضافية (ر.ع.)')}
+              <input
+                type="number"
+                required
+                min="0"
+                step="0.001"
+                value={form.extraRoundPrice}
+                onChange={e => setForm(f => ({ ...f, extraRoundPrice: e.target.value }))}
+              />
+            </label>
+            <label className="ld-field">
+              {tr('Hasib quotes by himself up to (OMR, 0 = off)', 'يسعّر حاسب تلقائياً حتى (ر.ع، ٠ = متوقف)')}
+              <input
+                type="number"
+                required
+                min="0"
+                step="0.001"
+                value={form.autoQuoteLimit}
+                onChange={e => setForm(f => ({ ...f, autoQuoteLimit: e.target.value }))}
+              />
+              <small>
+                {tr(
+                  'Only when every line has a fixed catalog price. Anything else is drafted by Adiba for you to price and approve.',
+                  'فقط عندما يكون لكل بند سعر ثابت في الكتالوج. وما عدا ذلك تُعدّه أديبة لتسعّره وتعتمده.',
+                )}
+              </small>
+            </label>
+          </>
+        ),
+      }}
+    />
+  );
 }

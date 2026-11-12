@@ -4,20 +4,56 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { store, customer, product, order, orderStatus, repair, repairStatus, followups, sentRule, value, refused, MIN, HOUR } from './fixtures/ascend/store.mjs';
+import {
+  store,
+  customer,
+  product,
+  order,
+  orderStatus,
+  repair,
+  repairStatus,
+  followups,
+  sentRule,
+  value,
+  refused,
+  MIN,
+  HOUR,
+} from './fixtures/ascend/store.mjs';
 import { assertHasibRows } from './helpers/hasib-contract.mjs';
 
 const offers = s => s.h.m.table('adibaOffers');
 
 test('both store packs start on the agreed defaults: facts send themselves, a quote reminder waits, exceptions are tasks', async () => {
   const retail = await store();
-  assert.deepEqual(value(await retail.manager('overview')).settings.retail.rules.map(r => [r.id, r.enabled, r.mode]),
-    [['ready_for_collection', true, 'auto'], ['back_in_stock', true, 'auto'], ['order_unconfirmed', true, 'task']]);
-  refused(await retail.manager('settings_update', { retailSettings: { rules: [{ id: 'ready_for_collection', enabled: true, mode: 'send_now', offsetMinutes: 30 }] } }), 'invalid_settings');
+  assert.deepEqual(
+    value(await retail.manager('overview')).settings.retail.rules.map(r => [r.id, r.enabled, r.mode]),
+    [
+      ['ready_for_collection', true, 'auto'],
+      ['back_in_stock', true, 'auto'],
+      ['order_unconfirmed', true, 'task'],
+    ],
+  );
+  refused(
+    await retail.manager('settings_update', {
+      retailSettings: { rules: [{ id: 'ready_for_collection', enabled: true, mode: 'send_now', offsetMinutes: 30 }] },
+    }),
+    'invalid_settings',
+  );
   const tech = await store({ packId: 'retail-tech', name: 't' });
-  assert.deepEqual(value(await tech.manager('overview')).settings.retailTech.rules.map(r => [r.id, r.enabled, r.mode]),
-    [['repair_ready', true, 'auto'], ['back_in_stock', true, 'auto'], ['repair_quote_reminder', true, 'draft'], ['overdue_repair', true, 'task']]);
-  assert.equal(tech.h.m.table('hasibAutomation').find(a => a.accountId === tech.t.accountId)?.enabled, true, 'choosing the pack puts the store on Hasib’s schedule');
+  assert.deepEqual(
+    value(await tech.manager('overview')).settings.retailTech.rules.map(r => [r.id, r.enabled, r.mode]),
+    [
+      ['repair_ready', true, 'auto'],
+      ['back_in_stock', true, 'auto'],
+      ['repair_quote_reminder', true, 'draft'],
+      ['overdue_repair', true, 'task'],
+    ],
+  );
+  assert.equal(
+    tech.h.m.table('hasibAutomation').find(a => a.accountId === tech.t.accountId)?.enabled,
+    true,
+    'choosing the pack puts the store on Hasib’s schedule',
+  );
   assertHasibRows(retail.h.m);
   assertHasibRows(tech.h.m);
 });
@@ -37,15 +73,25 @@ test('"ready for collection" reaches the customer by itself, once, with the orde
   assert.equal(message.manual, false, 'sent as Layla; the chat is not taken over');
   await s.run();
   assert.equal(sentRule(s).length, 1, 'one message per event');
-  assert.match(s.h.m.table('ascendActivity').find(a => a.action === 'draft_auto_sent').details, /^agent:hasib\|rule:ready_for_collection$/);
+  assert.match(
+    s.h.m.table('ascendActivity').find(a => a.action === 'draft_auto_sent').details,
+    /^agent:hasib\|rule:ready_for_collection$/,
+  );
   assertHasibRows(s.h.m);
 });
 
 test('"back in stock" tells the customer who asked, once, and never outside the 24-hour window', async () => {
   const s = await store();
-  const a = await customer(s, { name: 'Amal' }), b = await customer(s, { name: 'Badr' });
+  const a = await customer(s, { name: 'Amal' }),
+    b = await customer(s, { name: 'Badr' });
   const { variantId } = await product(s, { stock: 0 });
-  for (const c of [a, b]) value(await s.manager('product_request_create', { requestId: randomUUID(), workflow: { contactId: c.contact.id, variantId, qty: 1 } }));
+  for (const c of [a, b])
+    value(
+      await s.manager('product_request_create', {
+        requestId: randomUUID(),
+        workflow: { contactId: c.contact.id, variantId, qty: 1 },
+      }),
+    );
   s.h.m.advance(25 * HOUR);
   await s.h.inbound(s.t, { from: a.from, text: 'Any news?', profileName: 'Amal' });
   value(await s.manager('stock_move', { requestId: randomUUID(), variantId, delta: 2, reason: 'stock_in' }));
@@ -71,7 +117,10 @@ test('Follow-ups: an order Layla could not confirm is a decision, and staff neve
   await s.h.m.db.patch(o.id, { source: 'layla', flags: ['needs_review'] });
   s.h.m.advance(121 * MIN);
   const queue = await followups(s, 'decision');
-  assert.ok(queue.items.some(r => r.kind === 'rule_order_unconfirmed' && r.ref === `#${o.number}`), 'past two hours: the team is asked to check it');
+  assert.ok(
+    queue.items.some(r => r.kind === 'rule_order_unconfirmed' && r.ref === `#${o.number}`),
+    'past two hours: the team is asked to check it',
+  );
   const overview = value(await s.manager('store_overview'));
   assert.equal(overview.attention.unconfirmed, 1);
   assert.ok(overview.followups.actionable >= 1);
@@ -79,7 +128,10 @@ test('Follow-ups: an order Layla could not confirm is a decision, and staff neve
   assert.equal(staffCard.ref, `#${o.number}`);
   assert.equal(staffCard.totalMinor, undefined, 'amounts are the manager’s');
   assert.equal(value(await s.manager('store_context', { contactId: contact.id })).items[0].totalMinor, 25000);
-  refused(await s.employee('store_draft_approve', { draftId: s.h.m.table('retailTasks')[0]._id, version: 1 }), 'manager_required');
+  refused(
+    await s.employee('store_draft_approve', { draftId: s.h.m.table('retailTasks')[0]._id, version: 1 }),
+    'manager_required',
+  );
   assertHasibRows(s.h.m);
 });
 
@@ -89,12 +141,27 @@ test('a repair quote becomes Adiba’s offer for the owner; the customer’s yes
   let r = await repairStatus(s, await repair(s, contact.id), 'diagnosing');
   await s.run();
   const [o] = offers(s);
-  assert.deepEqual([o.subjectType, o.status, o.reasons, o.lines[0].priceSource, o.totalMinor], ['repair', 'awaiting_approval', ['auto_quote_off'], 'owner', 45000], 'the technician’s figure goes to the owner');
+  assert.deepEqual(
+    [o.subjectType, o.status, o.reasons, o.lines[0].priceSource, o.totalMinor],
+    ['repair', 'awaiting_approval', ['auto_quote_off'], 'owner', 45000],
+    'the technician’s figure goes to the owner',
+  );
   await s.run();
-  assert.equal(offers(s).find(x => x._id === o._id).status, 'awaiting_approval', 'Hasib never sends a repair quote himself');
+  assert.equal(
+    offers(s).find(x => x._id === o._id).status,
+    'awaiting_approval',
+    'Hasib never sends a repair quote himself',
+  );
   value(await s.manager('adiba_offer_approve', { offerId: o._id, version: o.version }));
   assert.equal(offers(s)[0].status, 'sent');
-  refused(await s.manager('repair_status', { repairId: r.id, to: 'repairing', version: value(await s.manager('repair', { repairId: r.id })).version }), 'approval_required');
+  refused(
+    await s.manager('repair_status', {
+      repairId: r.id,
+      to: 'repairing',
+      version: value(await s.manager('repair', { repairId: r.id })).version,
+    }),
+    'approval_required',
+  );
   await s.h.inbound(s.t, { from, text: 'YES' });
   r = value(await s.manager('repair', { repairId: r.id }));
   assert.equal(r.approvalStatus, 'approved');
@@ -109,7 +176,11 @@ test('a repair quote becomes Adiba’s offer for the owner; the customer’s yes
   value(await t.manager('adiba_offer_approve', { offerId: offers(t)[0]._id, version: offers(t)[0].version }));
   q = value(await t.manager('repair_update', { repairId: q.id, version: q.version, labourMinor: 60000 }));
   await t.h.inbound(t.t, { from: c.from, text: 'YES' });
-  assert.equal(value(await t.manager('repair', { repairId: q.id })).approvalStatus, 'awaiting', 'the yes was to the old price');
+  assert.equal(
+    value(await t.manager('repair', { repairId: q.id })).approvalStatus,
+    'awaiting',
+    'the yes was to the old price',
+  );
   await t.run();
   assert.equal(offers(t)[0].status, 'cancelled');
   assert.equal(offers(t)[1].totalMinor, 60000, 'the revised quote is a new offer for the owner');
@@ -124,7 +195,12 @@ test('"repair ready" reaches the customer by itself with the device and what is 
   r = await repairStatus(s, await repairStatus(s, r, 'repairing'), 'ready');
   s.h.m.advance(31 * MIN);
   assert.match(await s.run(), /sent:1/);
-  assert.match(sentRule(s)[0].text, new RegExp(`your iPhone 15 128GB repair \\(#${r.number}\\) is ready for collection\\. The balance due is 45\\.000 OMR\\.`));
+  assert.match(
+    sentRule(s)[0].text,
+    new RegExp(
+      `your iPhone 15 128GB repair \\(#${r.number}\\) is ready for collection\\. The balance due is 45\\.000 OMR\\.`,
+    ),
+  );
   assertHasibRows(s.h.m);
 });
 
@@ -144,8 +220,20 @@ test('Layla takes in a repair question as one task, which closes once the device
   const shop = await store({ name: 'v' });
   await product(shop, { nameEn: 'Black abaya', priceMinor: 25000 });
   // BznsBrain lists the same abaya with a "from" price; the stock line holds the store's real price.
-  await shop.h.m.db.insert('blueCatalogEntries', { ownerKey: String(shop.t.accountId), entryKey: randomUUID(), kind: 'product', nameEn: 'Black abaya', nameAr: 'عباية سوداء', category: 'Abayas',
-    prices: [{ type: 'from', amount: 20, label: 'From 20 OMR' }], status: 'approved', state: 'published', sortOrder: 1, createdAt: shop.h.m.now(), updatedAt: shop.h.m.now() });
+  await shop.h.m.db.insert('blueCatalogEntries', {
+    ownerKey: String(shop.t.accountId),
+    entryKey: randomUUID(),
+    kind: 'product',
+    nameEn: 'Black abaya',
+    nameAr: 'عباية سوداء',
+    category: 'Abayas',
+    prices: [{ type: 'from', amount: 20, label: 'From 20 OMR' }],
+    status: 'approved',
+    state: 'published',
+    sortOrder: 1,
+    createdAt: shop.h.m.now(),
+    updatedAt: shop.h.m.now(),
+  });
   const buyer = await customer(shop, { name: 'Noor', text: 'Hi' });
   await shop.h.inbound(shop.t, { from: buyer.from, text: 'How much is the black abaya?', intent: 'catalog_item' });
   assert.equal(offers(shop).length, 0, 'Layla answered from the stock price; there is nothing for the owner to price');

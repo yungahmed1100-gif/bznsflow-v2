@@ -21,7 +21,13 @@ const NOT_WHATSAPP = /landline|fixed|toll|unified|free ?phone|هاتف ثابت|
 /** Best-effort column mapping from header names; the owner can change it. */
 export function guessMapping(headers, fields = []) {
   const find = test => headers.findIndex(h => test(String(h || '').trim()));
-  const mapping = { phone: find(h => HEADER_HINTS.phone.test(h)), name: find(h => HEADER_HINTS.name.test(h)), country: find(h => HEADER_HINTS.country.test(h)), type: find(h => TYPE_HEADER.test(h)), fields: {} };
+  const mapping = {
+    phone: find(h => HEADER_HINTS.phone.test(h)),
+    name: find(h => HEADER_HINTS.name.test(h)),
+    country: find(h => HEADER_HINTS.country.test(h)),
+    type: find(h => TYPE_HEADER.test(h)),
+    fields: {},
+  };
   for (const f of fields) {
     const index = find(h => h.toLowerCase() === f.key || h.toLowerCase() === f.en.toLowerCase() || h === f.ar);
     if (index >= 0) mapping.fields[f.key] = index;
@@ -30,14 +36,48 @@ export function guessMapping(headers, fields = []) {
 }
 
 // Short names and Arabic names lists commonly use for GCC and nearby countries.
-const COUNTRY_ALIASES = new Map(Object.entries({
-  KSA: 'SA', SAUDI: 'SA', 'SAUDI ARABIA': 'SA', 'K.S.A': 'SA', 'السعودية': 'SA', 'المملكة العربية السعودية': 'SA', 'السعوديه': 'SA',
-  UAE: 'AE', 'U.A.E': 'AE', EMIRATES: 'AE', 'UNITED ARAB EMIRATES': 'AE', 'الإمارات': 'AE', 'الامارات': 'AE', 'الإمارات العربية المتحدة': 'AE',
-  'DUBAI': 'AE', 'ABU DHABI': 'AE', 'SHARJAH': 'AE', 'دبي': 'AE', 'أبوظبي': 'AE',
-  OMAN: 'OM', 'SULTANATE OF OMAN': 'OM', 'عمان': 'OM', 'عُمان': 'OM', 'سلطنة عمان': 'OM', 'سلطنة عُمان': 'OM',
-  BAHRAIN: 'BH', 'البحرين': 'BH', QATAR: 'QA', 'قطر': 'QA', KUWAIT: 'KW', 'الكويت': 'KW',
-  EGYPT: 'EG', 'مصر': 'EG', JORDAN: 'JO', 'الأردن': 'JO', 'الاردن': 'JO', UK: 'GB', USA: 'US',
-}));
+const COUNTRY_ALIASES = new Map(
+  Object.entries({
+    KSA: 'SA',
+    SAUDI: 'SA',
+    'SAUDI ARABIA': 'SA',
+    'K.S.A': 'SA',
+    السعودية: 'SA',
+    'المملكة العربية السعودية': 'SA',
+    السعوديه: 'SA',
+    UAE: 'AE',
+    'U.A.E': 'AE',
+    EMIRATES: 'AE',
+    'UNITED ARAB EMIRATES': 'AE',
+    الإمارات: 'AE',
+    الامارات: 'AE',
+    'الإمارات العربية المتحدة': 'AE',
+    DUBAI: 'AE',
+    'ABU DHABI': 'AE',
+    SHARJAH: 'AE',
+    دبي: 'AE',
+    أبوظبي: 'AE',
+    OMAN: 'OM',
+    'SULTANATE OF OMAN': 'OM',
+    عمان: 'OM',
+    عُمان: 'OM',
+    'سلطنة عمان': 'OM',
+    'سلطنة عُمان': 'OM',
+    BAHRAIN: 'BH',
+    البحرين: 'BH',
+    QATAR: 'QA',
+    قطر: 'QA',
+    KUWAIT: 'KW',
+    الكويت: 'KW',
+    EGYPT: 'EG',
+    مصر: 'EG',
+    JORDAN: 'JO',
+    الأردن: 'JO',
+    الاردن: 'JO',
+    UK: 'GB',
+    USA: 'US',
+  }),
+);
 
 /** Country column may hold ISO-2, a dial code (+968 / 968), a short or Arabic name, or an English name. */
 export function countryFromCell(value) {
@@ -51,7 +91,9 @@ export function countryFromCell(value) {
   try {
     const names = new Intl.DisplayNames(['en'], { type: 'region' });
     return COUNTRIES.find(([iso]) => names.of(iso)?.toLowerCase() === text.toLowerCase())?.[0] || '';
-  } catch { return ''; }
+  } catch {
+    return '';
+  }
 }
 
 /**
@@ -61,20 +103,43 @@ export function countryFromCell(value) {
 export function buildImportPreview(rows, mapping, defaultCountry, fields = []) {
   const [, ...data] = rows;
   const truncated = data.length > IMPORT_MAX_ROWS;
-  const byWaId = new Map(), invalid = [];
-  let duplicates = 0, notWhatsApp = 0;
+  const byWaId = new Map(),
+    invalid = [];
+  let duplicates = 0,
+    notWhatsApp = 0;
   const notMobile = [];
   data.slice(0, IMPORT_MAX_ROWS).forEach((cells, index) => {
     const line = index + 2;
     // Rows the file itself marks as landline or toll-free cannot receive WhatsApp.
-    if (mapping.type >= 0 && NOT_WHATSAPP.test(String(cells[mapping.type] || ''))) { notWhatsApp++; return; }
+    if (mapping.type >= 0 && NOT_WHATSAPP.test(String(cells[mapping.type] || ''))) {
+      notWhatsApp++;
+      return;
+    }
     const raw = phoneCell(mapping.phone >= 0 ? cells[mapping.phone] : '');
     const country = (mapping.country >= 0 && countryFromCell(cells[mapping.country])) || defaultCountry;
     const normalized = normalizePhone(raw, country);
-    if (normalized.error) { invalid.push({ line, reason: raw ? normalized.error : 'missing_phone', value: String(raw || '').slice(0, 40) }); return; }
-    if (isMobileNumber(normalized.waId) === false) { notMobile.push({ line, value: String(raw || '').slice(0, 40) }); return; }
-    const name = mapping.name >= 0 ? String(cells[mapping.name] || '').trim().slice(0, 80) : '';
-    const rowFields = fields.map(f => ({ key: f.key, value: String(cells[mapping.fields?.[f.key]] ?? '').trim().slice(0, 120) })).filter(f => mapping.fields?.[f.key] >= 0 && f.value);
+    if (normalized.error) {
+      invalid.push({ line, reason: raw ? normalized.error : 'missing_phone', value: String(raw || '').slice(0, 40) });
+      return;
+    }
+    if (isMobileNumber(normalized.waId) === false) {
+      notMobile.push({ line, value: String(raw || '').slice(0, 40) });
+      return;
+    }
+    const name =
+      mapping.name >= 0
+        ? String(cells[mapping.name] || '')
+            .trim()
+            .slice(0, 80)
+        : '';
+    const rowFields = fields
+      .map(f => ({
+        key: f.key,
+        value: String(cells[mapping.fields?.[f.key]] ?? '')
+          .trim()
+          .slice(0, 120),
+      }))
+      .filter(f => mapping.fields?.[f.key] >= 0 && f.value);
     const existing = byWaId.get(normalized.waId);
     if (existing) {
       duplicates++;
@@ -82,9 +147,22 @@ export function buildImportPreview(rows, mapping, defaultCountry, fields = []) {
       for (const f of rowFields) if (!existing.fields.some(e => e.key === f.key)) existing.fields.push(f);
       return;
     }
-    byWaId.set(normalized.waId, { line, waId: normalized.waId, countryIso: normalized.countryIso, name, fields: rowFields });
+    byWaId.set(normalized.waId, {
+      line,
+      waId: normalized.waId,
+      countryIso: normalized.countryIso,
+      name,
+      fields: rowFields,
+    });
   });
-  return { valid: [...byWaId.values()], invalid, duplicates, notWhatsApp: notWhatsApp + notMobile.length, notMobile, truncated };
+  return {
+    valid: [...byWaId.values()],
+    invalid,
+    duplicates,
+    notWhatsApp: notWhatsApp + notMobile.length,
+    notMobile,
+    truncated,
+  };
 }
 
 /** A wa.me / api.whatsapp.com link is always international; other cells pass through. */
@@ -115,10 +193,13 @@ export async function readContactsFile(file) {
     const rows = [];
     sheet?.eachRow({ includeEmpty: false }, row => {
       if (rows.length > IMPORT_MAX_ROWS + 1) return;
-      rows.push(row.values.slice(1).map(v => {
-        if (v && typeof v === 'object') return String(v.text ?? v.result ?? (v.richText ? v.richText.map(r => r.text).join('') : ''));
-        return String(v ?? '').trim();
-      }));
+      rows.push(
+        row.values.slice(1).map(v => {
+          if (v && typeof v === 'object')
+            return String(v.text ?? v.result ?? (v.richText ? v.richText.map(r => r.text).join('') : ''));
+          return String(v ?? '').trim();
+        }),
+      );
     });
     if (!rows.length) throw new Error('import_file_empty');
     return rows;

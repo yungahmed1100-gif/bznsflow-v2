@@ -32,7 +32,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
 
 /** Lowercase and trim. The database stores and compares this form. */
 export function normalizeEmail(raw) {
-  return String(raw ?? '').trim().toLowerCase();
+  return String(raw ?? '')
+    .trim()
+    .toLowerCase();
 }
 
 /** @returns {boolean} */
@@ -103,10 +105,14 @@ export function validateProfile(input) {
   const name = String(src.name ?? '').trim();
   if (!name || name.length > LIMITS.name) return { ok: false, field: 'name' };
 
-  const country = String(src.country ?? '').trim().toUpperCase();
+  const country = String(src.country ?? '')
+    .trim()
+    .toUpperCase();
   if (!COUNTRY_CODES.has(country)) return { ok: false, field: 'country' };
 
-  const digits = String(src.phone ?? '').replace(/\D/g, '').replace(/^0+/, '');
+  const digits = String(src.phone ?? '')
+    .replace(/\D/g, '')
+    .replace(/^0+/, '');
   if (digits.length < MIN_PHONE_DIGITS || digits.length > LIMITS.phoneDigits) {
     return { ok: false, field: 'phone' };
   }

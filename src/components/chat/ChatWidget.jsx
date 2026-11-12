@@ -11,7 +11,14 @@ import laylaAvatar from '../../assets/layla-avatar.png';
 
 // `respond` replaces the live chat backend (the setup page answers from a fixed scenario list);
 // `suggestions` are one-tap questions shown under the greeting.
-export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange = () => {}, respond = null, suggestions = [] }) {
+export function ChatWidget({
+  t,
+  lang = 'en',
+  trackEvent = () => {},
+  onOpenChange = () => {},
+  respond = null,
+  suggestions = [],
+}) {
   const isAr = lang === 'ar';
   const [isOpen, setIsOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
@@ -38,7 +45,9 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
 
   // Report open state upward so other surfaces (the playbook popup) can stand
   // down rather than stacking a second dialog over this one.
-  useEffect(() => { onOpenChange(isOpen); }, [isOpen, onOpenChange]);
+  useEffect(() => {
+    onOpenChange(isOpen);
+  }, [isOpen, onOpenChange]);
 
   // Auto-scroll to newest message / typing indicator.
   useEffect(() => {
@@ -58,42 +67,45 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
   // Close on Escape.
   useEffect(() => {
     if (!isOpen) return;
-    const onKey = (e) => {
+    const onKey = e => {
       if (e.key === 'Escape') closePanel();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, closePanel]);
 
-  const send = useCallback(async (preset) => {
-    const text = (typeof preset === 'string' ? preset : input).trim();
-    if (!text || isTyping) return;
+  const send = useCallback(
+    async preset => {
+      const text = (typeof preset === 'string' ? preset : input).trim();
+      if (!text || isTyping) return;
 
-    setInput('');
-    setMessages((prev) => [...prev, { role: 'user', text }]);
-    setIsTyping(true);
-    trackEvent('ChatMessageSent', { source: 'widget' });
+      setInput('');
+      setMessages(prev => [...prev, { role: 'user', text }]);
+      setIsTyping(true);
+      trackEvent('ChatMessageSent', { source: 'widget' });
 
-    try {
-      const res = respond ? await respond(text) : await sendChatMessage(text, sessionRef.current);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'layla',
-          text: res.reply || t.chat_error,
-          handoff: res.handoff,
-          handoffContext: res.handoffContext,
-        },
-      ]);
-      if (res.handoff) trackEvent('ChatHandoff', { source: 'widget' });
-    } catch (_) {
-      setMessages((prev) => [...prev, { role: 'layla', text: t.chat_error }]);
-    } finally {
-      setIsTyping(false);
-    }
-  }, [input, isTyping, t.chat_error, trackEvent, respond]);
+      try {
+        const res = respond ? await respond(text) : await sendChatMessage(text, sessionRef.current);
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'layla',
+            text: res.reply || t.chat_error,
+            handoff: res.handoff,
+            handoffContext: res.handoffContext,
+          },
+        ]);
+        if (res.handoff) trackEvent('ChatHandoff', { source: 'widget' });
+      } catch (_) {
+        setMessages(prev => [...prev, { role: 'layla', text: t.chat_error }]);
+      } finally {
+        setIsTyping(false);
+      }
+    },
+    [input, isTyping, t.chat_error, trackEvent, respond],
+  );
 
-  const onInputKey = (e) => {
+  const onInputKey = e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       send();
@@ -125,7 +137,12 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
       )}
 
       {/* Chat panel */}
-      <div className={`chat-panel${isOpen ? ' is-open' : ''}`} role="dialog" aria-label={t.chat_title} aria-modal="false">
+      <div
+        className={`chat-panel${isOpen ? ' is-open' : ''}`}
+        role="dialog"
+        aria-label={t.chat_title}
+        aria-modal="false"
+      >
         <header className="chat-header">
           <div className="chat-header-id">
             <span className="chat-header-avatar">
@@ -155,11 +172,7 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
                   // would otherwise hit a dead end at the moment they converted.
                   <div className="chat-handoff-actions">
                     <a
-                      href={waLink(
-                        m.handoffContext
-                          ? `${t.chat_wa_prefix}: ${m.handoffContext}`
-                          : t.chat_wa_prefix,
-                      )}
+                      href={waLink(m.handoffContext ? `${t.chat_wa_prefix}: ${m.handoffContext}` : t.chat_wa_prefix)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="chat-wa-btn"
@@ -171,9 +184,7 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
                     <a
                       href={mailtoLink(
                         t.chat_email_subject,
-                        m.handoffContext
-                          ? `${t.chat_wa_prefix}: ${m.handoffContext}`
-                          : t.chat_wa_prefix,
+                        m.handoffContext ? `${t.chat_wa_prefix}: ${m.handoffContext}` : t.chat_wa_prefix,
                       )}
                       className="chat-email-btn"
                       onClick={() => trackEvent('EmailClick', { source: 'chat-handoff' })}
@@ -188,11 +199,19 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
           ))}
 
           {suggestions.length > 0 && messages.length === 1 && !isTyping && (
-            <div className="chat-suggestions" role="group" aria-label={t.chat_suggestions_label || 'Suggested questions'}>
-              {suggestions.map((item) => {
+            <div
+              className="chat-suggestions"
+              role="group"
+              aria-label={t.chat_suggestions_label || 'Suggested questions'}
+            >
+              {suggestions.map(item => {
                 const question = typeof item === 'string' ? item : item.question;
                 const label = typeof item === 'string' ? item : item.label;
-                return <button key={question} type="button" className="chat-suggestion" onClick={() => send(question)}>{label}</button>;
+                return (
+                  <button key={question} type="button" className="chat-suggestion" onClick={() => send(question)}>
+                    {label}
+                  </button>
+                );
               })}
             </div>
           )}
@@ -200,7 +219,9 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
             <div className="chat-msg chat-msg--layla">
               <img src={laylaAvatar} alt="" className="chat-msg-avatar" width="28" height="28" />
               <div className="chat-msg-bubble chat-typing" aria-label={t.chat_typing}>
-                <span></span><span></span><span></span>
+                <span></span>
+                <span></span>
+                <span></span>
               </div>
             </div>
           )}
@@ -214,7 +235,7 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
             value={input}
             maxLength={CHAT_MAX_CHARS}
             placeholder={t.chat_placeholder}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={e => setInput(e.target.value)}
             onKeyDown={onInputKey}
             aria-label={t.chat_placeholder}
           />

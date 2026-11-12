@@ -6,8 +6,17 @@ const TICKS = { sent: 1, submitted: 1, delivered: 2, read: 2 };
 export function StatusTicks({ s, status, channel }) {
   const label = s.t(statusKey(status, channel));
   if (!TICKS[status]) {
-    const tone = ['failed'].includes(status) ? 'is-coral' : ['ambiguous', 'queued', 'attempting', 'pending'].includes(status) ? 'is-yellow' : 'is-muted';
-    return <span className={`ld-ticks ${tone}`} title={label}><span aria-hidden="true">{status === 'failed' ? '!' : status === 'ambiguous' ? '?' : '◷'}</span><span className="ld-visually-hidden">{label}</span></span>;
+    const tone = ['failed'].includes(status)
+      ? 'is-coral'
+      : ['ambiguous', 'queued', 'attempting', 'pending'].includes(status)
+        ? 'is-yellow'
+        : 'is-muted';
+    return (
+      <span className={`ld-ticks ${tone}`} title={label}>
+        <span aria-hidden="true">{status === 'failed' ? '!' : status === 'ambiguous' ? '?' : '◷'}</span>
+        <span className="ld-visually-hidden">{label}</span>
+      </span>
+    );
   }
   return (
     <span className={`ld-ticks ${status === 'read' ? 'is-read' : ''}`} title={label}>
@@ -21,6 +30,13 @@ export function StatusTicks({ s, status, channel }) {
 }
 export function QualificationChip({ s, status }) {
   // A new inquiry is the customer's (blue); qualifying is in progress (yellow); qualified is done (green).
-  const tone = status === 'qualified' ? 'is-green' : status === 'in_progress' ? 'is-yellow' : status === 'not_qualified' ? 'is-muted' : 'is-blue';
+  const tone =
+    status === 'qualified'
+      ? 'is-green'
+      : status === 'in_progress'
+        ? 'is-yellow'
+        : status === 'not_qualified'
+          ? 'is-muted'
+          : 'is-blue';
   return <span className={`ld-chip ${tone}`}>{s.t(`q_${status}`)}</span>;
 }

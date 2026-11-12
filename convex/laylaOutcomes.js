@@ -8,7 +8,8 @@ import { requiredKeys } from '../config/layla-qualification.js';
  * @param {string} sectorId @param {{key:string, value?:string}[]} fields
  */
 export function detailsOf(sectorId, fields = []) {
-  const required = requiredKeys(sectorId), have = new Set(fields.filter(f => f.value).map(f => f.key));
+  const required = requiredKeys(sectorId),
+    have = new Set(fields.filter(f => f.value).map(f => f.key));
   return { required, captured: required.filter(k => have.has(k)), missing: required.filter(k => !have.has(k)) };
 }
 
@@ -23,7 +24,12 @@ export function nextOutcome({ previous, sectorId, fields, needsTeam, intent, now
   const qualifiedNow = details.required.length > 0 && details.missing.length === 0;
   const qualifiedAt = previous?.qualifiedAt || (qualifiedNow ? now : undefined);
   const referral = needsTeam ? { at: now, reason: String(intent || 'unknown').slice(0, 40) } : previous?.referral;
-  if (qualifiedAt === previous?.qualifiedAt && referral === previous?.referral && String(details.captured) === String(previous?.captured || '')) return null;
+  if (
+    qualifiedAt === previous?.qualifiedAt &&
+    referral === previous?.referral &&
+    String(details.captured) === String(previous?.captured || '')
+  )
+    return null;
   return { ...(qualifiedAt ? { qualifiedAt } : {}), ...(referral ? { referral } : {}), ...details, updatedAt: now };
 }
 
@@ -42,9 +48,20 @@ export function firstStamps(metrics = {}, outcome, now) {
 export async function recordOutcome(ctx, { person, contact, row, sectorId, needsTeam, intent, now }) {
   if (!contact) return;
   const fresh = await ctx.db.get(contact._id);
-  const outcome = nextOutcome({ previous: person.outcome, sectorId, fields: fresh?.fields || [], needsTeam, intent, now });
+  const outcome = nextOutcome({
+    previous: person.outcome,
+    sectorId,
+    fields: fresh?.fields || [],
+    needsTeam,
+    intent,
+    now,
+  });
   if (!outcome) return;
   await ctx.db.patch(person._id, { outcome });
   const metrics = firstStamps(row.metrics, outcome, now);
-  if (metrics.firstQualifiedAt !== row.metrics?.firstQualifiedAt || metrics.firstTeamReferralAt !== row.metrics?.firstTeamReferralAt) await ctx.db.patch(row._id, { metrics });
+  if (
+    metrics.firstQualifiedAt !== row.metrics?.firstQualifiedAt ||
+    metrics.firstTeamReferralAt !== row.metrics?.firstTeamReferralAt
+  )
+    await ctx.db.patch(row._id, { metrics });
 }

@@ -26,7 +26,7 @@ export const billingPrice = (plan, interval) => BILLING_PLANS[plan]?.[interval] 
 // Paymob's `amount` is in the currency's minor unit: baisa for OMR. Confirmed 2026-10-18 with a sandbox
 // intention: 9000 showed as 9.000 OMR on Paymob Oman's checkout.
 export const PAYMOB_UNITS_PER_OMR = 1000;
-export const paymobAmount = baisa => Math.round(baisa * PAYMOB_UNITS_PER_OMR / 1000);
+export const paymobAmount = baisa => Math.round((baisa * PAYMOB_UNITS_PER_OMR) / 1000);
 
 // A paid period: whole calendar months from `from`, in UTC.
 export function addMonths(from, months) {

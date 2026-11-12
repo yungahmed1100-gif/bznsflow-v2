@@ -4,16 +4,33 @@ import assert from 'node:assert/strict';
 import { brainPart, dashboardMap, resolveTab } from '../src/lib/dashboard/navigation.js';
 
 const retail = { modules: ['orders', 'stock', 'expenses', 'insights'], setupRequired: false };
-const tech = { modules: ['orders', 'stock', 'expenses', 'insights', 'serials', 'repairs', 'tradeIns'], setupRequired: false };
-const construction = { modules: ['orders', 'stock', 'expenses', 'insights'], setupRequired: false, pack: { id: 'construction' }, workspaceRole: 'manager' };
-const automotive = { modules: ['orders', 'stock', 'expenses', 'insights'], setupRequired: false, pack: { id: 'automotive' }, workspaceRole: 'manager' };
+const tech = {
+  modules: ['orders', 'stock', 'expenses', 'insights', 'serials', 'repairs', 'tradeIns'],
+  setupRequired: false,
+};
+const construction = {
+  modules: ['orders', 'stock', 'expenses', 'insights'],
+  setupRequired: false,
+  pack: { id: 'construction' },
+  workspaceRole: 'manager',
+};
+const automotive = {
+  modules: ['orders', 'stock', 'expenses', 'insights'],
+  setupRequired: false,
+  pack: { id: 'automotive' },
+  workspaceRole: 'manager',
+};
 
 test('Catalyst: four tabs, with chats as home', () => {
   const map = dashboardMap(null);
   assert.deepEqual(map.sections, ['chats', 'broadcasts', 'customers', 'settings']);
   assert.deepEqual(resolveTab(null, null, map), { tab: 'chats', view: null });
   assert.deepEqual(resolveTab('orders', null, map), { tab: 'chats', view: null }, 'Hasib sections are not reachable');
-  assert.deepEqual(resolveTab('settings', null, map), { tab: 'settings', view: 'brain' }, 'Settings opens on BznsBrain');
+  assert.deepEqual(
+    resolveTab('settings', null, map),
+    { tab: 'settings', view: 'brain' },
+    'Settings opens on BznsBrain',
+  );
   assert.deepEqual(map.views.settings, ['brain', 'channels'], 'BznsBrain and Channels: no extra tabs');
   assert.deepEqual(dashboardMap(null, { broadcasts: false }).sections, ['chats', 'customers', 'settings']);
 });
@@ -31,7 +48,8 @@ test('Catalyst: old links land on the four tabs', () => {
     ['channels', null, { tab: 'settings', view: 'channels' }],
     ['business', null, { tab: 'settings', view: 'brain' }],
     ['settings', 'channels', { tab: 'settings', view: 'channels' }],
-  ]) assert.deepEqual(resolveTab(tab, view, map), where, `${tab}/${view}`);
+  ])
+    assert.deepEqual(resolveTab(tab, view, map), where, `${tab}/${view}`);
 });
 
 test('BznsBrain opens the catalog for old Services & prices links, else bzns.md', () => {
@@ -43,7 +61,7 @@ test('BznsBrain opens the catalog for old Services & prices links, else bzns.md'
   assert.equal(part('tab=settings&part=nope'), 'bzns');
 });
 
-test('Ascend before Hasib loads keeps its own map, not Catalyst\'s', () => {
+test("Ascend before Hasib loads keeps its own map, not Catalyst's", () => {
   const map = dashboardMap(null, { operations: true, broadcasts: true, money: true });
   assert.equal(map.catalyst, undefined);
   assert.deepEqual(map.sections, ['chats', 'customers', 'settings']);
@@ -52,15 +70,39 @@ test('Ascend before Hasib loads keeps its own map, not Catalyst\'s', () => {
 });
 
 test('retail shop: Today is home; Service is only for phone stores', () => {
-  assert.deepEqual(dashboardMap(retail).sections, ['today', 'chats', 'orders', 'stock', 'money', 'customers', 'settings']);
-  assert.deepEqual(dashboardMap(tech).sections, ['today', 'chats', 'orders', 'stock', 'service', 'money', 'customers', 'settings']);
+  assert.deepEqual(dashboardMap(retail).sections, [
+    'today',
+    'chats',
+    'orders',
+    'stock',
+    'money',
+    'customers',
+    'settings',
+  ]);
+  assert.deepEqual(dashboardMap(tech).sections, [
+    'today',
+    'chats',
+    'orders',
+    'stock',
+    'service',
+    'money',
+    'customers',
+    'settings',
+  ]);
   assert.deepEqual(resolveTab(null, null, dashboardMap(retail)), { tab: 'today', view: null });
   assert.deepEqual(resolveTab('service', null, dashboardMap(retail)), { tab: 'today', view: null });
 });
 
 test('old links land where their content lives now', () => {
   const map = dashboardMap(retail);
-  for (const [old, where] of [['insights', ['money', 'insights']], ['expenses', ['money', 'expenses']], ['contacts', ['customers', 'contacts']], ['broadcast', ['customers', 'broadcast']], ['channels', ['settings', 'channels']], ['business', ['settings', 'business']]]) {
+  for (const [old, where] of [
+    ['insights', ['money', 'insights']],
+    ['expenses', ['money', 'expenses']],
+    ['contacts', ['customers', 'contacts']],
+    ['broadcast', ['customers', 'broadcast']],
+    ['channels', ['settings', 'channels']],
+    ['business', ['settings', 'business']],
+  ]) {
     assert.deepEqual(resolveTab(old, null, map), { tab: where[0], view: where[1] }, old);
   }
   assert.deepEqual(resolveTab('stock', 'services', map), { tab: 'stock', view: 'services' });
@@ -88,7 +130,11 @@ test('an automotive workshop: the six Ascend tabs with Workshop as Work, and old
   const map = dashboardMap(automotive);
   assert.deepEqual(map.sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
   assert.deepEqual(map.views.work, ['board', 'schedule', 'parts', 'followups']);
-  assert.deepEqual(map.views.settings, ['brain', 'rules', 'team', 'workshop', 'business', 'channels', 'accounts'], 'Channels and BznsBrain are reachable again');
+  assert.deepEqual(
+    map.views.settings,
+    ['brain', 'rules', 'team', 'workshop', 'business', 'channels', 'accounts'],
+    'Channels and BznsBrain are reachable again',
+  );
   assert.deepEqual(resolveTab('stock', 'products', map), { tab: 'work', view: 'parts' });
   assert.deepEqual(resolveTab('orders', null, map), { tab: 'work', view: 'board' });
   assert.deepEqual(resolveTab('money', null, map), { tab: 'insights', view: null });
@@ -109,7 +155,12 @@ test('a dental clinic: the six Ascend tabs with Visits as Work, and old links la
 });
 
 test('an AC business: the six Ascend tabs with Jobs as Work (Contracts its fifth view), and old links land in Jobs', () => {
-  const hvac = { modules: ['orders', 'stock', 'expenses', 'insights'], setupRequired: false, pack: { id: 'hvac' }, workspaceRole: 'manager' };
+  const hvac = {
+    modules: ['orders', 'stock', 'expenses', 'insights'],
+    setupRequired: false,
+    pack: { id: 'hvac' },
+    workspaceRole: 'manager',
+  };
   const map = dashboardMap(hvac);
   assert.deepEqual(map.sections, ['chats', 'work', 'customers', 'broadcasts', 'insights', 'settings']);
   assert.deepEqual(map.views.work, ['schedule', 'jobs', 'contracts', 'units', 'followups']);
@@ -118,7 +169,11 @@ test('an AC business: the six Ascend tabs with Jobs as Work (Contracts its fifth
   assert.deepEqual(resolveTab('stock', null, map), { tab: 'work', view: 'units' });
   assert.deepEqual(resolveTab('today', null, map), { tab: 'work', view: 'schedule' });
   assert.deepEqual(resolveTab('work', 'contracts', map), { tab: 'work', view: 'contracts' });
-  assert.deepEqual(dashboardMap({ ...hvac, workspaceRole: 'employee' }).sections, ['chats', 'work', 'customers'], 'technicians and advisors: three tabs');
+  assert.deepEqual(
+    dashboardMap({ ...hvac, workspaceRole: 'employee' }).sections,
+    ['chats', 'work', 'customers'],
+    'technicians and advisors: three tabs',
+  );
 });
 
 test('Accounts and VAT appear in Settings once an industry is set', () => {
@@ -132,16 +187,40 @@ test('Rasil’s Email tab is one general section in every Ascend dashboard, for 
   const { livePackSummaries } = await import('../config/hasib-packs.js');
   const caps = capabilitiesFor('ascend');
   for (const { id } of livePackSummaries()) {
-    const hasib = { modules: ['orders', 'stock', 'insights', 'repairs'], setupRequired: false, pack: { id }, workspaceRole: 'manager' };
+    const hasib = {
+      modules: ['orders', 'stock', 'insights', 'repairs'],
+      setupRequired: false,
+      pack: { id },
+      workspaceRole: 'manager',
+    };
     const map = dashboardMap(hasib, caps, 'manager', { email: true });
-    if (map.sections.includes('broadcasts')) assert.equal(map.sections.indexOf('email'), map.sections.indexOf('broadcasts') + 1, `${id}: right after Broadcasts`);
+    if (map.sections.includes('broadcasts'))
+      assert.equal(
+        map.sections.indexOf('email'),
+        map.sections.indexOf('broadcasts') + 1,
+        `${id}: right after Broadcasts`,
+      );
     assert.ok(map.sections.includes('email'), `${id}: the Email tab`);
     assert.deepEqual(map.views.email, ['campaigns', 'subscribers', 'setup'], id);
     assert.deepEqual(resolveTab('email', 'subscribers', map), { tab: 'email', view: 'subscribers' }, id);
     assert.deepEqual(resolveTab('email', null, map), { tab: 'email', view: 'campaigns' }, id);
-    assert.equal(dashboardMap({ ...hasib, workspaceRole: 'employee' }, capabilitiesFor('ascend', 'employee'), 'employee', { email: true }).sections.includes('email'), false, `${id}: staff`);
-    assert.deepEqual(dashboardMap(hasib, caps, 'manager'), dashboardMap(hasib, caps, 'manager', { email: false }), `${id}: closed means no change`);
+    assert.equal(
+      dashboardMap({ ...hasib, workspaceRole: 'employee' }, capabilitiesFor('ascend', 'employee'), 'employee', {
+        email: true,
+      }).sections.includes('email'),
+      false,
+      `${id}: staff`,
+    );
+    assert.deepEqual(
+      dashboardMap(hasib, caps, 'manager'),
+      dashboardMap(hasib, caps, 'manager', { email: false }),
+      `${id}: closed means no change`,
+    );
     assert.equal(dashboardMap(hasib, caps, 'manager').sections.includes('email'), false, id);
   }
-  assert.equal(dashboardMap(null, capabilitiesFor('catalyst'), 'manager', { email: true }).sections.includes('email'), false, 'Catalyst has no Email tab');
+  assert.equal(
+    dashboardMap(null, capabilitiesFor('catalyst'), 'manager', { email: true }).sections.includes('email'),
+    false,
+    'Catalyst has no Email tab',
+  );
 });

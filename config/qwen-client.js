@@ -10,7 +10,9 @@ export const TIMEOUT_MS = 12000;
 /** The Qwen settings from an environment object, or null when Layla's AI is not configured. */
 export function qwenConfig(env = {}) {
   const key = String(env.QWEN_API_KEY || '').trim();
-  const baseUrl = String(env.QWEN_BASE_URL || '').trim().replace(/\/+$/, '');
+  const baseUrl = String(env.QWEN_BASE_URL || '')
+    .trim()
+    .replace(/\/+$/, '');
   if (!key || !/^https:\/\//.test(baseUrl)) return null;
   return { key, baseUrl, model: String(env.LAYLA_AI_MODEL || '').trim() || DEFAULT_MODEL };
 }
@@ -24,7 +26,10 @@ export function completionsUrl(baseUrl) {
 }
 
 export class QwenError extends Error {
-  constructor(reason) { super(reason); this.reason = reason; }
+  constructor(reason) {
+    super(reason);
+    this.reason = reason;
+  }
 }
 
 /**
@@ -33,28 +38,50 @@ export class QwenError extends Error {
  *   fetcher?: typeof fetch, timeoutMs?: number, maxTokens?: number, temperature?: number, now?: () => number }} input
  * @returns {Promise<{ text: string, usage: { input: number, output: number }, ms: number, model: string }>}
  */
-export async function qwenChat({ config, messages, fetcher = globalThis.fetch, timeoutMs = TIMEOUT_MS, maxTokens = 400, temperature = 0.3, json = true, now = Date.now }) {
+export async function qwenChat({
+  config,
+  messages,
+  fetcher = globalThis.fetch,
+  timeoutMs = TIMEOUT_MS,
+  maxTokens = 400,
+  temperature = 0.3,
+  json = true,
+  now = Date.now,
+}) {
   if (!config) throw new QwenError('ai_not_configured');
   const started = now();
   let response;
   try {
     // Speech recognition answers in plain text; every other call must return a JSON object.
-    const body = json ? { model: config.model, messages, temperature, max_tokens: maxTokens, response_format: { type: 'json_object' } } : { model: config.model, messages };
+    const body = json
+      ? { model: config.model, messages, temperature, max_tokens: maxTokens, response_format: { type: 'json_object' } }
+      : { model: config.model, messages };
     response = await fetcher(completionsUrl(config.baseUrl), {
-      method: 'POST', redirect: 'error', signal: AbortSignal.timeout(timeoutMs),
+      method: 'POST',
+      redirect: 'error',
+      signal: AbortSignal.timeout(timeoutMs),
       headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
   } catch (e) {
     throw new QwenError(e?.name === 'TimeoutError' || e?.name === 'AbortError' ? 'ai_timeout' : 'ai_network');
   }
-  if (!response.ok) throw new QwenError(response.status === 429 ? 'ai_rate_limited' : response.status >= 500 ? 'ai_unavailable' : 'ai_rejected');
+  if (!response.ok)
+    throw new QwenError(
+      response.status === 429 ? 'ai_rate_limited' : response.status >= 500 ? 'ai_unavailable' : 'ai_rejected',
+    );
   let body;
-  try { body = await response.json(); } catch { throw new QwenError('ai_bad_response'); }
+  try {
+    body = await response.json();
+  } catch {
+    throw new QwenError('ai_bad_response');
+  }
   const text = body?.choices?.[0]?.message?.content;
   if (typeof text !== 'string' || !text.trim()) throw new QwenError('ai_empty');
   return {
-    text, model: String(body.model || config.model).slice(0, 60), ms: now() - started,
+    text,
+    model: String(body.model || config.model).slice(0, 60),
+    ms: now() - started,
     usage: { input: Number(body.usage?.prompt_tokens) || 0, output: Number(body.usage?.completion_tokens) || 0 },
   };
 }
@@ -66,4 +93,5 @@ export const qwenGenerator = (env, fetcher = globalThis.fetch, options = {}) => 
 };
 /** BznsBrain extraction: deterministic, room for a page of proposals, and a longer wait than a chat reply. */
 // Extraction writes a long JSON answer: allow up to 45 s and 3,000 tokens (the API function stops at 60 s).
-export const qwenExtractor = (env, fetcher = globalThis.fetch) => qwenGenerator(env, fetcher, { temperature: 0, maxTokens: 3000, timeoutMs: 45000 });
+export const qwenExtractor = (env, fetcher = globalThis.fetch) =>
+  qwenGenerator(env, fetcher, { temperature: 0, maxTokens: 3000, timeoutMs: 45000 });

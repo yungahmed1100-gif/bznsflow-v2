@@ -5,8 +5,15 @@ import { executeWebsiteAdmin } from './websiteProjectsState.js';
 
 export const execute = internalMutation({
   args: {
-    operation: v.union(v.literal('get'), v.literal('upload_url'), v.literal('file_register'), v.literal('submit'), v.literal('emailed'),
-      v.literal('save_draft'), v.literal('domain_rate')),
+    operation: v.union(
+      v.literal('get'),
+      v.literal('upload_url'),
+      v.literal('file_register'),
+      v.literal('submit'),
+      v.literal('emailed'),
+      v.literal('save_draft'),
+      v.literal('domain_rate'),
+    ),
     sessionHash: v.string(),
     storageId: v.optional(v.string()),
     kind: v.optional(v.string()),

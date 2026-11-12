@@ -40,7 +40,7 @@ function fail(msg) {
 
 const args = process.argv.slice(2);
 const flag = (name, fallback = null) => {
-  const hit = args.find((a) => a.startsWith(`--${name}=`));
+  const hit = args.find(a => a.startsWith(`--${name}=`));
   if (hit) return hit.slice(name.length + 3);
   const i = args.indexOf(`--${name}`);
   return i !== -1 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : fallback;
@@ -51,8 +51,9 @@ const onlyIntent = flag('intent');
 const onlyLang = flag('lang');
 const count = Number(flag('count', '10'));
 
-if (onlySector && !INDUSTRIES.some((i) => i.id === onlySector)) fail(`unknown sector "${onlySector}".`);
-if (onlyIntent && !CLASSIFY_INTENTS.includes(onlyIntent)) fail(`unknown intent "${onlyIntent}". One of: ${CLASSIFY_INTENTS.join(', ')}`);
+if (onlySector && !INDUSTRIES.some(i => i.id === onlySector)) fail(`unknown sector "${onlySector}".`);
+if (onlyIntent && !CLASSIFY_INTENTS.includes(onlyIntent))
+  fail(`unknown intent "${onlyIntent}". One of: ${CLASSIFY_INTENTS.join(', ')}`);
 if (onlyLang && !LANGS.includes(onlyLang)) fail(`unknown lang "${onlyLang}". One of: ${LANGS.join(', ')}`);
 if (!Number.isInteger(count) || count < 1 || count > 50) fail('--count must be 1-50.');
 
@@ -78,41 +79,51 @@ const MODE = {
 async function propose(sector, label, intent, lang) {
   const pack = SECTOR_PACKS[sector];
   const domain = pack ? `${label.en} (${label.ar})` : label.en;
-  const reply = await chat([
-    { role: 'user', content:
-`Write ${count} short, different messages a real customer might send on WhatsApp to a business in this field: ${domain}.
+  const reply = await chat(
+    [
+      {
+        role: 'user',
+        content: `Write ${count} short, different messages a real customer might send on WhatsApp to a business in this field: ${domain}.
 
 Every message must be someone ${BRIEF[intent].en} — ${BRIEF[intent].ar}.
 Write them ${MODE[lang]}.
 
-Rules: one message per line, numbered 1. to ${count}. No preamble, no explanation, no translation, no commentary. Each under 15 words. Use wording specific to this field, not generic.` },
-  ], { numPredict: 60 + count * 24 });
+Rules: one message per line, numbered 1. to ${count}. No preamble, no explanation, no translation, no commentary. Each under 15 words. Use wording specific to this field, not generic.`,
+      },
+    ],
+    { numPredict: 60 + count * 24 },
+  );
 
-  const existing = new Set(QUESTIONS.map((q) => q.text.trim().toLowerCase()));
+  const existing = new Set(QUESTIONS.map(q => q.text.trim().toLowerCase()));
   return parseList(reply, { max: count })
-    .filter((text) => !existing.has(text.toLowerCase()))
-    .map((text) => ({ sector, intent, lang, text }));
+    .filter(text => !existing.has(text.toLowerCase()))
+    .map(text => ({ sector, intent, lang, text }));
 }
 
 if (!(await reachable())) {
-  fail(`no Ollama server at ${host()}.\n` +
-    '  Start Ollama on the host, or point OLLAMA_HOST somewhere else.\n' +
-    '  This script is the only part of the harness that needs a model —\n' +
-    '  `npm run eval:intents` scores the existing labels with no network at all.');
+  fail(
+    `no Ollama server at ${host()}.\n` +
+      '  Start Ollama on the host, or point OLLAMA_HOST somewhere else.\n' +
+      '  This script is the only part of the harness that needs a model —\n' +
+      '  `npm run eval:intents` scores the existing labels with no network at all.',
+  );
 }
 
 const have = await installed();
-if (!have.some((n) => n === model() || n.startsWith(`${model()}:`))) {
-  fail(`model "${model()}" is not installed on ${host()}.\n` +
-    `  Installed: ${have.join(', ') || '(none)'}\n` +
-    `  Pull it, or set OLLAMA_MODEL to one of the above.`);
+if (!have.some(n => n === model() || n.startsWith(`${model()}:`))) {
+  fail(
+    `model "${model()}" is not installed on ${host()}.\n` +
+      `  Installed: ${have.join(', ') || '(none)'}\n` +
+      `  Pull it, or set OLLAMA_MODEL to one of the above.`,
+  );
 }
 
-const sectors = INDUSTRIES.filter((i) => (onlySector ? i.id === onlySector : true));
-const intents = TARGET_INTENTS.filter((i) => (onlyIntent ? i === onlyIntent : true));
-const langs = LANGS.filter((l) => (onlyLang ? l === onlyLang : true));
+const sectors = INDUSTRIES.filter(i => (onlySector ? i.id === onlySector : true));
+const intents = TARGET_INTENTS.filter(i => (onlyIntent ? i === onlyIntent : true));
+const langs = LANGS.filter(l => (onlyLang ? l === onlyLang : true));
 
-if (!intents.length) fail(`intent "${onlyIntent}" is not generated per sector. Generated: ${TARGET_INTENTS.join(', ')}`);
+if (!intents.length)
+  fail(`intent "${onlyIntent}" is not generated per sector. Generated: ${TARGET_INTENTS.join(', ')}`);
 
 console.log(`\npropose-eval-questions: ${model()} at ${host()}`);
 console.log(`  ${sectors.length} sector(s) × ${intents.length} intent(s) × ${langs.length} lang(s), ${count} each\n`);
@@ -137,11 +148,20 @@ for (const { id, en, ar } of sectors) {
   }
   if (!rows.length) continue;
   const file = join(OUT_DIR, `${id}.json`);
-  writeFileSync(file, `${JSON.stringify({
-    sector: id, model: model(), generatedAt: new Date().toISOString(),
-    note: 'CANDIDATES ONLY. Review each line, then paste the good ones into config/eval-questions.js.',
-    rows,
-  }, null, 2)}\n`);
+  writeFileSync(
+    file,
+    `${JSON.stringify(
+      {
+        sector: id,
+        model: model(),
+        generatedAt: new Date().toISOString(),
+        note: 'CANDIDATES ONLY. Review each line, then paste the good ones into config/eval-questions.js.',
+        rows,
+      },
+      null,
+      2,
+    )}\n`,
+  );
   written += rows.length;
 }
 

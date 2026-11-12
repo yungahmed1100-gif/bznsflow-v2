@@ -17,18 +17,49 @@ async function setup({ gate = true } = {}) {
   await h.messaging('activate', { sessionHash: a.sessionHash });
   await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'ascend' }, h.m.now());
   await grantPlan(h.m.ctx, { email: 'b@example.com', plan: 'ascend' }, h.m.now());
-  const hasib = (tenant, operation, args = {}) => executeHasib(h.m.ctx, { operation, sessionHash: tenant.sessionHash, hashSecret: SECRET, ...args }, h.m.now());
+  const hasib = (tenant, operation, args = {}) =>
+    executeHasib(h.m.ctx, { operation, sessionHash: tenant.sessionHash, hashSecret: SECRET, ...args }, h.m.now());
   return { h, a, b, hasib };
 }
 
 async function abaya(hasib, tenant, { onHand = 5, price = 25000, cost = 12000 } = {}) {
-  const r = await hasib(tenant, 'item_save', { requestId: randomUUID(), item: { kind: 'product', nameAr: 'عباية سوداء', nameEn: 'Black abaya', category: 'Abayas', unit: 'piece', trackStock: true },
-    variants: [{ sku: 'AB-52', options: [{ key: 'size', value: '52' }], priceMinor: price, costMinor: cost, reorderPoint: 2, openingStock: onHand }] });
+  const r = await hasib(tenant, 'item_save', {
+    requestId: randomUUID(),
+    item: {
+      kind: 'product',
+      nameAr: 'عباية سوداء',
+      nameEn: 'Black abaya',
+      category: 'Abayas',
+      unit: 'piece',
+      trackStock: true,
+    },
+    variants: [
+      {
+        sku: 'AB-52',
+        options: [{ key: 'size', value: '52' }],
+        priceMinor: price,
+        costMinor: cost,
+        reorderPoint: 2,
+        openingStock: onHand,
+      },
+    ],
+  });
   assert.equal(r.ok, true, r.reason);
   return { itemId: r.value.item.id, variantId: r.value.variants[0].id };
 }
-const order = (hasib, tenant, variantId, extra = {}) => hasib(tenant, 'order_create', { requestId: randomUUID(), channel: 'whatsapp', lines: [{ variantId, qty: 1 }], fulfilment: { type: 'pickup' }, ...extra });
-const ledger = h => variantId => h.m.table('hasibStockMoves').filter(r => r.variantId === variantId).reduce((n, r) => n + r.delta, 0);
+const order = (hasib, tenant, variantId, extra = {}) =>
+  hasib(tenant, 'order_create', {
+    requestId: randomUUID(),
+    channel: 'whatsapp',
+    lines: [{ variantId, qty: 1 }],
+    fulfilment: { type: 'pickup' },
+    ...extra,
+  });
+const ledger = h => variantId =>
+  h.m
+    .table('hasibStockMoves')
+    .filter(r => r.variantId === variantId)
+    .reduce((n, r) => n + r.delta, 0);
 const variant = (h, id) => h.m.table('hasibVariants').find(r => r._id === id);
 
 test('Hasib refuses every operation while its durable gate is off', async () => {
@@ -41,7 +72,10 @@ test('overview reports the retail pack, VAT off by default and only available mo
   const { a, hasib } = await setup();
   const o = (await hasib(a, 'overview')).value;
   assert.equal(o.pack.id, 'retail');
-  assert.deepEqual(o.pack.variantOptions.map(v => v.key), ['size', 'length', 'colour']);
+  assert.deepEqual(
+    o.pack.variantOptions.map(v => v.key),
+    ['size', 'length', 'colour'],
+  );
   assert.deepEqual(o.modules.sort(), ['demand', 'expenses', 'insights', 'orders', 'stock']);
   assert.equal(o.settings.vatRegistered, false);
   assert.equal(o.settings.stockPolicy, 'warn');
@@ -56,11 +90,19 @@ test('a second tenant can neither read nor change the first tenant’s items, or
   const attempts = [
     ['order', { orderId: created.id }, 'order_not_found'],
     ['order_status', { orderId: created.id, to: 'confirmed', version: created.version }, 'order_not_found'],
-    ['payment_record', { requestId: randomUUID(), orderId: created.id, amountMinor: 1000, method: 'cash' }, 'order_not_found'],
+    [
+      'payment_record',
+      { requestId: randomUUID(), orderId: created.id, amountMinor: 1000, method: 'cash' },
+      'order_not_found',
+    ],
     ['item_archive', { itemId }, 'item_not_found'],
     ['stock_move', { requestId: randomUUID(), variantId, delta: 5, reason: 'stock_in' }, 'variant_not_found'],
     ['stock_moves', { variantId }, 'variant_not_found'],
-    ['order_create', { requestId: randomUUID(), channel: 'whatsapp', lines: [{ variantId, qty: 1 }], fulfilment: { type: 'pickup' } }, 'variant_not_found'],
+    [
+      'order_create',
+      { requestId: randomUUID(), channel: 'whatsapp', lines: [{ variantId, qty: 1 }], fulfilment: { type: 'pickup' } },
+      'variant_not_found',
+    ],
   ];
   for (const [op, args, reason] of attempts) assert.equal((await hasib(b, op, args)).reason, reason, op);
   // An id from another table is not an order id, even inside the same tenant.
@@ -92,21 +134,48 @@ test('confirming takes stock once; cancelling returns it; the ledger always equa
   o = (await hasib(a, 'order_status', { orderId: o.id, to: 'cancelled', version: o.version })).value;
   assert.equal(variant(h, variantId).onHand, 5);
   assert.equal(ledger(h)(variantId), 5);
-  assert.equal((await hasib(a, 'order_status', { orderId: o.id, to: 'confirmed', version: o.version })).reason, 'invalid_transition');
+  assert.equal(
+    (await hasib(a, 'order_status', { orderId: o.id, to: 'confirmed', version: o.version })).reason,
+    'invalid_transition',
+  );
 });
 
 test('the line keeps the price and cost it was sold at, and confirmed orders snapshot COGS', async () => {
   const { h, a, hasib } = await setup();
   const { variantId } = await abaya(hasib, a, { onHand: 0, cost: 10000 });
-  await hasib(a, 'stock_move', { requestId: randomUUID(), variantId, delta: 10, reason: 'stock_in', unitCostMinor: 13000 });
+  await hasib(a, 'stock_move', {
+    requestId: randomUUID(),
+    variantId,
+    delta: 10,
+    reason: 'stock_in',
+    unitCostMinor: 13000,
+  });
   assert.equal(variant(h, variantId).costMinor, 13000, 'moving average from zero stock');
-  await hasib(a, 'stock_move', { requestId: randomUUID(), variantId, delta: 10, reason: 'stock_in', unitCostMinor: 15000 });
+  await hasib(a, 'stock_move', {
+    requestId: randomUUID(),
+    variantId,
+    delta: 10,
+    reason: 'stock_in',
+    unitCostMinor: 15000,
+  });
   assert.equal(variant(h, variantId).costMinor, 14000);
   const o = (await order(hasib, a, variantId, { confirm: true })).value;
   assert.equal(o.status, 'confirmed');
   assert.equal(o.lines[0].unitCostMinor, 14000);
-  await hasib(a, 'item_save', { itemId: o.lines[0].itemId, item: { kind: 'product', nameAr: 'عباية', nameEn: 'Abaya', category: 'Abayas', unit: 'piece', trackStock: true },
-    variants: [{ variantId, sku: 'AB-52', options: [{ key: 'size', value: '52' }], priceMinor: 30000, costMinor: 14000, reorderPoint: 2 }] });
+  await hasib(a, 'item_save', {
+    itemId: o.lines[0].itemId,
+    item: { kind: 'product', nameAr: 'عباية', nameEn: 'Abaya', category: 'Abayas', unit: 'piece', trackStock: true },
+    variants: [
+      {
+        variantId,
+        sku: 'AB-52',
+        options: [{ key: 'size', value: '52' }],
+        priceMinor: 30000,
+        costMinor: 14000,
+        reorderPoint: 2,
+      },
+    ],
+  });
   assert.equal((await hasib(a, 'order', { orderId: o.id })).value.lines[0].unitPriceMinor, 25000);
 });
 
@@ -115,7 +184,10 @@ test('block policy refuses an oversell and writes nothing; warn allows it and fl
   const { variantId } = await abaya(hasib, a, { onHand: 1 });
   await hasib(a, 'settings_update', { stockPolicy: 'block' });
   const before = h.m.table('hasibOrders').length;
-  assert.equal((await order(hasib, a, variantId, { lines: [{ variantId, qty: 2 }], confirm: true })).reason, 'insufficient_stock');
+  assert.equal(
+    (await order(hasib, a, variantId, { lines: [{ variantId, qty: 2 }], confirm: true })).reason,
+    'insufficient_stock',
+  );
   assert.equal(h.m.table('hasibOrders').length, before);
   assert.equal(variant(h, variantId).onHand, 1);
   await hasib(a, 'settings_update', { stockPolicy: 'warn' });
@@ -131,13 +203,18 @@ test('a stale version is refused instead of overwriting a newer change', async (
   const { variantId } = await abaya(hasib, a);
   const o = (await order(hasib, a, variantId)).value;
   await hasib(a, 'order_status', { orderId: o.id, to: 'confirmed', version: o.version });
-  assert.equal((await hasib(a, 'order_status', { orderId: o.id, to: 'cancelled', version: o.version })).reason, 'order_conflict');
+  assert.equal(
+    (await hasib(a, 'order_status', { orderId: o.id, to: 'cancelled', version: o.version })).reason,
+    'order_conflict',
+  );
 });
 
 test('VAT settings apply at creation and are frozen on the order', async () => {
   const { a, hasib } = await setup();
   const { variantId } = await abaya(hasib, a, { price: 10000 });
-  await hasib(a, 'settings_update', { vat: { registered: true, rateBps: 500, pricesIncludeVat: false, vatin: 'OM1100012345' } });
+  await hasib(a, 'settings_update', {
+    vat: { registered: true, rateBps: 500, pricesIncludeVat: false, vatin: 'OM1100012345' },
+  });
   const o = (await order(hasib, a, variantId, { deliveryFeeMinor: 1000 })).value;
   assert.deepEqual([o.vatMinor, o.totalMinor, o.pricesIncludeVat], [550, 11550, false]);
   await hasib(a, 'settings_update', { vat: { registered: false, rateBps: 500, pricesIncludeVat: false } });
@@ -149,15 +226,33 @@ test('payments are idempotent, move the balance, and refunds cannot exceed what 
   const { variantId } = await abaya(hasib, a, { price: 25000 });
   const o = (await order(hasib, a, variantId)).value;
   const requestId = randomUUID();
-  let r = await hasib(a, 'payment_record', { requestId, orderId: o.id, amountMinor: 10000, method: 'bank_transfer', reference: 'TRX-1' });
+  let r = await hasib(a, 'payment_record', {
+    requestId,
+    orderId: o.id,
+    amountMinor: 10000,
+    method: 'bank_transfer',
+    reference: 'TRX-1',
+  });
   assert.deepEqual([r.value.order.paidMinor, r.value.order.paymentStatus], [10000, 'partial']);
   r = await hasib(a, 'payment_record', { requestId, orderId: o.id, amountMinor: 10000, method: 'bank_transfer' });
   assert.equal(r.value.order.paidMinor, 10000, 'same requestId is recorded once');
   r = await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: 15000, method: 'cod' });
   assert.equal(r.value.order.paymentStatus, 'paid');
-  assert.equal((await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: -30000, method: 'cash' })).reason, 'refund_exceeds_paid');
-  assert.equal((await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: 0, method: 'cash' })).reason, 'invalid_amount');
-  assert.equal((await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: 5, method: 'bitcoin' })).reason, 'invalid_payment_method');
+  assert.equal(
+    (await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: -30000, method: 'cash' }))
+      .reason,
+    'refund_exceeds_paid',
+  );
+  assert.equal(
+    (await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: 0, method: 'cash' }))
+      .reason,
+    'invalid_amount',
+  );
+  assert.equal(
+    (await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: 5, method: 'bitcoin' }))
+      .reason,
+    'invalid_payment_method',
+  );
   const detail = (await hasib(a, 'order', { orderId: o.id })).value;
   assert.equal(detail.payments.length, 2);
 });
@@ -169,8 +264,16 @@ test('a cancelled order accepts refunds but no new money', async () => {
   await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: 5000, method: 'cash' });
   o = (await hasib(a, 'order', { orderId: o.id })).value;
   await hasib(a, 'order_status', { orderId: o.id, to: 'cancelled', version: o.version });
-  assert.equal((await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: 1000, method: 'cash' })).reason, 'order_closed');
-  assert.equal((await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: -5000, method: 'cash' })).value.order.paidMinor, 0);
+  assert.equal(
+    (await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: 1000, method: 'cash' }))
+      .reason,
+    'order_closed',
+  );
+  assert.equal(
+    (await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: -5000, method: 'cash' }))
+      .value.order.paidMinor,
+    0,
+  );
 });
 
 test('deleting a contact strips the customer from orders but keeps the amounts', async () => {
@@ -179,9 +282,18 @@ test('deleting a contact strips the customer from orders but keeps the amounts',
   await h.inbound(a, { from: '96891111111', text: 'Hi', profileName: 'Mariam' });
   const [contact] = h.m.table('blueContacts').filter(r => r.accountId === a.accountId);
   const o = (await order(hasib, a, variantId, { contactId: contact._id, customerName: 'Mariam Al Balushi' })).value;
-  await hasib(a, 'payment_record', { requestId: randomUUID(), orderId: o.id, amountMinor: 5000, method: 'bank_transfer', reference: 'Mariam transfer 9123' });
+  await hasib(a, 'payment_record', {
+    requestId: randomUUID(),
+    orderId: o.id,
+    amountMinor: 5000,
+    method: 'bank_transfer',
+    reference: 'Mariam transfer 9123',
+  });
   assert.equal(o.contact.name, 'Mariam');
-  assert.equal((await h.dashboard('contact_delete', { sessionHash: a.sessionHash, contactId: contact._id, confirm: true })).ok, true);
+  assert.equal(
+    (await h.dashboard('contact_delete', { sessionHash: a.sessionHash, contactId: contact._id, confirm: true })).ok,
+    true,
+  );
   const after = (await hasib(a, 'order', { orderId: o.id })).value;
   assert.equal(after.contact, null);
   assert.equal(after.totalMinor, o.totalMinor);
@@ -192,12 +304,37 @@ test('deleting a contact strips the customer from orders but keeps the amounts',
 test('custom lines without a product are allowed and never touch stock', async () => {
   const { h, a, hasib } = await setup();
   const { variantId } = await abaya(hasib, a, { onHand: 5 });
-  const o = (await hasib(a, 'order_create', { requestId: randomUUID(), channel: 'walk_in', confirm: true, fulfilment: { type: 'in_store' },
-    lines: [{ variantId, qty: 1 }, { name: 'Hemming', qty: 1, unitPriceMinor: 2000 }] })).value;
+  const o = (
+    await hasib(a, 'order_create', {
+      requestId: randomUUID(),
+      channel: 'walk_in',
+      confirm: true,
+      fulfilment: { type: 'in_store' },
+      lines: [
+        { variantId, qty: 1 },
+        { name: 'Hemming', qty: 1, unitPriceMinor: 2000 },
+      ],
+    })
+  ).value;
   assert.equal(o.totalMinor, 27000);
   assert.equal(variant(h, variantId).onHand, 4);
-  for (const bad of [{ name: '', qty: 1, unitPriceMinor: 1 }, { name: 'x', qty: 1 }, { variantId, qty: 0 }]) {
-    assert.equal((await hasib(a, 'order_create', { requestId: randomUUID(), channel: 'walk_in', fulfilment: { type: 'in_store' }, lines: [bad] })).reason, 'invalid_order_lines', JSON.stringify(bad));
+  for (const bad of [
+    { name: '', qty: 1, unitPriceMinor: 1 },
+    { name: 'x', qty: 1 },
+    { variantId, qty: 0 },
+  ]) {
+    assert.equal(
+      (
+        await hasib(a, 'order_create', {
+          requestId: randomUUID(),
+          channel: 'walk_in',
+          fulfilment: { type: 'in_store' },
+          lines: [bad],
+        })
+      ).reason,
+      'invalid_order_lines',
+      JSON.stringify(bad),
+    );
   }
 });
 
@@ -216,11 +353,26 @@ test('a rejected order from a chat writes nothing, not even the contact link', a
   const { h, a, hasib } = await setup();
   const { variantId } = await abaya(hasib, a, { onHand: 0 });
   await hasib(a, 'settings_update', { stockPolicy: 'block' });
-  const conversationId = await h.m.db.insert('blueConversations', { key: 'k-new', integrationId: a.integration.id, accountId: a.accountId, number: '96893333333',
-    lastInbound: h.m.now(), takeover: false, optout: false, updatedAt: h.m.now() });
+  const conversationId = await h.m.db.insert('blueConversations', {
+    key: 'k-new',
+    integrationId: a.integration.id,
+    accountId: a.accountId,
+    number: '96893333333',
+    lastInbound: h.m.now(),
+    takeover: false,
+    optout: false,
+    updatedAt: h.m.now(),
+  });
   const contactsBefore = h.m.table('blueContacts').length;
   for (const lines of [[{ variantId, qty: 1 }], [{ name: '', qty: 1, unitPriceMinor: 1 }]]) {
-    const r = await hasib(a, 'order_create', { requestId: randomUUID(), channel: 'whatsapp', conversationId, confirm: true, lines, fulfilment: { type: 'pickup' } });
+    const r = await hasib(a, 'order_create', {
+      requestId: randomUUID(),
+      channel: 'whatsapp',
+      conversationId,
+      confirm: true,
+      lines,
+      fulfilment: { type: 'pickup' },
+    });
     assert.equal(r.ok, false);
   }
   assert.equal(h.m.table('blueContacts').length, contactsBefore);

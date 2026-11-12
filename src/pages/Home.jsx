@@ -11,29 +11,28 @@ import { TIERS, TIERS_AR } from '../data/tiers';
 
 // All sections are STATIC imports — they must be in the prerendered HTML for SEO.
 // (Previously React.lazy behind <Suspense>, which rendered nothing during SSG.)
-import { NavBar }             from '../components/layout/NavBar';
-import { HeroSection }        from '../components/sections/HeroSection';
-import { SolutionsSection }   from '../components/sections/SolutionsSection';
-import { ChatWidget }         from '../components/chat/ChatWidget';
-import { ClientTape }        from '../components/sections/ClientTape';
-import { TiersSection }       from '../components/sections/TiersSection';
-import { AboutSection }       from '../components/sections/AboutSection';
-import { FAQSection }         from '../components/sections/FAQSection';
-import { Footer }             from '../components/layout/Footer';
-import { StickyMobileCTA }    from '../components/ui/StickyMobileCTA';
-import { PlaybookModal }      from '../components/ui/PlaybookModal';
+import { NavBar } from '../components/layout/NavBar';
+import { HeroSection } from '../components/sections/HeroSection';
+import { SolutionsSection } from '../components/sections/SolutionsSection';
+import { ChatWidget } from '../components/chat/ChatWidget';
+import { ClientTape } from '../components/sections/ClientTape';
+import { TiersSection } from '../components/sections/TiersSection';
+import { AboutSection } from '../components/sections/AboutSection';
+import { FAQSection } from '../components/sections/FAQSection';
+import { Footer } from '../components/layout/Footer';
+import { StickyMobileCTA } from '../components/ui/StickyMobileCTA';
+import { PlaybookModal } from '../components/ui/PlaybookModal';
 
 // ─── Home page ───────────────────────────────────────────────────────────────
 // `lang` is the locale of THIS prerendered route ('ar' at /, 'en' at /en).
 export default function Home({ lang: routeLang = 'ar' }) {
-
   const lang = routeLang;
 
-  const [isMenuOpen,    setIsMenuOpen]    = useState(false);
-  const [isScrolled,    setIsScrolled]    = useState(false);
-  const [activeLink,    setActiveLink]    = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeLink, setActiveLink] = useState('');
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [isChatOpen,    setIsChatOpen]    = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // The popup must never stack on top of another surface that already
   // owns the screen — two dialogs at once is a trap, not a prompt.
@@ -43,10 +42,10 @@ export default function Home({ lang: routeLang = 'ar' }) {
   // shows too — so the navbar hydrates without a mismatch and then fills in.
   const account = useAccount();
 
-  const t              = getStrings(lang);
-  const activeTiers    = lang === 'ar' ? TIERS_AR : TIERS;
-  const seo            = HOME_SEO[routeLang] || HOME_SEO.ar;
-  const jsonLd         = buildSchemas(t, routeLang);
+  const t = getStrings(lang);
+  const activeTiers = lang === 'ar' ? TIERS_AR : TIERS;
+  const seo = HOME_SEO[routeLang] || HOME_SEO.ar;
+  const jsonLd = buildSchemas(t, routeLang);
 
   // ── Effects (all browser-only work lives here — never runs during SSG) ──────
 
@@ -85,13 +84,19 @@ export default function Home({ lang: routeLang = 'ar' }) {
   // different page than it asked for — the classic way a site loses its
   // hreflang pair from the index. The preference is for the account area to
   // read once accounts exist; the public routes stay deterministic.
-  const setLanguage = (code) => {
+  const setLanguage = code => {
     setCookie(COOKIE.LOCALE, code);
     // The crawlable anchor performs native navigation to the prerendered page.
   };
 
-  const closeMenu = () => { setIsMenuOpen(false); document.body.style.overflow = ''; };
-  const openMenu  = () => { setIsMenuOpen(true);  document.body.style.overflow = 'hidden'; };
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+    document.body.style.overflow = '';
+  };
+  const openMenu = () => {
+    setIsMenuOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
 
   const handleSmoothScroll = (e, targetId) => {
     e.preventDefault();
@@ -104,14 +109,19 @@ export default function Home({ lang: routeLang = 'ar' }) {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
-
-
       <NavBar
-        t={t} lang={lang} isScrolled={isScrolled} isMenuOpen={isMenuOpen}
-        activeLink={activeLink} scrollProgress={scrollProgress}
-        LANGUAGES={LANGUAGES} account={account}
-        onOpenMenu={openMenu} onCloseMenu={closeMenu}
-        onSmoothScroll={handleSmoothScroll} onSetLanguage={setLanguage}
+        t={t}
+        lang={lang}
+        isScrolled={isScrolled}
+        isMenuOpen={isMenuOpen}
+        activeLink={activeLink}
+        scrollProgress={scrollProgress}
+        LANGUAGES={LANGUAGES}
+        account={account}
+        onOpenMenu={openMenu}
+        onCloseMenu={closeMenu}
+        onSmoothScroll={handleSmoothScroll}
+        onSetLanguage={setLanguage}
       />
 
       <main id="main-content">
@@ -124,8 +134,10 @@ export default function Home({ lang: routeLang = 'ar' }) {
       </main>
 
       <Footer
-        t={t} lang={lang}
-        CALENDAR_URL={auditPath(lang)} WHATSAPP_URL={WHATSAPP_URL}
+        t={t}
+        lang={lang}
+        CALENDAR_URL={auditPath(lang)}
+        WHATSAPP_URL={WHATSAPP_URL}
         onSmoothScroll={handleSmoothScroll}
       />
 
@@ -133,12 +145,7 @@ export default function Home({ lang: routeLang = 'ar' }) {
 
       <ChatWidget t={t} lang={lang} trackEvent={trackEvent} onOpenChange={setIsChatOpen} />
 
-      <PlaybookModal
-        t={t} lang={lang}
-        open={playbook.armed}
-        onClose={playbook.dismiss}
-        trackEvent={trackEvent}
-      />
+      <PlaybookModal t={t} lang={lang} open={playbook.armed} onClose={playbook.dismiss} trackEvent={trackEvent} />
     </>
   );
 }

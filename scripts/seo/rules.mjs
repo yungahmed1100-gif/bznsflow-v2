@@ -2,9 +2,9 @@
 // checks read declaratively and nothing is a magic number.
 
 export const SEVERITY = {
-  ERROR: 'error',   // blocks the build — actively costs rankings
-  WARN: 'warn',     // should fix — measurable but not fatal
-  INFO: 'info',     // worth knowing
+  ERROR: 'error', // blocks the build — actively costs rankings
+  WARN: 'warn', // should fix — measurable but not fatal
+  INFO: 'info', // worth knowing
 };
 
 export const TITLE_MIN = 30;

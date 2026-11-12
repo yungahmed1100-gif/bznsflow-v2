@@ -9,7 +9,16 @@ test('MCP health accepts an importable public signing key', () => {
   assert.equal(validateSigningKeys({ keys: [key] }), 1);
 });
 test('MCP health refuses unusable, private or inappropriate signing keys', () => {
-  for (const keys of [[], [{}], [{ ...key, n: undefined }], [{ ...key, n: 'bad' }], [{ ...key, kid: '' }], [{ ...key, d: 'private' }], [{ ...key, use: 'enc' }], [{ ...key, key_ops: ['encrypt'] }]]) {
+  for (const keys of [
+    [],
+    [{}],
+    [{ ...key, n: undefined }],
+    [{ ...key, n: 'bad' }],
+    [{ ...key, kid: '' }],
+    [{ ...key, d: 'private' }],
+    [{ ...key, use: 'enc' }],
+    [{ ...key, key_ops: ['encrypt'] }],
+  ]) {
     assert.throws(() => validateSigningKeys({ keys }));
   }
 });

@@ -19,7 +19,9 @@ export function automationActor(workspace, accountId, agent) {
 export const isAutomation = actor => actor?.role === AUTOMATION_ROLE;
 
 /** The refusal for an automated actor calling an operation its sector does not allow; null otherwise. */
-export const automationRefusal = (actor, operation, allowed) => (isAutomation(actor) && !allowed.has(operation) ? 'automation_not_allowed' : null);
+export const automationRefusal = (actor, operation, allowed) =>
+  isAutomation(actor) && !allowed.has(operation) ? 'automation_not_allowed' : null;
 
 /** Activity details with the agent named first, e.g. "agent:hasib|rule:prep_request". */
-export const agentDetails = (actor, details) => [actor?.agent ? `agent:${actor.agent}` : '', details || ''].filter(Boolean).join('|') || undefined;
+export const agentDetails = (actor, details) =>
+  [actor?.agent ? `agent:${actor.agent}` : '', details || ''].filter(Boolean).join('|') || undefined;

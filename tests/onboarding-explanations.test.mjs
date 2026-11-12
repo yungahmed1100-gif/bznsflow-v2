@@ -21,7 +21,11 @@ test('every reason the Instagram callback may send has a banner in both language
   for (const reason of INSTAGRAM_CALLBACK_REASONS) {
     for (const lang of ['en', 'ar']) {
       const text = instagramReturnMessage('connection_failed', reason, lang);
-      assert.notEqual(text, instagramReturnMessage('connection_failed', undefined, lang), `${reason} (${lang}) has no specific message`);
+      assert.notEqual(
+        text,
+        instagramReturnMessage('connection_failed', undefined, lang),
+        `${reason} (${lang}) has no specific message`,
+      );
     }
   }
   assert.equal(instagramReturnMessage(null, 'asset_in_use', 'en'), null);
@@ -30,7 +34,11 @@ test('every reason the Instagram callback may send has a banner in both language
 });
 
 test('connection failures that used to hide behind a generic banner now say what to do', () => {
-  for (const reason of ['instagram_subscription_failed', 'instagram_provider_failed', 'instagram_provider_unavailable']) {
+  for (const reason of [
+    'instagram_subscription_failed',
+    'instagram_provider_failed',
+    'instagram_provider_unavailable',
+  ]) {
     assert.ok(INSTAGRAM_CALLBACK_REASONS.includes(reason), `${reason} reaches the setup page`);
   }
 });

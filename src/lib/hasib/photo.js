@@ -2,7 +2,9 @@
 // to storage. The server re-checks type and size when the product is saved.
 export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
-const MAX_SIDE = 1600, QUALITY = 0.85, SHRINK_ABOVE = 1.5 * 1024 * 1024;
+const MAX_SIDE = 1600,
+  QUALITY = 0.85,
+  SHRINK_ABOVE = 1.5 * 1024 * 1024;
 
 /** 'photo_type' | 'photo_size' | null for a file the owner picked. */
 export function photoProblem(file) {
@@ -15,7 +17,10 @@ export async function preparePhoto(file) {
   if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') return file;
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
-  if (scale === 1 && file.size <= SHRINK_ABOVE) { bitmap.close?.(); return file; }
+  if (scale === 1 && file.size <= SHRINK_ABOVE) {
+    bitmap.close?.();
+    return file;
+  }
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);

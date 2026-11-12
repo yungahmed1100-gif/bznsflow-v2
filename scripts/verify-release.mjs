@@ -1,6 +1,9 @@
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
-const tests = readdirSync('tests').filter(name => name.endsWith('.test.mjs')).sort().map(name => `tests/${name}`);
+const tests = readdirSync('tests')
+  .filter(name => name.endsWith('.test.mjs'))
+  .sort()
+  .map(name => `tests/${name}`);
 const checks = [
   // Fast, cheap gates first: formatting and the lint ratchet.
   ['npm', ['run', 'format:check']],
@@ -30,4 +33,6 @@ for (const [command, args] of checks) {
   const result = spawnSync(command, args, { stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status || 1);
 }
-console.log('Local release verification passed. Migration and live integration evidence are separate production gates.');
+console.log(
+  'Local release verification passed. Migration and live integration evidence are separate production gates.',
+);

@@ -12,9 +12,27 @@
 
 export const DEFAULT_TONE = 'informative';
 export const TONES = Object.freeze([
-  { id: 'sharp', en: 'Professional & sharp', ar: 'احترافية ومباشرة', descEn: 'Short, precise replies. Best for B2B and premium brands.', descAr: 'ردود قصيرة ودقيقة. مناسبة للشركات والعلامات الراقية.' },
-  { id: 'sweet', en: 'Helpful & sweet', ar: 'ودودة ولطيفة', descEn: 'Warm and friendly, with the occasional emoji.', descAr: 'دافئة وودودة مع رمز تعبيري أحياناً.' },
-  { id: 'informative', en: 'Informative & nice', ar: 'مفيدة ولطيفة', descEn: 'Clear, polite and complete. The default.', descAr: 'واضحة ومهذبة ومكتملة. الخيار الافتراضي.' },
+  {
+    id: 'sharp',
+    en: 'Professional & sharp',
+    ar: 'احترافية ومباشرة',
+    descEn: 'Short, precise replies. Best for B2B and premium brands.',
+    descAr: 'ردود قصيرة ودقيقة. مناسبة للشركات والعلامات الراقية.',
+  },
+  {
+    id: 'sweet',
+    en: 'Helpful & sweet',
+    ar: 'ودودة ولطيفة',
+    descEn: 'Warm and friendly, with the occasional emoji.',
+    descAr: 'دافئة وودودة مع رمز تعبيري أحياناً.',
+  },
+  {
+    id: 'informative',
+    en: 'Informative & nice',
+    ar: 'مفيدة ولطيفة',
+    descEn: 'Clear, polite and complete. The default.',
+    descAr: 'واضحة ومهذبة ومكتملة. الخيار الافتراضي.',
+  },
 ]);
 export const TONE_IDS = Object.freeze(TONES.map(t => t.id));
 export const toneOf = value => (TONE_IDS.includes(value) ? value : DEFAULT_TONE);
@@ -129,14 +147,19 @@ export function phrase(tone, key, lang = 'en', vars = {}) {
 }
 
 /** Who a customer can reach when Layla can't help: the bzns.md team contact. Inbox mode never advertises a legacy contact. */
-export const teamContactOf = profile => String((profile?.handoffMode === 'inbox' ? profile?.teamContact : profile?.humanContact || profile?.teamContact) || '').trim();
+export const teamContactOf = profile =>
+  String(
+    (profile?.handoffMode === 'inbox' ? profile?.teamContact : profile?.humanContact || profile?.teamContact) || '',
+  ).trim();
 /**
  * Layla is the whole front office: what she can't handle gets a polite pointer to the team,
  * and she stays on the chat. `lead` is what she says first ("Pricing decisions are made by our team.").
  */
 export function withTeamPointer(lead, profile, lang = 'en') {
   const contact = teamContactOf(profile);
-  return [lead, phrase(profile?.tone, contact ? 'contactSuffix' : 'teamLater', lang, { contact })].filter(Boolean).join(' ');
+  return [lead, phrase(profile?.tone, contact ? 'contactSuffix' : 'teamLater', lang, { contact })]
+    .filter(Boolean)
+    .join(' ');
 }
 
 /** The welcome greeting's customer slot: ", Sara" in English, " سارة" in Arabic, or nothing. */
@@ -147,7 +170,9 @@ const EMOJI = /\p{Extended_Pictographic}/u;
 export const hasEmoji = text => EMOJI.test(String(text || ''));
 /** Light emoji means at most one per message: Layla's own phrases drop theirs when another is already there. */
 export const stripEmoji = text => {
-  const plain = String(text || '').replace(/ ?\p{Extended_Pictographic}\uFE0F?/gu, '').trimEnd();
+  const plain = String(text || '')
+    .replace(/ ?\p{Extended_Pictographic}\uFE0F?/gu, '')
+    .trimEnd();
   // "…delivery or pickup 😊" keeps its full stop once the emoji is gone.
   return plain && plain !== String(text).trimEnd() && !/[.!?؟…]$/.test(plain) ? `${plain}.` : plain;
 };

@@ -1,5 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BRIEF_MAX_PHOTOS, normalizeBrief, paymentDocsProblem, websiteDomain } from '../../../../config/website-brief.js';
+import {
+  BRIEF_MAX_PHOTOS,
+  normalizeBrief,
+  paymentDocsProblem,
+  websiteDomain,
+} from '../../../../config/website-brief.js';
 import { briefAction, uploadBriefDocument, uploadBriefFile } from '../../../lib/dashboard/website-brief';
 import { W, ERRORS } from './copy';
 import { BusinessStep, ContactStep, LookStep, SiteStep, ReviewStep } from './steps';
@@ -12,16 +17,49 @@ const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
 
 // Each step's answers (for the review) and what it cannot be left without.
 const STEPS = [
-  { step: 'business', keys: ['nameEn', 'nameAr', 'about', 'services'], missing: (f) => (!f.nameEn?.trim() && !f.nameAr?.trim() ? 'nameEn' : '') },
-  { step: 'contact', keys: ['phone', 'email', 'address', 'mapUrl', 'hours', 'instagram', 'facebook', 'tiktok', 'otherSocial'], missing: f => (!f.phone?.trim() ? 'phone' : '') },
-  { step: 'look', keys: ['colors', 'style', 'fontNotes', 'references'], missing: (f, files) => (!files.logo && !f.designLogo ? 'logo' : '') },
+  {
+    step: 'business',
+    keys: ['nameEn', 'nameAr', 'about', 'services'],
+    missing: f => (!f.nameEn?.trim() && !f.nameAr?.trim() ? 'nameEn' : ''),
+  },
+  {
+    step: 'contact',
+    keys: ['phone', 'email', 'address', 'mapUrl', 'hours', 'instagram', 'facebook', 'tiktok', 'otherSocial'],
+    missing: f => (!f.phone?.trim() ? 'phone' : ''),
+  },
+  {
+    step: 'look',
+    keys: ['colors', 'style', 'fontNotes', 'references'],
+    missing: (f, files) => (!files.logo && !f.designLogo ? 'logo' : ''),
+  },
   { step: 'site', keys: ['pages', 'languages', 'notes'], missing: f => (!f.languages ? 'languages' : '') },
-  { step: 'domain', keys: ['domainChoice', 'domainAlternates', 'mailboxLocal', 'recoveryEmail'],
-    missing: f => (!websiteDomain(f.domainChoice || '') ? 'domainChoice' : !LOCAL_RE.test(f.mailboxLocal || '') ? 'mailboxLocal' : !EMAIL_RE.test(f.recoveryEmail || '') ? 'recoveryEmail' : '') },
+  {
+    step: 'domain',
+    keys: ['domainChoice', 'domainAlternates', 'mailboxLocal', 'recoveryEmail'],
+    missing: f =>
+      !websiteDomain(f.domainChoice || '')
+        ? 'domainChoice'
+        : !LOCAL_RE.test(f.mailboxLocal || '')
+          ? 'mailboxLocal'
+          : !EMAIL_RE.test(f.recoveryEmail || '')
+            ? 'recoveryEmail'
+            : '',
+  },
   // Optional Paymob onboarding: a "yes" needs a personal contact and every required document.
-  { step: 'payments', keys: ['payments', 'payContactName', 'payContactPhone'],
-    missing: (f, files) => (!f.payments ? 'payments' : f.payments !== 'yes' ? '' : !f.payContactName?.trim() ? 'payContactName'
-      : !f.payContactPhone?.trim() ? 'payContactPhone' : paymentDocsProblem(files.docs)) },
+  {
+    step: 'payments',
+    keys: ['payments', 'payContactName', 'payContactPhone'],
+    missing: (f, files) =>
+      !f.payments
+        ? 'payments'
+        : f.payments !== 'yes'
+          ? ''
+          : !f.payContactName?.trim()
+            ? 'payContactName'
+            : !f.payContactPhone?.trim()
+              ? 'payContactPhone'
+              : paymentDocsProblem(files.docs),
+  },
   { step: 'review', keys: [], missing: () => '' },
 ];
 
@@ -42,15 +80,27 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
   const [error, setError] = useState({ reason: '', field: '' });
   const heading = useRef(null);
   // The step the owner opens on (a new brief, or a draft resumed) starts the funnel.
-  useEffect(() => { captureWizardEvent('website_brief_step', { step: STEPS[step].step, index: step + 1 }); }, []);
+  useEffect(() => {
+    captureWizardEvent('website_brief_step', { step: STEPS[step].step, index: step + 1 });
+  }, []);
 
   // Editing a field ends its "from BznsBrain" note and the error it was flagged with.
   const touch = keys => {
     setPrefilled(p => p.filter(k => !keys.includes(k)));
-    setError(e => (keys.includes(e.field) || (e.field === 'logo' && keys.includes('designLogo')) ? { reason: '', field: '' } : e));
+    setError(e =>
+      keys.includes(e.field) || (e.field === 'logo' && keys.includes('designLogo')) ? { reason: '', field: '' } : e,
+    );
   };
-  const set = (key, value) => { setFields(f => ({ ...f, [key]: value })); touch([key]); setSaved(false); };
-  const setMany = patch => { setFields(f => ({ ...f, ...patch })); touch(Object.keys(patch)); setSaved(false); };
+  const set = (key, value) => {
+    setFields(f => ({ ...f, [key]: value }));
+    touch([key]);
+    setSaved(false);
+  };
+  const setMany = patch => {
+    setFields(f => ({ ...f, ...patch }));
+    touch(Object.keys(patch));
+    setSaved(false);
+  };
   const fail = (reason, field = '') => {
     setError({ reason, field });
     if (reason) captureWizardEvent('website_brief_error', { reason, field });
@@ -59,18 +109,27 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
   const form = { fields, set, setMany, error, tr, prefilled };
 
   const upload = async (kind, picked) => {
-    setBusy('upload'); fail('');
+    setBusy('upload');
+    fail('');
     try {
       for (const file of picked) {
         const id = await uploadBriefFile(csrf, kind, file);
         const preview = { id, url: window.URL.createObjectURL(file) };
-        if (kind === 'logo') { setLogo(preview); touch(['logo']); } else setPhotos(p => [...p, preview].slice(0, BRIEF_MAX_PHOTOS));
+        if (kind === 'logo') {
+          setLogo(preview);
+          touch(['logo']);
+        } else setPhotos(p => [...p, preview].slice(0, BRIEF_MAX_PHOTOS));
       }
-    } catch (e) { fail(e.reason); } finally { setBusy(''); }
+    } catch (e) {
+      fail(e.reason);
+    } finally {
+      setBusy('');
+    }
   };
   // Each document is uploaded as it is picked; the funnel counts the slot, never the file or its name.
   const uploadDocs = async (kind, picked) => {
-    setBusy(`upload:${kind}`); fail('');
+    setBusy(`upload:${kind}`);
+    fail('');
     try {
       for (const file of picked) {
         const id = await uploadBriefDocument(csrf, kind, file);
@@ -81,20 +140,46 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
     } catch (e) {
       fail(e.reason, kind);
       captureWizardEvent('website_brief_document_refused', { slot: kind, reason: e.reason || 'unknown' });
-    } finally { setBusy(''); }
+    } finally {
+      setBusy('');
+    }
   };
-  const files = { logo, photos, docs, busy, upload, removeLogo: () => setLogo(null), removePhoto: id => setPhotos(all => all.filter(p => p.id !== id)) };
+  const files = {
+    logo,
+    photos,
+    docs,
+    busy,
+    upload,
+    removeLogo: () => setLogo(null),
+    removePhoto: id => setPhotos(all => all.filter(p => p.id !== id)),
+  };
   const docSlots = { list: docs, busy, upload: uploadDocs, remove: id => setDocs(all => all.filter(d => d.id !== id)) };
   const docIds = list => list.map(d => ({ kind: d.kind, id: d.id }));
 
   const go = next => {
-    setStep(next); fail(''); requestAnimationFrame(() => heading.current?.focus());
+    setStep(next);
+    fail('');
+    requestAnimationFrame(() => heading.current?.focus());
     captureWizardEvent('website_brief_step', { step: STEPS[next].step, index: next + 1 });
   };
   const save = async next => {
     setBusy('save');
-    try { await briefAction(csrf, 'save_draft', { step: next, fields, logoId: logo?.id || null, photoIds: photos.map(p => p.id), docIds: docIds(docs) }); setSaved(true); return true; }
-    catch (e) { fail(e.reason, e.field); return false; } finally { setBusy(''); }
+    try {
+      await briefAction(csrf, 'save_draft', {
+        step: next,
+        fields,
+        logoId: logo?.id || null,
+        photoIds: photos.map(p => p.id),
+        docIds: docIds(docs),
+      });
+      setSaved(true);
+      return true;
+    } catch (e) {
+      fail(e.reason, e.field);
+      return false;
+    } finally {
+      setBusy('');
+    }
   };
   const forward = async () => {
     const missing = STEPS[step].missing(fields, files);
@@ -108,42 +193,101 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
       if (at >= 0) go(at);
       return fail(checked.reason, checked.field);
     }
-    setBusy('send'); fail('');
+    setBusy('send');
+    fail('');
     try {
-      const result = await briefAction(csrf, 'submit', { version: brief.version, fields: checked.value, logoId: logo?.id || null, photoIds: photos.map(p => p.id),
-        docIds: checked.value.payments === 'yes' ? docIds(docs) : [] });
-      captureWizardEvent('website_brief_sent', { payments: checked.value.payments || 'unanswered', documents: checked.value.payments === 'yes' ? docs.length : 0, update: brief.version > 0 });
+      const result = await briefAction(csrf, 'submit', {
+        version: brief.version,
+        fields: checked.value,
+        logoId: logo?.id || null,
+        photoIds: photos.map(p => p.id),
+        docIds: checked.value.payments === 'yes' ? docIds(docs) : [],
+      });
+      captureWizardEvent('website_brief_sent', {
+        payments: checked.value.payments || 'unanswered',
+        documents: checked.value.payments === 'yes' ? docs.length : 0,
+        update: brief.version > 0,
+      });
       onSent({ emailed: true, version: result.version });
     } catch (e) {
       if (e.reason === 'brief_email_failed') onSent({ emailed: false, version: brief.version + 1 });
       else fail(e.reason, e.field);
-    } finally { setBusy(''); }
+    } finally {
+      setBusy('');
+    }
   };
 
   const current = STEPS[step];
-  const body = current.step === 'business' ? <BusinessStep form={form} />
-    : current.step === 'contact' ? <ContactStep form={form} />
-    : current.step === 'look' ? <LookStep form={form} files={files} />
-    : current.step === 'site' ? <SiteStep form={form} />
-    : current.step === 'domain' ? <DomainStep form={form} csrf={csrf} />
-    : current.step === 'payments' ? <PaymentsStep form={form} docs={docSlots} />
-    : <ReviewStep form={form} files={files} groups={STEPS.slice(0, -1)} onEdit={go} />;
+  const body =
+    current.step === 'business' ? (
+      <BusinessStep form={form} />
+    ) : current.step === 'contact' ? (
+      <ContactStep form={form} />
+    ) : current.step === 'look' ? (
+      <LookStep form={form} files={files} />
+    ) : current.step === 'site' ? (
+      <SiteStep form={form} />
+    ) : current.step === 'domain' ? (
+      <DomainStep form={form} csrf={csrf} />
+    ) : current.step === 'payments' ? (
+      <PaymentsStep form={form} docs={docSlots} />
+    ) : (
+      <ReviewStep form={form} files={files} groups={STEPS.slice(0, -1)} onEdit={go} />
+    );
 
   return (
     <div className="ld-web-wizard">
       <ol className="ld-steps ld-web-steps" aria-label={tr(W.title)}>
-        {STEPS.map((x, i) => <li key={x.step} aria-current={i === step ? 'step' : undefined}><span className="ld-num">{i + 1}</span>{tr(W.steps[x.step])}</li>)}
+        {STEPS.map((x, i) => (
+          <li key={x.step} aria-current={i === step ? 'step' : undefined}>
+            <span className="ld-num">{i + 1}</span>
+            {tr(W.steps[x.step])}
+          </li>
+        ))}
       </ol>
-      <form className="ld-brief ld-web-step" noValidate onSubmit={e => { e.preventDefault(); if (current.step === 'review') submit(); else forward(); }} aria-labelledby="ld-web-step-title">
-        <p className="ld-web-step-count ld-num">{tr(W.stepOf).replace('{n}', step + 1).replace('{total}', STEPS.length)}</p>
-        <h2 id="ld-web-step-title" ref={heading} tabIndex={-1}>{tr(W.steps[current.step])}</h2>
+      <form
+        className="ld-brief ld-web-step"
+        noValidate
+        onSubmit={e => {
+          e.preventDefault();
+          if (current.step === 'review') submit();
+          else forward();
+        }}
+        aria-labelledby="ld-web-step-title"
+      >
+        <p className="ld-web-step-count ld-num">
+          {tr(W.stepOf)
+            .replace('{n}', step + 1)
+            .replace('{total}', STEPS.length)}
+        </p>
+        <h2 id="ld-web-step-title" ref={heading} tabIndex={-1}>
+          {tr(W.steps[current.step])}
+        </h2>
         {body}
-        {error.reason && <p className="ld-inline-error" role="alert">{message(error.reason)}</p>}
-        {saved && !error.reason && <p className="ld-help" role="status">{tr(W.saved)}</p>}
+        {error.reason && (
+          <p className="ld-inline-error" role="alert">
+            {message(error.reason)}
+          </p>
+        )}
+        {saved && !error.reason && (
+          <p className="ld-help" role="status">
+            {tr(W.saved)}
+          </p>
+        )}
         <div className="ld-actions ld-wizard-nav">
-          {step > 0 && <button type="button" className="ld-button" disabled={!!busy} onClick={() => go(step - 1)}>{tr(W.back)}</button>}
+          {step > 0 && (
+            <button type="button" className="ld-button" disabled={!!busy} onClick={() => go(step - 1)}>
+              {tr(W.back)}
+            </button>
+          )}
           <button type="submit" className="ld-button ld-primary" disabled={!!busy}>
-            {busy === 'save' ? tr(W.saving) : busy === 'send' ? tr(W.sending) : current.step === 'review' ? tr(brief.version ? W.update : W.send) : tr(W.next)}
+            {busy === 'save'
+              ? tr(W.saving)
+              : busy === 'send'
+                ? tr(W.sending)
+                : current.step === 'review'
+                  ? tr(brief.version ? W.update : W.send)
+                  : tr(W.next)}
           </button>
         </div>
       </form>

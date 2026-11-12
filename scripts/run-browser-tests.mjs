@@ -27,13 +27,19 @@ const SUITES = [
 ];
 
 const server = spawn(process.execPath, ['scripts/preview.mjs', '--port', String(PORT)], { stdio: 'ignore' });
-const stop = () => { if (!server.killed) server.kill(); };
+const stop = () => {
+  if (!server.killed) server.kill();
+};
 process.on('exit', stop);
 
 async function waitForServer(deadline = Date.now() + 30000) {
   while (Date.now() < deadline) {
-    try { if ((await fetch(BASE)).ok) return; } catch { /* not up yet */ }
-    await new Promise((r) => setTimeout(r, 500));
+    try {
+      if ((await fetch(BASE)).ok) return;
+    } catch {
+      /* not up yet */
+    }
+    await new Promise(r => setTimeout(r, 500));
   }
   throw new Error(`Static preview did not start on ${BASE}`);
 }

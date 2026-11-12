@@ -10,12 +10,20 @@ export const UNSENT = Object.freeze(['pending', 'cancelled', 'blocked', 'failed'
  * The contact's template sends, newest first, each with its campaign.
  * @returns {Promise<Array<{ send: object, campaign: object }>>}
  */
-export async function templateSendsFor(ctx, contactId, { since = 0, before = null, limit = 50, skip = ['pending', 'cancelled'] } = {}) {
+export async function templateSendsFor(
+  ctx,
+  contactId,
+  { since = 0, before = null, limit = 50, skip = ['pending', 'cancelled'] } = {},
+) {
   if (!contactId) return [];
-  const rows = await ctx.db.query('blueCampaignRecipients').withIndex('by_contact_at', q => {
-    const range = q.eq('contactId', contactId).gte('at', since);
-    return before ? range.lt('at', before) : range;
-  }).order('desc').take(limit);
+  const rows = await ctx.db
+    .query('blueCampaignRecipients')
+    .withIndex('by_contact_at', q => {
+      const range = q.eq('contactId', contactId).gte('at', since);
+      return before ? range.lt('at', before) : range;
+    })
+    .order('desc')
+    .take(limit);
   const campaigns = new Map();
   const sends = [];
   for (const send of rows) {
@@ -28,7 +36,8 @@ export async function templateSendsFor(ctx, contactId, { since = 0, before = nul
 }
 
 /** The text the customer received, while it is retained. */
-export const sentText = ({ send, campaign }, now) => (send.waId && send.expiresAt > now ? renderTemplate(campaign.template, send.parameters) : null);
+export const sentText = ({ send, campaign }, now) =>
+  send.waId && send.expiresAt > now ? renderTemplate(campaign.template, send.parameters) : null;
 
 /**
  * A template send that reached WhatsApp opens the contact's chat, as the WhatsApp Business app does,
@@ -37,11 +46,26 @@ export const sentText = ({ send, campaign }, now) => (send.waId && send.expiresA
 export async function openTemplateChat(ctx, send, now) {
   if (!send.waId || !send.contactId) return;
   const key = `${send.integrationId}:${send.waId}`;
-  const person = await ctx.db.query('blueConversations').withIndex('by_key', q => q.eq('key', key)).unique();
+  const person = await ctx.db
+    .query('blueConversations')
+    .withIndex('by_key', q => q.eq('key', key))
+    .unique();
   if (person) {
-    await ctx.db.patch(person._id, { updatedAt: Math.max(person.updatedAt, now), ...(person.contactId ? {} : { contactId: send.contactId }) });
+    await ctx.db.patch(person._id, {
+      updatedAt: Math.max(person.updatedAt, now),
+      ...(person.contactId ? {} : { contactId: send.contactId }),
+    });
     return;
   }
-  await ctx.db.insert('blueConversations', { key, integrationId: send.integrationId, accountId: send.accountId, number: send.waId, contactId: send.contactId,
-    lastInbound: 0, takeover: false, optout: false, updatedAt: now });
+  await ctx.db.insert('blueConversations', {
+    key,
+    integrationId: send.integrationId,
+    accountId: send.accountId,
+    number: send.waId,
+    contactId: send.contactId,
+    lastInbound: 0,
+    takeover: false,
+    optout: false,
+    updatedAt: now,
+  });
 }

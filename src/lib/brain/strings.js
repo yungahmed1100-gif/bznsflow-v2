@@ -84,7 +84,10 @@ const T = {
   optional: ['optional', 'اختياري'],
   websiteOff: ['Website reading is not available yet.', 'قراءة المواقع غير متاحة بعد.'],
   readPartial: ['Only the first part was read; the rest was too long.', 'قُرئ الجزء الأول فقط؛ الباقي طويل جداً.'],
-  readFailed: ['Layla could not read part of it. Try again in a moment.', 'تعذّر على ليلى قراءة جزء منه. حاول بعد قليل.'],
+  readFailed: [
+    'Layla could not read part of it. Try again in a moment.',
+    'تعذّر على ليلى قراءة جزء منه. حاول بعد قليل.',
+  ],
   // Review
   reviewTitle: ['Needs your review', 'بحاجة لمراجعتك'],
   reviewNone: ['Nothing to review.', 'لا شيء للمراجعة.'],
@@ -106,15 +109,18 @@ const T = {
   answer: ['Your answer', 'إجابتك'],
   addAnswer: ['Add answer', 'أضف الإجابة'],
   section: ['Goes under', 'تحت قسم'],
-  quarantined: ['This text reads like an instruction. Rewrite it in your own words to accept it.', 'هذا النص يشبه تعليمات. أعد كتابته بكلماتك لقبوله.'],
+  quarantined: [
+    'This text reads like an instruction. Rewrite it in your own words to accept it.',
+    'هذا النص يشبه تعليمات. أعد كتابته بكلماتك لقبوله.',
+  ],
   acceptedNote: ['Added to draft.', 'أُضيف إلى المسودة.'],
   // Behaviour
-  behaviourTitle: ['Layla\'s behaviour', 'طريقة تعامل ليلى'],
+  behaviourTitle: ["Layla's behaviour", 'طريقة تعامل ليلى'],
   tone: ['Style', 'الأسلوب'],
-  askName: ['Ask the customer\'s name', 'اسأل عن اسم العميل'],
+  askName: ["Ask the customer's name", 'اسأل عن اسم العميل'],
   askDetails: ['Layla asks for', 'تسأل ليلى عن'],
   appointmentPreferences: ['Preferred appointment time', 'الوقت المفضل للموعد'],
-  handoffNote: ['When to give your team\'s contact', 'متى تعطي رقم فريقك'],
+  handoffNote: ["When to give your team's contact", 'متى تعطي رقم فريقك'],
   saveBehaviour: ['Save behaviour', 'احفظ الإعدادات'],
   behaviourSaved: ['Saved.', 'تم الحفظ.'],
   // Test panel
@@ -133,31 +139,55 @@ const T = {
   noSources: ['No business data used', 'لم تُستخدم بيانات النشاط'],
   captured: ['Captured', 'ما تم تسجيله'],
   why: ['Why', 'السبب'],
-  gaveContact: ['Gave your team\'s contact', 'أعطت رقم فريقك'],
+  gaveContact: ["Gave your team's contact", 'أعطت رقم فريقك'],
   fallback: ['Safe fallback used', 'استُخدم الرد الاحتياطي'],
   appointment: ['Appointment request for reception', 'طلب موعد للاستقبال'],
   noReply: ['No reply needed', 'لا يحتاج رداً'],
   // Errors
-  err_generic: ['That did not work. Your saved data is safe. Try again.', 'لم ينجح ذلك. بياناتك المحفوظة آمنة. حاول مجدداً.'],
-  err_bzns_invalid: ['bzns.md did not pass the final check before publishing. Reload the page, fix what the bzns.md tab lists, then publish again.', 'لم يجتز ملف bzns.md الفحص الأخير قبل النشر. أعد تحميل الصفحة، وصحّح ما يظهر في تبويب bzns.md، ثم انشر مجدداً.'],
+  err_generic: [
+    'That did not work. Your saved data is safe. Try again.',
+    'لم ينجح ذلك. بياناتك المحفوظة آمنة. حاول مجدداً.',
+  ],
+  err_bzns_invalid: [
+    'bzns.md did not pass the final check before publishing. Reload the page, fix what the bzns.md tab lists, then publish again.',
+    'لم يجتز ملف bzns.md الفحص الأخير قبل النشر. أعد تحميل الصفحة، وصحّح ما يظهر في تبويب bzns.md، ثم انشر مجدداً.',
+  ],
   err_manager_required: ['Only the business manager can change this.', 'يمكن لمدير النشاط فقط تغيير هذا.'],
-  err_bzns_conflict: ['bzns.md changed in another tab. Reload before saving.', 'تغيّر bzns.md في نافذة أخرى. أعد التحميل قبل الحفظ.'],
-  err_behaviour_conflict: ['These settings changed in another tab. Reload before saving.', 'تغيّرت هذه الإعدادات في نافذة أخرى. أعد التحميل قبل الحفظ.'],
+  err_bzns_conflict: [
+    'bzns.md changed in another tab. Reload before saving.',
+    'تغيّر bzns.md في نافذة أخرى. أعد التحميل قبل الحفظ.',
+  ],
+  err_behaviour_conflict: [
+    'These settings changed in another tab. Reload before saving.',
+    'تغيّرت هذه الإعدادات في نافذة أخرى. أعد التحميل قبل الحفظ.',
+  ],
   err_price_in_section: ['Prices belong in the Catalog, not bzns.md.', 'الأسعار مكانها الكتالوج وليس bzns.md.'],
   err_handoff_note_money: ['Prices belong in the Catalog, not here.', 'الأسعار مكانها الكتالوج وليس هنا.'],
-  err_instruction_like: ['That reads like an instruction to an assistant. Write the fact itself.', 'هذا يشبه تعليمات لمساعد. اكتب المعلومة نفسها.'],
+  err_instruction_like: [
+    'That reads like an instruction to an assistant. Write the fact itself.',
+    'هذا يشبه تعليمات لمساعد. اكتب المعلومة نفسها.',
+  ],
   err_answer_required: ['Write the answer first.', 'اكتب الإجابة أولاً.'],
-  err_too_many: ['Layla has read a lot in the last hour. Try again later.', 'قرأت ليلى الكثير في الساعة الماضية. حاول لاحقاً.'],
+  err_too_many: [
+    'Layla has read a lot in the last hour. Try again later.',
+    'قرأت ليلى الكثير في الساعة الماضية. حاول لاحقاً.',
+  ],
   err_invalid_catalog_entry: ['Check the name and price, then save again.', 'تحقق من الاسم والسعر ثم احفظ مجدداً.'],
   err_catalog_limit: ['The catalog holds up to 1,000 items.', 'يتسع الكتالوج لألف عنصر كحد أقصى.'],
-  err_bzns_too_long: ['bzns.md is too long. Shorten it before adding more.', 'ملف bzns.md طويل جداً. اختصره قبل الإضافة.'],
-  err_website_url_invalid: ['That website address does not work. Check it and try again.', 'عنوان الموقع غير صالح. تحقق منه وحاول مجدداً.'],
+  err_bzns_too_long: [
+    'bzns.md is too long. Shorten it before adding more.',
+    'ملف bzns.md طويل جداً. اختصره قبل الإضافة.',
+  ],
+  err_website_url_invalid: [
+    'That website address does not work. Check it and try again.',
+    'عنوان الموقع غير صالح. تحقق منه وحاول مجدداً.',
+  ],
 };
 
 /** @param {'en'|'ar'} lang */
 export function brainStrings(lang = 'en') {
   const i = lang === 'ar' ? 1 : 0;
-  const t = (key, vars = {}) => String(T[key]?.[i] ?? key).replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? `{${k}}`));
+  const t = (key, vars = {}) => String(T[key]?.[i] ?? key).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
   const reason = code => (T[`err_${code}`] ? t(`err_${code}`) : t('err_generic'));
   return { lang, ar: lang === 'ar', t, reason };
 }

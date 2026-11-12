@@ -9,7 +9,9 @@ import { followPage } from '../lib/posthog';
 export function RootLayout() {
   const { pathname } = useLocation();
   const privateOwnerPage = /^\/(?:en\/)?(?:owner|layla|catalyst|reviewer|mcp)(?:\/|$)/.test(pathname);
-  useEffect(() => { followPage(pathname); }, [pathname]);
+  useEffect(() => {
+    followPage(pathname);
+  }, [pathname]);
   useEffect(() => {
     if (privateOwnerPage) return;
     // Schedule marketing only after hydration; the injected loader waits for idle time.

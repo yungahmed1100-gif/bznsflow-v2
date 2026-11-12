@@ -1,85 +1,81 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
-import { blueHarness, seedTenant } from "./helpers/blue-tenant.mjs";
-import { manage, prepare, admit, recordMetric, requestStatus } from "../convex/mcp/state.js";
-import { executeApplication } from "../convex/mcp/application.js";
-import { connectionOwner, mcpEffectAllowed } from "../convex/mcp/access.js";
-import { TOOLS, toolsFor } from "../config/mcp/contracts.js";
-import { HASIB_OPERATIONS } from "../convex/hasib/hasibState.js";
-import { HASIB_POLICY } from "../config/mcp/hasib-policy.js";
-import { valid } from "../config/mcp/validation.js";
-process.env.MCP_ENABLED = "true";
-process.env.CONVEX_SERVICE_SECRET = "9".repeat(64);
-async function fixture(plan = "ascend") {
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { blueHarness, seedTenant } from './helpers/blue-tenant.mjs';
+import { manage, prepare, admit, recordMetric, requestStatus } from '../convex/mcp/state.js';
+import { executeApplication } from '../convex/mcp/application.js';
+import { connectionOwner, mcpEffectAllowed } from '../convex/mcp/access.js';
+import { TOOLS, toolsFor } from '../config/mcp/contracts.js';
+import { HASIB_OPERATIONS } from '../convex/hasib/hasibState.js';
+import { HASIB_POLICY } from '../config/mcp/hasib-policy.js';
+import { valid } from '../config/mcp/validation.js';
+process.env.MCP_ENABLED = 'true';
+process.env.CONVEX_SERVICE_SECRET = '9'.repeat(64);
+async function fixture(plan = 'ascend') {
   const h = blueHarness({ start: Date.now() }),
     { m } = h;
   await h.enable();
-  await m.db.insert("blueMessagingSettings", { key: "hasib", enabled: true });
-  const a = await seedTenant(m, { plan, sector: "Real estate" });
-  await m.db.insert("sessions", {
+  await m.db.insert('blueMessagingSettings', { key: 'hasib', enabled: true });
+  const a = await seedTenant(m, { plan, sector: 'Real estate' });
+  await m.db.insert('sessions', {
     accountId: a.accountId,
-    tokenHash: "1".repeat(64),
+    tokenHash: '1'.repeat(64),
     createdAt: m.now(),
     expiresAt: m.now() + 86400000,
   });
   const c = await manage(
     m.ctx,
     {
-      operation: "connect",
-      tokenHash: "1".repeat(64),
-      clientId: "synthetic-client",
-      clientName: "Synthetic",
-      scopes: ["workspace:read", "workspace:write"],
+      operation: 'connect',
+      tokenHash: '1'.repeat(64),
+      clientId: 'synthetic-client',
+      clientName: 'Synthetic',
+      scopes: ['workspace:read', 'workspace:write'],
     },
     m.now(),
   );
   const call = async (tool, args = {}) => {
     const p = await prepare(m.ctx, { connectionId: c.id, tool, args }, m.now());
-    if (p.status === "approval_required") return p;
+    if (p.status === 'approval_required') return p;
     return executeApplication(
       m.ctx,
       { connectionId: c.id, tool, args, runId: p.runId },
-      { workerFunction: "dispatch" },
+      { workerFunction: 'dispatch' },
       m.now(),
     );
   };
   return { ...h, a, c, call };
 }
-test("every Hasib operation has exactly one explicit policy and a closed tool schema", () => {
-  assert.deepEqual(
-    Object.keys(HASIB_POLICY).sort(),
-    [...new Set(HASIB_OPERATIONS)].sort(),
-  );
-  assert.equal(new Set(TOOLS.map((t) => t.name)).size, TOOLS.length);
+test('every Hasib operation has exactly one explicit policy and a closed tool schema', () => {
+  assert.deepEqual(Object.keys(HASIB_POLICY).sort(), [...new Set(HASIB_OPERATIONS)].sort());
+  assert.equal(new Set(TOOLS.map(t => t.name)).size, TOOLS.length);
   for (const t of TOOLS) {
     assert.equal(t.inputSchema.additionalProperties, false, t.name);
-    assert.ok(["tool", "handoff", "unavailable"].includes(t.disposition));
-    assert.ok(!valid(t.inputSchema, { accountId: "injected" }), t.name);
-    if (t.category !== "read")
-      assert.ok(t.inputSchema.required.includes("requestId"));
+    assert.ok(['tool', 'handoff', 'unavailable'].includes(t.disposition));
+    assert.ok(!valid(t.inputSchema, { accountId: 'injected' }), t.name);
+    if (t.category !== 'read') assert.ok(t.inputSchema.required.includes('requestId'));
   }
 });
-test("authenticated read, routine edit and exact approval slice reuse domain operations", async () => {
+test('authenticated read, routine edit and exact approval slice reuse domain operations', async () => {
   const { m, c, call } = await fixture();
-  const read = await call("bznsflow_business_state");
-  assert.equal(read.status, "completed");
+  const read = await call('bznsflow_business_state');
+  assert.equal(read.status, 'completed');
   assert.ok(read.result.profile);
-  const write = await call("bznsflow_dashboard_set_timezone", {
+  const write = await call('bznsflow_dashboard_set_timezone', {
     requestId: randomUUID(),
-    timezone: "Asia/Muscat",
+    timezone: 'Asia/Muscat',
   });
-  assert.equal(write.status, "completed");
+  assert.equal(write.status, 'completed');
   const args = { requestId: randomUUID(), confirm: true };
-  const pending = await call("bznsflow_messaging_pause", args);
-  assert.equal(pending.status, "approval_required");
+  const pending = await call('bznsflow_messaging_pause', args);
+  assert.equal(pending.status, 'approval_required');
   await assert.rejects(
     () =>
       executeApplication(
         m.ctx,
         {
           connectionId: c.id,
-          tool: "bznsflow_messaging_pause",
+          tool: 'bznsflow_messaging_pause',
           runId: pending.runId,
         },
         {},
@@ -90,59 +86,47 @@ test("authenticated read, routine edit and exact approval slice reuse domain ope
   await manage(
     m.ctx,
     {
-      operation: "approve",
-      tokenHash: "1".repeat(64),
+      operation: 'approve',
+      tokenHash: '1'.repeat(64),
       connectionId: c.id,
       runId: pending.runId,
     },
     m.now(),
   );
-  const done = await call("bznsflow_messaging_pause", args);
-  assert.equal(done.status, "completed");
-  const again = await call("bznsflow_messaging_pause", args);
+  const done = await call('bznsflow_messaging_pause', args);
+  assert.equal(done.status, 'completed');
+  const again = await call('bznsflow_messaging_pause', args);
   assert.equal(again.replay, true);
   assert.deepEqual(done.result, again.result);
-  await assert.rejects(
-    () => call("bznsflow_messaging_pause", { ...args, confirm: false }),
-    /idempotency_conflict/,
-  );
+  await assert.rejects(() => call('bznsflow_messaging_pause', { ...args, confirm: false }), /idempotency_conflict/);
 });
-test("one tool call is one activity row, with its duration", async () => {
+test('one tool call is one activity row, with its duration', async () => {
   const { m, c, call } = await fixture();
-  const list = async () =>
-    (
-      await manage(
-        m.ctx,
-        { operation: "list", tokenHash: "1".repeat(64) },
-        m.now(),
-      )
-    ).activity;
+  const list = async () => (await manage(m.ctx, { operation: 'list', tokenHash: '1'.repeat(64) }, m.now())).activity;
   const before = (await list()).length;
-  await call("bznsflow_dashboard_overview");
+  await call('bznsflow_dashboard_overview');
   // The API's metric arrives after the call returns.
   await recordMetric(
     m.ctx,
     {
       connectionId: c.id,
-      tool: "bznsflow_dashboard_overview",
-      status: "completed",
+      tool: 'bznsflow_dashboard_overview',
+      status: 'completed',
       durationMs: 840,
     },
     m.now(),
   );
-  const rows = (await list()).filter(
-    (r) => r.tool === "bznsflow_dashboard_overview",
-  );
+  const rows = (await list()).filter(r => r.tool === 'bznsflow_dashboard_overview');
   assert.equal(rows.length, 1);
-  assert.equal(rows[0].status, "completed");
+  assert.equal(rows[0].status, 'completed');
   assert.equal(rows[0].durationMs, 840);
   // A call refused before it ran still leaves one row.
   await recordMetric(
     m.ctx,
     {
       connectionId: c.id,
-      tool: "bznsflow_dashboard_conversations",
-      status: "tool_not_allowed",
+      tool: 'bznsflow_dashboard_conversations',
+      status: 'tool_not_allowed',
       durationMs: 12,
     },
     m.now(),
@@ -152,110 +136,81 @@ test("one tool call is one activity row, with its duration", async () => {
   const legacy = {
     accountId: rows[0].accountId,
     connectionId: c.id,
-    tool: "bznsflow_dashboard_contacts",
-    status: "completed",
+    tool: 'bznsflow_dashboard_contacts',
+    status: 'completed',
     at: m.now(),
     expiresAt: m.now() + 86400000,
   };
-  await m.db.insert("mcpAudit", legacy);
-  await m.db.insert("mcpAudit", { ...legacy, durationMs: 900 });
+  await m.db.insert('mcpAudit', legacy);
+  await m.db.insert('mcpAudit', { ...legacy, durationMs: 900 });
   assert.equal((await list()).length, before + 3);
 });
-test("every owner with a plan can connect; no plan and the optional pilot lock refuse", async () => {
+test('every owner with a plan can connect; no plan and the optional pilot lock refuse', async () => {
   const connect = (m, extra = {}) =>
     manage(
       m.ctx,
       {
-        operation: "connect",
-        tokenHash: "1".repeat(64),
-        clientId: "synthetic-client",
-        clientName: "ChatGPT",
-        scopes: ["workspace:read"],
+        operation: 'connect',
+        tokenHash: '1'.repeat(64),
+        clientId: 'synthetic-client',
+        clientName: 'ChatGPT',
+        scopes: ['workspace:read'],
         ...extra,
       },
       m.now(),
     );
   assert.equal(process.env.MCP_PILOT_EMAIL, undefined);
-  for (const plan of ["catalyst", "ascend", "apex"]) {
+  for (const plan of ['catalyst', 'ascend', 'apex']) {
     const { m, c } = await fixture(plan);
     assert.ok(c.id, `${plan} owner connects`);
     assert.equal((await connectionOwner(m.ctx, c.id, m.now())).plan, plan);
     assert.ok((await connect(m)).id, `${plan} owner connects a second app`);
   }
-  const { m, c } = await fixture("catalyst");
-  const grant = m.table("blueAccessGrants")[0];
-  await m.db.patch(grant._id, { status: "revoked" });
+  const { m, c } = await fixture('catalyst');
+  const grant = m.table('blueAccessGrants')[0];
+  await m.db.patch(grant._id, { status: 'revoked' });
   await assert.rejects(() => connect(m), /access_required/);
-  await m.db.patch(grant._id, { status: "active" });
+  await m.db.patch(grant._id, { status: 'active' });
   // MCP_PILOT_EMAIL is only an emergency narrowing lever; it is unset in production.
-  process.env.MCP_PILOT_EMAIL = "someone-else@example.com";
+  process.env.MCP_PILOT_EMAIL = 'someone-else@example.com';
   try {
     await assert.rejects(() => connect(m), /mcp_pilot_only/);
-    await assert.rejects(
-      () => connectionOwner(m.ctx, c.id, m.now()),
-      /mcp_pilot_only/,
-    );
+    await assert.rejects(() => connectionOwner(m.ctx, c.id, m.now()), /mcp_pilot_only/);
   } finally {
     delete process.env.MCP_PILOT_EMAIL;
   }
 });
-test("employee, removed access, expired and revoked connections fail inside backend", async () => {
+test('employee, removed access, expired and revoked connections fail inside backend', async () => {
   const { m, a, c } = await fixture();
   await m.db.patch(c.id, { expiresAt: m.now() - 1 });
-  await assert.rejects(
-    () => connectionOwner(m.ctx, c.id, m.now()),
-    /connection_revoked/,
-  );
+  await assert.rejects(() => connectionOwner(m.ctx, c.id, m.now()), /connection_revoked/);
   await m.db.patch(c.id, { expiresAt: m.now() + 600000 });
-  const member = await m.db.insert("ascendWorkspaceMembers", {
+  const member = await m.db.insert('ascendWorkspaceMembers', {
     accountId: a.accountId,
-    status: "active",
+    status: 'active',
   });
-  await assert.rejects(
-    () => connectionOwner(m.ctx, c.id, m.now()),
-    /manager_required/,
-  );
+  await assert.rejects(() => connectionOwner(m.ctx, c.id, m.now()), /manager_required/);
   await m.db.delete(member);
-  const grant = m.table("blueAccessGrants")[0];
-  await m.db.patch(grant._id, { status: "revoked" });
-  await assert.rejects(
-    () => connectionOwner(m.ctx, c.id, m.now()),
-    /access_required/,
-  );
-  await m.db.patch(grant._id, { status: "active" });
-  await manage(
-    m.ctx,
-    { operation: "revoke", tokenHash: "1".repeat(64), connectionId: c.id },
-    m.now(),
-  );
-  await assert.rejects(
-    () => connectionOwner(m.ctx, c.id, m.now()),
-    /connection_revoked/,
-  );
-  assert.equal(
-    await mcpEffectAllowed(
-      m.ctx,
-      { accountId: a.accountId, mcpConnectionId: c.id },
-      m.now(),
-    ),
-    false,
-  );
-  assert.equal(
-    await mcpEffectAllowed(m.ctx, { accountId: a.accountId }, m.now()),
-    true,
-  );
+  const grant = m.table('blueAccessGrants')[0];
+  await m.db.patch(grant._id, { status: 'revoked' });
+  await assert.rejects(() => connectionOwner(m.ctx, c.id, m.now()), /access_required/);
+  await m.db.patch(grant._id, { status: 'active' });
+  await manage(m.ctx, { operation: 'revoke', tokenHash: '1'.repeat(64), connectionId: c.id }, m.now());
+  await assert.rejects(() => connectionOwner(m.ctx, c.id, m.now()), /connection_revoked/);
+  assert.equal(await mcpEffectAllowed(m.ctx, { accountId: a.accountId, mcpConnectionId: c.id }, m.now()), false);
+  assert.equal(await mcpEffectAllowed(m.ctx, { accountId: a.accountId }, m.now()), true);
 });
-test("stale and expired previews cannot be approved; foreign records denied", async () => {
+test('stale and expired previews cannot be approved; foreign records denied', async () => {
   const { m, a, c, call } = await fixture();
-  const p = await call("bznsflow_messaging_pause", { requestId: randomUUID() });
+  const p = await call('bznsflow_messaging_pause', { requestId: randomUUID() });
   await m.db.patch(a.rowId, { profileVersion: 2 });
   await assert.rejects(
     () =>
       manage(
         m.ctx,
         {
-          operation: "approve",
-          tokenHash: "1".repeat(64),
+          operation: 'approve',
+          tokenHash: '1'.repeat(64),
           connectionId: c.id,
           runId: p.runId,
         },
@@ -263,20 +218,20 @@ test("stale and expired previews cannot be approved; foreign records denied", as
       ),
     /approval_stale/,
   );
-  const other = await seedTenant(m, { name: "b" });
-  const foreign = await m.db.insert("blueContacts", {
+  const other = await seedTenant(m, { name: 'b' });
+  const foreign = await m.db.insert('blueContacts', {
     accountId: other.accountId,
   });
   await assert.rejects(
     () =>
-      call("bznsflow_dashboard_contact_delete", {
+      call('bznsflow_dashboard_contact_delete', {
         requestId: randomUUID(),
         contactId: foreign,
         confirm: true,
       }),
     /foreign_record/,
   );
-  const p2 = await call("bznsflow_messaging_pause", {
+  const p2 = await call('bznsflow_messaging_pause', {
     requestId: randomUUID(),
   });
   m.advance(16 * 60000);
@@ -285,8 +240,8 @@ test("stale and expired previews cannot be approved; foreign records denied", as
       manage(
         m.ctx,
         {
-          operation: "approve",
-          tokenHash: "1".repeat(64),
+          operation: 'approve',
+          tokenHash: '1'.repeat(64),
           connectionId: c.id,
           runId: p2.runId,
         },
@@ -295,18 +250,18 @@ test("stale and expired previews cannot be approved; foreign records denied", as
     /approval_expired/,
   );
 });
-test("permission changes need fresh account verification and invalidate pending approval", async () => {
+test('permission changes need fresh account verification and invalidate pending approval', async () => {
   const { m, c, call } = await fixture();
   const args = { requestId: randomUUID() },
-    pending = await call("bznsflow_messaging_pause", args);
+    pending = await call('bznsflow_messaging_pause', args);
   await manage(
     m.ctx,
     {
-      operation: "policy",
-      tokenHash: "1".repeat(64),
+      operation: 'policy',
+      tokenHash: '1'.repeat(64),
       connectionId: c.id,
-      direct: ["publish"],
-      scopes: ["workspace:read", "workspace:write"],
+      direct: ['publish'],
+      scopes: ['workspace:read', 'workspace:write'],
     },
     m.now(),
   );
@@ -315,8 +270,8 @@ test("permission changes need fresh account verification and invalidate pending 
       manage(
         m.ctx,
         {
-          operation: "approve",
-          tokenHash: "1".repeat(64),
+          operation: 'approve',
+          tokenHash: '1'.repeat(64),
           connectionId: c.id,
           runId: pending.runId,
         },
@@ -330,39 +285,33 @@ test("permission changes need fresh account verification and invalidate pending 
       manage(
         m.ctx,
         {
-          operation: "policy",
-          tokenHash: "1".repeat(64),
+          operation: 'policy',
+          tokenHash: '1'.repeat(64),
           connectionId: c.id,
           direct: [],
-          scopes: ["workspace:read"],
+          scopes: ['workspace:read'],
         },
         m.now(),
       ),
     /fresh_sign_in_required/,
   );
 });
-test("plan downgrade filters discovery and forbids previously available tools", async () => {
+test('plan downgrade filters discovery and forbids previously available tools', async () => {
   const { m, c } = await fixture();
   const p = await connectionOwner(m.ctx, c.id, m.now());
   assert.ok(
-    toolsFor({ ...p, scopes: p.connection.scopes }).some(
-      (t) => t.name === "bznsflow_hasib_real_estate_overview",
-    ),
+    toolsFor({ ...p, scopes: p.connection.scopes }).some(t => t.name === 'bznsflow_hasib_real_estate_overview'),
   );
-  await m.db.patch(m.table("blueAccessGrants")[0]._id, { plan: "catalyst" });
+  await m.db.patch(m.table('blueAccessGrants')[0]._id, { plan: 'catalyst' });
   const downgraded = await connectionOwner(m.ctx, c.id, m.now());
-  assert.ok(
-    !toolsFor({ ...downgraded, scopes: downgraded.connection.scopes }).some(
-      (t) => t.domain === "hasib",
-    ),
-  );
+  assert.ok(!toolsFor({ ...downgraded, scopes: downgraded.connection.scopes }).some(t => t.domain === 'hasib'));
   await assert.rejects(
     () =>
       prepare(
         m.ctx,
         {
           connectionId: c.id,
-          tool: "bznsflow_hasib_real_estate_overview",
+          tool: 'bznsflow_hasib_real_estate_overview',
           args: {},
         },
         m.now(),
@@ -370,294 +319,280 @@ test("plan downgrade filters discovery and forbids previously available tools", 
     /tool_not_allowed/,
   );
 });
-test("concurrency and call limits are durable and independent of a server instance", async () => {
+test('concurrency and call limits are durable and independent of a server instance', async () => {
   const { m, c } = await fixture();
-  for (let i = 0; i < 5; i++)
-    await admit(m.ctx, { connectionId: c.id, lease: randomUUID() }, m.now());
-  await assert.rejects(
-    () => admit(m.ctx, { connectionId: c.id, lease: randomUUID() }, m.now()),
-    /concurrency_limited/,
-  );
+  for (let i = 0; i < 5; i++) await admit(m.ctx, { connectionId: c.id, lease: randomUUID() }, m.now());
+  await assert.rejects(() => admit(m.ctx, { connectionId: c.id, lease: randomUUID() }, m.now()), /concurrency_limited/);
   m.advance(66000);
   await admit(m.ctx, { connectionId: c.id, lease: randomUUID() }, m.now());
-  const r = m.table("mcpLimits").find((r) => r.key === `connection:${c.id}`);
+  const r = m.table('mcpLimits').find(r => r.key === `connection:${c.id}`);
   await m.db.patch(r._id, { count: 120 });
-  await assert.rejects(
-    () => admit(m.ctx, { connectionId: c.id, lease: randomUUID() }, m.now()),
-    /rate_limited/,
-  );
+  await assert.rejects(() => admit(m.ctx, { connectionId: c.id, lease: randomUUID() }, m.now()), /rate_limited/);
 });
-test("connection area restrictions are enforced on discovery and execution", async () => {
+test('connection area restrictions are enforced on discovery and execution', async () => {
   const { m, c } = await fixture();
   await manage(
     m.ctx,
     {
-      operation: "policy",
-      tokenHash: "1".repeat(64),
+      operation: 'policy',
+      tokenHash: '1'.repeat(64),
       connectionId: c.id,
-      areas: ["customers"],
-      scopes: ["workspace:read", "workspace:write"],
+      areas: ['customers'],
+      scopes: ['workspace:read', 'workspace:write'],
       direct: [],
     },
     m.now(),
   );
   const p = await connectionOwner(m.ctx, c.id, m.now());
-  assert.ok(
-    !toolsFor({ ...p, scopes: p.connection.scopes }).some(
-      (t) => t.domain === "business",
-    ),
-  );
+  assert.ok(!toolsFor({ ...p, scopes: p.connection.scopes }).some(t => t.domain === 'business'));
   await assert.rejects(
-    () =>
-      prepare(
-        m.ctx,
-        { connectionId: c.id, tool: "bznsflow_business_state", args: {} },
-        m.now(),
-      ),
+    () => prepare(m.ctx, { connectionId: c.id, tool: 'bznsflow_business_state', args: {} }, m.now()),
     /tool_not_allowed/,
   );
 });
-test("knowledge draft identity is independent of MCP mutation idempotency", async () => {
-  const { m, c, call } = await fixture("catalyst");
+test('knowledge draft identity is independent of MCP mutation idempotency', async () => {
+  const { m, c, call } = await fixture('catalyst');
   const draft = {
-    requestId: "draft-1",
+    requestId: 'draft-1',
     idempotencyKey: randomUUID(),
-    sourceKey: "source-1",
-    title: "Garden access",
-    kind: "guided",
-    text: "Dogs are welcome in the garden.",
+    sourceKey: 'source-1',
+    title: 'Garden access',
+    kind: 'guided',
+    text: 'Dogs are welcome in the garden.',
     references: [],
     partial: false,
   };
-  const saved = await call("bznsflow_knowledge_save", draft);
-  assert.equal(saved.status, "completed");
+  const saved = await call('bznsflow_knowledge_save', draft);
+  assert.equal(saved.status, 'completed');
   const args = {
-    requestId: "draft-1",
+    requestId: 'draft-1',
     idempotencyKey: randomUUID(),
     version: 1,
     confirmed: true,
   };
-  const p = await call("bznsflow_knowledge_publish", args);
-  assert.equal(p.status, "approval_required");
+  const p = await call('bznsflow_knowledge_publish', args);
+  assert.equal(p.status, 'approval_required');
   await manage(
     m.ctx,
     {
-      operation: "approve",
-      tokenHash: "1".repeat(64),
+      operation: 'approve',
+      tokenHash: '1'.repeat(64),
       connectionId: c.id,
       runId: p.runId,
     },
     m.now(),
   );
-  assert.equal(
-    (await call("bznsflow_knowledge_publish", args)).status,
-    "completed",
-  );
+  assert.equal((await call('bznsflow_knowledge_publish', args)).status, 'completed');
 });
-test("CSV transfer validation, approval-required import, bounded export and expiry", async () => {
-  const { m, c, call } = await fixture("catalyst");
-  const uploaded = await call("bznsflow_files_upload_contacts", {
+test('CSV transfer validation, approval-required import, bounded export and expiry', async () => {
+  const { m, c, call } = await fixture('catalyst');
+  const uploaded = await call('bznsflow_files_upload_contacts', {
     requestId: randomUUID(),
-    content: "phone,name,country\n+96891234567,Synthetic,OM",
+    content: 'phone,name,country\n+96891234567,Synthetic,OM',
   });
-  assert.equal(uploaded.status, "completed");
+  assert.equal(uploaded.status, 'completed');
   const args = {
     requestId: randomUUID(),
     transferId: uploaded.result.transferId,
   };
-  const p = await call("bznsflow_files_import_contacts", args);
-  assert.equal(p.status, "approval_required");
+  const p = await call('bznsflow_files_import_contacts', args);
+  assert.equal(p.status, 'approval_required');
   await manage(
     m.ctx,
     {
-      operation: "approve",
-      tokenHash: "1".repeat(64),
+      operation: 'approve',
+      tokenHash: '1'.repeat(64),
       connectionId: c.id,
       runId: p.runId,
     },
     m.now(),
   );
-  const imported = await call("bznsflow_files_import_contacts", args);
-  assert.equal(imported.status, "completed");
-  assert.equal(m.table("blueContacts").length, 1);
+  const imported = await call('bznsflow_files_import_contacts', args);
+  assert.equal(imported.status, 'completed');
+  assert.equal(m.table('blueContacts').length, 1);
   const exportArgs = { requestId: randomUUID() },
-    e = await call("bznsflow_dashboard_export_contacts", exportArgs);
-  assert.equal(e.status, "approval_required");
+    e = await call('bznsflow_dashboard_export_contacts', exportArgs);
+  assert.equal(e.status, 'approval_required');
   assert.equal(e.preview.exportRecords, 1);
   await manage(
     m.ctx,
     {
-      operation: "approve",
-      tokenHash: "1".repeat(64),
+      operation: 'approve',
+      tokenHash: '1'.repeat(64),
       connectionId: c.id,
       runId: e.runId,
     },
     m.now(),
   );
-  const exported = await call("bznsflow_dashboard_export_contacts", exportArgs);
+  const exported = await call('bznsflow_dashboard_export_contacts', exportArgs);
   assert.ok(exported.result.transferId);
-  const file = await call("bznsflow_files_read", {
+  const file = await call('bznsflow_files_read', {
     transferId: exported.result.transferId,
   });
   assert.equal(file.result.data.items.length, 1);
   m.advance(16 * 60000);
   await assert.rejects(
-    () =>
-      call("bznsflow_files_read", { transferId: exported.result.transferId }),
+    () => call('bznsflow_files_read', { transferId: exported.result.transferId }),
     /transfer_expired/,
   );
   await assert.rejects(
     () =>
-      call("bznsflow_files_upload_contacts", {
+      call('bznsflow_files_upload_contacts', {
         requestId: randomUUID(),
-        content: "url,name\nhttps://127.0.0.1,secrets",
+        content: 'url,name\nhttps://127.0.0.1,secrets',
       }),
     /invalid_csv_headers/,
   );
 });
-test("manual replies retain pending delivery and revocation stops the queued provider effect", async () => {
+test('manual replies retain pending delivery and revocation stops the queued provider effect', async () => {
   const { m, c, a, call, inbound, messaging } = await fixture();
-  assert.equal(
-    (await messaging("activate", { sessionHash: a.sessionHash })).ok,
-    true,
-  );
+  assert.equal((await messaging('activate', { sessionHash: a.sessionHash })).ok, true);
   const accepted = await inbound(a, { turn: false });
   assert.equal(accepted.ok, true, JSON.stringify(accepted));
-  const person = m.table("blueConversations")[0],
+  const person = m.table('blueConversations')[0],
     args = {
       requestId: randomUUID(),
       conversationId: person._id,
-      text: "Synthetic reply",
+      text: 'Synthetic reply',
     };
-  const p = await call("bznsflow_messaging_manual_reply", args);
+  const p = await call('bznsflow_messaging_manual_reply', args);
   await manage(
     m.ctx,
     {
-      operation: "approve",
-      tokenHash: "1".repeat(64),
+      operation: 'approve',
+      tokenHash: '1'.repeat(64),
       connectionId: c.id,
       runId: p.runId,
     },
     m.now(),
   );
-  const sent = await call("bznsflow_messaging_manual_reply", args);
-  assert.equal(sent.status, "pending");
-  const message = m.table("blueMessages").find((x) => x.direction === "out");
+  const sent = await call('bznsflow_messaging_manual_reply', args);
+  assert.equal(sent.status, 'pending');
+  const message = m.table('blueMessages').find(x => x.direction === 'out');
   assert.equal(message.mcpConnectionId, c.id);
   assert.equal(message.mcpRunId, p.runId);
-  assert.equal(message.status, "queued");
+  assert.equal(message.status, 'queued');
   for (const [receipt, expected] of [
-    ["submitted", "pending"], ["sent", "pending"],
-    ["delivered", "completed"], ["read", "completed"],
-    ["failed", "failed"], ["ambiguous", "outcome_unknown"],
-    ["future_provider_state", "outcome_unknown"],
+    ['submitted', 'pending'],
+    ['sent', 'pending'],
+    ['delivered', 'completed'],
+    ['read', 'completed'],
+    ['failed', 'failed'],
+    ['ambiguous', 'outcome_unknown'],
+    ['future_provider_state', 'outcome_unknown'],
   ]) {
     await m.db.patch(message._id, { status: receipt });
-    const outcome = await call("bznsflow_requests_status", { runId: p.runId });
+    const outcome = await call('bznsflow_requests_status', { runId: p.runId });
     assert.equal(outcome.result.status, expected, receipt);
   }
-  await m.db.patch(message._id, { status: "queued" });
-  await manage(
-    m.ctx,
-    { operation: "revoke", tokenHash: "1".repeat(64), connectionId: c.id },
-    m.now(),
-  );
+  await m.db.patch(message._id, { status: 'queued' });
+  await manage(m.ctx, { operation: 'revoke', tokenHash: '1'.repeat(64), connectionId: c.id }, m.now());
   assert.equal(await mcpEffectAllowed(m.ctx, message, m.now()), false);
 });
-test("campaign receipts reflect recipient delivery rather than worker completion", async () => {
+test('campaign receipts reflect recipient delivery rather than worker completion', async () => {
   const { m, a, c } = await fixture();
-  const campaignId = await m.db.insert("blueCampaigns", {
-    accountId: a.accountId, status: "completed", recipientCount: 2,
+  const campaignId = await m.db.insert('blueCampaigns', {
+    accountId: a.accountId,
+    status: 'completed',
+    recipientCount: 2,
   });
-  const recipientIds = await Promise.all([0, 1].map(() => m.db.insert("blueCampaignRecipients", {
-    accountId: a.accountId, campaignId, status: "submitted",
-  })));
-  const runId = await m.db.insert("mcpRuns", {
-    accountId: a.accountId, connectionId: c.id,
-    tool: "bznsflow_dashboard_campaign_create", status: "pending",
-    effects: [{ id: campaignId, table: "blueCampaigns" }],
+  const recipientIds = await Promise.all(
+    [0, 1].map(() =>
+      m.db.insert('blueCampaignRecipients', {
+        accountId: a.accountId,
+        campaignId,
+        status: 'submitted',
+      }),
+    ),
+  );
+  const runId = await m.db.insert('mcpRuns', {
+    accountId: a.accountId,
+    connectionId: c.id,
+    tool: 'bznsflow_dashboard_campaign_create',
+    status: 'pending',
+    effects: [{ id: campaignId, table: 'blueCampaigns' }],
     expiresAt: m.now() + 86400000,
   });
   const principal = await connectionOwner(m.ctx, c.id, m.now());
   const status = () => requestStatus(m.ctx, principal, runId, m.now());
-  assert.equal((await status()).status, "pending", "submission is not delivery");
-  await m.db.patch(recipientIds[0], { status: "delivered" });
-  await m.db.patch(recipientIds[1], { status: "failed" });
+  assert.equal((await status()).status, 'pending', 'submission is not delivery');
+  await m.db.patch(recipientIds[0], { status: 'delivered' });
+  await m.db.patch(recipientIds[1], { status: 'failed' });
   let result = await status();
-  assert.equal(result.status, "failed", "partial delivery must expose the failure");
+  assert.equal(result.status, 'failed', 'partial delivery must expose the failure');
   assert.equal(result.effects[0].counts.delivered, 1);
   assert.equal(result.effects[0].counts.failed, 1);
-  await m.db.patch(recipientIds[1], { status: "ambiguous" });
-  assert.equal((await status()).status, "outcome_unknown");
-  await m.db.patch(recipientIds[1], { status: "read" });
-  assert.equal((await status()).status, "completed");
-  await m.db.patch(recipientIds[1], { status: "future_provider_state" });
-  assert.equal((await status()).status, "outcome_unknown", "unknown states cannot imply success");
+  await m.db.patch(recipientIds[1], { status: 'ambiguous' });
+  assert.equal((await status()).status, 'outcome_unknown');
+  await m.db.patch(recipientIds[1], { status: 'read' });
+  assert.equal((await status()).status, 'completed');
+  await m.db.patch(recipientIds[1], { status: 'future_provider_state' });
+  assert.equal((await status()).status, 'outcome_unknown', 'unknown states cannot imply success');
   await m.db.delete(recipientIds[1]);
-  assert.equal((await status()).status, "outcome_unknown", "missing delivery evidence cannot imply success");
+  assert.equal((await status()).status, 'outcome_unknown', 'missing delivery evidence cannot imply success');
   await m.db.patch(campaignId, { recipientCount: 101 });
-  assert.equal((await status()).status, "outcome_unknown", "an oversized campaign cannot use a partial receipt set");
+  assert.equal((await status()).status, 'outcome_unknown', 'an oversized campaign cannot use a partial receipt set');
 });
 for (const packId of [
-  "retail",
-  "retail-tech",
-  "dental",
-  "real-estate",
-  "construction",
-  "automotive",
-  "fitness",
-  "media",
+  'retail',
+  'retail-tech',
+  'dental',
+  'real-estate',
+  'construction',
+  'automotive',
+  'fitness',
+  'media',
 ])
   test(`${packId}: MCP owner read, approved financial write and replay`, async () => {
     const { m, c, a, call } = await fixture();
-    await m.db.insert("hasibSettings", { accountId: a.accountId, packId });
-    const read = await call("bznsflow_hasib_overview");
+    await m.db.insert('hasibSettings', { accountId: a.accountId, packId });
+    const read = await call('bznsflow_hasib_overview');
     assert.equal(read.result.pack.id, packId);
     const args = {
       requestId: randomUUID(),
-      category: "rent",
+      category: 'rent',
       amountMinor: 30000,
-      method: "bank_transfer",
+      method: 'bank_transfer',
       paidOn: new Date(m.now()).toISOString().slice(0, 10),
     };
-    const prepared = await call("bznsflow_hasib_expense_create", args);
-    assert.equal(prepared.status, "approval_required");
+    const prepared = await call('bznsflow_hasib_expense_create', args);
+    assert.equal(prepared.status, 'approval_required');
     await manage(
       m.ctx,
       {
-        operation: "approve",
-        tokenHash: "1".repeat(64),
+        operation: 'approve',
+        tokenHash: '1'.repeat(64),
         connectionId: c.id,
         runId: prepared.runId,
       },
       m.now(),
     );
-    const done = await call("bznsflow_hasib_expense_create", args);
-    assert.equal(done.status, "completed");
-    const replay = await call("bznsflow_hasib_expense_create", args);
+    const done = await call('bznsflow_hasib_expense_create', args);
+    assert.equal(done.status, 'completed');
+    const replay = await call('bznsflow_hasib_expense_create', args);
     assert.equal(replay.replay, true);
-    assert.equal(m.table("hasibExpenses").length, 1);
+    assert.equal(m.table('hasibExpenses').length, 1);
   });
 
-test("approved catalog publication is fenced against draft changes", async () => {
+test('approved catalog publication is fenced against draft changes', async () => {
   const { m, a, c, call } = await fixture();
-  const draftId = await m.db.insert("blueCatalogEntries", {
+  const draftId = await m.db.insert('blueCatalogEntries', {
     ownerKey: String(a.accountId),
-    entryKey: "item-a",
-    status: "draft",
-    nameEn: "Original",
+    entryKey: 'item-a',
+    status: 'draft',
+    nameEn: 'Original',
     sortOrder: 0,
   });
   const args = { requestId: randomUUID() },
-    p = await call("bznsflow_catalog_publish", args);
-  await m.db.patch(draftId, { nameEn: "Changed" });
+    p = await call('bznsflow_catalog_publish', args);
+  await m.db.patch(draftId, { nameEn: 'Changed' });
   await assert.rejects(
     () =>
       manage(
         m.ctx,
         {
-          operation: "approve",
-          tokenHash: "1".repeat(64),
+          operation: 'approve',
+          tokenHash: '1'.repeat(64),
           connectionId: c.id,
           runId: p.runId,
         },
@@ -666,102 +601,110 @@ test("approved catalog publication is fenced against draft changes", async () =>
     /approval_stale/,
   );
 });
-test("active employee membership can be revoked by its owner, never another workspace", async () => {
+test('active employee membership can be revoked by its owner, never another workspace', async () => {
   const { m, a, c, call } = await fixture();
-  await call("bznsflow_hasib_overview");
-  const workspace = m.table("ascendWorkspaces")[0];
-  const employee = await m.db.insert("accounts", {
-    email: "employee@example.com",
-    role: "customer",
+  await call('bznsflow_hasib_overview');
+  const workspace = m.table('ascendWorkspaces')[0];
+  const employee = await m.db.insert('accounts', {
+    email: 'employee@example.com',
+    role: 'customer',
     createdAt: m.now(),
   });
-  const memberId = await m.db.insert("ascendWorkspaceMembers", {
+  const memberId = await m.db.insert('ascendWorkspaceMembers', {
     workspaceId: workspace._id,
     accountId: employee,
-    email: "employee@example.com",
-    status: "active",
+    email: 'employee@example.com',
+    status: 'active',
     invitedAt: m.now(),
     updatedAt: m.now(),
   });
   const args = { requestId: randomUUID(), memberId },
-    p = await call("bznsflow_hasib_team_revoke", args);
-  assert.equal(p.status, "approval_required");
+    p = await call('bznsflow_hasib_team_revoke', args);
+  assert.equal(p.status, 'approval_required');
   await manage(
     m.ctx,
     {
-      operation: "approve",
-      tokenHash: "1".repeat(64),
+      operation: 'approve',
+      tokenHash: '1'.repeat(64),
       connectionId: c.id,
       runId: p.runId,
     },
     m.now(),
   );
-  assert.equal(
-    (await call("bznsflow_hasib_team_revoke", args)).status,
-    "completed",
-  );
-  assert.equal((await m.db.get(memberId)).status, "revoked");
+  assert.equal((await call('bznsflow_hasib_team_revoke', args)).status, 'completed');
+  assert.equal((await m.db.get(memberId)).status, 'revoked');
 });
-test("email campaign receipts come from delivery counts, and revoked access stops its sends", async () => {
+test('email campaign receipts come from delivery counts, and revoked access stops its sends', async () => {
   const { m, a, c } = await fixture();
-  const campaignId = await m.db.insert("emailCampaigns", {
-    accountId: a.accountId, status: "processing", recipientCount: 3, counts: { queued: 3 },
+  const campaignId = await m.db.insert('emailCampaigns', {
+    accountId: a.accountId,
+    status: 'processing',
+    recipientCount: 3,
+    counts: { queued: 3 },
     mcpConnectionId: c.id,
   });
-  const runId = await m.db.insert("mcpRuns", {
-    accountId: a.accountId, connectionId: c.id, tool: "bznsflow_email_campaign_create", status: "pending",
-    effects: [{ id: campaignId, table: "emailCampaigns" }], expiresAt: m.now() + 86400000,
+  const runId = await m.db.insert('mcpRuns', {
+    accountId: a.accountId,
+    connectionId: c.id,
+    tool: 'bznsflow_email_campaign_create',
+    status: 'pending',
+    effects: [{ id: campaignId, table: 'emailCampaigns' }],
+    expiresAt: m.now() + 86400000,
   });
   const principal = await connectionOwner(m.ctx, c.id, m.now());
   const status = () => requestStatus(m.ctx, principal, runId, m.now());
   let result = await status();
-  assert.equal(result.status, "pending");
-  assert.equal(result.effects[0].kind, "email_campaign");
+  assert.equal(result.status, 'pending');
+  assert.equal(result.effects[0].kind, 'email_campaign');
   assert.match(result.next, /not confirmed/);
-  await m.db.patch(campaignId, { status: "completed", counts: { submitted: 3 } });
-  assert.equal((await status()).status, "pending", "a finished worker is not delivery");
+  await m.db.patch(campaignId, { status: 'completed', counts: { submitted: 3 } });
+  assert.equal((await status()).status, 'pending', 'a finished worker is not delivery');
   await m.db.patch(campaignId, { counts: { delivered: 2, complained: 1 } });
-  assert.equal((await status()).status, "completed");
+  assert.equal((await status()).status, 'completed');
   await m.db.patch(campaignId, { counts: { delivered: 2, bounced: 1 } });
-  assert.equal((await status()).status, "failed", "a bounce is exposed");
+  assert.equal((await status()).status, 'failed', 'a bounce is exposed');
   await m.db.patch(campaignId, { counts: { delivered: 2 } });
-  assert.equal((await status()).status, "outcome_unknown", "missing receipts cannot imply success");
+  assert.equal((await status()).status, 'outcome_unknown', 'missing receipts cannot imply success');
   const campaign = await m.db.get(campaignId);
   assert.equal(await mcpEffectAllowed(m.ctx, campaign, m.now()), true);
-  await manage(m.ctx, { operation: "revoke", tokenHash: "1".repeat(64), connectionId: c.id }, m.now());
-  assert.equal(await mcpEffectAllowed(m.ctx, campaign, m.now()), false, "the Rasil worker blocks sends after revocation");
+  await manage(m.ctx, { operation: 'revoke', tokenHash: '1'.repeat(64), connectionId: c.id }, m.now());
+  assert.equal(
+    await mcpEffectAllowed(m.ctx, campaign, m.now()),
+    false,
+    'the Rasil worker blocks sends after revocation',
+  );
 });
-test("expired, rejected and cancelled approvals tell the assistant what to do next", async () => {
+test('expired, rejected and cancelled approvals tell the assistant what to do next', async () => {
   const { m, a, c, call } = await fixture();
   const args = { requestId: randomUUID() };
-  const waiting = await call("bznsflow_catalog_publish", args);
-  assert.equal(waiting.status, "approval_required");
+  const waiting = await call('bznsflow_catalog_publish', args);
+  assert.equal(waiting.status, 'approval_required');
   const principal = await connectionOwner(m.ctx, c.id, m.now());
   assert.match((await requestStatus(m.ctx, principal, waiting.runId, m.now())).next, /owner to approve/);
   const later = m.now() + 16 * 60000;
   const expired = await requestStatus(m.ctx, principal, waiting.runId, later);
-  assert.equal(expired.status, "approval_expired");
+  assert.equal(expired.status, 'approval_expired');
   await assert.rejects(
-    () => prepare(m.ctx, { connectionId: c.id, tool: "bznsflow_catalog_publish", args }, later),
+    () => prepare(m.ctx, { connectionId: c.id, tool: 'bznsflow_catalog_publish', args }, later),
     /approval_expired/,
   );
   const listed = await executeApplication(
     m.ctx,
-    { connectionId: c.id, tool: "bznsflow_requests_list", args: {} },
+    { connectionId: c.id, tool: 'bznsflow_requests_list', args: {} },
     {},
     later,
   );
-  const item = listed.result.items.find((i) => i.runId === waiting.runId);
-  assert.equal(item.status, "approval_expired");
-  assert.equal(item.args, undefined, "listing never returns stored arguments");
+  const item = listed.result.items.find(i => i.runId === waiting.runId);
+  assert.equal(item.status, 'approval_expired');
+  assert.equal(item.args, undefined, 'listing never returns stored arguments');
   assert.ok(a.accountId);
 });
-test("every handoff answers with its website path, including ones inside product domains", async () => {
+test('every handoff answers with its website path, including ones inside product domains', async () => {
   const { call } = await fixture();
-  for (const tool of ["bznsflow_email_domain_connect", "bznsflow_website_submit", "bznsflow_billing_checkout"]) {
+  for (const tool of ['bznsflow_email_domain_connect', 'bznsflow_website_submit', 'bznsflow_billing_checkout']) {
     const result = await call(tool);
-    assert.equal(result.status, "completed", tool);
-    assert.equal(result.result.status, "website_required", tool);
-    assert.ok(result.result.path.startsWith("/"), tool);
+    assert.equal(result.status, 'completed', tool);
+    assert.equal(result.result.status, 'website_required', tool);
+    assert.ok(result.result.path.startsWith('/'), tool);
   }
 });

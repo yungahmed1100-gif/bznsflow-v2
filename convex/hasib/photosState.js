@@ -5,28 +5,54 @@ import { ok, fail } from './shared.js';
 import { PHOTO_MAX_BYTES } from './photoBytes.js';
 
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const HOUR = 3600000, SWEEP_WINDOW = 3 * HOUR, SWEEP_BATCH = 500;
-const KEEP_UNREGISTERED = HOUR, KEEP_UNSAVED = 24 * HOUR;
+const HOUR = 3600000,
+  SWEEP_WINDOW = 3 * HOUR,
+  SWEEP_BATCH = 500;
+const KEEP_UNREGISTERED = HOUR,
+  KEEP_UNSAVED = 24 * HOUR;
 
 const storageId = (ctx, id) => (typeof id === 'string' ? ctx.db.system.normalizeId('_storage', id) : null);
 const attachedTo = async (ctx, id) => [
-  ...(await ctx.db.query('hasibItems').withIndex('by_photo', q => q.eq('photoId', id)).take(2)),
-  ...(await ctx.db.query('hasibPropertyPhotos').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
-  ...(await ctx.db.query('automotiveInspectionPhotos').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
+  ...(await ctx.db
+    .query('hasibItems')
+    .withIndex('by_photo', q => q.eq('photoId', id))
+    .take(2)),
+  ...(await ctx.db
+    .query('hasibPropertyPhotos')
+    .withIndex('by_storage', q => q.eq('storageId', id))
+    .take(2)),
+  ...(await ctx.db
+    .query('automotiveInspectionPhotos')
+    .withIndex('by_storage', q => q.eq('storageId', id))
+    .take(2)),
   // Ascend website brief uploads (convex/websiteBriefState.js) are not orphans either.
-  ...(await ctx.db.query('websiteBriefFiles').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
+  ...(await ctx.db
+    .query('websiteBriefFiles')
+    .withIndex('by_storage', q => q.eq('storageId', id))
+    .take(2)),
   // A customer's photo or voice note on their message, and a broadcast's header file, are kept by their own rules.
-  ...(await ctx.db.query('blueMessages').withIndex('by_media_storage', q => q.eq('media.storageId', id)).take(2)),
-  ...(await ctx.db.query('blueCampaignMedia').withIndex('by_storage', q => q.eq('storageId', id)).take(2)),
+  ...(await ctx.db
+    .query('blueMessages')
+    .withIndex('by_media_storage', q => q.eq('media.storageId', id))
+    .take(2)),
+  ...(await ctx.db
+    .query('blueCampaignMedia')
+    .withIndex('by_storage', q => q.eq('storageId', id))
+    .take(2)),
 ];
-const registration = (ctx, id) => ctx.db.query('hasibPhotoUploads').withIndex('by_storage', q => q.eq('storageId', id)).unique();
+const registration = (ctx, id) =>
+  ctx.db
+    .query('hasibPhotoUploads')
+    .withIndex('by_storage', q => q.eq('storageId', id))
+    .unique();
 
 /** `photo_register`: `photoCheck` is set by the HTTP route from the file's bytes, never by the client. */
 export async function registerPhoto(ctx, accountId, a, now) {
   const id = storageId(ctx, a.storageId);
   if (!id) return fail('invalid_photo');
   const [claimed, users] = [await registration(ctx, id), await attachedTo(ctx, id)];
-  if (claimed || users.length) return claimed?.accountId === accountId && !users.length ? ok({ photoId: id }) : fail('invalid_photo');
+  if (claimed || users.length)
+    return claimed?.accountId === accountId && !users.length ? ok({ photoId: id }) : fail('invalid_photo');
   if (a.photoCheck !== 'ok') {
     if (await ctx.db.system.get(id)) await ctx.storage.delete(id);
     return fail('invalid_photo');
@@ -38,7 +64,7 @@ export async function registerPhoto(ctx, accountId, a, now) {
 /** The storage id to attach, or null: an image under 5 MB this shop registered, or the product's own photo. */
 export async function checkPhoto(ctx, accountId, photoId, item) {
   const id = storageId(ctx, photoId);
-  const meta = id && await ctx.db.system.get(id);
+  const meta = id && (await ctx.db.system.get(id));
   if (!meta || !PHOTO_TYPES.includes(meta.contentType) || !(meta.size <= PHOTO_MAX_BYTES)) return null;
   if (item?.photoId === id) return id;
   const [claimed, users] = [await registration(ctx, id), await attachedTo(ctx, id)];
@@ -52,7 +78,10 @@ export async function releaseRegistration(ctx, id) {
 }
 
 async function sweepWindow(ctx, olderThan, keep) {
-  const files = await ctx.db.system.query('_storage').withIndex('by_creation_time', q => q.gt('_creationTime', olderThan - SWEEP_WINDOW).lte('_creationTime', olderThan)).take(SWEEP_BATCH);
+  const files = await ctx.db.system
+    .query('_storage')
+    .withIndex('by_creation_time', q => q.gt('_creationTime', olderThan - SWEEP_WINDOW).lte('_creationTime', olderThan))
+    .take(SWEEP_BATCH);
   let removed = 0;
   for (const f of files) {
     if ((await attachedTo(ctx, f._id)).length) continue;
@@ -70,7 +99,10 @@ async function sweepWindow(ctx, olderThan, keep) {
  * skipped run loses nothing.
  */
 export async function sweepOrphanPhotos(ctx, now) {
-  return (await sweepWindow(ctx, now - KEEP_UNREGISTERED, () => false)) + (await sweepWindow(ctx, now - KEEP_UNSAVED, () => true));
+  return (
+    (await sweepWindow(ctx, now - KEEP_UNREGISTERED, () => false)) +
+    (await sweepWindow(ctx, now - KEEP_UNSAVED, () => true))
+  );
 }
 
 export async function withPhoto(ctx, publicRow, item) {

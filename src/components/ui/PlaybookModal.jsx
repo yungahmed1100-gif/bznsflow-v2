@@ -29,7 +29,7 @@ export function PlaybookModal({ t, lang = 'ar', open, onClose, trackEvent }) {
     const panel = panelRef.current;
     panel?.querySelector(FOCUSABLE)?.focus();
 
-    const onKeyDown = (e) => {
+    const onKeyDown = e => {
       if (e.key === 'Escape') {
         onClose();
         return;
@@ -63,7 +63,7 @@ export function PlaybookModal({ t, lang = 'ar', open, onClose, trackEvent }) {
   if (!open) return null;
 
   return (
-    <div className="playbook-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="playbook-overlay" onMouseDown={e => e.target === e.currentTarget && onClose()}>
       <div
         className="playbook-card playbook-modal"
         role="dialog"

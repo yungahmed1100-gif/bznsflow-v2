@@ -17,5 +17,15 @@ if (data.integrations && !Array.isArray(data.integrations)) throw new Error('int
 const forbidden = /token|secret|pin|password|cookie|auth.?code|message.?body/i;
 const serialized = JSON.stringify(data);
 if (forbidden.test(serialized)) throw new Error('export contains a forbidden secret or message field');
-console.log(JSON.stringify({ ok: true, reviewOnly: true, accounts: data.accounts?.length ?? 0, businesses: data.businesses?.length ?? 0, integrations: data.integrations?.length ?? 0 }));
-console.log('Validated export only. Run the reviewed Convex import mutation after provisioning Blue; no Green connection was attempted.');
+console.log(
+  JSON.stringify({
+    ok: true,
+    reviewOnly: true,
+    accounts: data.accounts?.length ?? 0,
+    businesses: data.businesses?.length ?? 0,
+    integrations: data.integrations?.length ?? 0,
+  }),
+);
+console.log(
+  'Validated export only. Run the reviewed Convex import mutation after provisioning Blue; no Green connection was attempted.',
+);

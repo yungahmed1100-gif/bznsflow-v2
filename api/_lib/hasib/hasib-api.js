@@ -25,16 +25,33 @@ export async function sendTeamInvitation({ member, env, fetcher = fetch }) {
   const key = isGreenRuntime(env) ? env.RESEND_API_KEY : env.BLUE_RESEND_API_KEY;
   const from = isGreenRuntime(env) ? env.AUTH_FROM : env.BLUE_AUTH_FROM;
   if (!key || !from || !blueAccountsAvailable(env) || !member?.email) throw new PilotError('invite_send_failed', 502);
-  const response = await fetcher('https://api.resend.com/emails', { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15000), headers: {
-    Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'Idempotency-Key': `ascend-invite/${member.id}/${member.resentAt || member.invitedAt}`,
-  }, body: JSON.stringify({ from, to: [member.email], subject: 'You have been invited to join a BznsFlow team',
-    text: `You have been invited to join your team's BznsFlow dashboard. Sign in with this email at ${appUrl('/en/layla/dashboard',env)} — your invitation activates only after the email-code sign-in is verified.\n\nتمت دعوتك للانضمام إلى لوحة فريقك على BznsFlow. سجّل الدخول بهذا البريد عبر ${appUrl('/layla/dashboard',env)}، ولن تتفعّل الدعوة إلا بعد التحقق من رمز البريد.` }) });
+  const response = await fetcher('https://api.resend.com/emails', {
+    method: 'POST',
+    redirect: 'error',
+    signal: AbortSignal.timeout(15000),
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      'Idempotency-Key': `ascend-invite/${member.id}/${member.resentAt || member.invitedAt}`,
+    },
+    body: JSON.stringify({
+      from,
+      to: [member.email],
+      subject: 'You have been invited to join a BznsFlow team',
+      text: `You have been invited to join your team's BznsFlow dashboard. Sign in with this email at ${appUrl('/en/layla/dashboard', env)} — your invitation activates only after the email-code sign-in is verified.\n\nتمت دعوتك للانضمام إلى لوحة فريقك على BznsFlow. سجّل الدخول بهذا البريد عبر ${appUrl('/layla/dashboard', env)}، ولن تتفعّل الدعوة إلا بعد التحقق من رمز البريد.`,
+    }),
+  });
   const receipt = await response.json();
   if (!response.ok || typeof receipt?.id !== 'string') throw new PilotError('invite_send_failed', 502);
   return { providerId: receipt.id, status: 'submitted' };
 }
 
-export function createHasibApi({ env = process.env, fetcher = fetch, accounts = blueAuthStore({ env, fetcher }), store = hasibStore({ env, fetcher }) } = {}) {
+export function createHasibApi({
+  env = process.env,
+  fetcher = fetch,
+  accounts = blueAuthStore({ env, fetcher }),
+  store = hasibStore({ env, fetcher }),
+} = {}) {
   return async (req, res) => {
     try {
       if (!isSameSite(req, env, { write: req.method !== 'GET' })) throw new PilotError('origin', 403);
@@ -59,20 +76,26 @@ export function createHasibApi({ env = process.env, fetcher = fetch, accounts = 
       if (!verifyCsrf(req)) throw new PilotError('csrf', 403);
       const body = readBody(req);
       const action = typeof body.action === 'string' ? body.action : '';
-      if (JSON.stringify(body).length > (LIMITS[action] || DEFAULT_BODY_LIMIT)) throw new PilotError('body_too_large', 413);
+      if (JSON.stringify(body).length > (LIMITS[action] || DEFAULT_BODY_LIMIT))
+        throw new PilotError('body_too_large', 413);
       const previewIndustry = body.previewIndustry ?? url.searchParams.get('previewIndustry');
       if (previewIndustry !== null && previewIndustry !== undefined) {
         if (!isHasibFounder(account)) throw new PilotError('preview_forbidden', 403);
         return reply(hasibPreviewResponse(previewIndustry, action));
       }
       if (!sessionHash) throw new PilotError('setup_required', 409);
-      if (action === 'settings_update' && body.packId !== undefined && !isHasibFounder(account)) throw new PilotError('industry_profile_required', 409);
+      if (action === 'settings_update' && body.packId !== undefined && !isHasibFounder(account))
+        throw new PilotError('industry_profile_required', 409);
       // Dental's 24-hour text rule would trim the founder's real pilot chats: it is a preview there (2026-10-24).
-      if (action === 'settings_update' && body.packId === 'dental' && isHasibFounder(account)) throw new PilotError('founder_dental_preview_only', 409);
+      if (action === 'settings_update' && body.packId === 'dental' && isHasibFounder(account))
+        throw new PilotError('founder_dental_preview_only', 409);
       const result = await store(action, { sessionHash, actorAccountId: account.id, ...hasibArgs(action, body) });
       if (['team_invite', 'team_resend'].includes(action)) {
-        try { await sendTeamInvitation({ member: result, env, fetcher }); }
-        catch { return reply({ ...result, invitationDelivery: 'failed' }); }
+        try {
+          await sendTeamInvitation({ member: result, env, fetcher });
+        } catch {
+          return reply({ ...result, invitationDelivery: 'failed' });
+        }
         return reply({ ...result, invitationDelivery: 'sent' });
       }
       return reply(result);

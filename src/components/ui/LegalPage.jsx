@@ -18,25 +18,35 @@ function Block({ node, tables, headHtml: Head = 'h2' }) {
     <>
       <Head className={Head === 'h2' ? 'legal-h2' : 'legal-h3'}>{node.h}</Head>
 
-      {node.p?.map((text) => <p key={text}>{text}</p>)}
+      {node.p?.map(text => (
+        <p key={text}>{text}</p>
+      ))}
 
       {node.list && (
         <ul className="legal-list">
-          {node.list.map((item) => <li key={item}>{item}</li>)}
+          {node.list.map(item => (
+            <li key={item}>{item}</li>
+          ))}
         </ul>
       )}
 
       {node.table && <DataTable rows={tables[node.table]} head={tables[`${node.table}Head`]} />}
 
-      {node.p2?.map((text) => <p key={text}>{text}</p>)}
+      {node.p2?.map(text => (
+        <p key={text}>{text}</p>
+      ))}
 
       {node.links && (
         <ul className="legal-actions">
-          {node.links.map(({ href, label }) => <li key={href}><a href={href}>{label}</a></li>)}
+          {node.links.map(({ href, label }) => (
+            <li key={href}>
+              <a href={href}>{label}</a>
+            </li>
+          ))}
         </ul>
       )}
 
-      {node.sub?.map((child) => (
+      {node.sub?.map(child => (
         <Block key={child.h} node={child} tables={tables} headHtml="h3" />
       ))}
     </>
@@ -53,16 +63,26 @@ function DataTable({ rows, head }) {
     <div className="legal-table-wrap">
       <table className="legal-table">
         <thead>
-          <tr>{head.map((h) => <th key={h} scope="col">{h}</th>)}</tr>
+          <tr>
+            {head.map(h => (
+              <th key={h} scope="col">
+                {h}
+              </th>
+            ))}
+          </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {rows.map(row => (
             <tr key={row[0]}>
-              {row.map((cell, i) => (
-                i === 0
-                  ? <th key={cell} scope="row"><bdi>{cell}</bdi></th>
-                  : <td key={cell}>{cell}</td>
-              ))}
+              {row.map((cell, i) =>
+                i === 0 ? (
+                  <th key={cell} scope="row">
+                    <bdi>{cell}</bdi>
+                  </th>
+                ) : (
+                  <td key={cell}>{cell}</td>
+                ),
+              )}
             </tr>
           ))}
         </tbody>
@@ -77,8 +97,6 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
 
   return (
     <>
-
-
       <main className="legal-shell" id="main-content">
         <header className="legal-nav">
           <a className="legal-brand" href={ar ? '/' : '/en'}>
@@ -100,7 +118,7 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
           </p>
           <p className="legal-lead">{doc.lead}</p>
 
-          {doc.sections.map((section) => (
+          {doc.sections.map(section => (
             <Block key={section.h} node={section} tables={tables} />
           ))}
 
@@ -109,9 +127,13 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
               ['/contact', ar ? 'عن الشركة والتواصل' : 'Company & Contact'],
               ['/services', ar ? 'نطاق الخدمات' : 'Service Scope'],
               ['/support', ar ? 'المساعدة والدعم' : 'Help & Support'],
-            ].filter(([href]) => href !== path).map(([href, label]) => (
-              <a key={href} href={ar ? href : `/en${href}`}>{label}</a>
-            ))}
+            ]
+              .filter(([href]) => href !== path)
+              .map(([href, label]) => (
+                <a key={href} href={ar ? href : `/en${href}`}>
+                  {label}
+                </a>
+              ))}
           </nav>
 
           <nav className="legal-back" aria-label={ar ? 'السياسات' : 'Policies'}>
@@ -119,12 +141,14 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
               ['/refund', ar ? 'سياسة الاسترداد' : 'Refund Policy'],
               ['/terms', ar ? 'شروط الخدمة' : 'Terms of Service'],
               ['/privacy', ar ? 'سياسة الخصوصية' : 'Privacy Policy'],
-            ].filter(([href]) => href !== path).map(([href, label], index) => (
-              <React.Fragment key={href}>
-                {index > 0 && ' · '}
-                <a href={ar ? href : `/en${href}`}>{label}</a>
-              </React.Fragment>
-            ))}
+            ]
+              .filter(([href]) => href !== path)
+              .map(([href, label], index) => (
+                <React.Fragment key={href}>
+                  {index > 0 && ' · '}
+                  <a href={ar ? href : `/en${href}`}>{label}</a>
+                </React.Fragment>
+              ))}
           </nav>
 
           <p className="legal-back">

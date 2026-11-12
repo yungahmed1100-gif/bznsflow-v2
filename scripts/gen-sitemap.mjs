@@ -11,7 +11,7 @@ import { SITE, LOCALES, PAGES, urlFor } from '../src/routes-manifest.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(__dirname, '../public/sitemap.xml');
 
-const xmlEscape = (s) => s.replace(/&/g, '&amp;');
+const xmlEscape = s => s.replace(/&/g, '&amp;');
 
 function alternates(path) {
   const links = [

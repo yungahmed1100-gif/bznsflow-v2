@@ -36,7 +36,9 @@ html {
   font-weight: 600;
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition: background-color var(--transition), border-color var(--transition);
+  transition:
+    background-color var(--transition),
+    border-color var(--transition);
   color: var(--text-primary);
 }
 
@@ -68,7 +70,10 @@ html {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
-  transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
+  transition:
+    opacity var(--transition),
+    visibility var(--transition),
+    transform var(--transition);
   z-index: 100;
   min-width: 140px;
 }
@@ -92,7 +97,9 @@ html {
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
   text-align: start;
 }
 
@@ -131,7 +138,7 @@ html {
 
 /* Arabic is set in IBM Plex Sans Arabic — an Arabic text face, not a Latin
    one extended to cover Arabic. Leading is looser than the Latin 1.6. */
-[dir="rtl"] body {
+[dir='rtl'] body {
   font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', sans-serif;
   line-height: 1.8;
 }
@@ -143,7 +150,7 @@ html {
 /* Directional glyphs (arrows) that must point the other way in RTL.
    Applied per-icon via .icon-flip-rtl — never blanket-flip .btn svg,
    or WhatsApp/calendar/check icons would mirror too. */
-[dir="rtl"] .icon-flip-rtl {
+[dir='rtl'] .icon-flip-rtl {
   transform: scaleX(-1);
 }
 
@@ -160,7 +167,11 @@ html {
     scroll-behavior: auto !important;
   }
   /* The pipeline never cycles under reduced motion (HeroSection), and nothing slides. */
-  .pipeline-node, .pipeline-node-icon, .pipeline-arrow-fill { transition: none !important; }
+  .pipeline-node,
+  .pipeline-node-icon,
+  .pipeline-arrow-fill {
+    transition: none !important;
+  }
 }
 
 /* ============================================================
@@ -184,7 +195,7 @@ html {
   pointer-events: none;
 }
 
-[dir="rtl"] .scroll-progress {
+[dir='rtl'] .scroll-progress {
   transform-origin: right center;
 }
 

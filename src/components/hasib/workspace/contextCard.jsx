@@ -15,19 +15,39 @@ export function useWorkContext({ packId, operation, conversationId, contactId })
   const hb = useHasib();
   const [params, setParams] = useSearchParams();
   const enabled = hb?.overview?.pack?.id === packId && !hb.overview.readOnly && !!(conversationId || contactId);
-  const state = usePolling(() => hasib(operation, conversationId ? { conversationId } : { contactId }), [conversationId, contactId], { interval: 30000, enabled });
+  const state = usePolling(
+    () => hasib(operation, conversationId ? { conversationId } : { contactId }),
+    [conversationId, contactId],
+    { interval: 30000, enabled },
+  );
   if (!enabled || !state.data?.items?.length) return null;
   const from = conversationId ? { from: 'chat', chat: conversationId } : { from: 'customers' };
-  return { items: state.data.items, hb, go: extra => setParams(dashboardSearch(params, 'work', { ...extra, ...from })) };
+  return {
+    items: state.data.items,
+    hb,
+    go: extra => setParams(dashboardSearch(params, 'work', { ...extra, ...from })),
+  };
 }
 
 /** The open follow-ups a context card lists; `tones` colours the bucket where the sector does. */
 export function ContextFollowups({ followups, kindLabel, bucketLabel, tones }) {
   if (!followups.length) return null;
-  return <ul className="hb-deal-context-followups">{followups.map(f => <li key={`${f.source}:${f.id}`} data-bucket={f.bucket}>
-    {kindLabel(f)} · {tones ? <span data-tone={tones[f.bucket]}>{bucketLabel(f.bucket)}</span> : bucketLabel(f.bucket)}</li>)}</ul>;
+  return (
+    <ul className="hb-deal-context-followups">
+      {followups.map(f => (
+        <li key={`${f.source}:${f.id}`} data-bucket={f.bucket}>
+          {kindLabel(f)} ·{' '}
+          {tones ? <span data-tone={tones[f.bucket]}>{bucketLabel(f.bucket)}</span> : bucketLabel(f.bucket)}
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 /** "Follow-ups (n)" on a context card, opening Work → Follow-ups filtered to the record. */
-export const ContextFollowupsButton = ({ ar, count, onOpen }) => count > 0 ? <button type="button" className="ld-button ld-quiet" onClick={onOpen}>
-  {ar ? `المتابعات (${count})` : `Follow-ups (${count})`}</button> : null;
+export const ContextFollowupsButton = ({ ar, count, onOpen }) =>
+  count > 0 ? (
+    <button type="button" className="ld-button ld-quiet" onClick={onOpen}>
+      {ar ? `المتابعات (${count})` : `Follow-ups (${count})`}
+    </button>
+  ) : null;

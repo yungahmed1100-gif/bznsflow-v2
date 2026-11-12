@@ -26,11 +26,20 @@ return { format:1, source:'blue-owner-read-only', ownerEmail:account.email, expo
  catalog:catalog.map(r=>pick(r,['_id','entryKey','kind','status','nameEn','nameAr','category','benefitEn','benefitAr','descriptionEn','descriptionAr','availability','prices','source','confidence','laylaUseEn','laylaUseAr','revision','sortOrder','createdAt','updatedAt'])),
  exclusions:{pendingOutbound:messages.filter(r=>pending.has(r.status)).length,media:messages.filter(r=>r.media).length,authSessions:true,credentials:true,otp:true,instagram:true}
 };`;
-const result = spawnSync('npx', ['convex','run','--deployment','quaint-nightingale-675','--inline-query',query], { encoding:'utf8', maxBuffer:8*1024*1024 });
-if(result.status!==0) throw Error('Blue owner export failed; snapshot was not written');
-const data=JSON.parse(result.stdout);
-if(data.ownerEmail!=='ahmed@bznsflowai.com') throw Error('Owner mismatch');
-data.expected=Object.fromEntries(['contacts','conversations','messages','catalog'].map(k=>[k,data[k].length]));
-await mkdir(dirname(resolve(output)),{recursive:true,mode:0o700});
-await writeFile(output,JSON.stringify(data),{mode:0o600,flag:'wx'});
-console.log(JSON.stringify({counts:data.expected,excluded:data.exclusions,tombstones:data.contacts.filter(r=>r.state==='deleted').length}));
+const result = spawnSync('npx', ['convex', 'run', '--deployment', 'quaint-nightingale-675', '--inline-query', query], {
+  encoding: 'utf8',
+  maxBuffer: 8 * 1024 * 1024,
+});
+if (result.status !== 0) throw Error('Blue owner export failed; snapshot was not written');
+const data = JSON.parse(result.stdout);
+if (data.ownerEmail !== 'ahmed@bznsflowai.com') throw Error('Owner mismatch');
+data.expected = Object.fromEntries(['contacts', 'conversations', 'messages', 'catalog'].map(k => [k, data[k].length]));
+await mkdir(dirname(resolve(output)), { recursive: true, mode: 0o700 });
+await writeFile(output, JSON.stringify(data), { mode: 0o600, flag: 'wx' });
+console.log(
+  JSON.stringify({
+    counts: data.expected,
+    excluded: data.exclusions,
+    tombstones: data.contacts.filter(r => r.state === 'deleted').length,
+  }),
+);

@@ -12,7 +12,11 @@ export { ApiError as DashboardError };
 let csrfToken = '';
 async function call(surface, body, { timeout = 30000, query = {} } = {}) {
   if (hasibPreviewIndustry && !['dashboard', 'hasib'].includes(surface)) throw new ApiError('preview_read_only', 403);
-  const params = new URLSearchParams({ ...query, surface, ...(hasibPreviewIndustry ? { previewIndustry: hasibPreviewIndustry } : {}) });
+  const params = new URLSearchParams({
+    ...query,
+    surface,
+    ...(hasibPreviewIndustry ? { previewIndustry: hasibPreviewIndustry } : {}),
+  });
   const payload = await callApi(`/api/layla-meta?${params}`, { body, csrf: csrfToken, timeout });
   if (payload?.csrfToken) csrfToken = payload.csrfToken;
   return payload;
@@ -23,20 +27,31 @@ export const dashboard = (action, body = {}, options) => call('dashboard', { act
 /** Layla's existing conversational controls: activate, pause, takeover, resume, manual replies. */
 export const messaging = async (action, body = {}) => {
   // The first call only fetches a CSRF token; the channel picks whose state it reads.
-  if (!csrfToken) await call('messaging', undefined, { query: body.channel === 'instagram' ? { channel: 'instagram' } : {} });
+  if (!csrfToken)
+    await call('messaging', undefined, { query: body.channel === 'instagram' ? { channel: 'instagram' } : {} });
   return call('messaging', { action, ...body });
 };
 /** Rasil's email campaigns (Ascend): state on GET, everything else as an action. */
 export const loadRasil = () => call('rasil');
 export const rasil = (action, body = {}, options) => call('rasil', { action, ...body }, options);
-export const messagingState = (channel = 'whatsapp') => call('messaging', undefined, { query: channel === 'instagram' ? { channel } : {} });
+export const messagingState = (channel = 'whatsapp') =>
+  call('messaging', undefined, { query: channel === 'instagram' ? { channel } : {} });
 export const dashboardPath = lang => `${lang === 'ar' ? '' : '/en'}/layla/dashboard`;
 export const setupPath = (lang, next) => `${lang === 'ar' ? '' : '/en'}/catalyst/setup${next ? `?next=${next}` : ''}`;
 /** Hasib (orders, stock, payments) shares this client's session and CSRF token. */
 let hasibPreviewIndustry = '';
-export const setHasibPreviewIndustry = value => { hasibPreviewIndustry = typeof value === 'string' ? value : ''; };
-export const loadHasib = () => call('hasib', undefined, { query: hasibPreviewIndustry ? { previewIndustry: hasibPreviewIndustry } : {} });
-export const hasib = (action, body = {}, options) => call('hasib', { action, ...body, ...(hasibPreviewIndustry ? { previewIndustry: hasibPreviewIndustry } : {}) }, options);
+export const setHasibPreviewIndustry = value => {
+  hasibPreviewIndustry = typeof value === 'string' ? value : '';
+};
+export const loadHasib = () =>
+  call('hasib', undefined, { query: hasibPreviewIndustry ? { previewIndustry: hasibPreviewIndustry } : {} });
+export const hasib = (action, body = {}, options) =>
+  call(
+    'hasib',
+    { action, ...body, ...(hasibPreviewIndustry ? { previewIndustry: hasibPreviewIndustry } : {}) },
+    options,
+  );
 /** The founder's free-audit calendar (api/access-admin.js ?op=audits): a range on GET, a booking change on POST. */
-export const loadAudits = (from, to) => callApi(`/api/access-admin?${new URLSearchParams({ op: 'audits', from: String(from), to: String(to) })}`);
+export const loadAudits = (from, to) =>
+  callApi(`/api/access-admin?${new URLSearchParams({ op: 'audits', from: String(from), to: String(to) })}`);
 export const updateAudit = body => callApi('/api/access-admin?op=audits', { body, csrf: csrfToken });

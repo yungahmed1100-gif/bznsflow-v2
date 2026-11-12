@@ -33,8 +33,12 @@ export function send(res, status, payload, options = {}) {
 
 export function sendPilotError(res, error, { fallback = 'unavailable', vary } = {}) {
   const decided = error instanceof PilotError;
-  return send(res, decided ? error.status : 503,
-    { ok: false, reason: decided ? error.code : fallback }, vary ? { vary } : {});
+  return send(
+    res,
+    decided ? error.status : 503,
+    { ok: false, reason: decided ? error.code : fallback },
+    vary ? { vary } : {},
+  );
 }
 
 /**

@@ -12,7 +12,8 @@ async function setup() {
   await h.enable();
   await h.m.db.insert('blueMessagingSettings', { key: 'hasib', enabled: true });
   const a = await seedTenant(h.m, { name: 'a', sector: 'Technology & software' });
-  const hasib = (operation, args = {}) => executeHasib(h.m.ctx, { operation, sessionHash: a.sessionHash, hashSecret: SECRET, ...args }, h.m.now());
+  const hasib = (operation, args = {}) =>
+    executeHasib(h.m.ctx, { operation, sessionHash: a.sessionHash, hashSecret: SECRET, ...args }, h.m.now());
   return { h, a, hasib };
 }
 
@@ -23,7 +24,11 @@ test('Ascend and Apex include Hasib; Catalyst does not', () => {
 
 test('an Apex grant opens Hasib in its sector, like Ascend, and sets the sign-up industry', async () => {
   const { h, a, hasib } = await setup();
-  const r = await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'apex', packId: 'dental', note: 'enterprise client' }, h.m.now());
+  const r = await grantPlan(
+    h.m.ctx,
+    { email: 'a@example.com', plan: 'apex', packId: 'dental', note: 'enterprise client' },
+    h.m.now(),
+  );
   assert.equal(r.ok, true, r.reason);
   const o = (await hasib('overview')).value;
   assert.deepEqual([o.plan, o.pack.id, o.setupRequired], ['apex', 'dental', false]);
@@ -39,29 +44,60 @@ test('an account without a plan grant cannot open Hasib at all', async () => {
 
 test('granting Ascend by email with the retail pack opens Hasib directly, and Layla is untouched', async () => {
   const { h, a, hasib } = await setup();
-  const r = await grantPlan(h.m.ctx, { email: ' A@Example.com ', plan: 'ascend', packId: 'retail', note: 'owner test account' }, h.m.now());
+  const r = await grantPlan(
+    h.m.ctx,
+    { email: ' A@Example.com ', plan: 'ascend', packId: 'retail', note: 'owner test account' },
+    h.m.now(),
+  );
   assert.equal(r.ok, true, r.reason);
   const o = (await hasib('overview')).value;
   assert.equal(o.setupRequired, false);
   assert.equal(o.pack.id, 'retail');
   assert.equal(o.plan, 'ascend');
   assert.equal(h.m.table('blueReviewSessions').find(x => x._id === a.rowId).profile.sector, 'Technology & software');
-  assert.equal(h.m.table('accounts').find(x => x._id === a.accountId).industry, 'retail', 'an operator sector is also the sign-up industry');
+  assert.equal(
+    h.m.table('accounts').find(x => x._id === a.accountId).industry,
+    'retail',
+    'an operator sector is also the sign-up industry',
+  );
   // Granting again updates the verified-email record instead of duplicating.
   await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'ascend' }, h.m.now());
   assert.equal(h.m.table('blueAccessGrants').filter(e => e.email === 'a@example.com').length, 1);
   assert.equal((await hasib('overview')).value.plan, 'ascend');
-  assert.equal((await hasib('overview')).value.pack.id, 'retail', 'a later grant without a pack keeps the chosen industry');
+  assert.equal(
+    (await hasib('overview')).value.pack.id,
+    'retail',
+    'a later grant without a pack keeps the chosen industry',
+  );
 });
 
 test('grants refuse unknown accounts, plans and packs; revoking closes Hasib but keeps data', async () => {
   const { h, hasib } = await setup();
-  assert.equal((await grantPlan(h.m.ctx, { email: 'nobody@example.com', plan: 'ascend' }, h.m.now())).ok, true, 'pending email grants can precede signup');
-  assert.equal((await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'catalyst' }, h.m.now())).reason, 'invalid_plan');
-  assert.equal((await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'enterprise' }, h.m.now())).reason, 'invalid_plan');
-  assert.equal((await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'ascend', packId: 'beauty' }, h.m.now())).reason, 'pack_not_live');
+  assert.equal(
+    (await grantPlan(h.m.ctx, { email: 'nobody@example.com', plan: 'ascend' }, h.m.now())).ok,
+    true,
+    'pending email grants can precede signup',
+  );
+  assert.equal(
+    (await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'catalyst' }, h.m.now())).reason,
+    'invalid_plan',
+  );
+  assert.equal(
+    (await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'enterprise' }, h.m.now())).reason,
+    'invalid_plan',
+  );
+  assert.equal(
+    (await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'ascend', packId: 'beauty' }, h.m.now())).reason,
+    'pack_not_live',
+  );
   await grantPlan(h.m.ctx, { email: 'a@example.com', plan: 'ascend', packId: 'retail' }, h.m.now());
-  await hasib('expense_create', { requestId: '0b6f6c7e-8f4a-4d3b-9c2e-1a2b3c4d5e6f', category: 'rent', amountMinor: 1000, method: 'cash', paidOn: '2027-01-15' });
+  await hasib('expense_create', {
+    requestId: '0b6f6c7e-8f4a-4d3b-9c2e-1a2b3c4d5e6f',
+    category: 'rent',
+    amountMinor: 1000,
+    method: 'cash',
+    paidOn: '2027-01-15',
+  });
   assert.equal((await revokePlan(h.m.ctx, { email: 'a@example.com' }, h.m.now())).ok, true);
   assert.equal((await hasib('overview')).reason, 'plan_required');
   assert.equal(h.m.table('hasibExpenses').length, 1, 'revoking never deletes business records');

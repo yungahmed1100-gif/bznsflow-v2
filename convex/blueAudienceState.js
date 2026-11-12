@@ -5,26 +5,30 @@ import { catalogForFields, ensureContact, laylaSectorFor, publicContact, searchT
 import { qualificationStatus, validateFieldValue } from '../config/layla-qualification.js';
 
 export const IMPORT_BATCH_ROWS = 100;
-const ok = value => ({ ok: true, value }), fail = reason => ({ ok: false, reason });
-const text = (value, n) => typeof value === 'string' && value.length <= n && !/[\x00-\x1f\x7f]/.test(value) ? value.trim() : null;
+const ok = value => ({ ok: true, value }),
+  fail = reason => ({ ok: false, reason });
+const text = (value, n) =>
+  typeof value === 'string' && value.length <= n && !/[\x00-\x1f\x7f]/.test(value) ? value.trim() : null;
 
 // Meta's "message undeliverable": usually the number has no WhatsApp account. Meta offers no
 // way to check a number before sending, so a failed send is what teaches us.
 export const UNDELIVERABLE = 131026;
 
 /** True once WhatsApp could not deliver to this number, until the customer writes to us. */
-export const notOnWhatsApp = contact => !!contact?.undeliverableAt && !((contact.lastInboundAt || 0) > contact.undeliverableAt);
+export const notOnWhatsApp = contact =>
+  !!contact?.undeliverableAt && !((contact.lastInboundAt || 0) > contact.undeliverableAt);
 
 /** Remember an undeliverable number on its contact, so later broadcasts skip it. */
 export async function recordUndeliverable(ctx, job, errorCode, now) {
   if (errorCode !== UNDELIVERABLE || !job?.contactId) return;
   const contact = await ctx.db.get(job.contactId);
-  if (contact && contact.state === 'active' && contact.numberHash === job.numberHash) await ctx.db.patch(contact._id, { undeliverableAt: now });
+  if (contact && contact.state === 'active' && contact.numberHash === job.numberHash)
+    await ctx.db.patch(contact._id, { undeliverableAt: now });
 }
 
 /** A contact may receive a marketing template only with granted, unrevoked consent. */
 export function marketingEligibility(contact) {
-  if(contact?.channel==='instagram') return 'wrong_channel';
+  if (contact?.channel === 'instagram') return 'wrong_channel';
   if (!contact || contact.state !== 'active') return 'contact_deleted';
   if (contact.optout) return 'opted_out';
   if (notOnWhatsApp(contact)) return 'not_on_whatsapp';
@@ -35,7 +39,9 @@ export function marketingEligibility(contact) {
 
 export function validateConsent(batch, now) {
   if (!batch || batch.attested !== true) return null;
-  const source = text(batch.source, 120), purpose = text(batch.purpose, 200), date = text(batch.date, 10);
+  const source = text(batch.source, 120),
+    purpose = text(batch.purpose, 200),
+    date = text(batch.date, 10);
   if (!source || !purpose || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   const at = Date.parse(`${date}T00:00:00Z`);
   if (!Number.isFinite(at) || at > now + 86400000 || at < Date.parse('2000-01-01T00:00:00Z')) return null;
@@ -47,7 +53,13 @@ export async function executeAudience(ctx, a, now = Date.now()) {
   if (tenant.error) return fail(tenant.error);
   const { accountId, row } = tenant;
   if (a.operation !== 'import_contacts') return fail('invalid_action');
-  if (!/^[a-f0-9-]{36}$/.test(a.requestId || '') || !Array.isArray(a.rows) || !a.rows.length || a.rows.length > IMPORT_BATCH_ROWS) return fail('invalid_import');
+  if (
+    !/^[a-f0-9-]{36}$/.test(a.requestId || '') ||
+    !Array.isArray(a.rows) ||
+    !a.rows.length ||
+    a.rows.length > IMPORT_BATCH_ROWS
+  )
+    return fail('invalid_import');
   if (!['manual', 'import'].includes(a.origin)) return fail('invalid_import');
   const consent = a.consent ? validateConsent(a.consent, now) : null;
   if (a.consent && !consent) return fail('invalid_consent');
@@ -58,20 +70,48 @@ export async function executeAudience(ctx, a, now = Date.now()) {
   // One attestation per import; later pages of the same import reuse it.
   let batchId;
   if (consent) {
-    const existing = await ctx.db.query('blueConsentBatches').withIndex('by_account_request', q => q.eq('accountId', accountId).eq('requestId', a.requestId)).unique();
-    if (existing && (existing.source !== consent.source || existing.date !== consent.date || existing.purpose !== consent.purpose)) return fail('invalid_consent');
-    batchId = existing?._id || await ctx.db.insert('blueConsentBatches', { accountId, ...consent, attestedAt: now, requestId: a.requestId, count: 0 });
+    const existing = await ctx.db
+      .query('blueConsentBatches')
+      .withIndex('by_account_request', q => q.eq('accountId', accountId).eq('requestId', a.requestId))
+      .unique();
+    if (
+      existing &&
+      (existing.source !== consent.source || existing.date !== consent.date || existing.purpose !== consent.purpose)
+    )
+      return fail('invalid_consent');
+    batchId =
+      existing?._id ||
+      (await ctx.db.insert('blueConsentBatches', {
+        accountId,
+        ...consent,
+        attestedAt: now,
+        requestId: a.requestId,
+        count: 0,
+      }));
   }
 
   const summary = { created: 0, updated: 0, consentRecorded: 0, optedOutKept: 0, invalid: 0, contacts: [] };
   const seen = new Set();
   for (const input of a.rows) {
     const waId = typeof input?.waId === 'string' && /^[1-9]\d{7,14}$/.test(input.waId) ? input.waId : null;
-    if (!waId || seen.has(waId)) { summary.invalid += waId ? 0 : 1; continue; }
+    if (!waId || seen.has(waId)) {
+      summary.invalid += waId ? 0 : 1;
+      continue;
+    }
     seen.add(waId);
-    const before = await ctx.db.query('blueContacts').withIndex('by_key', q => q.eq('key', `${accountId}:${waId}`)).unique();
-    const contact = await ensureContact(ctx, { accountId, waId, sectorId, source: a.origin, now, secret: a.hashSecret,
-      countryIso: /^[A-Z]{2}$/.test(input.countryIso || '') ? input.countryIso : undefined });
+    const before = await ctx.db
+      .query('blueContacts')
+      .withIndex('by_key', q => q.eq('key', `${accountId}:${waId}`))
+      .unique();
+    const contact = await ensureContact(ctx, {
+      accountId,
+      waId,
+      sectorId,
+      source: a.origin,
+      now,
+      secret: a.hashSecret,
+      countryIso: /^[A-Z]{2}$/.test(input.countryIso || '') ? input.countryIso : undefined,
+    });
     const patch = { updatedAt: now };
     const name = text(input.name, 80);
     if (name && !contact.ownerName) patch.ownerName = name;
@@ -79,14 +119,18 @@ export async function executeAudience(ctx, a, now = Date.now()) {
       const map = new Map(contact.fields.map(f => [f.key, f]));
       for (const f of input.fields) {
         const value = validateFieldValue(sectorId, f?.key, f?.value, catalog);
-        if (value && !map.get(f.key)?.value) map.set(f.key, { key: f.key, value, source: 'owner', confidence: 1, at: now });
+        if (value && !map.get(f.key)?.value)
+          map.set(f.key, { key: f.key, value, source: 'owner', confidence: 1, at: now });
       }
       patch.fields = [...map.values()];
       patch.qualificationStatus = qualificationStatus(sectorId, patch.fields);
     }
     if (consent) {
       if (contact.optout || contact.consent.status === 'revoked') summary.optedOutKept++;
-      else { patch.consent = { status: 'granted', ...consent, attestedAt: now, batchId }; summary.consentRecorded++; }
+      else {
+        patch.consent = { status: 'granted', ...consent, attestedAt: now, batchId };
+        summary.consentRecorded++;
+      }
     }
     const next = { ...contact, ...patch };
     patch.searchText = searchTextFor(next);

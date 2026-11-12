@@ -73,9 +73,9 @@ export const PROVIDERS = {
     tokenUrl: () => 'https://oauth2.googleapis.com/token',
     jwksUrl: () => 'https://www.googleapis.com/oauth2/v3/certs',
     // Google publishes both spellings across its documents; both are legitimate.
-    checkIssuer: (iss) => iss === 'https://accounts.google.com' || iss === 'accounts.google.com',
+    checkIssuer: iss => iss === 'https://accounts.google.com' || iss === 'accounts.google.com',
     // Always present on Google ID tokens, and trustworthy.
-    isEmailVerified: (claims) => truthy(claims.email_verified),
+    isEmailVerified: claims => truthy(claims.email_verified),
     // Without this a visitor with several Google accounts is silently signed in
     // as whichever one the browser saw last, with no way to pick.
     extra: { prompt: 'select_account' },
@@ -114,7 +114,7 @@ export const PROVIDERS = {
      * The fallback exists so a missing optional claim degrades to "still safe"
      * instead of "nobody can sign in".
      */
-    isEmailVerified: (claims) => {
+    isEmailVerified: claims => {
       if (truthy(claims.xms_edov)) return true;
       const tid = String(claims?.tid || '').trim();
       return !!tid && tid !== MSA_TENANT;
@@ -132,7 +132,7 @@ export const PROVIDERS = {
     authorizeUrl: () => 'https://www.linkedin.com/oauth/v2/authorization',
     tokenUrl: () => 'https://www.linkedin.com/oauth/v2/accessToken',
     jwksUrl: () => 'https://www.linkedin.com/oauth/openid/jwks',
-    checkIssuer: (iss) => iss === 'https://www.linkedin.com/oauth' || iss === 'https://www.linkedin.com',
+    checkIssuer: iss => iss === 'https://www.linkedin.com/oauth' || iss === 'https://www.linkedin.com',
     /**
      * LinkedIn only ever returns a member's PRIMARY address, which LinkedIn
      * itself requires the member to confirm before it can hold that slot. So
@@ -142,9 +142,7 @@ export const PROVIDERS = {
      * Requiring it would reject perfectly good sign-ins. An explicit `false`
      * is still refused, which is what actually matters for account linking.
      */
-    isEmailVerified: (claims) => claims.email_verified !== false
-      && claims.email_verified !== 'false'
-      && !!claims.email,
+    isEmailVerified: claims => claims.email_verified !== false && claims.email_verified !== 'false' && !!claims.email,
     // LinkedIn implements neither. Sending them yields invalid_request.
     supportsPkce: false,
     supportsNonce: false,
@@ -166,7 +164,9 @@ function truthy(value) {
 
 /** @returns {object|null} the registry entry, or null for an unknown name. */
 export function providerFor(name) {
-  const key = String(name || '').trim().toLowerCase();
+  const key = String(name || '')
+    .trim()
+    .toLowerCase();
   return Object.prototype.hasOwnProperty.call(PROVIDERS, key) ? PROVIDERS[key] : null;
 }
 
@@ -188,7 +188,9 @@ export function isProviderEnabled(provider) {
  * button that dead-ends in a 500 because the secret was never set.
  */
 export function configuredProviders() {
-  return Object.values(PROVIDERS).filter(isProviderEnabled).map((p) => p.id);
+  return Object.values(PROVIDERS)
+    .filter(isProviderEnabled)
+    .map(p => p.id);
 }
 
 function credentials(provider) {
@@ -230,14 +232,22 @@ export function pkceChallenge(verifier) {
  *     so a forged host breaks the attacker's own flow and nobody else's.
  */
 export function redirectUriFor(req) {
-  const host = String(req?.headers?.host || '').trim().toLowerCase();
+  const host = String(req?.headers?.host || '')
+    .trim()
+    .toLowerCase();
   if (!host) throw new Error('cannot build a redirect URI: the request has no Host header');
 
   if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) return `http://${host}${CALLBACK_PATH}`;
 
-  const siteUrl = String(process.env.PUBLIC_SITE_ORIGIN || process.env.SITE_URL || 'https://www.bznsflowai.com').trim().replace(/\/+$/, '');
+  const siteUrl = String(process.env.PUBLIC_SITE_ORIGIN || process.env.SITE_URL || 'https://www.bznsflowai.com')
+    .trim()
+    .replace(/\/+$/, '');
   let siteHost = '';
-  try { siteHost = new URL(siteUrl).host.toLowerCase(); } catch { /* unset or malformed */ }
+  try {
+    siteHost = new URL(siteUrl).host.toLowerCase();
+  } catch {
+    /* unset or malformed */
+  }
 
   // Configured and disagrees with the request → trust the configuration.
   if (siteHost && host !== siteHost) return `${siteUrl}${CALLBACK_PATH}`;
@@ -281,14 +291,18 @@ export async function exchangeCode({ provider, code, verifier, redirectUri }) {
   if (provider.supportsPkce !== false && verifier) body.set('code_verifier', verifier);
 
   const label = `${provider.id} token exchange`;
-  const res = await fetchWithTimeout(provider.tokenUrl(), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
+  const res = await fetchWithTimeout(
+    provider.tokenUrl(),
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
+      body: body.toString(),
     },
-    body: body.toString(),
-  }, { label, timeoutMs: TOKEN_TIMEOUT_MS });
+    { label, timeoutMs: TOKEN_TIMEOUT_MS },
+  );
 
   if (!res.ok) throw await httpError(label, res);
   return res.json();
@@ -311,9 +325,13 @@ async function jwks(provider, { force = false } = {}) {
   if (!force && hit && Date.now() - hit.fetchedAt < JWKS_TTL_MS) return hit.keys;
 
   const label = `${provider.id} JWKS`;
-  const res = await fetchWithTimeout(provider.jwksUrl(), {
-    headers: { Accept: 'application/json' },
-  }, { label, timeoutMs: JWKS_TIMEOUT_MS });
+  const res = await fetchWithTimeout(
+    provider.jwksUrl(),
+    {
+      headers: { Accept: 'application/json' },
+    },
+    { label, timeoutMs: JWKS_TIMEOUT_MS },
+  );
 
   if (!res.ok) throw await httpError(label, res);
 
@@ -346,7 +364,9 @@ function decodeSegment(segment) {
  * @returns {Promise<object>} the verified claims
  */
 export async function verifyIdToken({ provider, idToken, nonce }) {
-  const fail = (why) => { throw new Error(`${provider.id} id_token: ${why}`); };
+  const fail = why => {
+    throw new Error(`${provider.id} id_token: ${why}`);
+  };
 
   if (typeof idToken !== 'string' || !idToken) fail('missing from the token response');
 
@@ -369,18 +389,17 @@ export async function verifyIdToken({ provider, idToken, nonce }) {
   // An unknown kid means the provider rotated its keys, so refetch once before
   // giving up. Without this, a rotation is a full outage until the cache ages.
   let keys = await jwks(provider);
-  let key = keys.find((k) => k.kid === header.kid);
+  let key = keys.find(k => k.kid === header.kid);
   if (!key) {
     keys = await jwks(provider, { force: true });
-    key = keys.find((k) => k.kid === header.kid);
+    key = keys.find(k => k.kid === header.kid);
   }
   if (!key) fail(`no signing key for kid ${header.kid}`);
 
   const verifier = createVerify(nodeAlg);
   verifier.update(`${headerB64}.${payloadB64}`);
   verifier.end();
-  if (!verifier.verify(createPublicKey({ key, format: 'jwk' }),
-    Buffer.from(signatureB64, 'base64url'))) {
+  if (!verifier.verify(createPublicKey({ key, format: 'jwk' }), Buffer.from(signatureB64, 'base64url'))) {
     fail('signature check failed');
   }
 
@@ -421,7 +440,9 @@ export function claimsToIdentity(provider, claims) {
     subject: String(claims?.sub || '').trim(),
     email: normalizeEmail(claims?.email),
     emailVerified: !!provider.isEmailVerified(claims || {}),
-    name: String(claims?.name || '').trim().slice(0, LIMITS.name),
+    name: String(claims?.name || '')
+      .trim()
+      .slice(0, LIMITS.name),
   };
 }
 
@@ -437,9 +458,13 @@ async function fetchUserinfo(provider, accessToken) {
   if (typeof provider.userinfoUrl !== 'function' || !accessToken) return {};
   const label = `${provider.id} userinfo`;
   try {
-    const res = await fetchWithTimeout(provider.userinfoUrl(), {
-      headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
-    }, { label, timeoutMs: TOKEN_TIMEOUT_MS });
+    const res = await fetchWithTimeout(
+      provider.userinfoUrl(),
+      {
+        headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
+      },
+      { label, timeoutMs: TOKEN_TIMEOUT_MS },
+    );
     if (!res.ok) {
       console.error('%s → HTTP %s', label, res.status);
       return {};

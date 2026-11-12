@@ -4,11 +4,13 @@ import { SITE, urlFor } from '../routes-manifest';
 export const HOME_SEO = {
   en: {
     title: 'Qualified inquiries on WhatsApp & Instagram | BznsFlow',
-    description: 'Catalyst: Layla answers your WhatsApp and Instagram inquiries from the facts you approve, asks your qualifying questions and hands you the chat and customer record. Free audit.',
+    description:
+      'Catalyst: Layla answers your WhatsApp and Instagram inquiries from the facts you approve, asks your qualifying questions and hands you the chat and customer record. Free audit.',
   },
   ar: {
     title: 'استفسارات مؤهلة على واتساب وإنستغرام | BznsFlow',
-    description: 'كاتاليست: ليلى ترد على استفسارات واتساب وإنستغرام من معلوماتك المعتمدة، وتسأل أسئلة التأهيل الخاصة بك، وتسلّمك المحادثة وسجل العميل. احجز التدقيق المجاني.',
+    description:
+      'كاتاليست: ليلى ترد على استفسارات واتساب وإنستغرام من معلوماتك المعتمدة، وتسأل أسئلة التأهيل الخاصة بك، وتسلّمك المحادثة وسجل العميل. احجز التدقيق المجاني.',
   },
 };
 
@@ -37,8 +39,26 @@ export function buildSchemas(t, lang) {
     foundingDate: '2024',
     areaServed: ['Oman', 'GCC'],
     knowsAbout: isAr
-      ? ['تأهيل الاستفسارات', 'أتمتة واتساب', 'أتمتة إنستغرام', 'الذكاء الاصطناعي للأعمال', 'أتمتة الأعمال', 'جذب العملاء', 'تطوير المواقع', 'نظام CRM']
-      : ['inquiry qualification', 'WhatsApp automation', 'Instagram automation', 'AI for business', 'business automation', 'customer acquisition', 'web development', 'CRM'],
+      ? [
+          'تأهيل الاستفسارات',
+          'أتمتة واتساب',
+          'أتمتة إنستغرام',
+          'الذكاء الاصطناعي للأعمال',
+          'أتمتة الأعمال',
+          'جذب العملاء',
+          'تطوير المواقع',
+          'نظام CRM',
+        ]
+      : [
+          'inquiry qualification',
+          'WhatsApp automation',
+          'Instagram automation',
+          'AI for business',
+          'business automation',
+          'customer acquisition',
+          'web development',
+          'CRM',
+        ],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
@@ -81,7 +101,9 @@ export function buildSchemas(t, lang) {
     '@type': 'SoftwareApplication',
     name: 'BznsFlow',
     applicationCategory: 'BusinessApplication',
-    applicationSubCategory: isAr ? 'تأهيل الاستفسارات على واتساب وإنستغرام' : 'Inquiry qualification on WhatsApp and Instagram',
+    applicationSubCategory: isAr
+      ? 'تأهيل الاستفسارات على واتساب وإنستغرام'
+      : 'Inquiry qualification on WhatsApp and Instagram',
     operatingSystem: 'Web, WhatsApp, Instagram',
     url: SITE,
     description: isAr
@@ -107,7 +129,9 @@ export function buildSchemas(t, lang) {
     '@type': 'Service',
     '@id': `${SITE}/#catalyst`,
     name: isAr ? 'كاتاليست' : 'Catalyst',
-    serviceType: isAr ? 'تأهيل الاستفسارات على واتساب وإنستغرام' : 'Inquiry answering and qualification on WhatsApp and Instagram',
+    serviceType: isAr
+      ? 'تأهيل الاستفسارات على واتساب وإنستغرام'
+      : 'Inquiry answering and qualification on WhatsApp and Instagram',
     description: isAr
       ? 'ليلى ترد على الاستفسارات من معلومات النشاط المعتمدة، وتسأل أسئلة التأهيل المحددة، وتسلّم صاحب العمل المحادثة وسجل العميل.'
       : 'Layla answers inquiries from approved business facts, asks configured qualifying questions and hands the owner the conversation and customer record.',
@@ -146,16 +170,18 @@ export function buildSchemas(t, lang) {
 // Reuse visible page content; do not infer a registered address or legal entity.
 export function buildBusinessPageSchema(page, path, lang, updated) {
   const url = urlFor(path, lang);
-  return [{
-    '@context': 'https://schema.org',
-    '@type': path === '/contact' ? 'ContactPage' : 'WebPage',
-    '@id': `${url}#webpage`,
-    url,
-    name: page.title,
-    description: page.description,
-    inLanguage: lang,
-    dateModified: updated,
-    isPartOf: { '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'BznsFlow', url: SITE },
-    about: { '@type': 'Organization', '@id': `${SITE}/#organization`, name: 'BznsFlow', url: SITE },
-  }];
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': path === '/contact' ? 'ContactPage' : 'WebPage',
+      '@id': `${url}#webpage`,
+      url,
+      name: page.title,
+      description: page.description,
+      inLanguage: lang,
+      dateModified: updated,
+      isPartOf: { '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'BznsFlow', url: SITE },
+      about: { '@type': 'Organization', '@id': `${SITE}/#organization`, name: 'BznsFlow', url: SITE },
+    },
+  ];
 }

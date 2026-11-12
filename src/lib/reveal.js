@@ -11,8 +11,7 @@ const STAGGER_MS = 60;
 const VIEWPORT = { rootMargin: '0px 0px -10% 0px', threshold: 0.1 };
 
 const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function show(el) {
   el.classList.add('is-visible');
@@ -32,21 +31,22 @@ export function initReveals(root = document) {
     return () => {};
   }
 
-  const io = new IntersectionObserver((entries) => {
-    const entering = entries.filter((e) => e.isIntersecting);
+  const io = new IntersectionObserver(entries => {
+    const entering = entries.filter(e => e.isIntersecting);
     entering.forEach(({ target }, i) => {
       target.style.transitionDelay = `${i * STAGGER_MS}ms`;
       target.addEventListener(
         'transitionend',
-        () => { target.style.transitionDelay = ''; },
-        { once: true }
+        () => {
+          target.style.transitionDelay = '';
+        },
+        { once: true },
       );
       show(target);
       io.unobserve(target);
     });
   }, VIEWPORT);
 
-  els.forEach((el) => io.observe(el));
+  els.forEach(el => io.observe(el));
   return () => io.disconnect();
 }
-

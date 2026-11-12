@@ -17,7 +17,7 @@
    Kept: it is texture, not blur, and it is what stops a flat cream field
    from looking like an unstyled background. */
 .grain::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -30,8 +30,13 @@
 
 /* Layering only — keep the overlay layer ABSOLUTE (out of flow) so it does
    not become a flex item and push the content sideways. */
-.hero .hero-content { position: relative; z-index: 3; }
-.hero .hero-overlay { z-index: 2; }
+.hero .hero-content {
+  position: relative;
+  z-index: 3;
+}
+.hero .hero-overlay {
+  z-index: 2;
+}
 
 /* ---- Chip hover-pop (track verticals + industry chips) ---- */
 

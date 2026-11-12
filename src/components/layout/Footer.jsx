@@ -9,13 +9,19 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
         <div className="container">
           <div className="footer-grid">
             <div className="footer-brand">
-              <a href="#hero" className="nav-brand footer-nav-brand" onClick={(e) => onSmoothScroll(e, '#hero')}>
+              <a href="#hero" className="nav-brand footer-nav-brand" onClick={e => onSmoothScroll(e, '#hero')}>
                 <span className="brand-name">BznsFlow</span>
                 <span className="brand-tagline">{t.nav_tagline}</span>
               </a>
               <p className="footer-desc">{t.footer_desc}</p>
               <div className="footer-social">
-                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="social-link" aria-label="WhatsApp">
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="social-link"
+                  aria-label="WhatsApp"
+                >
                   <Icon name="whatsapp" size={18} />
                 </a>
               </div>
@@ -25,23 +31,67 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             <div className="footer-col">
               <h3 className="footer-heading">{t.footer_nav_heading}</h3>
               <ul className="footer-links">
-                <li><a href="#tiers" onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.tiers_label}</a></li>
-                <li><a href="#about" onClick={(e) => onSmoothScroll(e, '#about')}>{t.footer_nav_5}</a></li>
-                <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_nav_2}</a></li>
-                <li><a href={lang === 'en' ? '/en/services' : '/services'}>{lang === 'en' ? 'Service Scope' : 'نطاق الخدمات'}</a></li>
-                <li><a href={lang === 'en' ? '/en/contact' : '/contact'}>{lang === 'en' ? 'Company & Contact' : 'عن الشركة والتواصل'}</a></li>
-                <li><a href={lang === 'en' ? '/en/support' : '/support'}>{lang === 'en' ? 'Help & Support' : 'المساعدة والدعم'}</a></li>
+                <li>
+                  <a href="#tiers" onClick={e => onSmoothScroll(e, '#tiers')}>
+                    {t.tiers_label}
+                  </a>
+                </li>
+                <li>
+                  <a href="#about" onClick={e => onSmoothScroll(e, '#about')}>
+                    {t.footer_nav_5}
+                  </a>
+                </li>
+                <li>
+                  <a href="#solutions" onClick={e => onSmoothScroll(e, '#solutions')}>
+                    {t.footer_nav_2}
+                  </a>
+                </li>
+                <li>
+                  <a href={lang === 'en' ? '/en/services' : '/services'}>
+                    {lang === 'en' ? 'Service Scope' : 'نطاق الخدمات'}
+                  </a>
+                </li>
+                <li>
+                  <a href={lang === 'en' ? '/en/contact' : '/contact'}>
+                    {lang === 'en' ? 'Company & Contact' : 'عن الشركة والتواصل'}
+                  </a>
+                </li>
+                <li>
+                  <a href={lang === 'en' ? '/en/support' : '/support'}>
+                    {lang === 'en' ? 'Help & Support' : 'المساعدة والدعم'}
+                  </a>
+                </li>
               </ul>
             </div>
 
             <div className="footer-col">
               <h3 className="footer-heading">{t.footer_services_heading}</h3>
               <ul className="footer-links">
-                <li><a href="#tiers" onClick={(e) => onSmoothScroll(e, '#tiers')}>{t.footer_svc_1}</a></li>
-                <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_svc_2}</a></li>
-                <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_svc_3}</a></li>
-                <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_svc_4}</a></li>
-                <li><a href="#solutions" onClick={(e) => onSmoothScroll(e, '#solutions')}>{t.footer_svc_5}</a></li>
+                <li>
+                  <a href="#tiers" onClick={e => onSmoothScroll(e, '#tiers')}>
+                    {t.footer_svc_1}
+                  </a>
+                </li>
+                <li>
+                  <a href="#solutions" onClick={e => onSmoothScroll(e, '#solutions')}>
+                    {t.footer_svc_2}
+                  </a>
+                </li>
+                <li>
+                  <a href="#solutions" onClick={e => onSmoothScroll(e, '#solutions')}>
+                    {t.footer_svc_3}
+                  </a>
+                </li>
+                <li>
+                  <a href="#solutions" onClick={e => onSmoothScroll(e, '#solutions')}>
+                    {t.footer_svc_4}
+                  </a>
+                </li>
+                <li>
+                  <a href="#solutions" onClick={e => onSmoothScroll(e, '#solutions')}>
+                    {t.footer_svc_5}
+                  </a>
+                </li>
               </ul>
             </div>
 
@@ -54,7 +104,9 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
                 </li>
                 <li>
                   <Icon name="whatsapp" size={15} />
-                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">+20 103 675 5930</a>
+                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                    +20 103 675 5930
+                  </a>
                 </li>
                 <li>
                   <Icon name="mail" size={15} />
@@ -72,7 +124,9 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
             <p className="footer-copy">{t.footer_copy.replace(/©\s*\d{4}/, `© ${new Date().getFullYear()}`)}</p>
             <nav className="footer-legal" aria-label={lang === 'en' ? 'Policies' : 'السياسات'}>
               <a href={lang === 'en' ? '/en/privacy' : '/privacy'}>{t.footer_privacy}</a>
-              <a href={lang === 'en' ? '/en/refund' : '/refund'}>{lang === 'en' ? 'Refund Policy' : 'سياسة الاسترداد'}</a>
+              <a href={lang === 'en' ? '/en/refund' : '/refund'}>
+                {lang === 'en' ? 'Refund Policy' : 'سياسة الاسترداد'}
+              </a>
               <a href={lang === 'en' ? '/en/terms' : '/terms'}>{lang === 'en' ? 'Terms of Service' : 'شروط الخدمة'}</a>
             </nav>
           </div>

@@ -2,9 +2,20 @@
 // keep its qualifier ("from", a range), or come from a live fact or an order line. Pure, so the
 // API preview, Convex and the tests share it.
 
-const toLatin = s => String(s || '').replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x6f0));
-const norm = s => toLatin(s).normalize('NFKC').toLowerCase().replace(/[ً-ٰٟ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
-  .replace(/[^\p{L}\p{N}%]+/gu, ' ').trim();
+const toLatin = s =>
+  String(s || '')
+    .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660))
+    .replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x6f0));
+const norm = s =>
+  toLatin(s)
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[ً-ٰٟ]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[^\p{L}\p{N}%]+/gu, ' ')
+    .trim();
 const CURRENCY = /(omr|r\.?o\.?|rial|riyal|baisa|aed|sar|usd|\$|€|£|(?<![ء-ي])ر\.?\s?ع(?![ء-ي])|ريال|بيسة|درهم|%)/i;
 const MONEY = new RegExp(`(\\d[\\d.,]*)\\s*${CURRENCY.source}|${CURRENCY.source}\\s*(\\d[\\d.,]*)`, 'gi');
 const FROM = /\b(from|starting|starts?\s+at|as low as|minimum)\b|يبدا|يبدأ|ابتداء|اعتبارا|من\s*\d|من\s+/i;
@@ -21,8 +32,17 @@ const numbersIn = text => [...toLatin(text).matchAll(/\d[\d.,]*/g)].map(m => amo
 /** One catalog row as the check sees it: the words that name it and the amounts it may be quoted at. */
 function priced(row) {
   const names = [row.nameEn, row.nameAr].filter(Boolean).map(norm).filter(Boolean);
-  const heads = names.map(n => n.split(' ').filter(w => !STOP.has(w) && w.length >= 3).at(-1)).filter(Boolean);
-  const amounts = new Set(), mins = new Set(), ranges = [];
+  const heads = names
+    .map(n =>
+      n
+        .split(' ')
+        .filter(w => !STOP.has(w) && w.length >= 3)
+        .at(-1),
+    )
+    .filter(Boolean);
+  const amounts = new Set(),
+    mins = new Set(),
+    ranges = [];
   for (const p of row.prices || []) {
     if (!p) continue;
     const label = String(p.label || '');
@@ -30,12 +50,20 @@ function priced(row) {
     if (['free', 'quote', 'unavailable'].includes(type)) continue;
     if (type === 'range') {
       const m = toLatin(label).match(RANGE_IN_LABEL);
-      const lo = p.minimum ?? (m ? amountOf(m[1]) : null), hi = p.maximum ?? (m ? amountOf(m[2]) : null);
-      if (lo !== null && hi !== null) { ranges.push([lo, hi]); amounts.add(lo); amounts.add(hi); }
+      const lo = p.minimum ?? (m ? amountOf(m[1]) : null),
+        hi = p.maximum ?? (m ? amountOf(m[2]) : null);
+      if (lo !== null && hi !== null) {
+        ranges.push([lo, hi]);
+        amounts.add(lo);
+        amounts.add(hi);
+      }
       continue;
     }
     const values = p.amount != null || p.minimum != null ? [p.amount ?? p.minimum] : numbersIn(label);
-    for (const v of values) { amounts.add(v); if (type === 'from') mins.add(v); }
+    for (const v of values) {
+      amounts.add(v);
+      if (type === 'from') mins.add(v);
+    }
   }
   return { names, heads, amounts, mins, ranges };
 }
@@ -44,7 +72,10 @@ const mentions = (item, text) => {
   const t = ` ${norm(text)} `;
   return item.names.some(n => t.includes(` ${n} `)) || item.heads.some(h => t.includes(` ${h} `));
 };
-const sentencesOf = reply => toLatin(reply).split(/(?<=[.!?؟\n])\s+/).filter(s => s.trim());
+const sentencesOf = reply =>
+  toLatin(reply)
+    .split(/(?<=[.!?؟\n])\s+/)
+    .filter(s => s.trim());
 
 /** Whether an amount said in `sentence` is a true price of `item`, qualifier included. */
 function truePrice(item, amount, sentence) {
@@ -69,7 +100,8 @@ function truePrice(item, amount, sentence) {
  * @returns {string|null}
  */
 export function untracedAmount(reply, ctx) {
-  const items = (ctx.catalog || []).map(priced), cited = (ctx.cited || []).map(priced);
+  const items = (ctx.catalog || []).map(priced),
+    cited = (ctx.cited || []).map(priced);
   // Live facts, order lines and the business's own message to this customer state amounts the owner approved.
   const owned = (ctx.history || []).filter(h => h.role === 'business').map(h => h.text);
   const live = new Set([...(ctx.facts || []), ...(ctx.acks || []), ...owned].flatMap(numbersIn));
@@ -81,7 +113,9 @@ export function untracedAmount(reply, ctx) {
       if (amount === null || live.has(amount)) continue;
       // The item it is said about: named in this sentence, else the one before, else a cited source, else the customer's question.
       const inScope = scope => items.filter(item => mentions(item, scope));
-      const named = [inScope(sentence), inScope(sentences[i - 1] || ''), cited, inScope(lastCustomer)].find(list => list.length) || [];
+      const named =
+        [inScope(sentence), inScope(sentences[i - 1] || ''), cited, inScope(lastCustomer)].find(list => list.length) ||
+        [];
       if (!named.some(item => truePrice(item, amount, sentence))) return m[0];
     }
   }

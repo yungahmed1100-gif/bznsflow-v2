@@ -1,23 +1,23 @@
 // What a connection's tool list looks like to a client: which tools it may see,
 // how each is advertised, and the full description bznsflow_tools_describe returns.
-import { TOOL_BY_NAME } from "../../../config/mcp/contracts.js";
-import { mcpIcons } from "../../../config/mcp/identity.js";
-import { McpError } from "./store.js";
+import { TOOL_BY_NAME } from '../../../config/mcp/contracts.js';
+import { mcpIcons } from '../../../config/mcp/identity.js';
+import { McpError } from './store.js';
 
 // Bump when tool names, schemas or descriptions change, so clients refresh their cache.
-export const SERVER_VERSION = "1.1.0";
+export const SERVER_VERSION = '1.1.0';
 export const TOOLS_PER_PAGE = 60;
 // A schema above this size is advertised by its top-level fields only.
 const ADVERTISED_SCHEMA_BYTES = 2500;
 // Fields every sector call may need, kept when a shared sector schema is summarised.
-const CORE_FIELDS = new Set(["requestId", "idempotencyKey", "version", "cursor", "limit", "status"]);
+const CORE_FIELDS = new Set(['requestId', 'idempotencyKey', 'version', 'cursor', 'limit', 'status']);
 
-const brief = (schema) =>
+const brief = schema =>
   schema.type
     ? {
         type: schema.type,
         ...(schema.enum ? { enum: schema.enum } : {}),
-        ...(schema.type === "string" && schema.maxLength ? { maxLength: schema.maxLength } : {}),
+        ...(schema.type === 'string' && schema.maxLength ? { maxLength: schema.maxLength } : {}),
       }
     : schema.enum
       ? { enum: schema.enum }
@@ -31,14 +31,12 @@ const brief = (schema) =>
  */
 export function advertisedSchema(tool) {
   const full = tool.inputSchema;
-  const shared = tool.domain === "hasib" && !!tool.packs && Object.keys(full.properties).length > 8;
+  const shared = tool.domain === 'hasib' && !!tool.packs && Object.keys(full.properties).length > 8;
   if (!shared && JSON.stringify(full).length <= ADVERTISED_SCHEMA_BYTES) return full;
   const required = full.required || [];
-  const keep = Object.entries(full.properties).filter(
-    ([k]) => !shared || required.includes(k) || CORE_FIELDS.has(k),
-  );
+  const keep = Object.entries(full.properties).filter(([k]) => !shared || required.includes(k) || CORE_FIELDS.has(k));
   return {
-    type: "object",
+    type: 'object',
     properties: Object.fromEntries(keep.map(([k, v]) => [k, brief(v)])),
     required,
     additionalProperties: shared,
@@ -52,10 +50,10 @@ export function describeTool(tool) {
     title: tool.title,
     description: tool.description,
     category: tool.category,
-    approvalCategories: tool.category === "read" ? [] : tool.categories || [tool.category],
+    approvalCategories: tool.category === 'read' ? [] : tool.categories || [tool.category],
     required: tool.inputSchema.required || [],
     inputSchema: tool.inputSchema,
-    ...(tool.disposition === "handoff" ? { websitePath: tool.path } : {}),
+    ...(tool.disposition === 'handoff' ? { websitePath: tool.path } : {}),
   };
 }
 
@@ -65,27 +63,27 @@ export function describeTool(tool) {
  * Email campaigns stay limited to the accounts the website's Rasil switch admits.
  */
 export function visibleTools(names, { canWrite, emailOpen }) {
-  return names.filter((name) => {
+  return names.filter(name => {
     const tool = TOOL_BY_NAME.get(name);
-    return !!tool && (tool.category === "read" || canWrite) && (emailOpen || tool.domain !== "email");
+    return !!tool && (tool.category === 'read' || canWrite) && (emailOpen || tool.domain !== 'email');
   });
 }
 
-const annotations = (t) => ({
-  readOnlyHint: t.category === "read",
+const annotations = t => ({
+  readOnlyHint: t.category === 'read',
   destructiveHint:
-    ["bulk", "team"].includes(t.category) || /delete|archive|revoke|disconnect|void|cancel/.test(t.operation),
+    ['bulk', 'team'].includes(t.category) || /delete|archive|revoke|disconnect|void|cancel/.test(t.operation),
   // Reads repeat safely; writes dedupe on their requestId.
   idempotentHint: true,
-  openWorldHint: ["messages", "team"].includes(t.category) || (t.categories || []).includes("messages"),
+  openWorldHint: ['messages', 'team'].includes(t.category) || (t.categories || []).includes('messages'),
 });
 
 /** One page of the tool list, as tools/list returns it. */
-export function toolPage(names, cursor = "0", origin) {
-  if (!/^(0|[1-9][0-9]{0,4})$/.test(cursor)) throw new McpError("invalid_cursor", 400);
+export function toolPage(names, cursor = '0', origin) {
+  if (!/^(0|[1-9][0-9]{0,4})$/.test(cursor)) throw new McpError('invalid_cursor', 400);
   const start = Number(cursor);
   return {
-    tools: names.slice(start, start + TOOLS_PER_PAGE).map((name) => {
+    tools: names.slice(start, start + TOOLS_PER_PAGE).map(name => {
       const t = TOOL_BY_NAME.get(name);
       return {
         name: t.name,

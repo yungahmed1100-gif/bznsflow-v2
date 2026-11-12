@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseBzns, validateBzns, deriveProfile, bznsChunks, applySections, profileToBzns, BZNS_MAX_CHARS } from '../src/lib/bzns-doc.js';
+import {
+  parseBzns,
+  validateBzns,
+  deriveProfile,
+  bznsChunks,
+  applySections,
+  profileToBzns,
+  BZNS_MAX_CHARS,
+} from '../src/lib/bzns-doc.js';
 import { bznsTemplate, BZNS_TEMPLATE_SECTORS } from '../config/bzns-templates.js';
 import { validateReviewProfile } from '../api/_lib/layla/review-profile.js';
 
@@ -40,9 +48,17 @@ test('parses front matter and bilingual section headings', () => {
   const parsed = parseBzns(doc);
   assert.equal(parsed.meta.name, 'Qurum Coast Properties');
   assert.equal(parsed.meta.sector, 'real-estate');
-  assert.deepEqual(parsed.sections.map(s => s.key), ['about', 'offer', 'hours', 'location', 'contact', 'faq']);
-  const ar = parseBzns('---\nname: عقارات القرم\nsector: real-estate\n---\n## من نحن\nوكالة عائلية\n## خدماتنا\n- بيع وشراء\n## ساعات العمل\nمن الأحد إلى الخميس\n## الموقع\nالقرم\n## الأسئلة الشائعة\n**س:** هل المعاينة مجانية؟\nج: نعم');
-  assert.deepEqual(ar.sections.map(s => s.key), ['about', 'offer', 'hours', 'location', 'faq']);
+  assert.deepEqual(
+    parsed.sections.map(s => s.key),
+    ['about', 'offer', 'hours', 'location', 'contact', 'faq'],
+  );
+  const ar = parseBzns(
+    '---\nname: عقارات القرم\nsector: real-estate\n---\n## من نحن\nوكالة عائلية\n## خدماتنا\n- بيع وشراء\n## ساعات العمل\nمن الأحد إلى الخميس\n## الموقع\nالقرم\n## الأسئلة الشائعة\n**س:** هل المعاينة مجانية؟\nج: نعم',
+  );
+  assert.deepEqual(
+    ar.sections.map(s => s.key),
+    ['about', 'offer', 'hours', 'location', 'faq'],
+  );
   assert.deepEqual(ar.faqs, [{ question: 'هل المعاينة مجانية؟', answer: 'نعم' }]);
 });
 
@@ -61,21 +77,47 @@ test('a valid document derives a profile the existing validator accepts', () => 
 
 test('required fields, placeholders, HTML and size are reported per section', () => {
   const codes = text => validateBzns(text).errors.map(e => `${e.code}:${e.section || ''}`);
-  assert.deepEqual(codes('## About us\nhello'), ['bzns_name_required:', 'bzns_sector_required:', 'bzns_offer_required:offer', 'bzns_contact_required:contact']);
+  assert.deepEqual(codes('## About us\nhello'), [
+    'bzns_name_required:',
+    'bzns_sector_required:',
+    'bzns_offer_required:offer',
+    'bzns_contact_required:contact',
+  ]);
   assert.ok(codes(doc.replace('Family-run agency', '[Who you are]')).includes('bzns_placeholder:about'));
-  assert.ok(!codes(doc.replace('https://maps.example.test/qcp', '[Map](https://maps.example.test/qcp)')).includes('bzns_placeholder:location'), 'markdown links are not placeholders');
+  assert.ok(
+    !codes(doc.replace('https://maps.example.test/qcp', '[Map](https://maps.example.test/qcp)')).includes(
+      'bzns_placeholder:location',
+    ),
+    'markdown links are not placeholders',
+  );
   assert.ok(codes(doc.replace('Family-run', '<script>x</script>')).includes('bzns_html:about'));
   assert.ok(codes(doc + 'x'.repeat(BZNS_MAX_CHARS)).includes('bzns_too_long:'));
 });
 
 test('money amounts are blocked but free wording is allowed', () => {
-  const sectionOf = text => validateBzns(doc.replace('Family-run agency in Muscat since 2012.', text)).errors.filter(e => e.code === 'bzns_money').map(e => e.section);
-  for (const amount of ['Rent from 500 OMR', 'الإيجار ٥٠٠ ر.ع', 'Viewing fee RO 10', 'Deposit $200', 'Commission 2% of the sale', 'عمولة ٢٪', 'رسوم ٥٠ ريال']) assert.deepEqual(sectionOf(amount), ['about'], amount);
-  for (const ok of ['Viewings are free', 'We charge a commission on sale', 'Open since 2012', 'Way 2601', '3 bedrooms']) assert.deepEqual(sectionOf(ok), [], ok);
+  const sectionOf = text =>
+    validateBzns(doc.replace('Family-run agency in Muscat since 2012.', text))
+      .errors.filter(e => e.code === 'bzns_money')
+      .map(e => e.section);
+  for (const amount of [
+    'Rent from 500 OMR',
+    'الإيجار ٥٠٠ ر.ع',
+    'Viewing fee RO 10',
+    'Deposit $200',
+    'Commission 2% of the sale',
+    'عمولة ٢٪',
+    'رسوم ٥٠ ريال',
+  ])
+    assert.deepEqual(sectionOf(amount), ['about'], amount);
+  for (const ok of ['Viewings are free', 'We charge a commission on sale', 'Open since 2012', 'Way 2601', '3 bedrooms'])
+    assert.deepEqual(sectionOf(ok), [], ok);
 });
 
 test('FAQ extraction keeps the first twelve pairs for the profile', () => {
-  const many = doc.replace(/## FAQ[\s\S]*/, '## FAQ\n' + Array.from({ length: 15 }, (_, i) => `Q: Question ${i}\nA: Answer ${i}`).join('\n\n'));
+  const many = doc.replace(
+    /## FAQ[\s\S]*/,
+    '## FAQ\n' + Array.from({ length: 15 }, (_, i) => `Q: Question ${i}\nA: Answer ${i}`).join('\n\n'),
+  );
   assert.equal(deriveProfile(parseBzns(many)).profile.faqs.length, 12);
   assert.equal(parseBzns(many).faqs.length, 15, 'all pairs stay in the document chunks');
 });
@@ -84,25 +126,49 @@ test('chunks are one per section, tenant scoped, normalized and hashed', () => {
   const rows = bznsChunks(parseBzns(doc), { tenantId: 'acct1', revision: 3, now: 5 });
   assert.equal(rows.length, 6);
   for (const row of rows) {
-    assert.equal(row.tenantId, 'acct1'); assert.equal(row.revision, 3); assert.equal(row.approved, true);
-    assert.equal(row.source, 'bzns'); assert.match(row.contentHash, /^[a-f0-9]{8,}$/); assert.ok(row.text.length <= 12000);
+    assert.equal(row.tenantId, 'acct1');
+    assert.equal(row.revision, 3);
+    assert.equal(row.approved, true);
+    assert.equal(row.source, 'bzns');
+    assert.match(row.contentHash, /^[a-f0-9]{8,}$/);
+    assert.ok(row.text.length <= 12000);
   }
-  assert.equal(bznsChunks(parseBzns('---\nname: ع\nsector: x\n---\n## الموقع\nمسقط'), { tenantId: 't', revision: 1, now: 1 })[0].locale, 'ar');
+  assert.equal(
+    bznsChunks(parseBzns('---\nname: ع\nsector: x\n---\n## الموقع\nمسقط'), { tenantId: 't', revision: 1, now: 1 })[0]
+      .locale,
+    'ar',
+  );
 });
 
 test('every Catalyst template has English and Arabic versions that only fail on placeholders', () => {
-  for (const sector of BZNS_TEMPLATE_SECTORS) for (const lang of ['en', 'ar']) {
-    const template = bznsTemplate(sector, lang);
-    const result = validateBzns(template);
-    assert.ok(result.errors.length > 0, `${sector}/${lang} must not publish unedited`);
-    assert.ok(result.errors.every(e => e.code === 'bzns_placeholder'), `${sector}/${lang}: ${JSON.stringify(result.errors)}`);
-    assert.ok(parseBzns(template).sections.some(s => s.key === 'offer'), `${sector}/${lang} has an offer section`);
-  }
+  for (const sector of BZNS_TEMPLATE_SECTORS)
+    for (const lang of ['en', 'ar']) {
+      const template = bznsTemplate(sector, lang);
+      const result = validateBzns(template);
+      assert.ok(result.errors.length > 0, `${sector}/${lang} must not publish unedited`);
+      assert.ok(
+        result.errors.every(e => e.code === 'bzns_placeholder'),
+        `${sector}/${lang}: ${JSON.stringify(result.errors)}`,
+      );
+      assert.ok(
+        parseBzns(template).sections.some(s => s.key === 'offer'),
+        `${sector}/${lang} has an offer section`,
+      );
+    }
   assert.equal(bznsTemplate('unknown-sector', 'en'), bznsTemplate('generic', 'en'));
 });
 
 test('guided answers replace or add the matching sections and never add prices', () => {
-  const next = applySections(doc, { services: 'Sales, rentals and valuations', hours: 'Daily 9 to 9', prices: 'Rent from 400 OMR', faqs: [{ question: 'Do you manage property?', answer: 'Yes.' }] }, 'en');
+  const next = applySections(
+    doc,
+    {
+      services: 'Sales, rentals and valuations',
+      hours: 'Daily 9 to 9',
+      prices: 'Rent from 400 OMR',
+      faqs: [{ question: 'Do you manage property?', answer: 'Yes.' }],
+    },
+    'en',
+  );
   const parsed = parseBzns(next);
   assert.equal(parsed.sections.find(s => s.key === 'offer').body, 'Sales, rentals and valuations');
   assert.equal(parsed.sections.find(s => s.key === 'hours').body, 'Daily 9 to 9');
@@ -111,27 +177,48 @@ test('guided answers replace or add the matching sections and never add prices',
   assert.deepEqual(parsed.faqs.at(-1), { question: 'Do you manage property?', answer: 'Yes.' });
   assert.equal(parsed.faqs.length, 3, 'new questions are appended, existing ones kept');
   const added = parseBzns(applySections('---\nname: X\nsector: retail\n---\n', { location: 'مسقط' }, 'ar'));
-  assert.deepEqual(added.sections.map(s => [s.key, s.heading]), [['location', 'الموقع']]);
+  assert.deepEqual(
+    added.sections.map(s => [s.key, s.heading]),
+    [['location', 'الموقع']],
+  );
 });
 
 test('saved details convert into a publishable document without prices', () => {
-  const md = profileToBzns({ businessName: 'Noor Abayas', profile: { sector: 'Retail & e-commerce', services: 'Abayas and scarves', prices: 'From 25 OMR', hours: '10am to 10pm', location: 'Muscat Grand Mall', teamContact: 'WhatsApp +968 9100 2000', faqs: [{ question: 'Do you deliver?', answer: 'Yes, across Muscat.' }] },
-    answers: [{ question: 'Can I return an item?', answer: 'Within 7 days.' }], lang: 'en' });
+  const md = profileToBzns({
+    businessName: 'Noor Abayas',
+    profile: {
+      sector: 'Retail & e-commerce',
+      services: 'Abayas and scarves',
+      prices: 'From 25 OMR',
+      hours: '10am to 10pm',
+      location: 'Muscat Grand Mall',
+      teamContact: 'WhatsApp +968 9100 2000',
+      faqs: [{ question: 'Do you deliver?', answer: 'Yes, across Muscat.' }],
+    },
+    answers: [{ question: 'Can I return an item?', answer: 'Within 7 days.' }],
+    lang: 'en',
+  });
   const result = validateBzns(md);
   assert.equal(result.ok, true, JSON.stringify(result.errors));
   assert.equal(result.parsed.meta.sector, 'retail');
   assert.ok(!md.includes('25 OMR'));
-  assert.deepEqual(result.parsed.faqs.map(f => f.question), ['Do you deliver?', 'Can I return an item?']);
+  assert.deepEqual(
+    result.parsed.faqs.map(f => f.question),
+    ['Do you deliver?', 'Can I return an item?'],
+  );
 });
 
 test('the checklist only ticks sections the owner has actually written', () => {
-  const ticked = text => validateBzns(text).checklist.filter(i => i.present).map(i => i.key);
+  const ticked = text =>
+    validateBzns(text)
+      .checklist.filter(i => i.present)
+      .map(i => i.key);
   assert.deepEqual(ticked(bznsTemplate('real-estate', 'en')), [], 'template hints are not done');
   assert.deepEqual(ticked(doc), ['about', 'offer', 'location', 'contact', 'faq']);
   assert.ok(!validateBzns(doc).checklist.some(i => i.key === 'hours'), 'Layla is 24/7: hours are optional');
 });
 
-test('the tone line picks Layla\'s style; missing or unknown falls back to Informative & nice', async () => {
+test("the tone line picks Layla's style; missing or unknown falls back to Informative & nice", async () => {
   const { setMeta } = await import('../src/lib/bzns-doc.js');
   assert.equal(deriveProfile(parseBzns(doc)).profile.tone, 'informative');
   const sharp = setMeta(doc, 'tone', 'sharp');
@@ -146,29 +233,44 @@ test('the tone line picks Layla\'s style; missing or unknown falls back to Infor
 
 test('a Team contact section becomes the contact Layla gives a customer she cannot help', async () => {
   const { teamContactOf } = await import('../config/layla-tones.js');
-  const doc = (contact) => `---\nname: Qurum Coast\nsector: real-estate\ntone: informative\n---\n# Qurum Coast\n## About us\nFamily agency.\n## What we offer\n- Rentals\n${contact}`;
-  const withContact = deriveProfile(validateBzns(doc('## Team contact\nWhatsApp +968 9123 4567 (Huda)\n')).parsed).profile;
+  const doc = contact =>
+    `---\nname: Qurum Coast\nsector: real-estate\ntone: informative\n---\n# Qurum Coast\n## About us\nFamily agency.\n## What we offer\n- Rentals\n${contact}`;
+  const withContact = deriveProfile(
+    validateBzns(doc('## Team contact\nWhatsApp +968 9123 4567 (Huda)\n')).parsed,
+  ).profile;
   assert.equal(withContact.teamContact, 'WhatsApp +968 9123 4567 (Huda)', 'a phone number is not mistaken for a price');
   assert.equal(withContact.humanContact, '', 'kept apart from any legacy contact');
   assert.equal(withContact.handoffMode, 'inbox');
   assert.equal(teamContactOf(withContact), 'WhatsApp +968 9123 4567 (Huda)', 'this is what Layla’s AI turn is given');
-  assert.equal(teamContactOf({ ...withContact, teamContact: '', humanContact: 'legacy@example.test' }), '', 'inbox mode never advertises a legacy contact');
+  assert.equal(
+    teamContactOf({ ...withContact, teamContact: '', humanContact: 'legacy@example.test' }),
+    '',
+    'inbox mode never advertises a legacy contact',
+  );
   const arabic = deriveProfile(validateBzns(doc('## جهة اتصال الفريق\nواتساب 96891234567\n')).parsed).profile;
   assert.equal(arabic.teamContact, 'واتساب 96891234567');
   const none = deriveProfile(validateBzns(doc('')).parsed).profile;
   assert.equal(none.teamContact, undefined);
-  assert.equal(validateBzns(doc('')).errors.some(e => e.code === 'bzns_contact_required'), true, 'a document without a team contact cannot be published');
+  assert.equal(
+    validateBzns(doc('')).errors.some(e => e.code === 'bzns_contact_required'),
+    true,
+    'a document without a team contact cannot be published',
+  );
 });
 
 test('a team contact longer than one short line is refused, never silently dropped', () => {
-  const doc = contact => `---\nname: Qurum Coast\nsector: real-estate\n---\n# Qurum Coast\n## What we offer\n- Rentals\n## Team contact\n${contact}\n`;
+  const doc = contact =>
+    `---\nname: Qurum Coast\nsector: real-estate\n---\n# Qurum Coast\n## What we offer\n- Rentals\n## Team contact\n${contact}\n`;
   const exactly = 'WhatsApp +968 9123 4567 '.padEnd(120, 'x');
   const fits = validateBzns(doc(exactly));
   assert.equal(fits.ok, true);
   assert.equal(deriveProfile(fits.parsed).profile.teamContact, exactly);
   const tooLong = validateBzns(doc(`${exactly}y`));
   assert.equal(tooLong.ok, false);
-  assert.deepEqual(tooLong.errors.map(e => [e.code, e.section]), [['bzns_contact_too_long', 'contact']]);
+  assert.deepEqual(
+    tooLong.errors.map(e => [e.code, e.section]),
+    [['bzns_contact_too_long', 'contact']],
+  );
 });
 
 test('every sector template asks for what customers ask Layla: offer, how to order or book, payment, location, team contact', () => {
@@ -176,13 +278,16 @@ test('every sector template asks for what customers ask Layla: offer, how to ord
     order: /order|book|viewing|quote|service|request|enrolment|طلب|حجز|معاين|عرض|عروض|زيار|صيانة|تسجيل/i,
     payment: /payment|pay|دفع/i,
   };
-  for (const sector of BZNS_TEMPLATE_SECTORS) for (const lang of ['en', 'ar']) {
-    const parsed = parseBzns(bznsTemplate(sector, lang));
-    const keys = parsed.sections.map(s => s.key), headings = parsed.sections.map(s => s.heading).join(' | ');
-    for (const key of ['offer', 'location', 'contact']) assert.ok(keys.includes(key), `${sector}/${lang}: ${key}`);
-    assert.match(headings, topics.order, `${sector}/${lang}: how to order or book`);
-    if (sector !== 'real-estate' && sector !== 'construction') assert.match(headings, topics.payment, `${sector}/${lang}: payment methods`);
-  }
+  for (const sector of BZNS_TEMPLATE_SECTORS)
+    for (const lang of ['en', 'ar']) {
+      const parsed = parseBzns(bznsTemplate(sector, lang));
+      const keys = parsed.sections.map(s => s.key),
+        headings = parsed.sections.map(s => s.heading).join(' | ');
+      for (const key of ['offer', 'location', 'contact']) assert.ok(keys.includes(key), `${sector}/${lang}: ${key}`);
+      assert.match(headings, topics.order, `${sector}/${lang}: how to order or book`);
+      if (sector !== 'real-estate' && sector !== 'construction')
+        assert.match(headings, topics.payment, `${sector}/${lang}: payment methods`);
+    }
 });
 
 // Publishing a starter template: unreplaced hints are left out; only what a customer needs blocks.
@@ -193,16 +298,28 @@ test('publishing leaves out unreplaced template hints and keeps only the essenti
     const raw = brainTemplate(sector, 'en');
     const { markdown, removed } = prepareForPublish(raw);
     const blocking = new Set(validateBzns(markdown).errors.map(e => e.section || 'meta'));
-    assert.deepEqual([...blocking].filter(x => !['meta', 'offer', 'contact'].includes(x)), [], `${sector}: an untouched template blocks only on name, offer and team contact`);
+    assert.deepEqual(
+      [...blocking].filter(x => !['meta', 'offer', 'contact'].includes(x)),
+      [],
+      `${sector}: an untouched template blocks only on name, offer and team contact`,
+    );
     assert.ok(blocking.has('contact') && blocking.has('meta'), `${sector}: the name and team contact must be written`);
     assert.ok(removed.length > 0, `${sector}: hint-only sections are reported`);
     let filled = setMeta(raw, 'name', 'Bright Smile');
     filled = upsertSection(filled, 'offer', '- Check-ups and cleaning', { replace: true });
     filled = upsertSection(filled, 'contact', 'WhatsApp +968 9100 2000 (Sara)', { replace: true });
     const ready = prepareForPublish(filled);
-    assert.equal(validateBzns(ready.markdown).ok, true, `${sector}: name, offer and team contact are enough to publish`);
+    assert.equal(
+      validateBzns(ready.markdown).ok,
+      true,
+      `${sector}: name, offer and team contact are enough to publish`,
+    );
     assert.doesNotMatch(ready.markdown, /\[[^\]\n]+\](?!\()/, `${sector}: no bracket hint is published`);
-    assert.equal(prepareForPublish(ready.markdown).markdown, ready.markdown, `${sector}: preparing twice changes nothing`);
+    assert.equal(
+      prepareForPublish(ready.markdown).markdown,
+      ready.markdown,
+      `${sector}: preparing twice changes nothing`,
+    );
   }
 });
 
@@ -213,14 +330,19 @@ test('preparing for publish keeps what the owner wrote, links and front matter',
   const { markdown, removed } = prepareForPublish(mixed);
   assert.deepEqual(removed, ['Hours']);
   assert.match(markdown, /^# Noor$/m, 'a bracket title takes the name from the front matter');
-  assert.match(markdown, /- Tailoring/); assert.doesNotMatch(markdown, /\[Abayas\]/);
+  assert.match(markdown, /- Tailoring/);
+  assert.doesNotMatch(markdown, /\[Abayas\]/);
   assert.match(markdown, /\[our map\]\(https:\/\/maps\.example\/x\)/, 'markdown links are not hints');
   assert.equal(validateBzns(markdown).ok, true);
 });
 
 test('accepting text into a template section replaces its hint instead of appending below it', async () => {
   const { upsertSection, sectionText } = await import('../src/lib/bzns-doc.js');
-  const contact = upsertSection(`# X\n\n## Team contact\n[A WhatsApp number or email]\n`, 'contact', 'WhatsApp +968 9100 2000');
+  const contact = upsertSection(
+    `# X\n\n## Team contact\n[A WhatsApp number or email]\n`,
+    'contact',
+    'WhatsApp +968 9100 2000',
+  );
   assert.equal(sectionText(contact, 'contact'), 'WhatsApp +968 9100 2000');
   const offer = upsertSection(`# X\n\n## What we offer\n- [General check-ups]\n`, 'offer', '- Whitening');
   assert.doesNotMatch(offer, /\[General check-ups\]/);

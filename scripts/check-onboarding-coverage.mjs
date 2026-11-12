@@ -17,8 +17,14 @@
 
 import { INDUSTRIES } from '../src/lib/industries.js';
 import { prefillFor } from '../src/lib/sector-prefill.generated.js';
-import { ARCHETYPES, DEFAULT_ARCHETYPE, FIELD_RUNGS, FAQ_COPY, OWNER_QUESTIONS, REVIEW_COPY }
-  from '../src/lib/owner-questions.js';
+import {
+  ARCHETYPES,
+  DEFAULT_ARCHETYPE,
+  FIELD_RUNGS,
+  FAQ_COPY,
+  OWNER_QUESTIONS,
+  REVIEW_COPY,
+} from '../src/lib/owner-questions.js';
 
 function fail(msg) {
   console.error(`\n✖ check-onboarding-coverage: ${msg}\n`);
@@ -33,16 +39,23 @@ const problems = [];
 
 // 1. Every rung must target a field the profile contract accepts.
 for (const field of FIELD_RUNGS) {
-  if (!PROFILE_FIELDS.includes(field)) problems.push(`rung "${field}" is not a profile field (${PROFILE_FIELDS.join(', ')})`);
+  if (!PROFILE_FIELDS.includes(field))
+    problems.push(`rung "${field}" is not a profile field (${PROFILE_FIELDS.join(', ')})`);
 }
 
 // 2. Every archetype needs complete bilingual copy for every rung.
 for (const archetype of ARCHETYPES) {
   const bank = OWNER_QUESTIONS[archetype];
-  if (!bank) { problems.push(`archetype "${archetype}" has no question set`); continue; }
+  if (!bank) {
+    problems.push(`archetype "${archetype}" has no question set`);
+    continue;
+  }
   for (const field of FIELD_RUNGS) {
     const copy = bank[field];
-    if (!copy) { problems.push(`${archetype}.${field} is missing`); continue; }
+    if (!copy) {
+      problems.push(`${archetype}.${field} is missing`);
+      continue;
+    }
     for (const part of ['question', 'help', 'example']) {
       for (const lang of ['en', 'ar']) {
         if (!copy[part]?.[lang]?.trim()) problems.push(`${archetype}.${field}.${part}.${lang} is empty`);
@@ -57,7 +70,10 @@ for (const archetype of ARCHETYPES) {
 }
 
 // 3. The shared copy blocks.
-for (const [name, block] of [['FAQ_COPY', FAQ_COPY], ['REVIEW_COPY', REVIEW_COPY]]) {
+for (const [name, block] of [
+  ['FAQ_COPY', FAQ_COPY],
+  ['REVIEW_COPY', REVIEW_COPY],
+]) {
   for (const [key, pair] of Object.entries(block)) {
     for (const lang of ['en', 'ar']) {
       if (!pair?.[lang]?.trim()) problems.push(`${name}.${key}.${lang} is empty`);
@@ -72,17 +88,23 @@ for (const [name, block] of [['FAQ_COPY', FAQ_COPY], ['REVIEW_COPY', REVIEW_COPY
 for (const { id } of INDUSTRIES) {
   const archetype = prefillFor(id).archetype || DEFAULT_ARCHETYPE;
   if (!ARCHETYPES.includes(archetype)) problems.push(`sector "${id}" resolves to unknown archetype "${archetype}"`);
-  else if (!OWNER_QUESTIONS[archetype]) problems.push(`sector "${id}" resolves to "${archetype}", which has no questions`);
+  else if (!OWNER_QUESTIONS[archetype])
+    problems.push(`sector "${id}" resolves to "${archetype}", which has no questions`);
 }
 
-if (!ARCHETYPES.includes(DEFAULT_ARCHETYPE)) problems.push(`DEFAULT_ARCHETYPE "${DEFAULT_ARCHETYPE}" is not an archetype`);
+if (!ARCHETYPES.includes(DEFAULT_ARCHETYPE))
+  problems.push(`DEFAULT_ARCHETYPE "${DEFAULT_ARCHETYPE}" is not an archetype`);
 
 if (problems.length) {
-  fail(`${problems.length} coverage problem${problems.length === 1 ? '' : 's'} in src/lib/owner-questions.js:\n` +
-    problems.map((p) => `  · ${p}`).join('\n') +
-    '\n\n  Add the missing copy by hand, or draft candidates with\n' +
-    '  `npm run onboarding:propose` and promote the ones that read well.');
+  fail(
+    `${problems.length} coverage problem${problems.length === 1 ? '' : 's'} in src/lib/owner-questions.js:\n` +
+      problems.map(p => `  · ${p}`).join('\n') +
+      '\n\n  Add the missing copy by hand, or draft candidates with\n' +
+      '  `npm run onboarding:propose` and promote the ones that read well.',
+  );
 }
 
-console.log(`✓ check-onboarding-coverage: in sync — ${INDUSTRIES.length} sectors, ` +
-  `${ARCHETYPES.length} archetypes, ${FIELD_RUNGS.length} rungs, 2 languages.`);
+console.log(
+  `✓ check-onboarding-coverage: in sync — ${INDUSTRIES.length} sectors, ` +
+    `${ARCHETYPES.length} archetypes, ${FIELD_RUNGS.length} rungs, 2 languages.`,
+);

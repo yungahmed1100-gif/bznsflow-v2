@@ -27,9 +27,24 @@ test('a Layla-only account is Catalyst: chats, customers, handoff, broadcasts an
   const o = (await h.dashboard('overview', { sessionHash: a.sessionHash })).value;
   assert.equal(o.plan, 'catalyst');
   assert.equal(o.workspaceRole, 'manager');
-  for (const key of ['chats', 'customers', 'customerDelete', 'humanHandoff', 'businessDetails', 'channelsSetup', 'broadcasts', 'imports']) assert.equal(o.capabilities[key], true, key);
-  for (const key of ['operations', 'money', 'insights', 'approvals', 'exports', 'team']) assert.notEqual(o.capabilities[key], true, key);
-  const hasib = await executeHasib(h.m.ctx, { operation: 'overview', sessionHash: a.sessionHash, hashSecret: SECRET }, h.m.now());
+  for (const key of [
+    'chats',
+    'customers',
+    'customerDelete',
+    'humanHandoff',
+    'businessDetails',
+    'channelsSetup',
+    'broadcasts',
+    'imports',
+  ])
+    assert.equal(o.capabilities[key], true, key);
+  for (const key of ['operations', 'money', 'insights', 'approvals', 'exports', 'team'])
+    assert.notEqual(o.capabilities[key], true, key);
+  const hasib = await executeHasib(
+    h.m.ctx,
+    { operation: 'overview', sessionHash: a.sessionHash, hashSecret: SECRET },
+    h.m.now(),
+  );
   assert.equal(hasib.reason, 'plan_required');
 });
 
@@ -43,16 +58,39 @@ test('the Catalyst owner journey: a customer writes, the owner reads, takes over
 
   assert.equal((await h.messaging('takeover', { sessionHash: a.sessionHash, conversationId: chat.id })).ok, true);
   const requestId = randomUUID();
-  const reply = () => h.messaging('manual_reply', { sessionHash: a.sessionHash, conversationId: chat.id, text: 'Yes, tomorrow.', requestId });
+  const reply = () =>
+    h.messaging('manual_reply', {
+      sessionHash: a.sessionHash,
+      conversationId: chat.id,
+      text: 'Yes, tomorrow.',
+      requestId,
+    });
   assert.equal((await reply()).ok, true);
   assert.equal((await reply()).ok, true, 'a double-clicked send is accepted once');
-  assert.equal(h.m.table('blueMessages').filter(m => m.manual && m.text === 'Yes, tomorrow.').length, 1, 'and queues exactly one reply');
-  assert.equal((await h.messaging('resume_conversation', { sessionHash: a.sessionHash, conversationId: chat.id })).ok, true);
+  assert.equal(
+    h.m.table('blueMessages').filter(m => m.manual && m.text === 'Yes, tomorrow.').length,
+    1,
+    'and queues exactly one reply',
+  );
+  assert.equal(
+    (await h.messaging('resume_conversation', { sessionHash: a.sessionHash, conversationId: chat.id })).ok,
+    true,
+  );
 
-  const edited = await h.dashboard('contact_update', { sessionHash: a.sessionHash, contactId: chat.contact.id, patch: { ownerName: 'Aisha (Seeb)' } });
+  const edited = await h.dashboard('contact_update', {
+    sessionHash: a.sessionHash,
+    contactId: chat.contact.id,
+    patch: { ownerName: 'Aisha (Seeb)' },
+  });
   assert.equal(edited.value.contact.name, 'Aisha (Seeb)');
-  assert.equal((await h.dashboard('contact_delete', { sessionHash: a.sessionHash, contactId: chat.contact.id })).reason, 'confirmation_required');
-  assert.equal((await h.dashboard('contact_delete', { sessionHash: a.sessionHash, contactId: chat.contact.id, confirm: true })).ok, true);
+  assert.equal(
+    (await h.dashboard('contact_delete', { sessionHash: a.sessionHash, contactId: chat.contact.id })).reason,
+    'confirmation_required',
+  );
+  assert.equal(
+    (await h.dashboard('contact_delete', { sessionHash: a.sessionHash, contactId: chat.contact.id, confirm: true })).ok,
+    true,
+  );
   assert.deepEqual((await h.dashboard('contacts', { sessionHash: a.sessionHash })).value.items, []);
 });
 
@@ -60,8 +98,15 @@ test('Catalyst exports its customer list as CSV; chat and full-account exports s
   const { h, a } = await catalyst();
   await h.inbound(a, { from: '96891111111', text: 'Hello' });
   const [chat] = (await h.dashboard('conversations', { sessionHash: a.sessionHash })).value.items;
-  for (const [operation, args] of [['export_chat', { conversationId: chat.id }], ['export_account', {}]]) {
-    assert.equal((await h.dashboard(operation, { sessionHash: a.sessionHash, ...args })).reason, 'plan_required', operation);
+  for (const [operation, args] of [
+    ['export_chat', { conversationId: chat.id }],
+    ['export_account', {}],
+  ]) {
+    assert.equal(
+      (await h.dashboard(operation, { sessionHash: a.sessionHash, ...args })).reason,
+      'plan_required',
+      operation,
+    );
   }
   const csv = await h.dashboard('export_contacts', { sessionHash: a.sessionHash });
   assert.equal(csv.ok, true, 'the customer list exports');
@@ -69,7 +114,11 @@ test('Catalyst exports its customer list as CSV; chat and full-account exports s
   const caps = capabilitiesFor('catalyst');
   for (const operation of ['import_contacts', 'templates', 'campaign_preview', 'campaign_create', 'campaign_cancel']) {
     assert.equal(dashboardGate(operation, caps, 'manager'), null, operation);
-    assert.equal(dashboardGate(operation, capabilitiesFor('catalyst', 'employee'), 'employee'), 'manager_required', operation);
+    assert.equal(
+      dashboardGate(operation, capabilitiesFor('catalyst', 'employee'), 'employee'),
+      'manager_required',
+      operation,
+    );
   }
   assert.equal(dashboardGate('conversations', caps, 'manager'), null);
   const ascend = capabilitiesFor('ascend');
@@ -82,13 +131,36 @@ test('the Catalyst dashboard is four tabs: Chats, Broadcasts, Customers and Sett
   const map = dashboardMap(null, caps);
   assert.deepEqual(map.sections, ['chats', 'broadcasts', 'customers', 'settings']);
   assert.deepEqual(map.views.customers, [], 'Customers is one list');
-  assert.deepEqual(map.views.settings, ['brain', 'channels'], 'Settings: BznsBrain (bzns.md and the Catalog) and Channels');
-  assert.deepEqual(dashboardMap(null, capabilitiesFor('catalyst', 'employee'), 'employee').sections, ['chats', 'customers'], 'staff answer chats and see customers');
+  assert.deepEqual(
+    map.views.settings,
+    ['brain', 'channels'],
+    'Settings: BznsBrain (bzns.md and the Catalog) and Channels',
+  );
+  assert.deepEqual(
+    dashboardMap(null, capabilitiesFor('catalyst', 'employee'), 'employee').sections,
+    ['chats', 'customers'],
+    'staff answer chats and see customers',
+  );
   const p = dashboardPermissions({ capabilities: caps, workspaceRole: 'manager' });
-  assert.deepEqual(p, { canExport: false, canExportCsv: true, canImport: true, canBroadcast: true, canDeleteCustomer: true });
+  assert.deepEqual(p, {
+    canExport: false,
+    canExportCsv: true,
+    canImport: true,
+    canBroadcast: true,
+    canDeleteCustomer: true,
+  });
   const ascend = dashboardPermissions({ capabilities: capabilitiesFor('ascend'), workspaceRole: 'manager' });
-  assert.deepEqual(ascend, { canExport: true, canExportCsv: true, canImport: true, canBroadcast: true, canDeleteCustomer: true });
-  const employee = dashboardPermissions({ capabilities: capabilitiesFor('ascend', 'employee'), workspaceRole: 'employee' });
+  assert.deepEqual(ascend, {
+    canExport: true,
+    canExportCsv: true,
+    canImport: true,
+    canBroadcast: true,
+    canDeleteCustomer: true,
+  });
+  const employee = dashboardPermissions({
+    capabilities: capabilitiesFor('ascend', 'employee'),
+    workspaceRole: 'employee',
+  });
   assert.equal(employee.canExport, false);
   assert.equal(employee.canExportCsv, false);
   assert.equal(employee.canImport, false);
@@ -96,15 +168,52 @@ test('the Catalyst dashboard is four tabs: Chats, Broadcasts, Customers and Sett
 });
 
 // Codes only the webhook, worker or email sender can produce; an owner never sees them.
-const INTERNAL_CODES = new Set(['invalid_envelope', 'invalid_job', 'invalid_state', 'too_many_bindings', 'too_many_events', 'method', 'email', 'code_invalid']);
-const OWNER_CODES = ['plan_required', 'manager_required', 'confirmation_required', 'workspace_access_revoked', 'session_expired', 'csrf', 'origin', 'body_too_large', 'invalid_action',
-  'invalid_timezone', 'invalid_search', 'messaging_unavailable', 'account_unavailable', 'send_failed', 'echo_pending', 'profile_changed', 'instagram_reconnect_required', 'instagram_subscription_failed',
-  'sign_in_required', 'setup_required', 'connection_not_ready', 'reply_not_allowed', 'window_closed', 'contact_opted_out', 'contact_not_found', 'dashboard_unavailable', 'invalid_phone', 'invalid_import'];
+const INTERNAL_CODES = new Set([
+  'invalid_envelope',
+  'invalid_job',
+  'invalid_state',
+  'too_many_bindings',
+  'too_many_events',
+  'method',
+  'email',
+  'code_invalid',
+]);
+const OWNER_CODES = [
+  'plan_required',
+  'manager_required',
+  'confirmation_required',
+  'workspace_access_revoked',
+  'session_expired',
+  'csrf',
+  'origin',
+  'body_too_large',
+  'invalid_action',
+  'invalid_timezone',
+  'invalid_search',
+  'messaging_unavailable',
+  'account_unavailable',
+  'send_failed',
+  'echo_pending',
+  'profile_changed',
+  'instagram_reconnect_required',
+  'instagram_subscription_failed',
+  'sign_in_required',
+  'setup_required',
+  'connection_not_ready',
+  'reply_not_allowed',
+  'window_closed',
+  'contact_opted_out',
+  'contact_not_found',
+  'dashboard_unavailable',
+  'invalid_phone',
+  'invalid_import',
+];
 
 test('every refusal an owner can meet has its own message in English and Arabic, never the generic retry', async () => {
   const { createStrings } = await import('../src/lib/dashboard/strings.js');
   for (const lang of ['en', 'ar']) {
-    const s = createStrings(lang), generic = s.reason('__unknown__');
+    const s = createStrings(lang),
+      generic = s.reason('__unknown__');
     for (const code of OWNER_CODES) {
       assert.ok(!INTERNAL_CODES.has(code), code);
       assert.notEqual(s.reason(code), generic, `${lang}: ${code}`);
@@ -120,10 +229,34 @@ test('the overview tells a live Catalyst owner what is still missing: services &
   assert.deepEqual(await setup(), { services: false, teamContact: false });
   const row = await h.m.db.get(a.rowId);
   await h.m.db.patch(a.rowId, { profile: { ...row.profile, teamContact: 'Sara · +968 9123 4567' } });
-  const entry = { ownerKey: String(a.accountId), entryKey: randomUUID(), kind: 'service', nameEn: 'Valuation', nameAr: 'تقييم', category: '', benefitEn: '', benefitAr: '', descriptionEn: '', descriptionAr: '',
-    availability: '', prices: [], source: 'owner', confidence: 1, laylaUseEn: '', laylaUseAr: '', revision: 1, sortOrder: 0, createdAt: h.m.now(), updatedAt: h.m.now() };
+  const entry = {
+    ownerKey: String(a.accountId),
+    entryKey: randomUUID(),
+    kind: 'service',
+    nameEn: 'Valuation',
+    nameAr: 'تقييم',
+    category: '',
+    benefitEn: '',
+    benefitAr: '',
+    descriptionEn: '',
+    descriptionAr: '',
+    availability: '',
+    prices: [],
+    source: 'owner',
+    confidence: 1,
+    laylaUseEn: '',
+    laylaUseAr: '',
+    revision: 1,
+    sortOrder: 0,
+    createdAt: h.m.now(),
+    updatedAt: h.m.now(),
+  };
   await h.m.db.insert('blueCatalogEntries', { ...entry, status: 'draft' });
-  assert.deepEqual(await setup(), { services: false, teamContact: true }, 'a draft service is not yet something Layla offers');
+  assert.deepEqual(
+    await setup(),
+    { services: false, teamContact: true },
+    'a draft service is not yet something Layla offers',
+  );
   await h.m.db.insert('blueCatalogEntries', { ...entry, entryKey: randomUUID(), status: 'approved' });
   assert.deepEqual(await setup(), { services: true, teamContact: true });
 });

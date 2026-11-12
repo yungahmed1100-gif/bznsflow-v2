@@ -20,14 +20,24 @@ export const MAX_OFFERS_PER_RUN = 5;
 const ARABIC = /[؀-ۿ]/;
 // Hasib may send an offer himself only when every price is a fact the business recorded.
 const FACT_SOURCES = new Set(['catalog_fixed', 'settings']);
-export const HVAC_ESTIMATE_SUBJECT = 'hvac_estimate', HVAC_CONTRACT_SUBJECT = 'hvac_contract';
+export const HVAC_ESTIMATE_SUBJECT = 'hvac_estimate',
+  HVAC_CONTRACT_SUBJECT = 'hvac_contract';
 
 async function openOffers(ctx, subjectType, subjectId) {
-  return (await ctx.db.query('adibaOffers').withIndex('by_subject', q => q.eq('subjectType', subjectType).eq('subjectId', String(subjectId))).take(20)).filter(o => OPEN_STATUSES.includes(o.status));
+  return (
+    await ctx.db
+      .query('adibaOffers')
+      .withIndex('by_subject', q => q.eq('subjectType', subjectType).eq('subjectId', String(subjectId)))
+      .take(20)
+  ).filter(o => OPEN_STATUSES.includes(o.status));
 }
 
 async function langOf(ctx, conversationId) {
-  const last = await ctx.db.query('blueMessages').withIndex('by_conversation_direction_at', q => q.eq('conversationId', conversationId).eq('direction', 'in')).order('desc').first();
+  const last = await ctx.db
+    .query('blueMessages')
+    .withIndex('by_conversation_direction_at', q => q.eq('conversationId', conversationId).eq('direction', 'in'))
+    .order('desc')
+    .first();
   return last?.text && ARABIC.test(last.text) ? 'ar' : 'en';
 }
 
@@ -37,7 +47,11 @@ async function offerLines(ctx, accountId, e) {
   for (const [i, l] of e.lines.entries()) {
     const variant = l.variantId ? await owned(ctx, l.variantId, accountId, 'hasibVariants') : null;
     const base = { key: `l${i + 1}`, name: l.name, qty: l.qty };
-    lines.push(variant && variant.priceMinor === l.unitPriceMinor ? { ...base, catalogPrices: [{ type: 'fixed', amount: l.unitPriceMinor / 1000 }] } : { ...base, ownerMinor: l.unitPriceMinor });
+    lines.push(
+      variant && variant.priceMinor === l.unitPriceMinor
+        ? { ...base, catalogPrices: [{ type: 'fixed', amount: l.unitPriceMinor / 1000 }] }
+        : { ...base, ownerMinor: l.unitPriceMinor },
+    );
   }
   return lines;
 }
@@ -55,17 +69,41 @@ async function offerEstimates(ctx, tenant, shop, settings, actor, now) {
   let sent = 0;
   for (const job of shop.jobs) {
     if (sent >= MAX_OFFERS_PER_RUN) break;
-    const e = latestOf(shop.estimatesOf(job._id)), open = await openOffers(ctx, HVAC_ESTIMATE_SUBJECT, job._id);
-    const waiting = ['triaged', 'on_site', 'estimate_pending', 'approved'].includes(job.status) && e && ['draft', 'issued'].includes(e.status);
+    const e = latestOf(shop.estimatesOf(job._id)),
+      open = await openOffers(ctx, HVAC_ESTIMATE_SUBJECT, job._id);
+    const waiting =
+      ['triaged', 'on_site', 'estimate_pending', 'approved'].includes(job.status) &&
+      e &&
+      ['draft', 'issued'].includes(e.status);
     const current = o => waiting && o.requestId === `hvac-estimate:${e._id}`;
     await withdrawStale(ctx, open, current, now);
     if (!waiting || open.some(current)) continue;
     const { conversation, optedOut } = await conversationOf(ctx, tenant.accountId, job.contactId);
     if (!conversation || optedOut) continue;
-    const offer = await draftOffer(ctx, tenant, { requestId: `hvac-estimate:${e._id}`, packId: 'hvac', kind: 'quote', subjectType: HVAC_ESTIMATE_SUBJECT, subjectId: job._id,
-      contactId: job.contactId, conversationId: conversation._id, lang: await langOf(ctx, conversation._id), lines: await offerLines(ctx, tenant.accountId, e),
-      limitMinor: settings.autoQuoteLimitMinor || 0, validDays: settings.estimateWindowDays }, now);
-    if (!offer.reasons.length && offer.lines.every(l => FACT_SOURCES.has(l.priceSource)) && (await approveAutomatically(ctx, tenant, actor, offer, now)).ok) sent++;
+    const offer = await draftOffer(
+      ctx,
+      tenant,
+      {
+        requestId: `hvac-estimate:${e._id}`,
+        packId: 'hvac',
+        kind: 'quote',
+        subjectType: HVAC_ESTIMATE_SUBJECT,
+        subjectId: job._id,
+        contactId: job.contactId,
+        conversationId: conversation._id,
+        lang: await langOf(ctx, conversation._id),
+        lines: await offerLines(ctx, tenant.accountId, e),
+        limitMinor: settings.autoQuoteLimitMinor || 0,
+        validDays: settings.estimateWindowDays,
+      },
+      now,
+    );
+    if (
+      !offer.reasons.length &&
+      offer.lines.every(l => FACT_SOURCES.has(l.priceSource)) &&
+      (await approveAutomatically(ctx, tenant, actor, offer, now)).ok
+    )
+      sent++;
   }
   return sent;
 }
@@ -74,14 +112,30 @@ async function offerEstimates(ctx, tenant, shop, settings, actor, now) {
 async function offerRenewals(ctx, tenant, shop, actor, now) {
   for (const c of shop.contracts) {
     // The owner may change the price on the offer; approving writes it to the draft, so the offer stays current.
-    const open = await openOffers(ctx, HVAC_CONTRACT_SUBJECT, c._id), current = o => c.status === 'draft' && o.requestId === `hvac-contract:${c._id}`;
+    const open = await openOffers(ctx, HVAC_CONTRACT_SUBJECT, c._id),
+      current = o => c.status === 'draft' && o.requestId === `hvac-contract:${c._id}`;
     await withdrawStale(ctx, open, current, now);
     if (c.status !== 'draft' || !c.renewedFromId || open.some(current)) continue;
     const { conversation, optedOut } = await conversationOf(ctx, tenant.accountId, c.contactId);
     if (!conversation || optedOut) continue;
-    await draftOffer(ctx, tenant, { requestId: `hvac-contract:${c._id}`, packId: 'hvac', kind: 'quote', subjectType: HVAC_CONTRACT_SUBJECT, subjectId: c._id,
-      contactId: c.contactId, conversationId: conversation._id, lang: await langOf(ctx, conversation._id),
-      lines: [{ key: 'l1', name: `AMC ${c.reference} · ${c.visitsPerYear}×`, qty: 1, ownerMinor: c.priceMinor }], limitMinor: 0, validDays: 14 }, now);
+    await draftOffer(
+      ctx,
+      tenant,
+      {
+        requestId: `hvac-contract:${c._id}`,
+        packId: 'hvac',
+        kind: 'quote',
+        subjectType: HVAC_CONTRACT_SUBJECT,
+        subjectId: c._id,
+        contactId: c.contactId,
+        conversationId: conversation._id,
+        lang: await langOf(ctx, conversation._id),
+        lines: [{ key: 'l1', name: `AMC ${c.reference} · ${c.visitsPerYear}×`, qty: 1, ownerMinor: c.priceMinor }],
+        limitMinor: 0,
+        validDays: 14,
+      },
+      now,
+    );
   }
 }
 
@@ -89,7 +143,18 @@ async function offerRenewals(ctx, tenant, shop, actor, now) {
 export async function runHvacAutomation(ctx, tenant, now) {
   const { shop, settings } = await refreshShop(ctx, tenant.accountId, now);
   const actor = automationActor(await workspaceForManager(ctx, tenant.accountId, now), tenant.accountId, 'hasib');
-  const { sent, skipped } = await sendAutoRuleDrafts(ctx, tenant, { drafts: shop.drafts, rules: settings.rules, keyPrefix: 'hvac-draft', actor, links: draft => ({ hvacDraftId: draft._id }) }, now);
+  const { sent, skipped } = await sendAutoRuleDrafts(
+    ctx,
+    tenant,
+    {
+      drafts: shop.drafts,
+      rules: settings.rules,
+      keyPrefix: 'hvac-draft',
+      actor,
+      links: draft => ({ hvacDraftId: draft._id }),
+    },
+    now,
+  );
   const opened = await openContractVisits(ctx, tenant, actor, shop.contracts, now, settings.amcVisitLeadDays);
   const quoted = await offerEstimates(ctx, tenant, shop, settings, actor, now);
   await offerRenewals(ctx, tenant, shop, actor, now);

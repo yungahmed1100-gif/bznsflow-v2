@@ -28,12 +28,37 @@ const SEEDS = [
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz'.split('');
 const MODIFIERS = [
-  '', 'how', 'what', 'why', 'when', 'which', 'who', 'can', 'do', 'does', 'is', 'are',
-  'best', 'top', 'cheap', 'cheapest', 'cost', 'price', 'pricing', 'free',
-  'vs', 'alternative', 'alternatives', 'for', 'near me', 'software', 'setup', 'review',
+  '',
+  'how',
+  'what',
+  'why',
+  'when',
+  'which',
+  'who',
+  'can',
+  'do',
+  'does',
+  'is',
+  'are',
+  'best',
+  'top',
+  'cheap',
+  'cheapest',
+  'cost',
+  'price',
+  'pricing',
+  'free',
+  'vs',
+  'alternative',
+  'alternatives',
+  'for',
+  'near me',
+  'software',
+  'setup',
+  'review',
 ];
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function suggest(query) {
   const url =
@@ -60,9 +85,9 @@ for (const seed of SEEDS) {
   const found = new Set();
   const probes = [
     seed,
-    ...MODIFIERS.filter(Boolean).map((m) => `${m} ${seed}`),
-    ...MODIFIERS.filter(Boolean).map((m) => `${seed} ${m}`),
-    ...ALPHABET.map((c) => `${seed} ${c}`),
+    ...MODIFIERS.filter(Boolean).map(m => `${m} ${seed}`),
+    ...MODIFIERS.filter(Boolean).map(m => `${seed} ${m}`),
+    ...ALPHABET.map(c => `${seed} ${c}`),
   ];
   for (const probe of probes) {
     const { ok, items } = await suggest(probe);

@@ -18,19 +18,37 @@ export async function recordDemand(ctx, { accountId, contact, conversationId, up
   const text = captured || (DEMAND_INTENTS.has(intent) ? known : '');
   if (!text || !(await hasibEnabled(ctx))) return;
   const key = demandKey(text);
-  const recent = await ctx.db.query('hasibDemandSignals').withIndex('by_contact_at', q => q.eq('contactId', contact._id).gte('at', at - DEDUPE_MS)).take(50);
+  const recent = await ctx.db
+    .query('hasibDemandSignals')
+    .withIndex('by_contact_at', q => q.eq('contactId', contact._id).gte('at', at - DEDUPE_MS))
+    .take(50);
   if (recent.some(s => s.key === key)) return;
   const item = await matchItem(ctx, accountId, text);
   let onHand = null;
   if (item?.trackStock) {
-    const variants = await ctx.db.query('hasibVariants').withIndex('by_item', q => q.eq('itemId', item._id)).take(50);
+    const variants = await ctx.db
+      .query('hasibVariants')
+      .withIndex('by_item', q => q.eq('itemId', item._id))
+      .take(50);
     onHand = variants.filter(v => !v.archived).reduce((n, v) => n + Math.max(v.onHand, 0), 0);
   }
-  await ctx.db.insert('hasibDemandSignals', { accountId, contactId: contact._id, ...(conversationId ? { conversationId } : {}), ...(item ? { itemId: item._id } : {}),
-    text: text.slice(0, 80), key, kind: KIND[intent] || 'asked', outOfStock: onHand === 0, at });
+  await ctx.db.insert('hasibDemandSignals', {
+    accountId,
+    contactId: contact._id,
+    ...(conversationId ? { conversationId } : {}),
+    ...(item ? { itemId: item._id } : {}),
+    text: text.slice(0, 80),
+    key,
+    kind: KIND[intent] || 'asked',
+    outOfStock: onHand === 0,
+    at,
+  });
 }
 
 export async function removeDemandFor(ctx, contactId) {
-  const rows = await ctx.db.query('hasibDemandSignals').withIndex('by_contact_at', q => q.eq('contactId', contactId)).take(2000);
+  const rows = await ctx.db
+    .query('hasibDemandSignals')
+    .withIndex('by_contact_at', q => q.eq('contactId', contactId))
+    .take(2000);
   for (const r of rows) await ctx.db.delete(r._id);
 }

@@ -8,9 +8,12 @@ export const DEADLINE_MS = deadlineFor(60);
 
 export function createHandler({ env = process.env, ...options } = {}) {
   const worker = createBlueWorker({ env, ...options });
-  return withDeadline((req, res) => {
-    if (!greenDataReady(env)) return send(res, 503, { ok: false, reason: 'green_cutover_not_ready' });
-    return worker(req, res);
-  }, { ms: DEADLINE_MS, label: 'layla-meta-worker' });
+  return withDeadline(
+    (req, res) => {
+      if (!greenDataReady(env)) return send(res, 503, { ok: false, reason: 'green_cutover_not_ready' });
+      return worker(req, res);
+    },
+    { ms: DEADLINE_MS, label: 'layla-meta-worker' },
+  );
 }
 export default createHandler();

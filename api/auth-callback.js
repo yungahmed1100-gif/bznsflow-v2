@@ -17,12 +17,21 @@
 import { createHmac } from 'node:crypto';
 import { clientIp } from './_lib/guard.js';
 import {
-  readOauthCookie, clearOauthCookie, safeEqual, randomToken,
-  setSessionCookie, SESSION_MAX_AGE,
+  readOauthCookie,
+  clearOauthCookie,
+  safeEqual,
+  randomToken,
+  setSessionCookie,
+  SESSION_MAX_AGE,
 } from './_lib/cookies.js';
 import {
-  providerFor, isProviderEnabled, exchangeCode, verifyIdToken,
-  resolveIdentity, redirectUriFor, signinPath,
+  providerFor,
+  isProviderEnabled,
+  exchangeCode,
+  verifyIdToken,
+  resolveIdentity,
+  redirectUriFor,
+  signinPath,
 } from './_lib/oidc.js';
 import { hashToken } from './_lib/auth.js';
 import { blueAuthStore } from './_lib/blue-auth.js';
@@ -49,18 +58,19 @@ async function handler(req, res) {
   clearOauthCookie(res);
 
   const lang = stash?.l === 'en' ? 'en' : 'ar';
-  const back = (reason) => redirect(
-    res,
-    reason ? `${signinPath(lang)}?e=${encodeURIComponent(reason)}` : signinPath(lang),
-  );
+  const back = reason =>
+    redirect(res, reason ? `${signinPath(lang)}?e=${encodeURIComponent(reason)}` : signinPath(lang));
 
   // The provider refused or the visitor pressed Cancel. `access_denied` is the
   // ordinary "changed my mind" case and is not worth a log line.
   const providerError = url.searchParams.get('error');
   if (providerError) {
     if (providerError !== 'access_denied') {
-      console.warn('[auth-callback] provider returned %s: %s',
-        providerError, url.searchParams.get('error_description') || '');
+      console.warn(
+        '[auth-callback] provider returned %s: %s',
+        providerError,
+        url.searchParams.get('error_description') || '',
+      );
     }
     return back(providerError === 'access_denied' ? 'cancelled' : 'provider');
   }
@@ -80,7 +90,9 @@ async function handler(req, res) {
   const provider = providerFor(stash.p);
   if (!provider || !isProviderEnabled(provider)) return back('provider');
 
-  const ipHash = createHmac('sha256', convexServiceSecret()).update(`oauth:${clientIp(req)}`).digest('hex');
+  const ipHash = createHmac('sha256', convexServiceSecret())
+    .update(`oauth:${clientIp(req)}`)
+    .digest('hex');
   try {
     await blueAuthStore()('oauth_rate', { ipHash });
   } catch (err) {

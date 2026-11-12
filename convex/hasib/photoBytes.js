@@ -14,7 +14,11 @@ export function photoKind(head) {
 /** 'ok' | 'bad' | 'missing' for an uploaded file. */
 export async function checkPhotoBytes(ctx, storageId) {
   let blob;
-  try { blob = await ctx.storage.get(storageId); } catch { return 'missing'; }
+  try {
+    blob = await ctx.storage.get(storageId);
+  } catch {
+    return 'missing';
+  }
   if (!blob) return 'missing';
   if (blob.size > PHOTO_MAX_BYTES) return 'bad';
   return photoKind(new Uint8Array(await blob.slice(0, 12).arrayBuffer())) ? 'ok' : 'bad';
@@ -26,7 +30,11 @@ export async function checkPhotoBytes(ctx, storageId) {
  */
 export async function checkDocumentBytes(ctx, storageId, maxBytes) {
   let blob;
-  try { blob = await ctx.storage.get(storageId); } catch { return 'missing'; }
+  try {
+    blob = await ctx.storage.get(storageId);
+  } catch {
+    return 'missing';
+  }
   if (!blob) return 'missing';
   if (blob.size > maxBytes) return 'bad';
   const head = new Uint8Array(await blob.slice(0, 12).arrayBuffer());

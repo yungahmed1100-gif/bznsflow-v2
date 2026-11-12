@@ -15,7 +15,9 @@ const BASELINE = 'tests/lint-baseline.json';
 const update = process.argv.includes('--update');
 
 const results = await new ESLint().lintFiles(['.']);
-const fatal = results.flatMap(r => r.messages.filter(m => m.fatal).map(m => `${relative('.', r.filePath)}: ${m.message}`));
+const fatal = results.flatMap(r =>
+  r.messages.filter(m => m.fatal).map(m => `${relative('.', r.filePath)}: ${m.message}`),
+);
 if (fatal.length) {
   console.error(`Lint could not parse:\n${fatal.join('\n')}`);
   process.exit(1);
@@ -39,7 +41,8 @@ function countFindings() {
 }
 
 const current = countFindings();
-const total = counts => Object.values(counts).reduce((sum, rules) => sum + Object.values(rules).reduce((a, b) => a + b, 0), 0);
+const total = counts =>
+  Object.values(counts).reduce((sum, rules) => sum + Object.values(rules).reduce((a, b) => a + b, 0), 0);
 
 if (update) {
   writeFileSync(BASELINE, `${JSON.stringify(current, null, 2)}\n`);

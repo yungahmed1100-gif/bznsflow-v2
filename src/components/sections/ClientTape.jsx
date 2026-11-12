@@ -13,14 +13,14 @@ import React from 'react';
 // because equal pixels are not equal presence. These were tuned by eye against
 // the cream ground; adjust by looking, not by measuring.
 const CLIENTS = [
-  { slug: 'bizbay',       name: 'BizBay',            scale: 0.72 },
-  { slug: 'mawa',         name: 'Mawa Real Estate',  scale: 1.12 },
-  { slug: 'mekka-hijama', name: 'Mekka Hijama',      scale: 1.10 },
-  { slug: 'readingjeel',  name: 'Reading Jeel',      scale: 1.10 },
-  { slug: 'royalfish',    name: 'Royal Fish',        scale: 1.10 },
-  { slug: 'madrasaty',    name: 'Madrasaty',         scale: 0.92 },
-  { slug: 'wildmuscat',   name: 'Wild Muscat',       scale: 1.00 },
-  { slug: 'fivegates',    name: 'Five Gates',        scale: 0.88 },
+  { slug: 'bizbay', name: 'BizBay', scale: 0.72 },
+  { slug: 'mawa', name: 'Mawa Real Estate', scale: 1.12 },
+  { slug: 'mekka-hijama', name: 'Mekka Hijama', scale: 1.1 },
+  { slug: 'readingjeel', name: 'Reading Jeel', scale: 1.1 },
+  { slug: 'royalfish', name: 'Royal Fish', scale: 1.1 },
+  { slug: 'madrasaty', name: 'Madrasaty', scale: 0.92 },
+  { slug: 'wildmuscat', name: 'Wild Muscat', scale: 1.0 },
+  { slug: 'fivegates', name: 'Five Gates', scale: 0.88 },
 ];
 
 // Five Gates is white-on-red and Madrasaty is an app icon — neither can be keyed

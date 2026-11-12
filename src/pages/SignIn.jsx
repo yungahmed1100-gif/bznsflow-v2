@@ -43,10 +43,18 @@ function fill(template, values) {
 // Kept in sessionStorage so it survives OAuth; the OAuth start also carries it to the callback.
 function rememberNext(path) {
   if (!path || !NEXT_PATH.test(path)) return;
-  try { sessionStorage.setItem('bf_next', path); } catch { /* storage blocked */ }
+  try {
+    sessionStorage.setItem('bf_next', path);
+  } catch {
+    /* storage blocked */
+  }
 }
 function readNext() {
-  try { return sessionStorage.getItem('bf_next'); } catch { return null; }
+  try {
+    return sessionStorage.getItem('bf_next');
+  } catch {
+    return null;
+  }
 }
 
 // One destination rule for every way in (code, profile, OAuth return, an existing session), shared
@@ -55,7 +63,11 @@ function readNext() {
 function leaveFor(account, lang) {
   const path = signinDestination({ account: { ...account, profileComplete: true }, lang, next: readNext() });
   if (!path) return false;
-  try { sessionStorage.removeItem('bf_next'); } catch { /* storage blocked */ }
+  try {
+    sessionStorage.removeItem('bf_next');
+  } catch {
+    /* storage blocked */
+  }
   window.location.replace(path);
   return true;
 }
@@ -68,7 +80,10 @@ export default function SignIn({ lang = 'ar' }) {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [profile, setProfile] = useState({
-    name: '', phone: '', country: DEFAULT_COUNTRY, industry: '',
+    name: '',
+    phone: '',
+    country: DEFAULT_COUNTRY,
+    industry: '',
   });
   const [account, setAccount] = useState(null);
   const [returning, setReturning] = useState(false);
@@ -111,27 +126,37 @@ export default function SignIn({ lang = 'ar' }) {
   }, []);
 
   const session = useCallback((method, body) => call('/api/auth-session', method, body), [call]);
-  const requestCode = useCallback((body) => call('/api/auth-code', 'POST', body), [call]);
+  const requestCode = useCallback(body => call('/api/auth-code', 'POST', body), [call]);
 
   /** Map a server reason code to copy. The server sends codes, not prose. */
-  const messageFor = useCallback((data) => {
-    switch (data?.reason) {
-      case 'email':      return t.auth_err_email;
-      case 'no_code':    return t.auth_err_expired;
-      case 'locked':     return t.auth_err_locked;
-      case 'too_soon':   return t.auth_err_too_soon;
-      case 'too_many':   return t.auth_err_too_many;
-      case 'rate_ip':
-      case 'rate_global':return t.auth_err_rate;
-      case 'send_failed':return t.auth_err_send;
-      case 'invalid':    return t.auth_err_field;
-      case 'bad_code':
-        return data.attemptsLeft > 0
-          ? fill(t.auth_err_code, { attempts: data.attemptsLeft })
-          : t.auth_err_code_last;
-      default:           return t.auth_err_generic;
-    }
-  }, [t]);
+  const messageFor = useCallback(
+    data => {
+      switch (data?.reason) {
+        case 'email':
+          return t.auth_err_email;
+        case 'no_code':
+          return t.auth_err_expired;
+        case 'locked':
+          return t.auth_err_locked;
+        case 'too_soon':
+          return t.auth_err_too_soon;
+        case 'too_many':
+          return t.auth_err_too_many;
+        case 'rate_ip':
+        case 'rate_global':
+          return t.auth_err_rate;
+        case 'send_failed':
+          return t.auth_err_send;
+        case 'invalid':
+          return t.auth_err_field;
+        case 'bad_code':
+          return data.attemptsLeft > 0 ? fill(t.auth_err_code, { attempts: data.attemptsLeft }) : t.auth_err_code_last;
+        default:
+          return t.auth_err_generic;
+      }
+    },
+    [t],
+  );
 
   /**
    * Where an authenticated account goes next.
@@ -141,27 +166,27 @@ export default function SignIn({ lang = 'ar' }) {
    * shape where a future third outcome gets added to one copy and returning
    * visitors are silently stranded on the wrong step.
    */
-  const applyAccount = useCallback((data) => {
-    setAccount(data.account);
-    if (data.needsProfile) {
-      // A social sign-in hands us a name the emailed code never could, so seed
-      // the form with it rather than making someone retype what Google just
-      // told us. Only ever fills a blank — never overwrites something typed.
-      const given = data.account?.name;
-      if (given) setProfile((p) => (p.name ? p : { ...p, name: given }));
-      setStep('profile');
-      return;
-    }
-    if (leaveFor(data.account, lang)) return;
-    setReturning(true);
-    setStep('done');
-  }, [lang]);
+  const applyAccount = useCallback(
+    data => {
+      setAccount(data.account);
+      if (data.needsProfile) {
+        // A social sign-in hands us a name the emailed code never could, so seed
+        // the form with it rather than making someone retype what Google just
+        // told us. Only ever fills a blank — never overwrites something typed.
+        const given = data.account?.name;
+        if (given) setProfile(p => (p.name ? p : { ...p, name: given }));
+        setStep('profile');
+        return;
+      }
+      if (leaveFor(data.account, lang)) return;
+      setReturning(true);
+      setStep('done');
+    },
+    [lang],
+  );
 
   /** Curried field setter using the updater form, so it cannot read stale state. */
-  const field = useCallback(
-    (key) => (e) => setProfile((p) => ({ ...p, [key]: e.target.value })),
-    [],
-  );
+  const field = useCallback(key => e => setProfile(p => ({ ...p, [key]: e.target.value })), []);
 
   // Mint the CSRF token and pick up an existing session. The site is prerendered
   // by vite-react-ssg, so there is no server render that could have set the
@@ -181,7 +206,9 @@ export default function SignIn({ lang = 'ar' }) {
         if (!cancelled) setResuming(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [session, applyAccount]);
 
   // Surface a failed social sign-in. api/auth-callback.js has no page to render
@@ -194,7 +221,10 @@ export default function SignIn({ lang = 'ar' }) {
     if (typeof window === 'undefined') return; // prerendered by vite-react-ssg
     const params = new URLSearchParams(window.location.search);
     rememberNext(params.get('next'));
-    if (params.get('welcome') === '1') { setResuming(true); window.history.replaceState({}, '', window.location.pathname); }
+    if (params.get('welcome') === '1') {
+      setResuming(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
     const code = params.get('e');
     if (!code) return;
 
@@ -208,86 +238,110 @@ export default function SignIn({ lang = 'ar' }) {
   // the button is disabled rather than pressed into a guaranteed 429.
   useEffect(() => {
     if (resendIn <= 0) return undefined;
-    const id = setTimeout(() => setResendIn((n) => n - 1), 1000);
+    const id = setTimeout(() => setResendIn(n => n - 1), 1000);
     return () => clearTimeout(id);
   }, [resendIn]);
 
   // The first step keeps its autofocused field; every later step scrolls into view with its heading.
   const firstStep = useRef(true);
   useEffect(() => {
-    if (firstStep.current) { firstStep.current = false; return; }
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
+    }
     revealStep(stepHeading.current);
   }, [step]);
 
-  const sendCode = useCallback(async (e) => {
-    e?.preventDefault?.();
-    if (busy) return;
-    setBusy(true); setError('');
-    try {
-      const { status, data } = await requestCode({ email: email.trim(), lang });
-      if (status === 200 && data?.ok) {
-        setStep('code');
-        setCode('');
-        setResendIn(RESEND_SECONDS);
-      } else {
-        setError(messageFor(data));
+  const sendCode = useCallback(
+    async e => {
+      e?.preventDefault?.();
+      if (busy) return;
+      setBusy(true);
+      setError('');
+      try {
+        const { status, data } = await requestCode({ email: email.trim(), lang });
+        if (status === 200 && data?.ok) {
+          setStep('code');
+          setCode('');
+          setResendIn(RESEND_SECONDS);
+        } else {
+          setError(messageFor(data));
+        }
+      } catch {
+        setError(t.auth_err_generic);
+      } finally {
+        setBusy(false);
       }
-    } catch {
-      setError(t.auth_err_generic);
-    } finally {
-      setBusy(false);
-    }
-  }, [busy, requestCode, email, lang, messageFor, t]);
+    },
+    [busy, requestCode, email, lang, messageFor, t],
+  );
 
-  const verifyCode = useCallback(async (e) => {
-    e?.preventDefault?.();
-    if (busy) return;
-    setBusy(true); setError('');
-    try {
-      const { status, data } = await session('POST', { email: email.trim(), code });
-      if (status === 200 && data?.ok) {
-        applyAccount(data);
-      } else {
-        setError(messageFor(data));
+  const verifyCode = useCallback(
+    async e => {
+      e?.preventDefault?.();
+      if (busy) return;
+      setBusy(true);
+      setError('');
+      try {
+        const { status, data } = await session('POST', { email: email.trim(), code });
+        if (status === 200 && data?.ok) {
+          applyAccount(data);
+        } else {
+          setError(messageFor(data));
+        }
+      } catch {
+        setError(t.auth_err_generic);
+      } finally {
+        setBusy(false);
       }
-    } catch {
-      setError(t.auth_err_generic);
-    } finally {
-      setBusy(false);
-    }
-  }, [busy, session, code, email, messageFor, applyAccount, t]);
+    },
+    [busy, session, code, email, messageFor, applyAccount, t],
+  );
 
-  const saveProfile = useCallback(async (e) => {
-    e?.preventDefault?.();
-    if (busy) return;
-    setBusy(true); setError('');
-    try {
-      const { status, data } = await session('PATCH', {
-        ...profile,
-        lang,
-        pageUrl: typeof window !== 'undefined' ? window.location.href : '',
-      });
-      if (status === 200 && data?.ok) {
-        setAccount(data.account);
-        if (leaveFor(data.account, lang)) return;
-        setReturning(false);
-        setStep('done');
-      } else {
-        setError(messageFor(data));
+  const saveProfile = useCallback(
+    async e => {
+      e?.preventDefault?.();
+      if (busy) return;
+      setBusy(true);
+      setError('');
+      try {
+        const { status, data } = await session('PATCH', {
+          ...profile,
+          lang,
+          pageUrl: typeof window !== 'undefined' ? window.location.href : '',
+        });
+        if (status === 200 && data?.ok) {
+          setAccount(data.account);
+          if (leaveFor(data.account, lang)) return;
+          setReturning(false);
+          setStep('done');
+        } else {
+          setError(messageFor(data));
+        }
+      } catch {
+        setError(t.auth_err_generic);
+      } finally {
+        setBusy(false);
       }
-    } catch {
-      setError(t.auth_err_generic);
-    } finally {
-      setBusy(false);
-    }
-  }, [busy, session, lang, messageFor, profile, t]);
+    },
+    [busy, session, lang, messageFor, profile, t],
+  );
 
   const signOut = useCallback(async () => {
     setBusy(true);
-    try { await session('DELETE'); } catch { /* the cookie is cleared server-side */ }
-    setAccount(null); setReturning(false); setEmail(''); setCode('');
+    try {
+      await session('DELETE');
+    } catch {
+      /* the cookie is cleared server-side */
+    }
+    setAccount(null);
+    setReturning(false);
+    setEmail('');
+    setCode('');
     setProfile({ name: '', phone: '', country: DEFAULT_COUNTRY, industry: '' });
-    setStep('email'); setBusy(false); setError('');
+    setStep('email');
+    setBusy(false);
+    setError('');
   }, [session]);
 
   // Carried through the provider round-trip so the callback can send the account straight on.
@@ -298,8 +352,6 @@ export default function SignIn({ lang = 'ar' }) {
 
   return (
     <>
-
-
       <main className="auth-shell" id="main-content">
         <header className="auth-nav">
           <a className="auth-brand" href={ar ? '/' : '/en'}>
@@ -321,32 +373,38 @@ export default function SignIn({ lang = 'ar' }) {
                   aria-current={stepIndex === i ? 'step' : undefined}
                   className={stepIndex > i ? 'is-done' : undefined}
                 >
-                  <span className="auth-step-dot">
-                    {stepIndex > i ? <Icon name="check" size={12} /> : i + 1}
-                  </span>
+                  <span className="auth-step-dot">{stepIndex > i ? <Icon name="check" size={12} /> : i + 1}</span>
                   {label}
                 </li>
               ))}
             </ol>
           )}
 
-          {error && <p className="auth-error" role="alert">{error}</p>}
+          {error && (
+            <p className="auth-error" role="alert">
+              {error}
+            </p>
+          )}
 
-          {step === 'email' && resuming && <p className="auth-sub" role="status">{t.auth_resuming}</p>}
+          {step === 'email' && resuming && (
+            <p className="auth-sub" role="status">
+              {t.auth_resuming}
+            </p>
+          )}
           {step === 'email' && !resuming && (
             <form className="auth-form" onSubmit={sendCode}>
               <p className="section-label">{t.auth_eyebrow}</p>
-              <h1 className="auth-title" tabIndex={-1} ref={stepHeading}>{t.auth_title}</h1>
+              <h1 className="auth-title" tabIndex={-1} ref={stepHeading}>
+                {t.auth_title}
+              </h1>
               {/* The default copy promises an emailed code, which is the wrong
                   sentence to put directly above three provider buttons. */}
-              <p className="auth-sub">
-                {providers.length > 0 ? t.auth_sub_social : t.auth_sub}
-              </p>
+              <p className="auth-sub">{providers.length > 0 ? t.auth_sub_social : t.auth_sub}</p>
 
               {providers.length > 0 && (
                 <>
                   <div className="auth-providers">
-                    {PROVIDER_ORDER.filter((p) => providers.includes(p.id)).map((p) => (
+                    {PROVIDER_ORDER.filter(p => providers.includes(p.id)).map(p => (
                       /* A real link, not a button with a click handler. An OAuth
                          redirect cannot happen inside fetch, so this has to be a
                          full-page navigation — and as an anchor it also works
@@ -357,24 +415,32 @@ export default function SignIn({ lang = 'ar' }) {
                         className="auth-provider"
                         href={`/api/auth-oauth?provider=${p.id}&lang=${lang}${nextQuery}`}
                         aria-disabled={busy || undefined}
-                        onClick={busy ? (e) => e.preventDefault() : undefined}
+                        onClick={busy ? e => e.preventDefault() : undefined}
                       >
                         <BrandMark name={p.id} size={18} />
                         <span>{t[p.key]}</span>
                       </a>
                     ))}
                   </div>
-                  <p className="auth-or"><span>{t.auth_oauth_or}</span></p>
+                  <p className="auth-or">
+                    <span>{t.auth_oauth_or}</span>
+                  </p>
                 </>
               )}
 
               <div className="auth-field">
                 <label htmlFor="auth-email">{t.auth_email_label}</label>
                 <input
-                  id="auth-email" name="email" type="email" required
-                  autoComplete="email" inputMode="email" autoFocus
+                  id="auth-email"
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  inputMode="email"
+                  autoFocus
                   placeholder={t.auth_email_ph}
-                  value={email} onChange={(e) => setEmail(e.target.value)}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
                 />
               </div>
 
@@ -391,7 +457,9 @@ export default function SignIn({ lang = 'ar' }) {
           {step === 'code' && (
             <form className="auth-form" onSubmit={verifyCode}>
               <p className="section-label">{t.auth_eyebrow}</p>
-              <h1 className="auth-title" tabIndex={-1} ref={stepHeading}>{t.auth_step_code}</h1>
+              <h1 className="auth-title" tabIndex={-1} ref={stepHeading}>
+                {t.auth_step_code}
+              </h1>
               <p className="auth-sub" role="status" aria-live="polite">
                 {fill(t.auth_code_sent, { email: email.trim() })}
               </p>
@@ -399,16 +467,22 @@ export default function SignIn({ lang = 'ar' }) {
               <div className="auth-field">
                 <label htmlFor="auth-code">{t.auth_code_label}</label>
                 <input
-                  id="auth-code" name="code" type="text" required autoFocus
-                  inputMode="numeric" autoComplete="one-time-code"
-                  pattern="[0-9]*" className="auth-code-input"
+                  id="auth-code"
+                  name="code"
+                  type="text"
+                  required
+                  autoFocus
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]*"
+                  className="auth-code-input"
                   placeholder={t.auth_code_ph}
                   value={code}
                   /* The six-digit cap lives here rather than in maxLength on
                      purpose. maxLength truncates the RAW value before this
                      handler runs, so pasting "123 456" would be cut to "123 45"
                      and then stripped to five digits — silently losing one. */
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 />
               </div>
 
@@ -423,17 +497,17 @@ export default function SignIn({ lang = 'ar' }) {
               </button>
 
               <div className="auth-alt">
-                <button
-                  type="button" className="auth-link"
-                  onClick={sendCode} disabled={busy || resendIn > 0}
-                >
-                  {resendIn > 0
-                    ? fill(t.auth_code_resend_in, { seconds: resendIn })
-                    : t.auth_code_resend}
+                <button type="button" className="auth-link" onClick={sendCode} disabled={busy || resendIn > 0}>
+                  {resendIn > 0 ? fill(t.auth_code_resend_in, { seconds: resendIn }) : t.auth_code_resend}
                 </button>
                 <button
-                  type="button" className="auth-link"
-                  onClick={() => { setStep('email'); setError(''); setCode(''); }}
+                  type="button"
+                  className="auth-link"
+                  onClick={() => {
+                    setStep('email');
+                    setError('');
+                    setCode('');
+                  }}
                 >
                   {t.auth_code_change}
                 </button>
@@ -444,14 +518,21 @@ export default function SignIn({ lang = 'ar' }) {
           {step === 'profile' && (
             <form className="auth-form" onSubmit={saveProfile}>
               <p className="section-label">{t.auth_eyebrow}</p>
-              <h1 className="auth-title" tabIndex={-1} ref={stepHeading}>{t.auth_step_profile}</h1>
+              <h1 className="auth-title" tabIndex={-1} ref={stepHeading}>
+                {t.auth_step_profile}
+              </h1>
               <p className="auth-sub">{t.auth_profile_sub}</p>
 
               <div className="auth-field">
                 <label htmlFor="auth-name">{t.auth_name_label}</label>
                 <input
-                  id="auth-name" name="name" type="text" required autoFocus
-                  autoComplete="name" maxLength={100}
+                  id="auth-name"
+                  name="name"
+                  type="text"
+                  required
+                  autoFocus
+                  autoComplete="name"
+                  maxLength={100}
                   placeholder={t.auth_name_ph}
                   value={profile.name}
                   onChange={field('name')}
@@ -460,19 +541,15 @@ export default function SignIn({ lang = 'ar' }) {
 
               <div className="auth-field">
                 <label htmlFor="auth-country">{t.auth_country_label}</label>
-                <select
-                  id="auth-country" name="country" required
-                  value={profile.country}
-                  onChange={field('country')}
-                >
+                <select id="auth-country" name="country" required value={profile.country} onChange={field('country')}>
                   {countries.map((c, i) => (
                     <React.Fragment key={c.iso}>
                       {/* A rule after the priority markets, so the jump from
                           "regional" to "everywhere else" is visible. */}
-                      {i > 0 && countries[i - 1].priority && !c.priority && (
-                        <option disabled>──────────</option>
-                      )}
-                      <option value={c.iso}>{c.name} (+{c.dial})</option>
+                      {i > 0 && countries[i - 1].priority && !c.priority && <option disabled>──────────</option>}
+                      <option value={c.iso}>
+                        {c.name} (+{c.dial})
+                      </option>
                     </React.Fragment>
                   ))}
                 </select>
@@ -485,11 +562,16 @@ export default function SignIn({ lang = 'ar' }) {
                       above, so letting it be edited would just let the two
                       disagree. bdi keeps '+971' rendering LTR inside RTL copy. */}
                   <bdi className="auth-dial" aria-hidden="true">
-                    +{countries.find((c) => c.iso === profile.country)?.dial || ''}
+                    +{countries.find(c => c.iso === profile.country)?.dial || ''}
                   </bdi>
                   <input
-                    id="auth-phone" name="phone" type="tel" required
-                    autoComplete="tel-national" inputMode="tel" maxLength={20}
+                    id="auth-phone"
+                    name="phone"
+                    type="tel"
+                    required
+                    autoComplete="tel-national"
+                    inputMode="tel"
+                    maxLength={20}
                     placeholder={t.auth_phone_ph}
                     value={profile.phone}
                     onChange={field('phone')}
@@ -501,13 +583,19 @@ export default function SignIn({ lang = 'ar' }) {
               <div className="auth-field">
                 <label htmlFor="auth-industry">{t.auth_industry_label}</label>
                 <select
-                  id="auth-industry" name="industry" required
+                  id="auth-industry"
+                  name="industry"
+                  required
                   value={profile.industry}
                   onChange={field('industry')}
                 >
-                  <option value="" disabled>{t.auth_industry_ph}</option>
-                  {INDUSTRIES.map((s) => (
-                    <option key={s.id} value={s.id}>{ar ? s.ar : s.en}</option>
+                  <option value="" disabled>
+                    {t.auth_industry_ph}
+                  </option>
+                  {INDUSTRIES.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {ar ? s.ar : s.en}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -530,21 +618,22 @@ export default function SignIn({ lang = 'ar' }) {
               <h1 className="auth-title" tabIndex={-1} ref={stepHeading}>
                 {returning ? t.auth_done_back : t.auth_done_title}
               </h1>
-              <p className="auth-sub">
-                {returning ? t.auth_done_back_sub : t.auth_done_sub}
-              </p>
-              {account?.email && <p className="auth-whoami"><bdi>{account.email}</bdi></p>}
+              <p className="auth-sub">{returning ? t.auth_done_back_sub : t.auth_done_sub}</p>
+              {account?.email && (
+                <p className="auth-whoami">
+                  <bdi>{account.email}</bdi>
+                </p>
+              )}
 
-              <a
-                className="btn btn-primary btn-large auth-submit"
-                href={auditPath(lang)}
-              >
+              <a className="btn btn-primary btn-large auth-submit" href={auditPath(lang)}>
                 <Icon name="calendar" size={18} />
                 <span>{t.auth_done_book}</span>
               </a>
               <a
                 className="btn btn-ghost btn-large auth-submit"
-                href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer"
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <Icon name="whatsapp" size={18} />
                 <span>{t.auth_done_whatsapp}</span>
@@ -554,7 +643,9 @@ export default function SignIn({ lang = 'ar' }) {
                 <button type="button" className="auth-link" onClick={signOut} disabled={busy}>
                   {t.auth_signout}
                 </button>
-                <a className="auth-link" href={ar ? '/' : '/en'}>{t.auth_back}</a>
+                <a className="auth-link" href={ar ? '/' : '/en'}>
+                  {t.auth_back}
+                </a>
               </div>
             </div>
           )}

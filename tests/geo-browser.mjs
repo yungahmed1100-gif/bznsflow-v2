@@ -11,47 +11,81 @@ try {
   for (const lang of ['ar', 'en']) {
     const prefix = lang === 'en' ? '/en' : '';
     const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
-    await context.route('**/*', route => route.request().url().startsWith(base) && !route.request().url().includes('/api/') ? route.continue() : route.abort());
+    await context.route('**/*', route =>
+      route.request().url().startsWith(base) && !route.request().url().includes('/api/')
+        ? route.continue()
+        : route.abort(),
+    );
     const page = await context.newPage();
     await page.goto(`${base}${prefix || '/'}`);
     const schemas = await page.locator('script[type="application/ld+json"]').allTextContents();
     const services = schemas.map(JSON.parse).filter(s => s['@type'] === 'Service');
-    assert.deepEqual(services.map(s => s['@id'].split('#')[1]), ['catalyst', 'ascend']); count++;
-    assert.ok(await page.locator('h1').textContent()); count++;
+    assert.deepEqual(
+      services.map(s => s['@id'].split('#')[1]),
+      ['catalyst', 'ascend'],
+    );
+    count++;
+    assert.ok(await page.locator('h1').textContent());
+    count++;
     for (const target of ['ar', 'en']) {
-      assert.equal(await page.locator(`.lang-item[hreflang="${target}"]`).getAttribute('href'), target === 'en' ? '/en' : '/'); count++;
+      assert.equal(
+        await page.locator(`.lang-item[hreflang="${target}"]`).getAttribute('href'),
+        target === 'en' ? '/en' : '/',
+      );
+      count++;
     }
-    assert.equal(await page.locator('meta[property="og:image"]').getAttribute('content'), 'https://www.bznsflowai.com/og-image.jpg'); count++;
+    assert.equal(
+      await page.locator('meta[property="og:image"]').getAttribute('content'),
+      'https://www.bznsflowai.com/og-image.jpg',
+    );
+    count++;
     const image = await context.request.get(`${base}/og-image.jpg`);
-    assert.equal(image.status(), 200); count++;
-    assert.match(image.headers()['content-type'], /image\/jpeg/); count++;
+    assert.equal(image.status(), 200);
+    count++;
+    assert.match(image.headers()['content-type'], /image\/jpeg/);
+    count++;
     await page.goto(`${base}/og-image.jpg`);
-    assert.deepEqual(await page.locator('img').evaluate(img => [img.naturalWidth, img.naturalHeight]), [1200, 630]); count++;
+    assert.deepEqual(await page.locator('img').evaluate(img => [img.naturalWidth, img.naturalHeight]), [1200, 630]);
+    count++;
     for (const route of ['/contact', '/services', '/support']) {
       await page.goto(`${base}${prefix}${route}`);
       const schema = JSON.parse(await page.locator('script[type="application/ld+json"]').first().textContent());
-      assert.equal(schema.inLanguage, lang); count++;
-      assert.equal(schema.url, `https://www.bznsflowai.com${prefix}${route}`); count++;
-      assert.equal(schema.name, await page.locator('h1').textContent()); count++;
-      assert.ok((await page.locator('body').textContent()).includes(BUSINESS_PAGES[route.slice(1)][lang].updated)); count++;
+      assert.equal(schema.inLanguage, lang);
+      count++;
+      assert.equal(schema.url, `https://www.bznsflowai.com${prefix}${route}`);
+      count++;
+      assert.equal(schema.name, await page.locator('h1').textContent());
+      count++;
+      assert.ok((await page.locator('body').textContent()).includes(BUSINESS_PAGES[route.slice(1)][lang].updated));
+      count++;
     }
     await context.close();
     const interactive = await browser.newContext();
-    await interactive.route('**/*', route => route.request().url().startsWith(base) && !route.request().url().includes('/api/') ? route.continue() : route.abort());
+    await interactive.route('**/*', route =>
+      route.request().url().startsWith(base) && !route.request().url().includes('/api/')
+        ? route.continue()
+        : route.abort(),
+    );
     const live = await interactive.newPage();
     await live.goto(`${base}${prefix || '/'}`);
     await live.locator('.lang-toggle').click();
     const alternate = live.locator(`.lang-item[hreflang="${lang === 'en' ? 'ar' : 'en'}"]`);
     await alternate.waitFor({ state: 'visible' });
     await alternate.focus();
-    assert.equal(await alternate.evaluate(el => el === document.activeElement), true); count++;
+    assert.equal(await alternate.evaluate(el => el === document.activeElement), true);
+    count++;
     await live.keyboard.press('Enter');
     await live.waitForURL(`${base}${lang === 'en' ? '/' : '/en'}`);
-    assert.equal(await live.locator('html').getAttribute('lang'), lang === 'en' ? 'ar' : 'en'); count++;
+    assert.equal(await live.locator('html').getAttribute('lang'), lang === 'en' ? 'ar' : 'en');
+    count++;
     await interactive.close();
   }
   const llms = await (await fetch(`${base}/llms.txt`)).text();
-  assert.ok(llms.includes('Ascend — available by owner-granted access')); count++;
-  assert.ok(llms.includes('Apex — by request, custom quote')); count++;
+  assert.ok(llms.includes('Ascend — available by owner-granted access'));
+  count++;
+  assert.ok(llms.includes('Apex — by request, custom quote'));
+  count++;
   console.log(`PASS: ${count} bilingual discovery, no-JS content, schema, social-image and keyboard checks.`);
-} finally { await browser.close(); }
+} finally {
+  await browser.close();
+}

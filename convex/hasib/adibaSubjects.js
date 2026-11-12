@@ -23,18 +23,52 @@ export const SUBJECTS = Object.freeze({
     async approve(ctx, tenant, actor, offer, now) {
       const p = await owned(ctx, offer.subjectId, tenant.accountId, 'mediaProductions');
       if (!p) return { ok: false, reason: 'production_not_found' };
-      const quoted = await executeMedia(ctx, tenant, actor, { operation: 'media_quote', productionId: offer.subjectId, version: p.version,
-        media: { quoteMinor: offer.totalMinor, ...(offer.depositMinor !== undefined ? { depositMinor: offer.depositMinor } : {}) } }, now);
+      const quoted = await executeMedia(
+        ctx,
+        tenant,
+        actor,
+        {
+          operation: 'media_quote',
+          productionId: offer.subjectId,
+          version: p.version,
+          media: {
+            quoteMinor: offer.totalMinor,
+            ...(offer.depositMinor !== undefined ? { depositMinor: offer.depositMinor } : {}),
+          },
+        },
+        now,
+      );
       if (!quoted.ok) return quoted;
       const fresh = await ctx.db.get(p._id);
-      return executeMedia(ctx, tenant, actor, { operation: 'media_production_status', productionId: offer.subjectId, version: fresh.version, status: 'awaiting_acceptance' }, now);
+      return executeMedia(
+        ctx,
+        tenant,
+        actor,
+        {
+          operation: 'media_production_status',
+          productionId: offer.subjectId,
+          version: fresh.version,
+          status: 'awaiting_acceptance',
+        },
+        now,
+      );
     },
     /** Accept = the customer's recorded yes to the current quote version. */
     async accept(ctx, tenant, actor, offer, { by, evidence }, now) {
       const p = await owned(ctx, offer.subjectId, tenant.accountId, 'mediaProductions');
       if (!p) return { ok: false, reason: 'production_not_found' };
-      return executeMedia(ctx, tenant, actor, { operation: 'media_accept', productionId: offer.subjectId, version: p.version,
-        media: { quoteVersion: p.quoteVersion, acceptedBy: by, evidenceSource: evidence } }, now);
+      return executeMedia(
+        ctx,
+        tenant,
+        actor,
+        {
+          operation: 'media_accept',
+          productionId: offer.subjectId,
+          version: p.version,
+          media: { quoteVersion: p.quoteVersion, acceptedBy: by, evidenceSource: evidence },
+        },
+        now,
+      );
     },
   },
 
@@ -44,8 +78,18 @@ export const SUBJECTS = Object.freeze({
     async accept(ctx, tenant, actor, offer, { evidence }, now) {
       const change = await owned(ctx, offer.subjectId, tenant.accountId, 'mediaChangeOrders');
       if (!change) return { ok: false, reason: 'change_order_not_found' };
-      return executeMedia(ctx, tenant, actor, { operation: 'media_change_order_decide', changeOrderId: offer.subjectId, version: change.version,
-        media: { decision: 'approved', customerApproval: `${evidence}:${offer.ref}` } }, now);
+      return executeMedia(
+        ctx,
+        tenant,
+        actor,
+        {
+          operation: 'media_change_order_decide',
+          changeOrderId: offer.subjectId,
+          version: change.version,
+          media: { decision: 'approved', customerApproval: `${evidence}:${offer.ref}` },
+        },
+        now,
+      );
     },
   },
 
@@ -55,28 +99,79 @@ export const SUBJECTS = Object.freeze({
       const current = await currentEstimate(ctx, tenant, offer);
       if (!current.ok) return current;
       let { estimate, work } = current;
-      const priced = estimate.lines.map((l, i) => ({ ...l, unitPriceMinor: offer.lines.find(x => x.key === `l${i + 1}`)?.unitPriceMinor ?? l.unitPriceMinor }));
+      const priced = estimate.lines.map((l, i) => ({
+        ...l,
+        unitPriceMinor: offer.lines.find(x => x.key === `l${i + 1}`)?.unitPriceMinor ?? l.unitPriceMinor,
+      }));
       if (priced.some((l, i) => l.unitPriceMinor !== estimate.lines[i].unitPriceMinor)) {
-        const saved = await executeAutomotive(ctx, tenant, actor, { operation: 'automotive_estimate_save', requestId: stableRequestId(`offer-estimate:${offer._id}:${offer.version}`), workOrderId: work._id,
-          workflow: { lines: priced.map(({ kind, name, variantId, qty, unitPriceMinor, standardMinutes }) => ({ kind, name, ...(variantId ? { variantId } : {}), qty, unitPriceMinor, ...(standardMinutes !== undefined ? { standardMinutes } : {}) })) } }, now);
+        const saved = await executeAutomotive(
+          ctx,
+          tenant,
+          actor,
+          {
+            operation: 'automotive_estimate_save',
+            requestId: stableRequestId(`offer-estimate:${offer._id}:${offer.version}`),
+            workOrderId: work._id,
+            workflow: {
+              lines: priced.map(({ kind, name, variantId, qty, unitPriceMinor, standardMinutes }) => ({
+                kind,
+                name,
+                ...(variantId ? { variantId } : {}),
+                qty,
+                unitPriceMinor,
+                ...(standardMinutes !== undefined ? { standardMinutes } : {}),
+              })),
+            },
+          },
+          now,
+        );
         if (!saved.ok) return saved;
         estimate = await ctx.db.get(saved.value.id);
         await ctx.db.patch(offer._id, { requestId: `auto-estimate:${estimate._id}` });
       }
       if (estimate.status !== 'draft') return { ok: true };
-      return executeAutomotive(ctx, tenant, actor, { operation: 'automotive_estimate_status', requestId: stableRequestId(`issue:${estimate._id}`), estimateId: estimate._id, version: estimate.version, status: 'issued' }, now);
+      return executeAutomotive(
+        ctx,
+        tenant,
+        actor,
+        {
+          operation: 'automotive_estimate_status',
+          requestId: stableRequestId(`issue:${estimate._id}`),
+          estimateId: estimate._id,
+          version: estimate.version,
+          status: 'issued',
+        },
+        now,
+      );
     },
     /** Accept = the customer's recorded yes approves the estimate they were sent, and only that one. */
     async accept(ctx, tenant, actor, offer, { by, evidence }, now) {
-      const current = await currentEstimate(ctx, tenant, await ctx.db.get(offer._id) || offer);
+      const current = await currentEstimate(ctx, tenant, (await ctx.db.get(offer._id)) || offer);
       if (!current.ok) return current;
       const { estimate, work } = current;
-      if (estimate.status !== 'issued' || estimate.totalMinor !== offer.totalMinor) return { ok: false, reason: 'estimate_changed' };
-      const conversation = offer.conversationId ? await owned(ctx, offer.conversationId, tenant.accountId, 'blueConversations') : null;
+      if (estimate.status !== 'issued' || estimate.totalMinor !== offer.totalMinor)
+        return { ok: false, reason: 'estimate_changed' };
+      const conversation = offer.conversationId
+        ? await owned(ctx, offer.conversationId, tenant.accountId, 'blueConversations')
+        : null;
       // A chat yes is recorded as the channel it came on; a staff entry keeps the evidence they chose.
-      const source = evidence === 'chat_reply' ? (conversation?.channel === 'instagram' ? 'instagram' : 'whatsapp') : evidence;
-      return executeAutomotive(ctx, tenant, actor, { operation: 'automotive_approval_record', requestId: stableRequestId(`accept:${offer._id}`), workOrderId: work._id, version: work.version,
-        estimateId: estimate._id, approvedBy: `${by} · ${offer.ref}`.slice(0, 100), evidenceSource: source }, now);
+      const source =
+        evidence === 'chat_reply' ? (conversation?.channel === 'instagram' ? 'instagram' : 'whatsapp') : evidence;
+      return executeAutomotive(
+        ctx,
+        tenant,
+        actor,
+        {
+          operation: 'automotive_approval_record',
+          requestId: stableRequestId(`accept:${offer._id}`),
+          workOrderId: work._id,
+          version: work.version,
+          estimateId: estimate._id,
+          approvedBy: `${by} · ${offer.ref}`.slice(0, 100),
+          evidenceSource: source,
+        },
+        now,
+      );
     },
   },
 
@@ -90,7 +185,13 @@ export const SUBJECTS = Object.freeze({
       if (!v) return { ok: false, reason: 'variation_not_found' };
       if (v.contractDeltaMinor !== offer.totalMinor) return { ok: false, reason: 'variation_changed' };
       if (v.status === 'submitted') return { ok: true };
-      return executeConstruction(ctx, tenant, actor, { operation: 'construction_variation_status', variationId: v._id, version: v.version, status: 'submitted' }, now);
+      return executeConstruction(
+        ctx,
+        tenant,
+        actor,
+        { operation: 'construction_variation_status', variationId: v._id, version: v.version, status: 'submitted' },
+        now,
+      );
     },
     /**
      * Accept = the client's recorded agreement. A variation changes the contract, so it is not approved
@@ -98,10 +199,25 @@ export const SUBJECTS = Object.freeze({
      */
     async accept(ctx, tenant, actor, offer, { evidence }, now) {
       const v = await owned(ctx, offer.subjectId, tenant.accountId, 'constructionVariations');
-      if (!v || v.status !== 'submitted' || v.contractDeltaMinor !== offer.totalMinor) return { ok: false, reason: 'variation_changed' };
-      await ctx.db.patch(v._id, { customerApproval: `${evidence}:${offer.ref}`.slice(0, 80), customerApprovedAt: now, updatedAt: now });
-      await openTaskOnce(ctx, 'constructionTasks', { accountId: tenant.accountId, kind: 'signed_variation_required', entityType: 'variation', entityId: v._id,
-        reason: `The client agreed to ${v.reference} in chat (${offer.ref}): attach the signed variation, then approve it` }, now);
+      if (!v || v.status !== 'submitted' || v.contractDeltaMinor !== offer.totalMinor)
+        return { ok: false, reason: 'variation_changed' };
+      await ctx.db.patch(v._id, {
+        customerApproval: `${evidence}:${offer.ref}`.slice(0, 80),
+        customerApprovedAt: now,
+        updatedAt: now,
+      });
+      await openTaskOnce(
+        ctx,
+        'constructionTasks',
+        {
+          accountId: tenant.accountId,
+          kind: 'signed_variation_required',
+          entityType: 'variation',
+          entityId: v._id,
+          reason: `The client agreed to ${v.reference} in chat (${offer.ref}): attach the signed variation, then approve it`,
+        },
+        now,
+      );
       return { ok: true };
     },
   },
@@ -112,25 +228,65 @@ export const SUBJECTS = Object.freeze({
       const current = await currentHvacEstimate(ctx, tenant, offer);
       if (!current.ok) return current;
       let { estimate, job } = current;
-      const priced = estimate.lines.map((l, i) => ({ ...l, unitPriceMinor: offer.lines.find(x => x.key === `l${i + 1}`)?.unitPriceMinor ?? l.unitPriceMinor }));
+      const priced = estimate.lines.map((l, i) => ({
+        ...l,
+        unitPriceMinor: offer.lines.find(x => x.key === `l${i + 1}`)?.unitPriceMinor ?? l.unitPriceMinor,
+      }));
       if (priced.some((l, i) => l.unitPriceMinor !== estimate.lines[i].unitPriceMinor)) {
-        const saved = await executeHvac(ctx, tenant, actor, { operation: 'hvac_estimate_save', requestId: stableRequestId(`offer-estimate:${offer._id}:${offer.version}`), jobId: job._id,
-          hvac: { lines: priced.map(({ kind, name, variantId, qty, unitPriceMinor }) => ({ kind, name, ...(variantId ? { variantId } : {}), qty, unitPriceMinor })) } }, now);
+        const saved = await executeHvac(
+          ctx,
+          tenant,
+          actor,
+          {
+            operation: 'hvac_estimate_save',
+            requestId: stableRequestId(`offer-estimate:${offer._id}:${offer.version}`),
+            jobId: job._id,
+            hvac: {
+              lines: priced.map(({ kind, name, variantId, qty, unitPriceMinor }) => ({
+                kind,
+                name,
+                ...(variantId ? { variantId } : {}),
+                qty,
+                unitPriceMinor,
+              })),
+            },
+          },
+          now,
+        );
         if (!saved.ok) return saved;
         estimate = await ctx.db.get(saved.value.id);
         await ctx.db.patch(offer._id, { requestId: `hvac-estimate:${estimate._id}` });
       }
       if (estimate.status !== 'draft') return { ok: true };
-      return executeHvac(ctx, tenant, actor, { operation: 'hvac_estimate_status', estimateId: estimate._id, version: estimate.version, status: 'issued' }, now);
+      return executeHvac(
+        ctx,
+        tenant,
+        actor,
+        { operation: 'hvac_estimate_status', estimateId: estimate._id, version: estimate.version, status: 'issued' },
+        now,
+      );
     },
     /** Accept = the customer's recorded yes approves the estimate they were sent, and only that one. */
     async accept(ctx, tenant, actor, offer, { by, evidence }, now) {
-      const current = await currentHvacEstimate(ctx, tenant, await ctx.db.get(offer._id) || offer);
+      const current = await currentHvacEstimate(ctx, tenant, (await ctx.db.get(offer._id)) || offer);
       if (!current.ok) return current;
       const { estimate, job } = current;
-      if (estimate.status !== 'issued' || estimate.totalMinor !== offer.totalMinor) return { ok: false, reason: 'estimate_changed' };
-      return executeHvac(ctx, tenant, actor, { operation: 'hvac_approval_record', jobId: job._id, version: job.version, estimateId: estimate._id,
-        approvedBy: `${by} · ${offer.ref}`.slice(0, 100), evidenceSource: await chatEvidence(ctx, tenant, offer, evidence) }, now);
+      if (estimate.status !== 'issued' || estimate.totalMinor !== offer.totalMinor)
+        return { ok: false, reason: 'estimate_changed' };
+      return executeHvac(
+        ctx,
+        tenant,
+        actor,
+        {
+          operation: 'hvac_approval_record',
+          jobId: job._id,
+          version: job.version,
+          estimateId: estimate._id,
+          approvedBy: `${by} · ${offer.ref}`.slice(0, 100),
+          evidenceSource: await chatEvidence(ctx, tenant, offer, evidence),
+        },
+        now,
+      );
     },
   },
 
@@ -140,13 +296,37 @@ export const SUBJECTS = Object.freeze({
       const c = await owned(ctx, offer.subjectId, tenant.accountId, 'hvacContracts');
       if (!c || c.status !== 'draft') return { ok: false, reason: 'contract_changed' };
       if (c.priceMinor === offer.totalMinor) return { ok: true };
-      return executeHvac(ctx, tenant, actor, { operation: 'hvac_contract_save', contractId: c._id, version: c.version, hvac: { priceMinor: offer.totalMinor } }, now);
+      return executeHvac(
+        ctx,
+        tenant,
+        actor,
+        {
+          operation: 'hvac_contract_save',
+          contractId: c._id,
+          version: c.version,
+          hvac: { priceMinor: offer.totalMinor },
+        },
+        now,
+      );
     },
     /** Accept = the customer's recorded yes activates the contract at the price they were sent, which charges it. */
     async accept(ctx, tenant, actor, offer, { evidence }, now) {
       const c = await owned(ctx, offer.subjectId, tenant.accountId, 'hvacContracts');
-      if (!c || c.status !== 'draft' || c.priceMinor !== offer.totalMinor) return { ok: false, reason: 'contract_changed' };
-      return executeHvac(ctx, tenant, actor, { operation: 'hvac_contract_status', contractId: c._id, version: c.version, status: 'active', evidenceSource: await chatEvidence(ctx, tenant, offer, evidence) }, now);
+      if (!c || c.status !== 'draft' || c.priceMinor !== offer.totalMinor)
+        return { ok: false, reason: 'contract_changed' };
+      return executeHvac(
+        ctx,
+        tenant,
+        actor,
+        {
+          operation: 'hvac_contract_status',
+          contractId: c._id,
+          version: c.version,
+          status: 'active',
+          evidenceSource: await chatEvidence(ctx, tenant, offer, evidence),
+        },
+        now,
+      );
     },
   },
 });
@@ -154,7 +334,9 @@ export const SUBJECTS = Object.freeze({
 /** A chat yes is recorded as the channel it came on; a staff entry keeps the evidence they chose. */
 async function chatEvidence(ctx, tenant, offer, evidence) {
   if (evidence !== 'chat_reply') return evidence;
-  const conversation = offer.conversationId ? await owned(ctx, offer.conversationId, tenant.accountId, 'blueConversations') : null;
+  const conversation = offer.conversationId
+    ? await owned(ctx, offer.conversationId, tenant.accountId, 'blueConversations')
+    : null;
   return conversation?.channel === 'instagram' ? 'instagram' : 'whatsapp';
 }
 
@@ -163,8 +345,14 @@ async function currentHvacEstimate(ctx, tenant, offer) {
   const job = await owned(ctx, offer.subjectId, tenant.accountId, 'hvacJobs');
   const estimateId = String(offer.requestId || '').replace(/^hvac-estimate:/, '');
   const estimate = estimateId ? await owned(ctx, estimateId, tenant.accountId, 'hvacEstimates') : null;
-  if (!job || !estimate || String(estimate.jobId) !== String(job._id)) return { ok: false, reason: 'estimate_not_found' };
-  const latest = latestOf(await ctx.db.query('hvacEstimates').withIndex('by_job', q => q.eq('jobId', job._id)).take(100));
+  if (!job || !estimate || String(estimate.jobId) !== String(job._id))
+    return { ok: false, reason: 'estimate_not_found' };
+  const latest = latestOf(
+    await ctx.db
+      .query('hvacEstimates')
+      .withIndex('by_job', q => q.eq('jobId', job._id))
+      .take(100),
+  );
   if (String(latest?._id) !== String(estimate._id)) return { ok: false, reason: 'estimate_changed' };
   return { ok: true, estimate, job };
 }
@@ -174,8 +362,14 @@ async function currentEstimate(ctx, tenant, offer) {
   const work = await owned(ctx, offer.subjectId, tenant.accountId, 'automotiveWorkOrders');
   const estimateId = String(offer.requestId || '').replace(/^auto-estimate:/, '');
   const estimate = estimateId ? await owned(ctx, estimateId, tenant.accountId, 'automotiveEstimates') : null;
-  if (!work || !estimate || String(estimate.workOrderId) !== String(work._id)) return { ok: false, reason: 'estimate_not_found' };
-  const latest = latestEstimates(await ctx.db.query('automotiveEstimates').withIndex('by_work_order', q => q.eq('workOrderId', work._id)).take(100)).get(String(work._id));
+  if (!work || !estimate || String(estimate.workOrderId) !== String(work._id))
+    return { ok: false, reason: 'estimate_not_found' };
+  const latest = latestEstimates(
+    await ctx.db
+      .query('automotiveEstimates')
+      .withIndex('by_work_order', q => q.eq('workOrderId', work._id))
+      .take(100),
+  ).get(String(work._id));
   if (String(latest?._id) !== String(estimate._id)) return { ok: false, reason: 'estimate_changed' };
   return { ok: true, estimate, work };
 }

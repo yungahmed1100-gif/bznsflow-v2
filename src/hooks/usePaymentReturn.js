@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
-const ATTEMPTS = 6, INTERVAL_MS = 2500;
+const ATTEMPTS = 6,
+  INTERVAL_MS = 2500;
 
 // Back from Paymob (?payment=return&plan=…): the callback may land a moment after the customer does,
 // so re-read the session a few times until the plan bought shows. `plan` only says what to wait for. Paymob's query parameters are never
@@ -17,20 +18,26 @@ export function usePaymentReturn() {
     window.history.replaceState(null, '', window.location.pathname);
     document.getElementById('tiers')?.scrollIntoView();
     setState({ status: 'checking', plan, account: null });
-    let cancelled = false, timer = null;
+    let cancelled = false,
+      timer = null;
     const check = async attempt => {
       let account = null;
       try {
         const res = await fetch('/api/auth-session', { credentials: 'same-origin', cache: 'no-store' });
         if (res.ok) account = (await res.json())?.account || null;
-      } catch { /* offline for a moment: the next attempt asks again */ }
+      } catch {
+        /* offline for a moment: the next attempt asks again */
+      }
       if (cancelled) return;
       if (account?.accessPlan === plan) return setState({ status: 'active', plan, account });
       if (attempt + 1 >= ATTEMPTS) return setState({ status: 'pending', plan, account });
       timer = setTimeout(() => check(attempt + 1), INTERVAL_MS);
     };
     check(0);
-    return () => { cancelled = true; clearTimeout(timer); };
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, []);
 
   return state;

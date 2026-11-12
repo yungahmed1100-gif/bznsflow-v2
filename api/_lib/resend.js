@@ -14,11 +14,21 @@ export async function sendEmail({ env = process.env, fetcher = fetch, idempotenc
   if (!key || !from) throw new PilotError(failure, 503);
   let response, receipt;
   try {
-    response = await fetcher('https://api.resend.com/emails', { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(20000),
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
-      body: JSON.stringify({ from, ...message }) });
+    response = await fetcher('https://api.resend.com/emails', {
+      method: 'POST',
+      redirect: 'error',
+      signal: AbortSignal.timeout(20000),
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey,
+      },
+      body: JSON.stringify({ from, ...message }),
+    });
     receipt = await response.json();
-  } catch { throw new PilotError(failure, 502); }
+  } catch {
+    throw new PilotError(failure, 502);
+  }
   if (!response.ok || typeof receipt?.id !== 'string') throw new PilotError(failure, 502);
   return receipt.id;
 }

@@ -6,7 +6,7 @@ const SECTION_LABELS = {
   hours: ['Hours', 'ساعات العمل'],
   location: ['Location', 'الموقع'],
   handoff: ['When to hand over to the team', 'متى تحوّل ليلى للفريق'],
-  contact: ['Team contact for customers Layla can\'t help', 'جهة اتصال الفريق للعملاء الذين لا تستطيع ليلى مساعدتهم'],
+  contact: ["Team contact for customers Layla can't help", 'جهة اتصال الفريق للعملاء الذين لا تستطيع ليلى مساعدتهم'],
   faq: ['FAQ', 'الأسئلة الشائعة'],
   areas: ['Areas we cover', 'المناطق التي نغطيها'],
   meta: ['the name and sector lines at the top', 'سطري الاسم والقطاع في الأعلى'],
@@ -16,23 +16,65 @@ const SECTION_LABELS = {
 export const sectionLabel = (key, lang = 'en') => SECTION_LABELS[key]?.[lang === 'ar' ? 1 : 0] || key;
 
 const MESSAGES = {
-  bzns_too_long: ['Your document is longer than 10,000 characters. Shorten it before publishing.', 'المستند أطول من ١٠٬٠٠٠ حرف. اختصره قبل النشر.'],
-  bzns_invalid_characters: ['Remove the hidden control characters (usually from copying text).', 'احذف الرموز المخفية (غالباً من النسخ واللصق).'],
-  bzns_name_required: ['Add your business name on the "name:" line at the top.', 'أضف اسم نشاطك في سطر "name:" في الأعلى.'],
+  bzns_too_long: [
+    'Your document is longer than 10,000 characters. Shorten it before publishing.',
+    'المستند أطول من ١٠٬٠٠٠ حرف. اختصره قبل النشر.',
+  ],
+  bzns_invalid_characters: [
+    'Remove the hidden control characters (usually from copying text).',
+    'احذف الرموز المخفية (غالباً من النسخ واللصق).',
+  ],
+  bzns_name_required: [
+    'Add your business name on the "name:" line at the top.',
+    'أضف اسم نشاطك في سطر "name:" في الأعلى.',
+  ],
   bzns_name_too_long: ['Keep your business name under 100 characters.', 'اجعل اسم النشاط أقل من ١٠٠ حرف.'],
-  bzns_sector_required: ['Add your sector on the "sector:" line at the top.', 'أضف مجال نشاطك في سطر "sector:" في الأعلى.'],
-  bzns_offer_required: ['Add a "What we offer" section that lists your services or products.', 'أضف قسم "خدماتنا" واذكر فيه خدماتك أو منتجاتك.'],
-  bzns_too_many_sections: ['Use at most 40 sections. Merge related ones.', 'استخدم ٤٠ قسماً كحد أقصى. ادمج الأقسام المتشابهة.'],
-  bzns_placeholder: ['Replace every [bracket] in {section} with your real details, or delete the line.', 'استبدل كل [قوسين] في {section} بمعلوماتك الحقيقية أو احذف السطر.'],
-  bzns_html: ['Remove HTML tags from {section}. Plain text and markdown only.', 'احذف وسوم HTML من {section}. نص عادي وتنسيق markdown فقط.'],
-  bzns_money: ['Remove prices or fees from {section}. Layla reads prices from Services & Prices or your Hasib stock.', 'احذف الأسعار أو الرسوم من {section}. تقرأ ليلى الأسعار من الخدمات والأسعار أو من مخزون حاسب.'],
-  bzns_contact_required: ['Add a "Team contact" section with a phone number or email. Layla gives it to customers she can\'t help.', 'أضف قسم "جهة اتصال الفريق" برقم هاتف أو بريد إلكتروني. تعطيه ليلى للعملاء عندما لا تستطيع مساعدتهم.'],
-  bzns_contact_too_long: ['Keep {section} to one short line (120 characters at most), for example a phone number and a name.', 'اجعل {section} سطراً قصيراً واحداً (١٢٠ حرفاً كحد أقصى)، مثل رقم هاتف واسم.'],
-  bzns_conflict: ['This document changed in another tab. Reload the page to get the latest version before saving.', 'تغيّر هذا المستند في نافذة أخرى. أعد تحميل الصفحة للحصول على آخر نسخة قبل الحفظ.'],
+  bzns_sector_required: [
+    'Add your sector on the "sector:" line at the top.',
+    'أضف مجال نشاطك في سطر "sector:" في الأعلى.',
+  ],
+  bzns_offer_required: [
+    'Add a "What we offer" section that lists your services or products.',
+    'أضف قسم "خدماتنا" واذكر فيه خدماتك أو منتجاتك.',
+  ],
+  bzns_too_many_sections: [
+    'Use at most 40 sections. Merge related ones.',
+    'استخدم ٤٠ قسماً كحد أقصى. ادمج الأقسام المتشابهة.',
+  ],
+  bzns_placeholder: [
+    'Replace every [bracket] in {section} with your real details, or delete the line.',
+    'استبدل كل [قوسين] في {section} بمعلوماتك الحقيقية أو احذف السطر.',
+  ],
+  bzns_html: [
+    'Remove HTML tags from {section}. Plain text and markdown only.',
+    'احذف وسوم HTML من {section}. نص عادي وتنسيق markdown فقط.',
+  ],
+  bzns_money: [
+    'Remove prices or fees from {section}. Layla reads prices from Services & Prices or your Hasib stock.',
+    'احذف الأسعار أو الرسوم من {section}. تقرأ ليلى الأسعار من الخدمات والأسعار أو من مخزون حاسب.',
+  ],
+  bzns_contact_required: [
+    'Add a "Team contact" section with a phone number or email. Layla gives it to customers she can\'t help.',
+    'أضف قسم "جهة اتصال الفريق" برقم هاتف أو بريد إلكتروني. تعطيه ليلى للعملاء عندما لا تستطيع مساعدتهم.',
+  ],
+  bzns_contact_too_long: [
+    'Keep {section} to one short line (120 characters at most), for example a phone number and a name.',
+    'اجعل {section} سطراً قصيراً واحداً (١٢٠ حرفاً كحد أقصى)، مثل رقم هاتف واسم.',
+  ],
+  bzns_conflict: [
+    'This document changed in another tab. Reload the page to get the latest version before saving.',
+    'تغيّر هذا المستند في نافذة أخرى. أعد تحميل الصفحة للحصول على آخر نسخة قبل الحفظ.',
+  ],
   bzns_invalid: ['Fix the items listed below, then publish again.', 'صحّح البنود المذكورة أدناه ثم انشر مرة أخرى.'],
-  operation_conflict: ['A WhatsApp connection step is still finishing. Try publishing again in a minute.', 'ما زالت خطوة ربط واتساب قيد الإنهاء. حاول النشر بعد دقيقة.'],
+  operation_conflict: [
+    'A WhatsApp connection step is still finishing. Try publishing again in a minute.',
+    'ما زالت خطوة ربط واتساب قيد الإنهاء. حاول النشر بعد دقيقة.',
+  ],
   session_expired: ['Your setup session expired. Reload the page.', 'انتهت جلسة الإعداد. أعد تحميل الصفحة.'],
-  unavailable: ['We could not save right now. Your text is still here; try again.', 'تعذّر الحفظ الآن. نصّك ما زال هنا؛ حاول مرة أخرى.'],
+  unavailable: [
+    'We could not save right now. Your text is still here; try again.',
+    'تعذّر الحفظ الآن. نصّك ما زال هنا؛ حاول مرة أخرى.',
+  ],
 };
 
 /**
@@ -47,9 +89,15 @@ export function bznsMessage(error, lang = 'en') {
 }
 
 const GROUPED = {
-  bzns_placeholder: ['Replace the [brackets] with your real details, or delete those lines, in: {sections}.', 'استبدل ما بين [القوسين] بمعلوماتك الحقيقية أو احذف تلك الأسطر في: {sections}.'],
+  bzns_placeholder: [
+    'Replace the [brackets] with your real details, or delete those lines, in: {sections}.',
+    'استبدل ما بين [القوسين] بمعلوماتك الحقيقية أو احذف تلك الأسطر في: {sections}.',
+  ],
   bzns_html: ['Remove HTML tags in: {sections}.', 'احذف وسوم HTML في: {sections}.'],
-  bzns_money: ['Remove prices or fees in: {sections}. Layla reads prices from Services & Prices or your Hasib stock.', 'احذف الأسعار أو الرسوم في: {sections}. تقرأ ليلى الأسعار من الخدمات والأسعار أو من مخزون حاسب.'],
+  bzns_money: [
+    'Remove prices or fees in: {sections}. Layla reads prices from Services & Prices or your Hasib stock.',
+    'احذف الأسعار أو الرسوم في: {sections}. تقرأ ليلى الأسعار من الخدمات والأسعار أو من مخزون حاسب.',
+  ],
 };
 
 /**
@@ -59,9 +107,14 @@ const GROUPED = {
  * @returns {string[]}
  */
 export function bznsMessages(errors, lang = 'en') {
-  const ar = lang === 'ar', lines = [], groups = new Map();
+  const ar = lang === 'ar',
+    lines = [],
+    groups = new Map();
   for (const error of errors) {
-    if (!GROUPED[error.code]) { lines.push(bznsMessage(error, lang)); continue; }
+    if (!GROUPED[error.code]) {
+      lines.push(bznsMessage(error, lang));
+      continue;
+    }
     const where = error.heading || sectionLabel(error.section, lang);
     groups.set(error.code, [...(groups.get(error.code) || []), where]);
   }
@@ -76,4 +129,5 @@ export function bznsMessages(errors, lang = 'en') {
  * draft, so it can refuse what the browser's check passed (an older copy, or a newer rule); its list is
  * shown like the browser's instead of a generic "try again".
  */
-export const serverBznsProblems = error => (error?.reason === 'bzns_invalid' && error.errors?.length ? error.errors : null);
+export const serverBznsProblems = error =>
+  error?.reason === 'bzns_invalid' && error.errors?.length ? error.errors : null;

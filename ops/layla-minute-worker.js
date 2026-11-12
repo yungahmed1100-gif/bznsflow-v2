@@ -7,13 +7,19 @@ export default {
     try {
       response = await fetch('https://www.bznsflowai.com/api/layla-meta-worker', {
         // Inspect redirects explicitly; never forward the bearer credential.
-        method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(55000),
+        method: 'POST',
+        redirect: 'manual',
+        signal: AbortSignal.timeout(55000),
         headers: { Authorization: `Bearer ${env.LAYLA_META_WORKER_SECRET}` },
       });
     } catch (error) {
       // Only fixed categories leave this boundary, never exception messages.
-      const reason = error?.name === 'TimeoutError' || error?.name === 'AbortError' ? 'worker_timeout'
-        : error?.name === 'TypeError' ? 'worker_request_failed' : 'worker_unavailable';
+      const reason =
+        error?.name === 'TimeoutError' || error?.name === 'AbortError'
+          ? 'worker_timeout'
+          : error?.name === 'TypeError'
+            ? 'worker_request_failed'
+            : 'worker_unavailable';
       throw new Error(reason);
     }
     if (response.status >= 300 && response.status < 400) {
@@ -24,5 +30,7 @@ export default {
     // The worker endpoint returns only sanitized aggregate status.
     await response.body?.cancel();
   },
-  fetch() { return new Response('Not found', { status: 404 }); },
+  fetch() {
+    return new Response('Not found', { status: 404 });
+  },
 };

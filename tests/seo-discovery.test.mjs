@@ -6,14 +6,25 @@ import { checkSocialImages } from '../scripts/seo/social-images.mjs';
 
 const production = 'https://www.bznsflowai.com';
 const local = 'http://127.0.0.1:5207';
-const pages = () => ['/', '/en'].map((path, i) => ({
-  finalUrl: local + path, title: `Title ${i}`, description: `Description ${i}`, links: [],
-  hreflang: [{ lang: 'ar', href: production + '/' }, { lang: 'en', href: production + '/en' }, { lang: 'x-default', href: production + '/en' }],
-}));
+const pages = () =>
+  ['/', '/en'].map((path, i) => ({
+    finalUrl: local + path,
+    title: `Title ${i}`,
+    description: `Description ${i}`,
+    links: [],
+    hreflang: [
+      { lang: 'ar', href: production + '/' },
+      { lang: 'en', href: production + '/en' },
+      { lang: 'x-default', href: production + '/en' },
+    ],
+  }));
 const options = { sitemapUrls: new Set([local + '/', local + '/en']), canonicalOrigin: production };
 
 test('local hreflang respects the expected production origin and reciprocal paths', () => {
-  assert.deepEqual(checkSite(pages(), options).filter(f => f.severity === 'error'), []);
+  assert.deepEqual(
+    checkSite(pages(), options).filter(f => f.severity === 'error'),
+    [],
+  );
   const wrongDomain = pages();
   wrongDomain[0].hreflang[0].href = 'https://wrong.example/';
   assert.ok(checkSite(wrongDomain, options).some(f => f.code === 'hreflang-no-self'));
@@ -24,16 +35,29 @@ test('local hreflang respects the expected production origin and reciprocal path
 
 test('social image checks detect missing files and HTML fallbacks', async () => {
   const server = createServer((req, res) => {
-    if (req.url === '/good.jpg') { res.writeHead(200, { 'Content-Type': 'image/jpeg' }); res.end(Buffer.from([255, 216, 255, 217])); }
-    else if (req.url === '/fake.jpg') { res.writeHead(200, { 'Content-Type': 'image/jpeg' }); res.end('<html>Fallback</html>'); }
-    else { res.writeHead(404, { 'Content-Type': 'text/html' }); res.end('Missing'); }
+    if (req.url === '/good.jpg') {
+      res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+      res.end(Buffer.from([255, 216, 255, 217]));
+    } else if (req.url === '/fake.jpg') {
+      res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+      res.end('<html>Fallback</html>');
+    } else {
+      res.writeHead(404, { 'Content-Type': 'text/html' });
+      res.end('Missing');
+    }
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   try {
     const base = `http://127.0.0.1:${server.address().port}`;
-    for (const [path, errors] of [['/good.jpg', 0], ['/fake.jpg', 1], ['/missing.jpg', 1]]) {
+    for (const [path, errors] of [
+      ['/good.jpg', 0],
+      ['/fake.jpg', 1],
+      ['/missing.jpg', 1],
+    ]) {
       const result = await checkSocialImages([{ og: { 'og:image': production + path } }], base, production);
       assert.equal(result.length, errors);
     }
-  } finally { await new Promise(resolve => server.close(resolve)); }
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+  }
 });

@@ -8,17 +8,26 @@ import { grantLive } from '../grantStatus.js';
 
 // Apex (custom enterprise, by request) holds everything Ascend has (Ahmed, 2026-10-27).
 export const HASIB_PLANS = Object.freeze(['ascend', 'apex']);
-const normEmail = email => String(email || '').toLowerCase().trim();
+const normEmail = email =>
+  String(email || '')
+    .toLowerCase()
+    .trim();
 
 export async function planFor(ctx, accountId, now = Date.now()) {
   const account = await ctx.db.get(accountId);
   if (!account?.email) return null;
-  const grant = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', normEmail(account.email))).unique();
+  const grant = await ctx.db
+    .query('blueAccessGrants')
+    .withIndex('by_email', q => q.eq('email', normEmail(account.email)))
+    .unique();
   return grantLive(grant, now) ? grant.plan : null;
 }
 
 export async function accountByEmail(ctx, email) {
-  return ctx.db.query('accounts').withIndex('by_email', q => q.eq('email', normEmail(email))).unique();
+  return ctx.db
+    .query('accounts')
+    .withIndex('by_email', q => q.eq('email', normEmail(email)))
+    .unique();
 }
 
 /**
@@ -33,9 +42,21 @@ export async function grantPlan(ctx, { email, plan, packId, note }, now) {
   if (packId !== undefined && !isLivePack(packId)) return fail('pack_not_live');
   const normalized = normEmail(email);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) return fail('invalid_email');
-  const current = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', normalized)).unique();
-  const row = { email: normalized, plan, status: 'active', grantedAt: now, grantedBy: 'ahmed@bznsflowai.com', ...(packId ? { packId } : {}), ...(note ? { note: String(note).slice(0, 200) } : {}) };
-  if (current) await ctx.db.replace(current._id, row); else await ctx.db.insert('blueAccessGrants', row);
+  const current = await ctx.db
+    .query('blueAccessGrants')
+    .withIndex('by_email', q => q.eq('email', normalized))
+    .unique();
+  const row = {
+    email: normalized,
+    plan,
+    status: 'active',
+    grantedAt: now,
+    grantedBy: 'ahmed@bznsflowai.com',
+    ...(packId ? { packId } : {}),
+    ...(note ? { note: String(note).slice(0, 200) } : {}),
+  };
+  if (current) await ctx.db.replace(current._id, row);
+  else await ctx.db.insert('blueAccessGrants', row);
   // An account that doesn't exist yet gets the sector at sign-in (applyGrantedPack). Owners pick their sector
   // only at sign-up, so an operator's assignment also becomes the account's sign-up industry: one answer everywhere.
   if (account && packId) {
@@ -48,11 +69,18 @@ export async function grantPlan(ctx, { email, plan, packId, note }, now) {
 /** @param {any} ctx @param {{ email: string }} input @param {number} now */
 export async function revokePlan(ctx, { email }, now) {
   const normalized = normEmail(email);
-  const current = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', normalized)).unique();
-  if (current?.status === 'active') await ctx.db.patch(current._id, { status: 'revoked', revokedAt: now, revokedBy: 'ahmed@bznsflowai.com' });
+  const current = await ctx.db
+    .query('blueAccessGrants')
+    .withIndex('by_email', q => q.eq('email', normalized))
+    .unique();
+  if (current?.status === 'active')
+    await ctx.db.patch(current._id, { status: 'revoked', revokedAt: now, revokedBy: 'ahmed@bznsflowai.com' });
   const account = await accountByEmail(ctx, normalized);
   if (account) {
-    const entitlement = await ctx.db.query('blueEntitlements').withIndex('by_account', q => q.eq('accountId', account._id)).unique();
+    const entitlement = await ctx.db
+      .query('blueEntitlements')
+      .withIndex('by_account', q => q.eq('accountId', account._id))
+      .unique();
     if (entitlement?.status === 'active') await ctx.db.patch(entitlement._id, { status: 'revoked', revokedAt: now });
   }
   return ok({ accountId: account?._id || null, status: 'revoked' });

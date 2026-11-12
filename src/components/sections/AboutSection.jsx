@@ -38,16 +38,33 @@ export function AboutSection({ t, CALENDAR_URL, trackEvent }) {
             </figure>
             <div className="about-card-detail">
               <div className="detail-item">
-                <span className="detail-icon" data-tone="blue"><Icon name="location" size={16} /></span>
+                <span className="detail-icon" data-tone="blue">
+                  <Icon name="location" size={16} />
+                </span>
                 <span>{t.about_location}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-icon" data-tone="green"><Icon name="shield" size={16} /></span>
+                <span className="detail-icon" data-tone="green">
+                  <Icon name="shield" size={16} />
+                </span>
                 <span>{t.about_role}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-icon" data-tone="orange">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
                 </span>
                 <span>{t.about_founder_role}</span>
               </div>

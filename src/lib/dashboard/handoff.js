@@ -16,4 +16,10 @@ const reasons = {
   send_failed: ['Reply could not be delivered to this customer', 'تعذر توصيل الرد إلى هذا العميل'],
 };
 export const handoffReason = (reason, ar) => (reasons[reason] || reasons.human_attention)[ar ? 1 : 0];
-export const handoffState = (state, ar) => ({ open: ['Waiting for team', 'بانتظار الفريق'], handling: ['Being handled', 'قيد المتابعة'], resolved: ['Resolved · Layla paused', 'تم الحل · ليلى متوقفة'], returned: ['Returned to Layla', 'أُعيدت إلى ليلى'] }[state] || ['Layla can reply', 'يمكن لليلى الرد'])[ar ? 1 : 0];
+export const handoffState = (state, ar) =>
+  (({
+    open: ['Waiting for team', 'بانتظار الفريق'],
+    handling: ['Being handled', 'قيد المتابعة'],
+    resolved: ['Resolved · Layla paused', 'تم الحل · ليلى متوقفة'],
+    returned: ['Returned to Layla', 'أُعيدت إلى ليلى'],
+  })[state] || ['Layla can reply', 'يمكن لليلى الرد'])[ar ? 1 : 0];

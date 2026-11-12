@@ -1,7 +1,17 @@
 // Which plan or role a dashboard operation needs. Pure, so the refusal a Catalyst
 // owner or an employee receives is tested without a Convex deployment.
 
-export const CAMPAIGN_OPERATIONS = Object.freeze(['templates', 'replace_templates', 'campaign_preview', 'campaign_create', 'campaigns', 'campaign_detail', 'campaign_cancel', 'campaign_media_upload_url', 'campaign_media_register']);
+export const CAMPAIGN_OPERATIONS = Object.freeze([
+  'templates',
+  'replace_templates',
+  'campaign_preview',
+  'campaign_create',
+  'campaigns',
+  'campaign_detail',
+  'campaign_cancel',
+  'campaign_media_upload_url',
+  'campaign_media_register',
+]);
 
 /**
  * @param {string} operation the requested dashboard operation
@@ -10,7 +20,8 @@ export const CAMPAIGN_OPERATIONS = Object.freeze(['templates', 'replace_template
  * @returns {null | 'plan_required' | 'manager_required'} null when the operation may run
  */
 export function dashboardGate(operation, capabilities, role) {
-  const needs = operation === 'import_contacts' ? 'imports' : CAMPAIGN_OPERATIONS.includes(operation) ? 'broadcasts' : null;
+  const needs =
+    operation === 'import_contacts' ? 'imports' : CAMPAIGN_OPERATIONS.includes(operation) ? 'broadcasts' : null;
   if (!needs) return null;
   if (role !== 'manager') return 'manager_required';
   return capabilities[needs] ? null : 'plan_required';

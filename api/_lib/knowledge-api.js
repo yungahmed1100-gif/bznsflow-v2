@@ -7,9 +7,25 @@ import { readBody, send, sendPilotError } from './http.js';
 import { PilotError } from './layla/config.js';
 
 const OPERATIONS = ['list', 'open', 'open_draft', 'answers', 'save', 'publish', 'cancel', 'archive'];
-const FIELDS = ['requestId', 'sourceKey', 'title', 'kind', 'text', 'references', 'partial', 'version', 'expectedRevision', 'confirmed', 'acceptPartial'];
+const FIELDS = [
+  'requestId',
+  'sourceKey',
+  'title',
+  'kind',
+  'text',
+  'references',
+  'partial',
+  'version',
+  'expectedRevision',
+  'confirmed',
+  'acceptPartial',
+];
 
-export function createKnowledgeApi({ env = process.env, fetcher = fetch, store = knowledgeStore({ env, fetcher }) } = {}) {
+export function createKnowledgeApi({
+  env = process.env,
+  fetcher = fetch,
+  store = knowledgeStore({ env, fetcher }),
+} = {}) {
   return async (req, res) => {
     try {
       if (!isSameSite(req, env, { write: req.method === 'POST' })) throw new PilotError('origin', 403);
@@ -24,6 +40,8 @@ export function createKnowledgeApi({ env = process.env, fetcher = fetch, store =
       for (const field of FIELDS) if (body[field] !== undefined) args[field] = body[field];
       const result = await store(body.operation, { ...args, tokenHash: hashAccountToken(token) });
       return send(res, 200, { ok: true, ...result, csrfToken: ensureCsrfToken(req, res) }, { vary: 'Cookie' });
-    } catch (error) { return sendPilotError(res, error, { fallback: 'knowledge_unavailable', vary: 'Cookie' }); }
+    } catch (error) {
+      return sendPilotError(res, error, { fallback: 'knowledge_unavailable', vary: 'Cookie' });
+    }
   };
 }

@@ -15,14 +15,27 @@ const OFFSET_LIMITS = [5, 43200];
  *   (off, task mode); an object keyed by rule id sets each rule's own default
  * @param {string[]} [modes] the modes this sector accepts (RULE_MODES, or AUTO_RULE_MODES)
  */
-export function domainSettings(key, defaults, limits, offsets, ruleDefault = { enabled: false, mode: 'task' }, modes = RULE_MODES) {
+export function domainSettings(
+  key,
+  defaults,
+  limits,
+  offsets,
+  ruleDefault = { enabled: false, mode: 'task' },
+  modes = RULE_MODES,
+) {
   const ruleIds = Object.keys(offsets);
   const startOf = id => ('mode' in ruleDefault ? ruleDefault : ruleDefault[id] || { enabled: false, mode: 'task' });
-  const DEFAULTS = Object.freeze({ ...defaults, rules: ruleIds.map(id => ({ id, ...startOf(id), offsetMinutes: offsets[id] })) });
+  const DEFAULTS = Object.freeze({
+    ...defaults,
+    rules: ruleIds.map(id => ({ id, ...startOf(id), offsetMinutes: offsets[id] })),
+  });
   /** The saved values over the defaults; every rule is always present, in a fixed order. */
   const read = (settings = {}) => {
     const saved = settings[key] || {};
-    const rules = ruleIds.map(id => ({ ...DEFAULTS.rules.find(r => r.id === id), ...(saved.rules || []).find(r => r.id === id) }));
+    const rules = ruleIds.map(id => ({
+      ...DEFAULTS.rules.find(r => r.id === id),
+      ...(saved.rules || []).find(r => r.id === id),
+    }));
     return { ...DEFAULTS, ...saved, rules };
   };
   /** Merges a partial update. Returns null when any value is out of range. */
@@ -37,9 +50,20 @@ export function domainSettings(key, defaults, limits, offsets, ruleDefault = { e
     if (update.rules !== undefined) {
       if (!Array.isArray(update.rules) || update.rules.length > ruleIds.length) return null;
       for (const rule of update.rules) {
-        if (!ruleIds.includes(rule?.id) || typeof rule.enabled !== 'boolean' || !modes.includes(rule.mode)
-          || !Number.isSafeInteger(rule.offsetMinutes) || rule.offsetMinutes < OFFSET_LIMITS[0] || rule.offsetMinutes > OFFSET_LIMITS[1]) return null;
-        next.rules = next.rules.map(r => r.id === rule.id ? { id: rule.id, enabled: rule.enabled, mode: rule.mode, offsetMinutes: rule.offsetMinutes } : r);
+        if (
+          !ruleIds.includes(rule?.id) ||
+          typeof rule.enabled !== 'boolean' ||
+          !modes.includes(rule.mode) ||
+          !Number.isSafeInteger(rule.offsetMinutes) ||
+          rule.offsetMinutes < OFFSET_LIMITS[0] ||
+          rule.offsetMinutes > OFFSET_LIMITS[1]
+        )
+          return null;
+        next.rules = next.rules.map(r =>
+          r.id === rule.id
+            ? { id: rule.id, enabled: rule.enabled, mode: rule.mode, offsetMinutes: rule.offsetMinutes }
+            : r,
+        );
       }
     }
     return next;

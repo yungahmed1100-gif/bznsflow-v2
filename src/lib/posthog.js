@@ -17,16 +17,49 @@ export const isPrivatePath = pathname => PRIVATE_PATH.test(pathname);
 export const isAnalyticsHost = hostname => PUBLIC_HOSTS.has(hostname);
 
 /** The website brief's funnel: the only events a private page may send, with only these properties. */
-export const WIZARD_EVENTS = Object.freeze(['website_brief_step', 'website_brief_payments_answer', 'website_brief_form_downloaded',
-  'website_brief_document_added', 'website_brief_document_refused', 'website_brief_sent', 'website_brief_error']);
-export const WIZARD_PROPS = Object.freeze(['step', 'index', 'answer', 'form', 'slot', 'reason', 'field', 'payments', 'documents', 'update']);
+export const WIZARD_EVENTS = Object.freeze([
+  'website_brief_step',
+  'website_brief_payments_answer',
+  'website_brief_form_downloaded',
+  'website_brief_document_added',
+  'website_brief_document_refused',
+  'website_brief_sent',
+  'website_brief_error',
+]);
+export const WIZARD_PROPS = Object.freeze([
+  'step',
+  'index',
+  'answer',
+  'form',
+  'slot',
+  'reason',
+  'field',
+  'payments',
+  'documents',
+  'update',
+]);
 // Properties PostHog adds that could carry where someone came from or who they are.
-const PRIVATE_DROP = ['$referrer', '$referring_domain', '$initial_referrer', '$initial_referring_domain', '$set', '$set_once', '$el_text', '$elements', '$elements_chain'];
+const PRIVATE_DROP = [
+  '$referrer',
+  '$referring_domain',
+  '$initial_referrer',
+  '$initial_referring_domain',
+  '$set',
+  '$set_once',
+  '$el_text',
+  '$elements',
+  '$elements_chain',
+];
 const KEEP = new Set(['token', 'distinct_id']);
 /** Any URL PostHog attaches ($current_url, $session_entry_url, …) loses its query and fragment: ids live there. */
 const withoutQuery = value => {
   if (!/^https?:\/\//i.test(value)) return value;
-  try { const url = new URL(value); return `${url.origin}${url.pathname}`; } catch { return ''; }
+  try {
+    const url = new URL(value);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return '';
+  }
 };
 
 /**
@@ -38,8 +71,12 @@ export function privateEvent(event, location) {
   const properties = {};
   for (const [key, value] of Object.entries(event.properties || {})) {
     if (PRIVATE_DROP.includes(key)) continue;
-    if (key.startsWith('$') || KEEP.has(key)) { properties[key] = typeof value === 'string' ? withoutQuery(value) : value; continue; }
-    const plain = typeof value === 'number' || typeof value === 'boolean' || (typeof value === 'string' && value.length <= 40);
+    if (key.startsWith('$') || KEEP.has(key)) {
+      properties[key] = typeof value === 'string' ? withoutQuery(value) : value;
+      continue;
+    }
+    const plain =
+      typeof value === 'number' || typeof value === 'boolean' || (typeof value === 'string' && value.length <= 40);
     if (WIZARD_PROPS.includes(key) && plain) properties[key] = value;
   }
   properties.$current_url = `${location.origin}${location.pathname}`;
@@ -59,25 +96,34 @@ const pending = [];
  */
 function start({ privateMode = false } = {}) {
   starting = true;
-  const load = () => import('posthog-js').then(({ default: posthog }) => {
-    posthog.init(PROJECT_KEY, {
-      api_host: '/ingest',
-      ui_host: 'https://us.posthog.com',
-      capture_pageview: privateMode ? false : 'history_change',
-      capture_pageleave: !privateMode,
-      autocapture: !privateMode,
-      person_profiles: 'identified_only',
-      session_recording: { maskAllInputs: true },
-      disable_surveys: true,
-      ...(privateMode ? { persistence: 'memory', disable_session_recording: true } : {}),
-      // On a private page only the wizard's allowlisted events leave, whatever raised them.
-      before_send: event => (isPrivatePath(window.location.pathname) ? privateEvent(event, window.location) : event),
-    });
-    client = posthog;
-    followPage(window.location.pathname);
-    for (const [name, props] of pending.splice(0)) client.capture(name, props);
-  }).catch(() => { starting = false; });
-  setTimeout(() => ('requestIdleCallback' in window ? requestIdleCallback(load, { timeout: IDLE_TIMEOUT_MS }) : load()), privateMode ? 0 : START_DELAY_MS);
+  const load = () =>
+    import('posthog-js')
+      .then(({ default: posthog }) => {
+        posthog.init(PROJECT_KEY, {
+          api_host: '/ingest',
+          ui_host: 'https://us.posthog.com',
+          capture_pageview: privateMode ? false : 'history_change',
+          capture_pageleave: !privateMode,
+          autocapture: !privateMode,
+          person_profiles: 'identified_only',
+          session_recording: { maskAllInputs: true },
+          disable_surveys: true,
+          ...(privateMode ? { persistence: 'memory', disable_session_recording: true } : {}),
+          // On a private page only the wizard's allowlisted events leave, whatever raised them.
+          before_send: event =>
+            isPrivatePath(window.location.pathname) ? privateEvent(event, window.location) : event,
+        });
+        client = posthog;
+        followPage(window.location.pathname);
+        for (const [name, props] of pending.splice(0)) client.capture(name, props);
+      })
+      .catch(() => {
+        starting = false;
+      });
+  setTimeout(
+    () => ('requestIdleCallback' in window ? requestIdleCallback(load, { timeout: IDLE_TIMEOUT_MS }) : load()),
+    privateMode ? 0 : START_DELAY_MS,
+  );
 }
 
 /** Called on every route change: starts PostHog on the first public page and pauses replay on private ones. */
@@ -88,8 +134,13 @@ export function followPage(pathname) {
     if (!starting && !hidden) start();
     return;
   }
-  if (hidden && !replayPaused) { client.stopSessionRecording(); replayPaused = true; }
-  else if (!hidden && replayPaused) { client.startSessionRecording(); replayPaused = false; }
+  if (hidden && !replayPaused) {
+    client.stopSessionRecording();
+    replayPaused = true;
+  } else if (!hidden && replayPaused) {
+    client.startSessionRecording();
+    replayPaused = false;
+  }
 }
 
 /** A named site event (CTA clicks, chat, playbook). Dropped until PostHog has started. */
@@ -102,8 +153,12 @@ export function captureEvent(name, props) {
  * private mode on the dashboard, and is held until PostHog has loaded. Never pass names, numbers or files.
  */
 export function captureWizardEvent(name, props = {}) {
-  if (typeof window === 'undefined' || !isAnalyticsHost(window.location.hostname) || !WIZARD_EVENTS.includes(name)) return;
-  if (client) { client.capture(name, props); return; }
+  if (typeof window === 'undefined' || !isAnalyticsHost(window.location.hostname) || !WIZARD_EVENTS.includes(name))
+    return;
+  if (client) {
+    client.capture(name, props);
+    return;
+  }
   if (pending.length < 50) pending.push([name, props]);
   if (!starting) start({ privateMode: isPrivatePath(window.location.pathname) });
 }

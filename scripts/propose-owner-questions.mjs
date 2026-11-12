@@ -46,8 +46,8 @@ function fail(msg) {
 }
 
 const args = process.argv.slice(2);
-const flag = (name) => {
-  const hit = args.find((a) => a.startsWith(`--${name}=`));
+const flag = name => {
+  const hit = args.find(a => a.startsWith(`--${name}=`));
   if (hit) return hit.slice(name.length + 3);
   const i = args.indexOf(`--${name}`);
   return i !== -1 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : null;
@@ -55,8 +55,9 @@ const flag = (name) => {
 
 const onlySector = flag('sector');
 const onlyField = flag('field');
-if (onlySector && !INDUSTRIES.some((i) => i.id === onlySector)) fail(`unknown sector "${onlySector}".`);
-if (onlyField && !FIELD_RUNGS.includes(onlyField)) fail(`unknown field "${onlyField}". One of: ${FIELD_RUNGS.join(', ')}`);
+if (onlySector && !INDUSTRIES.some(i => i.id === onlySector)) fail(`unknown sector "${onlySector}".`);
+if (onlyField && !FIELD_RUNGS.includes(onlyField))
+  fail(`unknown field "${onlyField}". One of: ${FIELD_RUNGS.join(', ')}`);
 
 const ASKING = {
   services: 'what the business offers, listed by name',
@@ -69,9 +70,11 @@ async function propose(sector, label, archetype, field, lang) {
   const bank = questionsFor(archetype);
   const askedEn = bank[field].question.en;
   const neutral = bank[field].example.en;
-  const reply = await chat([
-    { role: 'user', content:
-`A business owner in Oman running this kind of business: ${label.en} (${label.ar}).
+  const reply = await chat(
+    [
+      {
+        role: 'user',
+        content: `A business owner in Oman running this kind of business: ${label.en} (${label.ar}).
 
 They are asked: "${askedEn}"
 
@@ -82,25 +85,30 @@ These are PLACEHOLDER examples shown in a form to suggest the shape of a good an
 Keep each under 14 words, concrete and specific to this kind of business.
 For reference, the current generic example is: "${neutral}"
 
-One per line, numbered 1. to 4. No preamble, no explanation, no commentary.` },
-  ], { numPredict: 200 });
-  return parseList(reply, { max: 4, maxChars: 160 }).map((text) => ({ sector, archetype, field, lang, text }));
+One per line, numbered 1. to 4. No preamble, no explanation, no commentary.`,
+      },
+    ],
+    { numPredict: 200 },
+  );
+  return parseList(reply, { max: 4, maxChars: 160 }).map(text => ({ sector, archetype, field, lang, text }));
 }
 
 if (!(await reachable())) {
-  fail(`no Ollama server at ${host()}.\n` +
-    '  Start Ollama on the host, or point OLLAMA_HOST somewhere else.\n' +
-    '  Nothing else in the onboarding work needs a model: the ladder, its tests\n' +
-    '  and `npm run check:onboarding-coverage` all run offline.');
+  fail(
+    `no Ollama server at ${host()}.\n` +
+      '  Start Ollama on the host, or point OLLAMA_HOST somewhere else.\n' +
+      '  Nothing else in the onboarding work needs a model: the ladder, its tests\n' +
+      '  and `npm run check:onboarding-coverage` all run offline.',
+  );
 }
 
 const have = await installed();
-if (!have.some((n) => n === model() || n.startsWith(`${model()}:`))) {
+if (!have.some(n => n === model() || n.startsWith(`${model()}:`))) {
   fail(`model "${model()}" is not installed on ${host()}.\n  Installed: ${have.join(', ') || '(none)'}`);
 }
 
-const sectors = INDUSTRIES.filter((i) => (onlySector ? i.id === onlySector : true));
-const fields = FIELD_RUNGS.filter((f) => (onlyField ? f === onlyField : true));
+const sectors = INDUSTRIES.filter(i => (onlySector ? i.id === onlySector : true));
+const fields = FIELD_RUNGS.filter(f => (onlyField ? f === onlyField : true));
 
 console.log(`\npropose-owner-questions: ${model()} at ${host()}`);
 console.log(`  ${sectors.length} sector(s) × ${fields.length} field(s) × 2 languages\n`);
@@ -125,12 +133,23 @@ for (const { id, en, ar } of sectors) {
     }
   }
   if (!rows.length) continue;
-  writeFileSync(join(OUT_DIR, `${id}.json`), `${JSON.stringify({
-    sector: id, archetype, model: model(), generatedAt: new Date().toISOString(),
-    note: 'CANDIDATES ONLY. These are placeholder examples, not facts. Read every line, '
-      + 'then promote the good ones into src/lib/owner-questions.js by hand.',
-    rows,
-  }, null, 2)}\n`);
+  writeFileSync(
+    join(OUT_DIR, `${id}.json`),
+    `${JSON.stringify(
+      {
+        sector: id,
+        archetype,
+        model: model(),
+        generatedAt: new Date().toISOString(),
+        note:
+          'CANDIDATES ONLY. These are placeholder examples, not facts. Read every line, ' +
+          'then promote the good ones into src/lib/owner-questions.js by hand.',
+        rows,
+      },
+      null,
+      2,
+    )}\n`,
+  );
   written += rows.length;
 }
 

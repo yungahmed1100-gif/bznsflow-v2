@@ -38,18 +38,33 @@ export const DEFAULT_ARCHETYPE = 'project';
 const booking = {
   services: {
     question: { en: 'What can customers book with you?', ar: 'ما الذي يمكن للعملاء حجزه معك؟' },
-    help: { en: 'List the treatments or services by name. Layla reads this back word for word.', ar: 'اذكر الخدمات أو العلاجات بالاسم. تقرأها ليلى حرفياً كما كتبتها.' },
+    help: {
+      en: 'List the treatments or services by name. Layla reads this back word for word.',
+      ar: 'اذكر الخدمات أو العلاجات بالاسم. تقرأها ليلى حرفياً كما كتبتها.',
+    },
     example: { en: 'Check-up, cleaning, whitening, orthodontics', ar: 'فحص، تنظيف، تبييض، تقويم' },
   },
   prices: {
     question: { en: 'What do your main services cost?', ar: 'كم تكلفة خدماتك الرئيسية؟' },
-    help: { en: 'Even a starting price helps. Leave it blank if prices vary too much.', ar: 'حتى السعر الابتدائي يفيد. اتركه فارغاً إذا كانت الأسعار متفاوتة.' },
-    example: { en: 'First visit 15 OMR, main service from 25 OMR', ar: 'الزيارة الأولى ١٥ ر.ع، الخدمة الرئيسية من ٢٥ ر.ع' },
+    help: {
+      en: 'Even a starting price helps. Leave it blank if prices vary too much.',
+      ar: 'حتى السعر الابتدائي يفيد. اتركه فارغاً إذا كانت الأسعار متفاوتة.',
+    },
+    example: {
+      en: 'First visit 15 OMR, main service from 25 OMR',
+      ar: 'الزيارة الأولى ١٥ ر.ع، الخدمة الرئيسية من ٢٥ ر.ع',
+    },
   },
   hours: {
     question: { en: 'When can customers come in?', ar: 'متى يمكن للعملاء الحضور؟' },
-    help: { en: 'Include the days you are closed — that is what customers ask about most.', ar: 'اذكر أيام الإغلاق أيضاً — فهي أكثر ما يسأل عنه العملاء.' },
-    example: { en: 'Sunday to Thursday, 9am to 9pm. Closed Friday.', ar: 'الأحد إلى الخميس، ٩ صباحاً حتى ٩ مساءً. الجمعة مغلق.' },
+    help: {
+      en: 'Include the days you are closed — that is what customers ask about most.',
+      ar: 'اذكر أيام الإغلاق أيضاً — فهي أكثر ما يسأل عنه العملاء.',
+    },
+    example: {
+      en: 'Sunday to Thursday, 9am to 9pm. Closed Friday.',
+      ar: 'الأحد إلى الخميس، ٩ صباحاً حتى ٩ مساءً. الجمعة مغلق.',
+    },
   },
   location: {
     question: { en: 'Where are you, and do you have more than one branch?', ar: 'أين تقع، وهل لديك أكثر من فرع؟' },
@@ -61,22 +76,40 @@ const booking = {
 const catalog = {
   services: {
     question: { en: 'What do you sell?', ar: 'ماذا تبيع؟' },
-    help: { en: 'Name the categories customers ask for. You can add the full list later.', ar: 'اذكر الأصناف التي يطلبها العملاء. يمكنك إضافة القائمة الكاملة لاحقاً.' },
+    help: {
+      en: 'Name the categories customers ask for. You can add the full list later.',
+      ar: 'اذكر الأصناف التي يطلبها العملاء. يمكنك إضافة القائمة الكاملة لاحقاً.',
+    },
     example: { en: 'Coffee, cold drinks, cakes and pastries', ar: 'قهوة، مشروبات باردة، كيك ومعجنات' },
   },
   prices: {
     question: { en: 'What do your popular items cost?', ar: 'كم أسعار أكثر منتجاتك طلباً؟' },
     help: { en: 'A few real prices are worth more than a full list.', ar: 'بعض الأسعار الحقيقية أنفع من قائمة كاملة.' },
-    example: { en: 'Most items 1 to 5 OMR, larger orders from 12 OMR', ar: 'معظم الأصناف من ١ إلى ٥ ر.ع، الطلبات الكبيرة من ١٢ ر.ع' },
+    example: {
+      en: 'Most items 1 to 5 OMR, larger orders from 12 OMR',
+      ar: 'معظم الأصناف من ١ إلى ٥ ر.ع، الطلبات الكبيرة من ١٢ ر.ع',
+    },
   },
   hours: {
-    question: { en: 'When are you open, and how much notice do orders need?', ar: 'ما مواعيد العمل، وكم يحتاج الطلب من وقت مسبق؟' },
-    help: { en: 'Notice periods stop customers asking for something today that takes two days.', ar: 'ذكر المدة المسبقة يمنع طلب شيء اليوم يحتاج يومين.' },
-    example: { en: 'Daily 7am to 11pm. Large orders need 24 hours notice.', ar: 'يومياً من ٧ صباحاً حتى ١١ مساءً. الطلبات الكبيرة تحتاج ٢٤ ساعة.' },
+    question: {
+      en: 'When are you open, and how much notice do orders need?',
+      ar: 'ما مواعيد العمل، وكم يحتاج الطلب من وقت مسبق؟',
+    },
+    help: {
+      en: 'Notice periods stop customers asking for something today that takes two days.',
+      ar: 'ذكر المدة المسبقة يمنع طلب شيء اليوم يحتاج يومين.',
+    },
+    example: {
+      en: 'Daily 7am to 11pm. Large orders need 24 hours notice.',
+      ar: 'يومياً من ٧ صباحاً حتى ١١ مساءً. الطلبات الكبيرة تحتاج ٢٤ ساعة.',
+    },
   },
   location: {
     question: { en: 'Where do customers collect from, and do you deliver?', ar: 'من أين يستلم العملاء، وهل توصّل؟' },
-    help: { en: 'Say which areas you deliver to and what it costs.', ar: 'اذكر المناطق التي توصّل إليها وتكلفة التوصيل.' },
+    help: {
+      en: 'Say which areas you deliver to and what it costs.',
+      ar: 'اذكر المناطق التي توصّل إليها وتكلفة التوصيل.',
+    },
     example: { en: 'Qurum, Muscat. Delivery across Muscat for 2 OMR.', ar: 'القرم، مسقط. توصيل داخل مسقط بـ ٢ ر.ع.' },
   },
 };
@@ -84,22 +117,43 @@ const catalog = {
 const project = {
   services: {
     question: { en: 'What kind of work do you take on?', ar: 'ما نوع الأعمال التي تنفذها؟' },
-    help: { en: 'Describe the jobs you want enquiries about — and the ones you do not.', ar: 'اذكر الأعمال التي تريد استفسارات عنها، والتي لا تريدها.' },
-    example: { en: 'AC installation, servicing and repair for homes and offices', ar: 'تركيب وصيانة وإصلاح المكيفات للمنازل والمكاتب' },
+    help: {
+      en: 'Describe the jobs you want enquiries about — and the ones you do not.',
+      ar: 'اذكر الأعمال التي تريد استفسارات عنها، والتي لا تريدها.',
+    },
+    example: {
+      en: 'AC installation, servicing and repair for homes and offices',
+      ar: 'تركيب وصيانة وإصلاح المكيفات للمنازل والمكاتب',
+    },
   },
   prices: {
     question: { en: 'How do you price your work?', ar: 'كيف تحدد أسعار أعمالك؟' },
-    help: { en: 'A call-out fee or a starting range is enough. Layla will not quote beyond what you write.', ar: 'أجر الزيارة أو نطاق ابتدائي يكفي. لن تذكر ليلى سعراً غير ما كتبته.' },
+    help: {
+      en: 'A call-out fee or a starting range is enough. Layla will not quote beyond what you write.',
+      ar: 'أجر الزيارة أو نطاق ابتدائي يكفي. لن تذكر ليلى سعراً غير ما كتبته.',
+    },
     example: { en: 'Site visit 10 OMR. Most jobs from 35 OMR.', ar: 'زيارة الموقع ١٠ ر.ع. معظم الأعمال من ٣٥ ر.ع.' },
   },
   hours: {
-    question: { en: 'When can customers reach you, and how soon can you start?', ar: 'متى يمكن للعملاء الوصول إليك، وكم يلزم للبدء؟' },
-    help: { en: 'Lead time matters as much as working hours for this kind of work.', ar: 'مدة البدء مهمة كأهمية ساعات العمل في هذا النوع من الأعمال.' },
-    example: { en: 'Saturday to Thursday, 8am to 6pm. Usually on site within two days.', ar: 'السبت إلى الخميس، ٨ صباحاً حتى ٦ مساءً. عادة نبدأ خلال يومين.' },
+    question: {
+      en: 'When can customers reach you, and how soon can you start?',
+      ar: 'متى يمكن للعملاء الوصول إليك، وكم يلزم للبدء؟',
+    },
+    help: {
+      en: 'Lead time matters as much as working hours for this kind of work.',
+      ar: 'مدة البدء مهمة كأهمية ساعات العمل في هذا النوع من الأعمال.',
+    },
+    example: {
+      en: 'Saturday to Thursday, 8am to 6pm. Usually on site within two days.',
+      ar: 'السبت إلى الخميس، ٨ صباحاً حتى ٦ مساءً. عادة نبدأ خلال يومين.',
+    },
   },
   location: {
     question: { en: 'Which areas do you cover?', ar: 'ما المناطق التي تغطيها؟' },
-    help: { en: 'Coverage stops enquiries you cannot serve, which saves your team time.', ar: 'تحديد التغطية يمنع استفسارات لا تستطيع خدمتها، ويوفر وقت فريقك.' },
+    help: {
+      en: 'Coverage stops enquiries you cannot serve, which saves your team time.',
+      ar: 'تحديد التغطية يمنع استفسارات لا تستطيع خدمتها، ويوفر وقت فريقك.',
+    },
     example: { en: 'All of Muscat and Barka. Outside that by arrangement.', ar: 'كل مسقط وبركاء. خارجها بالاتفاق.' },
   },
 };

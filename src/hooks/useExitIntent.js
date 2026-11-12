@@ -17,7 +17,7 @@ import { useEffect, useState, useCallback } from 'react';
 const SEEN_KEY = 'bf_playbook_seen';
 
 const ORGANIC = { scroll: 0.55, dwellMs: 20000 };
-const FROM_AD = { scroll: 0.30, dwellMs: 8000 };
+const FROM_AD = { scroll: 0.3, dwellMs: 8000 };
 
 /** localStorage throws outright in some privacy modes — never let that break the page. */
 function alreadySeen() {
@@ -74,16 +74,17 @@ export function useExitIntent({ suppressed = false } = {}) {
     };
 
     // Desktop: leaving through the top edge.
-    const onMouseOut = (e) => {
+    const onMouseOut = e => {
       if (e.clientY <= 0 && !e.relatedTarget) fire();
     };
 
     // Touch: engagement stands in for intent — scrolled far enough AND stayed
     // long enough.
-    const qualifies = () =>
-      Date.now() - startedAt >= dwellMs && scrolledFraction() >= scrollGate;
+    const qualifies = () => Date.now() - startedAt >= dwellMs && scrolledFraction() >= scrollGate;
 
-    const check = () => { if (qualifies()) fire(); };
+    const check = () => {
+      if (qualifies()) fire();
+    };
 
     // Deliberately BOTH a scroll listener and a poll. The listener responds
     // immediately; the poll is the safety net, because "dwell elapsed while

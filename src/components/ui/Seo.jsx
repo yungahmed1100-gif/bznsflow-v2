@@ -27,9 +27,7 @@ export function Seo({
       <meta
         name="robots"
         content={
-          noindex
-            ? 'noindex, follow'
-            : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'
+          noindex ? 'noindex, follow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'
         }
       />
 
@@ -54,7 +52,11 @@ export function Seo({
 
       {/* JSON-LD */}
       {jsonLd.map((schema, i) => (
-        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }} />
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
+        />
       ))}
     </>
   );

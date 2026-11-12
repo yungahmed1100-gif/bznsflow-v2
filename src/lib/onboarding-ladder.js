@@ -23,8 +23,7 @@
 // clever here.
 
 import { prefillFor } from './sector-prefill.generated.js';
-import { DEFAULT_ARCHETYPE, FAQ_COPY, FAQ_TARGET, FIELD_RUNGS, REVIEW_COPY, questionsFor }
-  from './owner-questions.js';
+import { DEFAULT_ARCHETYPE, FAQ_COPY, FAQ_TARGET, FIELD_RUNGS, REVIEW_COPY, questionsFor } from './owner-questions.js';
 
 /**
  * The real limits from api/_lib/layla/review-profile.js. Duplicated here on
@@ -35,7 +34,10 @@ import { DEFAULT_ARCHETYPE, FAQ_COPY, FAQ_TARGET, FIELD_RUNGS, REVIEW_COPY, ques
 export const LIMITS = { field: 350, faqQuestion: 200, faqAnswer: 700 };
 
 /** Trim and clamp one answer to what the profile contract accepts. */
-export const clamp = (value, limit) => String(value ?? '').trim().slice(0, limit);
+export const clamp = (value, limit) =>
+  String(value ?? '')
+    .trim()
+    .slice(0, limit);
 
 /** A fresh ladder for one sector. `skipped` is a list of rung ids. */
 export function createLadder(sectorId, lang = 'en') {
@@ -72,7 +74,7 @@ const isAnswered = (state, field) => !!clamp(state.answers[field], LIMITS.field)
  */
 export function nextRung(state) {
   const ar = state.lang === 'ar';
-  const pick = (pair) => (ar ? pair.ar : pair.en);
+  const pick = pair => (ar ? pair.ar : pair.en);
   const bank = questionsFor(state.archetype);
 
   for (const field of FIELD_RUNGS) {
@@ -90,7 +92,7 @@ export function nextRung(state) {
   }
 
   if (state.faqs.length < FAQ_TARGET && !isSkipped(state, 'faqs')) {
-    const used = new Set(state.faqs.map((f) => f.question));
+    const used = new Set(state.faqs.map(f => f.question));
     return {
       id: `faq:${state.faqs.length}`,
       kind: 'faq',
@@ -98,14 +100,20 @@ export function nextRung(state) {
       help: pick(FAQ_COPY.help),
       answerQuestion: pick(FAQ_COPY.answerQuestion),
       answerHelp: pick(FAQ_COPY.answerHelp),
-      suggestions: state.faqSuggestions.filter((q) => !used.has(q)),
+      suggestions: state.faqSuggestions.filter(q => !used.has(q)),
       limit: LIMITS.faqQuestion,
       answerLimit: LIMITS.faqAnswer,
     };
   }
 
   if (!isSkipped(state, 'review')) {
-    return { id: 'review', kind: 'review', question: pick(REVIEW_COPY.question), help: pick(REVIEW_COPY.help), limit: 0 };
+    return {
+      id: 'review',
+      kind: 'review',
+      question: pick(REVIEW_COPY.question),
+      help: pick(REVIEW_COPY.help),
+      limit: 0,
+    };
   }
   return null;
 }
@@ -115,7 +123,7 @@ export function answerField(state, field, value) {
   if (!FIELD_RUNGS.includes(field)) return state;
   const text = clamp(value, LIMITS.field);
   if (!text) return skip(state, field);
-  return { ...state, answers: { ...state.answers, [field]: text }, skipped: state.skipped.filter((id) => id !== field) };
+  return { ...state, answers: { ...state.answers, [field]: text }, skipped: state.skipped.filter(id => id !== field) };
 }
 
 /** Record one FAQ pair. Both halves are required — a question with no answer is not an FAQ. */
@@ -123,7 +131,7 @@ export function answerFaq(state, question, answer) {
   const q = clamp(question, LIMITS.faqQuestion);
   const a = clamp(answer, LIMITS.faqAnswer);
   if (!q || !a) return state;
-  if (state.faqs.some((f) => f.question === q)) return state;
+  if (state.faqs.some(f => f.question === q)) return state;
   return { ...state, faqs: [...state.faqs, { question: q, answer: a }] };
 }
 
@@ -135,8 +143,9 @@ export function skip(state, id) {
 /** How far along the ladder is, for a progress indicator. */
 export function progress(state) {
   const total = FIELD_RUNGS.length + 1;
-  const done = FIELD_RUNGS.filter((f) => isAnswered(state, f) || isSkipped(state, f)).length
-    + (state.faqs.length >= FAQ_TARGET || isSkipped(state, 'faqs') ? 1 : 0);
+  const done =
+    FIELD_RUNGS.filter(f => isAnswered(state, f) || isSkipped(state, f)).length +
+    (state.faqs.length >= FAQ_TARGET || isSkipped(state, 'faqs') ? 1 : 0);
   return { done: Math.min(done, total), total };
 }
 
@@ -158,6 +167,6 @@ export function toProfilePatch(state) {
     const text = clamp(state.answers[field], LIMITS.field);
     if (text) patch[field] = text;
   }
-  if (state.faqs.length) patch.faqs = state.faqs.map((f) => ({ question: f.question, answer: f.answer }));
+  if (state.faqs.length) patch.faqs = state.faqs.map(f => ({ question: f.question, answer: f.answer }));
   return patch;
 }

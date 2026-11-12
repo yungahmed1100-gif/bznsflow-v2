@@ -6,18 +6,28 @@ import { INSTAGRAM, WHATSAPP, accountOf, channelOf, isSender, selfOf } from '../
 const NOW = Date.UTC(2026, 8, 17, 12);
 // A real IGSID is 16-17 digits — longer than any E.164 subscriber number, which
 // is the whole reason the old single sender test could not accept Instagram.
-const IG_ACCOUNT = '17841400000000000', IGSID = '6123456789012345';
+const IG_ACCOUNT = '17841400000000000',
+  IGSID = '6123456789012345';
 const ig = () => ({ channel: INSTAGRAM, igAccount: IG_ACCOUNT });
 const wa = () => ({ channel: WHATSAPP, waba: '222', phone: '333', sender: '96888888888' });
 const raw = x => Buffer.from(JSON.stringify(x));
 
-const item = (over = {}) => ({ sender: { id: IGSID }, recipient: { id: IG_ACCOUNT }, timestamp: NOW,
-  message: { mid: 'ig.mid.1', text: 'what are your prices?' }, ...over });
-const envelope = (...items) => ({ object: 'instagram', entry: [{ id: IG_ACCOUNT, time: NOW, messaging: items.length ? items : [item()] }] });
+const item = (over = {}) => ({
+  sender: { id: IGSID },
+  recipient: { id: IG_ACCOUNT },
+  timestamp: NOW,
+  message: { mid: 'ig.mid.1', text: 'what are your prices?' },
+  ...over,
+});
+const envelope = (...items) => ({
+  object: 'instagram',
+  entry: [{ id: IG_ACCOUNT, time: NOW, messaging: items.length ? items : [item()] }],
+});
 
 test('an Instagram direct message parses into one channel-agnostic message event', () => {
-  assert.deepEqual(parseEvents(raw(envelope()), ig(), NOW),
-    [{ kind: 'message', id: 'ig.mid.1', from: IGSID, at: NOW, text: 'what are your prices?' }]);
+  assert.deepEqual(parseEvents(raw(envelope()), ig(), NOW), [
+    { kind: 'message', id: 'ig.mid.1', from: IGSID, at: NOW, text: 'what are your prices?' },
+  ]);
 });
 
 test('an IGSID is accepted as a sender where the WhatsApp phone rule would reject it', () => {
@@ -38,9 +48,14 @@ test('Instagram timestamps are milliseconds, not WhatsApp seconds', () => {
 });
 
 test('a business echo retains its provider identity so our own replies can be excluded', () => {
-  const echo = item({ sender: { id: IG_ACCOUNT }, recipient: { id: IGSID },
-    message: { mid: 'ig.mid.2', text: 'a human answered', is_echo: true } });
-  assert.deepEqual(parseEvents(raw(envelope(echo)), ig(), NOW), [{ kind: 'echo', id: 'ig.mid.2', from: IGSID, at:NOW, text:'a human answered' }]);
+  const echo = item({
+    sender: { id: IG_ACCOUNT },
+    recipient: { id: IGSID },
+    message: { mid: 'ig.mid.2', text: 'a human answered', is_echo: true },
+  });
+  assert.deepEqual(parseEvents(raw(envelope(echo)), ig(), NOW), [
+    { kind: 'echo', id: 'ig.mid.2', from: IGSID, at: NOW, text: 'a human answered' },
+  ]);
 });
 
 test('unsent messages, self traffic and bodiless events create no reply work', () => {
@@ -48,11 +63,11 @@ test('unsent messages, self traffic and bodiless events create no reply work', (
   const self = item({ sender: { id: IG_ACCOUNT }, message: { mid: 'ig.mid.4', text: 'ours' } });
   const seen = item({ message: undefined, read: { mid: 'ig.mid.1' } });
   const empty = item({ message: { mid: 'ig.mid.5', text: '   ' } });
-  const events=parseEvents(raw(envelope(deleted, self, seen, empty)), ig(), NOW);
-  assert.equal(events[0].kind,'deleted');
-  assert.equal(events[1].handoff,true);
-  assert.equal(events[1].reply,null);
-  assert.equal(events.length,2);
+  const events = parseEvents(raw(envelope(deleted, self, seen, empty)), ig(), NOW);
+  assert.equal(events[0].kind, 'deleted');
+  assert.equal(events[1].handoff, true);
+  assert.equal(events[1].reply, null);
+  assert.equal(events.length, 2);
 });
 
 test('a binding answers only for its own channel, in both directions', () => {

@@ -2,21 +2,30 @@
 // Every check returns findings; nothing here touches the network.
 
 import {
-  SEVERITY, TITLE_MIN, TITLE_MAX, DESC_MIN, DESC_MAX,
-  LCP_MS, CLS, FCP_MS, IMAGE_OVERSIZE_RATIO, REQUIRED_SCHEMA_PROPS,
+  SEVERITY,
+  TITLE_MIN,
+  TITLE_MAX,
+  DESC_MIN,
+  DESC_MAX,
+  LCP_MS,
+  CLS,
+  FCP_MS,
+  IMAGE_OVERSIZE_RATIO,
+  REQUIRED_SCHEMA_PROPS,
 } from './rules.mjs';
 
 const finding = (severity, code, message) => ({ severity, code, message });
 const { ERROR, WARN, INFO } = SEVERITY;
 
 // Strip a trailing slash so '/en' and '/en/' compare equal.
-const norm = (u) => (u ? u.replace(/\/$/, '') || '/' : u);
+const norm = u => (u ? u.replace(/\/$/, '') || '/' : u);
 
 function checkTitle({ title }) {
   if (!title) return [finding(ERROR, 'title-missing', 'No <title>')];
   const n = title.length;
   if (n < TITLE_MIN) return [finding(WARN, 'title-short', `Title ${n} chars (min ${TITLE_MIN}): "${title}"`)];
-  if (n > TITLE_MAX) return [finding(WARN, 'title-long', `Title ${n} chars (max ${TITLE_MAX}) — will truncate in SERP: "${title}"`)];
+  if (n > TITLE_MAX)
+    return [finding(WARN, 'title-long', `Title ${n} chars (max ${TITLE_MAX}) — will truncate in SERP: "${title}"`)];
   return [];
 }
 
@@ -24,22 +33,29 @@ function checkDescription({ description }) {
   if (!description) return [finding(ERROR, 'desc-missing', 'No meta description')];
   const n = description.length;
   if (n < DESC_MIN) return [finding(WARN, 'desc-short', `Meta description ${n} chars (min ${DESC_MIN})`)];
-  if (n > DESC_MAX) return [finding(WARN, 'desc-long', `Meta description ${n} chars (max ${DESC_MAX}) — will truncate`)];
+  if (n > DESC_MAX)
+    return [finding(WARN, 'desc-long', `Meta description ${n} chars (max ${DESC_MAX}) — will truncate`)];
   return [];
 }
 
 function checkKeywords({ keywords }) {
   if (!keywords) return [];
   const count = keywords.split(',').length;
-  return [finding(WARN, 'meta-keywords',
-    `meta keywords present (${count} terms). Google ignores it; large lists read as spam. Remove.`)];
+  return [
+    finding(
+      WARN,
+      'meta-keywords',
+      `meta keywords present (${count} terms). Google ignores it; large lists read as spam. Remove.`,
+    ),
+  ];
 }
 
 function checkHeadings({ headings }) {
   const out = [];
-  const h1s = headings.filter((h) => h.level === 1);
+  const h1s = headings.filter(h => h.level === 1);
   if (h1s.length === 0) out.push(finding(ERROR, 'h1-missing', 'No <h1>'));
-  if (h1s.length > 1) out.push(finding(ERROR, 'h1-multiple', `${h1s.length} <h1> elements: ${h1s.map((h) => `"${h.text}"`).join(', ')}`));
+  if (h1s.length > 1)
+    out.push(finding(ERROR, 'h1-multiple', `${h1s.length} <h1> elements: ${h1s.map(h => `"${h.text}"`).join(', ')}`));
 
   let prev = 0;
   for (const h of headings) {
@@ -53,7 +69,8 @@ function checkHeadings({ headings }) {
 
 function checkCanonical({ canonical, finalUrl }) {
   if (!canonical) return [finding(ERROR, 'canonical-missing', 'No canonical link')];
-  if (!/^https?:\/\//.test(canonical)) return [finding(ERROR, 'canonical-relative', `Canonical is not absolute: ${canonical}`)];
+  if (!/^https?:\/\//.test(canonical))
+    return [finding(ERROR, 'canonical-relative', `Canonical is not absolute: ${canonical}`)];
   if (norm(canonical) !== norm(finalUrl)) {
     return [finding(INFO, 'canonical-cross', `Canonical points elsewhere: ${canonical} (page is ${finalUrl})`)];
   }
@@ -69,8 +86,13 @@ function checkRobotsMeta({ robots }) {
 
 function checkContent({ textLength }) {
   if (textLength < 300) {
-    return [finding(ERROR, 'thin-content',
-      `Only ${textLength} chars of rendered text — likely not server-rendered, or genuinely thin`)];
+    return [
+      finding(
+        ERROR,
+        'thin-content',
+        `Only ${textLength} chars of rendered text — likely not server-rendered, or genuinely thin`,
+      ),
+    ];
   }
   return [];
 }
@@ -98,8 +120,13 @@ function checkImages({ images }) {
     const budget = img.renderWidth * IMAGE_OVERSIZE_RATIO;
     if (img.naturalWidth > budget) {
       const waste = (img.naturalWidth / img.renderWidth).toFixed(1);
-      out.push(finding(WARN, 'img-oversized',
-        `Served ${img.naturalWidth}px for a ${img.renderWidth}px box (${waste}x, budget ${budget}px): ${src}`));
+      out.push(
+        finding(
+          WARN,
+          'img-oversized',
+          `Served ${img.naturalWidth}px for a ${img.renderWidth}px box (${waste}x, budget ${budget}px): ${src}`,
+        ),
+      );
     }
   }
   return out;
@@ -143,8 +170,13 @@ function checkRedirects({ redirects, status }) {
   const out = [];
   if (status >= 400) out.push(finding(ERROR, 'http-error', `HTTP ${status}`));
   if (redirects.length > 1) {
-    out.push(finding(WARN, 'redirect-chain',
-      `${redirects.length}-hop redirect chain: ${redirects.map((r) => r.from).join(' → ')}`));
+    out.push(
+      finding(
+        WARN,
+        'redirect-chain',
+        `${redirects.length}-hop redirect chain: ${redirects.map(r => r.from).join(' → ')}`,
+      ),
+    );
   }
   return out;
 }
@@ -185,12 +217,12 @@ export function checkPage(page) {
 // judged once every page is in hand.
 export function checkSite(pages, { sitemapUrls, canonicalOrigin }) {
   const out = [];
-  const live = pages.filter((p) => !p.error);
-  const known = new Set(live.map((p) => norm(p.finalUrl)));
+  const live = pages.filter(p => !p.error);
+  const known = new Set(live.map(p => norm(p.finalUrl)));
   // Local previews keep production canonicals. Rebase only the explicitly
   // expected origin so wrong-domain or wrong-path alternates still fail.
   const crawlOrigin = live[0] ? new URL(live[0].finalUrl).origin : null;
-  const crawlUrl = (href) => {
+  const crawlUrl = href => {
     if (!href || !canonicalOrigin || !crawlOrigin) return norm(href);
     const url = new URL(href);
     return norm(url.origin === canonicalOrigin ? `${crawlOrigin}${url.pathname}${url.search}` : href);
@@ -206,8 +238,13 @@ export function checkSite(pages, { sitemapUrls, canonicalOrigin }) {
     }
     for (const [value, urls] of seen) {
       if (urls.length > 1) {
-        out.push(finding(ERROR, `duplicate-${field}`,
-          `${urls.length} pages share the same ${field} ("${String(value).slice(0, 60)}…"): ${urls.join(', ')}`));
+        out.push(
+          finding(
+            ERROR,
+            `duplicate-${field}`,
+            `${urls.length} pages share the same ${field} ("${String(value).slice(0, 60)}…"): ${urls.join(', ')}`,
+          ),
+        );
       }
     }
   }
@@ -215,22 +252,27 @@ export function checkSite(pages, { sitemapUrls, canonicalOrigin }) {
   // hreflang must be reciprocal and must include x-default.
   for (const p of live) {
     if (p.hreflang.length === 0) continue;
-    const langs = p.hreflang.map((h) => h.lang);
+    const langs = p.hreflang.map(h => h.lang);
     if (!langs.includes('x-default')) {
       out.push(finding(WARN, 'hreflang-no-xdefault', `${p.finalUrl} declares hreflang but no x-default`));
     }
-    const selfDeclared = p.hreflang.some((h) => crawlUrl(h.href) === norm(p.finalUrl));
+    const selfDeclared = p.hreflang.some(h => crawlUrl(h.href) === norm(p.finalUrl));
     if (!selfDeclared) {
       out.push(finding(ERROR, 'hreflang-no-self', `${p.finalUrl} does not list itself in its own hreflang set`));
     }
     for (const alt of p.hreflang) {
       if (alt.lang === 'x-default') continue;
-      const target = live.find((q) => norm(q.finalUrl) === crawlUrl(alt.href));
+      const target = live.find(q => norm(q.finalUrl) === crawlUrl(alt.href));
       if (!target) continue; // outside the crawl — reported by the link check
-      const reciprocal = target.hreflang.some((h) => crawlUrl(h.href) === norm(p.finalUrl));
+      const reciprocal = target.hreflang.some(h => crawlUrl(h.href) === norm(p.finalUrl));
       if (!reciprocal) {
-        out.push(finding(ERROR, 'hreflang-not-reciprocal',
-          `${p.finalUrl} → ${alt.href} (${alt.lang}) is not returned by the target`));
+        out.push(
+          finding(
+            ERROR,
+            'hreflang-not-reciprocal',
+            `${p.finalUrl} → ${alt.href} (${alt.lang}) is not returned by the target`,
+          ),
+        );
       }
     }
   }

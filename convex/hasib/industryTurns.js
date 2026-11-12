@@ -12,69 +12,137 @@ import { OPEN_JOB } from './hvacDomain.js';
 const fieldsOf = contact => new Map((contact.fields || []).map(field => [field.key, field.value]));
 
 async function automotiveTurn(ctx, { row, contact, now, secret }) {
-  if (!await sectorTurnPack(ctx, { row, secret, packId: 'automotive' })) return null;
+  if (!(await sectorTurnPack(ctx, { row, secret, packId: 'automotive' }))) return null;
   const fields = fieldsOf(contact);
   if (!fields.get('service') && !fields.get('date') && !fields.get('time')) return null;
   // A customer who already has a booking coming up needs no new request.
-  const vehicles = (await ctx.db.query('automotiveVehicles').withIndex('by_contact', q => q.eq('contactId', contact._id)).take(20)).filter(x => x.accountId === row.accountId);
+  const vehicles = (
+    await ctx.db
+      .query('automotiveVehicles')
+      .withIndex('by_contact', q => q.eq('contactId', contact._id))
+      .take(20)
+  ).filter(x => x.accountId === row.accountId);
   if (vehicles.length) {
     const ids = new Set(vehicles.map(x => String(x._id)));
-    const coming = await ctx.db.query('automotiveAppointments').withIndex('by_account_start', q => q.eq('accountId', row.accountId).gte('startsAt', now)).take(500);
+    const coming = await ctx.db
+      .query('automotiveAppointments')
+      .withIndex('by_account_start', q => q.eq('accountId', row.accountId).gte('startsAt', now))
+      .take(500);
     if (coming.some(x => ids.has(String(x.vehicleId)) && ['scheduled', 'confirmed'].includes(x.status))) return null;
   }
-  await openTaskOnce(ctx, 'automotiveTasks', { accountId: row.accountId, kind: 'chat_booking_request', entityType: 'contact', entityId: contact._id,
-    reason: 'Service request from Layla: offer the customer a slot' }, now);
+  await openTaskOnce(
+    ctx,
+    'automotiveTasks',
+    {
+      accountId: row.accountId,
+      kind: 'chat_booking_request',
+      entityType: 'contact',
+      entityId: contact._id,
+      reason: 'Service request from Layla: offer the customer a slot',
+    },
+    now,
+  );
   return { contactId: contact._id };
 }
 
 async function constructionTurn(ctx, { row, contact, now, secret }) {
-  if (!await sectorTurnPack(ctx, { row, secret, packId: 'construction' })) return null;
+  if (!(await sectorTurnPack(ctx, { row, secret, packId: 'construction' }))) return null;
   const fields = fieldsOf(contact);
   if (!fields.get('service') && !fields.get('project_type')) return null;
-  const projects = await ctx.db.query('constructionProjects').withIndex('by_account_status', q => q.eq('accountId', row.accountId).eq('status', 'tender')).take(200);
+  const projects = await ctx.db
+    .query('constructionProjects')
+    .withIndex('by_account_status', q => q.eq('accountId', row.accountId).eq('status', 'tender'))
+    .take(200);
   if (projects.some(p => String(p.contactId) === String(contact._id))) return null;
-  await openTaskOnce(ctx, 'constructionTasks', { accountId: row.accountId, kind: 'site_visit_request', entityType: 'contact', entityId: contact._id,
-    reason: 'Project enquiry from Layla: arrange a site visit' }, now);
+  await openTaskOnce(
+    ctx,
+    'constructionTasks',
+    {
+      accountId: row.accountId,
+      kind: 'site_visit_request',
+      entityType: 'contact',
+      entityId: contact._id,
+      reason: 'Project enquiry from Layla: arrange a site visit',
+    },
+    now,
+  );
   return { contactId: contact._id };
 }
 
 // A phone store's repair question. Catalog sectors have no service field, so a fixed word list on the
 // message decides; the task names no device or fault, only that a repair was asked about.
-const REPAIR = /\b(repair|repairs|fix|fixed|broken|crack(?:ed)?|screen|battery|not charging|won'?t turn on|water damage)\b|صيانة|تصليح|إصلاح|اصلاح|مكسور|شاشة|بطارية|ما يشحن|لا يشحن/i;
+const REPAIR =
+  /\b(repair|repairs|fix|fixed|broken|crack(?:ed)?|screen|battery|not charging|won'?t turn on|water damage)\b|صيانة|تصليح|إصلاح|اصلاح|مكسور|شاشة|بطارية|ما يشحن|لا يشحن/i;
 const OPEN_REPAIRS = ['received', 'diagnosing', 'waiting_parts', 'repairing', 'ready'];
 
 async function repairTurn(ctx, { row, contact, text, now, secret }) {
   if (!text || !REPAIR.test(text)) return null;
-  if (!await sectorTurnPack(ctx, { row, secret, packId: 'retail-tech' })) return null;
+  if (!(await sectorTurnPack(ctx, { row, secret, packId: 'retail-tech' }))) return null;
   // A customer whose device is already in the shop is asking about that repair, not a new one.
   for (const status of OPEN_REPAIRS) {
-    const open = await ctx.db.query('hasibRepairs').withIndex('by_account_status_created', q => q.eq('accountId', row.accountId).eq('status', status)).order('desc').take(300);
+    const open = await ctx.db
+      .query('hasibRepairs')
+      .withIndex('by_account_status_created', q => q.eq('accountId', row.accountId).eq('status', status))
+      .order('desc')
+      .take(300);
     if (open.some(r => String(r.contactId) === String(contact._id))) return null;
   }
-  await openTaskOnce(ctx, 'retailTasks', { accountId: row.accountId, kind: 'repair_request', entityType: 'contact', entityId: contact._id,
-    reason: 'Repair question from Layla: ask the customer to bring the device in' }, now);
+  await openTaskOnce(
+    ctx,
+    'retailTasks',
+    {
+      accountId: row.accountId,
+      kind: 'repair_request',
+      entityType: 'contact',
+      entityId: contact._id,
+      reason: 'Repair question from Layla: ask the customer to bring the device in',
+    },
+    now,
+  );
   return { contactId: contact._id };
 }
 
 // An AC customer: Layla's validated need, or a fixed word list on the message. What the customer said is
 // kept only as a fixed symptom ("not cooling" makes the request urgent, never a diagnosis); the team
 // triages, prices and books. A customer with a job already open is talking about that job.
-const HVAC_WORDS = /\b(a\/?c|aircon|air ?condition\w*|hvac|split unit|not cooling|gas refill|compressor)\b|مكيف|مكيّف|المكيف|تكييف|ما يبرد|مو يبرد|لا يبرد|ما يبرّد|تعبئة غاز|شحن فريون|فريون|كمبروسر|تسريب غاز|تنظيف مكيفات|صيانة مكيفات/i;
-const NOT_COOLING = /not cooling|no cold|ما يبرد|مو يبرد|لا يبرد|ما يبرّد|ما فيه برودة/i, LEAK = /leak|dripping|تسريب|يقطر|ينقط/i;
+const HVAC_WORDS =
+  /\b(a\/?c|aircon|air ?condition\w*|hvac|split unit|not cooling|gas refill|compressor)\b|مكيف|مكيّف|المكيف|تكييف|ما يبرد|مو يبرد|لا يبرد|ما يبرّد|تعبئة غاز|شحن فريون|فريون|كمبروسر|تسريب غاز|تنظيف مكيفات|صيانة مكيفات/i;
+const NOT_COOLING = /not cooling|no cold|ما يبرد|مو يبرد|لا يبرد|ما يبرّد|ما فيه برودة/i,
+  LEAK = /leak|dripping|تسريب|يقطر|ينقط/i;
 const NEED_TYPES = { installation: 'install', repair: 'repair', maintenance: 'inspection', cleaning: 'cleaning' };
 const DAY = 86400000;
 
 async function hvacTurn(ctx, { row, person, contact, text, now, secret }) {
-  const fields = fieldsOf(contact), need = fields.get('need');
+  const fields = fieldsOf(contact),
+    need = fields.get('need');
   if (!need && !(text && HVAC_WORDS.test(text))) return null;
-  if (!await sectorTurnPack(ctx, { row, secret, packId: 'hvac' })) return null;
-  const open = (await ctx.db.query('hvacJobs').withIndex('by_contact', q => q.eq('contactId', contact._id)).take(50)).filter(j => j.accountId === row.accountId && OPEN_JOB.has(j.status));
+  if (!(await sectorTurnPack(ctx, { row, secret, packId: 'hvac' }))) return null;
+  const open = (
+    await ctx.db
+      .query('hvacJobs')
+      .withIndex('by_contact', q => q.eq('contactId', contact._id))
+      .take(50)
+  ).filter(j => j.accountId === row.accountId && OPEN_JOB.has(j.status));
   if (open.length) return null;
   const symptom = text && NOT_COOLING.test(text) ? 'not_cooling' : text && LEAK.test(text) ? 'leak' : undefined;
   const actor = automationActor(await workspaceForManager(ctx, row.accountId, now), row.accountId, 'layla');
-  const made = await jobSave(ctx, { accountId: row.accountId, row, secret }, actor, { requestId: stableRequestId(`layla-hvac:${contact._id}:${Math.floor(now / DAY)}`), contactId: contact._id,
-    ...(person?._id ? { conversationId: person._id } : {}),
-    hvac: { source: 'layla', jobType: NEED_TYPES[need] || (symptom ? 'repair' : 'inspection'), ...(symptom ? { reportedSymptom: symptom } : {}), ...(fields.get('area') ? { area: String(fields.get('area')).slice(0, 60) } : {}) } }, now);
+  const made = await jobSave(
+    ctx,
+    { accountId: row.accountId, row, secret },
+    actor,
+    {
+      requestId: stableRequestId(`layla-hvac:${contact._id}:${Math.floor(now / DAY)}`),
+      contactId: contact._id,
+      ...(person?._id ? { conversationId: person._id } : {}),
+      hvac: {
+        source: 'layla',
+        jobType: NEED_TYPES[need] || (symptom ? 'repair' : 'inspection'),
+        ...(symptom ? { reportedSymptom: symptom } : {}),
+        ...(fields.get('area') ? { area: String(fields.get('area')).slice(0, 60) } : {}),
+      },
+    },
+    now,
+  );
   return made.ok ? { contactId: contact._id, jobId: made.value.id } : null;
 }
 

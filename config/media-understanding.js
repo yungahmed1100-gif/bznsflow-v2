@@ -12,11 +12,36 @@ const MB = 1024 * 1024;
 export const MEDIA_KINDS = Object.freeze({
   image: { types: ['image/jpeg', 'image/png', 'image/webp'], maxBytes: 5 * MB },
   sticker: { types: ['image/webp'], maxBytes: MB },
-  audio: { types: ['audio/ogg', 'audio/mpeg', 'audio/mp4', 'audio/aac', 'audio/amr', 'audio/webm', 'audio/wav', 'audio/x-wav', 'audio/x-m4a'], maxBytes: 16 * MB },
+  audio: {
+    types: [
+      'audio/ogg',
+      'audio/mpeg',
+      'audio/mp4',
+      'audio/aac',
+      'audio/amr',
+      'audio/webm',
+      'audio/wav',
+      'audio/x-wav',
+      'audio/x-m4a',
+    ],
+    maxBytes: 16 * MB,
+  },
   video: { types: ['video/mp4', 'video/3gpp', 'video/quicktime', 'video/webm'], maxBytes: 16 * MB },
-  document: { types: ['application/pdf', 'text/plain', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation'], maxBytes: 16 * MB },
+  document: {
+    types: [
+      'application/pdf',
+      'text/plain',
+      'image/jpeg',
+      'image/png',
+      'application/msword',
+      'application/vnd.ms-excel',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    ],
+    maxBytes: 16 * MB,
+  },
 });
 // qwen3-asr-flash takes at most 10 MB and 5 minutes; a longer note is kept for the owner but not transcribed.
 export const ASR_MAX_BYTES = 10 * MB;
@@ -24,7 +49,11 @@ export const PHOTO_KINDS = Object.freeze(['product', 'screenshot', 'document', '
 export const MEDIA_TEXT_MAX = 2000;
 
 /** A MIME type without its parameters ("audio/ogg; codecs=opus" → "audio/ogg"), or ''. */
-export const mimeOf = value => String(value || '').split(';')[0].trim().toLowerCase();
+export const mimeOf = value =>
+  String(value || '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
 /** Whether a file of this kind and type may be kept and shown. */
 export const mediaAllowed = (kind, type) => !!MEDIA_KINDS[kind]?.types.includes(mimeOf(type));
 
@@ -32,12 +61,20 @@ export const mediaAllowed = (kind, type) => !!MEDIA_KINDS[kind]?.types.includes(
 export function understandingConfig(env = {}, job) {
   const base = qwenConfig(env);
   if (!base) return null;
-  const model = job === 'asr' ? String(env.LAYLA_ASR_MODEL || '').trim() || ASR_MODEL : String(env.LAYLA_VISION_MODEL || '').trim() || VISION_MODEL;
+  const model =
+    job === 'asr'
+      ? String(env.LAYLA_ASR_MODEL || '').trim() || ASR_MODEL
+      : String(env.LAYLA_VISION_MODEL || '').trim() || VISION_MODEL;
   return { ...base, model };
 }
 
 const dataUri = (type, bytes) => `data:${mimeOf(type)};base64,${Buffer.from(bytes).toString('base64')}`;
-const clean = (value, max) => String(value || '').replace(/[\x00-\x08\x0b-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+const clean = (value, max) =>
+  String(value || '')
+    .replace(/[\x00-\x08\x0b-\x1f\x7f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
 
 /**
  * A voice note in the customer's own words. The business's name and catalog bias recognition toward
@@ -68,11 +105,23 @@ export async function describePhoto({ config, bytes, mimeType, catalog = [], bus
     `Return ONLY a JSON object: {"summary": one factual English sentence, "text_in_image": the visible text copied exactly (at most 300 characters, "" if none), "kind": one of ${JSON.stringify(PHOTO_KINDS)}, "catalog_match": the exact name from CATALOG that the photo clearly shows, or ""}.`,
     `CATALOG: ${names.length ? names.join('; ') : '(none)'}`,
   ].join('\n');
-  const messages = [{ role: 'system', content: system },
-    { role: 'user', content: [{ type: 'image_url', image_url: { url: dataUri(mimeType, bytes) } }, { type: 'text', text: 'Describe this photo.' }] }];
+  const messages = [
+    { role: 'system', content: system },
+    {
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: dataUri(mimeType, bytes) } },
+        { type: 'text', text: 'Describe this photo.' },
+      ],
+    },
+  ];
   const { text } = await qwenChat({ config, messages, fetcher, temperature: 0, maxTokens: 300, timeoutMs: 25000 });
   let value;
-  try { value = JSON.parse(text); } catch { throw new QwenError('ai_bad_response'); }
+  try {
+    value = JSON.parse(text);
+  } catch {
+    throw new QwenError('ai_bad_response');
+  }
   const match = clean(value?.catalog_match, 80);
   return {
     summary: clean(value?.summary, 300),
@@ -84,7 +133,12 @@ export async function describePhoto({ config, bytes, mimeType, catalog = [], bus
 
 /** The stored reading of a photo: one line the owner and Layla both read. */
 export function photoText({ summary, textInImage, catalogMatch }) {
-  return clean([summary, textInImage && `Text in the photo: "${textInImage}"`, catalogMatch && `Looks like: ${catalogMatch}`].filter(Boolean).join(' '), MEDIA_TEXT_MAX);
+  return clean(
+    [summary, textInImage && `Text in the photo: "${textInImage}"`, catalogMatch && `Looks like: ${catalogMatch}`]
+      .filter(Boolean)
+      .join(' '),
+    MEDIA_TEXT_MAX,
+  );
 }
 
 const LABEL = { image: 'photo', sticker: 'sticker', video: 'video', document: 'file' };
@@ -97,7 +151,8 @@ export function mediaLine(media, mediaText) {
   const label = media.kind === 'audio' ? (media.voice ? 'voice note' : 'audio message') : LABEL[media.kind] || 'file';
   if (mediaText && media.kind === 'audio') return `[${label}] ${mediaText}`;
   if (mediaText && (media.kind === 'image' || media.kind === 'sticker')) return `[${label}: ${mediaText}]`;
-  if (media.kind === 'document' && media.status !== 'failed') return `[${label}${media.filename ? ` "${clean(media.filename, 80)}"` : ''}: you cannot open files]`;
+  if (media.kind === 'document' && media.status !== 'failed')
+    return `[${label}${media.filename ? ` "${clean(media.filename, 80)}"` : ''}: you cannot open files]`;
   if (media.kind === 'video' && media.status !== 'failed') return '[video: you cannot watch videos]';
   return `[${label} that could not be read]`;
 }

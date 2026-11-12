@@ -17,47 +17,111 @@ export const PRIVACY_UPDATED_ISO = '2026-10-31';
 /** Shared across both languages — a table of who else touches the data. */
 const PROCESSORS = [
   {
-    en: ['Vercel', 'Hosts the website and runs its server code. Sees request logs, including IP addresses.', 'United States / global'],
-    ar: ['Vercel', 'يستضيف الموقع ويشغّل الكود على الخادم. يطّلع على سجلات الطلبات بما فيها عناوين IP.', 'الولايات المتحدة / عالمي'],
+    en: [
+      'Vercel',
+      'Hosts the website and runs its server code. Sees request logs, including IP addresses.',
+      'United States / global',
+    ],
+    ar: [
+      'Vercel',
+      'يستضيف الموقع ويشغّل الكود على الخادم. يطّلع على سجلات الطلبات بما فيها عناوين IP.',
+      'الولايات المتحدة / عالمي',
+    ],
   },
   {
     en: ['Supabase', 'The database holding your account, and chat conversations.', 'Singapore (ap-southeast-1)'],
     ar: ['Supabase', 'قاعدة البيانات التي تحفظ حسابك ومحادثاتك.', 'سنغافورة (ap-southeast-1)'],
   },
   {
-    en: ['Google (Apps Script, Sheets, Gmail)', 'Sends your sign-in code and our emails, and stores enquiries in our internal sheet.', 'United States / global'],
+    en: [
+      'Google (Apps Script, Sheets, Gmail)',
+      'Sends your sign-in code and our emails, and stores enquiries in our internal sheet.',
+      'United States / global',
+    ],
     // Latin left intact rather than joined with Arabic "و": these are product
     // names, and "وSheets" sets a waw hard against Latin type with no space,
     // which reads as a typo. <bdi> in the table isolates the run either way.
-    ar: ['Google (Apps Script, Sheets, Gmail)', 'يرسل رمز الدخول ورسائلنا، ويحفظ الطلبات في جدولنا الداخلي.', 'الولايات المتحدة / عالمي'],
+    ar: [
+      'Google (Apps Script, Sheets, Gmail)',
+      'يرسل رمز الدخول ورسائلنا، ويحفظ الطلبات في جدولنا الداخلي.',
+      'الولايات المتحدة / عالمي',
+    ],
   },
   {
-    en: ['OpenAI', 'Generates the replies in our chat assistant. Receives the messages you type into it.', 'United States'],
+    en: [
+      'OpenAI',
+      'Generates the replies in our chat assistant. Receives the messages you type into it.',
+      'United States',
+    ],
     ar: ['OpenAI', 'يولّد ردود مساعد المحادثة لدينا، ويستقبل الرسائل التي تكتبها فيه.', 'الولايات المتحدة'],
   },
   {
-    en: ['Alibaba Cloud (Model Studio)', 'Writes Layla’s replies to the customers of businesses that use BznsFlow. Receives the conversation and that business’s published information.', 'Singapore'],
-    ar: ['Alibaba Cloud (Model Studio)', 'يكتب ردود ليلى لعملاء الأنشطة التي تستخدم BznsFlow، ويستقبل المحادثة والمعلومات المنشورة لذلك النشاط.', 'سنغافورة'],
+    en: [
+      'Alibaba Cloud (Model Studio)',
+      'Writes Layla’s replies to the customers of businesses that use BznsFlow. Receives the conversation and that business’s published information.',
+      'Singapore',
+    ],
+    ar: [
+      'Alibaba Cloud (Model Studio)',
+      'يكتب ردود ليلى لعملاء الأنشطة التي تستخدم BznsFlow، ويستقبل المحادثة والمعلومات المنشورة لذلك النشاط.',
+      'سنغافورة',
+    ],
   },
   {
-    en: ['Meta (Facebook)', 'Measures our advertising. Receives a pseudonymous identifier, not your name.', 'United States / global'],
+    en: [
+      'Meta (Facebook)',
+      'Measures our advertising. Receives a pseudonymous identifier, not your name.',
+      'United States / global',
+    ],
     ar: ['Meta (Facebook)', 'يقيس أداء إعلاناتنا. يستقبل معرّفاً مستعاراً لا اسمك.', 'الولايات المتحدة / عالمي'],
   },
   {
-    en: ['Paymob', 'Takes card payments for BznsFlow subscriptions. For an Ascend owner who asks for online payments, it also receives the business documents and personal contact we send to open their own merchant account.', 'Oman / global'],
-    ar: ['Paymob', 'يستقبل مدفوعات البطاقات لاشتراكات BznsFlow. ولصاحب نشاط في أسيند يطلب الدفع الإلكتروني، يستقبل أيضًا مستندات النشاط وبيانات التواصل الشخصية التي نرسلها لفتح حساب التاجر الخاص به.', 'عُمان / عالمي'],
+    en: [
+      'Paymob',
+      'Takes card payments for BznsFlow subscriptions. For an Ascend owner who asks for online payments, it also receives the business documents and personal contact we send to open their own merchant account.',
+      'Oman / global',
+    ],
+    ar: [
+      'Paymob',
+      'يستقبل مدفوعات البطاقات لاشتراكات BznsFlow. ولصاحب نشاط في أسيند يطلب الدفع الإلكتروني، يستقبل أيضًا مستندات النشاط وبيانات التواصل الشخصية التي نرسلها لفتح حساب التاجر الخاص به.',
+      'عُمان / عالمي',
+    ],
   },
   {
-    en: ['PostHog', 'Measures how visitors use our public pages: page views, clicks and session recordings with typed text hidden. On the dashboard, only anonymous counts of website-setup steps; never page content, recordings or what you type.', 'United States'],
-    ar: ['PostHog', 'يقيس كيف يستخدم الزوّار صفحاتنا العامة: الصفحات المعروضة والنقرات وتسجيلات الجلسات مع إخفاء ما يُكتب. في لوحة التحكم يعدّ فقط خطوات إعداد الموقع دون هوية؛ ولا يسجّل أبدًا محتوى الصفحة أو الجلسات أو ما تكتبه.', 'الولايات المتحدة'],
+    en: [
+      'PostHog',
+      'Measures how visitors use our public pages: page views, clicks and session recordings with typed text hidden. On the dashboard, only anonymous counts of website-setup steps; never page content, recordings or what you type.',
+      'United States',
+    ],
+    ar: [
+      'PostHog',
+      'يقيس كيف يستخدم الزوّار صفحاتنا العامة: الصفحات المعروضة والنقرات وتسجيلات الجلسات مع إخفاء ما يُكتب. في لوحة التحكم يعدّ فقط خطوات إعداد الموقع دون هوية؛ ولا يسجّل أبدًا محتوى الصفحة أو الجلسات أو ما تكتبه.',
+      'الولايات المتحدة',
+    ],
   },
   {
-    en: ['Google Fonts', 'Serves the typefaces. Your browser requests them directly, which exposes your IP address to Google.', 'United States / global'],
-    ar: ['Google Fonts', 'يقدّم الخطوط. يطلبها متصفحك مباشرة، ما يكشف عنوان IP لديك لشركة Google.', 'الولايات المتحدة / عالمي'],
+    en: [
+      'Google Fonts',
+      'Serves the typefaces. Your browser requests them directly, which exposes your IP address to Google.',
+      'United States / global',
+    ],
+    ar: [
+      'Google Fonts',
+      'يقدّم الخطوط. يطلبها متصفحك مباشرة، ما يكشف عنوان IP لديك لشركة Google.',
+      'الولايات المتحدة / عالمي',
+    ],
   },
   {
-    en: ['Google / LinkedIn sign-in', 'Only if you choose one of those buttons. They confirm your identity and email to us.', 'United States / global'],
-    ar: ['تسجيل الدخول عبر Google / LinkedIn', 'فقط إذا اخترت أحد هذين الزرّين. يؤكّدان لنا هويتك وبريدك الإلكتروني.', 'الولايات المتحدة / عالمي'],
+    en: [
+      'Google / LinkedIn sign-in',
+      'Only if you choose one of those buttons. They confirm your identity and email to us.',
+      'United States / global',
+    ],
+    ar: [
+      'تسجيل الدخول عبر Google / LinkedIn',
+      'فقط إذا اخترت أحد هذين الزرّين. يؤكّدان لنا هويتك وبريدك الإلكتروني.',
+      'الولايات المتحدة / عالمي',
+    ],
   },
 ];
 
@@ -67,8 +131,18 @@ const COOKIES = [
     ar: ['bf_locale', 'ضروري', 'سنة واحدة', 'يتذكّر اختيارك للعربية أو الإنجليزية.'],
   },
   {
-    en: ['bf_session', 'Necessary', '30 days', 'Keeps you signed in. Holds a random token; the database stores only a hash of it.'],
-    ar: ['bf_session', 'ضروري', '٣٠ يوماً', 'يبقيك مسجّل الدخول. يحمل رمزاً عشوائياً، ولا تحفظ قاعدة البيانات سوى بصمته.'],
+    en: [
+      'bf_session',
+      'Necessary',
+      '30 days',
+      'Keeps you signed in. Holds a random token; the database stores only a hash of it.',
+    ],
+    ar: [
+      'bf_session',
+      'ضروري',
+      '٣٠ يوماً',
+      'يبقيك مسجّل الدخول. يحمل رمزاً عشوائياً، ولا تحفظ قاعدة البيانات سوى بصمته.',
+    ],
   },
   {
     en: ['bf_csrf', 'Necessary', '30 days', 'Protects your session from cross-site request forgery.'],
@@ -83,12 +157,32 @@ const COOKIES = [
     ar: ['_fbp, _fbc', 'تسويقي', '~٩٠ يوماً', 'يضعهما بيكسل Meta لقياس أداء إعلاناتنا.'],
   },
   {
-    en: ['ph_phc_…_posthog', 'Analytics', '1 year', 'Set by PostHog on our public pages to count visits and link the pages of one visit. Not your name or email.'],
-    ar: ['ph_phc_…_posthog', 'تحليلي', 'سنة واحدة', 'يضعه PostHog في صفحاتنا العامة لعدّ الزيارات وربط صفحات الزيارة الواحدة. لا يحمل اسمك ولا بريدك.'],
+    en: [
+      'ph_phc_…_posthog',
+      'Analytics',
+      '1 year',
+      'Set by PostHog on our public pages to count visits and link the pages of one visit. Not your name or email.',
+    ],
+    ar: [
+      'ph_phc_…_posthog',
+      'تحليلي',
+      'سنة واحدة',
+      'يضعه PostHog في صفحاتنا العامة لعدّ الزيارات وربط صفحات الزيارة الواحدة. لا يحمل اسمك ولا بريدك.',
+    ],
   },
   {
-    en: ['bznsflow_chat_session, bf_playbook_seen, bf_uid', 'Browser storage', 'Until cleared', 'Keep your chat continuous, stop a pop-up repeating, and identify you to Meta pseudonymously.'],
-    ar: ['bznsflow_chat_session, bf_playbook_seen, bf_uid', 'تخزين المتصفح', 'حتى تمسحها', 'تُبقي محادثتك متصلة، وتمنع تكرار نافذة منبثقة، وتعرّفك إلى Meta باسم مستعار.'],
+    en: [
+      'bznsflow_chat_session, bf_playbook_seen, bf_uid',
+      'Browser storage',
+      'Until cleared',
+      'Keep your chat continuous, stop a pop-up repeating, and identify you to Meta pseudonymously.',
+    ],
+    ar: [
+      'bznsflow_chat_session, bf_playbook_seen, bf_uid',
+      'تخزين المتصفح',
+      'حتى تمسحها',
+      'تُبقي محادثتك متصلة، وتمنع تكرار نافذة منبثقة، وتعرّفك إلى Meta باسم مستعار.',
+    ],
   },
 ];
 
@@ -103,7 +197,7 @@ const en = {
       h: 'Who we are',
       p: [
         'BznsFlow builds and runs AI front-office, website, CRM and automation systems for businesses. This policy covers the website at www.bznsflowai.com and the sign-in, chat and enquiry features on it.',
-        'It does not cover systems we build and operate for a client under a separate agreement. In those, the client is responsible for their own customers\' data and we act on their instructions.',
+        "It does not cover systems we build and operate for a client under a separate agreement. In those, the client is responsible for their own customers' data and we act on their instructions.",
         'For anything in this policy, contact ahmed@bznsflowai.com.',
       ],
     },
@@ -170,7 +264,7 @@ const en = {
       h: 'Where your data is stored',
       p: [
         'Our database is hosted in Singapore. Our hosting, email and other providers operate in the United States and elsewhere.',
-        'If you are in a country that restricts sending personal data abroad, be aware that using this site involves such a transfer. We rely on our providers\' standard contractual protections for this.',
+        "If you are in a country that restricts sending personal data abroad, be aware that using this site involves such a transfer. We rely on our providers' standard contractual protections for this.",
       ],
     },
     {
@@ -191,7 +285,9 @@ const en = {
         'Our database denies all access by default. Only our own server code can read it, using a key that is never sent to your browser.',
         'Sign-in attempts are rate-limited, and a code is locked after five wrong guesses.',
       ],
-      p: ['No system is perfectly secure, and we will not claim otherwise. If we ever discover a breach affecting your data, we will tell you.'],
+      p: [
+        'No system is perfectly secure, and we will not claim otherwise. If we ever discover a breach affecting your data, we will tell you.',
+      ],
     },
     {
       h: 'Your rights',
@@ -211,7 +307,7 @@ const en = {
     },
     {
       h: 'Cookies and similar technologies',
-      p: ['A full technical breakdown, kept in step with the code, is in our repository\'s COOKIES.md. In short:'],
+      p: ["A full technical breakdown, kept in step with the code, is in our repository's COOKIES.md. In short:"],
       table: 'cookies',
       p2: [
         'The ones marked Necessary cannot be turned off — the site cannot sign you in or protect that sign-in without them. The marketing ones can be blocked in your browser settings, or with any standard content blocker, without breaking the site.',
@@ -219,11 +315,15 @@ const en = {
     },
     {
       h: 'Children',
-      p: ['This site is for businesses and is not directed at children. We do not knowingly collect data from anyone under 18. If you believe a child has given us their details, email us and we will delete them.'],
+      p: [
+        'This site is for businesses and is not directed at children. We do not knowingly collect data from anyone under 18. If you believe a child has given us their details, email us and we will delete them.',
+      ],
     },
     {
       h: 'Changes to this policy',
-      p: ['If we change how we handle your data, we will update this page and the date at the top. If the change is significant and we hold your email address, we will tell you directly rather than relying on you noticing.'],
+      p: [
+        'If we change how we handle your data, we will update this page and the date at the top. If the change is significant and we hold your email address, we will tell you directly rather than relying on you noticing.',
+      ],
     },
     {
       h: 'Contact us',
@@ -359,11 +459,15 @@ const ar = {
     },
     {
       h: 'الأطفال',
-      p: ['هذا الموقع موجّه للشركات وليس للأطفال. ولا نجمع عن قصد بيانات من هم دون ١٨ عاماً. وإن كنت تعتقد أن طفلاً زوّدنا ببياناته، فراسلنا وسنحذفها.'],
+      p: [
+        'هذا الموقع موجّه للشركات وليس للأطفال. ولا نجمع عن قصد بيانات من هم دون ١٨ عاماً. وإن كنت تعتقد أن طفلاً زوّدنا ببياناته، فراسلنا وسنحذفها.',
+      ],
     },
     {
       h: 'تعديل هذه السياسة',
-      p: ['إذا غيّرنا طريقة تعاملنا مع بياناتك، فسنحدّث هذه الصفحة والتاريخ في أعلاها. وإن كان التغيير جوهرياً ولدينا بريدك، فسنخبرك مباشرة بدل انتظار أن تلاحظ.'],
+      p: [
+        'إذا غيّرنا طريقة تعاملنا مع بياناتك، فسنحدّث هذه الصفحة والتاريخ في أعلاها. وإن كان التغيير جوهرياً ولدينا بريدك، فسنخبرك مباشرة بدل انتظار أن تلاحظ.',
+      ],
     },
     {
       h: 'تواصل معنا',
@@ -376,8 +480,8 @@ const ar = {
 export function privacyTables(lang) {
   const key = lang === 'ar' ? 'ar' : 'en';
   return {
-    processors: PROCESSORS.map((r) => r[key]),
-    cookies: COOKIES.map((r) => r[key]),
+    processors: PROCESSORS.map(r => r[key]),
+    cookies: COOKIES.map(r => r[key]),
   };
 }
 

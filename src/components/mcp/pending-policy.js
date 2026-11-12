@@ -1,6 +1,6 @@
 // A permission change interrupted by account re-verification is finished on
 // return instead of being asked for again.
-const PENDING_POLICY_KEY = "bf_mcp_pending_policy";
+const PENDING_POLICY_KEY = 'bf_mcp_pending_policy';
 const PENDING_POLICY_MS = 10 * 60000;
 export function readPendingPolicy() {
   try {
@@ -13,10 +13,7 @@ export function readPendingPolicy() {
 }
 export function keepPendingPolicy(body) {
   try {
-    sessionStorage.setItem(
-      PENDING_POLICY_KEY,
-      JSON.stringify({ ...body, at: Date.now() }),
-    );
+    sessionStorage.setItem(PENDING_POLICY_KEY, JSON.stringify({ ...body, at: Date.now() }));
   } catch {
     // Without storage the owner simply saves again after verifying.
   }

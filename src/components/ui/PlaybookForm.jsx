@@ -40,7 +40,7 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
   const ar = lang === 'ar';
 
   const handleSubmit = useCallback(
-    async (e) => {
+    async e => {
       e.preventDefault();
       if (status === 'sending') return;
       setStatus('sending');
@@ -90,7 +90,9 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
         if (emailOptIn) {
           setSubscriptionStatus(data.subscription === 'confirmation_pending' ? 'pending' : 'failed');
           setStatus('subscribed');
-        } else { onSuccess?.(); }
+        } else {
+          onSuccess?.();
+        }
       } catch {
         // Timeout, offline, or a server error. Never a dead end: the failure
         // state still hands over the PDF.
@@ -100,13 +102,27 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
     [status, name, email, industry, phone, sourceCta, lang, emailOptIn, trackEvent, onSuccess],
   );
 
-  if (subscriptionStatus) return (
-    <div className="playbook-success" role="status" dir={ar ? 'rtl' : 'ltr'}>
-      <p>{subscriptionStatus === 'pending' ? t.playbook_optin_pending : t.playbook_optin_failed}</p>
-      <a href={PLAYBOOK_PDF} download className="btn btn-primary">{t.playbook_download}</a>
-      {subscriptionStatus === 'failed' && <button type="button" className="btn btn-ghost" onClick={() => { setSubscriptionStatus(null); setStatus('idle'); }}>{t.playbook_optin_retry}</button>}
-    </div>
-  );
+  if (subscriptionStatus)
+    return (
+      <div className="playbook-success" role="status" dir={ar ? 'rtl' : 'ltr'}>
+        <p>{subscriptionStatus === 'pending' ? t.playbook_optin_pending : t.playbook_optin_failed}</p>
+        <a href={PLAYBOOK_PDF} download className="btn btn-primary">
+          {t.playbook_download}
+        </a>
+        {subscriptionStatus === 'failed' && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => {
+              setSubscriptionStatus(null);
+              setStatus('idle');
+            }}
+          >
+            {t.playbook_optin_retry}
+          </button>
+        )}
+      </div>
+    );
 
   return (
     <>
@@ -114,19 +130,29 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
         <div className="playbook-field">
           <label htmlFor="playbook-name">{t.playbook_name_label}</label>
           <input
-            id="playbook-name" name="name" type="text" autoComplete="name" required
+            id="playbook-name"
+            name="name"
+            type="text"
+            autoComplete="name"
+            required
             maxLength={100}
             placeholder={t.playbook_name_ph}
-            value={name} onChange={(e) => setName(e.target.value)}
+            value={name}
+            onChange={e => setName(e.target.value)}
           />
         </div>
 
         <div className="playbook-field">
           <label htmlFor="playbook-email">{t.playbook_email_label}</label>
           <input
-            id="playbook-email" name="email" type="email" autoComplete="email" required
+            id="playbook-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
             placeholder={t.playbook_email_ph}
-            value={email} onChange={(e) => setEmail(e.target.value)}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
           />
         </div>
 
@@ -136,12 +162,19 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
               against. The slugs are stable identifiers written to the CRM
               sheet — see the header of src/lib/industries.js. */}
           <select
-            id="playbook-industry" name="industry" required
-            value={industry} onChange={(e) => setIndustry(e.target.value)}
+            id="playbook-industry"
+            name="industry"
+            required
+            value={industry}
+            onChange={e => setIndustry(e.target.value)}
           >
-            <option value="" disabled>{t.auth_industry_ph}</option>
-            {INDUSTRIES.map((s) => (
-              <option key={s.id} value={s.id}>{ar ? s.ar : s.en}</option>
+            <option value="" disabled>
+              {t.auth_industry_ph}
+            </option>
+            {INDUSTRIES.map(s => (
+              <option key={s.id} value={s.id}>
+                {ar ? s.ar : s.en}
+              </option>
             ))}
           </select>
         </div>
@@ -153,15 +186,26 @@ export function PlaybookForm({ t, lang = 'ar', sourceCta, onSuccess, trackEvent 
               is a reason to leave. The dial code is typed, and the server
               keeps the digits rather than rejecting an unexpected shape. */}
           <input
-            id="playbook-phone" name="phone" type="tel" required
-            autoComplete="tel" inputMode="tel" maxLength={20}
+            id="playbook-phone"
+            name="phone"
+            type="tel"
+            required
+            autoComplete="tel"
+            inputMode="tel"
+            maxLength={20}
             placeholder={t.playbook_phone_ph}
-            value={phone} onChange={(e) => setPhone(e.target.value)}
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
           />
         </div>
 
         <label className="playbook-email-consent">
-          <input type="checkbox" name="emailOptIn" checked={emailOptIn} onChange={e => setEmailOptIn(e.target.checked)} />
+          <input
+            type="checkbox"
+            name="emailOptIn"
+            checked={emailOptIn}
+            onChange={e => setEmailOptIn(e.target.checked)}
+          />
           <span>{t.playbook_optin_label}</span>
         </label>
 
@@ -194,7 +238,9 @@ export function PlaybookSuccess({ t, titleId, children }) {
   return (
     <div className="playbook-success">
       <Icon name="check" size={28} />
-      <h2 id={titleId} className="playbook-success-title">{t.playbook_success_title}</h2>
+      <h2 id={titleId} className="playbook-success-title">
+        {t.playbook_success_title}
+      </h2>
       <p className="playbook-sub">{t.playbook_success_sub}</p>
       <a href={PLAYBOOK_PDF} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-large">
         <Icon name="feather" size={18} />

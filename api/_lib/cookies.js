@@ -65,13 +65,7 @@ export function parseCookies(req) {
  * @returns {string}
  */
 export function serializeCookie(name, value, options = {}) {
-  const {
-    maxAge,
-    path = '/',
-    sameSite = 'Lax',
-    httpOnly = false,
-    secure = true,
-  } = options;
+  const { maxAge, path = '/', sameSite = 'Lax', httpOnly = false, secure = true } = options;
 
   const parts = [`${encodeURIComponent(name)}=${encodeURIComponent(value)}`, `Path=${path}`];
   if (Number.isFinite(maxAge)) parts.push(`Max-Age=${maxAge}`);
@@ -122,16 +116,26 @@ export function safeEqual(a, b) {
  * that manages to run script on the page.
  */
 export function setSessionCookie(res, sessionId, maxAge = SESSION_MAX_AGE) {
-  appendCookie(res, serializeCookie(SESSION_COOKIE, sessionId, {
-    maxAge, httpOnly: true, sameSite: 'Lax',
-  }));
+  appendCookie(
+    res,
+    serializeCookie(SESSION_COOKIE, sessionId, {
+      maxAge,
+      httpOnly: true,
+      sameSite: 'Lax',
+    }),
+  );
 }
 
 /** Clear the session cookie. Max-Age=0 with matching attributes. */
 export function clearSessionCookie(res) {
-  appendCookie(res, serializeCookie(SESSION_COOKIE, '', {
-    maxAge: 0, httpOnly: true, sameSite: 'Lax',
-  }));
+  appendCookie(
+    res,
+    serializeCookie(SESSION_COOKIE, '', {
+      maxAge: 0,
+      httpOnly: true,
+      sameSite: 'Lax',
+    }),
+  );
 }
 
 /**
@@ -151,9 +155,14 @@ export function clearSessionCookie(res) {
  */
 export function issueCsrfToken(res) {
   const token = randomToken();
-  appendCookie(res, serializeCookie(CSRF_COOKIE, token, {
-    maxAge: SESSION_MAX_AGE, httpOnly: true, sameSite: 'Lax',
-  }));
+  appendCookie(
+    res,
+    serializeCookie(CSRF_COOKIE, token, {
+      maxAge: SESSION_MAX_AGE,
+      httpOnly: true,
+      sameSite: 'Lax',
+    }),
+  );
   return token;
 }
 
@@ -184,9 +193,14 @@ export function ensureCsrfToken(req, res) {
   // truncated or hand-set value would never verify anyway.
   if (!/^[0-9a-f]{64}$/.test(existing)) return issueCsrfToken(res);
 
-  appendCookie(res, serializeCookie(CSRF_COOKIE, existing, {
-    maxAge: SESSION_MAX_AGE, httpOnly: true, sameSite: 'Lax',
-  }));
+  appendCookie(
+    res,
+    serializeCookie(CSRF_COOKIE, existing, {
+      maxAge: SESSION_MAX_AGE,
+      httpOnly: true,
+      sameSite: 'Lax',
+    }),
+  );
   return existing;
 }
 
@@ -209,9 +223,14 @@ export function ensureCsrfToken(req, res) {
  */
 export function setOauthCookie(res, payload) {
   const value = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
-  appendCookie(res, serializeCookie(OAUTH_COOKIE, value, {
-    maxAge: OAUTH_MAX_AGE, httpOnly: true, sameSite: 'Lax',
-  }));
+  appendCookie(
+    res,
+    serializeCookie(OAUTH_COOKIE, value, {
+      maxAge: OAUTH_MAX_AGE,
+      httpOnly: true,
+      sameSite: 'Lax',
+    }),
+  );
 }
 
 /** Read the in-flight OAuth attempt, or null when absent or unreadable. */
@@ -228,9 +247,14 @@ export function readOauthCookie(req) {
 
 /** Clear the OAuth cookie. Single-use: the callback drops it before anything else. */
 export function clearOauthCookie(res) {
-  appendCookie(res, serializeCookie(OAUTH_COOKIE, '', {
-    maxAge: 0, httpOnly: true, sameSite: 'Lax',
-  }));
+  appendCookie(
+    res,
+    serializeCookie(OAUTH_COOKIE, '', {
+      maxAge: 0,
+      httpOnly: true,
+      sameSite: 'Lax',
+    }),
+  );
 }
 
 /**

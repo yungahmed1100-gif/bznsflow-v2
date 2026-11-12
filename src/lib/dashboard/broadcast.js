@@ -5,7 +5,10 @@ import { variableId } from '../../../config/layla-templates.js';
 
 export const MAX_BROADCAST = 100;
 
-const norm = text => String(text ?? '').toLowerCase().replace(/[{}\s_\-:#]+/g, '');
+const norm = text =>
+  String(text ?? '')
+    .toLowerCase()
+    .replace(/[{}\s_\-:#]+/g, '');
 const NAME_KEY = /name|اسم/i;
 
 /**
@@ -15,11 +18,21 @@ const NAME_KEY = /name|اسم/i;
  * Rule sources: 'name' | 'column:<index>' | 'field:<key>' | 'static' | 'each' (typed per contact).
  */
 export function guessVariableColumns(headers = [], template, rows = []) {
-  const out = {}, sample = rows.slice(0, 200);
+  const out = {},
+    sample = rows.slice(0, 200);
   for (const v of template?.variables || []) {
-    const wanted = new Set([norm(v.key), norm(`${v.component}${v.key}`), norm(`var${v.key}`), norm(`variable${v.key}`), ...(v.example ? [norm(v.example)] : [])].filter(Boolean));
+    const wanted = new Set(
+      [
+        norm(v.key),
+        norm(`${v.component}${v.key}`),
+        norm(`var${v.key}`),
+        norm(`variable${v.key}`),
+        ...(v.example ? [norm(v.example)] : []),
+      ].filter(Boolean),
+    );
     let index = headers.findIndex(h => wanted.has(norm(h)));
-    if (index < 0 && v.example && norm(v.example)) index = headers.findIndex((_, i) => sample.some(r => norm(r[i]) === norm(v.example)));
+    if (index < 0 && v.example && norm(v.example))
+      index = headers.findIndex((_, i) => sample.some(r => norm(r[i]) === norm(v.example)));
     if (index >= 0) out[variableId(v)] = index;
   }
   return out;
@@ -39,7 +52,9 @@ export function defaultRules(template, headers = [], rows = []) {
 /** Columns found in a new file take over rules still left to typing. */
 export function applyColumns(rules, headers, template, rows = []) {
   const columns = guessVariableColumns(headers, template, rows);
-  return rules.map(r => r.source === 'each' && columns[r.key] !== undefined ? { ...r, source: `column:${columns[r.key]}` } : r);
+  return rules.map(r =>
+    r.source === 'each' && columns[r.key] !== undefined ? { ...r, source: `column:${columns[r.key]}` } : r,
+  );
 }
 
 export function sourceValue(row, rule) {
@@ -66,10 +81,12 @@ export function rowMissing(row, rules) {
 /** Parameters for renderTemplate, so the preview shows this person's message. */
 export function rowParameters(row, rules, template) {
   const byKey = new Map(rules.map(r => [r.key, r]));
-  return (template?.variables || []).map(v => {
-    const rule = byKey.get(variableId(v));
-    return { key: v.key, component: v.component, text: rule ? resolvedValue(row, rule) : '' };
-  }).filter(p => p.text);
+  return (template?.variables || [])
+    .map(v => {
+      const rule = byKey.get(variableId(v));
+      return { key: v.key, component: v.component, text: rule ? resolvedValue(row, rule) : '' };
+    })
+    .filter(p => p.text);
 }
 
 /** Server mapping: every variable is per recipient, with the rule's text as the fallback. */
@@ -79,20 +96,29 @@ export function serverMapping(rules) {
 
 /** Each recipient's own values, keyed by the contact id returned on import. */
 export function recipientValues(rows, rules) {
-  return rows.filter(r => r.contactId).map(row => ({
-    contactId: row.contactId,
-    values: rules.map(rule => ({ key: rule.key, text: cellValue(row, rule) })).filter(v => v.text),
-  }));
+  return rows
+    .filter(r => r.contactId)
+    .map(row => ({
+      contactId: row.contactId,
+      values: rules.map(rule => ({ key: rule.key, text: cellValue(row, rule) })).filter(v => v.text),
+    }));
 }
 
 /** Append rows not already present (by WhatsApp number). Returns the new list and counts. */
 export function mergeRows(existing, incoming, max = MAX_BROADCAST) {
   const seen = new Set(existing.map(r => r.waId));
   const next = [...existing];
-  let duplicates = 0, overLimit = 0;
+  let duplicates = 0,
+    overLimit = 0;
   for (const row of incoming) {
-    if (seen.has(row.waId)) { duplicates++; continue; }
-    if (next.length >= max) { overLimit++; continue; }
+    if (seen.has(row.waId)) {
+      duplicates++;
+      continue;
+    }
+    if (next.length >= max) {
+      overLimit++;
+      continue;
+    }
     seen.add(row.waId);
     next.push(row);
   }
@@ -101,7 +127,14 @@ export function mergeRows(existing, incoming, max = MAX_BROADCAST) {
 
 /** Rows from a parsed sheet: valid numbers from buildImportPreview plus their raw cells. */
 export function rowsFromSheet(sheet, preview) {
-  return preview.valid.map(v => ({ waId: v.waId, countryIso: v.countryIso, name: v.name, cells: sheet[v.line - 1] || [], fields: v.fields || [], origin: 'import' }));
+  return preview.valid.map(v => ({
+    waId: v.waId,
+    countryIso: v.countryIso,
+    name: v.name,
+    cells: sheet[v.line - 1] || [],
+    fields: v.fields || [],
+    origin: 'import',
+  }));
 }
 
 /** A saved contact as a recipient row. */

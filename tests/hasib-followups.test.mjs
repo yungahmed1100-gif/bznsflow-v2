@@ -7,8 +7,16 @@ import { executeFollowups } from '../convex/hasib/followupsState.js';
 async function setup() {
   const m = convexMemory();
   const contactId = await m.db.insert('blueContacts', { accountId: 'a', state: 'active' });
-  const call = (operation, args = {}, accountId = 'a') => executeFollowups(m.ctx, { accountId }, { operation, ...args }, m.now());
-  const save = (args = {}) => call('followup_save', { requestId: randomUUID(), contactId, dueAt: m.now(), reason: 'Owner asked to follow up', ...args });
+  const call = (operation, args = {}, accountId = 'a') =>
+    executeFollowups(m.ctx, { accountId }, { operation, ...args }, m.now());
+  const save = (args = {}) =>
+    call('followup_save', {
+      requestId: randomUUID(),
+      contactId,
+      dueAt: m.now(),
+      reason: 'Owner asked to follow up',
+      ...args,
+    });
   return { m, contactId, call, save };
 }
 
@@ -37,7 +45,10 @@ test('linked conversation/record ownership and matching customer are checked; no
   assert.equal((await save({ linkedType: 'order', linkedId: order })).reason, 'linked_record_not_found');
   assert.equal((await save({ linkedType: 'order' })).reason, 'invalid_followup');
   const followup = (await save()).value;
-  assert.equal((await call('followup_complete', { requestId: randomUUID(), followupId: followup.id, version: 1 }, 'b')).reason, 'followup_not_found');
+  assert.equal(
+    (await call('followup_complete', { requestId: randomUUID(), followupId: followup.id, version: 1 }, 'b')).reason,
+    'followup_not_found',
+  );
   assert.equal((await call('followups', {}, 'b')).value.items.length, 0);
 });
 
@@ -56,5 +67,8 @@ test('follow-up retries, stale edits, owner due dates and explicit link clearing
   assert.equal(first.conversationId, undefined);
   assert.equal(first.dueAt, m.now() + 86400000);
   assert.equal(m.table('hasibFollowups').length, 1);
-  assert.equal((await call('followup_save', { requestId: randomUUID(), contactId, reason: 'Due date missing' })).reason, 'invalid_followup');
+  assert.equal(
+    (await call('followup_save', { requestId: randomUUID(), contactId, reason: 'Due date missing' })).reason,
+    'invalid_followup',
+  );
 });

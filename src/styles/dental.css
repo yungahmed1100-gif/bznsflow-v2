@@ -4,26 +4,82 @@
    not recorded, past-due balance). No gradients. */
 
 /* The day schedule: one column per provider, one panel per visit, its tone the visit's state. */
-.hb-day-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-block: 4px 12px; }
-.hb-day-label { min-inline-size: 10ch; }
-.hb-schedule { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; align-items: start; }
-.hb-schedule-col h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; }
-.hb-schedule-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.hb-visit { display: grid; gap: 6px; border-inline-start: 4px solid var(--tone, var(--rule-strong)); }
-.hb-visit p { margin: 0; overflow-wrap: anywhere; }
-.hb-visit .hb-status-line { flex-wrap: wrap; gap: 6px 12px; }
-.hb-visit[data-status="cancelled"] { opacity: .75; }
-.hb-visits .ld-chip, .hb-visit .ld-chip { margin-inline-start: 4px; }
+.hb-day-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-block: 4px 12px;
+}
+.hb-day-label {
+  min-inline-size: 10ch;
+}
+.hb-schedule {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.hb-schedule-col h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+.hb-schedule-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.hb-visit {
+  display: grid;
+  gap: 6px;
+  border-inline-start: 4px solid var(--tone, var(--rule-strong));
+}
+.hb-visit p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.hb-visit .hb-status-line {
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+.hb-visit[data-status='cancelled'] {
+  opacity: 0.75;
+}
+.hb-visits .ld-chip,
+.hb-visit .ld-chip {
+  margin-inline-start: 4px;
+}
 
 /* The visit list (row tones are in sector-records.css): one-tap buttons sit beside the next action. */
-.hb-visits td .ld-button { margin-inline-start: 6px; }
+.hb-visits td .ld-button {
+  margin-inline-start: 6px;
+}
 
 /* Services and the visit record. */
-.hb-services-block { margin-block-end: 24px; }
-.hb-resources > li, .hb-supplies > li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.hb-resources > li:not([data-active]) { opacity: .8; }
-.hb-supplies > li[data-tone] { border-inline-start: 4px solid var(--tone); padding-inline-start: 8px; }
+.hb-services-block {
+  margin-block-end: 24px;
+}
+.hb-resources > li,
+.hb-supplies > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.hb-resources > li:not([data-active]) {
+  opacity: 0.8;
+}
+.hb-supplies > li[data-tone] {
+  border-inline-start: 4px solid var(--tone);
+  padding-inline-start: 8px;
+}
 
 @media (max-width: 767px) {
-  .hb-schedule { grid-template-columns: 1fr; }
+  .hb-schedule {
+    grid-template-columns: 1fr;
+  }
 }

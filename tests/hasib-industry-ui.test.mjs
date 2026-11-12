@@ -10,11 +10,15 @@ test('one catalog covers Setup plus electronics and labels live, preview and pen
   assert.deepEqual(new Set(catalog.map(row => row.id)), new Set(BUSINESS_INDUSTRIES.map(row => row.id)));
   assert.equal(catalog.length, 25);
   assert.deepEqual(new Set(catalog.filter(row => row.status === 'live').map(row => row.id)), new Set(HASIB_LIVE_PACKS));
-  assert.deepEqual(new Set(catalog.filter(row => row.status === 'preview').map(row => row.id)), new Set(HASIB_PREVIEW_PACKS));
+  assert.deepEqual(
+    new Set(catalog.filter(row => row.status === 'preview').map(row => row.id)),
+    new Set(HASIB_PREVIEW_PACKS),
+  );
   // Media has its own owner configuration (Productions) and is live since 2026-10-12.
   assert.equal(catalog.filter(row => row.status === 'pending').length, 9);
   assert.equal(catalog.find(row => row.id === 'media').status, 'live');
-  for (const row of catalog) assert.ok(row.id && row.en && row.ar && ['live', 'preview', 'pending'].includes(row.status));
+  for (const row of catalog)
+    assert.ok(row.id && row.en && row.ar && ['live', 'preview', 'pending'].includes(row.status));
 });
 
 test('all 16 built owner packs specify exactly three distinct bilingual measures and relevant labels', () => {
@@ -23,14 +27,25 @@ test('all 16 built owner packs specify exactly three distinct bilingual measures
     assert.equal(pack.id, id);
     assert.equal(pack.todayMetrics.length, 3, id);
     assert.equal(new Set(pack.todayMetrics.map(m => m.id)).size, 3, id);
-    for (const measure of pack.todayMetrics) assert.ok(measure.en && measure.ar && measure.go?.length, `${id}:${measure.id}`);
+    for (const measure of pack.todayMetrics)
+      assert.ok(measure.en && measure.ar && measure.go?.length, `${id}:${measure.id}`);
     assert.ok(pack.ownerUi.work.en && pack.ownerUi.work.ar && pack.ownerUi.stock.en && pack.ownerUi.stock.ar, id);
     assert.equal(pack.thresholds.unsoldDays, 60);
     assert.equal(pack.thresholds.absenceDays, 14);
     assert.ok(!pack.orderFields.some(f => f.key === 'pickup_at'), 'fulfilment.dueAt owns pickup time');
   }
   assert.equal(HASIB_LIVE_PACKS.length + HASIB_PREVIEW_PACKS.length, 16);
-  assert.deepEqual(HASIB_LIVE_PACKS, ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive', 'fitness', 'media', 'hvac']);
+  assert.deepEqual(HASIB_LIVE_PACKS, [
+    'retail',
+    'retail-tech',
+    'dental',
+    'real-estate',
+    'construction',
+    'automotive',
+    'fitness',
+    'media',
+    'hvac',
+  ]);
 });
 
 test('every live dashboard exposes bilingual icon actions with valid destinations', () => {
@@ -42,14 +57,67 @@ test('every live dashboard exposes bilingual icon actions with valid destination
     for (const [actionId, en, ar, icon, go] of dashboard.actions) {
       assert.ok(actionId && en && ar && icon, `${id}:${actionId}`);
       // Six-tab packs (Real Estate's successors) point into their Work tab.
-      assert.ok(['today', 'orders', 'stock', 'service', 'money', 'customers', 'work'].includes(go[0]), `${id}:${actionId}:${go[0]}`);
-      if (go[1]?.action) assert.ok(['product', 'import', 'repair', 'trade-in', 'warranty', 'setup', 'property', 'opportunity', 'viewing', 'offer', 'follow-up', 'project', 'progress', 'variation', 'commitment', 'appointment', 'vehicle', 'work-order', 'membership', 'class', 'visit', 'brief', 'job'].includes(go[1].action));
+      assert.ok(
+        ['today', 'orders', 'stock', 'service', 'money', 'customers', 'work'].includes(go[0]),
+        `${id}:${actionId}:${go[0]}`,
+      );
+      if (go[1]?.action)
+        assert.ok(
+          [
+            'product',
+            'import',
+            'repair',
+            'trade-in',
+            'warranty',
+            'setup',
+            'property',
+            'opportunity',
+            'viewing',
+            'offer',
+            'follow-up',
+            'project',
+            'progress',
+            'variation',
+            'commitment',
+            'appointment',
+            'vehicle',
+            'work-order',
+            'membership',
+            'class',
+            'visit',
+            'brief',
+            'job',
+          ].includes(go[1].action),
+        );
     }
   }
 });
 
 test('Money exports share recorded recipe costs and keep unknown costs blank', () => {
-  const order = { number: 1, createdAt: 1, status: 'completed', paymentStatus: 'paid', channel: 'walk_in', lines: [{ name: 'Coffee', qty: 2, unitPriceMinor: 2000, netMinor: 4000, vatMinor: 0, unitCostMinor: 800, costKnown: true }], pricesIncludeVat: false, vatMinor: 0, deliveryMinor: 0, totalMinor: 4000, paidMinor: 4000, balanceMinor: 0 };
+  const order = {
+    number: 1,
+    createdAt: 1,
+    status: 'completed',
+    paymentStatus: 'paid',
+    channel: 'walk_in',
+    lines: [
+      {
+        name: 'Coffee',
+        qty: 2,
+        unitPriceMinor: 2000,
+        netMinor: 4000,
+        vatMinor: 0,
+        unitCostMinor: 800,
+        costKnown: true,
+      },
+    ],
+    pricesIncludeVat: false,
+    vatMinor: 0,
+    deliveryMinor: 0,
+    totalMinor: 4000,
+    paidMinor: 4000,
+    balanceMinor: 0,
+  };
   assert.match(ordersCsv([order]), /1\.600,,2\.400/);
   assert.ok(!ordersCsv([{ ...order, lines: [{ ...order.lines[0], costKnown: false }] }]).includes('2.400'));
 });
@@ -57,7 +125,8 @@ test('Money exports share recorded recipe costs and keep unknown costs blank', (
 test('plain-language money and missing-record messages exist in Arabic and English', () => {
   for (const lang of ['en', 'ar']) {
     const h = createHasibStrings(lang);
-    for (const key of ['notEnoughRecords', 'details', 'missingCounts', 'expectedProfit', 'waste_remake']) assert.notEqual(h.t(key), key);
+    for (const key of ['notEnoughRecords', 'details', 'missingCounts', 'expectedProfit', 'waste_remake'])
+      assert.notEqual(h.t(key), key);
   }
   assert.equal(createHasibStrings('en').t('owed'), 'Customers owe you');
   assert.equal(createHasibStrings('en').t('contribution'), 'Left after item costs');

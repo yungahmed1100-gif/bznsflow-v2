@@ -16,12 +16,24 @@ export function rasilKey(env = process.env) {
 async function call(env, fetcher, method, path, body, headers = {}) {
   const key = rasilKey(env);
   if (!key) throw new PilotError('email_unavailable', 503);
-  let response, json = null;
+  let response,
+    json = null;
   try {
-    response = await fetcher(`${API}${path}`, { method, redirect: 'error', signal: AbortSignal.timeout(15000),
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...headers }, ...(body ? { body: JSON.stringify(body) } : {}) });
-    try { json = await response.json(); } catch { json = null; }
-  } catch { throw new PilotError('email_provider_unavailable', 502); }
+    response = await fetcher(`${API}${path}`, {
+      method,
+      redirect: 'error',
+      signal: AbortSignal.timeout(15000),
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...headers },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    try {
+      json = await response.json();
+    } catch {
+      json = null;
+    }
+  } catch {
+    throw new PilotError('email_provider_unavailable', 502);
+  }
   return { status: response.status, json };
 }
 
@@ -35,7 +47,8 @@ export async function rasilReadiness({ env = process.env, fetcher = fetch } = {}
   try {
     const { status, json } = await call(env, fetcher, 'GET', '/domains');
     if (status >= 200 && status < 300) return 'ready';
-    if (status === 401 || status === 403) return /restricted/i.test(`${json?.name || ''} ${json?.message || ''}`) ? 'sending_only' : 'key_refused';
+    if (status === 401 || status === 403)
+      return /restricted/i.test(`${json?.name || ''} ${json?.message || ''}`) ? 'sending_only' : 'key_refused';
     return 'provider_unavailable';
   } catch {
     return 'provider_unavailable';
@@ -46,16 +59,25 @@ const STATUS = { verified: 'verified', failed: 'failed', temporary_failure: 'fai
 /** Resend's records as the owner adds them, plus the recommended DMARC record. */
 export function publicDomain(json) {
   const records = (Array.isArray(json?.records) ? json.records : []).slice(0, 10).map(r => ({
-    type: String(r.type || '').slice(0, 10), name: String(r.name || '').slice(0, 253), value: String(r.value || '').slice(0, 1024),
-    ...(Number.isFinite(r.priority) ? { priority: r.priority } : {}), status: String(r.status || 'pending').slice(0, 30) }));
-  return { resendDomainId: String(json?.id || ''), status: STATUS[json?.status] || 'pending', records: [...records, { ...DMARC_RECORD }] };
+    type: String(r.type || '').slice(0, 10),
+    name: String(r.name || '').slice(0, 253),
+    value: String(r.value || '').slice(0, 1024),
+    ...(Number.isFinite(r.priority) ? { priority: r.priority } : {}),
+    status: String(r.status || 'pending').slice(0, 30),
+  }));
+  return {
+    resendDomainId: String(json?.id || ''),
+    status: STATUS[json?.status] || 'pending',
+    records: [...records, { ...DMARC_RECORD }],
+  };
 }
 
 export async function createDomain({ env, fetcher = fetch, domain }) {
   const { status, json } = await call(env, fetcher, 'POST', '/domains', { name: domain, region: 'eu-west-1' });
   if (status === 409 || /already/i.test(json?.message || '')) throw new PilotError('domain_in_use', 409);
   if (status === 403 && /limit|plan/i.test(json?.message || '')) throw new PilotError('email_domain_limit', 503);
-  if (status < 200 || status >= 300 || !json?.id) throw new PilotError(status === 422 ? 'invalid_domain' : 'email_provider_unavailable', status === 422 ? 400 : 502);
+  if (status < 200 || status >= 300 || !json?.id)
+    throw new PilotError(status === 422 ? 'invalid_domain' : 'email_provider_unavailable', status === 422 ? 400 : 502);
   return publicDomain(json);
 }
 
@@ -76,12 +98,18 @@ export async function checkDomain({ env, fetcher = fetch, resendDomainId }) {
  */
 export function rasilSendResult(status, json) {
   if (status >= 200 && status < 300) {
-    return typeof json?.id === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(json.id) ? { status: 'submitted', providerId: json.id } : { status: 'ambiguous', reason: 'provider_missing_id' };
+    return typeof json?.id === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(json.id)
+      ? { status: 'submitted', providerId: json.id }
+      : { status: 'ambiguous', reason: 'provider_missing_id' };
   }
   if (status === 429 || status >= 500 || status === 0) return { status: 'retry', reason: 'provider_unavailable' };
   const message = String(json?.message || json?.name || '');
   if (status === 401 || status === 403) {
-    return { status: 'failed', reason: 'provider_rejected', campaignBlock: /domain/i.test(message) ? 'domain_not_verified' : 'email_unavailable' };
+    return {
+      status: 'failed',
+      reason: 'provider_rejected',
+      campaignBlock: /domain/i.test(message) ? 'domain_not_verified' : 'email_unavailable',
+    };
   }
   return { status: 'failed', reason: 'provider_rejected' };
 }
@@ -89,10 +117,13 @@ export function rasilSendResult(status, json) {
 /** One campaign email. Network failures are retried: the idempotency key makes that safe. */
 export async function sendCampaignEmail({ env, fetcher = fetch, idempotencyKey, message }) {
   try {
-    const { status, json } = await call(env, fetcher, 'POST', '/emails', message, { 'Idempotency-Key': idempotencyKey });
+    const { status, json } = await call(env, fetcher, 'POST', '/emails', message, {
+      'Idempotency-Key': idempotencyKey,
+    });
     return rasilSendResult(status, json);
   } catch (e) {
-    if (e instanceof PilotError && e.code === 'email_unavailable') return { status: 'failed', reason: 'email_unavailable', campaignBlock: 'email_unavailable' };
+    if (e instanceof PilotError && e.code === 'email_unavailable')
+      return { status: 'failed', reason: 'email_unavailable', campaignBlock: 'email_unavailable' };
     return { status: 'retry', reason: 'provider_unavailable' };
   }
 }

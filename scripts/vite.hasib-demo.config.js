@@ -5,6 +5,9 @@ import { defineConfig, mergeConfig } from 'vite';
 import base from '../vite.config.js';
 
 const backend = `http://127.0.0.1:${process.env.HASIB_DEMO_PORT || 5310}`;
-export default mergeConfig(base, defineConfig({
-  server: { port: 5173, strictPort: true, proxy: { '/api': backend, '/demo': backend } },
-}));
+export default mergeConfig(
+  base,
+  defineConfig({
+    server: { port: 5173, strictPort: true, proxy: { '/api': backend, '/demo': backend } },
+  }),
+);

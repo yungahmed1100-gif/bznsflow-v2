@@ -83,7 +83,7 @@
    the cycle, and reduced motion never starts it.
 ────────────────────────────────────────────── */
 .pipeline {
-  width: 420px;               /* fixed, so both languages get the same column */
+  width: 420px; /* fixed, so both languages get the same column */
   max-width: 100%;
 }
 
@@ -95,11 +95,31 @@
   flex-direction: column;
 }
 
-.pipeline-step { --tone: var(--text-primary); --tint: var(--bg-secondary); --tone-ink: var(--text-primary); }
-.pipeline-step.tone-blue   { --tone: var(--accent-blue); --tint: var(--blue-tint);   --tone-ink: var(--blue-ink); }
-.pipeline-step.tone-green  { --tone: var(--green);       --tint: var(--green-tint);  --tone-ink: var(--green-ink); }
-.pipeline-step.tone-yellow { --tone: var(--yellow);      --tint: var(--yellow-tint); --tone-ink: var(--yellow-ink); }
-.pipeline-step.tone-orange { --tone: var(--orange);      --tint: var(--orange-tint); --tone-ink: var(--orange-ink); }
+.pipeline-step {
+  --tone: var(--text-primary);
+  --tint: var(--bg-secondary);
+  --tone-ink: var(--text-primary);
+}
+.pipeline-step.tone-blue {
+  --tone: var(--accent-blue);
+  --tint: var(--blue-tint);
+  --tone-ink: var(--blue-ink);
+}
+.pipeline-step.tone-green {
+  --tone: var(--green);
+  --tint: var(--green-tint);
+  --tone-ink: var(--green-ink);
+}
+.pipeline-step.tone-yellow {
+  --tone: var(--yellow);
+  --tint: var(--yellow-tint);
+  --tone-ink: var(--yellow-ink);
+}
+.pipeline-step.tone-orange {
+  --tone: var(--orange);
+  --tint: var(--orange-tint);
+  --tone-ink: var(--orange-ink);
+}
 
 .pipeline-node {
   font: inherit;
@@ -114,20 +134,28 @@
   align-items: center;
   gap: 14px;
   color: var(--text-primary);
-  transition: transform var(--transition), border-color var(--transition), background-color var(--transition-slow);
+  transition:
+    transform var(--transition),
+    border-color var(--transition),
+    background-color var(--transition-slow);
   position: relative;
   z-index: 1;
 }
 
-.pipeline-node:hover { border-color: var(--tone-ink); transform: translateX(calc(var(--x-sign) * 4px)); }
+.pipeline-node:hover {
+  border-color: var(--tone-ink);
+  transform: translateX(calc(var(--x-sign) * 4px));
+}
 
-.pipeline-step[data-state="active"] .pipeline-node {
+.pipeline-step[data-state='active'] .pipeline-node {
   background: var(--tint);
   border-color: var(--tone-ink);
   box-shadow: inset calc(4px * var(--x-sign)) 0 0 var(--tone);
 }
 @media (min-width: 1025px) {
-  .pipeline-step[data-state="active"] .pipeline-node { transform: translateX(calc(var(--x-sign) * 6px)); }
+  .pipeline-step[data-state='active'] .pipeline-node {
+    transform: translateX(calc(var(--x-sign) * 6px));
+  }
 }
 
 .pipeline-node-icon {
@@ -141,14 +169,35 @@
   flex-shrink: 0;
   transition: transform var(--transition-slow);
 }
-.pipeline-step:not([class*="tone-"]) .pipeline-node-icon { color: var(--bg-primary); }
-.pipeline-step[data-state="active"] .pipeline-node-icon { transform: scale(1.08); }
-.pipeline-node-icon svg { width: 18px; height: 18px; }
+.pipeline-step:not([class*='tone-']) .pipeline-node-icon {
+  color: var(--bg-primary);
+}
+.pipeline-step[data-state='active'] .pipeline-node-icon {
+  transform: scale(1.08);
+}
+.pipeline-node-icon svg {
+  width: 18px;
+  height: 18px;
+}
 
-.pipeline-node-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
-.pipeline-node-label { font-weight: 700; font-size: 0.9rem; line-height: 1.2; }
-.pipeline-node-sub { font-size: 0.75rem; color: var(--text-muted); }
-.pipeline-step[data-state="active"] .pipeline-node-sub { color: var(--text-secondary); }
+.pipeline-node-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+.pipeline-node-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+.pipeline-node-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.pipeline-step[data-state='active'] .pipeline-node-sub {
+  color: var(--text-secondary);
+}
 
 .pipeline-arrow {
   display: flex;
@@ -171,12 +220,14 @@
   transform-origin: top;
   transition: transform 420ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-.pipeline-step[data-state="done"] .pipeline-arrow-fill { transform: scaleY(1); }
+.pipeline-step[data-state='done'] .pipeline-arrow-fill {
+  transform: scaleY(1);
+}
 
 /* ── The worked example for the active step ── */
 .pipeline-example {
   margin: 16px 0 0;
-  min-height: 112px;          /* the tallest example, so the hero never jumps */
+  min-height: 112px; /* the tallest example, so the hero never jumps */
   padding: 14px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-hover);
@@ -192,15 +243,29 @@
   color: var(--text-secondary);
   margin-bottom: 10px;
 }
-[lang="en"] .pipeline-example figcaption { letter-spacing: 0.08em; text-transform: uppercase; }
+[lang='en'] .pipeline-example figcaption {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 .pipeline-example-tag {
   padding: 1px 8px;
   border-radius: var(--radius-pill);
   background: var(--tint);
   color: var(--tone-ink);
 }
-.pipeline-example-body { animation: exampleIn 360ms cubic-bezier(0.4, 0, 0.2, 1); }
-@keyframes exampleIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.pipeline-example-body {
+  animation: exampleIn 360ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes exampleIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 
 .pipeline-bubble {
   max-width: 92%;
@@ -210,12 +275,33 @@
   line-height: 1.5;
   width: fit-content;
 }
-.pipeline-bubble.is-in { background: var(--bg-primary); border: 1px solid var(--border-hover); }
-.pipeline-bubble.is-out { background: var(--tint); margin-inline-start: auto; }
-.pipeline-bubble small { display: block; font-size: 0.7rem; font-weight: 700; color: var(--tone-ink); margin-bottom: 2px; }
-.pipeline-bubble.is-in small { color: var(--blue-ink); }
+.pipeline-bubble.is-in {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-hover);
+}
+.pipeline-bubble.is-out {
+  background: var(--tint);
+  margin-inline-start: auto;
+}
+.pipeline-bubble small {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--tone-ink);
+  margin-bottom: 2px;
+}
+.pipeline-bubble.is-in small {
+  color: var(--blue-ink);
+}
 
-.pipeline-record { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.pipeline-record {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .pipeline-record li {
   font-size: 0.8rem;
   padding: 4px 10px;
@@ -225,8 +311,16 @@
   animation: exampleIn 360ms cubic-bezier(0.4, 0, 0.2, 1) both;
   animation-delay: calc(var(--n) * 120ms);
 }
-.pipeline-record li b { font-weight: 700; color: var(--chip-ink); margin-inline-end: 4px; }
-.pipeline-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pipeline-record li b {
+  font-weight: 700;
+  color: var(--chip-ink);
+  margin-inline-end: 4px;
+}
+.pipeline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .pipeline-actions span {
   font-size: 0.8rem;
   font-weight: 700;
@@ -235,15 +329,30 @@
   border-radius: var(--radius-sm);
   background: var(--bg-primary);
 }
-.pipeline-actions span:first-child { background: var(--text-primary); color: var(--bg-primary); }
-.pipeline-actions + p { margin: 8px 0 0; font-size: 0.8rem; color: var(--text-secondary); }
+.pipeline-actions span:first-child {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+.pipeline-actions + p {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
 
 @media (max-width: 1024px) {
-  .pipeline { width: 100%; max-width: 620px; margin-inline: auto; }   /* as wide as the text and buttons above */
+  .pipeline {
+    width: 100%;
+    max-width: 620px;
+    margin-inline: auto;
+  } /* as wide as the text and buttons above */
 }
 @media (max-width: 480px) {
-  .pipeline-node { padding: 10px 12px; }
-  .pipeline-node-label { font-size: 0.85rem; }
+  .pipeline-node {
+    padding: 10px 12px;
+  }
+  .pipeline-node-label {
+    font-size: 0.85rem;
+  }
 }
 
 .hero-headline {
@@ -318,9 +427,15 @@
   background: var(--spec-tone, var(--orange));
   vertical-align: 1px;
 }
-.hero-spec-row:nth-child(1) { --spec-tone: var(--green); }
-.hero-spec-row:nth-child(2) { --spec-tone: var(--yellow); }
-.hero-spec-row:nth-child(3) { --spec-tone: var(--orange); }
+.hero-spec-row:nth-child(1) {
+  --spec-tone: var(--green);
+}
+.hero-spec-row:nth-child(2) {
+  --spec-tone: var(--yellow);
+}
+.hero-spec-row:nth-child(3) {
+  --spec-tone: var(--orange);
+}
 
 .hero-spec dt {
   font-size: 0.75rem;
@@ -330,8 +445,8 @@
   color: var(--text-secondary);
 }
 
-[lang="ar"] .hero-spec dt,
-[dir="rtl"] .hero-spec dt {
+[lang='ar'] .hero-spec dt,
+[dir='rtl'] .hero-spec dt {
   text-transform: none;
   letter-spacing: normal;
 }
@@ -385,12 +500,16 @@
    two locales disagreed with each other. Art with baked-in direction does not
    follow text direction. */
 /* Flush to the page margins — no negative inset, nothing bleeding off-canvas. */
-.hero-flow--left  { left:  0; }
-.hero-flow--right { right: 0; }
+.hero-flow--left {
+  left: 0;
+}
+.hero-flow--right {
+  right: 0;
+}
 
 .hero-flow img {
   display: block;
-  width: clamp(120px, 12vw, 190px);   /* native 307px — stays above 1.5x at the widest */
+  width: clamp(120px, 12vw, 190px); /* native 307px — stays above 1.5x at the widest */
   height: auto;
   opacity: 0.52;
 }
@@ -399,17 +518,23 @@
    flipping depends on the side it sits on. Deliberately a class rather than a
    :nth-child rule or a logical property — the arrows are baked into the
    artwork, so they must not flip with text direction under RTL. */
-.hero-flow img.is-mirrored { transform: scaleX(-1); }
+.hero-flow img.is-mirrored {
+  transform: scaleX(-1);
+}
 
 /* The lower block fades back so the pair reads as depth rather than as the same
    stamp twice. No horizontal offset between them: both sit flush against the
    viewport edge as one column, instead of stepping inward and reading as adrift. */
-.hero-flow img:nth-child(2) { opacity: 0.3; }
+.hero-flow img:nth-child(2) {
+  opacity: 0.3;
+}
 
 /* No room beside the 1200px content column below this, and on a phone the rails
    would sit under the headline. */
 @media (max-width: 1180px) {
-  .hero-flow { display: none; }
+  .hero-flow {
+    display: none;
+  }
 }
 
 /* ============================================================
@@ -430,8 +555,8 @@
   line-height: 1.2;
 }
 
-[lang="ar"] .meta-verified,
-[dir="rtl"] .meta-verified {
+[lang='ar'] .meta-verified,
+[dir='rtl'] .meta-verified {
   text-transform: none;
   letter-spacing: normal;
   font-size: 0.85rem;

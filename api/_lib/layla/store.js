@@ -4,7 +4,9 @@ import { assertBinding } from './domain.js';
 // Retired pilot callers must inject their own test store. Live state uses the
 // authenticated Convex clients; there is no legacy database fallback.
 export function createStore() {
-  const retired = async () => { throw new PilotError('legacy_storage_retired', 410); };
+  const retired = async () => {
+    throw new PilotError('legacy_storage_retired', 410);
+  };
   return { read: retired, cas: retired };
 }
 // The callback must be synchronous and side-effect free: conflicts rerun it.

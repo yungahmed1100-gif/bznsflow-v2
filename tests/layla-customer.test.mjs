@@ -3,79 +3,279 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
-import { sealToken, openToken, credentialContext, exchangeAndVerify, numberFacts, COEXISTENCE_RECHECKS, COEXISTENCE_RECHECK_MS } from '../api/_lib/layla/customer-meta.js';
+import {
+  sealToken,
+  openToken,
+  credentialContext,
+  exchangeAndVerify,
+  numberFacts,
+  COEXISTENCE_RECHECKS,
+  COEXISTENCE_RECHECK_MS,
+} from '../api/_lib/layla/customer-meta.js';
 import { verifySignupConfiguration, createHandler as eligibilityHandler } from '../api/_lib/layla/eligibility.js';
 import { signupOptions, signupEvent } from '../src/lib/layla-signup.js';
 const env = { LAYLA_CREDENTIAL_ENCRYPTION_KEY: 'a'.repeat(64) };
-const owner = '11111111-1111-4111-8111-111111111111', other = '22222222-2222-4222-8222-222222222222';
+const owner = '11111111-1111-4111-8111-111111111111',
+  other = '22222222-2222-4222-8222-222222222222';
 const c = { owner, app: '123', secret: 'SECRET_APP', version: 'v25.0' };
 test('v4 signup separates coexistence, validates origins and ignores incomplete or wrong-flow events', () => {
   const options = signupOptions({ configId: '456', path: 'coexistence' });
-  assert.equal(options.config_id, '456'); assert.equal(options.extras.version, undefined); assert.equal(options.extras.featureType, 'whatsapp_business_app_onboarding');
+  assert.equal(options.config_id, '456');
+  assert.equal(options.extras.version, undefined);
+  assert.equal(options.extras.featureType, 'whatsapp_business_app_onboarding');
   assert.equal(signupOptions({ configId: '456', path: 'new_number' }).extras.featureType, undefined);
-  const event = { origin: 'https://www.facebook.com', data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING', data: { waba_id: '456', phone_number_id: '789' } } };
-  assert.deepEqual(signupEvent(event, 'coexistence'), { event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING', assets: { waba: '456', phone: '789' } });
+  const event = {
+    origin: 'https://www.facebook.com',
+    data: {
+      type: 'WA_EMBEDDED_SIGNUP',
+      event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING',
+      data: { waba_id: '456', phone_number_id: '789' },
+    },
+  };
+  assert.deepEqual(signupEvent(event, 'coexistence'), {
+    event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING',
+    assets: { waba: '456', phone: '789' },
+  });
   // Any finish counts on any path: a dropped finish left the owner waiting forever (2026-10-24). The server checks the path.
-  assert.deepEqual(signupEvent(event, 'new_number'), { event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING', assets: { waba: '456', phone: '789' } });
+  assert.deepEqual(signupEvent(event, 'new_number'), {
+    event: 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING',
+    assets: { waba: '456', phone: '789' },
+  });
   for (const name of ['FINISH', 'FINISH_ONLY_WABA', 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING'])
-    assert.deepEqual(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: name, data: { waba_id: '456' } } }, 'coexistence'), { event: name, assets: { waba: '456' } }, name);
-  assert.equal(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'PROGRESS', data: { waba_id: '456' } } }, 'coexistence'), null, 'not a finish');
-  assert.equal(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH', data: { waba_id: 'x1' } } }, 'coexistence'), null, 'numeric WABA only');
-  assert.equal(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH', data: { waba_id: '1', phone_number_id: '2x' } } }, 'coexistence'), null, 'numeric phone only');
+    assert.deepEqual(
+      signupEvent(
+        { ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: name, data: { waba_id: '456' } } },
+        'coexistence',
+      ),
+      { event: name, assets: { waba: '456' } },
+      name,
+    );
+  assert.equal(
+    signupEvent(
+      { ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'PROGRESS', data: { waba_id: '456' } } },
+      'coexistence',
+    ),
+    null,
+    'not a finish',
+  );
+  assert.equal(
+    signupEvent(
+      { ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH', data: { waba_id: 'x1' } } },
+      'coexistence',
+    ),
+    null,
+    'numeric WABA only',
+  );
+  assert.equal(
+    signupEvent(
+      {
+        ...event,
+        data: { type: 'WA_EMBEDDED_SIGNUP', event: 'FINISH', data: { waba_id: '1', phone_number_id: '2x' } },
+      },
+      'coexistence',
+    ),
+    null,
+    'numeric phone only',
+  );
   assert.equal(signupEvent({ ...event, origin: 'http://www.facebook.com' }, 'coexistence'), null);
-  assert.deepEqual(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'CANCEL', data: { error_message: 'Something failed', error_code: 524126 } } }, 'coexistence'), { cancelled: true, reason: 'meta_error', reference: '524126' }, 'Meta’s error_code is the reference');
+  assert.deepEqual(
+    signupEvent(
+      {
+        ...event,
+        data: {
+          type: 'WA_EMBEDDED_SIGNUP',
+          event: 'CANCEL',
+          data: { error_message: 'Something failed', error_code: 524126 },
+        },
+      },
+      'coexistence',
+    ),
+    { cancelled: true, reason: 'meta_error', reference: '524126' },
+    'Meta’s error_code is the reference',
+  );
   assert.equal(signupEvent({ ...event, origin: 'https://evilfacebook.com' }, 'coexistence'), null);
   assert.equal(signupEvent({ ...event, data: '{' }, 'coexistence'), null);
-  assert.deepEqual(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'CANCEL' } }, 'coexistence'), { cancelled: true, reason: 'meta_cancelled' });
+  assert.deepEqual(signupEvent({ ...event, data: { type: 'WA_EMBEDDED_SIGNUP', event: 'CANCEL' } }, 'coexistence'), {
+    cancelled: true,
+    reason: 'meta_cancelled',
+  });
 });
 test('signup configuration requires app identity and membership; provider errors are redacted', async () => {
   const configEnv = { LAYLA_EMBEDDED_SIGNUP_CONFIG_ID: '456' };
-  const reply = value => async (_url, options) => { assert.equal(options.method, 'GET'); return { ok: true, text: async () => JSON.stringify(value) }; };
+  const reply = value => async (_url, options) => {
+    assert.equal(options.method, 'GET');
+    return { ok: true, text: async () => JSON.stringify(value) };
+  };
   assert.equal(await verifySignupConfiguration(c, configEnv, reply({ id: '123', config_ids: [{ id: '456' }] })), '456');
-  await assert.rejects(verifySignupConfiguration(c, configEnv, reply({ id: '999', config_ids: [{ id: '456' }] })), /signup_configuration_unverified/);
-  await assert.rejects(verifySignupConfiguration(c, configEnv, reply({ id: '123', config_ids: [{ id: '999' }] })), /signup_configuration_not_in_app/);
-  await assert.rejects(verifySignupConfiguration(c, configEnv, async () => { throw Error('SECRET_PROVIDER_ERROR'); }), /meta_connection_unavailable/);
+  await assert.rejects(
+    verifySignupConfiguration(c, configEnv, reply({ id: '999', config_ids: [{ id: '456' }] })),
+    /signup_configuration_unverified/,
+  );
+  await assert.rejects(
+    verifySignupConfiguration(c, configEnv, reply({ id: '123', config_ids: [{ id: '999' }] })),
+    /signup_configuration_not_in_app/,
+  );
+  await assert.rejects(
+    verifySignupConfiguration(c, configEnv, async () => {
+      throw Error('SECRET_PROVIDER_ERROR');
+    }),
+    /meta_connection_unavailable/,
+  );
 });
 test('owner eligibility cannot infer customer approval from a ready pilot and rejects nonowners before Meta', async () => {
   let calls = 0;
   const req = { method: 'GET', headers: { cookie: `bf_session=${'a'.repeat(64)}` } };
-  const makeRes = () => ({ status(n) { this.code = n; }, setHeader() {}, end(b) { this.body = JSON.parse(b); } });
-  const options = { configuration: () => c, env: { LAYLA_EMBEDDED_SIGNUP_CONFIG_ID: '456' }, now: () => 1000000,
+  const makeRes = () => ({
+    status(n) {
+      this.code = n;
+    },
+    setHeader() {},
+    end(b) {
+      this.body = JSON.parse(b);
+    },
+  });
+  const options = {
+    configuration: () => c,
+    env: { LAYLA_EMBEDDED_SIGNUP_CONFIG_ID: '456' },
+    now: () => 1000000,
     store: { read: async () => ({ state: { activation: { readiness: { ready: true } }, openWorkerAt: 1 } }) },
-    fetcher: async () => { calls++; return { ok: true, text: async () => JSON.stringify({ id: '123', config_ids: [{ id: '456' }] }) }; } };
-  const denied = makeRes(); await eligibilityHandler({ ...options, sessionLookup: async () => ({ ok: true, account: { id: other } }) })(req, denied);
-  assert.equal(denied.code, 403); assert.equal(calls, 0);
-  const result = makeRes(); await eligibilityHandler({ ...options, sessionLookup: async () => ({ ok: true, account: { id: owner } }) })(req, result);
-  assert.equal(result.code, 200); assert.equal(result.body.customerAccessApproved, false);
-  assert.equal(result.body.checks.ownerNumber.status, 'passed'); assert.equal(result.body.checks.appPermissions.status, 'not_verified');
-  assert.equal(result.body.checks.scheduler.status, 'needs_action'); assert(!JSON.stringify(result.body).includes(c.secret));
+    fetcher: async () => {
+      calls++;
+      return { ok: true, text: async () => JSON.stringify({ id: '123', config_ids: [{ id: '456' }] }) };
+    },
+  };
+  const denied = makeRes();
+  await eligibilityHandler({ ...options, sessionLookup: async () => ({ ok: true, account: { id: other } }) })(
+    req,
+    denied,
+  );
+  assert.equal(denied.code, 403);
+  assert.equal(calls, 0);
+  const result = makeRes();
+  await eligibilityHandler({ ...options, sessionLookup: async () => ({ ok: true, account: { id: owner } }) })(
+    req,
+    result,
+  );
+  assert.equal(result.code, 200);
+  assert.equal(result.body.customerAccessApproved, false);
+  assert.equal(result.body.checks.ownerNumber.status, 'passed');
+  assert.equal(result.body.checks.appPermissions.status, 'not_verified');
+  assert.equal(result.body.checks.scheduler.status, 'needs_action');
+  assert(!JSON.stringify(result.body).includes(c.secret));
 });
 test('customer credential authenticated encryption rejects tampering and tenant/asset swaps', () => {
-  const i = { id: randomUUID(), app: '123', waba: '456', phone: '789' }, context = credentialContext(owner, i);
+  const i = { id: randomUUID(), app: '123', waba: '456', phone: '789' },
+    context = credentialContext(owner, i);
   const sealed = sealToken('SECRET_CUSTOMER_TOKEN', context, env);
-  assert(!JSON.stringify(sealed).includes('SECRET_CUSTOMER_TOKEN')); assert.equal(openToken(sealed, context, env), 'SECRET_CUSTOMER_TOKEN');
-  for (const wrong of [credentialContext(other, i), credentialContext(owner, { ...i, phone: '890' })]) assert.throws(() => openToken(sealed, wrong, env), /credential_unavailable/);
+  assert(!JSON.stringify(sealed).includes('SECRET_CUSTOMER_TOKEN'));
+  assert.equal(openToken(sealed, context, env), 'SECRET_CUSTOMER_TOKEN');
+  for (const wrong of [credentialContext(other, i), credentialContext(owner, { ...i, phone: '890' })])
+    assert.throws(() => openToken(sealed, wrong, env), /credential_unavailable/);
   assert.throws(() => openToken({ ...sealed, data: 'AAAA' }, context, env), /credential_unavailable/);
 });
 test('server verifies app, permissions, granted WABA, phone relationship and actual coexistence', async () => {
-  const token = 'SECRET_CUSTOMER_TOKEN_LONG', waba = '456', phone = '789';
-  const fixture = (url) => String(url).includes('oauth/access_token') ? { access_token: token } : String(url).includes('debug_token')
-    ? { data: { is_valid: true, app_id: c.app, scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'], granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: [waba] }] } }
-    : String(url).includes('/phone_numbers') ? { data: [{ id: phone, display_phone_number: '+20 1036755930', platform_type: 'CLOUD_API', is_on_biz_app: true }] } : { id: waba };
-  const verify = (change = () => {}) => exchangeAndVerify({ c, code: 'PRIVATE_CODE', waba, phone, path: 'coexistence', sleep: async () => {}, fetcher: async url => { const body = fixture(url); change(body, String(url)); return { ok: true, text: async () => JSON.stringify(body) }; } });
+  const token = 'SECRET_CUSTOMER_TOKEN_LONG',
+    waba = '456',
+    phone = '789';
+  const fixture = url =>
+    String(url).includes('oauth/access_token')
+      ? { access_token: token }
+      : String(url).includes('debug_token')
+        ? {
+            data: {
+              is_valid: true,
+              app_id: c.app,
+              scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'],
+              granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: [waba] }],
+            },
+          }
+        : String(url).includes('/phone_numbers')
+          ? {
+              data: [
+                { id: phone, display_phone_number: '+20 1036755930', platform_type: 'CLOUD_API', is_on_biz_app: true },
+              ],
+            }
+          : { id: waba };
+  const verify = (change = () => {}) =>
+    exchangeAndVerify({
+      c,
+      code: 'PRIVATE_CODE',
+      waba,
+      phone,
+      path: 'coexistence',
+      sleep: async () => {},
+      fetcher: async url => {
+        const body = fixture(url);
+        change(body, String(url));
+        return { ok: true, text: async () => JSON.stringify(body) };
+      },
+    });
   assert.equal((await verify()).sender, '201036755930');
-  for (const change of [b => { if (b.data?.app_id) b.data.app_id = 'wrong'; }, b => { if (b.data?.scopes) b.data.scopes = []; }, b => { if (b.data?.granular_scopes) b.data.granular_scopes = []; }, b => { if (Array.isArray(b.data)) b.data[0].id = 'wrong'; }, b => { if (Array.isArray(b.data)) b.data[0].is_on_biz_app = false; }]) await assert.rejects(verify(change));
+  for (const change of [
+    b => {
+      if (b.data?.app_id) b.data.app_id = 'wrong';
+    },
+    b => {
+      if (b.data?.scopes) b.data.scopes = [];
+    },
+    b => {
+      if (b.data?.granular_scopes) b.data.granular_scopes = [];
+    },
+    b => {
+      if (Array.isArray(b.data)) b.data[0].id = 'wrong';
+    },
+    b => {
+      if (Array.isArray(b.data)) b.data[0].is_on_biz_app = false;
+    },
+  ])
+    await assert.rejects(verify(change));
 });
 test('the app path asks Meta again before refusing, and a refusal carries what Meta said about the number', async () => {
-  const token = 'SECRET_CUSTOMER_TOKEN_LONG', waba = '456', phone = '789';
-  const run = ({ flags, recheckSleep = [] }) => { let lists = 0;
-    return exchangeAndVerify({ c, code: 'PRIVATE_CODE', waba, phone, path: 'coexistence', sleep: async ms => { recheckSleep.push(ms); }, fetcher: async url => {
-      const u = String(url);
-      const body = u.includes('oauth/access_token') ? { access_token: token } : u.includes('debug_token')
-        ? { data: { is_valid: true, app_id: c.app, scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'], granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: [waba] }] } }
-        : u.includes('/phone_numbers') ? { data: [{ id: phone, display_phone_number: '+968 9123 4567', platform_type: 'CLOUD_API', ...(flags[Math.min(lists++, flags.length - 1)] === undefined ? {} : { is_on_biz_app: flags[Math.min(lists - 1, flags.length - 1)] }) }] } : { id: waba };
-      return { ok: true, text: async () => JSON.stringify(body) };
-    } }); };
+  const token = 'SECRET_CUSTOMER_TOKEN_LONG',
+    waba = '456',
+    phone = '789';
+  const run = ({ flags, recheckSleep = [] }) => {
+    let lists = 0;
+    return exchangeAndVerify({
+      c,
+      code: 'PRIVATE_CODE',
+      waba,
+      phone,
+      path: 'coexistence',
+      sleep: async ms => {
+        recheckSleep.push(ms);
+      },
+      fetcher: async url => {
+        const u = String(url);
+        const body = u.includes('oauth/access_token')
+          ? { access_token: token }
+          : u.includes('debug_token')
+            ? {
+                data: {
+                  is_valid: true,
+                  app_id: c.app,
+                  scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'],
+                  granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: [waba] }],
+                },
+              }
+            : u.includes('/phone_numbers')
+              ? {
+                  data: [
+                    {
+                      id: phone,
+                      display_phone_number: '+968 9123 4567',
+                      platform_type: 'CLOUD_API',
+                      ...(flags[Math.min(lists++, flags.length - 1)] === undefined
+                        ? {}
+                        : { is_on_biz_app: flags[Math.min(lists - 1, flags.length - 1)] }),
+                    },
+                  ],
+                }
+              : { id: waba };
+        return { ok: true, text: async () => JSON.stringify(body) };
+      },
+    });
+  };
   // Meta marks the number as on the app on the third look: connected, after two pauses.
   const pauses = [];
   assert.equal((await run({ flags: [false, false, true], recheckSleep: pauses })).coexistence, true);
@@ -83,71 +283,206 @@ test('the app path asks Meta again before refusing, and a refusal carries what M
   // Never on the app: refused after every re-check, with Meta's answer kept (no full number).
   const waits = [];
   const refused = await run({ flags: [false], recheckSleep: waits }).catch(error => error);
-  assert.equal(refused.code, 'coexistence_not_verified'); assert.equal(waits.length, COEXISTENCE_RECHECKS);
+  assert.equal(refused.code, 'coexistence_not_verified');
+  assert.equal(waits.length, COEXISTENCE_RECHECKS);
   assert.deepEqual(refused.meta, { onBizApp: 'false', platform: 'CLOUD_API', last4: '4567' });
-  assert.equal((await run({ flags: [undefined] }).catch(error => error)).meta.onBizApp, 'missing', 'a missing flag is recorded as missing');
+  assert.equal(
+    (await run({ flags: [undefined] }).catch(error => error)).meta.onBizApp,
+    'missing',
+    'a missing flag is recorded as missing',
+  );
   assert.deepEqual(numberFacts({ display_phone_number: '12', platform_type: 'bad value' }), { onBizApp: 'missing' });
 });
 test('without Meta’s message the signup token names the WABA: exactly one is used, several are never chosen silently', async () => {
-  const token = 'SECRET_CUSTOMER_TOKEN_LONG', phone = '789';
-  const run = (targets, args = {}) => exchangeAndVerify({ c, code: 'PRIVATE_CODE', path: 'coexistence', allowPhoneSelection: true, sleep: async () => {}, ...args, fetcher: async url => {
-    const u = String(url);
-    const body = u.includes('oauth/access_token') ? { access_token: token } : u.includes('debug_token')
-      ? { data: { is_valid: true, app_id: c.app, scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'], granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: targets }] } }
-      : u.includes('/phone_numbers') ? { data: [{ id: phone, display_phone_number: '+968 9000 0000', platform_type: 'CLOUD_API', is_on_biz_app: true }] } : { id: u.match(/v\d+\.\d+\/(\d+)/)?.[1] };
-    return { ok: true, text: async () => JSON.stringify(body) };
-  } });
+  const token = 'SECRET_CUSTOMER_TOKEN_LONG',
+    phone = '789';
+  const run = (targets, args = {}) =>
+    exchangeAndVerify({
+      c,
+      code: 'PRIVATE_CODE',
+      path: 'coexistence',
+      allowPhoneSelection: true,
+      sleep: async () => {},
+      ...args,
+      fetcher: async url => {
+        const u = String(url);
+        const body = u.includes('oauth/access_token')
+          ? { access_token: token }
+          : u.includes('debug_token')
+            ? {
+                data: {
+                  is_valid: true,
+                  app_id: c.app,
+                  scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'],
+                  granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: targets }],
+                },
+              }
+            : u.includes('/phone_numbers')
+              ? {
+                  data: [
+                    {
+                      id: phone,
+                      display_phone_number: '+968 9000 0000',
+                      platform_type: 'CLOUD_API',
+                      is_on_biz_app: true,
+                    },
+                  ],
+                }
+              : { id: u.match(/v\d+\.\d+\/(\d+)/)?.[1] };
+        return { ok: true, text: async () => JSON.stringify(body) };
+      },
+    });
   const found = await run(['456']);
   assert.deepEqual([found.waba, found.phone, found.sender], ['456', phone, '96890000000']);
   await assert.rejects(run(['456', '457']), /waba_not_granted/, 'two WhatsApp accounts: the owner picks one in Meta');
   await assert.rejects(run([]), /waba_not_granted/);
-  await assert.rejects(run(['456'], { allowPhoneSelection: false }), /invalid_signup_result/, 'only the signup flow may omit the WABA');
+  await assert.rejects(
+    run(['456'], { allowPhoneSelection: false }),
+    /invalid_signup_result/,
+    'only the signup flow may omit the WABA',
+  );
 });
 test('owner system-user token is accepted only for its verified owner portfolio and exact Green asset', async () => {
-  const token='OWNER_SYSTEM_USER_TOKEN_PRIVATE', business='999', waba='456', phone='789';
-  const responder=async url=>{
-    const u=String(url);
-    const value=u.includes('debug_token')
-      ? {data:{is_valid:true,app_id:c.app,type:'SYSTEM_USER',scopes:['whatsapp_business_management','whatsapp_business_messaging'],granular_scopes:[{scope:'whatsapp_business_management',target_ids:[]}]}}
-      : u.includes('/phone_numbers')?{data:[{id:phone,display_phone_number:'+968 7113 4025',platform_type:'CLOUD_API',is_on_biz_app:false}]}
-        : {id:waba,owner_business_info:{id:business}};
-    return {ok:true,text:async()=>JSON.stringify(value)};
+  const token = 'OWNER_SYSTEM_USER_TOKEN_PRIVATE',
+    business = '999',
+    waba = '456',
+    phone = '789';
+  const responder = async url => {
+    const u = String(url);
+    const value = u.includes('debug_token')
+      ? {
+          data: {
+            is_valid: true,
+            app_id: c.app,
+            type: 'SYSTEM_USER',
+            scopes: ['whatsapp_business_management', 'whatsapp_business_messaging'],
+            granular_scopes: [{ scope: 'whatsapp_business_management', target_ids: [] }],
+          },
+        }
+      : u.includes('/phone_numbers')
+        ? {
+            data: [
+              { id: phone, display_phone_number: '+968 7113 4025', platform_type: 'CLOUD_API', is_on_biz_app: false },
+            ],
+          }
+        : { id: waba, owner_business_info: { id: business } };
+    return { ok: true, text: async () => JSON.stringify(value) };
   };
-  const connected=await exchangeAndVerify({c,token,waba,phone,path:'existing_cloud',ownerBusiness:business,fetcher:responder});
-  assert.equal(connected.sender,'96871134025');
-  const configured=await exchangeAndVerify({c,token,waba,phone,path:'existing_cloud',configuredOwner:true,fetcher:responder});
-  assert.equal(configured.sender,'96871134025');
-  await assert.rejects(exchangeAndVerify({c,token,waba,phone,path:'coexistence',configuredOwner:true,fetcher:responder}),/waba_not_granted/);
-  await assert.rejects(exchangeAndVerify({c,token,waba,phone,path:'existing_cloud',configuredOwner:true,fetcher:async(url,opts)=>String(url).includes('fields=id,owner_business_info')?{ok:true,text:async()=>JSON.stringify({id:waba})}:responder(url,opts)}),/waba_not_granted/);
-  await assert.rejects(exchangeAndVerify({c,token,waba,phone,path:'existing_cloud',ownerBusiness:'998',fetcher:responder}),/waba_not_granted/);
-  await assert.rejects(exchangeAndVerify({c,token,waba,phone,path:'existing_cloud',fetcher:responder}),/waba_not_granted/);
+  const connected = await exchangeAndVerify({
+    c,
+    token,
+    waba,
+    phone,
+    path: 'existing_cloud',
+    ownerBusiness: business,
+    fetcher: responder,
+  });
+  assert.equal(connected.sender, '96871134025');
+  const configured = await exchangeAndVerify({
+    c,
+    token,
+    waba,
+    phone,
+    path: 'existing_cloud',
+    configuredOwner: true,
+    fetcher: responder,
+  });
+  assert.equal(configured.sender, '96871134025');
+  await assert.rejects(
+    exchangeAndVerify({ c, token, waba, phone, path: 'coexistence', configuredOwner: true, fetcher: responder }),
+    /waba_not_granted/,
+  );
+  await assert.rejects(
+    exchangeAndVerify({
+      c,
+      token,
+      waba,
+      phone,
+      path: 'existing_cloud',
+      configuredOwner: true,
+      fetcher: async (url, opts) =>
+        String(url).includes('fields=id,owner_business_info')
+          ? { ok: true, text: async () => JSON.stringify({ id: waba }) }
+          : responder(url, opts),
+    }),
+    /waba_not_granted/,
+  );
+  await assert.rejects(
+    exchangeAndVerify({ c, token, waba, phone, path: 'existing_cloud', ownerBusiness: '998', fetcher: responder }),
+    /waba_not_granted/,
+  );
+  await assert.rejects(
+    exchangeAndVerify({ c, token, waba, phone, path: 'existing_cloud', fetcher: responder }),
+    /waba_not_granted/,
+  );
 });
 test('additive migration preserves auth and enforces sender uniqueness, callback replay and cross-tenant foreign keys', async () => {
   const db = new PGlite();
   try {
-    await db.exec('create role anon; create role authenticated; create role service_role bypassrls; grant usage on schema public to service_role;');
-    for (const file of ['003-accounts.sql', '004-oauth-identities.sql', '007-layla-customer-onboarding.sql']) await db.exec(await readFile(new URL(`../web-chatbot/migrations/${file}`, import.meta.url), 'utf8'));
-    await db.query('insert into web_accounts(id,email) values($1,$2),($3,$4)', [owner, 'owner@example.test', other, 'other@example.test']);
+    await db.exec(
+      'create role anon; create role authenticated; create role service_role bypassrls; grant usage on schema public to service_role;',
+    );
+    for (const file of ['003-accounts.sql', '004-oauth-identities.sql', '007-layla-customer-onboarding.sql'])
+      await db.exec(await readFile(new URL(`../web-chatbot/migrations/${file}`, import.meta.url), 'utf8'));
+    await db.query('insert into web_accounts(id,email) values($1,$2),($3,$4)', [
+      owner,
+      'owner@example.test',
+      other,
+      'other@example.test',
+    ]);
     await db.query('insert into layla_tenants(account_id) values($1),($2)', [owner, other]);
     for (const role of ['anon', 'authenticated']) {
       await db.exec(`set role ${role}`);
-      for (const table of ['layla_tenants', 'layla_integrations', 'layla_customer_inbox', 'layla_customer_outbox']) await assert.rejects(db.query(`select * from ${table}`), /permission denied/);
+      for (const table of ['layla_tenants', 'layla_integrations', 'layla_customer_inbox', 'layla_customer_outbox'])
+        await assert.rejects(db.query(`select * from ${table}`), /permission denied/);
       await db.exec('reset role');
     }
     await db.exec('set role service_role');
-    const attempt = randomUUID(), hash = 'b'.repeat(64);
-    assert.equal((await db.query('select layla_signup_begin($1,$2,$3,$4) as ok', [owner, attempt, hash, 'coexistence'])).rows[0].ok, true);
-    assert.equal((await db.query('select layla_signup_claim($1,$2,$3) as result', [other, attempt, hash])).rows[0].result, null);
-    const claims = await Promise.all([1, 2].map(() => db.query('select layla_signup_claim($1,$2,$3) as result', [owner, attempt, hash])));
+    const attempt = randomUUID(),
+      hash = 'b'.repeat(64);
+    assert.equal(
+      (await db.query('select layla_signup_begin($1,$2,$3,$4) as ok', [owner, attempt, hash, 'coexistence'])).rows[0]
+        .ok,
+      true,
+    );
+    assert.equal(
+      (await db.query('select layla_signup_claim($1,$2,$3) as result', [other, attempt, hash])).rows[0].result,
+      null,
+    );
+    const claims = await Promise.all(
+      [1, 2].map(() => db.query('select layla_signup_claim($1,$2,$3) as result', [owner, attempt, hash])),
+    );
     assert.equal(claims.filter(r => r.rows[0].result).length, 1);
-    const i = { id: randomUUID(), app: '123', waba: '456', phone: '789', sender: '201036755930', path: 'coexistence', coexistence: true, credential: { sealed: true } };
+    const i = {
+      id: randomUUID(),
+      app: '123',
+      waba: '456',
+      phone: '789',
+      sender: '201036755930',
+      path: 'coexistence',
+      coexistence: true,
+      credential: { sealed: true },
+    };
     assert.equal((await db.query('select layla_signup_finish($1,$2,$3) as ok', [owner, attempt, i])).rows[0].ok, true);
     const attempt2 = randomUUID();
     await db.query('select layla_signup_begin($1,$2,$3,$4)', [other, attempt2, 'c'.repeat(64), 'coexistence']);
     await db.query('select layla_signup_claim($1,$2,$3)', [other, attempt2, 'c'.repeat(64)]);
-    await assert.rejects(db.query('select layla_signup_finish($1,$2,$3)', [other, attempt2, { ...i, id: randomUUID() }]), /duplicate key/);
-    await assert.rejects(db.query('insert into layla_customer_inbox(account_id,integration_id,event_id,event) values($1,$2,$3,$4)', [other, i.id, 'fake', {}]), /foreign key/);
+    await assert.rejects(
+      db.query('select layla_signup_finish($1,$2,$3)', [other, attempt2, { ...i, id: randomUUID() }]),
+      /duplicate key/,
+    );
+    await assert.rejects(
+      db.query('insert into layla_customer_inbox(account_id,integration_id,event_id,event) values($1,$2,$3,$4)', [
+        other,
+        i.id,
+        'fake',
+        {},
+      ]),
+      /foreign key/,
+    );
     await db.exec('reset role');
     assert.equal((await db.query('select count(*)::int as n from web_accounts')).rows[0].n, 2);
-  } finally { await db.close(); }
+  } finally {
+    await db.close();
+  }
 });

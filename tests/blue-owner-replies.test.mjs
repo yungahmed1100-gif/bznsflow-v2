@@ -13,7 +13,13 @@ async function setup() {
   await h.messaging('activate', { sessionHash: a.sessionHash });
   await h.inbound(a, { from: '96891111111', text: 'Hello' });
   const person = h.m.table('blueConversations').find(c => c.accountId === a.accountId);
-  const reply = (text = 'Owner here') => h.messaging('manual_reply', { sessionHash: a.sessionHash, conversationId: person._id, text, requestId: randomUUID() });
+  const reply = (text = 'Owner here') =>
+    h.messaging('manual_reply', {
+      sessionHash: a.sessionHash,
+      conversationId: person._id,
+      text,
+      requestId: randomUUID(),
+    });
   const job = text => h.m.table('blueMessages').find(m => m.manual && m.text === text);
   return { h, a, person, reply, job };
 }
@@ -21,7 +27,11 @@ async function sendsThrough(h, job) {
   assert.equal(job?.status, 'queued', 'the reply is queued');
   const claim = await h.messaging('claim', { jobId: job._id, intent: 'intent-1' });
   assert.ok(claim.value, 'the worker can claim it');
-  assert.equal((await h.messaging('send_gate', { jobId: job._id, intent: 'intent-1' })).value, true, 'the send gate lets it through');
+  assert.equal(
+    (await h.messaging('send_gate', { jobId: job._id, intent: 'intent-1' })).value,
+    true,
+    'the send gate lets it through',
+  );
 }
 
 test('the owner can reply while Layla is paused', async () => {
@@ -77,7 +87,17 @@ test('an owner reply still queued is never cancelled by the owner’s next reply
   for (const text of ['First', 'Second']) {
     assert.equal(job(text).status, 'queued', `${text} survives hand-back and takeover`);
     await sendsThrough(h, job(text));
-    assert.equal((await h.messaging('result', { jobId: job(text)._id, intent: 'intent-1', status: 'submitted', providerId: `wamid.${text}` })).ok, true);
+    assert.equal(
+      (
+        await h.messaging('result', {
+          jobId: job(text)._id,
+          intent: 'intent-1',
+          status: 'submitted',
+          providerId: `wamid.${text}`,
+        })
+      ).ok,
+      true,
+    );
   }
 });
 
@@ -98,8 +118,11 @@ test('pausing Layla keeps the owner’s queued reply', async () => {
 
 // A reply the owner types on their phone's WhatsApp/Instagram app arrives as an echo.
 // The owner has then answered live, so a dashboard reply still waiting must not go out after it.
-const phoneEcho = (h, a, kind = 'echo') => h.messaging('ingest', { integrationId: a.integration.id,
-  events: [{ kind, id: `echo-${randomUUID()}`, from: '96891111111', at: h.m.now(), text: 'Answered from my phone' }] });
+const phoneEcho = (h, a, kind = 'echo') =>
+  h.messaging('ingest', {
+    integrationId: a.integration.id,
+    events: [{ kind, id: `echo-${randomUUID()}`, from: '96891111111', at: h.m.now(), text: 'Answered from my phone' }],
+  });
 
 test('a reply from the owner’s phone cancels a dashboard reply still waiting to send', async () => {
   const { h, a, reply, job } = await setup();

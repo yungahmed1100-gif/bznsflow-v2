@@ -21,7 +21,11 @@ try {
     <p>Layla on WhatsApp &amp; Instagram<br>Arabic &amp; English · Oman &amp; the GCC</p>
     <footer><span>Catalyst · Available now</span><span>bznsflowai.com</span></footer></main></html>`);
   await page.locator('img').evaluate(img => img.decode());
-  await page.screenshot({ path: fileURLToPath(new URL('../public/og-image.jpg', import.meta.url)), type: 'jpeg', quality: 90 });
+  await page.screenshot({
+    path: fileURLToPath(new URL('../public/og-image.jpg', import.meta.url)),
+    type: 'jpeg',
+    quality: 90,
+  });
 } finally {
   await browser.close();
 }

@@ -23,18 +23,18 @@ const META_EVENTS = {
   // email. It now renders in two places, the exit-intent popup and /playbook,
   // but it is one component firing one event; which surface it came from is
   // carried by `sourceCta` into the CRM sheet, not by a second event name.
-  PlaybookSubmit:  { name: 'Lead' },
+  PlaybookSubmit: { name: 'Lead' },
   // Handing off to a human. WhatsApp is the main route; email and the chat
   // handoff are the same intent arriving by a different door.
-  WhatsAppClick:   { name: 'Contact' },
-  EmailClick:      { name: 'Contact' },
-  ChatHandoff:     { name: 'Contact' },
+  WhatsAppClick: { name: 'Contact' },
+  EmailClick: { name: 'Contact' },
+  ChatHandoff: { name: 'Contact' },
   // Booking a call on the Google calendar.
-  HeroCallClick:   { name: 'Schedule' },
-  AboutCallClick:  { name: 'Schedule' },
+  HeroCallClick: { name: 'Schedule' },
+  AboutCallClick: { name: 'Schedule' },
   // Engagement signals, not conversions — kept custom so they can never be
   // mistaken for one in Ads Manager.
-  ChatOpen:        { name: 'ChatOpened', custom: true },
+  ChatOpen: { name: 'ChatOpened', custom: true },
   ChatMessageSent: { name: 'ChatEngaged', custom: true },
 };
 
@@ -51,7 +51,9 @@ function metaEventFor(name, props) {
 function eventId() {
   try {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
@@ -63,10 +65,5 @@ export const trackEvent = (name, props) => {
   const meta = metaEventFor(name, props);
   if (!meta) return;
 
-  window.fbq(
-    meta.custom ? 'trackCustom' : 'track',
-    meta.name,
-    props || {},
-    { eventID: eventId() },
-  );
+  window.fbq(meta.custom ? 'trackCustom' : 'track', meta.name, props || {}, { eventID: eventId() });
 };

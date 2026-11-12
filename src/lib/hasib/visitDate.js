@@ -4,10 +4,20 @@
 import { businessDate, addDays, validDate } from '../../../convex/hasib/period.js';
 
 const WEEKDAYS = [
-  ['sunday', 'sun', 'الاحد'], ['monday', 'mon', 'الاثنين'], ['tuesday', 'tue', 'tues', 'الثلاثاء'], ['wednesday', 'wed', 'الاربعاء'],
-  ['thursday', 'thu', 'thur', 'thurs', 'الخميس'], ['friday', 'fri', 'الجمعه'], ['saturday', 'sat', 'السبت'],
+  ['sunday', 'sun', 'الاحد'],
+  ['monday', 'mon', 'الاثنين'],
+  ['tuesday', 'tue', 'tues', 'الثلاثاء'],
+  ['wednesday', 'wed', 'الاربعاء'],
+  ['thursday', 'thu', 'thur', 'thurs', 'الخميس'],
+  ['friday', 'fri', 'الجمعه'],
+  ['saturday', 'sat', 'السبت'],
 ];
-const normal = text => String(text || '').toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+const normal = text =>
+  String(text || '')
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي');
 const has = (text, word) => new RegExp(`(^|[^a-z\\u0600-\\u06ff])${word}($|[^a-z\\u0600-\\u06ff])`).test(text);
 
 /**
@@ -35,7 +45,7 @@ export function visitDateFrom(value, saidAt, timezone) {
   const day = WEEKDAYS.findIndex(names => names.some(n => has(text, n)));
   if (day >= 0) {
     const today = new Date(`${base}T12:00:00Z`).getUTCDay();
-    return addDays(base, ((day - today + 7) % 7) || 7);
+    return addDays(base, (day - today + 7) % 7 || 7);
   }
   return '';
 }

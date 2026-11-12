@@ -5,7 +5,8 @@ export const MAX_BODY = 65536;
 const id = x => typeof x === 'string' && /^[A-Za-z0-9_.:=/-]{1,220}$/.test(x);
 const phone = x => typeof x === 'string' && /^\d{7,15}$/.test(x);
 export function signatureValid(raw, signature, secret) {
-  if (!secret || !Buffer.isBuffer(raw) || typeof signature !== 'string' || !/^sha256=[a-f0-9]{64}$/.test(signature)) return false;
+  if (!secret || !Buffer.isBuffer(raw) || typeof signature !== 'string' || !/^sha256=[a-f0-9]{64}$/.test(signature))
+    return false;
   return timingSafeEqual(createHmac('sha256', secret).update(raw).digest(), Buffer.from(signature.slice(7), 'hex'));
 }
 export async function rawBody(req) {
@@ -16,14 +17,21 @@ export async function rawBody(req) {
     if (body.value.length > MAX_BODY) throw new PilotError('body_too_large', 413);
     return body.value;
   }
-  if (body && 'value' in body && body.value !== undefined && body.value !== null) throw new PilotError('raw_body_required', 503);
+  if (body && 'value' in body && body.value !== undefined && body.value !== null)
+    throw new PilotError('raw_body_required', 503);
   // Vercel replays data/end events after buffering the IncomingMessage. Its
   // original readableEnded flag can already be true, so use the replay events.
   return new Promise((resolve, reject) => {
-    const chunks = []; let size = 0;
+    const chunks = [];
+    let size = 0;
     req.on('data', chunk => {
-      const b = Buffer.from(chunk); size += b.length;
-      if (size > MAX_BODY) { chunks.length = 0; reject(new PilotError('body_too_large', 413)); return; }
+      const b = Buffer.from(chunk);
+      size += b.length;
+      if (size > MAX_BODY) {
+        chunks.length = 0;
+        reject(new PilotError('body_too_large', 413));
+        return;
+      }
       chunks.push(b);
     });
     req.once('end', () => resolve(Buffer.concat(chunks)));
@@ -39,7 +47,11 @@ export async function rawBody(req) {
  */
 export function parseEvents(raw, c, now) {
   let body;
-  try { body = JSON.parse(raw.toString('utf8')); } catch { throw new PilotError('invalid_json'); }
+  try {
+    body = JSON.parse(raw.toString('utf8'));
+  } catch {
+    throw new PilotError('invalid_json');
+  }
   const channel = CHANNEL_BY_OBJECT[body?.object];
   if (!channel || !Array.isArray(body.entry) || body.entry.length > 100) throw new PilotError('invalid_envelope');
   if (channel !== channelOf(c)) throw new PilotError('wrong_account', 403);
@@ -59,11 +71,15 @@ function whatsappEvents(body, c, now) {
     if (entry?.id !== c.waba) throw new PilotError('wrong_account', 403);
     if (!Array.isArray(entry.changes) || entry.changes.length > 100) throw new PilotError('invalid_changes');
     for (const change of entry.changes) {
-      if (!change || typeof change.field !== 'string' || !change.value || typeof change.value !== 'object') throw new PilotError('invalid_change');
+      if (!change || typeof change.field !== 'string' || !change.value || typeof change.value !== 'object')
+        throw new PilotError('invalid_change');
       const v = change.value;
-      if (!['messages','smb_message_echoes','user_preferences'].includes(change.field)) continue;
-      if (v.metadata?.phone_number_id !== c.phone || v.messaging_product !== 'whatsapp') throw new PilotError('wrong_sender', 403);
-      for (const name of ['messages','statuses','message_echoes','user_preferences']) if (v[name] !== undefined && (!Array.isArray(v[name]) || v[name].length > 100)) throw new PilotError('invalid_events');
+      if (!['messages', 'smb_message_echoes', 'user_preferences'].includes(change.field)) continue;
+      if (v.metadata?.phone_number_id !== c.phone || v.messaging_product !== 'whatsapp')
+        throw new PilotError('wrong_sender', 403);
+      for (const name of ['messages', 'statuses', 'message_echoes', 'user_preferences'])
+        if (v[name] !== undefined && (!Array.isArray(v[name]) || v[name].length > 100))
+          throw new PilotError('invalid_events');
       if (change.field === 'messages') {
         for (const m of v.messages || []) {
           if (!m || !id(m.id) || !phone(m.from)) throw new PilotError('invalid_message');
@@ -74,21 +90,31 @@ function whatsappEvents(body, c, now) {
         }
         for (const r of v.statuses || []) {
           if (!r || !id(r.id) || !phone(r.recipient_id)) throw new PilotError('invalid_receipt');
-          if (!['sent','delivered','read','failed'].includes(r.status)) continue;
-          if (r.biz_opaque_callback_data !== undefined && !id(r.biz_opaque_callback_data)) throw new PilotError('invalid_correlation');
-          events.push({ kind: 'receipt', id: r.id, recipient: r.recipient_id, status: r.status, at: timestamp(r.timestamp), intent: r.biz_opaque_callback_data || null });
+          if (!['sent', 'delivered', 'read', 'failed'].includes(r.status)) continue;
+          if (r.biz_opaque_callback_data !== undefined && !id(r.biz_opaque_callback_data))
+            throw new PilotError('invalid_correlation');
+          events.push({
+            kind: 'receipt',
+            id: r.id,
+            recipient: r.recipient_id,
+            status: r.status,
+            at: timestamp(r.timestamp),
+            intent: r.biz_opaque_callback_data || null,
+          });
         }
       }
       // Coexistence echoes never generate replies; pause before processing this envelope.
-      if (change.field === 'smb_message_echoes') for (const m of v.message_echoes || []) {
-        if (!m || !id(m.id) || !phone(m.to) || m.from !== c.sender) throw new PilotError('invalid_echo');
-        events.push({ kind: 'takeover', id: `echo:${m.id}`, from: m.to });
-      }
-      if (change.field === 'user_preferences') for (const p of v.user_preferences || []) {
-        if (!p || !phone(p.wa_id)) throw new PilotError('invalid_preference');
-        // Resume requires explicit owner review; an unknown preference fails closed.
-        if (p.value !== 'resume') events.push({ kind: 'optout', from: p.wa_id });
-      }
+      if (change.field === 'smb_message_echoes')
+        for (const m of v.message_echoes || []) {
+          if (!m || !id(m.id) || !phone(m.to) || m.from !== c.sender) throw new PilotError('invalid_echo');
+          events.push({ kind: 'takeover', id: `echo:${m.id}`, from: m.to });
+        }
+      if (change.field === 'user_preferences')
+        for (const p of v.user_preferences || []) {
+          if (!p || !phone(p.wa_id)) throw new PilotError('invalid_preference');
+          // Resume requires explicit owner review; an unknown preference fails closed.
+          if (p.value !== 'resume') events.push({ kind: 'optout', from: p.wa_id });
+        }
       if (events.length > 100) throw new PilotError('too_many_events', 413);
     }
   }
@@ -113,14 +139,28 @@ function instagramEvents(body, c, now) {
     if (!Array.isArray(entry.messaging) || entry.messaging.length > 100) throw new PilotError('invalid_changes');
     for (const item of entry.messaging) {
       if (!item || typeof item !== 'object') throw new PilotError('invalid_change');
-      const senderId = item.sender?.id, recipientId = item.recipient?.id;
-      if (!isSender(senderId, INSTAGRAM) || !isSender(recipientId, INSTAGRAM)) throw new PilotError('wrong_sender', 403);
+      const senderId = item.sender?.id,
+        recipientId = item.recipient?.id;
+      if (!isSender(senderId, INSTAGRAM) || !isSender(recipientId, INSTAGRAM))
+        throw new PilotError('wrong_sender', 403);
       // A tapped ice breaker or button arrives as a postback; its title is what the customer said.
       const postback = item.postback;
-      if (!item.message && postback && typeof postback.title === 'string' && postback.title.trim() && id(postback.mid)) {
+      if (
+        !item.message &&
+        postback &&
+        typeof postback.title === 'string' &&
+        postback.title.trim() &&
+        id(postback.mid)
+      ) {
         if (senderId === account) continue;
-        if (recipientId !== account) throw new PilotError('wrong_sender',403);
-        events.push({ kind: 'message', id: postback.mid, from: senderId, at: timestamp(item.timestamp), text: postback.title.trim().slice(0, 1000) });
+        if (recipientId !== account) throw new PilotError('wrong_sender', 403);
+        events.push({
+          kind: 'message',
+          id: postback.mid,
+          from: senderId,
+          at: timestamp(item.timestamp),
+          text: postback.title.trim().slice(0, 1000),
+        });
         continue;
       }
       // Reads and reactions carry no message body. They are authentic and create no
@@ -133,26 +173,55 @@ function instagramEvents(body, c, now) {
       // WhatsApp smb_message_echo: a human has taken this thread over.
       if (message.is_self === true || item.is_self === true) continue;
       if (message.is_echo === true) {
-        if (senderId !== account) throw new PilotError('wrong_sender',403);
-        events.push({kind:'echo',id:message.mid,from:recipientId,at:timestamp(item.timestamp),text:typeof message.text==='string'?message.text.slice(0,1000):'[Message needs human attention]'});
+        if (senderId !== account) throw new PilotError('wrong_sender', 403);
+        events.push({
+          kind: 'echo',
+          id: message.mid,
+          from: recipientId,
+          at: timestamp(item.timestamp),
+          text: typeof message.text === 'string' ? message.text.slice(0, 1000) : '[Message needs human attention]',
+        });
         continue;
       }
       if (senderId === account) continue;
-      if (recipientId !== account) throw new PilotError('wrong_sender',403);
+      if (recipientId !== account) throw new PilotError('wrong_sender', 403);
       // An unsent message must never be answered after the fact.
-      if (message.is_deleted === true) { events.push({kind:'deleted',id:message.mid,from:senderId}); continue; }
+      if (message.is_deleted === true) {
+        events.push({ kind: 'deleted', id: message.mid, from: senderId });
+        continue;
+      }
       // Photos, voice notes, shares, story mentions and over-long text: Layla can't read them, so
       // the wrapper acknowledges once in the business's style (as on WhatsApp) and the team takes over.
       if (typeof message.text !== 'string' || !message.text.trim() || message.text.length > 1000) {
         const tooLong = typeof message.text === 'string' && message.text.length > 1000;
         // The first attachment's type and link travel with it: a photo or voice note is fetched and read (inbound-media.js).
-        const first=!tooLong && Array.isArray(message.attachments) ? message.attachments[0] : null;
-        const attachment=typeof first?.type==='string' && typeof first?.payload?.url==='string' ? {type:first.type.slice(0,40),payload:{url:first.payload.url.slice(0,2000)}} : null;
-        events.push({kind:'message',id:message.mid,from:senderId,at:timestamp(item.timestamp),text:'[Message needs human attention]',handoff:true,reply:null,intent:'human',
-          nonText:tooLong?'too_long':'media',...(tooLong?{sample:message.text.slice(0,200)}:{}),...(attachment?{attachment}:{})});
+        const first = !tooLong && Array.isArray(message.attachments) ? message.attachments[0] : null;
+        const attachment =
+          typeof first?.type === 'string' && typeof first?.payload?.url === 'string'
+            ? { type: first.type.slice(0, 40), payload: { url: first.payload.url.slice(0, 2000) } }
+            : null;
+        events.push({
+          kind: 'message',
+          id: message.mid,
+          from: senderId,
+          at: timestamp(item.timestamp),
+          text: '[Message needs human attention]',
+          handoff: true,
+          reply: null,
+          intent: 'human',
+          nonText: tooLong ? 'too_long' : 'media',
+          ...(tooLong ? { sample: message.text.slice(0, 200) } : {}),
+          ...(attachment ? { attachment } : {}),
+        });
         continue;
       }
-      events.push({ kind: 'message', id: message.mid, from: senderId, at: timestamp(item.timestamp), text: message.text });
+      events.push({
+        kind: 'message',
+        id: message.mid,
+        from: senderId,
+        at: timestamp(item.timestamp),
+        text: message.text,
+      });
     }
     if (events.length > 100) throw new PilotError('too_many_events', 413);
   }

@@ -12,33 +12,50 @@
 
 import assert from 'node:assert/strict';
 import {
-  normalizeEmail, isValidEmail, generateCode, normalizeCode,
-  hashCode, hashToken, validateProfile, authBuckets, LIMITS,
+  normalizeEmail,
+  isValidEmail,
+  generateCode,
+  normalizeCode,
+  hashCode,
+  hashToken,
+  validateProfile,
+  authBuckets,
+  LIMITS,
 } from '../api/_lib/auth.js';
 import { bucketKeys } from '../api/_lib/guard.js';
 import { CSRF_COOKIE, CSRF_HEADER, randomToken, safeEqual } from '../api/_lib/cookies.js';
 import { INDUSTRY_IDS } from '../src/lib/industries.js';
 import { COUNTRY_CODES, dialFor, countryOptions } from '../src/lib/countries.js';
 
-let pass = 0, fail = 0;
+let pass = 0,
+  fail = 0;
 const t = (name, fn) => {
-  try { fn(); console.log(`  ✓ ${name}`); pass++; }
-  catch (e) { console.log(`  ✗ ${name}\n      ${e.message}`); fail++; }
+  try {
+    fn();
+    console.log(`  ✓ ${name}`);
+    pass++;
+  } catch (e) {
+    console.log(`  ✗ ${name}\n      ${e.message}`);
+    fail++;
+  }
 };
 const ta = async (name, fn) => {
-  try { await fn(); console.log(`  ✓ ${name}`); pass++; }
-  catch (e) { console.log(`  ✗ ${name}\n      ${e.message}`); fail++; }
+  try {
+    await fn();
+    console.log(`  ✓ ${name}`);
+    pass++;
+  } catch (e) {
+    console.log(`  ✗ ${name}\n      ${e.message}`);
+    fail++;
+  }
 };
 
 process.env.AUTH_OTP_PEPPER ||= 'test-pepper';
 
 console.log('\nemail');
-t('lowercases and trims', () =>
-  assert.equal(normalizeEmail('  Ahmed@BznsFlowAI.com '), 'ahmed@bznsflowai.com'));
-t('accepts an ordinary address', () =>
-  assert.equal(isValidEmail('ahmed@bznsflowai.com'), true));
-t('accepts a subdomain and a plus tag', () =>
-  assert.equal(isValidEmail('a+b@mail.example.co.uk'), true));
+t('lowercases and trims', () => assert.equal(normalizeEmail('  Ahmed@BznsFlowAI.com '), 'ahmed@bznsflowai.com'));
+t('accepts an ordinary address', () => assert.equal(isValidEmail('ahmed@bznsflowai.com'), true));
+t('accepts a subdomain and a plus tag', () => assert.equal(isValidEmail('a+b@mail.example.co.uk'), true));
 t('rejects a missing @', () => assert.equal(isValidEmail('ahmed.example.com'), false));
 t('rejects a missing TLD', () => assert.equal(isValidEmail('ahmed@localhost'), false));
 t('rejects whitespace inside', () => assert.equal(isValidEmail('a b@example.com'), false));
@@ -47,8 +64,7 @@ t('rejects empty and nullish', () => {
   assert.equal(isValidEmail(undefined), false);
   assert.equal(isValidEmail(null), false);
 });
-t('rejects an over-long address', () =>
-  assert.equal(isValidEmail(`${'a'.repeat(LIMITS.email)}@example.com`), false));
+t('rejects an over-long address', () => assert.equal(isValidEmail(`${'a'.repeat(LIMITS.email)}@example.com`), false));
 
 console.log('\ncodes');
 t('is always six digits', () => {
@@ -68,13 +84,17 @@ t('strips separators from a pasted code', () => {
 
 console.log('\nhashing');
 t('is deterministic for the same code and address', () =>
-  assert.equal(hashCode('123456', 'a@b.com'), hashCode('123456', 'a@b.com')));
+  assert.equal(hashCode('123456', 'a@b.com'), hashCode('123456', 'a@b.com')),
+);
 t('is salted by the address — same code, different person, different hash', () =>
-  assert.notEqual(hashCode('123456', 'a@b.com'), hashCode('123456', 'c@d.com')));
+  assert.notEqual(hashCode('123456', 'a@b.com'), hashCode('123456', 'c@d.com')),
+);
 t('normalises the address before hashing', () =>
-  assert.equal(hashCode('123456', 'A@B.com'), hashCode('123456', ' a@b.com ')));
+  assert.equal(hashCode('123456', 'A@B.com'), hashCode('123456', ' a@b.com ')),
+);
 t('normalises the code before hashing', () =>
-  assert.equal(hashCode('123 456', 'a@b.com'), hashCode('123456', 'a@b.com')));
+  assert.equal(hashCode('123 456', 'a@b.com'), hashCode('123456', 'a@b.com')),
+);
 t('depends on the pepper', () => {
   const before = hashCode('123456', 'a@b.com');
   const original = process.env.AUTH_OTP_PEPPER;
@@ -112,31 +132,30 @@ t('accepts a well-formed profile and composes E.164', () => {
   assert.equal(r.profile.country, 'AE');
 });
 t('drops the national trunk zero', () =>
-  assert.equal(validateProfile({ ...good, phone: '0501234567' }).profile.phone, '+971501234567'));
+  assert.equal(validateProfile({ ...good, phone: '0501234567' }).profile.phone, '+971501234567'),
+);
 t('tolerates spaces and dashes in the number', () =>
-  assert.equal(validateProfile({ ...good, phone: '050 123-4567' }).profile.phone, '+971501234567'));
-t('uppercases the country code', () =>
-  assert.equal(validateProfile({ ...good, country: 'ae' }).profile.country, 'AE'));
-t('rejects an empty name', () =>
-  assert.equal(validateProfile({ ...good, name: '   ' }).field, 'name'));
+  assert.equal(validateProfile({ ...good, phone: '050 123-4567' }).profile.phone, '+971501234567'),
+);
+t('uppercases the country code', () => assert.equal(validateProfile({ ...good, country: 'ae' }).profile.country, 'AE'));
+t('rejects an empty name', () => assert.equal(validateProfile({ ...good, name: '   ' }).field, 'name'));
 t('rejects an over-long name', () =>
-  assert.equal(validateProfile({ ...good, name: 'a'.repeat(LIMITS.name + 1) }).field, 'name'));
-t('rejects an unknown country', () =>
-  assert.equal(validateProfile({ ...good, country: 'ZZ' }).field, 'country'));
-t('rejects a too-short phone', () =>
-  assert.equal(validateProfile({ ...good, phone: '12' }).field, 'phone'));
-t('rejects a too-long phone', () =>
-  assert.equal(validateProfile({ ...good, phone: '1'.repeat(16) }).field, 'phone'));
+  assert.equal(validateProfile({ ...good, name: 'a'.repeat(LIMITS.name + 1) }).field, 'name'),
+);
+t('rejects an unknown country', () => assert.equal(validateProfile({ ...good, country: 'ZZ' }).field, 'country'));
+t('rejects a too-short phone', () => assert.equal(validateProfile({ ...good, phone: '12' }).field, 'phone'));
+t('rejects a too-long phone', () => assert.equal(validateProfile({ ...good, phone: '1'.repeat(16) }).field, 'phone'));
 t('rejects a phone that is only a trunk zero', () =>
-  assert.equal(validateProfile({ ...good, phone: '0000' }).field, 'phone'));
+  assert.equal(validateProfile({ ...good, phone: '0000' }).field, 'phone'),
+);
 t('rejects an unknown industry', () =>
-  assert.equal(validateProfile({ ...good, industry: 'not-a-sector' }).field, 'industry'));
-t('rejects a missing industry', () =>
-  assert.equal(validateProfile({ ...good, industry: '' }).field, 'industry'));
+  assert.equal(validateProfile({ ...good, industry: 'not-a-sector' }).field, 'industry'),
+);
+t('rejects a missing industry', () => assert.equal(validateProfile({ ...good, industry: '' }).field, 'industry'));
 t('defaults an unrecognised language to en', () =>
-  assert.equal(validateProfile({ ...good, lang: 'fr' }).profile.lang, 'en'));
-t('keeps ar when asked', () =>
-  assert.equal(validateProfile({ ...good, lang: 'ar' }).profile.lang, 'ar'));
+  assert.equal(validateProfile({ ...good, lang: 'fr' }).profile.lang, 'en'),
+);
+t('keeps ar when asked', () => assert.equal(validateProfile({ ...good, lang: 'ar' }).profile.lang, 'ar'));
 t('survives a non-object body', () => {
   assert.equal(validateProfile(undefined).ok, false);
   assert.equal(validateProfile('nope').ok, false);
@@ -158,11 +177,16 @@ t('every country in the dropdown has a dial code', () => {
 t('the dropdown lists every country exactly once', () => {
   const opts = countryOptions('en');
   assert.equal(opts.length, COUNTRY_CODES.size);
-  assert.equal(new Set(opts.map((c) => c.iso)).size, opts.length);
+  assert.equal(new Set(opts.map(c => c.iso)).size, opts.length);
 });
 t('GCC markets come first', () =>
-  assert.deepEqual(countryOptions('en').slice(0, 6).map((c) => c.iso),
-    ['AE', 'SA', 'KW', 'QA', 'BH', 'OM']));
+  assert.deepEqual(
+    countryOptions('en')
+      .slice(0, 6)
+      .map(c => c.iso),
+    ['AE', 'SA', 'KW', 'QA', 'BH', 'OM'],
+  ),
+);
 t('dialFor is unknown-safe', () => assert.equal(dialFor('ZZ'), ''));
 
 console.log('\nrate-limit buckets');
@@ -192,11 +216,23 @@ t('the IP bucket rolls every minute and the global one every day', () => {
 // ---------------------------------------------------------------------------
 
 const mockRes = () => ({
-  code: 0, headers: {}, body: undefined,
-  status(n) { this.code = n; return this; },
-  setHeader(k, v) { this.headers[k.toLowerCase()] = v; },
-  getHeader(k) { return this.headers[k.toLowerCase()]; },
-  end(payload) { this.body = payload ? JSON.parse(payload) : undefined; return this; },
+  code: 0,
+  headers: {},
+  body: undefined,
+  status(n) {
+    this.code = n;
+    return this;
+  },
+  setHeader(k, v) {
+    this.headers[k.toLowerCase()] = v;
+  },
+  getHeader(k) {
+    return this.headers[k.toLowerCase()];
+  },
+  end(payload) {
+    this.body = payload ? JSON.parse(payload) : undefined;
+    return this;
+  },
 });
 
 const csrfToken = randomToken();
@@ -232,11 +268,14 @@ await ta('rejects a missing CSRF token', async () => {
 });
 await ta('rejects a CSRF header that does not match the cookie', async () => {
   const res = mockRes();
-  await authCode({
-    method: 'POST',
-    headers: { ...goodHeaders, [CSRF_HEADER]: randomToken() },
-    body: { email: 'a@b.com' },
-  }, res);
+  await authCode(
+    {
+      method: 'POST',
+      headers: { ...goodHeaders, [CSRF_HEADER]: randomToken() },
+      body: { email: 'a@b.com' },
+    },
+    res,
+  );
   assert.equal(res.code, 403);
 });
 await ta('never caches a response', async () => {
@@ -277,7 +316,7 @@ await ta('GET issues a CSRF cookie and reports nobody signed in', async () => {
   assert.equal(res.body.account, null);
   assert.match(res.body.csrfToken, /^[a-f0-9]{64}$/);
   const cookies = [].concat(res.getHeader('set-cookie') || []);
-  const csrf = cookies.find((c) => c.startsWith(`${CSRF_COOKIE}=`));
+  const csrf = cookies.find(c => c.startsWith(`${CSRF_COOKIE}=`));
   assert.ok(csrf, 'CSRF cookie should be set');
   // Per-cookie, not over the joined string: a naive `.includes('HttpOnly')`
   // across all Set-Cookie headers passes as long as ANY cookie is HttpOnly,
@@ -294,14 +333,16 @@ await ta('a second GET keeps the first token instead of minting a new one', asyn
   await authSession({ method: 'GET', headers: { host: 'x', origin: 'https://x' } }, first);
 
   const second = mockRes();
-  await authSession({
-    method: 'GET',
-    headers: { host: 'x', origin: 'https://x', cookie: `${CSRF_COOKIE}=${first.body.csrfToken}` },
-  }, second);
+  await authSession(
+    {
+      method: 'GET',
+      headers: { host: 'x', origin: 'https://x', cookie: `${CSRF_COOKIE}=${first.body.csrfToken}` },
+    },
+    second,
+  );
 
   assert.equal(second.body.csrfToken, first.body.csrfToken, 'the token changed between GETs');
-  const reissued = [].concat(second.getHeader('set-cookie') || [])
-    .find((c) => c.startsWith(`${CSRF_COOKIE}=`));
+  const reissued = [].concat(second.getHeader('set-cookie') || []).find(c => c.startsWith(`${CSRF_COOKIE}=`));
   assert.ok(reissued.includes(first.body.csrfToken), 'the cookie was replaced');
   assert.ok(reissued.includes('HttpOnly'));
 });
@@ -316,8 +357,10 @@ await ta('DELETE without a session still succeeds and clears the cookie', async 
   await authSession({ method: 'DELETE', headers: goodHeaders }, res);
   assert.equal(res.code, 200);
   const setCookie = [].concat(res.getHeader('set-cookie') || []).join('; ');
-  assert.ok(/bf_session=;|bf_session=\s*;/.test(setCookie) || setCookie.includes('Max-Age=0'),
-    `expected the session cookie to be cleared, got: ${setCookie}`);
+  assert.ok(
+    /bf_session=;|bf_session=\s*;/.test(setCookie) || setCookie.includes('Max-Age=0'),
+    `expected the session cookie to be cleared, got: ${setCookie}`,
+  );
 });
 await ta('marks every response Vary: Cookie', async () => {
   const res = mockRes();

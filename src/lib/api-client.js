@@ -27,7 +27,13 @@ export const reasonOf = (value, fallback = 'unavailable') =>
 
 /** A failed API call, carrying the reason code and the HTTP status. */
 export class ApiError extends Error {
-  constructor(reason, status, errors = []) { super(reason); this.name = 'ApiError'; this.reason = reason; this.status = status; this.errors = errors; }
+  constructor(reason, status, errors = []) {
+    super(reason);
+    this.name = 'ApiError';
+    this.reason = reason;
+    this.status = status;
+    this.errors = errors;
+  }
 }
 
 /**
@@ -35,9 +41,21 @@ export class ApiError extends Error {
  * (`[{ code, section, heading? }]`). Only well-formed items cross into the UI, for
  * the same reason as `reasonOf`: their codes are looked up as translations.
  */
-const problemsOf = value => (Array.isArray(value) ? value : []).slice(0, 50)
-  .filter(p => p && REASON_CODE.test(String(p.code ?? '')) && typeof (p.section ?? '') === 'string' && typeof (p.heading ?? '') === 'string')
-  .map(({ code, section = '', heading }) => ({ code, section: section.slice(0, 80), ...(heading ? { heading: heading.slice(0, 120) } : {}) }));
+const problemsOf = value =>
+  (Array.isArray(value) ? value : [])
+    .slice(0, 50)
+    .filter(
+      p =>
+        p &&
+        REASON_CODE.test(String(p.code ?? '')) &&
+        typeof (p.section ?? '') === 'string' &&
+        typeof (p.heading ?? '') === 'string',
+    )
+    .map(({ code, section = '', heading }) => ({
+      code,
+      section: section.slice(0, 80),
+      ...(heading ? { heading: heading.slice(0, 120) } : {}),
+    }));
 
 /**
  * Call a JSON API endpoint.
@@ -62,7 +80,9 @@ export async function callApi(url, { body = null, csrf = '', timeout = 30000, fa
       credentials: 'same-origin',
       cache: 'no-store',
       signal: AbortSignal.timeout(timeout),
-      ...(body ? { headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(body) } : {}),
+      ...(body
+        ? { headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf }, body: JSON.stringify(body) }
+        : {}),
     });
   } catch {
     // A network failure or an abort. There is no server reason to report, and
@@ -71,8 +91,13 @@ export async function callApi(url, { body = null, csrf = '', timeout = 30000, fa
   }
 
   let payload = null;
-  try { payload = await response.json(); } catch { payload = null; }
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
 
-  if (!response.ok || !payload?.ok) throw new ApiError(reasonOf(payload?.reason, fallback), response.status, problemsOf(payload?.errors));
+  if (!response.ok || !payload?.ok)
+    throw new ApiError(reasonOf(payload?.reason, fallback), response.status, problemsOf(payload?.errors));
   return payload;
 }

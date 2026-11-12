@@ -135,7 +135,7 @@ async function generate(apiKey, agent, anchorImageB64) {
   }
 
   const json = await res.json();
-  const imagePart = json.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
+  const imagePart = json.candidates?.[0]?.content?.parts?.find(p => p.inlineData?.data);
   if (!imagePart) {
     throw new Error(`${agent.name}: no image in response — ${JSON.stringify(json).slice(0, 500)}`);
   }
@@ -145,16 +145,14 @@ async function generate(apiKey, agent, anchorImageB64) {
 async function main() {
   const apiKey = loadApiKey();
   const args = process.argv.slice(2);
-  const requested = args.includes('--all')
-    ? AGENTS.map((a) => a.name)
-    : args.filter((a) => !a.startsWith('--'));
+  const requested = args.includes('--all') ? AGENTS.map(a => a.name) : args.filter(a => !a.startsWith('--'));
 
   if (requested.length === 0) {
-    console.log(`Usage: node scripts/generate-agent-avatars.mjs [--all | ${AGENTS.map((a) => a.name).join(' | ')}]`);
+    console.log(`Usage: node scripts/generate-agent-avatars.mjs [--all | ${AGENTS.map(a => a.name).join(' | ')}]`);
     process.exit(0);
   }
 
-  const unknown = requested.filter((n) => !AGENTS.some((a) => a.name === n));
+  const unknown = requested.filter(n => !AGENTS.some(a => a.name === n));
   if (unknown.length) {
     console.error(`Unknown agent(s): ${unknown.join(', ')}`);
     process.exit(1);
@@ -166,10 +164,10 @@ async function main() {
   // Ensure the anchor exists first — everything else derives its style from it.
   let queue = [...requested];
   if (!existsSync(anchorPath) && !queue.includes(ANCHOR)) queue.unshift(ANCHOR);
-  if (queue.includes(ANCHOR)) queue = [ANCHOR, ...queue.filter((n) => n !== ANCHOR)];
+  if (queue.includes(ANCHOR)) queue = [ANCHOR, ...queue.filter(n => n !== ANCHOR)];
 
   for (const name of queue) {
-    const agent = AGENTS.find((a) => a.name === name);
+    const agent = AGENTS.find(a => a.name === name);
     const isAnchor = name === ANCHOR;
     const anchorB64 = isAnchor ? null : readFileSync(anchorPath).toString('base64');
     process.stdout.write(`Generating ${name}${isAnchor ? ' (style anchor)' : ''}... `);
@@ -182,7 +180,7 @@ async function main() {
   console.log('before running --all, since all other avatars inherit its style.');
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error(err.message);
   process.exit(1);
 });

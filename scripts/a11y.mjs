@@ -46,9 +46,13 @@ for (const t of TARGETS) {
   const context = await browser.newContext({ viewport: { width: t.width, height: 900 } });
   const page = await context.newPage();
   if (t.signedIn) {
-    await page.route('**/api/auth-session', (route) => route.fulfill({
-      status: 200, contentType: 'application/json', body: JSON.stringify(SESSION),
-    }));
+    await page.route('**/api/auth-session', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(SESSION),
+      }),
+    );
   }
   await page.goto(`${BASE}${t.path}`, { waitUntil: 'networkidle' });
 

@@ -6,30 +6,47 @@ import React, { useId, useState } from 'react';
  * and for each channel.
  */
 export function LaylaSwitch({ s, on, label, detail, channel, disabled = false, problem = '', onToggle }) {
-  const [pending, setPending] = useState(null), [error, setError] = useState('');
+  const [pending, setPending] = useState(null),
+    [error, setError] = useState('');
   const id = useId();
   const shown = pending ?? !!on;
   async function change(event) {
     const next = event.target.checked;
-    setPending(next); setError('');
-    try { await onToggle(next); }
-    // A refusal is worded for the channel that refused (the master switch names it on the error).
-    catch (e) { setError(s.reason(e?.reason, e?.channel || channel)); }
-    finally { setPending(null); }
+    setPending(next);
+    setError('');
+    try {
+      await onToggle(next);
+    } catch (e) {
+      // A refusal is worded for the channel that refused (the master switch names it on the error).
+      setError(s.reason(e?.reason, e?.channel || channel));
+    } finally {
+      setPending(null);
+    }
   }
   const note = error || problem;
   return (
     <div className={`ld-layla-switch ${shown ? 'is-on' : ''}`}>
       <label className="ld-switch">
-        <input type="checkbox" role="switch" checked={shown} disabled={disabled || pending !== null} onChange={change}
-          aria-describedby={note ? `${id}-note` : undefined} aria-busy={pending !== null || undefined} />
+        <input
+          type="checkbox"
+          role="switch"
+          checked={shown}
+          disabled={disabled || pending !== null}
+          onChange={change}
+          aria-describedby={note ? `${id}-note` : undefined}
+          aria-busy={pending !== null || undefined}
+        />
         <span className="ld-switch-track" aria-hidden="true" />
         <span className="ld-switch-text">
           <strong>{label ?? (shown ? s.t('active') : s.t('paused'))}</strong>
           {detail && <small>{detail}</small>}
         </span>
       </label>
-      {note && <p id={`${id}-note`} className="ld-switch-note" role={error ? 'alert' : undefined}>{note}</p>}
+      {note && (
+        <p id={`${id}-note`} className="ld-switch-note" role={error ? 'alert' : undefined}>
+          {note}
+        </p>
+      )}
     </div>
   );
 }

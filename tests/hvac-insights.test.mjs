@@ -3,18 +3,55 @@
 // exact population, and nothing crosses tenants.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { shop, customer, unit, job, book, estimate, issue, completeJob, metric, value, refused, randomUUID, HOUR, DAY } from './fixtures/ascend/hvac.mjs';
+import {
+  shop,
+  customer,
+  unit,
+  job,
+  book,
+  estimate,
+  issue,
+  completeJob,
+  metric,
+  value,
+  refused,
+  randomUUID,
+  HOUR,
+  DAY,
+} from './fixtures/ascend/hvac.mjs';
 
 /** A: on time, fixed first time, costed. B: arrived late and came back (E). C: window passed, no arrival. D: estimate never answered. */
 async function history() {
   const c = await shop();
-  value(await c.manager('settings_update', { hvacSettings: { repeatWindowDays: 7, estimateWindowDays: 3, bookingWindowDays: 2 } }));
-  const [sara, ali, omar, huda] = [await customer(c, 'Sara'), await customer(c, 'Ali'), await customer(c, 'Omar'), await customer(c, 'Huda')];
-  const uA = value(await unit(c, c.desk, sara.id)), uB = value(await unit(c, c.desk, ali.id, { unitType: 'ducted', label: 'Majlis ducted' }));
+  value(
+    await c.manager('settings_update', {
+      hvacSettings: { repeatWindowDays: 7, estimateWindowDays: 3, bookingWindowDays: 2 },
+    }),
+  );
+  const [sara, ali, omar, huda] = [
+    await customer(c, 'Sara'),
+    await customer(c, 'Ali'),
+    await customer(c, 'Omar'),
+    await customer(c, 'Huda'),
+  ];
+  const uA = value(await unit(c, c.desk, sara.id)),
+    uB = value(await unit(c, c.desk, ali.id, { unitType: 'ducted', label: 'Majlis ducted' }));
   const A = await completeJob(c, sara.id, { unitIds: [uA.id] });
-  value(await c.manager('hvac_cost_save', { jobId: A.job._id, version: A.job.version, hvac: { costs: [{ kind: 'gas', label: 'R410A 1kg', amountMinor: 5000 }], costsComplete: true } }));
+  value(
+    await c.manager('hvac_cost_save', {
+      jobId: A.job._id,
+      version: A.job.version,
+      hvac: { costs: [{ kind: 'gas', label: 'R410A 1kg', amountMinor: 5000 }], costsComplete: true },
+    }),
+  );
   const B = await completeJob(c, ali.id, { unitIds: [uB.id], arriveLateMs: 3 * HOUR });
-  value(await c.tech('hvac_unit_service', { unitId: uA.id, version: c.h.m.table('hvacUnits').find(u => u._id === uA.id).version, hvac: { nextServiceAt: c.h.m.now() + 5 * DAY } }));
+  value(
+    await c.tech('hvac_unit_service', {
+      unitId: uA.id,
+      version: c.h.m.table('hvacUnits').find(u => u._id === uA.id).version,
+      hvac: { nextServiceAt: c.h.m.now() + 5 * DAY },
+    }),
+  );
   const C = value(await job(c, c.desk, omar.id, { jobType: 'inspection' }));
   value(await book(c, c.desk, C.id, HOUR));
   const D = value(await job(c, c.desk, huda.id, { jobType: 'install' }));
@@ -29,7 +66,10 @@ async function history() {
 test('every KPI has its golden value, numerator and denominator', async () => {
   const { c } = await history();
   const ins = value(await c.manager('hvac_insights', { period: '30d' }));
-  const pick = id => { const m = metric(ins, id); return [m.value, m.numerator, m.denominator]; };
+  const pick = id => {
+    const m = metric(ins, id);
+    return [m.value, m.numerator, m.denominator];
+  };
   assert.deepEqual(pick('on_time_arrival'), [33.3, 1, 3], 'A on time; B late; C’s window passed with no arrival');
   assert.deepEqual(metric(ins, 'on_time_arrival').notes, { unrecorded: 1 });
   assert.deepEqual(pick('first_time_fix'), [50, 1, 2], 'B came back for the same unit');
@@ -58,10 +98,18 @@ test('breakdowns slice the same populations, and a drill-down returns the exact 
   assert.deepEqual([row('split').first_time_fix.value, row('ducted').first_time_fix.value], [100, 0]);
   refused(await c.manager('hvac_insights', { segment: 'technician' }), 'invalid_segment');
   const records = value(await c.manager('hvac_metric_records', { metric: 'first_time_fix', period: '30d' })).items;
-  assert.deepEqual(records.map(r => [r.jobId, r.inNumerator]).sort(), [[A.job._id, true], [B.job._id, false]].sort());
+  assert.deepEqual(
+    records.map(r => [r.jobId, r.inNumerator]).sort(),
+    [
+      [A.job._id, true],
+      [B.job._id, false],
+    ].sort(),
+  );
   const late = value(await c.manager('hvac_metric_records', { metric: 'on_time_arrival', period: '30d' })).items;
   assert.deepEqual(late.map(r => r.note || null).sort(), [null, null, 'unrecorded'].sort());
-  const urgent = value(await c.manager('hvac_metric_records', { metric: 'booking_rate', period: '30d', segment: 'job_type:install' })).items;
+  const urgent = value(
+    await c.manager('hvac_metric_records', { metric: 'booking_rate', period: '30d', segment: 'job_type:install' }),
+  ).items;
   assert.equal(urgent.length, 1);
   refused(await c.manager('hvac_metric_records', { metric: 'profit_by_tech' }), 'invalid_metric');
 });
@@ -69,11 +117,15 @@ test('breakdowns slice the same populations, and a drill-down returns the exact 
 test('a window still open is disclosed, never counted as a miss; an empty business shows no eligible records', async () => {
   const c = await shop();
   const empty = value(await c.manager('hvac_insights', {}));
-  for (const m of [...empty.headline, ...empty.diagnostics].filter(m => m.kind === 'rate')) assert.equal(m.value, null, m.id);
+  for (const m of [...empty.headline, ...empty.diagnostics].filter(m => m.kind === 'rate'))
+    assert.equal(m.value, null, m.id);
   const s = await customer(c, 'Fresh');
   await completeJob(c, s.id);
   const ins = value(await c.manager('hvac_insights', {}));
-  assert.deepEqual([metric(ins, 'first_time_fix').value, metric(ins, 'first_time_fix').notes], [null, { window_open: 1 }]);
+  assert.deepEqual(
+    [metric(ins, 'first_time_fix').value, metric(ins, 'first_time_fix').notes],
+    [null, { window_open: 1 }],
+  );
   assert.equal(metric(ins, 'on_time_arrival').value, 100);
 });
 

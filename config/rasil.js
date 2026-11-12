@@ -32,23 +32,44 @@ export function normalizeEmail(value) {
 }
 export function validEmail(value) {
   const email = normalizeEmail(value);
-  return email.length <= 254 && /^[a-z0-9._%+-]{1,64}@([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/.test(email);
+  return (
+    email.length <= 254 && /^[a-z0-9._%+-]{1,64}@([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/.test(email)
+  );
 }
 
 // The sending domain is the owner's. BznsFlow's own domain is never lent to a customer.
-const RESERVED = /(^|\.)(bznsflowai\.com|bznsflow\.com|resend\.dev|vercel\.app|gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/;
+const RESERVED =
+  /(^|\.)(bznsflowai\.com|bznsflow\.com|resend\.dev|vercel\.app|gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/;
 export function normalizeDomain(value) {
-  return typeof value === 'string' ? value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '') : '';
+  return typeof value === 'string'
+    ? value
+        .trim()
+        .toLowerCase()
+        .replace(/^https?:\/\//, '')
+        .replace(/^www\./, '')
+        .replace(/\/.*$/, '')
+    : '';
 }
 export function validDomain(value) {
   const domain = normalizeDomain(value);
-  return domain.length <= 253 && /^([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/.test(domain) && !RESERVED.test(domain);
+  return (
+    domain.length <= 253 &&
+    /^([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/.test(domain) &&
+    !RESERVED.test(domain)
+  );
 }
-export const validLocalPart = value => typeof value === 'string' && /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/.test(value);
-export const validSenderName = value => typeof value === 'string' && value.trim().length > 0 && value.length <= NAME_MAX && !/[<>"\r\n]/.test(value);
+export const validLocalPart = value =>
+  typeof value === 'string' && /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/.test(value);
+export const validSenderName = value =>
+  typeof value === 'string' && value.trim().length > 0 && value.length <= NAME_MAX && !/[<>"\r\n]/.test(value);
 
 /** DMARC is not one of Resend's records, but Gmail and Yahoo expect it from bulk senders. */
-export const DMARC_RECORD = Object.freeze({ type: 'TXT', name: '_dmarc', value: 'v=DMARC1; p=none;', status: 'recommended' });
+export const DMARC_RECORD = Object.freeze({
+  type: 'TXT',
+  name: '_dmarc',
+  value: 'v=DMARC1; p=none;',
+  status: 'recommended',
+});
 
 /** A campaign's subject and body, trimmed; plain text only. `{{name}}` is the one personal field. */
 export function campaignContent({ subject, body } = {}) {
@@ -59,12 +80,15 @@ export function campaignContent({ subject, body } = {}) {
   return { ok: true, subject: s, body: b };
 }
 
-const escape = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const escape = text =>
+  String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const URL_RE = /\bhttps?:\/\/[^\s<>"']+[^\s<>"'.,;:!?)]/g;
-const linkify = escaped => escaped.replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)]/g, url => `<a href="${url}" style="color:#2f6ea3">${url}</a>`);
+const linkify = escaped =>
+  escaped.replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)]/g, url => `<a href="${url}" style="color:#2f6ea3">${url}</a>`);
 const FALLBACK_NAME = { en: 'there', ar: 'عزيزي العميل' };
 const FOOTER = {
-  en: (business, address) => `You receive this because you subscribed to emails from ${business}.${address ? ` ${address}.` : ''}`,
+  en: (business, address) =>
+    `You receive this because you subscribed to emails from ${business}.${address ? ` ${address}.` : ''}`,
   ar: (business, address) => `وصلتك هذه الرسالة لأنك اشتركت في رسائل ${business}.${address ? ` ${address}.` : ''}`,
 };
 const UNSUBSCRIBE = { en: 'Unsubscribe', ar: 'إلغاء الاشتراك' };
@@ -76,17 +100,24 @@ const UNSUBSCRIBE = { en: 'Unsubscribe', ar: 'إلغاء الاشتراك' };
  */
 export function renderEmail({ subject, body, name, business, address = '', unsubscribeUrl, lang = 'en' }) {
   const l = lang === 'ar' ? 'ar' : 'en';
-  const who = String(name || '').trim().slice(0, NAME_MAX) || FALLBACK_NAME[l];
+  const who =
+    String(name || '')
+      .trim()
+      .slice(0, NAME_MAX) || FALLBACK_NAME[l];
   const personal = text => text.replace(/\{\{\s*name\s*\}\}/g, who);
   const text = personal(body);
   const footer = FOOTER[l](business, String(address || '').trim());
-  const paragraphs = text.split(/\n{2,}/).map(p => `<p style="margin:0 0 16px">${linkify(escape(p)).replace(/\n/g, '<br>')}</p>`).join('');
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map(p => `<p style="margin:0 0 16px">${linkify(escape(p)).replace(/\n/g, '<br>')}</p>`)
+    .join('');
   const dir = l === 'ar' ? 'rtl' : 'ltr';
-  const html = `<!doctype html><html lang="${l}" dir="${dir}"><body style="margin:0;padding:24px;background:#f6efdf">`
-    + `<div style="max-width:600px;margin:0 auto;background:#ffffff;padding:28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#1a1a1a;text-align:${l === 'ar' ? 'right' : 'left'}">`
-    + paragraphs
-    + `<hr style="border:0;border-top:1px solid #e5ddca;margin:24px 0 12px"><p style="margin:0;font-size:12px;color:#6b665b">${escape(footer)} `
-    + `<a href="${escape(unsubscribeUrl)}" style="color:#6b665b">${UNSUBSCRIBE[l]}</a></p></div></body></html>`;
+  const html =
+    `<!doctype html><html lang="${l}" dir="${dir}"><body style="margin:0;padding:24px;background:#f6efdf">` +
+    `<div style="max-width:600px;margin:0 auto;background:#ffffff;padding:28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#1a1a1a;text-align:${l === 'ar' ? 'right' : 'left'}">` +
+    paragraphs +
+    `<hr style="border:0;border-top:1px solid #e5ddca;margin:24px 0 12px"><p style="margin:0;font-size:12px;color:#6b665b">${escape(footer)} ` +
+    `<a href="${escape(unsubscribeUrl)}" style="color:#6b665b">${UNSUBSCRIBE[l]}</a></p></div></body></html>`;
   return { subject: personal(subject), html, text: `${text}\n\n--\n${footer}\n${UNSUBSCRIBE[l]}: ${unsubscribeUrl}` };
 }
 

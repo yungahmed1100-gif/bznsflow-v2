@@ -19,12 +19,16 @@ export function ChannelSwitch({ s, channel = 'whatsapp', state: given, autoOn = 
     await onChanged?.();
   };
   const tried = useRef(false);
-  useEffect(() => { if (state) onActive?.(!!state.active); }, [state?.active]);
+  useEffect(() => {
+    if (state) onActive?.(!!state.active);
+  }, [state?.active]);
   useEffect(() => {
     if (!autoOn || tried.current || !state || state.active || state.reason !== 'not_activated') return;
     tried.current = true;
     // A refusal (for example, business details not saved yet) shows on the switch after the refresh.
-    messaging('activate', { ...channelBody(channel), auto: true }).catch(() => {}).finally(refresh);
+    messaging('activate', { ...channelBody(channel), auto: true })
+      .catch(() => {})
+      .finally(refresh);
   }, [autoOn, state?.active, state?.reason]);
 
   async function toggle(next) {
@@ -37,8 +41,21 @@ export function ChannelSwitch({ s, channel = 'whatsapp', state: given, autoOn = 
   }
   const name = channelName(channel, s.ar);
   const reason = state?.active ? '' : state?.reason || '';
-  return <LaylaSwitch s={s} channel={channel} on={!!state?.active} disabled={!state || state.available === false}
-    label={state?.active ? s.t('activeOn', { channel: name }) : s.t('pausedOn', { channel: name })}
-    problem={state?.available === false ? s.reason('messaging_unavailable', channel) : OWNER_REASONS.includes(reason) ? '' : s.reason(reason, channel)}
-    onToggle={toggle} />;
+  return (
+    <LaylaSwitch
+      s={s}
+      channel={channel}
+      on={!!state?.active}
+      disabled={!state || state.available === false}
+      label={state?.active ? s.t('activeOn', { channel: name }) : s.t('pausedOn', { channel: name })}
+      problem={
+        state?.available === false
+          ? s.reason('messaging_unavailable', channel)
+          : OWNER_REASONS.includes(reason)
+            ? ''
+            : s.reason(reason, channel)
+      }
+      onToggle={toggle}
+    />
+  );
 }

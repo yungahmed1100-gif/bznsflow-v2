@@ -213,7 +213,9 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  transition: border-color var(--transition), transform var(--transition);
+  transition:
+    border-color var(--transition),
+    transform var(--transition);
 }
 .tier-chip:hover {
   border-color: var(--border-hover);
@@ -296,7 +298,9 @@
   justify-content: flex-start;
   margin-bottom: 22px;
 }
-.growth-pack-chips .tier-chip-avatar { color: var(--text-primary); }
+.growth-pack-chips .tier-chip-avatar {
+  color: var(--text-primary);
+}
 
 .growth-pack-btn {
   display: inline-flex;
@@ -393,16 +397,29 @@
 /* Three 2.25rem figures plus their conversion lines is the tightest case in
    the whole grid; ease the type down before the cards start wrapping. */
 @media (max-width: 1024px) {
-  .price-amount { font-size: 2rem; }
+  .price-amount {
+    font-size: 2rem;
+  }
 }
 
 @media (max-width: 720px) {
-  .pricing-ladder { flex-direction: column; }
-  .ladder-arrow { transform: rotate(90deg); }
-  .pricing-guarantee { flex-direction: column; gap: 12px; }
-  .growth-pack { padding: 24px 20px; }
+  .pricing-ladder {
+    flex-direction: column;
+  }
+  .ladder-arrow {
+    transform: rotate(90deg);
+  }
+  .pricing-guarantee {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .growth-pack {
+    padding: 24px 20px;
+  }
   /* Chips go full-width so two never wrap into a cramped half-row */
-  .growth-pack-chips .tier-chip { flex: 1 1 100%; }
+  .growth-pack-chips .tier-chip {
+    flex: 1 1 100%;
+  }
 }
 
 /* ============================================================
@@ -445,13 +462,23 @@
 
 /* WCAG AA contrast — darker same-hue variants for small bold labels on tinted
    backgrounds (scoped to these labels; the accent button tokens are unchanged) */
-.tier-stage-tag { color: #2f6296; }
-.tier-bottleneck-label { color: #b8333a; }
-.tier-roi-val--accent { color: #2e7150; }
+.tier-stage-tag {
+  color: #2f6296;
+}
+.tier-bottleneck-label {
+  color: #b8333a;
+}
+.tier-roi-val--accent {
+  color: #2e7150;
+}
 
 /* Tap targets ≥44px + touch press feedback */
-.lang-toggle { min-height: 40px; }
-.btn:active { transform: translateY(1px); }
+.lang-toggle {
+  min-height: 40px;
+}
+.btn:active {
+  transform: translateY(1px);
+}
 
 /* Pricing-compare table: scroll hint on phones (matches comparison table) */
 @media (max-width: 600px) {
@@ -465,19 +492,41 @@
     letter-spacing: 0.04em;
   }
 }
-[dir="rtl"] .pricing-compare-scroll::after { content: '← مرّر للمقارنة'; }
+[dir='rtl'] .pricing-compare-scroll::after {
+  content: '← مرّر للمقارنة';
+}
 
 /* Pipeline diagram never overflows a phone viewport */
 @media (max-width: 480px) {
-  .pipeline-node { min-width: 0; flex: 1 1 calc(50% - 8px); }
-  .btn { white-space: normal; }
-  .trust-flag { white-space: normal; }
-  .section { padding: 64px 0; }
+  .pipeline-node {
+    min-width: 0;
+    flex: 1 1 calc(50% - 8px);
+  }
+  .btn {
+    white-space: normal;
+  }
+  .trust-flag {
+    white-space: normal;
+  }
+  .section {
+    padding: 64px 0;
+  }
 }
 @media (max-width: 375px) {
-  .pipeline-diagram { flex-direction: column; }
-  .pipeline-node { flex: 1 1 100%; width: 100%; }
-  .container { padding: 0 14px; }
-  .hero-content { padding: 104px 14px 56px; }
-  .section { padding: 52px 0; }
+  .pipeline-diagram {
+    flex-direction: column;
+  }
+  .pipeline-node {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .container {
+    padding: 0 14px;
+  }
+  .hero-content {
+    padding: 104px 14px 56px;
+  }
+  .section {
+    padding: 52px 0;
+  }
 }

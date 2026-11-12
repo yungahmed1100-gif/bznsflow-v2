@@ -26,7 +26,7 @@ import '../styles/playbook.css';
 const FORM_ANCHOR = 'playbook-get';
 
 /** The headline carries a <span class="mark">; page metadata cannot. */
-const plain = (html) => String(html ?? '').replace(/<[^>]+>/g, '');
+const plain = html => String(html ?? '').replace(/<[^>]+>/g, '');
 
 export default function Playbook({ lang = 'ar' }) {
   const t = getStrings(lang);
@@ -35,8 +35,6 @@ export default function Playbook({ lang = 'ar' }) {
 
   return (
     <>
-
-
       <main className="pb-page" id="main-content">
         <header className="pb-nav">
           <a className="pb-brand" href={ar ? '/' : '/en'}>
@@ -60,10 +58,7 @@ export default function Playbook({ lang = 'ar' }) {
 
         <article className="pb-doc">
           <p className="section-label">{t.playbook_eyebrow}</p>
-          <h1
-            className="pb-title"
-            dangerouslySetInnerHTML={{ __html: t.playbook_title }}
-          ></h1>
+          <h1 className="pb-title" dangerouslySetInnerHTML={{ __html: t.playbook_title }}></h1>
           <p className="pb-lede">{t.playbook_sub}</p>
 
           {/* The form sits directly under the lede rather than at the foot of

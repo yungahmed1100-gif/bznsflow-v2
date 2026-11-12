@@ -9,7 +9,8 @@ const URL = '/api/layla-meta?surface=website-brief';
 /** @returns {Promise<{ brief: object, csrfToken: string }>} */
 export const loadBrief = () => callApi(URL, { fallback: 'brief_unavailable' });
 
-export const briefAction = (csrf, action, body = {}) => callApi(URL, { body: { action, ...body }, csrf, fallback: 'brief_unavailable', timeout: 45000 });
+export const briefAction = (csrf, action, body = {}) =>
+  callApi(URL, { body: { action, ...body }, csrf, fallback: 'brief_unavailable', timeout: 45000 });
 
 /**
  * Upload one logo or photo and register it. The logo is sent as it is, so a transparent PNG stays
@@ -22,7 +23,11 @@ export async function uploadBriefFile(csrf, kind, file) {
   if (prepared.size > PHOTO_MAX_BYTES) throw new ApiError('photo_size', 0);
   const { url } = await briefAction(csrf, 'upload_url');
   let storageId;
-  try { storageId = await uploadPhoto(url, prepared); } catch { throw new ApiError('photo_upload_failed', 0); }
+  try {
+    storageId = await uploadPhoto(url, prepared);
+  } catch {
+    throw new ApiError('photo_upload_failed', 0);
+  }
   const { fileId } = await briefAction(csrf, 'file_register', { storageId, kind });
   return fileId;
 }
@@ -43,8 +48,14 @@ export async function uploadBriefDocument(csrf, kind, file) {
   try {
     const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': file.type }, body: file });
     storageId = response.ok ? (await response.json().catch(() => null))?.storageId : null;
-  } catch { storageId = null; }
+  } catch {
+    storageId = null;
+  }
   if (!storageId) throw new ApiError('photo_upload_failed', 0);
-  const { fileId } = await briefAction(csrf, 'file_register', { storageId, kind, name: String(file.name || '').slice(0, 120) });
+  const { fileId } = await briefAction(csrf, 'file_register', {
+    storageId,
+    kind,
+    name: String(file.name || '').slice(0, 120),
+  });
   return fileId;
 }

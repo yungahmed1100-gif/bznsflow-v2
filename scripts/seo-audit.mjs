@@ -32,27 +32,39 @@ async function fetchSitemapUrls(base) {
   const res = await fetch(`${base}/sitemap.xml`);
   if (!res.ok) throw new Error(`sitemap.xml returned HTTP ${res.status}`);
   const xml = await res.text();
-  const locs = [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map((m) => m[1]);
+  const locs = [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)].map(m => m[1]);
   if (locs.length === 0) throw new Error('sitemap.xml contains no <loc> entries');
   // Rebase onto the target origin so a local build can be audited against the
   // production sitemap without every URL pointing at production.
   const origin = new URL(base).origin;
-  return locs.map((loc) => origin + new URL(loc).pathname);
+  return locs.map(loc => origin + new URL(loc).pathname);
 }
 
 async function checkRobots(base) {
   const findings = [];
   const res = await fetch(`${base}/robots.txt`);
   if (!res.ok) {
-    findings.push({ severity: SEVERITY.ERROR, code: 'robots-missing', message: `robots.txt returned HTTP ${res.status}` });
+    findings.push({
+      severity: SEVERITY.ERROR,
+      code: 'robots-missing',
+      message: `robots.txt returned HTTP ${res.status}`,
+    });
     return findings;
   }
   const body = await res.text();
-  if (/^\s*Disallow:\s*\/\s*$/mi.test(body)) {
-    findings.push({ severity: SEVERITY.ERROR, code: 'robots-disallow-all', message: 'robots.txt disallows the whole site' });
+  if (/^\s*Disallow:\s*\/\s*$/im.test(body)) {
+    findings.push({
+      severity: SEVERITY.ERROR,
+      code: 'robots-disallow-all',
+      message: 'robots.txt disallows the whole site',
+    });
   }
-  if (!/^\s*Sitemap:/mi.test(body)) {
-    findings.push({ severity: SEVERITY.WARN, code: 'robots-no-sitemap', message: 'robots.txt does not declare a Sitemap:' });
+  if (!/^\s*Sitemap:/im.test(body)) {
+    findings.push({
+      severity: SEVERITY.WARN,
+      code: 'robots-no-sitemap',
+      message: 'robots.txt does not declare a Sitemap:',
+    });
   }
   return findings;
 }
@@ -61,7 +73,9 @@ const ICON = { error: '✗', warn: '!', info: '·' };
 const rank = { error: 0, warn: 1, info: 2 };
 
 function report(groups) {
-  let errors = 0; let warns = 0; let infos = 0;
+  let errors = 0;
+  let warns = 0;
+  let infos = 0;
   for (const [scope, findings] of groups) {
     if (findings.length === 0) continue;
     console.log(`\n${scope}`);
@@ -106,9 +120,11 @@ async function main() {
   const { errors, warns, infos } = report(groups);
 
   console.log(`\n[seo:audit] ${errors} error(s), ${warns} warning(s), ${infos} note(s) across ${pages.length} page(s)`);
-  for (const p of pages.filter((x) => !x.error)) {
+  for (const p of pages.filter(x => !x.error)) {
     const v = p.vitals;
-    console.log(`  vitals ${p.finalUrl} — LCP ${v.lcp ?? '?'}ms  CLS ${v.cls}  FCP ${v.fcp ?? '?'}ms  TTFB ${v.ttfb ?? '?'}ms`);
+    console.log(
+      `  vitals ${p.finalUrl} — LCP ${v.lcp ?? '?'}ms  CLS ${v.cls}  FCP ${v.fcp ?? '?'}ms  TTFB ${v.ttfb ?? '?'}ms`,
+    );
   }
 
   if (json) {
@@ -124,7 +140,7 @@ async function main() {
   console.log('\n[seo:audit] passed');
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error(`[seo:audit] ${err.message}`);
   process.exit(1);
 });

@@ -12,39 +12,43 @@
 // dropdown without one just produces bad data from people who don't fit.
 
 export const INDUSTRIES = [
-  { id: 'real-estate',   en: 'Real estate',              ar: 'العقارات' },
-  { id: 'dental',        en: 'Dental clinics',           ar: 'عيادات الأسنان' },
-  { id: 'clinic',        en: 'Medical clinics',          ar: 'العيادات الطبية' },
-  { id: 'hvac',          en: 'Air conditioning',         ar: 'التكييف' },
-  { id: 'construction',  en: 'Construction',             ar: 'المقاولات' },
-  { id: 'cakes',         en: 'Cakes',                    ar: 'الكيك' },
-  { id: 'cafe',          en: 'Coffee & dessert',         ar: 'القهوة والحلويات' },
-  { id: 'restaurant',    en: 'Restaurants',              ar: 'المطاعم' },
+  { id: 'real-estate', en: 'Real estate', ar: 'العقارات' },
+  { id: 'dental', en: 'Dental clinics', ar: 'عيادات الأسنان' },
+  { id: 'clinic', en: 'Medical clinics', ar: 'العيادات الطبية' },
+  { id: 'hvac', en: 'Air conditioning', ar: 'التكييف' },
+  { id: 'construction', en: 'Construction', ar: 'المقاولات' },
+  { id: 'cakes', en: 'Cakes', ar: 'الكيك' },
+  { id: 'cafe', en: 'Coffee & dessert', ar: 'القهوة والحلويات' },
+  { id: 'restaurant', en: 'Restaurants', ar: 'المطاعم' },
 
-  { id: 'retail',        en: 'Retail & e-commerce',      ar: 'التجزئة والتجارة الإلكترونية' },
-  { id: 'beauty',        en: 'Beauty & salons',          ar: 'التجميل والصالونات' },
-  { id: 'fitness',       en: 'Fitness & wellness',       ar: 'اللياقة والعافية' },
-  { id: 'education',     en: 'Education & training',     ar: 'التعليم والتدريب' },
-  { id: 'automotive',    en: 'Automotive',               ar: 'السيارات' },
-  { id: 'logistics',     en: 'Logistics & delivery',     ar: 'الشحن والتوصيل' },
-  { id: 'travel',        en: 'Travel & hospitality',     ar: 'السفر والضيافة' },
-  { id: 'events',        en: 'Events & weddings',        ar: 'المناسبات والأعراس' },
-  { id: 'legal',         en: 'Legal services',           ar: 'الخدمات القانونية' },
-  { id: 'finance',       en: 'Finance & accounting',     ar: 'المالية والمحاسبة' },
-  { id: 'marketing',     en: 'Marketing & agencies',     ar: 'التسويق والوكالات' },
-  { id: 'media',         en: 'Media & production',       ar: 'الإعلام والإنتاج' },
-  { id: 'technology',    en: 'Technology & software',    ar: 'التقنية والبرمجيات' },
-  { id: 'manufacturing', en: 'Manufacturing',            ar: 'التصنيع' },
-  { id: 'cleaning',      en: 'Cleaning & facilities',    ar: 'النظافة وإدارة المرافق' },
-  { id: 'other',         en: 'Something else',           ar: 'مجال آخر' },
+  { id: 'retail', en: 'Retail & e-commerce', ar: 'التجزئة والتجارة الإلكترونية' },
+  { id: 'beauty', en: 'Beauty & salons', ar: 'التجميل والصالونات' },
+  { id: 'fitness', en: 'Fitness & wellness', ar: 'اللياقة والعافية' },
+  { id: 'education', en: 'Education & training', ar: 'التعليم والتدريب' },
+  { id: 'automotive', en: 'Automotive', ar: 'السيارات' },
+  { id: 'logistics', en: 'Logistics & delivery', ar: 'الشحن والتوصيل' },
+  { id: 'travel', en: 'Travel & hospitality', ar: 'السفر والضيافة' },
+  { id: 'events', en: 'Events & weddings', ar: 'المناسبات والأعراس' },
+  { id: 'legal', en: 'Legal services', ar: 'الخدمات القانونية' },
+  { id: 'finance', en: 'Finance & accounting', ar: 'المالية والمحاسبة' },
+  { id: 'marketing', en: 'Marketing & agencies', ar: 'التسويق والوكالات' },
+  { id: 'media', en: 'Media & production', ar: 'الإعلام والإنتاج' },
+  { id: 'technology', en: 'Technology & software', ar: 'التقنية والبرمجيات' },
+  { id: 'manufacturing', en: 'Manufacturing', ar: 'التصنيع' },
+  { id: 'cleaning', en: 'Cleaning & facilities', ar: 'النظافة وإدارة المرافق' },
+  { id: 'other', en: 'Something else', ar: 'مجال آخر' },
 ];
 
 /** The electronics pack is a Hasib-only specialization under retail. */
-export const ELECTRONICS_INDUSTRY = { id: 'retail-tech', en: 'Electronics and phone store', ar: 'متجر الإلكترونيات والهواتف' };
+export const ELECTRONICS_INDUSTRY = {
+  id: 'retail-tech',
+  en: 'Electronics and phone store',
+  ar: 'متجر الإلكترونيات والهواتف',
+};
 export const BUSINESS_INDUSTRIES = Object.freeze([...INDUSTRIES.slice(0, -1), ELECTRONICS_INDUSTRY, INDUSTRIES.at(-1)]);
 export function businessIndustryId(value) {
   return BUSINESS_INDUSTRIES.find(industry => industry.en === value || industry.ar === value)?.id || null;
 }
 
 /** Every valid slug, as a Set — the validator's only real question. */
-export const INDUSTRY_IDS = new Set(BUSINESS_INDUSTRIES.map((i) => i.id));
+export const INDUSTRY_IDS = new Set(BUSINESS_INDUSTRIES.map(i => i.id));

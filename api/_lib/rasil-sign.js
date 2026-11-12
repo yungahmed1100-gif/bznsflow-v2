@@ -44,12 +44,29 @@ const TOLERANCE_S = 300;
  * @param {string} raw the exact request body
  */
 export function verifyWebhook(secret, headers, raw, now = Date.now()) {
-  const header = name => { const v = headers?.[name]; return Array.isArray(v) ? v[0] : v; };
-  const id = header('svix-id'), timestamp = header('svix-timestamp'), signatures = header('svix-signature');
-  if (typeof secret !== 'string' || !secret.startsWith('whsec_') || !id || !/^\d{1,12}$/.test(timestamp || '') || !signatures || typeof raw !== 'string') return false;
+  const header = name => {
+    const v = headers?.[name];
+    return Array.isArray(v) ? v[0] : v;
+  };
+  const id = header('svix-id'),
+    timestamp = header('svix-timestamp'),
+    signatures = header('svix-signature');
+  if (
+    typeof secret !== 'string' ||
+    !secret.startsWith('whsec_') ||
+    !id ||
+    !/^\d{1,12}$/.test(timestamp || '') ||
+    !signatures ||
+    typeof raw !== 'string'
+  )
+    return false;
   if (Math.abs(now / 1000 - Number(timestamp)) > TOLERANCE_S) return false;
   let key;
-  try { key = Buffer.from(secret.slice(6), 'base64'); } catch { return false; }
+  try {
+    key = Buffer.from(secret.slice(6), 'base64');
+  } catch {
+    return false;
+  }
   if (!key.length) return false;
   const expected = Buffer.from(createHmac('sha256', key).update(`${id}.${timestamp}.${raw}`).digest('base64'));
   return signatures.split(' ').some(part => {

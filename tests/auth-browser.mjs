@@ -14,79 +14,106 @@ const BASE = process.argv[2] || 'http://localhost:5173';
 const OUT = 'work/auth-browser';
 mkdirSync(OUT, { recursive: true });
 
-let pass = 0, fail = 0;
+let pass = 0,
+  fail = 0;
 const chk = (name, cond, extra = '') => {
-  if (cond) { console.log('  ✓', name); pass++; }
-  else { console.log('  ✗', name, extra); fail++; }
+  if (cond) {
+    console.log('  ✓', name);
+    pass++;
+  } else {
+    console.log('  ✗', name, extra);
+    fail++;
+  }
 };
 
 const browser = await chromium.launch();
 
-for (const [lang, path, width] of [['ar', '/signin', 390], ['en', '/en/signin', 1440]]) {
+for (const [lang, path, width] of [
+  ['ar', '/signin', 390],
+  ['en', '/en/signin', 1440],
+]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
   const page = await ctx.newPage();
 
   let needsProfile = true;
-  await page.route('**/api/auth-code', (r) =>
-    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) }));
-  await page.route('**/api/auth-session', (r) => {
+  await page.route('**/api/auth-code', r =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) }),
+  );
+  await page.route('**/api/auth-session', r => {
     const m = r.request().method();
     if (m === 'GET') {
-      return r.fulfill({ status: 200, contentType: 'application/json',
+      return r.fulfill({
+        status: 200,
+        contentType: 'application/json',
         body: JSON.stringify({
           ok: true,
           csrfToken: 'a'.repeat(64),
           providers: ['google', 'microsoft', 'linkedin'],
           account: null,
-        }) });
+        }),
+      });
     }
     if (m === 'POST') {
-      return r.fulfill({ status: 200, contentType: 'application/json',
-        body: JSON.stringify({ ok: true, needsProfile, account: { email: 'test@example.com' } }) });
+      return r.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, needsProfile, account: { email: 'test@example.com' } }),
+      });
     }
-    return r.fulfill({ status: 200, contentType: 'application/json',
-      body: JSON.stringify({ ok: true, account: { email: 'test@example.com', name: 'Test' } }) });
+    return r.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, account: { email: 'test@example.com', name: 'Test' } }),
+    });
   });
 
   console.log(`\n${lang} @ ${width}px`);
   await page.goto(`${BASE}${path}`, { waitUntil: 'networkidle' });
 
-  chk('renders the right direction', await page.getAttribute('html', 'dir') === (lang === 'ar' ? 'rtl' : 'ltr'));
+  chk('renders the right direction', (await page.getAttribute('html', 'dir')) === (lang === 'ar' ? 'rtl' : 'ltr'));
   await page.screenshot({ path: `${OUT}/${lang}-1-email.png`, fullPage: true });
 
   // ── Social sign-in buttons ────────────────────────────────────────────────
   const providers = page.locator('.auth-provider');
-  chk('renders one button per configured provider', await providers.count() === 3,
-      `got ${await providers.count()}`);
+  chk('renders one button per configured provider', (await providers.count()) === 3, `got ${await providers.count()}`);
 
   // Real links, not scripted buttons: an OAuth redirect cannot happen inside
   // fetch, and an anchor also works before hydration.
-  const hrefs = await providers.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
-  chk('each button links to the start endpoint with its provider and language',
-      hrefs.every((h, i) => h === `/api/auth-oauth?provider=${['google', 'microsoft', 'linkedin'][i]}&lang=${lang}`),
-      hrefs.join(' | '));
+  const hrefs = await providers.evaluateAll(els => els.map(e => e.getAttribute('href')));
+  chk(
+    'each button links to the start endpoint with its provider and language',
+    hrefs.every((h, i) => h === `/api/auth-oauth?provider=${['google', 'microsoft', 'linkedin'][i]}&lang=${lang}`),
+    hrefs.join(' | '),
+  );
 
   // The label has to survive translation; an icon-only button would be
   // unusable with a screen reader.
-  const labels = await providers.evaluateAll((els) => els.map((e) => e.textContent.trim()));
-  chk('every button has a visible label', labels.every((l) => l.length > 3), labels.join(' | '));
-  chk('brand names stay in Latin script even in Arabic',
-      labels.some((l) => l.includes('Google')), labels.join(' | '));
+  const labels = await providers.evaluateAll(els => els.map(e => e.textContent.trim()));
+  chk(
+    'every button has a visible label',
+    labels.every(l => l.length > 3),
+    labels.join(' | '),
+  );
+  chk(
+    'brand names stay in Latin script even in Arabic',
+    labels.some(l => l.includes('Google')),
+    labels.join(' | '),
+  );
 
   // The buttons and the divider must not force the card wider than the screen.
-  const providerOverflow = await page.evaluate(() =>
-    document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  const providerOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
   chk('provider buttons do not cause horizontal overflow', !providerOverflow);
 
-  chk('the "or" divider is present', await page.locator('.auth-or').count() === 1);
+  chk('the "or" divider is present', (await page.locator('.auth-or').count()) === 1);
   await page.screenshot({ path: `${OUT}/${lang}-1b-providers.png`, fullPage: true });
 
   // A failed round trip reports through ?e=, and must not leave the code in the
   // URL for a refresh to re-show.
   await page.goto(`${BASE}${path}?e=cancelled`, { waitUntil: 'networkidle' });
-  chk('a cancelled sign-in shows a message', await page.locator('.auth-error').count() === 1);
-  chk('the ?e= code is stripped from the address bar',
-      !page.url().includes('e=cancelled'), page.url());
+  chk('a cancelled sign-in shows a message', (await page.locator('.auth-error').count()) === 1);
+  chk('the ?e= code is stripped from the address bar', !page.url().includes('e=cancelled'), page.url());
   await page.goto(`${BASE}${path}`, { waitUntil: 'networkidle' });
 
   // Step 1 -> 2
@@ -99,12 +126,17 @@ for (const [lang, path, width] of [['ar', '/signin', 390], ['en', '/en/signin', 
   // A pasted code keeps all six digits: this is what maxLength={6} used to
   // break, by truncating "123 456" to "123 45" before the strip ran.
   await page.fill('#auth-code', '123 456');
-  chk('a spaced paste keeps all six digits', await page.inputValue('#auth-code') === '123456',
-      `got "${await page.inputValue('#auth-code')}"`);
+  chk(
+    'a spaced paste keeps all six digits',
+    (await page.inputValue('#auth-code')) === '123456',
+    `got "${await page.inputValue('#auth-code')}"`,
+  );
   await page.fill('#auth-code', 'abc123456789');
-  chk('letters are refused and the value caps at six',
-      await page.inputValue('#auth-code') === '123456',
-      `got "${await page.inputValue('#auth-code')}"`);
+  chk(
+    'letters are refused and the value caps at six',
+    (await page.inputValue('#auth-code')) === '123456',
+    `got "${await page.inputValue('#auth-code')}"`,
+  );
 
   const resend = page.locator('.auth-link', { hasText: /\d+/ }).first();
   chk('resend is disabled during the countdown', await resend.isDisabled().catch(() => false));
@@ -113,8 +145,7 @@ for (const [lang, path, width] of [['ar', '/signin', 390], ['en', '/en/signin', 
   await page.click('button[type=submit]');
   await page.waitForSelector('#auth-industry', { timeout: 5000 });
   chk('code step advances to the profile step', true);
-  chk('the dial code is shown for the default country',
-      (await page.textContent('.auth-dial'))?.includes('+971'));
+  chk('the dial code is shown for the default country', (await page.textContent('.auth-dial'))?.includes('+971'));
   await page.screenshot({ path: `${OUT}/${lang}-3-profile.png`, fullPage: true });
 
   // Step 3 -> done
@@ -127,27 +158,54 @@ for (const [lang, path, width] of [['ar', '/signin', 390], ['en', '/en/signin', 
   await page.screenshot({ path: `${OUT}/${lang}-4-done.png`, fullPage: true });
 
   // No horizontal overflow in any state — the check that actually catches RTL bugs.
-  const overflow = await page.evaluate(() =>
-    document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
   chk('no horizontal overflow', !overflow);
 
   await ctx.close();
 }
 
 // A granted owner goes straight to their workspace: setup while there is none yet, else the dashboard.
-for (const [hasWorkspace, target] of [[false, '/en/catalyst/setup'], [true, '/en/layla/dashboard']]) {
+for (const [hasWorkspace, target] of [
+  [false, '/en/catalyst/setup'],
+  [true, '/en/layla/dashboard'],
+]) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
-  await page.route('**/api/auth-code', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) }));
-  await page.route('**/api/auth-session', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(r.request().method() === 'GET'
-    ? { ok: true, csrfToken: 'a'.repeat(64), providers: [], account: null }
-    : { ok: true, needsProfile: false, account: { email: 'owner@example.test', accessPlan: 'catalyst', hasWorkspace } }) }));
-  await page.route(/\/(en\/)?(catalyst\/setup|layla\/dashboard)$/, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<p>workspace</p>' }));
+  await page.route('**/api/auth-code', r =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) }),
+  );
+  await page.route('**/api/auth-session', r =>
+    r.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(
+        r.request().method() === 'GET'
+          ? { ok: true, csrfToken: 'a'.repeat(64), providers: [], account: null }
+          : {
+              ok: true,
+              needsProfile: false,
+              account: { email: 'owner@example.test', accessPlan: 'catalyst', hasWorkspace },
+            },
+      ),
+    }),
+  );
+  await page.route(/\/(en\/)?(catalyst\/setup|layla\/dashboard)$/, r =>
+    r.fulfill({ status: 200, contentType: 'text/html', body: '<p>workspace</p>' }),
+  );
   await page.goto(`${BASE}/en/signin`, { waitUntil: 'networkidle' });
-  await page.fill('#auth-email', 'owner@example.test'); await page.click('button[type=submit]');
-  await page.waitForSelector('#auth-code'); await page.fill('#auth-code', '123456'); await page.click('button[type=submit]');
+  await page.fill('#auth-email', 'owner@example.test');
+  await page.click('button[type=submit]');
+  await page.waitForSelector('#auth-code');
+  await page.fill('#auth-code', '123456');
+  await page.click('button[type=submit]');
   await page.waitForURL(`**${target}`, { timeout: 5000 }).catch(() => {});
-  chk(`a granted owner ${hasWorkspace ? 'with' : 'without'} a workspace lands on ${target}`, new URL(page.url()).pathname === target, page.url());
+  chk(
+    `a granted owner ${hasWorkspace ? 'with' : 'without'} a workspace lands on ${target}`,
+    new URL(page.url()).pathname === target,
+    page.url(),
+  );
   await ctx.close();
 }
 
@@ -155,17 +213,41 @@ for (const [hasWorkspace, target] of [[false, '/en/catalyst/setup'], [true, '/en
 {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
-  await page.route('**/api/auth-code', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) }));
-  await page.route('**/api/auth-session', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(r.request().method() === 'GET'
-    ? { ok: true, csrfToken: 'a'.repeat(64), providers: [], account: null }
-    : { ok: true, needsProfile: false, account: { email: 'owner@example.test', accessPlan: 'catalyst', hasWorkspace: false } }) }));
+  await page.route('**/api/auth-code', r =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true }) }),
+  );
+  await page.route('**/api/auth-session', r =>
+    r.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(
+        r.request().method() === 'GET'
+          ? { ok: true, csrfToken: 'a'.repeat(64), providers: [], account: null }
+          : {
+              ok: true,
+              needsProfile: false,
+              account: { email: 'owner@example.test', accessPlan: 'catalyst', hasWorkspace: false },
+            },
+      ),
+    }),
+  );
   const visited = [];
-  await page.route(/\/(en\/)?(catalyst\/setup|layla\/dashboard)$/, (r) => { visited.push(new URL(r.request().url()).pathname); return r.fulfill({ status: 200, contentType: 'text/html', body: '<p>workspace</p>' }); });
+  await page.route(/\/(en\/)?(catalyst\/setup|layla\/dashboard)$/, r => {
+    visited.push(new URL(r.request().url()).pathname);
+    return r.fulfill({ status: 200, contentType: 'text/html', body: '<p>workspace</p>' });
+  });
   await page.goto(`${BASE}/en/signin?next=${encodeURIComponent('/en/layla/dashboard')}`, { waitUntil: 'networkidle' });
-  await page.fill('#auth-email', 'owner@example.test'); await page.click('button[type=submit]');
-  await page.waitForSelector('#auth-code'); await page.fill('#auth-code', '123456'); await page.click('button[type=submit]');
+  await page.fill('#auth-email', 'owner@example.test');
+  await page.click('button[type=submit]');
+  await page.waitForSelector('#auth-code');
+  await page.fill('#auth-code', '123456');
+  await page.click('button[type=submit]');
   await page.waitForURL('**/en/catalyst/setup', { timeout: 5000 }).catch(() => {});
-  chk('a dashboard destination without a workspace opens setup directly', new URL(page.url()).pathname === '/en/catalyst/setup' && !visited.includes('/en/layla/dashboard'), visited.join(' → '));
+  chk(
+    'a dashboard destination without a workspace opens setup directly',
+    new URL(page.url()).pathname === '/en/catalyst/setup' && !visited.includes('/en/layla/dashboard'),
+    visited.join(' → '),
+  );
   await ctx.close();
 }
 
@@ -174,15 +256,30 @@ for (const [hasWorkspace, target] of [[false, '/en/catalyst/setup'], [true, '/en
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
   let answer;
-  const held = new Promise((resolve) => { answer = resolve; });
-  await page.route('**/api/auth-session', async (r) => { await held; return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, csrfToken: 'a'.repeat(64), providers: [], account: null }) }); });
+  const held = new Promise(resolve => {
+    answer = resolve;
+  });
+  await page.route('**/api/auth-session', async r => {
+    await held;
+    return r.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, csrfToken: 'a'.repeat(64), providers: [], account: null }),
+    });
+  });
   await page.goto(`${BASE}/en/signin?welcome=1`);
-  await page.getByText('Signing you in…').waitFor({ timeout: 5000 }).catch(() => {});
-  chk('an OAuth return shows "Signing you in…", not the email form', await page.getByText('Signing you in…').count() === 1 && await page.locator('#auth-email').count() === 0);
+  await page
+    .getByText('Signing you in…')
+    .waitFor({ timeout: 5000 })
+    .catch(() => {});
+  chk(
+    'an OAuth return shows "Signing you in…", not the email form',
+    (await page.getByText('Signing you in…').count()) === 1 && (await page.locator('#auth-email').count()) === 0,
+  );
   chk('the welcome marker leaves the address bar', !new URL(page.url()).search.includes('welcome'));
   answer();
   await page.waitForSelector('#auth-email', { timeout: 5000 }).catch(() => {});
-  chk('no session after all: the email form returns', await page.locator('#auth-email').count() === 1);
+  chk('no session after all: the email form returns', (await page.locator('#auth-email').count()) === 1);
   await ctx.close();
 }
 

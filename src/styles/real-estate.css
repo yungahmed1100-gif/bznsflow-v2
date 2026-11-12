@@ -1,8 +1,29 @@
 /* Real Estate's own colours; everything shared lives in workspace.css.
    Stages: the customer arrives (blue), is worked (yellow), reaches the record (orange), ends. */
-[data-stage="new"], [data-stage="contacted"] { --stage: var(--blue-mark); --stage-tint: var(--blue-tint); --stage-ink: var(--blue-ink); }
-[data-stage="qualified"], [data-stage="viewing"] { --stage: var(--yellow); --stage-tint: var(--yellow-tint); --stage-ink: var(--yellow-ink); }
-[data-stage="offer"] { --stage: var(--orange); --stage-tint: var(--orange-tint); --stage-ink: var(--orange-ink); }
-[data-stage="won"] { --stage: var(--green-mark); --stage-tint: var(--green-tint); --stage-ink: var(--green); }
-[data-stage="lost"] { --stage: var(--coral-mark); --stage-tint: var(--coral-tint); --stage-ink: var(--coral); }
-
+[data-stage='new'],
+[data-stage='contacted'] {
+  --stage: var(--blue-mark);
+  --stage-tint: var(--blue-tint);
+  --stage-ink: var(--blue-ink);
+}
+[data-stage='qualified'],
+[data-stage='viewing'] {
+  --stage: var(--yellow);
+  --stage-tint: var(--yellow-tint);
+  --stage-ink: var(--yellow-ink);
+}
+[data-stage='offer'] {
+  --stage: var(--orange);
+  --stage-tint: var(--orange-tint);
+  --stage-ink: var(--orange-ink);
+}
+[data-stage='won'] {
+  --stage: var(--green-mark);
+  --stage-tint: var(--green-tint);
+  --stage-ink: var(--green);
+}
+[data-stage='lost'] {
+  --stage: var(--coral-mark);
+  --stage-tint: var(--coral-tint);
+  --stage-ink: var(--coral);
+}

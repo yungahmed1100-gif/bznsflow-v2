@@ -30,7 +30,6 @@ export const COOKIE = {
 
 const canUseCookies = () => typeof document !== 'undefined';
 
-
 /**
  * Write one cookie. `Secure` is set on HTTPS only, so localhost development
  * still works — browsers reject Secure cookies over plain http.
@@ -41,11 +40,7 @@ const canUseCookies = () => typeof document !== 'undefined';
  */
 export function setCookie(name, value, options = {}) {
   if (!canUseCookies()) return false;
-  const {
-    maxAge = ONE_YEAR,
-    path = DEFAULT_PATH,
-    sameSite = DEFAULT_SAME_SITE,
-  } = options;
+  const { maxAge = ONE_YEAR, path = DEFAULT_PATH, sameSite = DEFAULT_SAME_SITE } = options;
 
   try {
     const parts = [
@@ -61,4 +56,3 @@ export function setCookie(name, value, options = {}) {
     return false;
   }
 }
-

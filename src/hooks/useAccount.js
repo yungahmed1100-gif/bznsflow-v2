@@ -27,7 +27,7 @@ export function useAccount() {
       try {
         const res = await fetch('/api/auth-session', {
           credentials: 'same-origin', // what carries bf_session
-          cache: 'no-store',          // the answer is per-visitor, never shared
+          cache: 'no-store', // the answer is per-visitor, never shared
           signal: controller.signal,
         });
         if (!res.ok) return;

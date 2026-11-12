@@ -46,23 +46,23 @@ export function detectLang(message) {
  * @param {Array<{role: string, content: string}>} history  oldest → newest
  */
 export function pickSections(message, history = []) {
-  const recent = history.slice(-CONTEXT_TURNS).map((m) => m.content).join(' ');
+  const recent = history
+    .slice(-CONTEXT_TURNS)
+    .map(m => m.content)
+    .join(' ');
   const haystack = `${message} ${recent}`.toLowerCase();
 
-  const scored = SECTIONS.map((section) => ({
+  const scored = SECTIONS.map(section => ({
     section,
-    score: section.kw.reduce(
-      (n, k) => n + (k.length >= MIN_KEYWORD_LEN && haystack.includes(k) ? 1 : 0),
-      0
-    ),
+    score: section.kw.reduce((n, k) => n + (k.length >= MIN_KEYWORD_LEN && haystack.includes(k) ? 1 : 0), 0),
   }))
-    .filter((x) => x.score > 0)
+    .filter(x => x.score > 0)
     .sort((a, b) => b.score - a.score || a.section.id.localeCompare(b.section.id))
     .slice(0, TOP_N)
-    .map((x) => x.section);
+    .map(x => x.section);
 
   if (scored.length) return scored;
-  return FALLBACK_IDS.map((id) => SECTIONS.find((s) => s.id === id)).filter(Boolean);
+  return FALLBACK_IDS.map(id => SECTIONS.find(s => s.id === id)).filter(Boolean);
 }
 
 /**
@@ -77,9 +77,7 @@ export function pickSections(message, history = []) {
 export function renderHistory(history = []) {
   if (!history.length) return '';
 
-  const lines = history.map(
-    (m) => `${m.role === 'user' ? 'Visitor' : 'Layla'}: ${m.content}`
-  );
+  const lines = history.map(m => `${m.role === 'user' ? 'Visitor' : 'Layla'}: ${m.content}`);
 
   // Trim from the FRONT when too long: recent turns decide the next reply.
   let out = lines.join('\n');
@@ -99,11 +97,9 @@ export function renderHistory(history = []) {
 export function buildSystemMessage(message, history = []) {
   const lang = detectLang(message);
   const sections = pickSections(message, history);
-  const knowledge = sections.map((s) => `- ${lang === 'ar' ? s.ar : s.en}`).join('\n');
+  const knowledge = sections.map(s => `- ${lang === 'ar' ? s.ar : s.en}`).join('\n');
   const rendered = renderHistory(history);
 
   const base = `${PERSONA}\n${knowledge}`;
-  return rendered
-    ? `${base}\n\nCONVERSATION SO FAR (older→newer):\n${rendered}`
-    : base;
+  return rendered ? `${base}\n\nCONVERSATION SO FAR (older→newer):\n${rendered}` : base;
 }

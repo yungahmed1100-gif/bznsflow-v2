@@ -4,7 +4,9 @@
    ============================================================ */
 
 /* ---- RESET & BASE ---- */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -16,30 +18,30 @@
      section from the next without a border. Card is white and stays rare:
      against cream it reads as a sheet laid on the desk, which only works
      while it is the exception. */
-  --bg-primary:       #F6EFDF;
-  --bg-secondary:     #EBE1C9;
-  --bg-card:          #FFFFFF;
-  --bg-card-hover:    #FCF9F2;
-  --border:           rgba(0, 0, 0, 0.08);
-  --border-hover:     rgba(0, 0, 0, 0.15);
+  --bg-primary: #f6efdf;
+  --bg-secondary: #ebe1c9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fcf9f2;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.15);
 
   /* ---- INK ----
      --text-muted is the contrast floor. It is legal on Paper and Card only;
      on --bg-secondary it fails AA, so ruled bands step up to --text-secondary. */
-  --text-primary:     #1A1A1A;
-  --text-secondary:   #4B5563;
-  --text-muted:       #565E6B;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4b5563;
+  --text-muted: #565e6b;
 
   /* ---- ANNOTATION ----
      These mark the page; they never build it. No accent is a section
      background or a card fill. --accent-blue means "interactive" and
      nothing else, which is why static emphasis uses --orange instead. */
-  --accent-blue:      #5C95C6;
-  --green:            #51A47B;
-  --red:              #E16B71;
-  --orange:           #F28C54;
-  --yellow:           #EEB462;
-  --whatsapp:         #25D366;
+  --accent-blue: #5c95c6;
+  --green: #51a47b;
+  --red: #e16b71;
+  --orange: #f28c54;
+  --yellow: #eeb462;
+  --whatsapp: #25d366;
 
   /* ---- MEANING (2026-10-10) ----
      The five marks carry one meaning each, on the site and in the app:
@@ -47,28 +49,28 @@
      yellow = in progress / needs input, orange = what matters next / the record,
      coral = a problem / needs attention. Tints fill small indicators only
      (chips, icon tiles, an active step); text on a tint is ink or a -ink colour. */
-  --blue-tint:        color-mix(in srgb, var(--accent-blue) 20%, var(--bg-primary));
-  --green-tint:       color-mix(in srgb, var(--green) 22%, var(--bg-primary));
-  --yellow-tint:      color-mix(in srgb, var(--yellow) 30%, var(--bg-primary));
-  --orange-tint:      color-mix(in srgb, var(--orange) 22%, var(--bg-primary));
-  --coral-tint:       color-mix(in srgb, var(--red) 20%, var(--bg-primary));
-  --blue-ink:         #1f4f7a;   /* text on --blue-tint; links and focus keep #2f6ea3 */
-  --green-ink:        #22603f;
-  --yellow-ink:       #7a5200;
-  --orange-ink:       #9a4a1c;
-  --coral-ink:        #9c2e35;
+  --blue-tint: color-mix(in srgb, var(--accent-blue) 20%, var(--bg-primary));
+  --green-tint: color-mix(in srgb, var(--green) 22%, var(--bg-primary));
+  --yellow-tint: color-mix(in srgb, var(--yellow) 30%, var(--bg-primary));
+  --orange-tint: color-mix(in srgb, var(--orange) 22%, var(--bg-primary));
+  --coral-tint: color-mix(in srgb, var(--red) 20%, var(--bg-primary));
+  --blue-ink: #1f4f7a; /* text on --blue-tint; links and focus keep #2f6ea3 */
+  --green-ink: #22603f;
+  --yellow-ink: #7a5200;
+  --orange-ink: #9a4a1c;
+  --coral-ink: #9c2e35;
 
-  --navbar-height:    72px;
+  --navbar-height: 72px;
 
   /* ---- SHAPE ----
      Corners are nearly square: a soft corner under a hard shadow reads as
      a mistake. --radius-lg is still 8px rather than its own step because
      the sheets that used the old 20px value read better at md, and the
      name is left in place where the distinction may return. */
-  --radius-sm:        4px;
-  --radius-md:        8px;
-  --radius-lg:        8px;
-  --radius-pill:      999px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
 
   /* ---- ELEVATION ----
      Flat by default. Only an actionable or transient surface earns a
@@ -77,28 +79,28 @@
      Three steps, each wired to a real surface: raised is a resting
      button, lifted is that button hovered, overlay is a modal or the
      chat panel. In RTL the offset mirrors through --x-sign. */
-  --shadow-raised:    calc(4px * var(--x-sign)) 4px 0 var(--text-primary);
-  --shadow-lifted:    calc(6px * var(--x-sign)) 6px 0 var(--text-primary);
-  --shadow-overlay:   calc(8px * var(--x-sign)) 8px 0 var(--text-primary);
+  --shadow-raised: calc(4px * var(--x-sign)) 4px 0 var(--text-primary);
+  --shadow-lifted: calc(6px * var(--x-sign)) 6px 0 var(--text-primary);
+  --shadow-overlay: calc(8px * var(--x-sign)) 8px 0 var(--text-primary);
 
-  --transition:       0.16s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow:  0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.32s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-press: 0.12s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ---- SPACING SCALE (8px base) ---- */
-  --space-2:   8px;
-  --space-3:   12px;
-  --space-4:   16px;
-  --space-5:   20px;
-  --space-6:   24px;
-  --space-8:   32px;
-  --space-10:  40px;
-  --space-12:  48px;
-  --space-16:  64px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
   --space-section: clamp(72px, 9vw, 120px); /* vertical section padding */
-  --grid-gap:      24px;                     /* one gap for all card grids */
-  --card-pad:      32px;                     /* one padding for all cards */
-  --header-gap:    56px;                     /* header trio → content below */
+  --grid-gap: 24px; /* one gap for all card grids */
+  --card-pad: 32px; /* one padding for all cards */
+  --header-gap: 56px; /* header trio → content below */
   --container-pad: 24px;
 
   /* Directional sign for x-axis transforms (logical props don't cover
@@ -106,7 +108,7 @@
   --x-sign: 1;
 }
 
-[dir="rtl"] {
+[dir='rtl'] {
   --x-sign: -1;
 }
 
@@ -129,8 +131,8 @@ body {
    drawn as an Arabic text face rather than adapted from a Latin one, and it
    needs more leading than the Latin 1.6 to keep ascenders and descenders
    apart at phone sizes. */
-[lang="ar"],
-[dir="rtl"] {
+[lang='ar'],
+[dir='rtl'] {
   font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', sans-serif;
   line-height: 1.8;
 }
@@ -154,7 +156,8 @@ ul {
   list-style: none;
 }
 
-img, video {
+img,
+video {
   display: block;
   max-width: 100%;
 }
@@ -208,8 +211,8 @@ img, video {
   margin-bottom: 16px;
 }
 
-[lang="ar"] .section-label,
-[dir="rtl"] .section-label {
+[lang='ar'] .section-label,
+[dir='rtl'] .section-label {
   text-transform: none;
   letter-spacing: normal;
 }
@@ -259,8 +262,8 @@ img, video {
 }
 
 /* Arabic has no case, and letter-spacing breaks its joins. */
-[lang="ar"] .btn,
-[dir="rtl"] .btn {
+[lang='ar'] .btn,
+[dir='rtl'] .btn {
   text-transform: none;
   letter-spacing: normal;
 }
@@ -299,4 +302,3 @@ img, video {
   padding: 17px 30px;
   font-size: 0.85rem;
 }
-

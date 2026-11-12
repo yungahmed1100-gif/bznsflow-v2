@@ -5,7 +5,7 @@
 
 .client-tape {
   padding: var(--space-12) 0;
-  overflow: hidden;              /* the rail must never widen the page */
+  overflow: hidden; /* the rail must never widen the page */
 }
 
 .client-tape-label {
@@ -31,7 +31,9 @@
   animation: client-tape-scroll 46s linear infinite;
 }
 
-.client-tape-rail:hover { animation-play-state: paused; }
+.client-tape-rail:hover {
+  animation-play-state: paused;
+}
 
 /* min-width is load-bearing, not cosmetic. The loop translates by exactly one
    track width (-50% of two tracks). If a track is narrower than the viewport,
@@ -52,7 +54,10 @@
   flex: none;
 }
 
-.client-tape-item { display: flex; align-items: center; }
+.client-tape-item {
+  display: flex;
+  align-items: center;
+}
 
 /* One box for every logo, contained — so a wide wordmark is bound by width and
    a square mark by height, instead of wordmarks dominating the rail. --logo-scale
@@ -76,20 +81,38 @@
 
 /* Two tracks × 100% each, so one full track width is exactly -50%. */
 @keyframes client-tape-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 /* A permanently moving strip is exactly what this rule exists for. Stopped, it
    must still show the logos — not an empty rail. */
 @media (prefers-reduced-motion: reduce) {
-  .client-tape-rail { animation: none; flex-wrap: wrap; justify-content: center; width: 100%; }
-  .client-tape-track[aria-hidden="true"] { display: none; }
-  .client-tape-track { flex-wrap: wrap; justify-content: center; row-gap: var(--space-5); min-width: 0; }
+  .client-tape-rail {
+    animation: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  .client-tape-track[aria-hidden='true'] {
+    display: none;
+  }
+  .client-tape-track {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: var(--space-5);
+    min-width: 0;
+  }
 }
 
 @media (max-width: 600px) {
-  .client-tape { padding: var(--space-8) 0; }
+  .client-tape {
+    padding: var(--space-8) 0;
+  }
   .client-tape-item img {
     height: calc(40px * var(--logo-scale, 1));
     max-width: calc(116px * var(--logo-scale, 1));

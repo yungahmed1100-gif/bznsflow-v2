@@ -4,21 +4,35 @@
 export const MAX_REPLY_LENGTH = 1000;
 // Instagram's Send API limit is 1000 bytes of UTF-8, not characters.
 export const INSTAGRAM_MAX_BYTES = 1000;
-const HOUR = 3600000, DAY = 86400000;
+const HOUR = 3600000,
+  DAY = 86400000;
 // Loop and flood guard: never a limit on a normal back-and-forth.
 export const CONVERSATION_REPLY_CAP = 10;
-const LOOP_WINDOW_MS = 2 * 60000, LOOP_REPEATS = 3;
+const LOOP_WINDOW_MS = 2 * 60000,
+  LOOP_REPEATS = 3;
 
-export const normalizeLoop = text => String(text || '').toLowerCase().replace(/[\p{P}\p{S}\s]+/gu, ' ').trim();
+export const normalizeLoop = text =>
+  String(text || '')
+    .toLowerCase()
+    .replace(/[\p{P}\p{S}\s]+/gu, ' ')
+    .trim();
 
 /**
  * Layla's messages in this chat that the ingest decisions need, read once and bounded.
  * @returns {Promise<{ firstReply: boolean, automatedLastHour: number, sentToday: string[], recentInbound: string[] }>}
  */
 export async function conversationHistory(ctx, conversationId, now) {
-  const byDirection = (direction, since, limit) => ctx.db.query('blueMessages')
-    .withIndex('by_conversation_direction_at', q => q.eq('conversationId', conversationId).eq('direction', direction).gte('at', since)).take(limit);
-  const [today, recentIn] = await Promise.all([byDirection('out', now - DAY, 200), byDirection('in', now - LOOP_WINDOW_MS, 10)]);
+  const byDirection = (direction, since, limit) =>
+    ctx.db
+      .query('blueMessages')
+      .withIndex('by_conversation_direction_at', q =>
+        q.eq('conversationId', conversationId).eq('direction', direction).gte('at', since),
+      )
+      .take(limit);
+  const [today, recentIn] = await Promise.all([
+    byDirection('out', now - DAY, 200),
+    byDirection('in', now - LOOP_WINDOW_MS, 10),
+  ]);
   const firstReply = !today.length && !(await byDirection('out', 0, 1)).length;
   return {
     firstReply,

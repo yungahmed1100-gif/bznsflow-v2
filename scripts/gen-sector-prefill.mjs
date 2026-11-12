@@ -41,7 +41,7 @@ function fail(msg) {
   process.exit(1);
 }
 
-const load = async (rel) => import(pathToFileURL(join(ROOT, rel)).href);
+const load = async rel => import(pathToFileURL(join(ROOT, rel)).href);
 
 const { INDUSTRIES } = await load('src/lib/industries.js');
 const { LAYLA_SUGGESTIONS } = await load('src/lib/layla-suggestions.js');
@@ -51,34 +51,34 @@ const { SECTOR_PACKS } = await load('config/layla-sector-packs.js');
 // Drift gate. `other` is the deliberate exception: it is a free-text escape
 // hatch on the form, so it carries authored suggestion text but no sector pack.
 // ---------------------------------------------------------------------------
-const ids = INDUSTRIES.map((item) => item.id);
+const ids = INDUSTRIES.map(item => item.id);
 const FREE_TEXT = 'other';
 
 if (!ids.includes(FREE_TEXT)) fail(`INDUSTRIES no longer contains the "${FREE_TEXT}" free-text option.`);
 if (new Set(ids).size !== ids.length) fail('INDUSTRIES contains duplicate ids.');
 
-const missingSuggestion = ids.filter((id) => !LAYLA_SUGGESTIONS[id]);
+const missingSuggestion = ids.filter(id => !LAYLA_SUGGESTIONS[id]);
 if (missingSuggestion.length) {
   fail(
     `these INDUSTRIES ids have no entry in src/lib/layla-suggestions.js: ${missingSuggestion.join(', ')}\n` +
-      '  Add authored English and Arabic service text for each before building.'
+      '  Add authored English and Arabic service text for each before building.',
   );
 }
 
-const orphanSuggestion = Object.keys(LAYLA_SUGGESTIONS).filter((id) => !ids.includes(id));
+const orphanSuggestion = Object.keys(LAYLA_SUGGESTIONS).filter(id => !ids.includes(id));
 if (orphanSuggestion.length) {
   fail(`src/lib/layla-suggestions.js has entries for ids absent from INDUSTRIES: ${orphanSuggestion.join(', ')}`);
 }
 
-const missingPack = ids.filter((id) => id !== FREE_TEXT && !SECTOR_PACKS[id]);
+const missingPack = ids.filter(id => id !== FREE_TEXT && !SECTOR_PACKS[id]);
 if (missingPack.length) {
   fail(
     `these INDUSTRIES ids have no sector pack in config/layla-sector-packs.js: ${missingPack.join(', ')}\n` +
-      '  Add each to the `labels` map there, or the sector reaches customers with no routing vocabulary.'
+      '  Add each to the `labels` map there, or the sector reaches customers with no routing vocabulary.',
   );
 }
 
-const orphanPack = Object.keys(SECTOR_PACKS).filter((id) => !ids.includes(id));
+const orphanPack = Object.keys(SECTOR_PACKS).filter(id => !ids.includes(id));
 if (orphanPack.length) {
   fail(`config/layla-sector-packs.js has packs for ids absent from INDUSTRIES: ${orphanPack.join(', ')}`);
 }
@@ -111,7 +111,7 @@ if (orphanPack.length) {
  * TODO(content): replace these four per sector with fully authored Arabic
  * questions matching the English set. Tracked in CLAIMS-LEDGER.md.
  */
-const arabicQuestions = (sectorLabelAr) => [
+const arabicQuestions = sectorLabelAr => [
   `ما الخدمات المتاحة في ${sectorLabelAr}؟`,
   'كم تبلغ الأسعار؟',
   'ما مواعيد العمل والتوفر؟',
@@ -121,8 +121,10 @@ const arabicQuestions = (sectorLabelAr) => [
 const rows = INDUSTRIES.map(({ id, ar: sectorLabelAr }) => {
   const suggestion = LAYLA_SUGGESTIONS[id];
   const pack = SECTOR_PACKS[id];
-  if (!suggestion.en?.trim() || !suggestion.ar?.trim()) fail(`sector "${id}" is missing English or Arabic service text.`);
-  if (!Array.isArray(suggestion.questions) || !suggestion.questions.length) fail(`sector "${id}" has no English question drafts.`);
+  if (!suggestion.en?.trim() || !suggestion.ar?.trim())
+    fail(`sector "${id}" is missing English or Arabic service text.`);
+  if (!Array.isArray(suggestion.questions) || !suggestion.questions.length)
+    fail(`sector "${id}" has no English question drafts.`);
   if (!sectorLabelAr?.trim()) fail(`sector "${id}" has no Arabic label in INDUSTRIES; the Arabic questions need it.`);
 
   return {
@@ -137,18 +139,18 @@ const rows = INDUSTRIES.map(({ id, ar: sectorLabelAr }) => {
 // ---------------------------------------------------------------------------
 // Render
 // ---------------------------------------------------------------------------
-const q = (value) => JSON.stringify(value);
-const list = (values) => `[${values.map(q).join(', ')}]`;
+const q = value => JSON.stringify(value);
+const list = values => `[${values.map(q).join(', ')}]`;
 
 function render(entries) {
   const body = entries
     .map(
-      (row) =>
+      row =>
         `  ${/^[a-z][a-z0-9]*$/.test(row.id) ? row.id : q(row.id)}: {\n` +
         `    archetype: ${q(row.archetype)},\n` +
         `    services: { en: ${q(row.services.en)}, ar: ${q(row.services.ar)} },\n` +
         `    questions: {\n      en: ${list(row.questions.en)},\n      ar: ${list(row.questions.ar)},\n    },\n` +
-        `  },`
+        `  },`,
     )
     .join('\n');
 
@@ -215,7 +217,7 @@ if (isCheck) {
   if (current !== out) {
     fail(
       'src/lib/sector-prefill.generated.js is out of date with the sector sources.\n' +
-        '  Run `npm run gen:sector-prefill` and commit the result.'
+        '  Run `npm run gen:sector-prefill` and commit the result.',
     );
   }
   console.log(`✓ gen-sector-prefill: in sync (${rows.length} sectors).`);
@@ -223,9 +225,9 @@ if (isCheck) {
   console.log(`✓ gen-sector-prefill: already up to date (${rows.length} sectors).`);
 } else {
   writeFileSync(OUT, out);
-  const packed = rows.filter((row) => row.archetype).length;
+  const packed = rows.filter(row => row.archetype).length;
   console.log(
     `✓ gen-sector-prefill: wrote src/lib/sector-prefill.generated.js — ` +
-      `${rows.length} sectors, ${packed} with a pack, 1 free-text.`
+      `${rows.length} sectors, ${packed} with a pack, 1 free-text.`,
   );
 }

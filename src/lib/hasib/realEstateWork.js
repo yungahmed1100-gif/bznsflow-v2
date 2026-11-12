@@ -3,7 +3,12 @@
 
 export const BOARD_STAGES = ['new', 'contacted', 'qualified', 'viewing', 'offer'];
 export const QUICK_FILTERS = ['all', 'mine', 'unassigned', 'awaiting', 'viewing_due'];
-const AWAITING_TASKS = new Set(['first_response_overdue', 'second_attempt_overdue', 'rule_missing_requirements', 'rule_post_viewing_decision']);
+const AWAITING_TASKS = new Set([
+  'first_response_overdue',
+  'second_attempt_overdue',
+  'rule_missing_requirements',
+  'rule_post_viewing_decision',
+]);
 const LIVE_VIEWING = new Set(['requested', 'confirmed']);
 const DAY = 86400000;
 
@@ -22,13 +27,20 @@ export function nextViewings(viewings = [], now = Date.now()) {
 
 /** Deals for one quick filter. `tasks` are the overview's open tasks; `viewing` maps deal → next viewing. */
 export function quickFilter(deals, quick, { actorAccountId, tasks = [], viewing = new Map(), now = Date.now() } = {}) {
-  if (quick === 'mine') return deals.filter(d => d.assignedAccountId && String(d.assignedAccountId) === String(actorAccountId));
+  if (quick === 'mine')
+    return deals.filter(d => d.assignedAccountId && String(d.assignedAccountId) === String(actorAccountId));
   if (quick === 'unassigned') return deals.filter(d => !d.assignedAccountId);
   if (quick === 'awaiting') {
-    const waiting = new Set(tasks.filter(t => AWAITING_TASKS.has(t.kind) && t.entityType === 'opportunity').map(t => String(t.entityId)));
+    const waiting = new Set(
+      tasks.filter(t => AWAITING_TASKS.has(t.kind) && t.entityType === 'opportunity').map(t => String(t.entityId)),
+    );
     return deals.filter(d => waiting.has(String(d.id)));
   }
-  if (quick === 'viewing_due') return deals.filter(d => { const v = viewing.get(d.id); return v && v.scheduledAt < now + 2 * DAY; });
+  if (quick === 'viewing_due')
+    return deals.filter(d => {
+      const v = viewing.get(d.id);
+      return v && v.scheduledAt < now + 2 * DAY;
+    });
   return deals;
 }
 
@@ -44,7 +56,8 @@ export function groupByStage(deals) {
 export const forwardStages = stage => BOARD_STAGES.slice(BOARD_STAGES.indexOf(stage) + 1);
 
 /** What a deal is looking for, in one line. */
-export const requirementLine = (deal, typeLabel = x => x, sep = ' · ') => [deal.propertyTypes?.map(typeLabel).join('/') || null, deal.areas?.join('، ') || null].filter(Boolean).join(sep);
+export const requirementLine = (deal, typeLabel = x => x, sep = ' · ') =>
+  [deal.propertyTypes?.map(typeLabel).join('/') || null, deal.areas?.join('، ') || null].filter(Boolean).join(sep);
 
 /** The URL parameters that open Insights' source records in Deals and bring the owner back. */
 // Insights ↔ Work links are shared by every six-tab sector.

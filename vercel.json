@@ -44,9 +44,7 @@
       "maxDuration": 30
     }
   },
-  "regions": [
-    "dub1"
-  ],
+  "regions": ["dub1"],
   "rewrites": [
     {
       "source": "/ingest/static/:path*",

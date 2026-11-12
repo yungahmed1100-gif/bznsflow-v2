@@ -23,7 +23,14 @@ const DAY = 86400000;
 // The last few template messages the business sent this contact; older ones add nothing to a reply.
 const BUSINESS_MESSAGES = 3;
 // AI intents that Today's reception counts read from the inbound message's topic.
-export const TOPIC_FOR_INTENT = Object.freeze({ prices: 'prices', services: 'services', hours: 'hours', location: 'location', booking: 'disabled', human: 'human' });
+export const TOPIC_FOR_INTENT = Object.freeze({
+  prices: 'prices',
+  services: 'services',
+  hours: 'hours',
+  location: 'location',
+  booking: 'disabled',
+  human: 'human',
+});
 
 /** Catalog rows belong to the account, or to the setup itself until it is saved to an account. */
 export const catalogOwnerKey = row => (row?.accountId ? String(row.accountId) : `review_${row?._id}`);
@@ -38,17 +45,47 @@ export async function turnMode(ctx, row) {
   return HASIB_PLANS.includes(await planFor(ctx, row.accountId)) ? 'legacy' : 'brain';
 }
 
-const catalogShape = ({ entryKey, nameEn, nameAr, category, availability, prices, benefitEn, benefitAr, descriptionEn, descriptionAr }) =>
-  ({ entryKey, nameEn, nameAr, category, availability, prices, benefitEn, benefitAr, descriptionEn, descriptionAr });
+const catalogShape = ({
+  entryKey,
+  nameEn,
+  nameAr,
+  category,
+  availability,
+  prices,
+  benefitEn,
+  benefitAr,
+  descriptionEn,
+  descriptionAr,
+}) => ({
+  entryKey,
+  nameEn,
+  nameAr,
+  category,
+  availability,
+  prices,
+  benefitEn,
+  benefitAr,
+  descriptionEn,
+  descriptionAr,
+});
 /**
  * The catalog with everything Layla may say about it. Published: approved entries as approved.
  * Draft (Test Layla only): approved entries with their staged edits, plus unpublished drafts.
  */
 export async function catalogForTurn(ctx, ownerKey, limit = 200, variant = 'published') {
-  const approved = await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order', q => q.eq('ownerKey', String(ownerKey)).eq('status', 'approved')).take(limit);
+  const approved = await ctx.db
+    .query('blueCatalogEntries')
+    .withIndex('by_owner_status_order', q => q.eq('ownerKey', String(ownerKey)).eq('status', 'approved'))
+    .take(limit);
   if (variant !== 'draft') return approved.map(catalogShape);
-  const drafts = await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order', q => q.eq('ownerKey', String(ownerKey)).eq('status', 'draft')).take(limit);
-  return [...approved.map(row => (row.pending ? { ...row, ...row.pending } : row)), ...drafts].sort((a, b) => a.sortOrder - b.sortOrder).slice(0, limit).map(catalogShape);
+  const drafts = await ctx.db
+    .query('blueCatalogEntries')
+    .withIndex('by_owner_status_order', q => q.eq('ownerKey', String(ownerKey)).eq('status', 'draft'))
+    .take(limit);
+  return [...approved.map(row => (row.pending ? { ...row, ...row.pending } : row)), ...drafts]
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .slice(0, limit)
+    .map(catalogShape);
 }
 
 /**
@@ -58,11 +95,20 @@ export async function catalogForTurn(ctx, ownerKey, limit = 200, variant = 'publ
  */
 export async function transcript(ctx, conversationId, now, limit = 30, contactId = null) {
   const since = now - 7 * DAY;
-  const rows = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', conversationId).gte('at', since)).order('desc').take(limit);
+  const rows = await ctx.db
+    .query('blueMessages')
+    .withIndex('by_conversation_at', q => q.eq('conversationId', conversationId).gte('at', since))
+    .order('desc')
+    .take(limit);
   // Oldest first before merging: messages that share a timestamp keep the order they arrived in.
-  const said = rows.reverse().filter(m => m.status !== 'blocked').map(m => turnOf(m, now)).filter(Boolean);
+  const said = rows
+    .reverse()
+    .filter(m => m.status !== 'blocked')
+    .map(m => turnOf(m, now))
+    .filter(Boolean);
   const sent = (await templateSendsFor(ctx, contactId, { since, limit: BUSINESS_MESSAGES, skip: UNSENT }))
-    .map(s => ({ role: 'business', text: sentText(s, now), at: s.send.at })).filter(s => s.text);
+    .map(s => ({ role: 'business', text: sentText(s, now), at: s.send.at }))
+    .filter(s => s.text);
   return [...said, ...sent].sort((a, b) => a.at - b.at).map(({ at, ...turn }) => turn);
 }
 
@@ -73,7 +119,8 @@ export async function transcript(ctx, conversationId, now, limit = 30, contactId
 function turnOf(m, now) {
   const role = m.direction === 'in' ? 'customer' : m.direction === 'human' || m.manual ? 'team' : 'layla';
   const typed = typeof m.text === 'string' ? m.text.trim() : '';
-  const media = role === 'customer' && m.media && m.media.status !== 'expired' && m.textExpiresAt > now ? m.media : null;
+  const media =
+    role === 'customer' && m.media && m.media.status !== 'expired' && m.textExpiresAt > now ? m.media : null;
   const line = media ? mediaLine(media, m.mediaText) : '';
   if (!typed && !line) return null;
   if (!media) return { role, text: m.text, at: m.at };
@@ -81,24 +128,39 @@ function turnOf(m, now) {
   return { role, text: [line, typed].filter(Boolean).join('\n'), at: m.at, media: true, words };
 }
 
-const sectionsOf = markdown => parseBzns(markdown || '').sections.filter(s => String(s.body || '').trim() && !/\[[^\]\n]{2,80}\]/.test(s.body)).map(({ key, heading, body }) => ({ key, heading, body }));
+const sectionsOf = markdown =>
+  parseBzns(markdown || '')
+    .sections.filter(s => String(s.body || '').trim() && !/\[[^\]\n]{2,80}\]/.test(s.body))
+    .map(({ key, heading, body }) => ({ key, heading, body }));
 /**
  * What the business has approved for Layla to say, or (variant 'draft') what the owner is editing.
  * Draft testing reads the bzns.md draft and the catalog's drafts and staged edits; published reads
  * exactly what a customer's reply reads.
  */
 export async function loadTurnSources(ctx, row, { variant = 'published', sectorId, mode } = {}) {
-  const resolvedMode = mode || await turnMode(ctx, row);
+  const resolvedMode = mode || (await turnMode(ctx, row));
   const [catalog, knowledge, published] = await Promise.all([
     catalogForTurn(ctx, catalogOwnerKey(row), 200, variant),
     row.accountId ? approvedKnowledge(ctx, row.accountId) : [],
     variant === 'draft' ? [] : publishedSections(ctx, row.accountId, row.bznsPublished?.revision),
   ]);
   // Published: the stored sections of the published revision; a setup not yet saved to an account has none stored, so its published text is read directly.
-  const sections = variant === 'draft' ? sectionsOf(row.bznsDraft?.markdown ?? row.bznsPublished?.markdown)
-    : published.length ? published : row.accountId ? [] : sectionsOf(row.bznsPublished?.markdown);
-  return { mode: resolvedMode, variant, catalog, knowledge, sections,
-    behaviour: resolvedMode === 'brain' ? effectiveBehaviour(row, sectorId) : null };
+  const sections =
+    variant === 'draft'
+      ? sectionsOf(row.bznsDraft?.markdown ?? row.bznsPublished?.markdown)
+      : published.length
+        ? published
+        : row.accountId
+          ? []
+          : sectionsOf(row.bznsPublished?.markdown);
+  return {
+    mode: resolvedMode,
+    variant,
+    catalog,
+    knowledge,
+    sections,
+    behaviour: resolvedMode === 'brain' ? effectiveBehaviour(row, sectorId) : null,
+  };
 }
 
 /**
@@ -113,24 +175,48 @@ export function composeTurnContext({ row, sectorId, sources, history, contact, p
   const document = sources.sections.length ? sources.sections : profileSections(row.profile);
   // The customer's own words set the language: a photo's reading is written in English whatever they speak.
   const latest = history.filter(h => h.role === 'customer' && (h.words ?? h.text)).at(-1);
-  const latestWords = latest ? latest.words ?? latest.text : '';
+  const latestWords = latest ? (latest.words ?? latest.text) : '';
   return {
     // The general (Catalyst) pack names no industry in the prompt.
-    business: { name: row.profile?.businessName || '', sector: sectorId === 'other' ? '' : row.profile?.sector || '', sectorId },
-    tone: brain ? sources.behaviour.tone : row.profile?.tone, channel: row.integration?.channel === 'instagram' ? 'instagram' : 'whatsapp',
-    teamContact: teamContactOf(row.profile), sections: document, catalog: sources.catalog,
+    business: {
+      name: row.profile?.businessName || '',
+      sector: sectorId === 'other' ? '' : row.profile?.sector || '',
+      sectorId,
+    },
+    tone: brain ? sources.behaviour.tone : row.profile?.tone,
+    channel: row.integration?.channel === 'instagram' ? 'instagram' : 'whatsapp',
+    teamContact: teamContactOf(row.profile),
+    sections: document,
+    catalog: sources.catalog,
     knowledge: sources.knowledge.map(k => ({ title: k.title, text: k.text })),
-    facts: pending.facts || [], acks: pending.acks || [],
+    facts: pending.facts || [],
+    acks: pending.acks || [],
     customer: {
       name: contact?.customerName || contact?.ownerName || '',
-      fields: (contact?.fields || []).filter(f => f.value).map(f => ({ label: pack.fields.find(x => x.key === f.key)?.en || f.key, value: f.value })),
+      fields: (contact?.fields || [])
+        .filter(f => f.value)
+        .map(f => ({ label: pack.fields.find(x => x.key === f.key)?.en || f.key, value: f.value })),
     },
     ask: askField ? { key: askField.key, en: askField.ask.en, ar: askField.ask.ar } : null,
-    firstReply: !!pending.firstReply, afterBusinessMessage: history.some(h => h.role === 'business'), history, notes: pending.notes || {},
+    firstReply: !!pending.firstReply,
+    afterBusinessMessage: history.some(h => h.role === 'business'),
+    history,
+    notes: pending.notes || {},
     fieldKeys: [NAME_FIELD.key, ...pack.fields.map(f => f.key)],
-    fieldOptions: Object.fromEntries(pack.fields.filter(f => f.options?.length).map(f => [f.key, f.options.map(o => ({ id: o.id, words: o.match || [o.en, o.ar] }))])),
+    fieldOptions: Object.fromEntries(
+      pack.fields
+        .filter(f => f.options?.length)
+        .map(f => [f.key, f.options.map(o => ({ id: o.id, words: o.match || [o.en, o.ar] }))]),
+    ),
     lang: langOf(latestWords),
-    ...(brain ? { mode: 'brain', handoffNote: sources.behaviour.handoffNote, reception: !!pending.reception, override: pending.override || null } : {}),
+    ...(brain
+      ? {
+          mode: 'brain',
+          handoffNote: sources.behaviour.handoffNote,
+          reception: !!pending.reception,
+          override: pending.override || null,
+        }
+      : {}),
   };
 }
 
@@ -139,7 +225,10 @@ export function composeTurnContext({ row, sectorId, sources, history, contact, p
  * @returns {Promise<import('../config/layla-ai.js').TurnContext>}
  */
 export async function turnContext(ctx, { row, person, contact, pending, sectorId, now }) {
-  const [sources, history] = await Promise.all([loadTurnSources(ctx, row, { sectorId }), transcript(ctx, person._id, now, 30, contact?._id)]);
+  const [sources, history] = await Promise.all([
+    loadTurnSources(ctx, row, { sectorId }),
+    transcript(ctx, person._id, now, 30, contact?._id),
+  ]);
   return composeTurnContext({ row, sectorId, sources, history, contact, pending });
 }
 
@@ -150,7 +239,12 @@ export async function turnContext(ctx, { row, person, contact, pending, sectorId
 export async function fenceRepliesForOwner(ctx, ownerKey, now) {
   const accountId = ctx.db.normalizeId('accounts', ownerKey);
   const account = accountId ? await ctx.db.get(accountId) : null;
-  const session = account?.draftHash ? await ctx.db.query('blueReviewSessions').withIndex('by_hash', q => q.eq('sessionHash', account.draftHash)).unique() : null;
+  const session = account?.draftHash
+    ? await ctx.db
+        .query('blueReviewSessions')
+        .withIndex('by_hash', q => q.eq('sessionHash', account.draftHash))
+        .unique()
+    : null;
   if (session) await ctx.db.patch(session._id, { profileVersion: (session.profileVersion || 1) + 1, updatedAt: now });
   return !!session;
 }

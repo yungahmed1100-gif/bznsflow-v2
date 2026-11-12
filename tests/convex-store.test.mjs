@@ -9,7 +9,14 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { reviewStore, catalogStore, blueAuthStore, dashboardStore, campaignStore, messagingStore } from '../api/_lib/convex.js';
+import {
+  reviewStore,
+  catalogStore,
+  blueAuthStore,
+  dashboardStore,
+  campaignStore,
+  messagingStore,
+} from '../api/_lib/convex.js';
 
 const env = {
   CONVEX_CLOUD_URL: 'https://green-test.eu-west-1.convex.cloud',
@@ -31,19 +38,28 @@ const rejected = async (store, body) => {
   try {
     await store({ env, fetcher })('op', {});
     return null;
-  } catch (error) { return error; }
+  } catch (error) {
+    return error;
+  }
 };
 
 test('an unconfigured environment never reaches the network', async () => {
   const { fetcher, calls } = answering({ ok: true, value: 1 });
-  await assert.rejects(() => reviewStore({ env: {}, fetcher })('op'), (e) => e.code === 'review_backend_unavailable' && e.status === 503);
+  await assert.rejects(
+    () => reviewStore({ env: {}, fetcher })('op'),
+    e => e.code === 'review_backend_unavailable' && e.status === 503,
+  );
   assert.equal(calls.length, 0, 'an unconfigured store must not make a request');
 });
 
 test('each route posts to its own path with the bearer, and refuses redirects', async () => {
   const expected = [
-    [reviewStore, 'blue-review'], [catalogStore, 'blue-catalog'], [blueAuthStore, 'blue-auth'],
-    [dashboardStore, 'blue-dashboard'], [campaignStore, 'blue-campaign'], [messagingStore, 'blue-messaging'],
+    [reviewStore, 'blue-review'],
+    [catalogStore, 'blue-catalog'],
+    [blueAuthStore, 'blue-auth'],
+    [dashboardStore, 'blue-dashboard'],
+    [campaignStore, 'blue-campaign'],
+    [messagingStore, 'blue-messaging'],
   ];
   for (const [store, route] of expected) {
     const { fetcher, calls } = answering({ ok: true, value: 'x' });
@@ -74,16 +90,26 @@ test('the auth route forwards only its own, shorter allowlist', async () => {
 });
 
 test('the shape-checked routes forward any well-formed reason and reject the rest', async () => {
-  assert.equal((await rejected(messagingStore, { ok: false, reason: 'anything_machine_like' })).code, 'anything_machine_like');
+  assert.equal(
+    (await rejected(messagingStore, { ok: false, reason: 'anything_machine_like' })).code,
+    'anything_machine_like',
+  );
   for (const bad of ['Has Spaces And Caps', 'x'.repeat(61), '', undefined, 42]) {
-    assert.equal((await rejected(messagingStore, { ok: false, reason: bad })).code, 'messaging_unavailable', `"${bad}" must not be forwarded`);
+    assert.equal(
+      (await rejected(messagingStore, { ok: false, reason: bad })).code,
+      'messaging_unavailable',
+      `"${bad}" must not be forwarded`,
+    );
   }
 });
 
 test('only the dashboard and campaign routes answer 401 for a missing session', async () => {
   for (const store of [dashboardStore, campaignStore]) {
-    assert.equal((await rejected(store, { ok: false, reason: 'sign_in_required' })).status, 401,
-      'the client retries this by signing in, not by changing the request');
+    assert.equal(
+      (await rejected(store, { ok: false, reason: 'sign_in_required' })).status,
+      401,
+      'the client retries this by signing in, not by changing the request',
+    );
     assert.equal((await rejected(store, { ok: false, reason: 'other_reason' })).status, 409);
   }
   // Elsewhere it is an ordinary conflict.
@@ -91,13 +117,19 @@ test('only the dashboard and campaign routes answer 401 for a missing session', 
 });
 
 test('a transport failure never leaks its shape to the caller', async () => {
-  const exploding = async () => { throw new TypeError('fetch failed: ECONNREFUSED 10.0.0.1:443'); };
-  await assert.rejects(() => catalogStore({ env, fetcher: exploding })('op'),
-    (e) => e.code === 'catalog_unavailable' && e.status === 503);
+  const exploding = async () => {
+    throw new TypeError('fetch failed: ECONNREFUSED 10.0.0.1:443');
+  };
+  await assert.rejects(
+    () => catalogStore({ env, fetcher: exploding })('op'),
+    e => e.code === 'catalog_unavailable' && e.status === 503,
+  );
 
   const { fetcher } = answering({}, { ok: false });
-  await assert.rejects(() => catalogStore({ env, fetcher })('op'),
-    (e) => e.code === 'catalog_unavailable' && e.status === 503);
+  await assert.rejects(
+    () => catalogStore({ env, fetcher })('op'),
+    e => e.code === 'catalog_unavailable' && e.status === 503,
+  );
 });
 
 test('bzns.md outcomes reach the editor instead of collapsing to an outage', async () => {

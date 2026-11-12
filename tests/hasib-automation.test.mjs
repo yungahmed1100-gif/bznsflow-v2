@@ -14,7 +14,9 @@ const prepDrafts = s => s.h.m.table('mediaDrafts').filter(d => d.ruleId === 'pre
 
 /** A booked production two hours before its shoot, with the customer's files still missing: prep_request fires. */
 async function bookedWithGaps(s, name = 'Salma') {
-  const run = s.manager, now = s.h.m.now(), c = await customer(s, name);
+  const run = s.manager,
+    now = s.h.m.now(),
+    c = await customer(s, name);
   const conversation = s.h.m.table('blueConversations').find(x => String(x.contactId) === String(c.id));
   let p = value(await brief(run, c.id, { conversationId: conversation._id }, now));
   p = await accepted(run, p);
@@ -22,7 +24,8 @@ async function bookedWithGaps(s, name = 'Salma') {
   p = value(await move(run, value(await run('media_production', { productionId: p.id })), 'booked'));
   return { p, conversation };
 }
-const runOnce = s => automationRun(s.h.m.ctx, { accountId: s.t.accountId, workerFunction: null, secret: 'x' }, s.h.m.now());
+const runOnce = s =>
+  automationRun(s.h.m.ctx, { accountId: s.t.accountId, workerFunction: null, secret: 'x' }, s.h.m.now());
 
 test('a new studio sends its prep request by itself, once, named as Hasib; a dashboard read sends nothing', async () => {
   const s = await studio();
@@ -34,7 +37,11 @@ test('a new studio sends its prep request by itself, once, named as Hasib; a das
   const [msg] = autoMessages(s);
   assert.equal(msg.manual, false, 'sent as an automated reply, so every Layla fence applies');
   assert.equal(msg.handoff, false);
-  assert.equal(s.h.m.table('blueConversations').find(c => c._id === msg.conversationId).takeover, false, 'the chat is not taken over');
+  assert.equal(
+    s.h.m.table('blueConversations').find(c => c._id === msg.conversationId).takeover,
+    false,
+    'the chat is not taken over',
+  );
   const draft = prepDrafts(s)[0];
   assert.deepEqual([draft.status, draft.sentBy], ['queued', 'automation']);
   const act = s.h.m.table('ascendActivity').find(a => a.action === 'draft_auto_sent');
@@ -66,8 +73,18 @@ test('fences: a closed window, a team takeover, an opt-out or a paused Layla kee
 test('at most three automatic messages per customer a day', async () => {
   const s = await studio();
   const { conversation } = await bookedWithGaps(s);
-  for (let i = 0; i < AUTO_SENDS_PER_DAY; i++) await s.h.m.db.insert('blueMessages', { key: `auto:other:${i}`, integrationId: conversation.integrationId, accountId: s.t.accountId,
-    conversationId: conversation._id, direction: 'out', text: 'x', at: s.h.m.now(), status: 'sent', manual: false });
+  for (let i = 0; i < AUTO_SENDS_PER_DAY; i++)
+    await s.h.m.db.insert('blueMessages', {
+      key: `auto:other:${i}`,
+      integrationId: conversation.integrationId,
+      accountId: s.t.accountId,
+      conversationId: conversation._id,
+      direction: 'out',
+      text: 'x',
+      at: s.h.m.now(),
+      status: 'sent',
+      manual: false,
+    });
   await runOnce(s);
   assert.equal(prepDrafts(s)[0].autoSkip, 'daily_cap');
   assertHasibRows(s.h.m);
@@ -82,10 +99,23 @@ test('the kill switch and the schedule: off stops every run; the sweep schedules
   try {
     assert.equal(await runOnce(s), 'off');
     assert.deepEqual(await automationSweep(s.h.m.ctx, null, s.h.m.now()), { scheduled: 0, off: true });
-  } finally { delete process.env.HASIB_AUTOMATION; }
+  } finally {
+    delete process.env.HASIB_AUTOMATION;
+  }
   assert.equal(autoMessages(s).length, 0);
   // With every rule off the studio stays on the schedule (Adiba still drafts offers), but nothing is sent by a rule.
-  value(await s.manager('settings_update', { mediaSettings: { rules: ['prep_request', 'cut_approval', 'delivery_balance'].map(id => ({ id, enabled: false, mode: 'auto', offsetMinutes: 60 })) } }));
+  value(
+    await s.manager('settings_update', {
+      mediaSettings: {
+        rules: ['prep_request', 'cut_approval', 'delivery_balance'].map(id => ({
+          id,
+          enabled: false,
+          mode: 'auto',
+          offsetMinutes: 60,
+        })),
+      },
+    }),
+  );
   assert.equal(s.h.m.table('hasibAutomation')[0].enabled, true);
   assert.match(await runOnce(s), /^sent:0 skipped:0/);
   assert.equal(autoMessages(s).length, 0);
@@ -96,7 +126,11 @@ test('automated actors may only run the operations their sector allows, and name
   const actor = automationActor({ _id: 'w' }, 'a1', 'adiba');
   assert.equal(automationRefusal(actor, 'media_payment_record', new Set(['media_quote'])), 'automation_not_allowed');
   assert.equal(automationRefusal(actor, 'media_quote', new Set(['media_quote'])), null);
-  assert.equal(automationRefusal({ role: 'manager' }, 'media_payment_record', new Set()), null, 'people are not affected');
+  assert.equal(
+    automationRefusal({ role: 'manager' }, 'media_payment_record', new Set()),
+    null,
+    'people are not affected',
+  );
   assert.equal(agentDetails(actor, 'x'), 'agent:adiba|x');
   assert.equal(agentDetails({ role: 'manager' }, 'x'), 'x');
   assert.throws(() => automationActor(null, 'a', 'stranger'));

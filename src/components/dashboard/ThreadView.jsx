@@ -23,25 +23,46 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
   const hb = useHasib();
   const thread = usePolling(() => dashboard('thread', { conversationId }), [conversationId]);
   const [draft, setDraft] = useState({ text: '', id: newRequestId() });
-  const [busy, setBusy] = useState(''), [error, setError] = useState(''), [templateOpen, setTemplateOpen] = useState(false);
+  const [busy, setBusy] = useState(''),
+    [error, setError] = useState(''),
+    [templateOpen, setTemplateOpen] = useState(false);
   const [earlier, setEarlier] = useState({ messages: [], before: undefined });
-  const scroller = useRef(null), stick = useRef(true);
+  const scroller = useRef(null),
+    stick = useRef(true);
   const data = thread.data;
   const count = data?.messages?.length || 0;
-  useLayoutEffect(() => { if (stick.current && scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight; }, [count]);
-  useEffect(() => { setError(''); }, [conversationId]);
+  useLayoutEffect(() => {
+    if (stick.current && scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight;
+  }, [count]);
+  useEffect(() => {
+    setError('');
+  }, [conversationId]);
 
-  if (thread.loading && !data) return <p className="ld-state" role="status">{s.t('loading')}</p>;
-  if (thread.error && !data) return <div className="ld-state" role="alert"><p>{s.reason(thread.error.reason)}</p><button className="ld-button" onClick={onBack}>{s.t('back')}</button></div>;
+  if (thread.loading && !data)
+    return (
+      <p className="ld-state" role="status">
+        {s.t('loading')}
+      </p>
+    );
+  if (thread.error && !data)
+    return (
+      <div className="ld-state" role="alert">
+        <p>{s.reason(thread.error.reason)}</p>
+        <button className="ld-button" onClick={onBack}>
+          {s.t('back')}
+        </button>
+      </div>
+    );
   const { contact, conversation } = data;
   // Older pages are kept locally; the polled page always holds the newest messages.
   const messages = [...earlier.messages.filter(m => !data.messages.some(x => x.id === m.id)), ...data.messages];
   const olderCursor = earlier.before === undefined ? data.before : earlier.before;
-  const loadEarlier = () => act('earlier', async () => {
-    const page = await dashboard('thread', { conversationId, before: olderCursor });
-    stick.current = false;
-    setEarlier(e => ({ messages: [...page.messages, ...e.messages], before: page.before }));
-  });
+  const loadEarlier = () =>
+    act('earlier', async () => {
+      const page = await dashboard('thread', { conversationId, before: olderCursor });
+      stick.current = false;
+      setEarlier(e => ({ messages: [...page.messages, ...e.messages], before: page.before }));
+    });
   const now = Date.now();
   const windowOpen = conversation.windowOpenUntil > now;
   const name = contact.nameSource === 'number' ? formatPhone(contact.number) : contact.name;
@@ -50,10 +71,17 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
   const clinical = !!overview?.capabilities?.operations && (contact.sectorId === 'dental' || s.packId === 'dental');
 
   const act = async (label, task) => {
-    setBusy(label); setError('');
-    try { await task(); await thread.refresh({ quiet: true }); onChanged(); }
-    catch (e) { setError(s.reason(e.reason)); }
-    finally { setBusy(''); }
+    setBusy(label);
+    setError('');
+    try {
+      await task();
+      await thread.refresh({ quiet: true });
+      onChanged();
+    } catch (e) {
+      setError(s.reason(e.reason));
+    } finally {
+      setBusy('');
+    }
   };
   const takeover = conversation.takeover;
   const handoff = conversation.handoff || { state: takeover ? 'open' : 'none', version: 0 };
@@ -62,97 +90,234 @@ export function ThreadView({ s, overview, conversationId, onBack, onChanged }) {
     const text = draft.text.trim();
     if (!text) return;
     // Resubmitting unchanged text reuses the request id, so a retry never duplicates; editing starts a new one.
-    act('send', async () => { await messaging('manual_reply', { conversationId,channel:conversation.channel, text, requestId: draft.id }); setDraft({ text: '', id: newRequestId() }); });
+    act('send', async () => {
+      await messaging('manual_reply', { conversationId, channel: conversation.channel, text, requestId: draft.id });
+      setDraft({ text: '', id: newRequestId() });
+    });
   };
   const { canExport, canBroadcast } = dashboardPermissions(overview);
-  const exportAs = format => act(`export-${format}`, () => exportChat(conversationId, format, { lang: s.lang, business: overview.business.name }));
+  const exportAs = format =>
+    act(`export-${format}`, () =>
+      exportChat(conversationId, format, { lang: s.lang, business: overview.business.name }),
+    );
 
   return (
     <article className="ld-thread">
       <header className="ld-thread-head">
-        <button type="button" className="ld-icon-button ld-back" onClick={onBack} aria-label={s.t('back')}><span aria-hidden="true">{s.ar ? '→' : '←'}</span></button>
+        <button type="button" className="ld-icon-button ld-back" onClick={onBack} aria-label={s.t('back')}>
+          <span aria-hidden="true">{s.ar ? '→' : '←'}</span>
+        </button>
         <div className="ld-thread-title">
-          <h2><bdi>{name}</bdi></h2>
-          <p><bdi dir="ltr" className="ld-num">{contact.channel==='instagram'?'Instagram':formatPhone(contact.number)}</bdi> <QualificationChip s={s} status={contact.status} />{contact.optout && <span className="ld-chip is-coral">{s.t('optedOut')}</span>}</p>
+          <h2>
+            <bdi>{name}</bdi>
+          </h2>
+          <p>
+            <bdi dir="ltr" className="ld-num">
+              {contact.channel === 'instagram' ? 'Instagram' : formatPhone(contact.number)}
+            </bdi>{' '}
+            <QualificationChip s={s} status={contact.status} />
+            {contact.optout && <span className="ld-chip is-coral">{s.t('optedOut')}</span>}
+          </p>
         </div>
         <div className="ld-thread-actions">
-          {canExport && <details className="ld-menu">
-            <summary className="ld-button ld-quiet">{s.t('export')}</summary>
-            <div className="ld-menu-list">
-              <button type="button" onClick={() => exportAs('csv')} disabled={!!busy}>{s.t('exportCsv')}</button>
-              <button type="button" onClick={() => exportAs('pdf')} disabled={!!busy}>{s.t('exportPdf')}</button>
-            </div>
-          </details>}
+          {canExport && (
+            <details className="ld-menu">
+              <summary className="ld-button ld-quiet">{s.t('export')}</summary>
+              <div className="ld-menu-list">
+                <button type="button" onClick={() => exportAs('csv')} disabled={!!busy}>
+                  {s.t('exportCsv')}
+                </button>
+                <button type="button" onClick={() => exportAs('pdf')} disabled={!!busy}>
+                  {s.t('exportPdf')}
+                </button>
+              </div>
+            </details>
+          )}
         </div>
         <section className="ld-handoff" aria-label={s.ar ? 'متابعة الفريق' : 'Team handling'}>
           {/* While Layla replies the switch says it all; once stopped, say why (the owner, a reply from the WhatsApp app, a flood). */}
           {takeover && <p role="status">{handoffReason(handoff.reason, s.ar)}</p>}
           {/* One switch per chat: on, Layla replies here; off, the team does. A refusal moves it back and says why. */}
-          <LaylaSwitch s={s} on={!takeover} channel={conversation.channel}
+          <LaylaSwitch
+            s={s}
+            on={!takeover}
+            channel={conversation.channel}
             label={!takeover ? s.t('chatLaylaOn') : s.t('chatLaylaOff')}
             detail={!takeover ? s.t('chatLaylaOnHelp') : contact.optout ? s.t('optedOut') : s.t('chatLaylaOffHelp')}
             disabled={!!busy || (takeover && contact.optout)}
             onToggle={async next => {
-              await dashboard(next ? 'return_handoff' : 'takeover_handoff', { conversationId, expectedVersion: handoff.version });
-              await thread.refresh({ quiet: true }); onChanged();
-            }} />
+              await dashboard(next ? 'return_handoff' : 'takeover_handoff', {
+                conversationId,
+                expectedVersion: handoff.version,
+              });
+              await thread.refresh({ quiet: true });
+              onChanged();
+            }}
+          />
         </section>
-        <CapturedDetails s={s} contact={contact} qualification={data.qualification} conversationId={conversationId} channel={conversation.channel} />
-        {hb?.overview && !hb.overview.readOnly && hb.overview.workspaceRole !== 'employee' && <OffersPanel s={s} conversationId={conversationId} compact />}
+        <CapturedDetails
+          s={s}
+          contact={contact}
+          qualification={data.qualification}
+          conversationId={conversationId}
+          channel={conversation.channel}
+        />
+        {hb?.overview && !hb.overview.readOnly && hb.overview.workspaceRole !== 'employee' && (
+          <OffersPanel s={s} conversationId={conversationId} compact />
+        )}
         <ChatOrders s={s} conversationId={conversationId} />
         <WorkContext s={s} conversationId={conversationId} />
       </header>
-      <ol className="ld-messages" ref={scroller} tabIndex={0} aria-live="polite" aria-relevant="additions"
-        onScroll={e => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>
-        {olderCursor && <li className="ld-day"><button type="button" className="ld-button ld-quiet" disabled={busy === 'earlier'} onClick={loadEarlier}>{s.t('loadEarlier')}</button></li>}
+      <ol
+        className="ld-messages"
+        ref={scroller}
+        tabIndex={0}
+        aria-live="polite"
+        aria-relevant="additions"
+        onScroll={e => {
+          const el = e.currentTarget;
+          stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        }}
+      >
+        {olderCursor && (
+          <li className="ld-day">
+            <button type="button" className="ld-button ld-quiet" disabled={busy === 'earlier'} onClick={loadEarlier}>
+              {s.t('loadEarlier')}
+            </button>
+          </li>
+        )}
         {messages.map((m, i) => (
           <React.Fragment key={m.id}>
-            {(i === 0 || !sameDay(messages[i - 1].at, m.at, overview.timezone)) && <li className="ld-day" aria-label={formatDay(m.at, s.lang, overview.timezone)}><span aria-hidden="true">{formatDay(m.at, s.lang, overview.timezone)}</span></li>}
-            <li className={`ld-bubble is-${m.direction === 'in' ? 'in' : 'out'} ${m.direction === 'template' ? 'is-template' : ''}`}>
-              <span className="ld-bubble-author">{m.direction === 'in' ? s.t('customer') : m.direction === 'human' ? s.t('yourTeamApp') : m.direction === 'template' ? `${s.t('template')} · ${m.templateName}` : m.manual ? s.t('you') : s.t('layla')}</span>
+            {(i === 0 || !sameDay(messages[i - 1].at, m.at, overview.timezone)) && (
+              <li className="ld-day" aria-label={formatDay(m.at, s.lang, overview.timezone)}>
+                <span aria-hidden="true">{formatDay(m.at, s.lang, overview.timezone)}</span>
+              </li>
+            )}
+            <li
+              className={`ld-bubble is-${m.direction === 'in' ? 'in' : 'out'} ${m.direction === 'template' ? 'is-template' : ''}`}
+            >
+              <span className="ld-bubble-author">
+                {m.direction === 'in'
+                  ? s.t('customer')
+                  : m.direction === 'human'
+                    ? s.t('yourTeamApp')
+                    : m.direction === 'template'
+                      ? `${s.t('template')} · ${m.templateName}`
+                      : m.manual
+                        ? s.t('you')
+                        : s.t('layla')}
+              </span>
               {m.direction === 'template' && m.media && <TemplateHeader s={s} media={m.media} />}
               {m.direction !== 'template' && m.media && <MessageMedia s={s} media={m.media} />}
-              {m.text === null ? <p className="ld-expired" title={clinical ? s.t('textClearedHelp') : undefined}>{clinical ? s.t('textCleared') : s.t('textExpired')}</p> : m.text || !m.media ? <p dir="auto">{m.text}</p> : null}
+              {m.text === null ? (
+                <p className="ld-expired" title={clinical ? s.t('textClearedHelp') : undefined}>
+                  {clinical ? s.t('textCleared') : s.t('textExpired')}
+                </p>
+              ) : m.text || !m.media ? (
+                <p dir="auto">{m.text}</p>
+              ) : null}
               <span className="ld-bubble-meta">
-                <time dateTime={new Date(m.at).toISOString()} className="ld-num">{formatTime(m.at, s.lang, overview.timezone)}</time>
-                {m.direction !== 'in' && m.direction !== 'human' && <StatusTicks s={s} status={m.status} channel={contact.channel} />}
-                {['failed', 'ambiguous', 'blocked'].includes(m.status) && <span className="ld-bubble-issue">{issueKey(m.reason) ? s.t(issueKey(m.reason)) : <>{s.t(`status_${m.status}`)}{m.errorCode ? ` · ${m.errorCode}` : ''}</>}</span>}
+                <time dateTime={new Date(m.at).toISOString()} className="ld-num">
+                  {formatTime(m.at, s.lang, overview.timezone)}
+                </time>
+                {m.direction !== 'in' && m.direction !== 'human' && (
+                  <StatusTicks s={s} status={m.status} channel={contact.channel} />
+                )}
+                {['failed', 'ambiguous', 'blocked'].includes(m.status) && (
+                  <span className="ld-bubble-issue">
+                    {issueKey(m.reason) ? (
+                      s.t(issueKey(m.reason))
+                    ) : (
+                      <>
+                        {s.t(`status_${m.status}`)}
+                        {m.errorCode ? ` · ${m.errorCode}` : ''}
+                      </>
+                    )}
+                  </span>
+                )}
               </span>
             </li>
           </React.Fragment>
         ))}
       </ol>
-      {error && <p className="ld-inline-error" role="alert">{error}</p>}
+      {error && (
+        <p className="ld-inline-error" role="alert">
+          {error}
+        </p>
+      )}
       <footer className="ld-composer">
-        {contact.optout ? <p className="ld-help">{s.t('optedOutComposer')}</p>
-          : windowOpen ? (
-            <form onSubmit={send}>
-              <label className="ld-visually-hidden" htmlFor="ld-reply">{s.t('composer', { name })}</label>
-              <textarea id="ld-reply" rows={1} maxLength={1000} dir="auto" value={draft.text} placeholder={s.t('composer', { name })}
-                onChange={e => setDraft({ text: e.target.value, id: newRequestId() })}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) send(e); }} />
-              <button type="submit" className="ld-button ld-primary" disabled={busy === 'send' || !draft.text.trim()}>{busy === 'send' ? s.t('sending') : s.t('send')}</button>
-              <p className="ld-help">{takeover ? s.t('windowOpen', { time: formatDateTime(conversation.windowOpenUntil, s.lang, overview.timezone) }) : s.t('replyPauses')}</p>
-            </form>
-          ) : (
-            <div className="ld-window-closed">
-              <p>{s.t(canBroadcast && conversation.channel !== 'instagram' ? 'windowClosed' : 'windowClosedWait', { time: formatDateTime(conversation.windowOpenUntil, s.lang, overview.timezone) })}</p>
-              {conversation.channel!=='instagram' && canBroadcast && <button type="button" className="ld-button" onClick={() => setTemplateOpen(true)} disabled={!overview.broadcastEnabled}>{s.t('sendTemplate')}</button>}
-              {conversation.channel!=='instagram' && canBroadcast && !overview.broadcastEnabled && <p className="ld-help">{s.t('broadcastUnavailable')}</p>}
-            </div>
-          )}
+        {contact.optout ? (
+          <p className="ld-help">{s.t('optedOutComposer')}</p>
+        ) : windowOpen ? (
+          <form onSubmit={send}>
+            <label className="ld-visually-hidden" htmlFor="ld-reply">
+              {s.t('composer', { name })}
+            </label>
+            <textarea
+              id="ld-reply"
+              rows={1}
+              maxLength={1000}
+              dir="auto"
+              value={draft.text}
+              placeholder={s.t('composer', { name })}
+              onChange={e => setDraft({ text: e.target.value, id: newRequestId() })}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) send(e);
+              }}
+            />
+            <button type="submit" className="ld-button ld-primary" disabled={busy === 'send' || !draft.text.trim()}>
+              {busy === 'send' ? s.t('sending') : s.t('send')}
+            </button>
+            <p className="ld-help">
+              {takeover
+                ? s.t('windowOpen', { time: formatDateTime(conversation.windowOpenUntil, s.lang, overview.timezone) })
+                : s.t('replyPauses')}
+            </p>
+          </form>
+        ) : (
+          <div className="ld-window-closed">
+            <p>
+              {s.t(canBroadcast && conversation.channel !== 'instagram' ? 'windowClosed' : 'windowClosedWait', {
+                time: formatDateTime(conversation.windowOpenUntil, s.lang, overview.timezone),
+              })}
+            </p>
+            {conversation.channel !== 'instagram' && canBroadcast && (
+              <button
+                type="button"
+                className="ld-button"
+                onClick={() => setTemplateOpen(true)}
+                disabled={!overview.broadcastEnabled}
+              >
+                {s.t('sendTemplate')}
+              </button>
+            )}
+            {conversation.channel !== 'instagram' && canBroadcast && !overview.broadcastEnabled && (
+              <p className="ld-help">{s.t('broadcastUnavailable')}</p>
+            )}
+          </div>
+        )}
       </footer>
-      {templateOpen && canBroadcast && conversation.channel!=='instagram' && (
+      {templateOpen && canBroadcast && conversation.channel !== 'instagram' && (
         <Dialog s={s} title={s.t('sendTemplate')} onClose={() => setTemplateOpen(false)} wide>
-          <CampaignWizard s={s} overview={overview} single={contact} onDone={() => { setTemplateOpen(false); thread.refresh({ quiet: true }); }} />
+          <CampaignWizard
+            s={s}
+            overview={overview}
+            single={contact}
+            onDone={() => {
+              setTemplateOpen(false);
+              thread.refresh({ quiet: true });
+            }}
+          />
         </Dialog>
       )}
     </article>
   );
 }
 
-export const mediaLabel = (s, media) => s.t(media.kind === 'audio' ? (media.voice ? 'media_voice' : 'media_audio') : `media_${media.kind}`);
-const fileSize = bytes => (bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
+export const mediaLabel = (s, media) =>
+  s.t(media.kind === 'audio' ? (media.voice ? 'media_voice' : 'media_audio') : `media_${media.kind}`);
+const fileSize = bytes =>
+  bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
 /**
  * A customer's photo, voice note, video or file (or Layla's product photo), playable in the chat, with what it
@@ -162,25 +327,88 @@ function MessageMedia({ s, media }) {
   const label = mediaLabel(s, media);
   if (media.status === 'expired') return null;
   if (!media.url) {
-    const state = media.status === 'pending' ? 'mediaPending' : media.status === 'too_large' ? 'mediaTooLarge' : 'mediaFailed';
-    return <p className="ld-bubble-media is-missing"><span className="ld-chip">{label}</span> <span className="ld-help" role={media.status === 'pending' ? 'status' : undefined}>{s.t(state)}</span></p>;
+    const state =
+      media.status === 'pending' ? 'mediaPending' : media.status === 'too_large' ? 'mediaTooLarge' : 'mediaFailed';
+    return (
+      <p className="ld-bubble-media is-missing">
+        <span className="ld-chip">{label}</span>{' '}
+        <span className="ld-help" role={media.status === 'pending' ? 'status' : undefined}>
+          {s.t(state)}
+        </span>
+      </p>
+    );
   }
   const reading = media.text ? (
-    <p className="ld-media-text" dir="auto"><span className="ld-media-text-label">{s.t(media.kind === 'audio' ? 'mediaTranscript' : 'mediaSeen')}</span> {media.text}</p>
-  ) : media.status === 'unread' && ['audio', 'image', 'sticker'].includes(media.kind) ? <p className="ld-media-text ld-help">{s.t('mediaUnread')}</p> : null;
-  if (media.kind === 'image' || media.kind === 'sticker') return <>
-    <a className="ld-bubble-media" href={media.url} target="_blank" rel="noopener noreferrer"><img src={media.url} alt={media.text || label} loading="lazy" width="320" height="240" /></a>{reading}
-  </>;
-  if (media.kind === 'audio') return <div className="ld-bubble-media ld-voice"><audio src={media.url} controls preload="none" aria-label={label} />{reading}</div>;
-  if (media.kind === 'video') return <video className="ld-bubble-media" src={media.url} controls preload="metadata" aria-label={label} />;
-  return <p className="ld-bubble-media"><a className="ld-link" href={media.url} target="_blank" rel="noopener noreferrer" download={media.filename || undefined}>
-    {media.filename || label}{media.size ? ` · ${fileSize(media.size)}` : ''} · {s.t('openFile')}</a></p>;
+    <p className="ld-media-text" dir="auto">
+      <span className="ld-media-text-label">{s.t(media.kind === 'audio' ? 'mediaTranscript' : 'mediaSeen')}</span>{' '}
+      {media.text}
+    </p>
+  ) : media.status === 'unread' && ['audio', 'image', 'sticker'].includes(media.kind) ? (
+    <p className="ld-media-text ld-help">{s.t('mediaUnread')}</p>
+  ) : null;
+  if (media.kind === 'image' || media.kind === 'sticker')
+    return (
+      <>
+        <a className="ld-bubble-media" href={media.url} target="_blank" rel="noopener noreferrer">
+          <img src={media.url} alt={media.text || label} loading="lazy" width="320" height="240" />
+        </a>
+        {reading}
+      </>
+    );
+  if (media.kind === 'audio')
+    return (
+      <div className="ld-bubble-media ld-voice">
+        <audio src={media.url} controls preload="none" aria-label={label} />
+        {reading}
+      </div>
+    );
+  if (media.kind === 'video')
+    return <video className="ld-bubble-media" src={media.url} controls preload="metadata" aria-label={label} />;
+  return (
+    <p className="ld-bubble-media">
+      <a
+        className="ld-link"
+        href={media.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        download={media.filename || undefined}
+      >
+        {media.filename || label}
+        {media.size ? ` · ${fileSize(media.size)}` : ''} · {s.t('openFile')}
+      </a>
+    </p>
+  );
 }
 
 /** The image, video or PDF a template message carried, while the business still keeps the file. */
 function TemplateHeader({ s, media }) {
-  if (!media.url) return <p className="ld-bubble-media is-missing"><span className="ld-chip">{s.t(`headerExpired_${media.kind}`)}</span></p>;
-  if (media.kind === 'image') return <a className="ld-bubble-media" href={media.url} target="_blank" rel="noopener noreferrer"><img src={media.url} alt={s.t('headerExpired_image')} loading="lazy" width="320" height="200" /></a>;
-  if (media.kind === 'video') return <video className="ld-bubble-media" src={media.url} controls preload="metadata" aria-label={s.t('headerExpired_video')} />;
-  return <p className="ld-bubble-media"><a className="ld-link" href={media.url} target="_blank" rel="noopener noreferrer">{media.filename || s.t('headerExpired_document')} · {s.t('openFile')}</a></p>;
+  if (!media.url)
+    return (
+      <p className="ld-bubble-media is-missing">
+        <span className="ld-chip">{s.t(`headerExpired_${media.kind}`)}</span>
+      </p>
+    );
+  if (media.kind === 'image')
+    return (
+      <a className="ld-bubble-media" href={media.url} target="_blank" rel="noopener noreferrer">
+        <img src={media.url} alt={s.t('headerExpired_image')} loading="lazy" width="320" height="200" />
+      </a>
+    );
+  if (media.kind === 'video')
+    return (
+      <video
+        className="ld-bubble-media"
+        src={media.url}
+        controls
+        preload="metadata"
+        aria-label={s.t('headerExpired_video')}
+      />
+    );
+  return (
+    <p className="ld-bubble-media">
+      <a className="ld-link" href={media.url} target="_blank" rel="noopener noreferrer">
+        {media.filename || s.t('headerExpired_document')} · {s.t('openFile')}
+      </a>
+    </p>
+  );
 }

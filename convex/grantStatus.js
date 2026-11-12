@@ -4,7 +4,7 @@
 export const ACCESS_GRACE_MS = 3 * 86400000;
 
 /** When a paid grant stops giving access; null for a grant with no end. */
-export const deniedAt = grant => Number.isFinite(grant?.paidUntil) ? grant.paidUntil + ACCESS_GRACE_MS : null;
+export const deniedAt = grant => (Number.isFinite(grant?.paidUntil) ? grant.paidUntil + ACCESS_GRACE_MS : null);
 
 export function grantLive(grant, now = Date.now()) {
   const end = deniedAt(grant);

@@ -11,7 +11,9 @@ function detectDelimiter(text) {
     if (ch === '"') inQuotes = !inQuotes;
     else if (!inQuotes && ch in counts) counts[ch]++;
   }
-  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][1] ? Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] : ',';
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][1]
+    ? Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
+    : ',';
 }
 
 /** @returns {string[][]} rows of trimmed cells; blank lines are skipped. */
@@ -19,18 +21,32 @@ export function parseDelimited(input, { maxRows = MAX_ROWS } = {}) {
   const text = String(input || '').replace(/^﻿/, '');
   const delimiter = detectDelimiter(text);
   const rows = [];
-  let row = [], cell = '', inQuotes = false;
-  const pushRow = () => { row.push(cell); cell = ''; if (row.some(v => v.trim() !== '')) rows.push(row.map(v => v.trim())); row = []; };
+  let row = [],
+    cell = '',
+    inQuotes = false;
+  const pushRow = () => {
+    row.push(cell);
+    cell = '';
+    if (row.some(v => v.trim() !== '')) rows.push(row.map(v => v.trim()));
+    row = [];
+  };
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
     if (inQuotes) {
-      if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; }
-      else if (ch === '"') inQuotes = false;
+      if (ch === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (ch === '"') inQuotes = false;
       else cell += ch;
     } else if (ch === '"' && cell === '') inQuotes = true;
-    else if (ch === delimiter) { row.push(cell); cell = ''; }
-    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; pushRow(); if (rows.length > maxRows) break; }
-    else cell += ch;
+    else if (ch === delimiter) {
+      row.push(cell);
+      cell = '';
+    } else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      pushRow();
+      if (rows.length > maxRows) break;
+    } else cell += ch;
   }
   if (cell !== '' || row.length) pushRow();
   return rows.slice(0, maxRows + 1);

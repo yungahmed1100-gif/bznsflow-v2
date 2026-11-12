@@ -6,58 +6,146 @@ import { hasibPreviewResponse, dashboardPreviewResponse } from '../api/_lib/hasi
 
 const base = process.argv[2] || 'http://127.0.0.1:5199';
 // Ahmed's website queue with one owner who asked for online payments (Paymob onboarding, 2026-10-31).
-const WEBSITES = { live: [], open: [{ id: 'p1', stage: 'live', stageAt: { received: 1 }, dueAt: Date.now() - 86400000, domain: 'nour.com', mailbox: 'info@nour.com',
-  liveUrl: 'https://nour.com', delayReason: '', note: '', createdAt: 1, email: 'owner@example.com', business: 'Nour Abayas', briefVersion: 2, alternates: [], phone: '+968 9000 0000',
-  payments: { stage: 'received', stageAt: { received: 1 } }, payContactName: 'Sara Al Balushi', payContactPhone: '+968 9123 4567',
-  docs: [{ id: 'd1', kind: 'doc_cr', name: 'cr.pdf', url: 'https://files.test/d1' }, { id: 'd2', kind: 'doc_id', name: 'id-sara.jpg', url: 'https://files.test/d2' }] }] };
+const WEBSITES = {
+  live: [],
+  open: [
+    {
+      id: 'p1',
+      stage: 'live',
+      stageAt: { received: 1 },
+      dueAt: Date.now() - 86400000,
+      domain: 'nour.com',
+      mailbox: 'info@nour.com',
+      liveUrl: 'https://nour.com',
+      delayReason: '',
+      note: '',
+      createdAt: 1,
+      email: 'owner@example.com',
+      business: 'Nour Abayas',
+      briefVersion: 2,
+      alternates: [],
+      phone: '+968 9000 0000',
+      payments: { stage: 'received', stageAt: { received: 1 } },
+      payContactName: 'Sara Al Balushi',
+      payContactPhone: '+968 9123 4567',
+      docs: [
+        { id: 'd1', kind: 'doc_cr', name: 'cr.pdf', url: 'https://files.test/d1' },
+        { id: 'd2', kind: 'doc_id', name: 'id-sara.jpg', url: 'https://files.test/d2' },
+      ],
+    },
+  ],
+};
 const browser = await chromium.launch();
 let checked = 0;
 async function open(path, width, access = 200) {
   const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
-  const errors = [], writes = [];
+  const errors = [],
+    writes = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.route('**/*', async route => {
-    const req = route.request(), url = new URL(req.url());
+    const req = route.request(),
+      url = new URL(req.url());
     if (url.origin !== new URL(base).origin) return route.abort();
     if (!url.pathname.startsWith('/api/')) return route.continue();
-    const reply = (data, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ ok: status === 200, csrfToken: 'a'.repeat(64), ...data }) });
+    const reply = (data, status = 200) =>
+      route.fulfill({
+        status,
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: status === 200, csrfToken: 'a'.repeat(64), ...data }),
+      });
     if (url.pathname === '/api/access-admin' && url.searchParams.get('op') === 'websites') {
-      if (req.method() === 'POST') { writes.push(req.postDataJSON()); return reply({ project: {} }); }
+      if (req.method() === 'POST') {
+        writes.push(req.postDataJSON());
+        return reply({ project: {} });
+      }
       return reply(WEBSITES);
     }
     if (url.pathname === '/api/access-admin') {
-      if (req.method() === 'POST') { writes.push(req.postDataJSON()); return reply({ email: req.postDataJSON().email, plan: req.postDataJSON().plan, status: 'active', hasAccount: false }); }
+      if (req.method() === 'POST') {
+        writes.push(req.postDataJSON());
+        return reply({
+          email: req.postDataJSON().email,
+          plan: req.postDataJSON().plan,
+          status: 'active',
+          hasAccount: false,
+        });
+      }
       // The 2026-10-07 mix-up: the signed-in address revoked, a near-identical one with no account granted.
-      return reply(access === 200 ? { grants: [{ email: 'owner1100@example.com', plan: 'ascend', status: 'active', grantedAt: 1, packId: 'real-estate', note: '', hasAccount: false }],
-        revoked: [{ email: 'owner@example.com', plan: 'catalyst', status: 'revoked', grantedAt: 1, revokedAt: 2, note: '', hasAccount: true }] } : { reason: access === 401 ? 'sign_in_required' : 'admin_required' }, access);
+      return reply(
+        access === 200
+          ? {
+              grants: [
+                {
+                  email: 'owner1100@example.com',
+                  plan: 'ascend',
+                  status: 'active',
+                  grantedAt: 1,
+                  packId: 'real-estate',
+                  note: '',
+                  hasAccount: false,
+                },
+              ],
+              revoked: [
+                {
+                  email: 'owner@example.com',
+                  plan: 'catalyst',
+                  status: 'revoked',
+                  grantedAt: 1,
+                  revokedAt: 2,
+                  note: '',
+                  hasAccount: true,
+                },
+              ],
+            }
+          : { reason: access === 401 ? 'sign_in_required' : 'admin_required' },
+        access,
+      );
     }
-    if (url.pathname === '/api/auth-session') return reply({ account: access === 401 ? null : { email: access === 200 ? ' AHMED@BZNSFLOWAI.COM ' : 'other@example.com' } });
-    const body = req.postDataJSON(), surface = url.searchParams.get('surface');
+    if (url.pathname === '/api/auth-session')
+      return reply({
+        account: access === 401 ? null : { email: access === 200 ? ' AHMED@BZNSFLOWAI.COM ' : 'other@example.com' },
+      });
+    const body = req.postDataJSON(),
+      surface = url.searchParams.get('surface');
     const pack = body?.previewIndustry || url.searchParams.get('previewIndustry');
     if (!pack) return reply({ reason: 'setup_required' }, 409);
     try {
-      return reply(surface === 'hasib' ? hasibPreviewResponse(pack, body?.action || 'overview') : dashboardPreviewResponse(pack, body?.action || 'overview'));
-    } catch (e) { writes.push(body?.action); return reply({ reason: e.code }, e.status); }
+      return reply(
+        surface === 'hasib'
+          ? hasibPreviewResponse(pack, body?.action || 'overview')
+          : dashboardPreviewResponse(pack, body?.action || 'overview'),
+      );
+    } catch (e) {
+      writes.push(body?.action);
+      return reply({ reason: e.code }, e.status);
+    }
   });
   await page.goto(base + path);
   return { page, context, errors, writes };
 }
 try {
-  for (const status of [401, 403, 503]) for (const path of ['/en/owner', '/en/owner/access']) {
-    const { page, context } = await open(path, 320, status);
-    await page.getByRole('status').filter({ hasText: /Sign in|cannot|Could not/ }).waitFor();
-    assert.equal(await page.locator('form').count(), 0);
-    assert.equal(await page.locator('a[href*="/owner/preview/"]').count(), 0);
-    await context.close(); checked++;
-  }
+  for (const status of [401, 403, 503])
+    for (const path of ['/en/owner', '/en/owner/access']) {
+      const { page, context } = await open(path, 320, status);
+      await page
+        .getByRole('status')
+        .filter({ hasText: /Sign in|cannot|Could not/ })
+        .waitFor();
+      assert.equal(await page.locator('form').count(), 0);
+      assert.equal(await page.locator('a[href*="/owner/preview/"]').count(), 0);
+      await context.close();
+      checked++;
+    }
   // The Arabic access page is right-to-left with Arabic labels.
   {
     const { page, context, errors } = await open('/owner/access', 375);
     await page.getByRole('heading', { name: 'صلاحيات المنتجات' }).waitFor();
     assert.equal(await page.locator('main').getAttribute('dir'), 'rtl');
     await page.getByText('لا يوجد حساب بهذا البريد بعد').waitFor();
-    assert.deepEqual(errors, []); await context.close(); checked++;
+    assert.deepEqual(errors, []);
+    await context.close();
+    checked++;
   }
   // Access page: an address nobody signs in with is flagged, and a revoked address stays one press away.
   for (const width of [320, 1280]) {
@@ -67,33 +155,77 @@ try {
     await page.getByRole('button', { name: 'Grant again' }).click();
     await page.getByText(/no account uses this address yet/).waitFor();
     assert.deepEqual(writes.at(-1), { email: 'owner@example.com', plan: 'catalyst' });
-    const issues = (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact));
-    assert.deepEqual(issues.map(v => v.id), [], `access page ${width} accessibility`);
-    assert.deepEqual(errors, []); await context.close(); checked++;
+    const issues = (await new AxeBuilder({ page }).analyze()).violations.filter(v =>
+      ['serious', 'critical'].includes(v.impact),
+    );
+    assert.deepEqual(
+      issues.map(v => v.id),
+      [],
+      `access page ${width} accessibility`,
+    );
+    assert.deepEqual(errors, []);
+    await context.close();
+    checked++;
   }
   // Website queue: a live website whose payments are still being set up stays listed, with no overdue date,
   // the owner's personal contact, the documents to forward to Paymob, and the next payments stage to mark.
-  for (const [path, width] of [['/en/owner/websites', 1280], ['/owner/websites', 375]]) {
+  for (const [path, width] of [
+    ['/en/owner/websites', 1280],
+    ['/owner/websites', 375],
+  ]) {
     const { page, context, errors, writes } = await open(path, width);
     const en = path.startsWith('/en');
     const row = page.locator('.owner-website').first();
     await row.locator('.owner-website-payments').waitFor();
-    assert.match(await row.locator('.owner-website-due').textContent(), en ? /Website live; payments in progress/ : /الموقع منشور/);
+    assert.match(
+      await row.locator('.owner-website-due').textContent(),
+      en ? /Website live; payments in progress/ : /الموقع منشور/,
+    );
     assert.equal(await row.locator('a[href^="tel:"]').getAttribute('href'), 'tel:+96891234567');
-    assert.deepEqual(await row.locator('.owner-website-docs a').evaluateAll(a => a.map(x => x.getAttribute('href'))), ['https://files.test/d1', 'https://files.test/d2']);
-    await row.getByRole('button', { name: en ? 'Payments done: Sent to Paymob' : 'المدفوعات: أُرسلت إلى Paymob' }).click();
-    await page.getByRole('status').filter({ hasText: en ? /Saved/ : /تم الحفظ/ }).waitFor();
+    assert.deepEqual(await row.locator('.owner-website-docs a').evaluateAll(a => a.map(x => x.getAttribute('href'))), [
+      'https://files.test/d1',
+      'https://files.test/d2',
+    ]);
+    await row
+      .getByRole('button', { name: en ? 'Payments done: Sent to Paymob' : 'المدفوعات: أُرسلت إلى Paymob' })
+      .click();
+    await page
+      .getByRole('status')
+      .filter({ hasText: en ? /Saved/ : /تم الحفظ/ })
+      .waitFor();
     assert.deepEqual(writes.at(-1), { projectId: 'p1', action: 'payments_advance' });
-    assert.equal(await row.getByRole('button', { name: en ? /Mark done/ : /^تم:/ }).count(), 0, 'nothing left to mark on a live website');
+    assert.equal(
+      await row.getByRole('button', { name: en ? /Mark done/ : /^تم:/ }).count(),
+      0,
+      'nothing left to mark on a live website',
+    );
     // Cancelling asks first, then ends the set-up.
-    page.once('dialog', dialog => { assert.match(dialog.message(), en ? /documents and personal contact are deleted/ : /ستُحذف/); dialog.accept(); });
+    page.once('dialog', dialog => {
+      assert.match(dialog.message(), en ? /documents and personal contact are deleted/ : /ستُحذف/);
+      dialog.accept();
+    });
     await row.getByRole('button', { name: en ? 'Cancel payments set-up' : 'إلغاء تفعيل المدفوعات' }).click();
-    await page.getByRole('status').filter({ hasText: en ? /Saved/ : /تم الحفظ/ }).waitFor();
+    await page
+      .getByRole('status')
+      .filter({ hasText: en ? /Saved/ : /تم الحفظ/ })
+      .waitFor();
     assert.deepEqual(writes.at(-1), { projectId: 'p1', action: 'payments_cancel' });
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${path} overflow`);
-    const issues = (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact));
-    assert.deepEqual(issues.map(v => v.id), [], `${path} accessibility`);
-    assert.deepEqual(errors, []); await context.close(); checked++;
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+      true,
+      `${path} overflow`,
+    );
+    const issues = (await new AxeBuilder({ page }).analyze()).violations.filter(v =>
+      ['serious', 'critical'].includes(v.impact),
+    );
+    assert.deepEqual(
+      issues.map(v => v.id),
+      [],
+      `${path} accessibility`,
+    );
+    assert.deepEqual(errors, []);
+    await context.close();
+    checked++;
   }
   for (const lang of ['en', 'ar']) {
     const prefix = lang === 'en' ? '/en' : '';
@@ -102,29 +234,53 @@ try {
     assert.equal(await home.page.locator('.owner-cards a').count(), HASIB_LIVE_PACKS.length);
     assert.equal(await home.page.locator('a[href*="clinic"]').count(), 0);
     assert.equal(await home.page.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow');
-    assert.deepEqual(home.errors, []); await home.context.close(); checked++;
-    for (const pack of HASIB_LIVE_PACKS) for (const width of [320, 768, 1440]) {
-      const { page, context, errors, writes } = await open(`${prefix}/owner/preview/${pack}?tab=today`, width);
-      await page.locator('.hb-preview-banner').waitFor().catch((error) => {
-        throw new Error(`${pack} ${lang} ${width}: preview banner did not load: ${error.message}`);
-      });
-      await page.locator('.ld-main .ld-state[role="status"]').waitFor({ state: 'hidden' });
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${pack} ${lang} ${width} overflow`);
-      const issues = (await new AxeBuilder({ page }).include('.ld').analyze()).violations.filter(v => ['serious','critical'].includes(v.impact));
-      assert.deepEqual(issues.map(v => v.id), [], `${pack} ${lang} ${width} accessibility`);
-      for (const tab of ['orders', 'stock', 'money', 'team', 'settings']) {
-        const link = page.locator(`.ld-nav a[href*="tab=${tab}"]`);
-        if (!(await link.count())) continue;
-        if (width <= 768) await page.locator('.ld-nav-trigger').click();
-        // Desktop: the sidebar. Phones: More's drawer (the sidebar is replaced by the bottom tab bar).
-        await page.locator(`:is(.ld-nav, .ld-drawer-nav) a[href*="tab=${tab}"]:visible`).click(); await page.waitForTimeout(100);
+    assert.deepEqual(home.errors, []);
+    await home.context.close();
+    checked++;
+    for (const pack of HASIB_LIVE_PACKS)
+      for (const width of [320, 768, 1440]) {
+        const { page, context, errors, writes } = await open(`${prefix}/owner/preview/${pack}?tab=today`, width);
+        await page
+          .locator('.hb-preview-banner')
+          .waitFor()
+          .catch(error => {
+            throw new Error(`${pack} ${lang} ${width}: preview banner did not load: ${error.message}`);
+          });
         await page.locator('.ld-main .ld-state[role="status"]').waitFor({ state: 'hidden' });
-        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${pack} ${lang} ${width} ${tab} overflow`);
+        assert.equal(
+          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+          true,
+          `${pack} ${lang} ${width} overflow`,
+        );
+        const issues = (await new AxeBuilder({ page }).include('.ld').analyze()).violations.filter(v =>
+          ['serious', 'critical'].includes(v.impact),
+        );
+        assert.deepEqual(
+          issues.map(v => v.id),
+          [],
+          `${pack} ${lang} ${width} accessibility`,
+        );
+        for (const tab of ['orders', 'stock', 'money', 'team', 'settings']) {
+          const link = page.locator(`.ld-nav a[href*="tab=${tab}"]`);
+          if (!(await link.count())) continue;
+          if (width <= 768) await page.locator('.ld-nav-trigger').click();
+          // Desktop: the sidebar. Phones: More's drawer (the sidebar is replaced by the bottom tab bar).
+          await page.locator(`:is(.ld-nav, .ld-drawer-nav) a[href*="tab=${tab}"]:visible`).click();
+          await page.waitForTimeout(100);
+          await page.locator('.ld-main .ld-state[role="status"]').waitFor({ state: 'hidden' });
+          assert.equal(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+            true,
+            `${pack} ${lang} ${width} ${tab} overflow`,
+          );
+        }
+        assert.deepEqual(errors, [], `${pack} ${lang} ${width} errors`);
+        assert.deepEqual(writes, [], `${pack} ${lang} ${width} unexpected preview operation`);
+        await context.close();
+        checked++;
       }
-      assert.deepEqual(errors, [], `${pack} ${lang} ${width} errors`);
-      assert.deepEqual(writes, [], `${pack} ${lang} ${width} unexpected preview operation`);
-      await context.close(); checked++;
-    }
   }
   console.log(`Owner browser: ${checked} authorization and bilingual viewport cases passed`);
-} finally { await browser.close(); }
+} finally {
+  await browser.close();
+}

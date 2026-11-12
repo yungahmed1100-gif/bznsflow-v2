@@ -17,18 +17,44 @@ const WIDE = '(min-width: 1100px)';
  */
 export function useWorkspaceShell({ recordParam, loadLists, setError, reasonOf, onGo, onOpenForm, onCloseForm }) {
   const [params, setParams] = useSearchParams();
-  const [form, setForm] = useState(null), [values, setValues] = useState({}), [lists, setLists] = useState(null), [preview, setPreview] = useState(null);
+  const [form, setForm] = useState(null),
+    [values, setValues] = useState({}),
+    [lists, setLists] = useState(null),
+    [preview, setPreview] = useState(null);
   const scroll = useRef(0);
   const recordId = params.get(recordParam);
-  const setParam = patch => { const next = new URLSearchParams(params); for (const [k, v] of Object.entries(patch)) { if (v) next.set(k, v); else next.delete(k); } setParams(next); };
-  const openForm = (type, preset = {}) => {
-    setError(''); setValues(preset); onOpenForm?.(type); setForm(type);
-    if (!lists) loadLists().then(setLists).catch(e => setError(reasonOf(e.reason)));
-    window.requestAnimationFrame?.(() => document.querySelector('.hb-action-fields')?.scrollIntoView({ block: 'start' }));
+  const setParam = patch => {
+    const next = new URLSearchParams(params);
+    for (const [k, v] of Object.entries(patch)) {
+      if (v) next.set(k, v);
+      else next.delete(k);
+    }
+    setParams(next);
   };
-  const closeForm = () => { onCloseForm?.(); setForm(null); setValues({}); };
+  const openForm = (type, preset = {}) => {
+    setError('');
+    setValues(preset);
+    onOpenForm?.(type);
+    setForm(type);
+    if (!lists)
+      loadLists()
+        .then(setLists)
+        .catch(e => setError(reasonOf(e.reason)));
+    window.requestAnimationFrame?.(() =>
+      document.querySelector('.hb-action-fields')?.scrollIntoView({ block: 'start' }),
+    );
+  };
+  const closeForm = () => {
+    onCloseForm?.();
+    setForm(null);
+    setValues({});
+  };
   // Opening a record remembers where the list was; Back returns there with its filters.
-  const openRecord = id => { scroll.current = window.scrollY; setPreview(null); setParam({ [recordParam]: id }); };
+  const openRecord = id => {
+    scroll.current = window.scrollY;
+    setPreview(null);
+    setParam({ [recordParam]: id });
+  };
   const openRow = id => (window.matchMedia?.(WIDE).matches ? setPreview(id) : openRecord(id));
   const back = () => {
     const from = params.get('from');
@@ -36,8 +62,29 @@ export function useWorkspaceShell({ recordParam, loadLists, setError, reasonOf, 
     if (from === 'customers') return onGo('customers');
     setParam({ [recordParam]: null });
   };
-  useLayoutEffect(() => { if (!recordId && scroll.current) { window.scrollTo(0, scroll.current); scroll.current = 0; } }, [recordId]);
-  return { params, setParam, form, values, setValues, lists, setLists, preview, setPreview, openForm, closeForm, openRecord, openRow, back, recordId };
+  useLayoutEffect(() => {
+    if (!recordId && scroll.current) {
+      window.scrollTo(0, scroll.current);
+      scroll.current = 0;
+    }
+  }, [recordId]);
+  return {
+    params,
+    setParam,
+    form,
+    values,
+    setValues,
+    lists,
+    setLists,
+    preview,
+    setPreview,
+    openForm,
+    closeForm,
+    openRecord,
+    openRow,
+    back,
+    recordId,
+  };
 }
 
 /** Back's words: to the chat or Customers it came from, to the drill-down, else the sector's own list. */

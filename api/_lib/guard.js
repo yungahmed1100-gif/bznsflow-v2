@@ -80,10 +80,10 @@ export function isAllowedOrigin(req) {
 
   const allowed = String(process.env.CHAT_ALLOWED_ORIGINS || '')
     .split(',')
-    .map((s) => s.trim())
+    .map(s => s.trim())
     .filter(Boolean);
 
-  return allowed.some((entry) => {
+  return allowed.some(entry => {
     try {
       return new URL(entry).host === originHost;
     } catch {
@@ -135,5 +135,7 @@ export function isSameSite(req, env = process.env, { write = false } = {}) {
   try {
     const origin = new URL(env.PUBLIC_SITE_ORIGIN || 'https://www.bznsflowai.com');
     return req.headers?.host === origin.host && (!write || req.headers?.origin === origin.origin);
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }

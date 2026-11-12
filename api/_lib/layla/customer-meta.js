@@ -2,32 +2,53 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { PilotError } from './config.js';
 
 function key(env) {
-  if (!/^[a-f0-9]{64}$/i.test(env.LAYLA_CREDENTIAL_ENCRYPTION_KEY || '')) throw new PilotError('credential_key_missing', 503);
+  if (!/^[a-f0-9]{64}$/i.test(env.LAYLA_CREDENTIAL_ENCRYPTION_KEY || ''))
+    throw new PilotError('credential_key_missing', 503);
   return Buffer.from(env.LAYLA_CREDENTIAL_ENCRYPTION_KEY, 'hex');
 }
 export function sealToken(token, context, env) {
-  const iv = randomBytes(12), cipher = createCipheriv('aes-256-gcm', key(env), iv);
+  const iv = randomBytes(12),
+    cipher = createCipheriv('aes-256-gcm', key(env), iv);
   cipher.setAAD(Buffer.from(context));
   const data = Buffer.concat([cipher.update(token, 'utf8'), cipher.final()]);
-  return { v: 1, iv: iv.toString('base64'), data: data.toString('base64'), tag: cipher.getAuthTag().toString('base64') };
+  return {
+    v: 1,
+    iv: iv.toString('base64'),
+    data: data.toString('base64'),
+    tag: cipher.getAuthTag().toString('base64'),
+  };
 }
 export function openToken(envelope, context, env) {
   try {
     if (envelope?.v !== 1) throw Error('version');
     const decipher = createDecipheriv('aes-256-gcm', key(env), Buffer.from(envelope.iv, 'base64'));
-    decipher.setAAD(Buffer.from(context)); decipher.setAuthTag(Buffer.from(envelope.tag, 'base64'));
+    decipher.setAAD(Buffer.from(context));
+    decipher.setAuthTag(Buffer.from(envelope.tag, 'base64'));
     return Buffer.concat([decipher.update(Buffer.from(envelope.data, 'base64')), decipher.final()]).toString('utf8');
-  } catch { throw new PilotError('credential_unavailable', 503); }
+  } catch {
+    throw new PilotError('credential_unavailable', 503);
+  }
 }
-export const credentialContext = (account, i) => (i.channel==='instagram' ? ['layla-instagram-v1',account,i.id,i.app,i.igAccount] : ['layla-credential-v1', account, i.id, i.app, i.waba, i.phone]).join(':');
+export const credentialContext = (account, i) =>
+  (i.channel === 'instagram'
+    ? ['layla-instagram-v1', account, i.id, i.app, i.igAccount]
+    : ['layla-credential-v1', account, i.id, i.app, i.waba, i.phone]
+  ).join(':');
 export async function metaRequest(c, path, token, fetcher, body) {
   try {
     const url = new URL(`https://graph.facebook.com/${c.version}/${path}`);
-    const response = await fetcher(url, { method: body ? 'POST' : 'GET', redirect: 'error', signal: AbortSignal.timeout(6000),
-      headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}) },
+    const response = await fetcher(url, {
+      method: body ? 'POST' : 'GET',
+      redirect: 'error',
+      signal: AbortSignal.timeout(6000),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(body ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
+      },
       ...(body ? { body: new URLSearchParams(body).toString() } : {}),
     });
-    const raw = await response.text(); if (raw.length > 100000) throw Error('response_limit');
+    const raw = await response.text();
+    if (raw.length > 100000) throw Error('response_limit');
     const value = JSON.parse(raw);
     if (!response.ok || !value || value.error) {
       const error = new PilotError('meta_connection_unavailable', 502);
@@ -35,31 +56,79 @@ export async function metaRequest(c, path, token, fetcher, body) {
       throw error;
     }
     return value;
-  } catch (error) { if (error instanceof PilotError) throw error; throw new PilotError('meta_connection_unavailable', 502); }
+  } catch (error) {
+    if (error instanceof PilotError) throw error;
+    throw new PilotError('meta_connection_unavailable', 502);
+  }
 }
 // Meta can mark a number as on the WhatsApp Business app a little after its window closes; the app
 // path asks again for about 15 seconds before refusing (2026-10-25: two refusals with no other cause known).
 // Kept short: the whole finish must fit api/layla-meta.js's 60-second limit.
-export const COEXISTENCE_RECHECKS = 4, COEXISTENCE_RECHECK_MS = 3000;
+export const COEXISTENCE_RECHECKS = 4,
+  COEXISTENCE_RECHECK_MS = 3000;
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 // What Meta said about a number, safe to keep on the record: the app flag, the number type and the last 4 digits.
 export function numberFacts(p) {
   const digits = String(p?.display_phone_number || '').replace(/\D/g, '');
-  return { onBizApp: p?.is_on_biz_app === true ? 'true' : p?.is_on_biz_app === false ? 'false' : 'missing',
-    ...(/^[A-Z_]{1,30}$/.test(p?.platform_type || '') ? { platform: p.platform_type } : {}), ...(digits.length >= 7 ? { last4: digits.slice(-4) } : {}) };
+  return {
+    onBizApp: p?.is_on_biz_app === true ? 'true' : p?.is_on_biz_app === false ? 'false' : 'missing',
+    ...(/^[A-Z_]{1,30}$/.test(p?.platform_type || '') ? { platform: p.platform_type } : {}),
+    ...(digits.length >= 7 ? { last4: digits.slice(-4) } : {}),
+  };
 }
-const refuse = (code, status, number) => Object.assign(new PilotError(code, status), number ? { meta: numberFacts(number) } : {});
-export async function exchangeAndVerify({ c, code, token: existingToken, waba, phone, path, allowPhoneSelection = false, ownerBusiness, configuredOwner = false, fetcher = fetch, now = Date.now, sleep = pause }) {
+const refuse = (code, status, number) =>
+  Object.assign(new PilotError(code, status), number ? { meta: numberFacts(number) } : {});
+export async function exchangeAndVerify({
+  c,
+  code,
+  token: existingToken,
+  waba,
+  phone,
+  path,
+  allowPhoneSelection = false,
+  ownerBusiness,
+  configuredOwner = false,
+  fetcher = fetch,
+  now = Date.now,
+  sleep = pause,
+}) {
   // Signup may arrive without the WABA when Meta's message never reached the page; the token then names it.
   const findWaba = allowPhoneSelection && !existingToken && !waba;
-  if ((!existingToken && (typeof code !== 'string' || !code || code.length > 4096)) || (!findWaba && !/^\d{1,30}$/.test(waba || '')) || (!/^\d{1,30}$/.test(phone || '') && !(allowPhoneSelection && !phone))) throw new PilotError('invalid_signup_result');
-  const token = existingToken || (await metaRequest(c, 'oauth/access_token', `${c.app}|${c.secret}`, fetcher, { client_id: c.app, client_secret: c.secret, code })).access_token;
-  if (typeof token !== 'string' || token.length < 20 || token.length > 8192) throw new PilotError('invalid_customer_token', 502);
-  const debug = await metaRequest(c, `debug_token?input_token=${encodeURIComponent(token)}`, `${c.app}|${c.secret}`, fetcher);
+  if (
+    (!existingToken && (typeof code !== 'string' || !code || code.length > 4096)) ||
+    (!findWaba && !/^\d{1,30}$/.test(waba || '')) ||
+    (!/^\d{1,30}$/.test(phone || '') && !(allowPhoneSelection && !phone))
+  )
+    throw new PilotError('invalid_signup_result');
+  const token =
+    existingToken ||
+    (
+      await metaRequest(c, 'oauth/access_token', `${c.app}|${c.secret}`, fetcher, {
+        client_id: c.app,
+        client_secret: c.secret,
+        code,
+      })
+    ).access_token;
+  if (typeof token !== 'string' || token.length < 20 || token.length > 8192)
+    throw new PilotError('invalid_customer_token', 502);
+  const debug = await metaRequest(
+    c,
+    `debug_token?input_token=${encodeURIComponent(token)}`,
+    `${c.app}|${c.secret}`,
+    fetcher,
+  );
   const d = debug.data;
-  const expired = value => value !== undefined && (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || (value !== 0 && value * 1000 <= now()));
-  if (d?.is_valid !== true || d.app_id !== c.app || expired(d.expires_at) || expired(d.data_access_expires_at) ||
-    !['whatsapp_business_management', 'whatsapp_business_messaging'].every(scope => d.scopes?.includes(scope))) throw new PilotError('token_permissions_incomplete', 409);
+  const expired = value =>
+    value !== undefined &&
+    (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || (value !== 0 && value * 1000 <= now()));
+  if (
+    d?.is_valid !== true ||
+    d.app_id !== c.app ||
+    expired(d.expires_at) ||
+    expired(d.data_access_expires_at) ||
+    !['whatsapp_business_management', 'whatsapp_business_messaging'].every(scope => d.scopes?.includes(scope))
+  )
+    throw new PilotError('token_permissions_incomplete', 409);
   const granted = d.granular_scopes?.find(s => s.scope === 'whatsapp_business_management');
   // Signup tokens list the granted WABAs. A business system-user token with broad access
   // lists none; only the server-configured owner path may use it. Meta must return
@@ -67,29 +136,72 @@ export async function exchangeAndVerify({ c, code, token: existingToken, waba, p
   const listed = Array.isArray(granted?.target_ids) && granted.target_ids.length > 0;
   // Exactly one granted WhatsApp account, or the owner connects again and picks one: never chosen silently.
   if (findWaba) {
-    if (!listed || granted.target_ids.length !== 1 || !/^\d{1,30}$/.test(String(granted.target_ids[0]))) throw new PilotError('waba_not_granted', 403);
+    if (!listed || granted.target_ids.length !== 1 || !/^\d{1,30}$/.test(String(granted.target_ids[0])))
+      throw new PilotError('waba_not_granted', 403);
     waba = String(granted.target_ids[0]);
   }
-  const ownerToken = !listed && !!granted && (/^\d{1,30}$/.test(ownerBusiness || '') || (configuredOwner && !!existingToken && path === 'existing_cloud')) && d.type === 'SYSTEM_USER';
+  const ownerToken =
+    !listed &&
+    !!granted &&
+    (/^\d{1,30}$/.test(ownerBusiness || '') || (configuredOwner && !!existingToken && path === 'existing_cloud')) &&
+    d.type === 'SYSTEM_USER';
   if (listed ? !granted.target_ids.includes(waba) : !ownerToken) throw new PilotError('waba_not_granted', 403);
-  const listPhones = () => metaRequest(c, `${waba}/phone_numbers?fields=id,display_phone_number,platform_type,is_on_biz_app&limit=100`, token, fetcher);
-  let [account, phones] = await Promise.all([metaRequest(c, `${waba}?fields=id${ownerToken ? ',owner_business_info' : ''}`, token, fetcher), listPhones()]);
-  const onApp = list => Array.isArray(list?.data) && list.data.some(p => p.is_on_biz_app === true && (!phone || p.id === phone));
-  for (let i = 0; path === 'coexistence' && !onApp(phones) && i < COEXISTENCE_RECHECKS; i++) { await sleep(COEXISTENCE_RECHECK_MS); phones = await listPhones(); }
+  const listPhones = () =>
+    metaRequest(
+      c,
+      `${waba}/phone_numbers?fields=id,display_phone_number,platform_type,is_on_biz_app&limit=100`,
+      token,
+      fetcher,
+    );
+  let [account, phones] = await Promise.all([
+    metaRequest(c, `${waba}?fields=id${ownerToken ? ',owner_business_info' : ''}`, token, fetcher),
+    listPhones(),
+  ]);
+  const onApp = list =>
+    Array.isArray(list?.data) && list.data.some(p => p.is_on_biz_app === true && (!phone || p.id === phone));
+  for (let i = 0; path === 'coexistence' && !onApp(phones) && i < COEXISTENCE_RECHECKS; i++) {
+    await sleep(COEXISTENCE_RECHECK_MS);
+    phones = await listPhones();
+  }
   if (account.id !== waba || !Array.isArray(phones.data)) throw new PilotError('phone_not_in_customer_waba', 403);
-  if (ownerToken && (!/^\d{1,30}$/.test(account.owner_business_info?.id || '') || (ownerBusiness && account.owner_business_info.id !== ownerBusiness))) throw new PilotError('waba_not_granted', 403);
+  if (
+    ownerToken &&
+    (!/^\d{1,30}$/.test(account.owner_business_info?.id || '') ||
+      (ownerBusiness && account.owner_business_info.id !== ownerBusiness))
+  )
+    throw new PilotError('waba_not_granted', 403);
   if (!phone && allowPhoneSelection) {
-    const eligible = phones.data.filter(p => /^\d{1,30}$/.test(p.id) && p.is_on_biz_app === (path === 'coexistence') && /^\d{7,15}$/.test(String(p.display_phone_number || '').replace(/\D/g,'')));
-    if (!eligible.length) throw refuse('phone_not_in_customer_waba', 403, phones.data.length === 1 ? phones.data[0] : null);
+    const eligible = phones.data.filter(
+      p =>
+        /^\d{1,30}$/.test(p.id) &&
+        p.is_on_biz_app === (path === 'coexistence') &&
+        /^\d{7,15}$/.test(String(p.display_phone_number || '').replace(/\D/g, '')),
+    );
+    if (!eligible.length)
+      throw refuse('phone_not_in_customer_waba', 403, phones.data.length === 1 ? phones.data[0] : null);
     // Never silently choose among multiple numbers (including paginated results).
-    if (eligible.length !== 1 || phones.paging?.next) return {token, waba, candidates: eligible.map(p => ({id:p.id, sender:String(p.display_phone_number).replace(/\D/g,'')}))};
+    if (eligible.length !== 1 || phones.paging?.next)
+      return {
+        token,
+        waba,
+        candidates: eligible.map(p => ({ id: p.id, sender: String(p.display_phone_number).replace(/\D/g, '') })),
+      };
     phone = eligible[0].id;
   }
   const selected = phones.data?.find(p => p.id === phone);
   if (account.id !== waba || !selected) throw new PilotError('phone_not_in_customer_waba', 403);
-  if (path === 'coexistence' && selected.is_on_biz_app !== true) throw refuse('coexistence_not_verified', 409, selected);
-  if (['new_number','existing_cloud'].includes(path) && selected.is_on_biz_app !== false) throw refuse('business_app_requires_coexistence', 409, selected);
+  if (path === 'coexistence' && selected.is_on_biz_app !== true)
+    throw refuse('coexistence_not_verified', 409, selected);
+  if (['new_number', 'existing_cloud'].includes(path) && selected.is_on_biz_app !== false)
+    throw refuse('business_app_requires_coexistence', 409, selected);
   const sender = String(selected.display_phone_number || '').replace(/\D/g, '');
   if (!/^\d{7,15}$/.test(sender)) throw new PilotError('sender_not_verified', 409);
-  return { token, waba, phone, sender, coexistence: selected.is_on_biz_app === true, cloudApi: selected.platform_type === 'CLOUD_API' };
+  return {
+    token,
+    waba,
+    phone,
+    sender,
+    coexistence: selected.is_on_biz_app === true,
+    cloudApi: selected.platform_type === 'CLOUD_API',
+  };
 }

@@ -13,18 +13,37 @@
 import assert from 'node:assert/strict';
 import { INDUSTRIES } from '../src/lib/industries.js';
 
-let pass = 0, fail = 0;
+let pass = 0,
+  fail = 0;
 const t = async (name, fn) => {
-  try { await fn(); console.log(`  ✓ ${name}`); pass++; }
-  catch (e) { console.log(`  ✗ ${name}\n      ${e.message}`); fail++; }
+  try {
+    await fn();
+    console.log(`  ✓ ${name}`);
+    pass++;
+  } catch (e) {
+    console.log(`  ✗ ${name}\n      ${e.message}`);
+    fail++;
+  }
 };
 
 const mockRes = () => ({
-  code: 0, headers: {}, body: undefined,
-  status(n) { this.code = n; return this; },
-  setHeader(k, v) { this.headers[k.toLowerCase()] = v; },
-  getHeader(k) { return this.headers[k.toLowerCase()]; },
-  end(payload) { this.body = payload ? JSON.parse(payload) : undefined; return this; },
+  code: 0,
+  headers: {},
+  body: undefined,
+  status(n) {
+    this.code = n;
+    return this;
+  },
+  setHeader(k, v) {
+    this.headers[k.toLowerCase()] = v;
+  },
+  getHeader(k) {
+    return this.headers[k.toLowerCase()];
+  },
+  end(payload) {
+    this.body = payload ? JSON.parse(payload) : undefined;
+    return this;
+  },
 });
 
 const headers = { host: 'www.bznsflowai.com', origin: 'https://www.bznsflowai.com' };
@@ -94,11 +113,14 @@ await t('a garbage phone or sector is never answered with a 400', async () => {
   // Supabase/LEAD_ENDPOINT are unset here, so the call dies at the network with
   // a 502. That is the assertion: it got past validation to reach I/O at all.
   const res = mockRes();
-  await lead({
-    method: 'POST',
-    headers,
-    body: { email: 'a@b.com', playbook: true, phone: 'nonsense', industry: 'nope' },
-  }, res);
+  await lead(
+    {
+      method: 'POST',
+      headers,
+      body: { email: 'a@b.com', playbook: true, phone: 'nonsense', industry: 'nope' },
+    },
+    res,
+  );
   assert.notEqual(res.code, 400, 'a bad phone or sector must not refuse the lead');
   assert.equal(res.code, 502, 'expected it to fail at the unconfigured endpoint instead');
 });

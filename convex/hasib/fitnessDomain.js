@@ -2,7 +2,9 @@
 // functions. Only facts are stored: payment, freezes, check-ins, cancellations. Frozen, grace,
 // expired, attendance gap and renewal due are worked out from those facts whenever they are read.
 
-export const MIN = 60000, HOUR = 3600000, DAY = 86400000;
+export const MIN = 60000,
+  HOUR = 3600000,
+  DAY = 86400000;
 export const PLAN_KINDS = ['membership', 'class_pack'];
 export const BILLING_MONTHS = [1, 3, 6, 12];
 export const ATTENDANCE_SOURCES = ['scan', 'instructor', 'staff'];
@@ -58,4 +60,4 @@ export function entitlementRefusal(m, t, heldSeats) {
 }
 
 /** Monthly run rate of a membership's recurring fee. */
-export const monthlyMinor = m => m.priceMinor && m.billingMonths ? Math.round(m.priceMinor / m.billingMonths) : 0;
+export const monthlyMinor = m => (m.priceMinor && m.billingMonths ? Math.round(m.priceMinor / m.billingMonths) : 0);

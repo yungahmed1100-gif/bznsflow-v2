@@ -50,7 +50,9 @@
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 999px;
-  transition: border-color var(--transition), color var(--transition);
+  transition:
+    border-color var(--transition),
+    color var(--transition);
 }
 
 .legal-lang:hover {
@@ -235,4 +237,6 @@
   outline: 2px solid #2f6ea3;
   outline-offset: 3px;
 }
-.legal-doc p { overflow-wrap: anywhere; }
+.legal-doc p {
+  overflow-wrap: anywhere;
+}

@@ -4,12 +4,12 @@
 // tests/function-deadlines.test.mjs requires every api/*.js entry to export one.
 
 /** Budget for a function with this `maxDuration`, in milliseconds: 10 s spare, never under 5 s. */
-export const deadlineFor = (maxDurationSeconds) => Math.max(5000, maxDurationSeconds * 1000 - 10000);
+export const deadlineFor = maxDurationSeconds => Math.max(5000, maxDurationSeconds * 1000 - 10000);
 
 export class DeadlineError extends Error {
-  constructor(label, ms, reason = "request_timeout") {
+  constructor(label, ms, reason = 'request_timeout') {
     super(reason);
-    this.code = "request_timeout";
+    this.code = 'request_timeout';
     this.reason = reason;
     this.status = 504;
     this.label = label;
@@ -42,11 +42,11 @@ export async function raceDeadline(work, ms, label, reason) {
 }
 
 /** The surface a shared function was asked for, for the log line. */
-const surfaceOf = (req) => {
+const surfaceOf = req => {
   try {
-    return new URL(req.url || "/", "https://internal.invalid").searchParams.get("surface") || "";
+    return new URL(req.url || '/', 'https://internal.invalid').searchParams.get('surface') || '';
   } catch {
-    return "";
+    return '';
   }
 };
 
@@ -63,15 +63,15 @@ export function withDeadline(handler, { ms, label }) {
     } catch (error) {
       if (!(error instanceof DeadlineError)) throw error;
       console.error(
-        "request_deadline",
+        'request_deadline',
         JSON.stringify({ label, surface: surfaceOf(req), method: req.method, ms, elapsedMs: Date.now() - started }),
       );
       if (res.writableEnded) return;
       if (res.headersSent) return res.end();
       res.statusCode = 504;
-      res.setHeader("Content-Type", "application/json");
-      res.setHeader("Cache-Control", "no-store");
-      res.end(JSON.stringify({ ok: false, reason: "request_timeout" }));
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'no-store');
+      res.end(JSON.stringify({ ok: false, reason: 'request_timeout' }));
     }
   };
 }

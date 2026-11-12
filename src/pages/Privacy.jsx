@@ -20,19 +20,25 @@ function Block({ node, tables, headHtml: Head = 'h2' }) {
     <>
       <Head className={Head === 'h2' ? 'legal-h2' : 'legal-h3'}>{node.h}</Head>
 
-      {node.p?.map((text) => <p key={text}>{text}</p>)}
+      {node.p?.map(text => (
+        <p key={text}>{text}</p>
+      ))}
 
       {node.list && (
         <ul className="legal-list">
-          {node.list.map((item) => <li key={item}>{item}</li>)}
+          {node.list.map(item => (
+            <li key={item}>{item}</li>
+          ))}
         </ul>
       )}
 
       {node.table && <DataTable rows={tables[node.table]} head={tables[`${node.table}Head`]} />}
 
-      {node.p2?.map((text) => <p key={text}>{text}</p>)}
+      {node.p2?.map(text => (
+        <p key={text}>{text}</p>
+      ))}
 
-      {node.sub?.map((child) => (
+      {node.sub?.map(child => (
         <Block key={child.h} node={child} tables={tables} headHtml="h3" />
       ))}
     </>
@@ -49,16 +55,26 @@ function DataTable({ rows, head }) {
     <div className="legal-table-wrap">
       <table className="legal-table">
         <thead>
-          <tr>{head.map((h) => <th key={h} scope="col">{h}</th>)}</tr>
+          <tr>
+            {head.map(h => (
+              <th key={h} scope="col">
+                {h}
+              </th>
+            ))}
+          </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {rows.map(row => (
             <tr key={row[0]}>
-              {row.map((cell, i) => (
-                i === 0
-                  ? <th key={cell} scope="row"><bdi>{cell}</bdi></th>
-                  : <td key={cell}>{cell}</td>
-              ))}
+              {row.map((cell, i) =>
+                i === 0 ? (
+                  <th key={cell} scope="row">
+                    <bdi>{cell}</bdi>
+                  </th>
+                ) : (
+                  <td key={cell}>{cell}</td>
+                ),
+              )}
             </tr>
           ))}
         </tbody>
@@ -82,8 +98,6 @@ export default function Privacy({ lang = 'ar' }) {
 
   return (
     <>
-
-
       <main className="legal-shell" id="main-content">
         <header className="legal-nav">
           <a className="legal-brand" href={ar ? '/' : '/en'}>
@@ -105,7 +119,7 @@ export default function Privacy({ lang = 'ar' }) {
           </p>
           <p className="legal-lead">{doc.lead}</p>
 
-          {doc.sections.map((section) => (
+          {doc.sections.map(section => (
             <Block key={section.h} node={section} tables={tables} />
           ))}
 

@@ -36,7 +36,7 @@ export async function installed() {
   const res = await fetch(`${host()}/api/tags`, { signal: AbortSignal.timeout(10000) });
   if (!res.ok) throw new Error(`ollama /api/tags returned ${res.status}`);
   const body = await res.json();
-  return (body?.models || []).map((m) => m.name);
+  return (body?.models || []).map(m => m.name);
 }
 
 /**
@@ -82,7 +82,10 @@ export function parseList(text, { max = 50, maxChars = 200 } = {}) {
   for (const raw of String(text).split('\n')) {
     const line = raw.trim();
     if (!/^(\d+[.)\-،:]|[-*•])\s*/.test(line)) continue;
-    const item = line.replace(/^(\d+[.)\-،:]|[-*•])\s*/, '').replace(/\s+/g, ' ').trim();
+    const item = line
+      .replace(/^(\d+[.)\-،:]|[-*•])\s*/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
     if (!item || item.length > maxChars) continue;
     const key = item.toLowerCase();
     if (seen.has(key)) continue;

@@ -13,22 +13,71 @@ const FAQ_PROFILE_MAX = 12;
 // Layla gives this to a customer who asks for a person, so it stays one short line.
 const CONTACT_MAX = 120;
 
-export const normalizeText = text => String(text || '').normalize('NFKC').toLowerCase()
-  .replace(/[ً-ٰٟ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي')
-  .replace(/[\p{P}\p{S}]+/gu, ' ').replace(/\s+/g, ' ').trim();
+export const normalizeText = text =>
+  String(text || '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[ً-ٰٟ]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[\p{P}\p{S}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 // Heading aliases in both languages. A section is recognised when its heading starts with one.
 const ALIASES = {
   about: ['about us', 'about', 'who we are', 'من نحن', 'عن الشركة', 'نبذة', 'عنا'],
-  offer: ['what we offer', 'our services', 'services', 'products and services', 'what we sell', 'ما نقدمه', 'خدماتنا', 'الخدمات', 'منتجاتنا', 'المنتجات والخدمات'],
+  offer: [
+    'what we offer',
+    'our services',
+    'services',
+    'products and services',
+    'what we sell',
+    'ما نقدمه',
+    'خدماتنا',
+    'الخدمات',
+    'منتجاتنا',
+    'المنتجات والخدمات',
+  ],
   areas: ['areas we cover', 'areas', 'service area', 'delivery areas', 'المناطق', 'مناطق التغطية', 'مناطق التوصيل'],
-  hours: ['hours', 'working hours', 'opening hours', 'business hours', 'ساعات العمل', 'أوقات العمل', 'مواعيد العمل', 'ساعات الدوام'],
+  hours: [
+    'hours',
+    'working hours',
+    'opening hours',
+    'business hours',
+    'ساعات العمل',
+    'أوقات العمل',
+    'مواعيد العمل',
+    'ساعات الدوام',
+  ],
   location: ['location', 'address', 'where to find us', 'branches', 'الموقع', 'العنوان', 'الفروع', 'موقعنا'],
-  contact: ['team contact', 'contact the team', 'speak to a person', 'contact us', 'contact', 'جهة اتصال الفريق', 'التواصل مع الفريق', 'تواصل مع الفريق', 'تواصل معنا', 'للتواصل', 'اتصل بنا'],
-  handoff: ['when layla should hand over', 'hand over', 'handoff', 'human handoff', 'متى تحوّل ليلى', 'تحويل المحادثة', 'التحويل للفريق'],
+  contact: [
+    'team contact',
+    'contact the team',
+    'speak to a person',
+    'contact us',
+    'contact',
+    'جهة اتصال الفريق',
+    'التواصل مع الفريق',
+    'تواصل مع الفريق',
+    'تواصل معنا',
+    'للتواصل',
+    'اتصل بنا',
+  ],
+  handoff: [
+    'when layla should hand over',
+    'hand over',
+    'handoff',
+    'human handoff',
+    'متى تحوّل ليلى',
+    'تحويل المحادثة',
+    'التحويل للفريق',
+  ],
   faq: ['faq', 'faqs', 'frequently asked questions', 'common questions', 'الأسئلة الشائعة', 'أسئلة متكررة'],
 };
-const ALIAS_LIST = Object.entries(ALIASES).flatMap(([key, names]) => names.map(name => [key, normalizeText(name)]))
+const ALIAS_LIST = Object.entries(ALIASES)
+  .flatMap(([key, names]) => names.map(name => [key, normalizeText(name)]))
   .sort((a, b) => b[1].length - a[1].length);
 // Layla answers 24/7, so business hours are optional facts, not a recommended section.
 export const RECOMMENDED_SECTIONS = Object.freeze(['about', 'offer', 'location', 'handoff', 'contact', 'faq']);
@@ -43,7 +92,7 @@ function parseMeta(lines) {
   for (const line of lines) {
     const m = line.match(/^\s*([A-Za-z؀-ۿ_]+)\s*:\s*(.*)$/);
     if (!m) continue;
-    const key = { 'الاسم': 'name', 'القطاع': 'sector', 'اللغات': 'languages', 'الأسلوب': 'tone' }[m[1]] || m[1].toLowerCase();
+    const key = { الاسم: 'name', القطاع: 'sector', اللغات: 'languages', الأسلوب: 'tone' }[m[1]] || m[1].toLowerCase();
     if (['name', 'sector', 'languages', 'handoff', 'tone'].includes(key)) meta[key] = m[2].trim();
   }
   return meta;
@@ -55,9 +104,12 @@ function parseFaqs(body) {
   const faqs = [];
   let current = null;
   for (const line of body.split('\n')) {
-    const q = line.match(FAQ_Q), a = line.match(FAQ_A);
-    if (q) { current = { question: q[1].replace(/\*\*/g, '').trim(), answer: '' }; faqs.push(current); }
-    else if (a && current) current.answer = a[1].replace(/\*\*/g, '').trim();
+    const q = line.match(FAQ_Q),
+      a = line.match(FAQ_A);
+    if (q) {
+      current = { question: q[1].replace(/\*\*/g, '').trim(), answer: '' };
+      faqs.push(current);
+    } else if (a && current) current.answer = a[1].replace(/\*\*/g, '').trim();
     else if (current?.answer && line.trim()) current.answer += ` ${line.trim()}`;
   }
   return faqs.filter(f => f.question && f.answer);
@@ -66,9 +118,13 @@ function parseFaqs(body) {
 /** Splits a document into front matter, a title and `##` sections. */
 export function parseBzns(markdown) {
   const source = String(markdown || '').replace(/\r\n?/g, '\n');
-  let body = source, meta = {};
+  let body = source,
+    meta = {};
   const front = source.match(/^\s*---\n([\s\S]*?)\n---\s*(?:\n|$)/);
-  if (front) { meta = parseMeta(front[1].split('\n')); body = source.slice(front[0].length); }
+  if (front) {
+    meta = parseMeta(front[1].split('\n'));
+    body = source.slice(front[0].length);
+  }
   const title = body.match(/^#\s+(.+)$/m)?.[1]?.trim() || '';
   if (!meta.name && title && !/\[[^\]]*\]/.test(title)) meta.name = title;
   const sections = [];
@@ -76,8 +132,10 @@ export function parseBzns(markdown) {
   const intro = [];
   for (const line of body.split('\n')) {
     const heading = line.match(/^##\s+(.+?)\s*#*\s*$/);
-    if (heading) { current = { heading: heading[1].trim(), key: sectionKey(heading[1]), lines: [] }; sections.push(current); }
-    else if (current) current.lines.push(line);
+    if (heading) {
+      current = { heading: heading[1].trim(), key: sectionKey(heading[1]), lines: [] };
+      sections.push(current);
+    } else if (current) current.lines.push(line);
     else if (!/^#\s/.test(line)) intro.push(line);
   }
   const rows = sections.map(({ lines, ...s }) => ({ ...s, body: lines.join('\n').trim() }));
@@ -87,12 +145,17 @@ export function parseBzns(markdown) {
   return { meta, title, sections: rows, faqs, length: source.length };
 }
 
-const CURRENCY = '(?:OMR|R\\.?O\\.?|AED|SAR|QAR|KWD|BHD|USD|EUR|GBP|ريال|(?<![\\u0621-\\u064A])ر\\.?\\s?ع(?![\\u0621-\\u064A])\\.?|درهم|دولار|دينار|بيسة|[$€£])';
+const CURRENCY =
+  '(?:OMR|R\\.?O\\.?|AED|SAR|QAR|KWD|BHD|USD|EUR|GBP|ريال|(?<![\\u0621-\\u064A])ر\\.?\\s?ع(?![\\u0621-\\u064A])\\.?|درهم|دولار|دينار|بيسة|[$€£])';
 const NUMBER = '[\\d\\u0660-\\u0669][\\d\\u0660-\\u0669,.\\s]*';
-const MONEY = new RegExp(`(?:${NUMBER}\\s*${CURRENCY}(?![A-Za-z]))|(?:(?<![A-Za-z])${CURRENCY}\\s*[\\d\\u0660-\\u0669])`, 'i');
+const MONEY = new RegExp(
+  `(?:${NUMBER}\\s*${CURRENCY}(?![A-Za-z]))|(?:(?<![A-Za-z])${CURRENCY}\\s*[\\d\\u0660-\\u0669])`,
+  'i',
+);
 const PERCENT = /[\d٠-٩]+(?:[.,][\d٠-٩]+)?\s*[%٪]/;
 const FEE_WORDS = /\b(?:commission|fees?|deposit|charges?|cost)\b|عمولة|رسوم|عربون|تأمين|دفعة/i;
-const hasMoney = text => text.split('\n').some(line => MONEY.test(line) || (PERCENT.test(line) && FEE_WORDS.test(line)));
+const hasMoney = text =>
+  text.split('\n').some(line => MONEY.test(line) || (PERCENT.test(line) && FEE_WORDS.test(line)));
 const PLACEHOLDER = /\[[^\]\n]{1,200}\](?!\()/;
 const HTML = /<\/?[a-z][^>]*>/i;
 const CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/;
@@ -110,9 +173,11 @@ export function validateBzns(markdown) {
   if (!parsed.meta.name) errors.push({ code: 'bzns_name_required', section: '' });
   else if (parsed.meta.name.length > 100) errors.push({ code: 'bzns_name_too_long', section: '' });
   if (!parsed.meta.sector) errors.push({ code: 'bzns_sector_required', section: '' });
-  if (!parsed.sections.some(s => s.key === 'offer' && s.body)) errors.push({ code: 'bzns_offer_required', section: 'offer' });
+  if (!parsed.sections.some(s => s.key === 'offer' && s.body))
+    errors.push({ code: 'bzns_offer_required', section: 'offer' });
   if (parsed.sections.length > MAX_SECTIONS) errors.push({ code: 'bzns_too_many_sections', section: '' });
-  if (PLACEHOLDER.test(`${parsed.meta.name || ''} ${parsed.meta.sector || ''}`)) errors.push({ code: 'bzns_placeholder', section: 'meta' });
+  if (PLACEHOLDER.test(`${parsed.meta.name || ''} ${parsed.meta.sector || ''}`))
+    errors.push({ code: 'bzns_placeholder', section: 'meta' });
   for (const s of parsed.sections) {
     const all = `${s.heading}\n${s.body}`;
     if (PLACEHOLDER.test(all)) errors.push({ code: 'bzns_placeholder', section: s.key, heading: s.heading });
@@ -123,16 +188,30 @@ export function validateBzns(markdown) {
   const contact = parsed.sections.find(s => s.key === 'contact' && s.body);
   // Layla is the whole front office: when she can't help, this is who she points the customer to.
   if (!contact) errors.push({ code: 'bzns_contact_required', section: 'contact' });
-  if (contact && !PLACEHOLDER.test(contact.body) && plain(contact.body).join(' · ').length > CONTACT_MAX) errors.push({ code: 'bzns_contact_too_long', section: 'contact', heading: contact.heading });
+  if (contact && !PLACEHOLDER.test(contact.body) && plain(contact.body).join(' · ').length > CONTACT_MAX)
+    errors.push({ code: 'bzns_contact_too_long', section: 'contact', heading: contact.heading });
   // A section counts as written only once its template hints are replaced.
-  const checklist = RECOMMENDED_SECTIONS.map(key => ({ key, present: parsed.sections.some(s => s.key === key && s.body && !PLACEHOLDER.test(s.body)) }));
+  const checklist = RECOMMENDED_SECTIONS.map(key => ({
+    key,
+    present: parsed.sections.some(s => s.key === key && s.body && !PLACEHOLDER.test(s.body)),
+  }));
   return { ok: errors.length === 0, errors, checklist, parsed };
 }
 
 // Markdown to plain sentences for the short profile fields used by the existing reply rules.
-const plain = body => body.split('\n').map(line => line.trim()
-  .replace(/^#{1,6}\s+/, '').replace(/^(?:[-*•]|\d+[.)])\s+/, '')
-  .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)').replace(/\*\*|__|`/g, '').trim()).filter(Boolean);
+const plain = body =>
+  body
+    .split('\n')
+    .map(line =>
+      line
+        .trim()
+        .replace(/^#{1,6}\s+/, '')
+        .replace(/^(?:[-*•]|\d+[.)])\s+/, '')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)')
+        .replace(/\*\*|__|`/g, '')
+        .trim(),
+    )
+    .filter(Boolean);
 function summary(body) {
   const joined = plain(body).join('; ');
   if (joined.length <= PROFILE_FIELD_MAX) return joined;
@@ -150,9 +229,14 @@ export function deriveProfile(parsed, { reviewed = true } = {}) {
   const ar = isArabic(parsed.sections.map(s => s.body).join(' '));
   const industry = BUSINESS_INDUSTRIES.find(row => row.id === parsed.meta.sector);
   return {
-    businessName: String(parsed.meta.name || '').trim().slice(0, 100),
+    businessName: String(parsed.meta.name || '')
+      .trim()
+      .slice(0, 100),
     profile: {
-      sector: (industry ? (ar ? industry.ar : industry.en) : String(parsed.meta.sector || '')).slice(0, PROFILE_FIELD_MAX),
+      sector: (industry ? (ar ? industry.ar : industry.en) : String(parsed.meta.sector || '')).slice(
+        0,
+        PROFILE_FIELD_MAX,
+      ),
       services: summary(firstBody(parsed, 'offer')),
       prices: '',
       hours: summary(firstBody(parsed, 'hours')),
@@ -163,7 +247,9 @@ export function deriveProfile(parsed, { reviewed = true } = {}) {
       // A separate field, so a legacy humanContact kept from older setups is never advertised.
       ...(contactLine(firstBody(parsed, 'contact')) ? { teamContact: contactLine(firstBody(parsed, 'contact')) } : {}),
       tone: toneOf(parsed.meta.tone),
-      faqs: parsed.faqs.slice(0, FAQ_PROFILE_MAX).map(f => ({ question: f.question.slice(0, 200), answer: f.answer.slice(0, 700) })),
+      faqs: parsed.faqs
+        .slice(0, FAQ_PROFILE_MAX)
+        .map(f => ({ question: f.question.slice(0, 200), answer: f.answer.slice(0, 700) })),
       reviewed,
     },
   };
@@ -172,8 +258,13 @@ export function deriveProfile(parsed, { reviewed = true } = {}) {
 const isArabic = text => (String(text).match(/[؀-ۿ]/g) || []).length > (String(text).match(/[A-Za-z]/g) || []).length;
 // cyrb53: a small stable content hash; identity only, not security.
 function contentHash(text) {
-  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
-  for (let i = 0; i < text.length; i++) { const ch = text.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  let h1 = 0xdeadbeef,
+    h2 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
   h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(14, '0');
@@ -182,11 +273,24 @@ function contentHash(text) {
 /** One retrieval row per section for blueKnowledgeChunks, scoped to one tenant and revision. */
 export function bznsChunks(parsed, { tenantId, revision, now }) {
   const name = parsed.meta.name || 'Business';
-  return parsed.sections.filter(s => s.body).map(s => {
-    const text = `# ${name} > ${s.heading}\n\n${s.body}`.slice(0, 12000);
-    return { tenantId, revision, locale: isArabic(s.body) ? 'ar' : 'en', text, searchText: normalizeText(`${s.heading} ${s.body}`),
-      source: 'bzns', docType: s.key, sectionPath: s.heading.slice(0, 200), approved: true, contentHash: contentHash(text), updatedAt: now };
-  });
+  return parsed.sections
+    .filter(s => s.body)
+    .map(s => {
+      const text = `# ${name} > ${s.heading}\n\n${s.body}`.slice(0, 12000);
+      return {
+        tenantId,
+        revision,
+        locale: isArabic(s.body) ? 'ar' : 'en',
+        text,
+        searchText: normalizeText(`${s.heading} ${s.body}`),
+        source: 'bzns',
+        docType: s.key,
+        sectionPath: s.heading.slice(0, 200),
+        approved: true,
+        contentHash: contentHash(text),
+        updatedAt: now,
+      };
+    });
 }
 
 const HEADINGS = {
@@ -199,23 +303,33 @@ const HEADINGS = {
 const FIELD_SECTION = { services: 'offer', hours: 'hours', location: 'location' };
 // BznsBrain's section targets: where an accepted proposal lands in bzns.md.
 export const BRAIN_SECTIONS = Object.freeze({
-  about: { en: 'About us', ar: 'من نحن' }, offer: { en: 'What we offer', ar: 'خدماتنا' }, areas: { en: 'Areas we cover', ar: 'المناطق' },
-  hours: { en: 'Hours', ar: 'ساعات العمل' }, location: { en: 'Location', ar: 'الموقع' }, contact: { en: 'Team contact', ar: 'جهة اتصال الفريق' },
+  about: { en: 'About us', ar: 'من نحن' },
+  offer: { en: 'What we offer', ar: 'خدماتنا' },
+  areas: { en: 'Areas we cover', ar: 'المناطق' },
+  hours: { en: 'Hours', ar: 'ساعات العمل' },
+  location: { en: 'Location', ar: 'الموقع' },
+  contact: { en: 'Team contact', ar: 'جهة اتصال الفريق' },
   policies: { en: 'Policies', ar: 'السياسات' },
 });
-const faqLines = (faqs, ar) => faqs.map(f => `${ar ? 'س' : 'Q'}: ${f.question}\n${ar ? 'ج' : 'A'}: ${f.answer}`).join('\n\n');
+const faqLines = (faqs, ar) =>
+  faqs.map(f => `${ar ? 'س' : 'Q'}: ${f.question}\n${ar ? 'ج' : 'A'}: ${f.answer}`).join('\n\n');
 
 function splitBlocks(markdown) {
-  const preamble = [], sections = [];
-  for (const line of String(markdown || '').replace(/\r\n?/g, '\n').split('\n')) {
+  const preamble = [],
+    sections = [];
+  for (const line of String(markdown || '')
+    .replace(/\r\n?/g, '\n')
+    .split('\n')) {
     const heading = line.match(/^##\s+(.+?)\s*#*\s*$/);
     if (heading) sections.push({ heading: line, key: sectionKey(heading[1]), lines: [] });
     else (sections.at(-1)?.lines || preamble).push(line);
   }
   return { preamble, sections };
 }
-const joinBlocks = ({ preamble, sections }) => [preamble.join('\n').trimEnd(), ...sections.map(s => `${s.heading}\n${s.lines.join('\n').trim()}`)]
-  .filter(Boolean).join('\n\n') + '\n';
+const joinBlocks = ({ preamble, sections }) =>
+  [preamble.join('\n').trimEnd(), ...sections.map(s => `${s.heading}\n${s.lines.join('\n').trim()}`)]
+    .filter(Boolean)
+    .join('\n\n') + '\n';
 
 // A template hint the owner never replaced: a whole line that is only "[…]" (optionally a list item).
 const HINT_LINE = /^(?:[-*•]\s+|\d+[.)]\s+)?\[[^\]\n]{1,200}\]\s*$/;
@@ -230,7 +344,8 @@ const withoutHints = lines => lines.filter(line => !HINT_LINE.test(line.trim()))
  */
 export function prepareForPublish(markdown) {
   const source = String(markdown || '');
-  const blocks = splitBlocks(source), removed = [];
+  const blocks = splitBlocks(source),
+    removed = [];
   const sections = blocks.sections.flatMap(s => {
     const lines = withoutHints(s.lines);
     if (lines.join('\n').trim()) return [{ ...s, lines }];
@@ -240,7 +355,8 @@ export function prepareForPublish(markdown) {
   const name = parseBzns(source).meta.name;
   const realName = name && !PLACEHOLDER.test(name) ? name : '';
   // Front matter (between the first two --- lines) is kept as written: its name and sector are required.
-  const fence = blocks.preamble[0]?.trim() === '---' ? blocks.preamble.findIndex((l, i) => i > 0 && l.trim() === '---') : -1;
+  const fence =
+    blocks.preamble[0]?.trim() === '---' ? blocks.preamble.findIndex((l, i) => i > 0 && l.trim() === '---') : -1;
   const preamble = blocks.preamble.flatMap((line, i) => {
     if (i <= fence) return [line];
     if (/^#\s+\[[^\]\n]*\]\s*$/.test(line)) return realName ? [`# ${realName}`] : [line];
@@ -255,7 +371,8 @@ export function prepareForPublish(markdown) {
  * the section. Prices are ignored on purpose: they belong in Hasib or Services & Prices.
  */
 export function applySections(markdown, patch, lang = 'en') {
-  const ar = lang === 'ar', blocks = splitBlocks(markdown);
+  const ar = lang === 'ar',
+    blocks = splitBlocks(markdown);
   const sections = blocks.sections.map(s => ({ ...s, lines: [...s.lines] }));
   const upsert = (key, body) => {
     const found = sections.find(s => s.key === key);
@@ -267,7 +384,9 @@ export function applySections(markdown, patch, lang = 'en') {
     if (text) upsert(key, text);
   }
   const known = new Set(parseBzns(markdown).faqs.map(f => normalizeText(f.question)));
-  const fresh = (patch?.faqs || []).filter(f => f?.question?.trim() && f?.answer?.trim() && !known.has(normalizeText(f.question)));
+  const fresh = (patch?.faqs || []).filter(
+    f => f?.question?.trim() && f?.answer?.trim() && !known.has(normalizeText(f.question)),
+  );
   if (fresh.length) {
     const faq = sections.find(s => s.key === 'faq');
     const lines = faqLines(fresh, ar);
@@ -288,13 +407,30 @@ export function profileToBzns({ businessName = '', profile = {}, answers = [], l
   const faqs = [...(profile.faqs || []), ...answers].filter(f => {
     const key = normalizeText(f?.question);
     if (!key || !f.answer?.trim() || seen.has(key) || hasMoney(`${f.question}\n${f.answer}`)) return false;
-    seen.add(key); return true;
+    seen.add(key);
+    return true;
   });
   const sections = [
-    ['offer', profile.services], ['hours', profile.hours], ['location', profile.location], ['contact', profile.teamContact || (profile.handoffMode === 'inbox' ? '' : profile.humanContact) || (ar ? '[رقم هاتف أو بريد فريقك]' : '[Your team’s phone number or email]')],
-  ].filter(([, text]) => String(text || '').trim()).map(([key, text]) => `## ${HEADINGS[key][ar ? 'ar' : 'en']}\n${String(text).trim()}`);
+    ['offer', profile.services],
+    ['hours', profile.hours],
+    ['location', profile.location],
+    [
+      'contact',
+      profile.teamContact ||
+        (profile.handoffMode === 'inbox' ? '' : profile.humanContact) ||
+        (ar ? '[رقم هاتف أو بريد فريقك]' : '[Your team’s phone number or email]'),
+    ],
+  ]
+    .filter(([, text]) => String(text || '').trim())
+    .map(([key, text]) => `## ${HEADINGS[key][ar ? 'ar' : 'en']}\n${String(text).trim()}`);
   if (faqs.length) sections.push(`## ${HEADINGS.faq[ar ? 'ar' : 'en']}\n${faqLines(faqs, ar)}`);
-  return [`---\nname: ${businessName}\nsector: ${industry?.id || profile.sector || ''}\n---`, `# ${businessName}`, ...sections].join('\n\n') + '\n';
+  return (
+    [
+      `---\nname: ${businessName}\nsector: ${industry?.id || profile.sector || ''}\n---`,
+      `# ${businessName}`,
+      ...sections,
+    ].join('\n\n') + '\n'
+  );
 }
 
 /**
@@ -308,7 +444,8 @@ export function setMeta(markdown, key, value) {
   if (!front) return `---\n${key}: ${value}\n---\n\n${source.replace(/^\n+/, '')}`;
   const lines = front[2].split('\n');
   const at = lines.findIndex(line => new RegExp(`^\\s*${key}\\s*:`).test(line));
-  if (at >= 0) lines[at] = `${key}: ${value}`; else lines.push(`${key}: ${value}`);
+  if (at >= 0) lines[at] = `${key}: ${value}`;
+  else lines.push(`${key}: ${value}`);
   return `${front[1]}${lines.join('\n')}${front[3]}${source.slice(front[0].length)}`;
 }
 
@@ -324,12 +461,22 @@ export function upsertSection(markdown, target, text, { replace = false, lang = 
   const blocks = splitBlocks(markdown);
   const sections = blocks.sections.map(s => ({ ...s, lines: [...s.lines] }));
   const names = BRAIN_SECTIONS[target] || BRAIN_SECTIONS.policies;
-  const found = target in ALIASES ? sections.find(s => s.key === target)
-    : sections.find(s => [names.en, names.ar].some(n => normalizeText(s.heading.replace(/^##\s+/, '')) === normalizeText(n)));
+  const found =
+    target in ALIASES
+      ? sections.find(s => s.key === target)
+      : sections.find(s =>
+          [names.en, names.ar].some(n => normalizeText(s.heading.replace(/^##\s+/, '')) === normalizeText(n)),
+        );
   if (found) {
     // A template hint is replaced by the first real text, never kept above it.
     const current = withoutHints(found.lines).join('\n').trim();
-    found.lines = [replace || !current ? body : normalizeText(current).includes(normalizeText(body)) ? current : `${current}\n${body}`];
+    found.lines = [
+      replace || !current
+        ? body
+        : normalizeText(current).includes(normalizeText(body))
+          ? current
+          : `${current}\n${body}`,
+    ];
   } else sections.push({ heading: `## ${names[lang === 'ar' ? 'ar' : 'en']}`, key: target, lines: [body] });
   return joinBlocks({ preamble: blocks.preamble, sections });
 }
@@ -337,6 +484,9 @@ export function upsertSection(markdown, target, text, { replace = false, lang = 
 export function sectionText(markdown, target) {
   const names = BRAIN_SECTIONS[target] || BRAIN_SECTIONS.policies;
   const parsed = parseBzns(markdown);
-  const found = target in ALIASES ? parsed.sections.find(s => s.key === target) : parsed.sections.find(s => [names.en, names.ar].some(n => normalizeText(s.heading) === normalizeText(n)));
+  const found =
+    target in ALIASES
+      ? parsed.sections.find(s => s.key === target)
+      : parsed.sections.find(s => [names.en, names.ar].some(n => normalizeText(s.heading) === normalizeText(n)));
   return found ? String(found.body || '').trim() : '';
 }

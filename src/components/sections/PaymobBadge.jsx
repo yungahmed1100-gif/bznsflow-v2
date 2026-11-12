@@ -18,7 +18,18 @@ export function PaymobBadge({ t }) {
         <img src="/payments/paymob.svg" alt="Paymob" width="74" height="16" loading="lazy" decoding="async" />
       </p>
       <ul className="paymob-badge-cards" aria-label={t.tier_pay_cards}>
-        {CARDS.map(card => <li key={card.alt}><img src={card.src} alt={card.alt} width={card.width} height={card.height} loading="lazy" decoding="async" /></li>)}
+        {CARDS.map(card => (
+          <li key={card.alt}>
+            <img
+              src={card.src}
+              alt={card.alt}
+              width={card.width}
+              height={card.height}
+              loading="lazy"
+              decoding="async"
+            />
+          </li>
+        ))}
       </ul>
     </div>
   );

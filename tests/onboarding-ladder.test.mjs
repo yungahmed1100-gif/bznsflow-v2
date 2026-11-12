@@ -5,10 +5,17 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { INDUSTRIES } from '../src/lib/industries.js';
 import { prefillFor } from '../src/lib/sector-prefill.generated.js';
-import { ARCHETYPES, DEFAULT_ARCHETYPE, FAQ_TARGET, FIELD_RUNGS, OWNER_QUESTIONS }
-  from '../src/lib/owner-questions.js';
-import { LIMITS, answerFaq, answerField, createLadder, nextRung, progress, skip, toProfilePatch }
-  from '../src/lib/onboarding-ladder.js';
+import { ARCHETYPES, DEFAULT_ARCHETYPE, FAQ_TARGET, FIELD_RUNGS, OWNER_QUESTIONS } from '../src/lib/owner-questions.js';
+import {
+  LIMITS,
+  answerFaq,
+  answerField,
+  createLadder,
+  nextRung,
+  progress,
+  skip,
+  toProfilePatch,
+} from '../src/lib/onboarding-ladder.js';
 import { validateReviewProfile } from '../api/_lib/layla/review-profile.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -150,7 +157,7 @@ test('each sector gets its own archetype question set, from the generated data',
 });
 
 test('booking, catalog and project ask genuinely different questions', () => {
-  const asked = ARCHETYPES.map((a) => OWNER_QUESTIONS[a].services.question.en);
+  const asked = ARCHETYPES.map(a => OWNER_QUESTIONS[a].services.question.en);
   assert.equal(new Set(asked).size, ARCHETYPES.length, 'archetypes must not share wording');
   // Spot-check the real mapping rather than a hardcoded sector list.
   assert.equal(prefillFor('dental').archetype, 'booking');
@@ -196,8 +203,12 @@ test('progress advances monotonically and never exceeds the total', () => {
     last = done;
     const rung = nextRung(state);
     if (!rung) break;
-    state = rung.kind === 'field' ? answerField(state, rung.field, 'answer')
-      : rung.kind === 'faq' ? answerFaq(state, `q${state.faqs.length}?`, 'a') : skip(state, rung.id);
+    state =
+      rung.kind === 'field'
+        ? answerField(state, rung.field, 'answer')
+        : rung.kind === 'faq'
+          ? answerFaq(state, `q${state.faqs.length}?`, 'a')
+          : skip(state, rung.id);
   }
   assert.equal(progress(state).done, progress(state).total);
 });
@@ -208,15 +219,18 @@ test('FAQ suggestions come from the sector and never repeat one already added', 
   assert.equal(first.kind, 'faq');
   assert.ok(first.suggestions.length > 0, 'dental should suggest questions');
   const used = first.suggestions[0];
-  const after = nextRung(answerFaq(
-    skip(skip(skip(skip(state, 'services'), 'prices'), 'hours'), 'location'), used, 'an answer'));
+  const after = nextRung(
+    answerFaq(skip(skip(skip(skip(state, 'services'), 'prices'), 'hours'), 'location'), used, 'an answer'),
+  );
   assert.ok(!after.suggestions.includes(used), 'a used suggestion must not be offered again');
 });
 
 // --- the coverage gate ------------------------------------------------------
 
 test('the onboarding coverage gate passes and reports what it checked', () => {
-  const out = execFileSync(process.execPath, [join(ROOT, 'scripts/check-onboarding-coverage.mjs')], { encoding: 'utf8' });
+  const out = execFileSync(process.execPath, [join(ROOT, 'scripts/check-onboarding-coverage.mjs')], {
+    encoding: 'utf8',
+  });
   assert.match(out, /in sync/);
   const counts = out.match(/(\d+) sectors, (\d+) archetypes/);
   assert.ok(counts, `unexpected output: ${out}`);

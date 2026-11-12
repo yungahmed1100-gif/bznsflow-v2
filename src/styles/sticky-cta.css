@@ -28,7 +28,9 @@
   text-decoration: none;
   transition: transform var(--transition-press);
 }
-.sticky-mobile-btn:active { transform: translateY(2px); }
+.sticky-mobile-btn:active {
+  transform: translateY(2px);
+}
 /* WhatsApp green is light: ink clears 7:1 on it where white sits under 2:1. */
 .sticky-mobile-btn--wa {
   background: var(--whatsapp);
@@ -39,9 +41,13 @@
   color: var(--bg-primary);
 }
 @media (max-width: 768px) {
-  .sticky-mobile-cta { display: flex; }
+  .sticky-mobile-cta {
+    display: flex;
+  }
   /* Hide the floating WA bubble — the bar replaces it on mobile */
-  .whatsapp-float { display: none !important; }
+  .whatsapp-float {
+    display: none !important;
+  }
   /* Footer clearance for this bar and the chat launcher lives in footer.css. */
 }
 
@@ -76,7 +82,9 @@
   list-style: none;
   user-select: none;
 }
-.faq-question::-webkit-details-marker { display: none; }
+.faq-question::-webkit-details-marker {
+  display: none;
+}
 .faq-chevron {
   flex-shrink: 0;
   color: var(--text-muted);

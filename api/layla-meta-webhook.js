@@ -20,55 +20,99 @@ export const DEADLINE_MS = deadlineFor(60);
 // Meta saved the subscription), never with anything else.
 function secretsFor(env) {
   let instagram = [];
-  try { instagram = [instagramConfig(env, false).secret]; } catch { /* Instagram not configured: WhatsApp only */ }
-  return { whatsapp: [env.LAYLA_META_APP_SECRET].filter(Boolean), instagram: [...instagram, env.LAYLA_META_APP_SECRET].filter(Boolean) };
+  try {
+    instagram = [instagramConfig(env, false).secret];
+  } catch {
+    /* Instagram not configured: WhatsApp only */
+  }
+  return {
+    whatsapp: [env.LAYLA_META_APP_SECRET].filter(Boolean),
+    instagram: [...instagram, env.LAYLA_META_APP_SECRET].filter(Boolean),
+  };
 }
 
 // `defer` runs work after the response: photos and voice notes are fetched and read once Meta has its 200.
-export function createHandler({ env = process.env, fetcher = fetch, messaging = messagingStore({ env, fetcher }), rasil = createRasilWebhook({ env, fetcher, raw: rawBody }), defer = waitUntil } = {}) {
-  const readMedia = ({ media = [] } = {}) => { if (media.length) defer(processInboundMedia(media, { store: messaging, env, fetcher })); };
-  return withDeadline(async (req, res) => {
-    // Resend's delivery events for Rasil share this function's raw body (vercel.json: /api/rasil-webhook), since the plan allows 12 functions.
-    if (new URL(req.url || '/', 'https://callback.invalid').searchParams.get('source') === 'resend') return rasil(req, res);
-    try {
-      if (req.method === 'GET') {
-        const q = new URL(req.url, 'https://callback.invalid').searchParams;
-        const challenge = q.get('hub.challenge'), given = q.get('hub.verify_token') || '';
-        const tokens = [env.GREEN_WHATSAPP_VERIFY_TOKEN, env.GREEN_INSTAGRAM_VERIFY_TOKEN].filter(Boolean);
-        if (!isGreenConvexConfigured(env) || !tokens.length) throw new PilotError('webhook_configuration_missing', 503);
-        if (q.get('hub.mode') !== 'subscribe' || !tokens.some(token => safeEqual(given, token)) || !challenge || challenge.length > 200) {
-          throw new PilotError('verification_failed', 403);
+export function createHandler({
+  env = process.env,
+  fetcher = fetch,
+  messaging = messagingStore({ env, fetcher }),
+  rasil = createRasilWebhook({ env, fetcher, raw: rawBody }),
+  defer = waitUntil,
+} = {}) {
+  const readMedia = ({ media = [] } = {}) => {
+    if (media.length) defer(processInboundMedia(media, { store: messaging, env, fetcher }));
+  };
+  return withDeadline(
+    async (req, res) => {
+      // Resend's delivery events for Rasil share this function's raw body (vercel.json: /api/rasil-webhook), since the plan allows 12 functions.
+      if (new URL(req.url || '/', 'https://callback.invalid').searchParams.get('source') === 'resend')
+        return rasil(req, res);
+      try {
+        if (req.method === 'GET') {
+          const q = new URL(req.url, 'https://callback.invalid').searchParams;
+          const challenge = q.get('hub.challenge'),
+            given = q.get('hub.verify_token') || '';
+          const tokens = [env.GREEN_WHATSAPP_VERIFY_TOKEN, env.GREEN_INSTAGRAM_VERIFY_TOKEN].filter(Boolean);
+          if (!isGreenConvexConfigured(env) || !tokens.length)
+            throw new PilotError('webhook_configuration_missing', 503);
+          if (
+            q.get('hub.mode') !== 'subscribe' ||
+            !tokens.some(token => safeEqual(given, token)) ||
+            !challenge ||
+            challenge.length > 200
+          ) {
+            throw new PilotError('verification_failed', 403);
+          }
+          res.status(200);
+          res.setHeader('Content-Type', 'text/plain');
+          res.setHeader('Cache-Control', 'no-store');
+          return res.end(challenge);
         }
-        res.status(200);
-        res.setHeader('Content-Type', 'text/plain');
-        res.setHeader('Cache-Control', 'no-store');
-        return res.end(challenge);
-      }
-      if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); throw new PilotError('method', 405); }
-      if (!greenDataReady(env)) throw new PilotError('green_cutover_not_ready', 503);
-      const raw = await rawBody(req);
-      const secrets = secretsFor(env);
-      if (!secrets.whatsapp.length) throw new PilotError('webhook_secret_missing', 503);
-      const signedBy = channel => secrets[channel].some(secret => signatureValid(raw, req.headers['x-hub-signature-256'], secret));
-      if (!signedBy('whatsapp') && !signedBy('instagram')) throw new PilotError('signature', 403);
-      let envelope;
-      try { envelope = JSON.parse(raw.toString('utf8')); } catch { throw new PilotError('invalid_json'); }
-      // Ingress is durable even when outbound sending is paused. The worker and
-      // Convex send gates control sending independently of webhook acceptance.
-      if (envelope?.object === 'instagram') {
-        if (!signedBy('instagram')) throw new PilotError('signature', 403);
-        const result = await ingestInstagramEnvelope(envelope, { store: messaging, app: instagramConfig(env, false).app, env, fetcher, suppressAutomation: !instagramMessagingEnabled(env) });
+        if (req.method !== 'POST') {
+          res.setHeader('Allow', 'GET, POST');
+          throw new PilotError('method', 405);
+        }
+        if (!greenDataReady(env)) throw new PilotError('green_cutover_not_ready', 503);
+        const raw = await rawBody(req);
+        const secrets = secretsFor(env);
+        if (!secrets.whatsapp.length) throw new PilotError('webhook_secret_missing', 503);
+        const signedBy = channel =>
+          secrets[channel].some(secret => signatureValid(raw, req.headers['x-hub-signature-256'], secret));
+        if (!signedBy('whatsapp') && !signedBy('instagram')) throw new PilotError('signature', 403);
+        let envelope;
+        try {
+          envelope = JSON.parse(raw.toString('utf8'));
+        } catch {
+          throw new PilotError('invalid_json');
+        }
+        // Ingress is durable even when outbound sending is paused. The worker and
+        // Convex send gates control sending independently of webhook acceptance.
+        if (envelope?.object === 'instagram') {
+          if (!signedBy('instagram')) throw new PilotError('signature', 403);
+          const result = await ingestInstagramEnvelope(envelope, {
+            store: messaging,
+            app: instagramConfig(env, false).app,
+            env,
+            fetcher,
+            suppressAutomation: !instagramMessagingEnabled(env),
+          });
+          send(res, 200, { ok: true, accepted: true });
+          return readMedia(result);
+        }
+        if (!signedBy('whatsapp')) throw new PilotError('signature', 403);
+        if (envelope?.object !== 'whatsapp_business_account' || !Array.isArray(envelope.entry))
+          throw new PilotError('invalid_envelope');
+        const result = await ingestBlueEnvelope(envelope, {
+          store: messaging,
+          sendingEnabled: env.GREEN_WHATSAPP_ENABLED === 'true',
+        });
         send(res, 200, { ok: true, accepted: true });
         return readMedia(result);
+      } catch (error) {
+        return sendPilotError(res, error, { fallback: 'unavailable' });
       }
-      if (!signedBy('whatsapp')) throw new PilotError('signature', 403);
-      if (envelope?.object !== 'whatsapp_business_account' || !Array.isArray(envelope.entry)) throw new PilotError('invalid_envelope');
-      const result = await ingestBlueEnvelope(envelope, { store: messaging, sendingEnabled: env.GREEN_WHATSAPP_ENABLED === 'true' });
-      send(res, 200, { ok: true, accepted: true });
-      return readMedia(result);
-    } catch (error) {
-      return sendPilotError(res, error, { fallback: 'unavailable' });
-    }
-  }, { ms: DEADLINE_MS, label: 'layla-meta-webhook' });
+    },
+    { ms: DEADLINE_MS, label: 'layla-meta-webhook' },
+  );
 }
 export default createHandler();

@@ -22,22 +22,40 @@ export function channelsFrom(overview) {
   if (whatsapp) {
     const connected = WHATSAPP_LIVE.includes(whatsapp.status);
     const checks = whatsapp.checks;
-    list.push(channel('whatsapp', whatsapp.sender, whatsapp.status, connected,
-      connected && !!(checks?.routing && checks?.registered && checks?.path), overview.messaging));
+    list.push(
+      channel(
+        'whatsapp',
+        whatsapp.sender,
+        whatsapp.status,
+        connected,
+        connected && !!(checks?.routing && checks?.registered && checks?.path),
+        overview.messaging,
+      ),
+    );
   }
   const instagram = overview?.instagram;
   if (instagram && !INSTAGRAM_GONE.includes(instagram.status)) {
     const connected = instagram.status === 'connected';
-    list.push(channel('instagram', instagram.username, instagram.status, connected, connected, overview.instagramMessaging));
+    list.push(
+      channel('instagram', instagram.username, instagram.status, connected, connected, overview.instagramMessaging),
+    );
   }
   return list;
 }
 
 function channel(id, identity, status, connected, healthy, messaging) {
   const active = connected && !!messaging?.active;
-  const reason = active ? '' : (messaging?.reason || 'not_activated');
-  return { id, identity: identity || '', status: status || '', connected, active, available: messaging?.available !== false,
-    healthy: healthy && NOT_A_FAULT.includes(reason), reason };
+  const reason = active ? '' : messaging?.reason || 'not_activated';
+  return {
+    id,
+    identity: identity || '',
+    status: status || '',
+    connected,
+    active,
+    available: messaging?.available !== false,
+    healthy: healthy && NOT_A_FAULT.includes(reason),
+    reason,
+  };
 }
 
 /** 'none' (nothing connected) | 'on' (every connected channel replies) | 'off' | 'mixed'. */
@@ -65,7 +83,8 @@ export async function setAll(on, channels, messaging) {
   return results.flatMap((r, i) => {
     if (r.status === 'rejected') return [{ id: targets[i].id, reason: r.reason?.reason || 'unknown' }];
     // An activate can succeed as a request yet leave the channel off (for example, facts not saved).
-    if (on && r.value && r.value.active === false) return [{ id: targets[i].id, reason: r.value.reason || 'activation_not_ready' }];
+    if (on && r.value && r.value.active === false)
+      return [{ id: targets[i].id, reason: r.value.reason || 'activation_not_ready' }];
     return [];
   });
 }

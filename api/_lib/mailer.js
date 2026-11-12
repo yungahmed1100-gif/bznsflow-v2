@@ -48,12 +48,16 @@ function endpoint(env = process.env) {
  * there is no preflight, so the honest content type is fine.
  */
 async function post(payload, timeoutMs, { env = process.env, fetcher = fetch } = {}) {
-  const res = await fetchWithTimeout(endpoint(env), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-    redirect: 'follow', // the 302 to googleusercontent carries the JSON body
-  }, { label: 'Apps Script', timeoutMs, fetcher });
+  const res = await fetchWithTimeout(
+    endpoint(env),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      redirect: 'follow', // the 302 to googleusercontent carries the JSON body
+    },
+    { label: 'Apps Script', timeoutMs, fetcher },
+  );
 
   if (!res.ok) throw await httpError('Apps Script', res);
 
@@ -84,13 +88,17 @@ export function sendOtpEmail({ email, code, lang, env = process.env, fetcher = f
   const secret = env.OTP_SHARED_SECRET;
   if (!secret) throw new Error('OTP_SHARED_SECRET is not configured');
 
-  return post({
-    action: 'sendOtp',
-    secret,
-    email,
-    code,
-    language: lang === 'ar' ? 'ar' : 'en',
-  }, OTP_TIMEOUT_MS, { env, fetcher });
+  return post(
+    {
+      action: 'sendOtp',
+      secret,
+      email,
+      code,
+      language: lang === 'ar' ? 'ar' : 'en',
+    },
+    OTP_TIMEOUT_MS,
+    { env, fetcher },
+  );
 }
 
 /**
@@ -115,19 +123,19 @@ export function sendOtpEmail({ email, code, lang, env = process.env, fetcher = f
  *
  * @returns {Promise<{ ok: true, emailed?: boolean, emailError?: string }>}
  */
-export function pushLead({
-  name, email, phone, country, industry, lang, pageUrl,
-  sourceCta, playbook, playbookUrl,
-}) {
-  return post({
-    name,
-    email,
-    phoneWhatsapp: phone,
-    sourceCta: sourceCta || 'Sign-in',
-    language: lang,
-    pageUrl: pageUrl || '',
-    marketRegion: country,
-    segment: industry,
-    ...(playbook ? { playbook: true, playbookUrl } : {}),
-  }, LEAD_TIMEOUT_MS);
+export function pushLead({ name, email, phone, country, industry, lang, pageUrl, sourceCta, playbook, playbookUrl }) {
+  return post(
+    {
+      name,
+      email,
+      phoneWhatsapp: phone,
+      sourceCta: sourceCta || 'Sign-in',
+      language: lang,
+      pageUrl: pageUrl || '',
+      marketRegion: country,
+      segment: industry,
+      ...(playbook ? { playbook: true, playbookUrl } : {}),
+    },
+    LEAD_TIMEOUT_MS,
+  );
 }

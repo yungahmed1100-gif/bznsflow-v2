@@ -4,5 +4,12 @@ import { BUSINESS_PAGES, BUSINESS_PAGES_UPDATED_ISO } from '../content/business-
 
 export default function BusinessInfo({ lang = 'ar', page }) {
   const locale = lang === 'ar' ? 'ar' : 'en';
-  return <LegalPage lang={locale} path={`/${page}`} doc={BUSINESS_PAGES[page][locale]} updatedIso={BUSINESS_PAGES_UPDATED_ISO} />;
+  return (
+    <LegalPage
+      lang={locale}
+      path={`/${page}`}
+      doc={BUSINESS_PAGES[page][locale]}
+      updatedIso={BUSINESS_PAGES_UPDATED_ISO}
+    />
+  );
 }

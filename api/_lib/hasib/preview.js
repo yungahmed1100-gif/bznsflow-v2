@@ -2,90 +2,452 @@ import { hasibPack, industryCatalog } from '../../../config/hasib-packs.js';
 import { capabilitiesFor } from '../../../convex/hasib/capabilities.js';
 import { PilotError } from '../layla/config.js';
 
-const READ_LISTS = new Set(['opportunities', 'viewings', 'offers', 'drafts', 'commissions', 'items', 'low_stock', 'orders', 'expenses', 'repairs', 'resources', 'services', 'bookings', 'waitlist', 'memberships', 'membership_credits', 'followups', 'jobs', 'equipment', 'properties', 'property_enquiries', 'product_requests', 'recipes', 'stock_expiry','construction_projects','construction_milestones','construction_progress','construction_costs','construction_variations','construction_commitments','construction_claims','construction_site_reports','construction_quality','construction_risks','construction_tasks','automotive_contacts','automotive_vehicles','automotive_bays','automotive_services','automotive_requests','automotive_appointments','automotive_work_orders','automotive_estimates','automotive_labor_entries','automotive_parts']);
-const settings = { currency: 'OMR', vatRegistered: false, vatRateBps: 500, pricesIncludeVat: false, vatin: '', stockPolicy: 'warn', unsoldDays: 60, absenceDays: 14, constructionIncidentHoursDenominator:200000 };
+const READ_LISTS = new Set([
+  'opportunities',
+  'viewings',
+  'offers',
+  'drafts',
+  'commissions',
+  'items',
+  'low_stock',
+  'orders',
+  'expenses',
+  'repairs',
+  'resources',
+  'services',
+  'bookings',
+  'waitlist',
+  'memberships',
+  'membership_credits',
+  'followups',
+  'jobs',
+  'equipment',
+  'properties',
+  'property_enquiries',
+  'product_requests',
+  'recipes',
+  'stock_expiry',
+  'construction_projects',
+  'construction_milestones',
+  'construction_progress',
+  'construction_costs',
+  'construction_variations',
+  'construction_commitments',
+  'construction_claims',
+  'construction_site_reports',
+  'construction_quality',
+  'construction_risks',
+  'construction_tasks',
+  'automotive_contacts',
+  'automotive_vehicles',
+  'automotive_bays',
+  'automotive_services',
+  'automotive_requests',
+  'automotive_appointments',
+  'automotive_work_orders',
+  'automotive_estimates',
+  'automotive_labor_entries',
+  'automotive_parts',
+]);
+const settings = {
+  currency: 'OMR',
+  vatRegistered: false,
+  vatRateBps: 500,
+  pricesIncludeVat: false,
+  vatin: '',
+  stockPolicy: 'warn',
+  unsoldDays: 60,
+  absenceDays: 14,
+  constructionIncidentHoursDenominator: 200000,
+};
 
 function overview(packId) {
   const pack = hasibPack(packId);
-  return { preview: true, readOnly: true, synthetic: true, selectedIndustryId: packId, industry: industryCatalog().find(row => row.id === packId),
-    pack: { id: pack.id, archetype: pack.archetype, version: pack.version, ownerUi: pack.ownerUi, todayMetrics: pack.todayMetrics, thresholds: pack.thresholds,
-      variantOptions: pack.variantOptions, orderFields: pack.orderFields, expenseCategories: pack.expenseCategories, modules: pack.modules },
-    workspaceRole: 'manager', capabilities: capabilitiesFor('ascend', 'manager'),
-    plan: 'ascend', setupRequired: false, livePacks: industryCatalog().filter(row => row.live), industries: industryCatalog(),
-    modules: Object.entries(pack.modules).filter(([, value]) => value === 'available').map(([key]) => key), settings,
-    counts: { pendingOrders: 0, lowStock: 0, laylaWaiting: 0, laylaOverdue: 0 } };
+  return {
+    preview: true,
+    readOnly: true,
+    synthetic: true,
+    selectedIndustryId: packId,
+    industry: industryCatalog().find(row => row.id === packId),
+    pack: {
+      id: pack.id,
+      archetype: pack.archetype,
+      version: pack.version,
+      ownerUi: pack.ownerUi,
+      todayMetrics: pack.todayMetrics,
+      thresholds: pack.thresholds,
+      variantOptions: pack.variantOptions,
+      orderFields: pack.orderFields,
+      expenseCategories: pack.expenseCategories,
+      modules: pack.modules,
+    },
+    workspaceRole: 'manager',
+    capabilities: capabilitiesFor('ascend', 'manager'),
+    plan: 'ascend',
+    setupRequired: false,
+    livePacks: industryCatalog().filter(row => row.live),
+    industries: industryCatalog(),
+    modules: Object.entries(pack.modules)
+      .filter(([, value]) => value === 'available')
+      .map(([key]) => key),
+    settings,
+    counts: { pendingOrders: 0, lowStock: 0, laylaWaiting: 0, laylaOverdue: 0 },
+  };
 }
 
 function today(packId) {
   const pack = hasibPack(packId);
-  return { date: new Date().toISOString().slice(0, 10), synthetic: true,
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    synthetic: true,
     needsYou: { ordersCount: 0, orders: [], chats: 0, lowStockCount: 0, lowStock: [], repairsReady: 0 },
-    industryActions: [], industryMetrics: pack.todayMetrics.map(metric => ({ id: metric.id, value: 0, format: 'number', detail: '' })),
-    setup: { products: false, photos: false, services: false } };
+    industryActions: [],
+    industryMetrics: pack.todayMetrics.map(metric => ({ id: metric.id, value: 0, format: 'number', detail: '' })),
+    setup: { products: false, photos: false, services: false },
+  };
 }
 
-const insights = () => ({ cash: [], receivablesMinor: 0, recordedProfitMinor: 0, expectedProfitMinor: 0,
-  sales: { orders: 0, totalMinor: 0, grossProfitMinor: 0 }, expenses: { operatingMinor: 0, stockPurchasesMinor: 0, byCategory: [] },
-  pending: { orders: 0, totalMinor: 0 }, demand: { signals: 0, mostWanted: [], lostSales: [], askedNotBought: [], notInCatalog: [] }, topProducts: [], restaurant: null,
-  stock: { valueMinor: 0, low: 0, out: 0 }, customers: { buyers: 0, returning: 0, walkIn: 0 }, truncated: false });
+const insights = () => ({
+  cash: [],
+  receivablesMinor: 0,
+  recordedProfitMinor: 0,
+  expectedProfitMinor: 0,
+  sales: { orders: 0, totalMinor: 0, grossProfitMinor: 0 },
+  expenses: { operatingMinor: 0, stockPurchasesMinor: 0, byCategory: [] },
+  pending: { orders: 0, totalMinor: 0 },
+  demand: { signals: 0, mostWanted: [], lostSales: [], askedNotBought: [], notInCatalog: [] },
+  topProducts: [],
+  restaurant: null,
+  stock: { valueMinor: 0, low: 0, out: 0 },
+  customers: { buyers: 0, returning: 0, walkIn: 0 },
+  truncated: false,
+});
 
 export function hasibPreviewResponse(packId, operation) {
   const industry = industryCatalog().find(row => row.id === packId);
   if (!industry?.built) throw new PilotError(industry ? 'preview_not_available' : 'invalid_industry', 409);
   if (operation === 'overview') return overview(packId);
-  if (operation === 'real_estate_overview') return { synthetic: true, counts: {}, pipeline: Object.fromEntries(['new', 'contacted', 'qualified', 'viewing', 'offer', 'won', 'lost'].map(s => [s, 0])), tasks: [],
-    listings: { available: 0, reserved: 0, unavailable: 0, verifiedFresh: 0, stale: 0 }, viewings: { today: 0, upcoming: 0, outcomeMissing: 0 }, approvals: { offers: 0, drafts: 0, total: 0 },
-    followups: { counts: { today: 0, overdue: 0, scheduled: 0, approval: 0, blocked: 0, completed: 0 }, actionable: 0 } };
-  if (operation === 'real_estate_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, sourceConversion: [], lostReasons: [] };
-  if (operation === 'real_estate_followups') return { items: [], counts: { today: 0, overdue: 0, scheduled: 0, approval: 0, blocked: 0, completed: 0 }, actionable: 0 };
+  if (operation === 'real_estate_overview')
+    return {
+      synthetic: true,
+      counts: {},
+      pipeline: Object.fromEntries(
+        ['new', 'contacted', 'qualified', 'viewing', 'offer', 'won', 'lost'].map(s => [s, 0]),
+      ),
+      tasks: [],
+      listings: { available: 0, reserved: 0, unavailable: 0, verifiedFresh: 0, stale: 0 },
+      viewings: { today: 0, upcoming: 0, outcomeMissing: 0 },
+      approvals: { offers: 0, drafts: 0, total: 0 },
+      followups: {
+        counts: { today: 0, overdue: 0, scheduled: 0, approval: 0, blocked: 0, completed: 0 },
+        actionable: 0,
+      },
+    };
+  if (operation === 'real_estate_insights')
+    return { synthetic: true, headline: [], diagnostics: [], segments: null, sourceConversion: [], lostReasons: [] };
+  if (operation === 'real_estate_followups')
+    return {
+      items: [],
+      counts: { today: 0, overdue: 0, scheduled: 0, approval: 0, blocked: 0, completed: 0 },
+      actionable: 0,
+    };
   if (operation === 'real_estate_context' || operation === 'real_estate_metric_records') return { items: [] };
   const EMPTY_QUEUE = { today: 0, overdue: 0, scheduled: 0, waiting: 0, decision: 0, blocked: 0, completed: 0 };
   // Adiba's offers: a preview has none, and nothing to approve.
   if (operation === 'adiba_offers') return { items: [], counts: {} };
-  if (operation === 'media_overview') return { synthetic: true, pipeline: {}, attention: { deliveryOverdue: 0, cutAwaitingApproval: 0, shootAtRisk: 0, extraScope: 0, holdsExpiring: 0, approvals: 0, briefIncomplete: 0 },
-    resources: { active: 0 }, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
-  if (operation === 'media_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, firstCut: { value: null, numerator: 0, denominator: 0 }, changeOrders: { proposed: 0, approved: 0, approvedMinor: 0 } };
+  if (operation === 'media_overview')
+    return {
+      synthetic: true,
+      pipeline: {},
+      attention: {
+        deliveryOverdue: 0,
+        cutAwaitingApproval: 0,
+        shootAtRisk: 0,
+        extraScope: 0,
+        holdsExpiring: 0,
+        approvals: 0,
+        briefIncomplete: 0,
+      },
+      resources: { active: 0 },
+      followups: { counts: EMPTY_QUEUE, actionable: 0 },
+    };
+  if (operation === 'media_insights')
+    return {
+      synthetic: true,
+      headline: [],
+      diagnostics: [],
+      segments: null,
+      firstCut: { value: null, numerator: 0, denominator: 0 },
+      changeOrders: { proposed: 0, approved: 0, approvedMinor: 0 },
+    };
   if (operation === 'media_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
   if (operation === 'media_calendar') return { holds: [], shoots: [] };
-  if (['media_productions', 'media_resources', 'media_context', 'media_metric_records'].includes(operation)) return { items: [] };
-  if (operation === 'fitness_overview') return { synthetic: true, members: { total: 0, active: 0, prospects: 0 }, attention: { trialFollowUp: 0, attendanceGap: 0, expiring: 0, frozen: 0, paymentsDue: 0, attendanceUnrecorded: 0, approvals: 0 },
-    classesToday: 0, plans: 0, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
-  if (operation === 'fitness_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, trials: { booked: 0, attended: 0, paid: 0, attendanceRate: null, attendedToPaid: null, bySource: [], costPerAttendedTrial: null } };
+  if (['media_productions', 'media_resources', 'media_context', 'media_metric_records'].includes(operation))
+    return { items: [] };
+  if (operation === 'fitness_overview')
+    return {
+      synthetic: true,
+      members: { total: 0, active: 0, prospects: 0 },
+      attention: {
+        trialFollowUp: 0,
+        attendanceGap: 0,
+        expiring: 0,
+        frozen: 0,
+        paymentsDue: 0,
+        attendanceUnrecorded: 0,
+        approvals: 0,
+      },
+      classesToday: 0,
+      plans: 0,
+      followups: { counts: EMPTY_QUEUE, actionable: 0 },
+    };
+  if (operation === 'fitness_insights')
+    return {
+      synthetic: true,
+      headline: [],
+      diagnostics: [],
+      segments: null,
+      trials: {
+        booked: 0,
+        attended: 0,
+        paid: 0,
+        attendanceRate: null,
+        attendedToPaid: null,
+        bySource: [],
+        costPerAttendedTrial: null,
+      },
+    };
   if (operation === 'fitness_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
   if (operation === 'fitness_classes') return { items: [] };
-  if (['fitness_members', 'fitness_plans', 'fitness_context', 'fitness_metric_records'].includes(operation)) return { items: [] };
-  if (operation === 'dental_overview') return { synthetic: true, today: { visits: 0, unconfirmed: 0, arrived: 0 }, attention: { requests: 0, attendanceUnrecorded: 0, rebook: 0, chargesUnrecorded: 0, balancesOverdue: 0, approvals: 0 },
-    setup: { providers: 0, chairs: 0, treatments: 0 }, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
-  if (operation === 'dental_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, coverage: { chargesWithoutVisit: 0, complete: true } };
+  if (['fitness_members', 'fitness_plans', 'fitness_context', 'fitness_metric_records'].includes(operation))
+    return { items: [] };
+  if (operation === 'dental_overview')
+    return {
+      synthetic: true,
+      today: { visits: 0, unconfirmed: 0, arrived: 0 },
+      attention: {
+        requests: 0,
+        attendanceUnrecorded: 0,
+        rebook: 0,
+        chargesUnrecorded: 0,
+        balancesOverdue: 0,
+        approvals: 0,
+      },
+      setup: { providers: 0, chairs: 0, treatments: 0 },
+      followups: { counts: EMPTY_QUEUE, actionable: 0 },
+    };
+  if (operation === 'dental_insights')
+    return {
+      synthetic: true,
+      headline: [],
+      diagnostics: [],
+      segments: null,
+      coverage: { chargesWithoutVisit: 0, complete: true },
+    };
   if (operation === 'dental_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
-  if (['dental_visits', 'dental_resources', 'dental_context', 'dental_metric_records'].includes(operation)) return { items: [] };
-  if (operation === 'hvac_overview') return { synthetic: true, today: { visits: 0, arrived: 0, openJobs: 0 }, attention: { requests: 0, unscheduled: 0, pastWindow: 0, partsWaiting: 0, estimatesOut: 0, outOfArea: 0, approvals: 0, renewalsDue: 0, balancesOverdue: 0 },
-    contracts: { active: 0, units: 0, visitsDue30d: 0, renewalsDue: 0, annualValueMinor: 0 }, setup: { technicians: 0, services: 0, units: 0 }, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
-  if (operation === 'hvac_insights') return { synthetic: true, headline: [], diagnostics: [], segments: null, revenuePerTechDay: { value: null, numerator: 0, denominator: 0 },
-    contracts: { active: 0, units: 0, visitsDue30d: 0, renewalsDue: 0, annualValueMinor: 0 }, receivables: { '0_30': 0, '31_60': 0, '60_plus': 0 }, coverage: { olderJobs: 0, complete: true } };
+  if (['dental_visits', 'dental_resources', 'dental_context', 'dental_metric_records'].includes(operation))
+    return { items: [] };
+  if (operation === 'hvac_overview')
+    return {
+      synthetic: true,
+      today: { visits: 0, arrived: 0, openJobs: 0 },
+      attention: {
+        requests: 0,
+        unscheduled: 0,
+        pastWindow: 0,
+        partsWaiting: 0,
+        estimatesOut: 0,
+        outOfArea: 0,
+        approvals: 0,
+        renewalsDue: 0,
+        balancesOverdue: 0,
+      },
+      contracts: { active: 0, units: 0, visitsDue30d: 0, renewalsDue: 0, annualValueMinor: 0 },
+      setup: { technicians: 0, services: 0, units: 0 },
+      followups: { counts: EMPTY_QUEUE, actionable: 0 },
+    };
+  if (operation === 'hvac_insights')
+    return {
+      synthetic: true,
+      headline: [],
+      diagnostics: [],
+      segments: null,
+      revenuePerTechDay: { value: null, numerator: 0, denominator: 0 },
+      contracts: { active: 0, units: 0, visitsDue30d: 0, renewalsDue: 0, annualValueMinor: 0 },
+      receivables: { '0_30': 0, '31_60': 0, '60_plus': 0 },
+      coverage: { olderJobs: 0, complete: true },
+    };
   if (operation === 'hvac_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
   if (operation === 'hvac_schedule') return { visits: [], unscheduled: [], technicians: [] };
-  if (operation === 'hvac_contracts') return { items: [], book: { active: 0, units: 0, visitsDue30d: 0, renewalsDue: 0, annualValueMinor: 0 } };
+  if (operation === 'hvac_contracts')
+    return { items: [], book: { active: 0, units: 0, visitsDue30d: 0, renewalsDue: 0, annualValueMinor: 0 } };
   if (['hvac_jobs', 'hvac_units', 'hvac_context', 'hvac_metric_records'].includes(operation)) return { items: [] };
   if (operation === 'today') return today(packId);
-  if (operation === 'clinic_overview') return { synthetic:true, governance:{status:'review_required',permitStatus:'unknown',approved:false}, activationReady:false,
-    metrics:[{id:'unconfirmed_48h',value:0},{id:'missed_today',value:0},{id:'outstanding_minor',value:0}], requests:[], bookings:[], tasks:[], workspaceRole:'manager' };
-  if (operation === 'clinic_insights') return { synthetic:true, coverage:{bookings:0,requests:0,arrivalToStart:{numerator:0,denominator:0}}, metrics:{thirdNextAvailableDays:null,responseMedianMinutes:null,responseP90Minutes:null,requestConversion7d:null,noShowRate:null,cancellationRate:null,cancellationLeadMedianHours:null,waitlistRecoveryRate:null,arrivalWaitMedianMinutes:null,arrivalWaitP90Minutes:null,completionRate:null,sameProviderContinuity:null,experienceResponseRate:null,averageRating:null,recordedRevenueMinor:0,cashCollectedMinor:0,collectionRate:null,openReceivablesMinor:0} };
-  if (operation === 'construction_overview') return { synthetic:true, metrics:[{key:'schedule_risk',value:0},{key:'variation_exposure',value:0},{key:'overdue_receivables',value:0}], projects:[], tasks:[] , attention: { atRisk: 0, approvalsOverdue: 0, materialsDue: 0, receivablesOverdue: 0, approvals: 0 }, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
+  if (operation === 'clinic_overview')
+    return {
+      synthetic: true,
+      governance: { status: 'review_required', permitStatus: 'unknown', approved: false },
+      activationReady: false,
+      metrics: [
+        { id: 'unconfirmed_48h', value: 0 },
+        { id: 'missed_today', value: 0 },
+        { id: 'outstanding_minor', value: 0 },
+      ],
+      requests: [],
+      bookings: [],
+      tasks: [],
+      workspaceRole: 'manager',
+    };
+  if (operation === 'clinic_insights')
+    return {
+      synthetic: true,
+      coverage: { bookings: 0, requests: 0, arrivalToStart: { numerator: 0, denominator: 0 } },
+      metrics: {
+        thirdNextAvailableDays: null,
+        responseMedianMinutes: null,
+        responseP90Minutes: null,
+        requestConversion7d: null,
+        noShowRate: null,
+        cancellationRate: null,
+        cancellationLeadMedianHours: null,
+        waitlistRecoveryRate: null,
+        arrivalWaitMedianMinutes: null,
+        arrivalWaitP90Minutes: null,
+        completionRate: null,
+        sameProviderContinuity: null,
+        experienceResponseRate: null,
+        averageRating: null,
+        recordedRevenueMinor: 0,
+        cashCollectedMinor: 0,
+        collectionRate: null,
+        openReceivablesMinor: 0,
+      },
+    };
+  if (operation === 'construction_overview')
+    return {
+      synthetic: true,
+      metrics: [
+        { key: 'schedule_risk', value: 0 },
+        { key: 'variation_exposure', value: 0 },
+        { key: 'overdue_receivables', value: 0 },
+      ],
+      projects: [],
+      tasks: [],
+      attention: { atRisk: 0, approvalsOverdue: 0, materialsDue: 0, receivablesOverdue: 0, approvals: 0 },
+      followups: { counts: EMPTY_QUEUE, actionable: 0 },
+    };
   if (operation === 'construction_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
   if (operation === 'construction_context') return { items: [] };
-  if (operation === 'construction_insights') return { synthetic:true, projects:[], claims:[], variations:[], metrics:{revisedContractMinor:0,revisedBudgetMinor:0,actualCostMinor:0,forecastFinalCostMinor:0,forecastVarianceMinor:0,forecastMargin:null,pvMinor:0,evMinor:0,cpi:null,spi:null,variationExposureMinor:0,procurementOnTimeRate:null,reworkRate:null,ncrClosureRate:null,incidentFrequency:null,earnedValuePerWorkerHour:null,certifiedBillingsMinor:0,cashCollectedMinor:0,collectionRate:null,openReceivablesMinor:0,retentionHeldMinor:0,clientRating:null},coverage:{earnedValue:{numerator:0,denominator:0},safety:{numerator:0,denominator:0},experience:{numerator:0,denominator:0}} };
-  if (operation === 'automotive_overview') return { synthetic:true, metrics:[{key:'approvals_waiting',value:0},{key:'past_promised',value:0},{key:'ready_for_collection',value:0}], workOrders:[], tasks:[],
-    attention: { awaitingApproval: 0, pastPromise: 0, partsNeeded: 0, ready: 0, requests: 0, approvals: 0 }, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
+  if (operation === 'construction_insights')
+    return {
+      synthetic: true,
+      projects: [],
+      claims: [],
+      variations: [],
+      metrics: {
+        revisedContractMinor: 0,
+        revisedBudgetMinor: 0,
+        actualCostMinor: 0,
+        forecastFinalCostMinor: 0,
+        forecastVarianceMinor: 0,
+        forecastMargin: null,
+        pvMinor: 0,
+        evMinor: 0,
+        cpi: null,
+        spi: null,
+        variationExposureMinor: 0,
+        procurementOnTimeRate: null,
+        reworkRate: null,
+        ncrClosureRate: null,
+        incidentFrequency: null,
+        earnedValuePerWorkerHour: null,
+        certifiedBillingsMinor: 0,
+        cashCollectedMinor: 0,
+        collectionRate: null,
+        openReceivablesMinor: 0,
+        retentionHeldMinor: 0,
+        clientRating: null,
+      },
+      coverage: {
+        earnedValue: { numerator: 0, denominator: 0 },
+        safety: { numerator: 0, denominator: 0 },
+        experience: { numerator: 0, denominator: 0 },
+      },
+    };
+  if (operation === 'automotive_overview')
+    return {
+      synthetic: true,
+      metrics: [
+        { key: 'approvals_waiting', value: 0 },
+        { key: 'past_promised', value: 0 },
+        { key: 'ready_for_collection', value: 0 },
+      ],
+      workOrders: [],
+      tasks: [],
+      attention: { awaitingApproval: 0, pastPromise: 0, partsNeeded: 0, ready: 0, requests: 0, approvals: 0 },
+      followups: { counts: EMPTY_QUEUE, actionable: 0 },
+    };
   if (operation === 'automotive_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
   if (operation === 'automotive_context') return { items: [] };
-  if (operation === 'automotive_insights') return { synthetic:true, metrics:{requestResponseMedianMs:null,requestResponseP90Ms:null,requestToBookedRate:null,appointmentMissedRate:null,estimateApprovalRate:null,technicianProductivity:null,technicianEfficiency:null,technicianProficiency:null,onTimeDeliveryRate:null,firstTimeFixRate:null,averageRepairOrderMinor:null,recordedRevenueMinor:0,cashCollectedMinor:0,collectionRate:null,openReceivablesMinor:0,experienceAverage:null},coverage:{technicianProductivity:{numerator:0,denominator:0},firstTimeFix:{numerator:0,denominator:0},responseTime:{numerator:0,denominator:0},experience:{numerator:0,denominator:0}} };
-  if (operation === 'store_overview') return { synthetic:true, workspaceRole:'manager', attention: { unconfirmed: 0, ready: 0, requests: 0, lowStock: 0, approvalPending: 0, repairsReady: 0, approvals: 0 }, followups: { counts: EMPTY_QUEUE, actionable: 0 } };
+  if (operation === 'automotive_insights')
+    return {
+      synthetic: true,
+      metrics: {
+        requestResponseMedianMs: null,
+        requestResponseP90Ms: null,
+        requestToBookedRate: null,
+        appointmentMissedRate: null,
+        estimateApprovalRate: null,
+        technicianProductivity: null,
+        technicianEfficiency: null,
+        technicianProficiency: null,
+        onTimeDeliveryRate: null,
+        firstTimeFixRate: null,
+        averageRepairOrderMinor: null,
+        recordedRevenueMinor: 0,
+        cashCollectedMinor: 0,
+        collectionRate: null,
+        openReceivablesMinor: 0,
+        experienceAverage: null,
+      },
+      coverage: {
+        technicianProductivity: { numerator: 0, denominator: 0 },
+        firstTimeFix: { numerator: 0, denominator: 0 },
+        responseTime: { numerator: 0, denominator: 0 },
+        experience: { numerator: 0, denominator: 0 },
+      },
+    };
+  if (operation === 'store_overview')
+    return {
+      synthetic: true,
+      workspaceRole: 'manager',
+      attention: {
+        unconfirmed: 0,
+        ready: 0,
+        requests: 0,
+        lowStock: 0,
+        approvalPending: 0,
+        repairsReady: 0,
+        approvals: 0,
+      },
+      followups: { counts: EMPTY_QUEUE, actionable: 0 },
+    };
   if (operation === 'store_followups') return { items: [], counts: EMPTY_QUEUE, actionable: 0 };
   if (operation === 'store_context') return { items: [] };
-  if (operation === 'team_list') return { limit:5, members:[] };
+  if (operation === 'team_list') return { limit: 5, members: [] };
   if (operation === 'insights') return insights();
-  if (operation === 'restaurant_summary') return { menu: [], channels: [], priceIncreases: [], foodCostBps: null, laborCostBps: null, primeCostBps: null, wasteMinor: 0, stockVarianceMinor: 0, usageVarianceMinor: null };
+  if (operation === 'restaurant_summary')
+    return {
+      menu: [],
+      channels: [],
+      priceIncreases: [],
+      foodCostBps: null,
+      laborCostBps: null,
+      primeCostBps: null,
+      wasteMinor: 0,
+      stockVarianceMinor: 0,
+      usageVarianceMinor: null,
+    };
   if (operation === 'baking_suggestions') return { items: [] };
   if (READ_LISTS.has(operation)) return { items: [], cursor: null };
   throw new PilotError('preview_read_only', 403);
@@ -94,10 +456,22 @@ export function hasibPreviewResponse(packId, operation) {
 // The dashboard side of a preview never reads a tenant or calls a provider.
 export function dashboardPreviewResponse(packId, operation) {
   const pack = hasibPreviewResponse(packId, 'overview');
-  if (operation === 'overview') return { synthetic: true, readOnly: true, connected: false,
-    founderPreview: true, workspaceRole: 'manager', capabilities: pack.capabilities,
-    business: { name: 'Sample business' }, timezone: 'Asia/Muscat', messaging: {},
-    channels: {}, counts: {}, qualification: { fields: [], id: packId }, broadcastEnabled: false };
+  if (operation === 'overview')
+    return {
+      synthetic: true,
+      readOnly: true,
+      connected: false,
+      founderPreview: true,
+      workspaceRole: 'manager',
+      capabilities: pack.capabilities,
+      business: { name: 'Sample business' },
+      timezone: 'Asia/Muscat',
+      messaging: {},
+      channels: {},
+      counts: {},
+      qualification: { fields: [], id: packId },
+      broadcastEnabled: false,
+    };
   if (['contacts', 'conversations', 'templates', 'campaigns'].includes(operation)) return { items: [], cursor: null };
   throw new PilotError('preview_read_only', 403);
 }

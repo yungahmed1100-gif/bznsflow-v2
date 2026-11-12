@@ -36,20 +36,21 @@ const CAPPED = {
 const GENERATED = [/(^|\/)_generated\//, /\.generated\./, /^config\/mcp\/hasib-contracts\.js$/];
 
 // A directory walk, not `git ls-files`: the release check also runs on a `git archive` copy.
-const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-  const path = `${dir}/${entry.name}`;
-  if (entry.isDirectory()) return entry.name === 'node_modules' || entry.name.startsWith('.') ? [] : walk(path);
-  return [path];
-});
+const walk = dir =>
+  readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+    const path = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) return entry.name === 'node_modules' || entry.name.startsWith('.') ? [] : walk(path);
+    return [path];
+  });
 const tracked = ['api', 'src', 'convex', 'config']
   .flatMap(walk)
-  .filter((f) => /\.(js|jsx|ts|tsx|mjs|css)$/.test(f) && !GENERATED.some((re) => re.test(f)));
+  .filter(f => /\.(js|jsx|ts|tsx|mjs|css)$/.test(f) && !GENERATED.some(re => re.test(f)));
 
-const lines = (file) => readFileSync(file, 'utf8').split('\n').length - 1;
+const lines = file => readFileSync(file, 'utf8').split('\n').length - 1;
 
 test(`source files stay within ${LIMIT} lines`, () => {
   assert.ok(tracked.length > 100, 'git lists the source tree');
-  const over = tracked.filter((f) => !(f in CAPPED) && lines(f) > LIMIT).map((f) => `${f}: ${lines(f)}`);
+  const over = tracked.filter(f => !(f in CAPPED) && lines(f) > LIMIT).map(f => `${f}: ${lines(f)}`);
   assert.deepEqual(over, [], 'split these modules');
 });
 

@@ -49,7 +49,9 @@ const PLAYBOOK_PDF = '/bznsflow-sme-operating-playbook.pdf';
  * mistyped digit would be the same mistake with a smaller excuse.
  */
 export function cleanPhone(raw) {
-  const digits = String(raw ?? '').replace(/\D/g, '').replace(/^0+/, '');
+  const digits = String(raw ?? '')
+    .replace(/\D/g, '')
+    .replace(/^0+/, '');
   if (digits.length < MIN_PHONE_DIGITS || digits.length > LIMITS.phoneDigits) return undefined;
   // Preserved as typed, minus the noise. Unlike the sign-in profile there is no
   // country here to derive a dial code from, so none is invented.
@@ -103,7 +105,9 @@ async function handler(req, res) {
     return send(res, 400, { ok: false, reason: 'email' });
   }
 
-  const name = String(body.name ?? '').trim().slice(0, LIMITS.name);
+  const name = String(body.name ?? '')
+    .trim()
+    .slice(0, LIMITS.name);
   const wantsPlaybook = body.playbook === true;
   const email = normalizeEmail(body.email);
   const phone = cleanPhone(body.phone);

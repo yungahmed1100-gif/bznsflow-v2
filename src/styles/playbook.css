@@ -40,16 +40,31 @@
   animation: playbook-rise var(--transition) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes playbook-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes playbook-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 @keyframes playbook-rise {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Motion is decoration — the prompt must still appear without it. */
 @media (prefers-reduced-motion: reduce) {
   .playbook-overlay,
-  .playbook-card { animation: none; }
+  .playbook-card {
+    animation: none;
+  }
 }
 
 .playbook-close {
@@ -67,10 +82,15 @@
   border: 1px solid var(--border);
   border-radius: 50%;
   cursor: pointer;
-  transition: color var(--transition), border-color var(--transition);
+  transition:
+    color var(--transition),
+    border-color var(--transition);
 }
 
-.playbook-close:hover { color: var(--text-primary); border-color: var(--border-hover); }
+.playbook-close:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
 
 .playbook-close:focus-visible {
   outline: 2px solid #2f6ea3;
@@ -156,7 +176,11 @@
   text-align: start;
 }
 
-.playbook-field { display: flex; flex-direction: column; gap: 4px; }
+.playbook-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
 .playbook-field label {
   font-size: 0.85rem;
@@ -173,7 +197,9 @@
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 /* The sector select matches the inputs beside it rather than inheriting the
@@ -187,12 +213,18 @@
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
-.playbook-field input::placeholder { color: var(--text-muted); }
+.playbook-field input::placeholder {
+  color: var(--text-muted);
+}
 .playbook-field input:hover,
-.playbook-field select:hover { border-color: var(--border-hover); }
+.playbook-field select:hover {
+  border-color: var(--border-hover);
+}
 
 .playbook-field input:focus-visible,
 .playbook-field select:focus-visible {
@@ -203,13 +235,15 @@
 
 /* The phone number is Latin digits and a dial code. Isolated so the leading "+"
    is not reordered to the far end of the field under dir="rtl". */
-.playbook-field input[type="tel"] {
+.playbook-field input[type='tel'] {
   direction: ltr;
   unicode-bidi: isolate;
   text-align: start;
 }
 
-[dir="rtl"] .playbook-field input[type="tel"] { text-align: end; }
+[dir='rtl'] .playbook-field input[type='tel'] {
+  text-align: end;
+}
 
 /* The CTA used to be pinned to the bottom of the scrolling card, so that the
    one element this surface exists for was always on screen. That was written
@@ -222,10 +256,23 @@
   margin-top: var(--space-2);
   justify-content: center;
 }
-.playbook-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.playbook-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
-.playbook-email-consent { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.9rem; line-height: 1.6; }
-.playbook-email-consent input { width: auto; margin-top: 0.3rem; flex-shrink: 0; }
+.playbook-email-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.playbook-email-consent input {
+  width: auto;
+  margin-top: 0.3rem;
+  flex-shrink: 0;
+}
 
 .playbook-privacy {
   margin-top: var(--space-2);
@@ -239,7 +286,10 @@
   color: var(--red);
 }
 
-.playbook-error a { color: var(--accent-blue); text-decoration: underline; }
+.playbook-error a {
+  color: var(--accent-blue);
+  text-decoration: underline;
+}
 
 /* --- success --- */
 .playbook-success {
@@ -250,12 +300,21 @@
   color: var(--green);
 }
 
-.playbook-success-title { font-size: 1.5rem; color: var(--text-primary); }
-.playbook-success .btn { margin-top: var(--space-2); }
+.playbook-success-title {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+.playbook-success .btn {
+  margin-top: var(--space-2);
+}
 
 @media (max-width: 600px) {
-  .playbook-overlay { padding: var(--space-3); }
-  .playbook-card { padding: var(--space-8) var(--space-5); }
+  .playbook-overlay {
+    padding: var(--space-3);
+  }
+  .playbook-card {
+    padding: var(--space-8) var(--space-5);
+  }
 }
 
 /* On a short screen the four fields and the submit win the space, and the
@@ -264,7 +323,9 @@
    against a 667px-tall phone, where the CTA otherwise needs a scroll inside
    the card to reach — which is where this prompt loses the visitor. */
 @media (max-height: 700px) {
-  .playbook-modal .playbook-problems { display: none; }
+  .playbook-modal .playbook-problems {
+    display: none;
+  }
 }
 
 /* ============================================================
@@ -308,7 +369,9 @@
   color: var(--text-secondary);
 }
 
-.pb-lang:hover { color: var(--text-primary); }
+.pb-lang:hover {
+  color: var(--text-primary);
+}
 
 .pb-nav-end {
   display: flex;
@@ -331,7 +394,9 @@
   background: transparent;
   border: 1px solid var(--text-primary);
   border-radius: var(--radius-sm);
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
 }
 
 .pb-services:hover {
@@ -345,8 +410,10 @@
   transform: scaleX(var(--x-sign));
 }
 
-[lang="ar"] .pb-services,
-[dir="rtl"] .pb-services { letter-spacing: normal; }
+[lang='ar'] .pb-services,
+[dir='rtl'] .pb-services {
+  letter-spacing: normal;
+}
 
 /* A reading column, set flush to the start edge rather than centred text.
    65ch on the lede, per the type scale in DESIGN.md. */
@@ -459,17 +526,38 @@
   font-size: 0.85rem;
 }
 
-.pb-foot a { color: var(--text-secondary); }
-.pb-foot a:hover { color: var(--text-primary); }
+.pb-foot a {
+  color: var(--text-secondary);
+}
+.pb-foot a:hover {
+  color: var(--text-primary);
+}
 
 @media (max-width: 640px) {
-  .pb-page { padding: var(--space-5) var(--space-4) var(--space-10); }
-  .pb-nav { margin-bottom: var(--space-8); gap: var(--space-3); }
-  .pb-nav-end { gap: var(--space-3); }
-  .pb-services { padding: 8px 12px; font-size: 0.75rem; }
+  .pb-page {
+    padding: var(--space-5) var(--space-4) var(--space-10);
+  }
+  .pb-nav {
+    margin-bottom: var(--space-8);
+    gap: var(--space-3);
+  }
+  .pb-nav-end {
+    gap: var(--space-3);
+  }
+  .pb-services {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
   /* The wordmark stands down before the button does — the logo is beside it and
      still identifies the page, and the way back matters more than the word. */
-  .pb-brand span { display: none; }
-  .pb-card { padding: var(--space-5); }
-  .pb-problems li { grid-template-columns: 2.2rem minmax(0, 1fr); gap: var(--space-3); }
+  .pb-brand span {
+    display: none;
+  }
+  .pb-card {
+    padding: var(--space-5);
+  }
+  .pb-problems li {
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: var(--space-3);
+  }
 }

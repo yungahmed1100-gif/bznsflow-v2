@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 
-const read = (path) => readFile(new URL(path, import.meta.url), 'utf8');
+const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 
 test('Vercel functions run beside the Ireland Convex deployment', async () => {
   const config = JSON.parse(await read('../vercel.json'));

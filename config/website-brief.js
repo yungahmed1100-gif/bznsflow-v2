@@ -11,30 +11,70 @@ export const BRIEF_DOMAIN = Object.freeze(['have', 'need']);
 
 // key → [max length, kind]. `url` must be http(s); `email` must look like one.
 export const BRIEF_TEXT = Object.freeze({
-  nameEn: [120, 'text'], nameAr: [120, 'text'], about: [1500, 'text'], services: [2000, 'text'],
-  phone: [40, 'text'], email: [254, 'email'], address: [300, 'text'], mapUrl: [500, 'url'], hours: [300, 'text'],
-  instagram: [300, 'text'], facebook: [300, 'text'], tiktok: [300, 'text'], otherSocial: [300, 'text'],
-  domain: [253, 'text'], fontNotes: [300, 'text'], notes: [2000, 'text'],
-  domainChoice: [80, 'domain'], mailboxLocal: [64, 'local'], recoveryEmail: [254, 'email'],
-  payContactName: [120, 'text'], payContactPhone: [40, 'text'],
+  nameEn: [120, 'text'],
+  nameAr: [120, 'text'],
+  about: [1500, 'text'],
+  services: [2000, 'text'],
+  phone: [40, 'text'],
+  email: [254, 'email'],
+  address: [300, 'text'],
+  mapUrl: [500, 'url'],
+  hours: [300, 'text'],
+  instagram: [300, 'text'],
+  facebook: [300, 'text'],
+  tiktok: [300, 'text'],
+  otherSocial: [300, 'text'],
+  domain: [253, 'text'],
+  fontNotes: [300, 'text'],
+  notes: [2000, 'text'],
+  domainChoice: [80, 'domain'],
+  mailboxLocal: [64, 'local'],
+  recoveryEmail: [254, 'email'],
+  payContactName: [120, 'text'],
+  payContactPhone: [40, 'text'],
 });
 
 // Email labels, in the order Ahmed reads them.
 export const BRIEF_LABELS = Object.freeze([
-  ['nameEn', 'Business name (English)'], ['nameAr', 'Business name (Arabic)'], ['about', 'What the business does'],
-  ['services', 'Services or products to feature'], ['phone', 'Phone / WhatsApp'], ['email', 'Email'], ['address', 'Address'],
-  ['mapUrl', 'Map link'], ['hours', 'Opening hours'], ['instagram', 'Instagram'], ['facebook', 'Facebook'], ['tiktok', 'TikTok'],
-  ['otherSocial', 'Other social'], ['domainChoice', 'Domain to register'], ['domainAlternates', 'If taken, these instead'],
-  ['mailboxLocal', 'Mailbox name'], ['recoveryEmail', 'Recovery email'], ['domainStatus', 'Domain'], ['domain', 'Domain name'], ['languages', 'Website languages'],
-  ['style', 'Style'], ['colors', 'Brand colours'], ['fontNotes', 'Fonts'], ['references', 'Reference websites'],
-  ['pages', 'Pages'], ['designLogo', 'Needs a simple logo designed'], ['notes', 'Anything else'],
-  ['payments', 'Online payments through Paymob'], ['payContactName', 'Paymob contact (personal)'], ['payContactPhone', 'Personal mobile'],
+  ['nameEn', 'Business name (English)'],
+  ['nameAr', 'Business name (Arabic)'],
+  ['about', 'What the business does'],
+  ['services', 'Services or products to feature'],
+  ['phone', 'Phone / WhatsApp'],
+  ['email', 'Email'],
+  ['address', 'Address'],
+  ['mapUrl', 'Map link'],
+  ['hours', 'Opening hours'],
+  ['instagram', 'Instagram'],
+  ['facebook', 'Facebook'],
+  ['tiktok', 'TikTok'],
+  ['otherSocial', 'Other social'],
+  ['domainChoice', 'Domain to register'],
+  ['domainAlternates', 'If taken, these instead'],
+  ['mailboxLocal', 'Mailbox name'],
+  ['recoveryEmail', 'Recovery email'],
+  ['domainStatus', 'Domain'],
+  ['domain', 'Domain name'],
+  ['languages', 'Website languages'],
+  ['style', 'Style'],
+  ['colors', 'Brand colours'],
+  ['fontNotes', 'Fonts'],
+  ['references', 'Reference websites'],
+  ['pages', 'Pages'],
+  ['designLogo', 'Needs a simple logo designed'],
+  ['notes', 'Anything else'],
+  ['payments', 'Online payments through Paymob'],
+  ['payContactName', 'Paymob contact (personal)'],
+  ['payContactPhone', 'Personal mobile'],
 ]);
 
 const URL_RE = /^https?:\/\/[^\s<>"']+$/i;
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
 const HEX_RE = /^#[0-9a-f]{6}$/i;
-const clean = value => String(value).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim();
+const clean = value =>
+  String(value)
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
+    .trim();
 
 /**
  * Validate and normalise a submitted brief.
@@ -79,7 +119,8 @@ export function normalizeBrief(input) {
   if (!list('references', 3, x => x.length <= 300 && URL_RE.test(x))) return bad('references');
   if (!list('pages', BRIEF_PAGES.length, x => BRIEF_PAGES.includes(x))) return bad('pages');
   if (!list('domainAlternates', 2, websiteDomain)) return bad('domainAlternates');
-  if (value.domainAlternates) value.domainAlternates = value.domainAlternates.map(d => d.toLowerCase()).filter(d => d !== value.domainChoice);
+  if (value.domainAlternates)
+    value.domainAlternates = value.domainAlternates.map(d => d.toLowerCase()).filter(d => d !== value.domainChoice);
   if (value.domainAlternates && !value.domainAlternates.length) delete value.domainAlternates;
   if (input.designLogo !== undefined && typeof input.designLogo !== 'boolean') return bad('designLogo');
   if (input.designLogo) value.designLogo = true;
@@ -92,7 +133,10 @@ export function normalizeBrief(input) {
   // Paymob is optional; whoever asks for it gives a personal contact BznsFlow handles the account with.
   if (value.payments === 'yes' && !value.payContactName) return bad('payContactName', 'brief_required');
   if (value.payments === 'yes' && !value.payContactPhone) return bad('payContactPhone', 'brief_required');
-  if (value.payments !== 'yes') { delete value.payContactName; delete value.payContactPhone; }
+  if (value.payments !== 'yes') {
+    delete value.payContactName;
+    delete value.payContactPhone;
+  }
   return { ok: true, value };
 }
 
@@ -102,9 +146,16 @@ export function normalizeBrief(input) {
 
 export const BRIEF_PAYMENTS = Object.freeze(['yes', 'no']);
 /** The documents Paymob needs, in the order the owner meets them: [kind, fewest, most]. */
-export const PAYMENT_DOC_SLOTS = Object.freeze([
-  ['doc_cr', 1, 2], ['doc_id', 1, 10], ['doc_bank', 1, 2], ['doc_tax', 0, 1], ['doc_forms', 1, 4], ['doc_invoice', 1, 3],
-].map(([kind, min, max]) => Object.freeze({ kind, min, max })));
+export const PAYMENT_DOC_SLOTS = Object.freeze(
+  [
+    ['doc_cr', 1, 2],
+    ['doc_id', 1, 10],
+    ['doc_bank', 1, 2],
+    ['doc_tax', 0, 1],
+    ['doc_forms', 1, 4],
+    ['doc_invoice', 1, 3],
+  ].map(([kind, min, max]) => Object.freeze({ kind, min, max })),
+);
 export const PAYMENT_DOC_KINDS = Object.freeze(PAYMENT_DOC_SLOTS.map(slot => slot.kind));
 export const PAYMENT_DOC_TYPES = Object.freeze(['application/pdf', 'image/jpeg', 'image/png']);
 export const PAYMENT_DOC_MAX_BYTES = 8 * 1024 * 1024;
@@ -132,16 +183,28 @@ const LABEL = '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?';
 const DOMAIN_RE = new RegExp(`^${LABEL}\\.(${WEBSITE_TLDS.join('|')})$`);
 const LOCAL_RE = /^[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?$/;
 const RESERVED = /^(bznsflow|bznsflowai)\./;
-export const websiteDomain = value => typeof value === 'string' && DOMAIN_RE.test(value.trim().toLowerCase()) && !RESERVED.test(value.trim().toLowerCase());
+export const websiteDomain = value =>
+  typeof value === 'string' && DOMAIN_RE.test(value.trim().toLowerCase()) && !RESERVED.test(value.trim().toLowerCase());
 
 /**
  * The names to look up for what the owner typed: "Nour Abayas", "nourabayas.net" or "https://www.nour.co/x"
  * becomes nour-abayas.com, .net, .co, with an ending they typed first. Nothing for text without Latin letters.
  */
 export function domainCandidates(input) {
-  const raw = String(input || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[/?#].*$/, '');
-  const [name, tld] = raw.includes('.') ? [raw.slice(0, raw.lastIndexOf('.')), raw.slice(raw.lastIndexOf('.') + 1)] : [raw, ''];
-  const label = name.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 63).replace(/-+$/, '');
+  const raw = String(input || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/[/?#].*$/, '');
+  const [name, tld] = raw.includes('.')
+    ? [raw.slice(0, raw.lastIndexOf('.')), raw.slice(raw.lastIndexOf('.') + 1)]
+    : [raw, ''];
+  const label = name
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 63)
+    .replace(/-+$/, '');
   if (!label) return [];
   const order = WEBSITE_TLDS.includes(tld) ? [tld, ...WEBSITE_TLDS.filter(t => t !== tld)] : WEBSITE_TLDS;
   return order.map(t => `${label}.${t}`).filter(websiteDomain);
@@ -151,7 +214,8 @@ export function domainCandidates(input) {
 
 export const WEBSITE_STAGES = Object.freeze(['received', 'domain', 'mailbox', 'building', 'live']);
 export const WEBSITE_DELIVERY_DAYS = 3;
-const HOUR = 3600000, DAY = 24 * HOUR;
+const HOUR = 3600000,
+  DAY = 24 * HOUR;
 const MUSCAT = 4 * HOUR; // Asia/Muscat is UTC+4 all year.
 const DUE_HOUR = 17;
 const working = localMidnight => new Date(localMidnight).getUTCDay() <= 4; // Sunday to Thursday
@@ -164,6 +228,8 @@ const working = localMidnight => new Date(localMidnight).getUTCDay() <= 4; // Su
 export function addBusinessDays(at, days = WEBSITE_DELIVERY_DAYS) {
   const local = at + MUSCAT;
   let day = local - (local % DAY);
-  for (let count = 0; count < days; count++) do day += DAY; while (!working(day));
+  for (let count = 0; count < days; count++)
+    do day += DAY;
+    while (!working(day));
   return day + DUE_HOUR * HOUR - MUSCAT;
 }

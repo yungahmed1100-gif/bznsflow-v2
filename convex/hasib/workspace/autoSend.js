@@ -19,10 +19,17 @@ export async function autoSendRefusal(ctx, tenant, { conversation }, now) {
   if (conversation.takeover) return 'team_handling';
   if (!conversation.lastInbound || conversation.lastInbound + DAY <= now) return 'window_closed';
   if (tenant.row?.integration?.id !== conversation.integrationId) return 'other_number';
-  const control = await ctx.db.query('blueMessagingControls').withIndex('by_integration', q => q.eq('integrationId', conversation.integrationId)).unique();
+  const control = await ctx.db
+    .query('blueMessagingControls')
+    .withIndex('by_integration', q => q.eq('integrationId', conversation.integrationId))
+    .unique();
   if (!control?.active) return 'layla_paused';
-  const recent = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', conversation._id).gte('at', now - DAY)).take(200);
-  if (recent.filter(m => String(m.key || '').startsWith(`${AUTO_KEY}:`)).length >= AUTO_SENDS_PER_DAY) return 'daily_cap';
+  const recent = await ctx.db
+    .query('blueMessages')
+    .withIndex('by_conversation_at', q => q.eq('conversationId', conversation._id).gte('at', now - DAY))
+    .take(200);
+  if (recent.filter(m => String(m.key || '').startsWith(`${AUTO_KEY}:`)).length >= AUTO_SENDS_PER_DAY)
+    return 'daily_cap';
   return null;
 }
 
@@ -34,15 +41,34 @@ export async function autoSendRefusal(ctx, tenant, { conversation }, now) {
  * @returns {Promise<{ status: 'queued', messageId: string } | { skip: string }>}
  */
 export async function sendAutomatedDraft(ctx, tenant, { draft, keyPrefix, messageLinks }, now) {
-  const conversation = draft.conversationId ? await owned(ctx, draft.conversationId, tenant.accountId, 'blueConversations') : null;
+  const conversation = draft.conversationId
+    ? await owned(ctx, draft.conversationId, tenant.accountId, 'blueConversations')
+    : null;
   const refusal = await autoSendRefusal(ctx, tenant, { conversation }, now);
   if (refusal) return { skip: refusal };
   const key = `${AUTO_KEY}:${keyPrefix}:${draft._id}`;
-  const existing = await ctx.db.query('blueMessages').withIndex('by_key', q => q.eq('key', key)).unique();
+  const existing = await ctx.db
+    .query('blueMessages')
+    .withIndex('by_key', q => q.eq('key', key))
+    .unique();
   if (existing) return { status: 'queued', messageId: existing._id };
-  const messageId = await ctx.db.insert('blueMessages', { key, integrationId: conversation.integrationId, accountId: tenant.accountId,
-    conversationId: conversation._id, conversationVersion: conversation.version || 0, profileVersion: tenant.row.profileVersion || 1, ...messageLinks,
-    direction: 'out', text: draft.text, at: now, expiresAt: now + 30 * DAY, textExpiresAt: now + 30 * DAY, status: 'queued', manual: false, handoff: false });
+  const messageId = await ctx.db.insert('blueMessages', {
+    key,
+    integrationId: conversation.integrationId,
+    accountId: tenant.accountId,
+    conversationId: conversation._id,
+    conversationVersion: conversation.version || 0,
+    profileVersion: tenant.row.profileVersion || 1,
+    ...messageLinks,
+    direction: 'out',
+    text: draft.text,
+    at: now,
+    expiresAt: now + 30 * DAY,
+    textExpiresAt: now + 30 * DAY,
+    status: 'queued',
+    manual: false,
+    handoff: false,
+  });
   if (tenant.workerFunction) await ctx.scheduler.runAfter(0, tenant.workerFunction, { jobId: messageId });
   return { status: 'queued', messageId };
 }

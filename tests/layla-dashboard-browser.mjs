@@ -13,73 +13,266 @@ import { addBusinessDays } from '../config/website-brief.js';
 const BASE = process.argv[2] || 'http://127.0.0.1:5199';
 const OUT = process.env.LAYLA_BROWSER_OUT || 'work/layla-dashboard-browser';
 await mkdir(OUT, { recursive: true });
-const HOUR = 3600000, now = Date.now();
-const pack = { id: 'real-estate', archetype: 'project', sensitive: false, fields: [
-  { key: 'need', kind: 'enum', en: 'Need', ar: 'الاحتياج', required: true, options: [{ id: 'rent', en: 'Rent', ar: 'إيجار' }, { id: 'buy', en: 'Buy', ar: 'شراء' }] },
-  { key: 'area', kind: 'area', en: 'Area', ar: 'المنطقة', required: true, options: [] },
-  { key: 'budget', kind: 'budget', en: 'Budget', ar: 'الميزانية', required: true, options: [] }] };
+const HOUR = 3600000,
+  now = Date.now();
+const pack = {
+  id: 'real-estate',
+  archetype: 'project',
+  sensitive: false,
+  fields: [
+    {
+      key: 'need',
+      kind: 'enum',
+      en: 'Need',
+      ar: 'الاحتياج',
+      required: true,
+      options: [
+        { id: 'rent', en: 'Rent', ar: 'إيجار' },
+        { id: 'buy', en: 'Buy', ar: 'شراء' },
+      ],
+    },
+    { key: 'area', kind: 'area', en: 'Area', ar: 'المنطقة', required: true, options: [] },
+    { key: 'budget', kind: 'budget', en: 'Budget', ar: 'الميزانية', required: true, options: [] },
+  ],
+};
 
 function fixture() {
-  const contact = (id, name, number, extra = {}) => ({ id, name, nameSource: name.startsWith('+') ? 'number' : 'whatsapp', number, ownerName: '', customerName: '', profileName: name, source: 'inbound', sectorId: 'real-estate',
-    fields: [{ key: 'need', value: 'rent', source: 'customer', confidence: 0.9, at: now }], qualificationStatus: 'in_progress', qualificationOverride: null, status: 'in_progress',
-    consent: { status: 'unknown', source: '', date: '', purpose: '' }, optout: false, lastActivityAt: now - HOUR, lastInboundAt: now - HOUR, takeover: false, conversationId: `c-${id}`, windowOpenUntil: now + 23 * HOUR, ...extra });
+  const contact = (id, name, number, extra = {}) => ({
+    id,
+    name,
+    nameSource: name.startsWith('+') ? 'number' : 'whatsapp',
+    number,
+    ownerName: '',
+    customerName: '',
+    profileName: name,
+    source: 'inbound',
+    sectorId: 'real-estate',
+    fields: [{ key: 'need', value: 'rent', source: 'customer', confidence: 0.9, at: now }],
+    qualificationStatus: 'in_progress',
+    qualificationOverride: null,
+    status: 'in_progress',
+    consent: { status: 'unknown', source: '', date: '', purpose: '' },
+    optout: false,
+    lastActivityAt: now - HOUR,
+    lastInboundAt: now - HOUR,
+    takeover: false,
+    conversationId: `c-${id}`,
+    windowOpenUntil: now + 23 * HOUR,
+    ...extra,
+  });
   const contacts = [
     contact('k1', 'Aisha Al Balushi', '96891234567'),
-    contact('k2', 'محمد الحارثي', '96892345678', { lastInboundAt: now - 30 * HOUR, windowOpenUntil: now - 6 * HOUR, consent: { status: 'granted', source: 'Store form', date: '2026-09-01', purpose: 'Offers' } }),
-    contact('k3', '+971501234567', '971501234567', { nameSource: 'number', status: 'qualified', qualificationStatus: 'qualified', optout: true }),
+    contact('k2', 'محمد الحارثي', '96892345678', {
+      lastInboundAt: now - 30 * HOUR,
+      windowOpenUntil: now - 6 * HOUR,
+      consent: { status: 'granted', source: 'Store form', date: '2026-09-01', purpose: 'Offers' },
+    }),
+    contact('k3', '+971501234567', '971501234567', {
+      nameSource: 'number',
+      status: 'qualified',
+      qualificationStatus: 'qualified',
+      optout: true,
+    }),
   ];
   const messages = {
-    'c-k1': [{ id: 'm1', direction: 'in', text: 'Do you have villas for rent in Seeb?', status: 'received', at: now - 2 * HOUR }, { id: 'm2', direction: 'out', text: 'Yes — villas from 500 OMR.\n\nTo help you further, could you share your approximate budget?', status: 'read', at: now - 2 * HOUR + 5000 },
-      { id: 'm3', direction: 'in', text: null, textExpired: true, status: 'received', at: now - 40 * 86400000 }],
-    'c-k2': [{ id: 'm4', direction: 'in', text: 'كم سعر الشقة في الموالح؟', status: 'received', at: now - 30 * HOUR }, { id: 'm5', direction: 'template', templateName: 'autumn_offer', text: 'Hello محمد, enjoy 10% off.', status: 'failed', errorCode: 131049, at: now - 29 * HOUR }],
+    'c-k1': [
+      {
+        id: 'm1',
+        direction: 'in',
+        text: 'Do you have villas for rent in Seeb?',
+        status: 'received',
+        at: now - 2 * HOUR,
+      },
+      {
+        id: 'm2',
+        direction: 'out',
+        text: 'Yes — villas from 500 OMR.\n\nTo help you further, could you share your approximate budget?',
+        status: 'read',
+        at: now - 2 * HOUR + 5000,
+      },
+      { id: 'm3', direction: 'in', text: null, textExpired: true, status: 'received', at: now - 40 * 86400000 },
+    ],
+    'c-k2': [
+      { id: 'm4', direction: 'in', text: 'كم سعر الشقة في الموالح؟', status: 'received', at: now - 30 * HOUR },
+      {
+        id: 'm5',
+        direction: 'template',
+        templateName: 'autumn_offer',
+        text: 'Hello محمد, enjoy 10% off.',
+        status: 'failed',
+        errorCode: 131049,
+        at: now - 29 * HOUR,
+      },
+    ],
     'c-k3': [{ id: 'm6', direction: 'in', text: 'stop', status: 'received', at: now - 3 * HOUR }],
   };
   return { contacts, messages, campaigns: [], calls: [], bodies: [], takeover: {}, imported: new Map() };
 }
 
-function api(state, { overviewStatus = 200, overviewReason, founderPreview = false, broadcastEnabled = true, plan = 'ascend', connected = true, imageHeader = false, staleTemplates = false } = {}) {
+function api(
+  state,
+  {
+    overviewStatus = 200,
+    overviewReason,
+    founderPreview = false,
+    broadcastEnabled = true,
+    plan = 'ascend',
+    connected = true,
+    imageHeader = false,
+    staleTemplates = false,
+  } = {},
+) {
   // The real overview always carries the plan's capabilities (convex/blueDashboardState.js); this owner is on Ascend unless a test says otherwise.
-  const overview = { ok: true, csrfToken: 'a'.repeat(64), account: { email: 'owner@example.test' }, plan, workspaceRole: 'manager', capabilities: capabilitiesFor(plan), dashboardAvailable: true, broadcastEnabled, connected,
+  const overview = {
+    ok: true,
+    csrfToken: 'a'.repeat(64),
+    account: { email: 'owner@example.test' },
+    plan,
+    workspaceRole: 'manager',
+    capabilities: capabilitiesFor(plan),
+    dashboardAvailable: true,
+    broadcastEnabled,
+    connected,
     founderPreview,
-    business: { name: 'Blue Studio Properties', sector: 'Real estate', sectorId: 'real-estate' }, integration: { sender: '96890000000', path: 'new_number', status: 'connected', checks: { routing: true, registered: true, path: true }, checkedAt: now },
-    messaging: { available: true, active: true, reason: '', broadcastAvailable: true, limits: { perMinute: 10, perDay: 100, usedToday: 7 } }, timezone: 'Asia/Muscat', migrationPending: false, qualification: pack };
-  const template = { id: '111', name: 'autumn_offer', language: 'en', category: 'MARKETING', status: 'APPROVED', parameterFormat: 'positional', header: null, body: 'Hello {{1}}, enjoy {{2}} off this week.', footer: 'Tap Stop promotions to opt out',
-    buttons: [], variables: [{ key: '1', component: 'body', example: 'Sara' }, { key: '2', component: 'body', example: '10%' }], sendable: true, unsupportedReason: null, syncedAt: now };
-  const item = c => ({ id: c.conversationId, contact: { ...c, takeover: !!state.takeover[c.conversationId] }, lastMessage: (m => m && { direction: m.direction, text: m.text, status: m.status, at: m.at })(state.messages[c.conversationId].filter(x => x.text).at(-1)),
-    updatedAt: c.lastActivityAt, takeover: !!state.takeover[c.conversationId], optout: c.optout, windowOpenUntil: c.windowOpenUntil });
+    business: { name: 'Blue Studio Properties', sector: 'Real estate', sectorId: 'real-estate' },
+    integration: {
+      sender: '96890000000',
+      path: 'new_number',
+      status: 'connected',
+      checks: { routing: true, registered: true, path: true },
+      checkedAt: now,
+    },
+    messaging: {
+      available: true,
+      active: true,
+      reason: '',
+      broadcastAvailable: true,
+      limits: { perMinute: 10, perDay: 100, usedToday: 7 },
+    },
+    timezone: 'Asia/Muscat',
+    migrationPending: false,
+    qualification: pack,
+  };
+  const template = {
+    id: '111',
+    name: 'autumn_offer',
+    language: 'en',
+    category: 'MARKETING',
+    status: 'APPROVED',
+    parameterFormat: 'positional',
+    header: null,
+    body: 'Hello {{1}}, enjoy {{2}} off this week.',
+    footer: 'Tap Stop promotions to opt out',
+    buttons: [],
+    variables: [
+      { key: '1', component: 'body', example: 'Sara' },
+      { key: '2', component: 'body', example: '10%' },
+    ],
+    sendable: true,
+    unsupportedReason: null,
+    syncedAt: now,
+  };
+  const item = c => ({
+    id: c.conversationId,
+    contact: { ...c, takeover: !!state.takeover[c.conversationId] },
+    lastMessage: (m => m && { direction: m.direction, text: m.text, status: m.status, at: m.at })(
+      state.messages[c.conversationId].filter(x => x.text).at(-1),
+    ),
+    updatedAt: c.lastActivityAt,
+    takeover: !!state.takeover[c.conversationId],
+    optout: c.optout,
+    windowOpenUntil: c.windowOpenUntil,
+  });
   return async (surface, method, body) => {
     state.calls.push({ surface, method, action: body?.action });
     if (body?.action) state.bodies.push(body);
     const ok = value => ({ status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), ...value } });
-    if (surface === 'dashboard' && method === 'GET') return overviewStatus === 200 ? { status: 200, json: overview } : { status: overviewStatus, json: { ok: false, reason: overviewReason } };
+    if (surface === 'dashboard' && method === 'GET')
+      return overviewStatus === 200
+        ? { status: 200, json: overview }
+        : { status: overviewStatus, json: { ok: false, reason: overviewReason } };
     if (surface === 'messaging') {
-      if (['takeover', 'resume_conversation'].includes(body?.action)) state.takeover[body.conversationId] = body.action === 'takeover';
+      if (['takeover', 'resume_conversation'].includes(body?.action))
+        state.takeover[body.conversationId] = body.action === 'takeover';
       return ok({ available: true, active: true, reason: '', limits: { usedToday: 7 } });
     }
     switch (body?.action) {
-      case 'takeover_handoff': state.takeover[body.conversationId] = true; return ok({});
-      case 'return_handoff': state.takeover[body.conversationId] = false; return ok({});
-      case 'resolve_handoff': return ok({});
-      case 'handoffs': return ok({ items: [], cursor: null });
-      case 'conversations': return ok({ items: state.contacts.filter(c => !body.search || c.name.includes(body.search) || c.number.includes(body.search)).map(item), cursor: null });
-      case 'thread': { const c = state.contacts.find(x => x.conversationId === body.conversationId);
-        return ok({ contact: c, conversation: { id: c.conversationId, takeover: !!state.takeover[c.conversationId], optout: c.optout, windowOpenUntil: c.windowOpenUntil }, messages: state.messages[c.conversationId], before: null }); }
-      case 'contacts': return ok({ items: state.contacts.map(c => ({ ...c, takeover: !!state.takeover[c.conversationId] })), cursor: null, migrationPending: false, qualification: pack });
-      case 'templates': case 'sync_templates': {
+      case 'takeover_handoff':
+        state.takeover[body.conversationId] = true;
+        return ok({});
+      case 'return_handoff':
+        state.takeover[body.conversationId] = false;
+        return ok({});
+      case 'resolve_handoff':
+        return ok({});
+      case 'handoffs':
+        return ok({ items: [], cursor: null });
+      case 'conversations':
+        return ok({
+          items: state.contacts
+            .filter(c => !body.search || c.name.includes(body.search) || c.number.includes(body.search))
+            .map(item),
+          cursor: null,
+        });
+      case 'thread': {
+        const c = state.contacts.find(x => x.conversationId === body.conversationId);
+        return ok({
+          contact: c,
+          conversation: {
+            id: c.conversationId,
+            takeover: !!state.takeover[c.conversationId],
+            optout: c.optout,
+            windowOpenUntil: c.windowOpenUntil,
+          },
+          messages: state.messages[c.conversationId],
+          before: null,
+        });
+      }
+      case 'contacts':
+        return ok({
+          items: state.contacts.map(c => ({ ...c, takeover: !!state.takeover[c.conversationId] })),
+          cursor: null,
+          migrationPending: false,
+          qualification: pack,
+        });
+      case 'templates':
+      case 'sync_templates': {
         // A stale list holds clinics_1 as the pre-release rules judged it, until a sync.
         if (body.action === 'sync_templates') state.synced = true;
         const stale = staleTemplates && !state.synced;
-        const clinics = { ...template, id: '222', name: 'clinics_1', language: 'ar', header: { format: 'IMAGE' }, body: 'مرحباً فريق {{1}}، كل رسالة من مريض قد تكون موعداً.',
-          variables: [{ key: '1', component: 'body', example: 'عيادة الابتسامة' }], ...(stale ? { sendable: false, unsupportedReason: 'media_header' } : {}) };
-        return ok({ templates: imageHeader || staleTemplates ? [template, clinics] : [template], syncedAt: now, stale, broadcastAvailable: true });
+        const clinics = {
+          ...template,
+          id: '222',
+          name: 'clinics_1',
+          language: 'ar',
+          header: { format: 'IMAGE' },
+          body: 'مرحباً فريق {{1}}، كل رسالة من مريض قد تكون موعداً.',
+          variables: [{ key: '1', component: 'body', example: 'عيادة الابتسامة' }],
+          ...(stale ? { sendable: false, unsupportedReason: 'media_header' } : {}),
+        };
+        return ok({
+          templates: imageHeader || staleTemplates ? [template, clinics] : [template],
+          syncedAt: now,
+          stale,
+          broadcastAvailable: true,
+        });
       }
-      case 'campaign_media_upload_url': return ok({ url: 'https://upload.test/1' });
-      case 'campaign_media_register': return ok({ media: { id: 'media1', format: body.format, contentType: 'image/png', size: 68 } });
-      case 'campaigns': return ok({ items: state.campaigns, cursor: null });
-      case 'campaign_detail': return ok({ campaign: state.campaigns.find(c => c.id === body.campaignId) });
+      case 'campaign_media_upload_url':
+        return ok({ url: 'https://upload.test/1' });
+      case 'campaign_media_register':
+        return ok({ media: { id: 'media1', format: body.format, contentType: 'image/png', size: 68 } });
+      case 'campaigns':
+        return ok({ items: state.campaigns, cursor: null });
+      case 'campaign_detail':
+        return ok({ campaign: state.campaigns.find(c => c.id === body.campaignId) });
       case 'import_contacts': {
         // Imported numbers become consented contacts; the wizard maps them back by number.
-        const contacts = body.rows.map(r => ({ id: `n${r.waId}`, number: r.waId, name: r.name || `+${r.waId}`, consent: { status: body.consent?.attested ? 'granted' : 'unknown' } }));
+        const contacts = body.rows.map(r => ({
+          id: `n${r.waId}`,
+          number: r.waId,
+          name: r.name || `+${r.waId}`,
+          consent: { status: body.consent?.attested ? 'granted' : 'unknown' },
+        }));
         for (const c of contacts) state.imported.set(c.id, c);
         return ok({ created: contacts.length, updated: 0, contacts });
       }
@@ -87,55 +280,142 @@ function api(state, { overviewStatus = 200, overviewReason, founderPreview = fal
         // The same resolver Convex uses, so the per-contact preview is what would be frozen.
         const own = recipientValueMap(body.values);
         const known = id => state.imported.get(id) || state.contacts.find(c => c.id === id);
-        const eligible = [], excluded = [];
+        const eligible = [],
+          excluded = [];
         for (const id of body.contactIds) {
-          const c = known(id), granted = c?.consent?.status === 'granted' && !c.optout;
+          const c = known(id),
+            granted = c?.consent?.status === 'granted' && !c.optout;
           const { parameters, missing } = resolveParameters(template, body.mapping, c, own.get(id));
-          if (!granted || missing.length) excluded.push({ contactId: id, name: c?.name || '', number: c ? `+${c.number}` : '', reason: granted ? 'missing_variable' : 'consent_unknown' });
+          if (!granted || missing.length)
+            excluded.push({
+              contactId: id,
+              name: c?.name || '',
+              number: c ? `+${c.number}` : '',
+              reason: granted ? 'missing_variable' : 'consent_unknown',
+            });
           else eligible.push({ contactId: id, name: c.name, number: `+${c.number}`, parameters });
         }
-        return ok({ eligible, excluded, cap: 100, allowance: 250, maxRecipients: 100, sendingAvailable: broadcastEnabled });
+        return ok({
+          eligible,
+          excluded,
+          cap: 100,
+          allowance: 250,
+          maxRecipients: 100,
+          sendingAvailable: broadcastEnabled,
+        });
       }
-      case 'campaign_create': state.campaigns.push({ id: 'camp1', name: 'autumn_offer', origin: 'broadcast', status: 'scheduled', reason: null, template: { name: 'autumn_offer', language: 'en', body: template.body }, scheduledAt: now + HOUR, timezone: 'Asia/Muscat', recipientCount: 1, createdAt: now, counts: { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 0 } });
+      case 'campaign_create':
+        state.campaigns.push({
+          id: 'camp1',
+          name: 'autumn_offer',
+          origin: 'broadcast',
+          status: 'scheduled',
+          reason: null,
+          template: { name: 'autumn_offer', language: 'en', body: template.body },
+          scheduledAt: now + HOUR,
+          timezone: 'Asia/Muscat',
+          recipientCount: 1,
+          createdAt: now,
+          counts: { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 0 },
+        });
         return ok({ campaign: state.campaigns[0] });
-      default: return { status: 400, json: { ok: false, reason: 'invalid_action' } };
+      default:
+        return { status: 400, json: { ok: false, reason: 'invalid_action' } };
     }
   };
 }
 
 function hasibOverview(packId, preview = false) {
-  const value = hasibPack(packId), industry = industryCatalog().find(row => row.id === packId);
-  return { ok: true, csrfToken: 'a'.repeat(64), preview, readOnly: preview, synthetic: preview, setupRequired: false, selectedIndustryId: packId, industry,
-    pack: { id: value.id, archetype: value.archetype, version: value.version, ownerUi: value.ownerUi, todayMetrics: value.todayMetrics, thresholds: value.thresholds,
-      variantOptions: value.variantOptions, orderFields: value.orderFields, expenseCategories: value.expenseCategories, modules: value.modules },
-    livePacks: industryCatalog().filter(row => row.live), industries: industryCatalog(), modules: visibleModules(value),
-    settings: { currency: 'OMR', vatRegistered: false, vatRateBps: 500, pricesIncludeVat: false, stockPolicy: 'warn', unsoldDays: 60, absenceDays: 14 },
+  const value = hasibPack(packId),
+    industry = industryCatalog().find(row => row.id === packId);
+  return {
+    ok: true,
+    csrfToken: 'a'.repeat(64),
+    preview,
+    readOnly: preview,
+    synthetic: preview,
+    setupRequired: false,
+    selectedIndustryId: packId,
+    industry,
+    pack: {
+      id: value.id,
+      archetype: value.archetype,
+      version: value.version,
+      ownerUi: value.ownerUi,
+      todayMetrics: value.todayMetrics,
+      thresholds: value.thresholds,
+      variantOptions: value.variantOptions,
+      orderFields: value.orderFields,
+      expenseCategories: value.expenseCategories,
+      modules: value.modules,
+    },
+    livePacks: industryCatalog().filter(row => row.live),
+    industries: industryCatalog(),
+    modules: visibleModules(value),
+    settings: {
+      currency: 'OMR',
+      vatRegistered: false,
+      vatRateBps: 500,
+      pricesIncludeVat: false,
+      stockPolicy: 'warn',
+      unsoldDays: 60,
+      absenceDays: 14,
+    },
     workspaceRole: packId === 'real-estate' ? 'manager' : undefined,
     teamSummary: packId === 'real-estate' ? { members: 0, pending: 0, limit: 5 } : undefined,
-    capabilities: packId === 'real-estate' ? { hasib: true, realEstate: true, money: true, insights: true, approvals: true, team: true, settings: true, imports: true, exports: true } : undefined,
-    counts: { pendingOrders: 0, lowStock: 0, laylaWaiting: 0, laylaOverdue: 0 } };
+    capabilities:
+      packId === 'real-estate'
+        ? {
+            hasib: true,
+            realEstate: true,
+            money: true,
+            insights: true,
+            approvals: true,
+            team: true,
+            settings: true,
+            imports: true,
+            exports: true,
+          }
+        : undefined,
+    counts: { pendingOrders: 0, lowStock: 0, laylaWaiting: 0, laylaOverdue: 0 },
+  };
 }
 
 async function openPage(browser, { width, lang = 'en', path, handler, extra, authEmail = null, authAccount = null }) {
   const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   let resolveAuthSession;
-  const authSessionDone = new Promise(resolve => { resolveAuthSession = resolve; });
+  const authSessionDone = new Promise(resolve => {
+    resolveAuthSession = resolve;
+  });
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.origin !== new URL(BASE).origin) return route.abort();
     if (url.pathname === '/api/layla-meta') {
       const surface = url.searchParams.get('surface');
-      const response = extra?.(surface, route.request()) || await handler(surface, route.request().method(), route.request().postDataJSON());
+      const response =
+        extra?.(surface, route.request()) ||
+        (await handler(surface, route.request().method(), route.request().postDataJSON()));
       return route.fulfill({ status: response.status, json: response.json });
     }
     if (url.pathname === '/api/auth-session') {
-      await route.fulfill({ status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), account: authAccount || (authEmail ? { email: authEmail } : null) } });
+      await route.fulfill({
+        status: 200,
+        json: {
+          ok: true,
+          csrfToken: 'a'.repeat(64),
+          account: authAccount || (authEmail ? { email: authEmail } : null),
+        },
+      });
       resolveAuthSession();
       return;
     }
-    if (url.pathname === '/api/access-admin') { const response = extra?.('access-admin', route.request()); if (response) return route.fulfill({ status: response.status, json: response.json }); }
-    if (url.pathname === '/api/product-setup' || url.pathname === '/api/knowledge') return route.fulfill({ status: 401, json: { reason: 'sign_in_required' } });
+    if (url.pathname === '/api/access-admin') {
+      const response = extra?.('access-admin', route.request());
+      if (response) return route.fulfill({ status: response.status, json: response.json });
+    }
+    if (url.pathname === '/api/product-setup' || url.pathname === '/api/knowledge')
+      return route.fulfill({ status: 401, json: { reason: 'sign_in_required' } });
     if (url.pathname.startsWith('/api/')) return route.fulfill({ status: 404, json: { ok: false } });
     return route.continue();
   });
@@ -143,43 +423,85 @@ async function openPage(browser, { width, lang = 'en', path, handler, extra, aut
   return { page, context, authSessionDone };
 }
 const noOverflow = page => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
-const axe = async page => (await new AxeBuilder({ page }).include('.ld').analyze()).violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
+const axe = async page =>
+  (await new AxeBuilder({ page }).include('.ld').analyze()).violations
+    .filter(v => ['critical', 'serious'].includes(v.impact))
+    .map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
 
 const browser = await chromium.launch();
 let count = 0;
 try {
   // A Catalyst workspace with no channel yet says what to do instead of loading forever.
   for (const lang of ['en', 'ar']) {
-    const { page, context } = await openPage(browser, { width: 1280, lang, path: '/layla/dashboard', handler: api(fixture(), { plan: 'catalyst', connected: false }) });
+    const { page, context } = await openPage(browser, {
+      width: 1280,
+      lang,
+      path: '/layla/dashboard',
+      handler: api(fixture(), { plan: 'catalyst', connected: false }),
+    });
     const empty = page.locator('.ld-empty-channel');
     await empty.waitFor();
-    assert.equal(await empty.getByRole('link', { name: lang === 'en' ? 'Connect a channel' : 'اربط قناة' }).getAttribute('href'), lang === 'en' ? '/en/catalyst/setup' : '/catalyst/setup'); count++;
-    assert.equal(await page.locator('.ld-main [role=status]', { hasText: /^(Loading…|جارٍ التحميل…)$/ }).count(), 0, `${lang}: no endless loading line`); count++;
+    assert.equal(
+      await empty.getByRole('link', { name: lang === 'en' ? 'Connect a channel' : 'اربط قناة' }).getAttribute('href'),
+      lang === 'en' ? '/en/catalyst/setup' : '/catalyst/setup',
+    );
+    count++;
+    assert.equal(
+      await page.locator('.ld-main [role=status]', { hasText: /^(Loading…|جارٍ التحميل…)$/ }).count(),
+      0,
+      `${lang}: no endless loading line`,
+    );
+    count++;
     await context.close();
   }
   // An empty inbox shows the one thing to try now.
   {
-    const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard', handler: api({ ...fixture(), contacts: [], messages: {} }, { plan: 'catalyst' }) });
-    await page.getByText('Try it now: send your number a message from another phone to see Layla answer.', { exact: false }).waitFor(); count++;
+    const { page, context } = await openPage(browser, {
+      width: 1280,
+      path: '/layla/dashboard',
+      handler: api({ ...fixture(), contacts: [], messages: {} }, { plan: 'catalyst' }),
+    });
+    await page
+      .getByText('Try it now: send your number a message from another phone to see Layla answer.', { exact: false })
+      .waitFor();
+    count++;
     await context.close();
   }
 
   // Direct visits: unsigned owners go through sign-in, accounts without a number go to setup.
-  for (const [reason, expected] of [['sign_in_required', /\/en\/catalyst\/setup\?next=dashboard$/], ['setup_required', /\/en\/catalyst\/setup$/]]) {
-    const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard', handler: api(fixture(), { overviewStatus: reason === 'sign_in_required' ? 401 : 409, overviewReason: reason }) });
-    await page.waitForURL(expected); count++;
+  for (const [reason, expected] of [
+    ['sign_in_required', /\/en\/catalyst\/setup\?next=dashboard$/],
+    ['setup_required', /\/en\/catalyst\/setup$/],
+  ]) {
+    const { page, context } = await openPage(browser, {
+      width: 1280,
+      path: '/layla/dashboard',
+      handler: api(fixture(), { overviewStatus: reason === 'sign_in_required' ? 401 : 409, overviewReason: reason }),
+    });
+    await page.waitForURL(expected);
+    count++;
     if (reason === 'sign_in_required') {
       // A returning owner can sign in straight back to the dashboard.
       const signIn = page.locator('.setup-signin a');
       await signIn.waitFor();
-      assert.equal(await signIn.getAttribute('href'), `/en/signin?next=${encodeURIComponent('/en/layla/dashboard')}`); count++;
+      assert.equal(await signIn.getAttribute('href'), `/en/signin?next=${encodeURIComponent('/en/layla/dashboard')}`);
+      count++;
     }
     await context.close();
   }
 
   // The owner access shortcut is rendered only for Ahmed's authenticated account.
-  for (const [email, expected] of [['Ahmed@BznsFlowAI.com', 1], ['other@example.test', 0], [null, 0]]) {
-    const { page, context, authSessionDone } = await openPage(browser, { width: 1280, path: '/layla/dashboard', handler: api(fixture()), authEmail: email });
+  for (const [email, expected] of [
+    ['Ahmed@BznsFlowAI.com', 1],
+    ['other@example.test', 0],
+    [null, 0],
+  ]) {
+    const { page, context, authSessionDone } = await openPage(browser, {
+      width: 1280,
+      path: '/layla/dashboard',
+      handler: api(fixture()),
+      authEmail: email,
+    });
     await page.waitForSelector('.ld-top .ld-brand');
     await authSessionDone;
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
@@ -193,242 +515,584 @@ try {
   // The founder-only selector includes live and preview-only built dashboards.
   // Pending packs are disabled and preview responses contain no customer data.
   for (const lang of ['en', 'ar']) {
-    const state = fixture(), handler = api(state, { founderPreview: true });
-    const { page, context } = await openPage(browser, { width: 320, lang, path: '/layla/dashboard', handler, extra: (surface, request) => {
-      if (surface !== 'hasib') return null;
-      const previewId = new URL(request.url()).searchParams.get('previewIndustry');
-      if (request.method() === 'GET') return { status: 200, json: hasibOverview(previewId || state.livePack || 'retail', !!previewId) };
-      const body = request.postDataJSON();
-      if (body.action === 'settings_update') { state.livePack = body.packId; return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), settings: {} } }; }
-      if (body.action === 'today') { const packId = body.previewIndustry || state.livePack || 'retail'; return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), synthetic: !!body.previewIndustry, date: '2026-09-28', needsYou: { ordersCount: 0, orders: [], chats: 0, lowStockCount: 0, lowStock: [], repairsReady: 0 }, industryActions: [], industryMetrics: hasibPack(packId).todayMetrics.map(metric => ({ id: metric.id, value: 0, format: 'number', detail: '' })), setup: { products: false, photos: false, services: false } } }; }
-      return { status: 403, json: { ok: false, reason: 'preview_read_only' } };
-    } });
+    const state = fixture(),
+      handler = api(state, { founderPreview: true });
+    const { page, context } = await openPage(browser, {
+      width: 320,
+      lang,
+      path: '/layla/dashboard',
+      handler,
+      extra: (surface, request) => {
+        if (surface !== 'hasib') return null;
+        const previewId = new URL(request.url()).searchParams.get('previewIndustry');
+        if (request.method() === 'GET')
+          return { status: 200, json: hasibOverview(previewId || state.livePack || 'retail', !!previewId) };
+        const body = request.postDataJSON();
+        if (body.action === 'settings_update') {
+          state.livePack = body.packId;
+          return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), settings: {} } };
+        }
+        if (body.action === 'today') {
+          const packId = body.previewIndustry || state.livePack || 'retail';
+          return {
+            status: 200,
+            json: {
+              ok: true,
+              csrfToken: 'a'.repeat(64),
+              synthetic: !!body.previewIndustry,
+              date: '2026-09-28',
+              needsYou: { ordersCount: 0, orders: [], chats: 0, lowStockCount: 0, lowStock: [], repairsReady: 0 },
+              industryActions: [],
+              industryMetrics: hasibPack(packId).todayMetrics.map(metric => ({
+                id: metric.id,
+                value: 0,
+                format: 'number',
+                detail: '',
+              })),
+              setup: { products: false, photos: false, services: false },
+            },
+          };
+        }
+        return { status: 403, json: { ok: false, reason: 'preview_read_only' } };
+      },
+    });
     const ar = lang === 'ar';
     const selector = page.locator('.hb-founder-preview select');
     await selector.waitFor();
     // Live: the founder's real sector, Dental left out (its 24-hour text rule would trim the pilot chats).
-    assert.equal(await selector.locator('option[value="live:retail-tech"]').count(), 1); count++;
-    assert.equal(await selector.locator('option[value="live:media"]').count(), 1); count++;
-    assert.equal(await selector.locator('option[value="live:dental"]').count(), 0, 'Dental is never a live choice for the founder'); count++;
-    assert.equal(await selector.inputValue(), 'live:retail', 'the current live sector is selected'); count++;
+    assert.equal(await selector.locator('option[value="live:retail-tech"]').count(), 1);
+    count++;
+    assert.equal(await selector.locator('option[value="live:media"]').count(), 1);
+    count++;
+    assert.equal(
+      await selector.locator('option[value="live:dental"]').count(),
+      0,
+      'Dental is never a live choice for the founder',
+    );
+    count++;
+    assert.equal(await selector.inputValue(), 'live:retail', 'the current live sector is selected');
+    count++;
     // Preview: every built industry, Dental included; pending ones disabled.
-    assert.equal(await selector.locator('option[value="preview:dental"]').count(), 1); count++;
-    assert.match(await selector.locator('option[value="preview:retail-tech"]').textContent(), ar ? /مباشر/ : /Live/); count++;
-    assert.notEqual(await selector.locator('option[value="preview:travel"]').getAttribute('disabled'), null); count++;
+    assert.equal(await selector.locator('option[value="preview:dental"]').count(), 1);
+    count++;
+    assert.match(await selector.locator('option[value="preview:retail-tech"]').textContent(), ar ? /مباشر/ : /Live/);
+    count++;
+    assert.notEqual(await selector.locator('option[value="preview:travel"]').getAttribute('disabled'), null);
+    count++;
     await selector.selectOption('preview:retail-tech');
-    await page.waitForFunction(() => document.querySelector('.hb-founder-preview select')?.value === 'preview:retail-tech');
-    await page.getByText(ar ? /معاينة للقراءة فقط/ : /Read-only preview/).first().waitFor(); assert.equal(state.livePack, undefined, 'preview does not change the live sector'); count++;
+    await page.waitForFunction(
+      () => document.querySelector('.hb-founder-preview select')?.value === 'preview:retail-tech',
+    );
+    await page
+      .getByText(ar ? /معاينة للقراءة فقط/ : /Read-only preview/)
+      .first()
+      .waitFor();
+    assert.equal(state.livePack, undefined, 'preview does not change the live sector');
+    count++;
     await selector.selectOption('preview:dental');
     await page.waitForFunction(() => document.querySelector('.hb-founder-preview select')?.value === 'preview:dental');
-    await page.getByText(ar ? /معاينة للقراءة فقط/ : /Read-only preview/).first().waitFor(); assert.equal(state.livePack, undefined, 'preview does not change the live sector'); count++;
+    await page
+      .getByText(ar ? /معاينة للقراءة فقط/ : /Read-only preview/)
+      .first()
+      .waitFor();
+    assert.equal(state.livePack, undefined, 'preview does not change the live sector');
+    count++;
     // A live choice saves the real sector, leaves the preview and keeps the bar on it.
     await selector.selectOption('live:media');
     await page.waitForFunction(() => document.querySelector('.hb-founder-preview select')?.value === 'live:media');
-    assert.equal(state.livePack, 'media', 'the live sector was saved'); count++;
-    await page.getByText(ar ? /قطاعك المباشر/ : /Your live sector: Media/).waitFor(); count++;
-    assert.equal(await page.locator('.hb-preview-banner').count(), 0, 'no longer a preview'); count++;
-    assert.equal(await noOverflow(page), true); count++;
-    assert.deepEqual(await axe(page), []); count++;
+    assert.equal(state.livePack, 'media', 'the live sector was saved');
+    count++;
+    await page.getByText(ar ? /قطاعك المباشر/ : /Your live sector: Media/).waitFor();
+    count++;
+    assert.equal(await page.locator('.hb-preview-banner').count(), 0, 'no longer a preview');
+    count++;
+    assert.equal(await noOverflow(page), true);
+    count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
     await context.close();
   }
 
   // Notices above Chats (founder bar, website reminder) shrink the chat panes instead of pushing them past the
   // bottom: the reply box stays on screen, and focusing it never scrolls the app shell (2026-10-24 report).
-  for (const [lang, width, height, fitsWithoutScroll] of [['en', 1440, 800, true], ['ar', 1280, 760, true], ['en', 1024, 600, false], ['ar', 375, 740, true]]) {
-    const state = fixture(), handler = api(state, { founderPreview: true });
-    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=chats&chat=c-k1', handler,
+  for (const [lang, width, height, fitsWithoutScroll] of [
+    ['en', 1440, 800, true],
+    ['ar', 1280, 760, true],
+    ['en', 1024, 600, false],
+    ['ar', 375, 740, true],
+  ]) {
+    const state = fixture(),
+      handler = api(state, { founderPreview: true });
+    const { page, context } = await openPage(browser, {
+      width,
+      lang,
+      path: '/layla/dashboard?tab=chats&chat=c-k1',
+      handler,
       authAccount: { id: 'a1', email: 'ahmed@bznsflowai.com', accessPlan: 'ascend', profileComplete: true },
-      extra: (surface, request) => surface === 'hasib' && request.method() === 'GET' ? { status: 200, json: hasibOverview('retail') }
-        : surface === 'website-brief' ? { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), brief: { version: 0, fields: {}, prefilled: [], draft: null, project: null, logo: null, photos: [] } } } : null });
+      extra: (surface, request) =>
+        surface === 'hasib' && request.method() === 'GET'
+          ? { status: 200, json: hasibOverview('retail') }
+          : surface === 'website-brief'
+            ? {
+                status: 200,
+                json: {
+                  ok: true,
+                  csrfToken: 'a'.repeat(64),
+                  brief: { version: 0, fields: {}, prefilled: [], draft: null, project: null, logo: null, photos: [] },
+                },
+              }
+            : null,
+    });
     await page.setViewportSize({ width, height });
     await page.locator('.ld-website-reminder').waitFor({ state: 'attached' });
     await page.locator('.hb-founder-preview').waitFor({ state: 'attached' });
     const reply = page.locator('#ld-reply');
     await reply.waitFor();
-    const where = () => page.evaluate(() => {
-      const box = document.querySelector('.ld-composer').getBoundingClientRect();
-      return { composer: box.bottom <= window.innerHeight + 1 && box.top >= 0, header: document.querySelector('.ld-top').getBoundingClientRect().top >= 0,
-        shell: document.querySelector('.ld').scrollTop + window.scrollY };
-    });
+    const where = () =>
+      page.evaluate(() => {
+        const box = document.querySelector('.ld-composer').getBoundingClientRect();
+        return {
+          composer: box.bottom <= window.innerHeight + 1 && box.top >= 0,
+          header: document.querySelector('.ld-top').getBoundingClientRect().top >= 0,
+          shell: document.querySelector('.ld').scrollTop + window.scrollY,
+        };
+      });
     const tag = `${lang} ${width}×${height}`;
     await page.screenshot({ path: `${OUT}/chats-notices-${lang}-${width}.png` });
-    if (fitsWithoutScroll) { assert.equal((await where()).composer, true, `${tag}: the reply box is on screen`); count++; }
+    if (fitsWithoutScroll) {
+      assert.equal((await where()).composer, true, `${tag}: the reply box is on screen`);
+      count++;
+    }
     await reply.focus();
     await page.keyboard.type('x');
-    assert.deepEqual(await where(), { composer: true, header: true, shell: 0 }, `${tag}: the reply box is reachable and the app frame never scrolls away`); count++;
-    if (width <= 768) { assert.equal(await page.locator('.ld-website-reminder').isVisible(), false, `${tag}: an open chat gets the whole phone screen`); count++; }
-    assert.equal(await noOverflow(page), true); count++;
+    assert.deepEqual(
+      await where(),
+      { composer: true, header: true, shell: 0 },
+      `${tag}: the reply box is reachable and the app frame never scrolls away`,
+    );
+    count++;
+    if (width <= 768) {
+      assert.equal(
+        await page.locator('.ld-website-reminder').isVisible(),
+        false,
+        `${tag}: an open chat gets the whole phone screen`,
+      );
+      count++;
+    }
+    assert.equal(await noOverflow(page), true);
+    count++;
     await context.close();
   }
 
   // The founder's Audits tab: a Sunday–Thursday week of free-audit bookings, details, and marking one done.
-  for (const [lang, width] of [['en', 1280], ['ar', 375]]) {
-    const state = fixture(), handler = api(state, { founderPreview: true });
-    const week = (() => { const local = Date.now() + 4 * HOUR, day = local - (local % (24 * HOUR)); return day - new Date(day).getUTCDay() * 24 * HOUR - 4 * HOUR; })();
-    const bookings = [{ id: 'b1', startAt: week + 24 * HOUR + 11 * HOUR, name: 'Sara', email: 'sara@example.com', phone: '+96890000000', business: 'Nour Abayas', industry: 'retail', note: 'WhatsApp replies', lang: 'en', status: 'booked', adminNote: '', createdAt: now },
-      { id: 'b2', startAt: week + 2 * 24 * HOUR + 14 * HOUR, name: 'Omar', email: 'omar@example.com', phone: '', business: '', industry: '', note: '', lang: 'ar', status: 'done', adminNote: 'Good fit', createdAt: now }];
+  for (const [lang, width] of [
+    ['en', 1280],
+    ['ar', 375],
+  ]) {
+    const state = fixture(),
+      handler = api(state, { founderPreview: true });
+    const week = (() => {
+      const local = Date.now() + 4 * HOUR,
+        day = local - (local % (24 * HOUR));
+      return day - new Date(day).getUTCDay() * 24 * HOUR - 4 * HOUR;
+    })();
+    const bookings = [
+      {
+        id: 'b1',
+        startAt: week + 24 * HOUR + 11 * HOUR,
+        name: 'Sara',
+        email: 'sara@example.com',
+        phone: '+96890000000',
+        business: 'Nour Abayas',
+        industry: 'retail',
+        note: 'WhatsApp replies',
+        lang: 'en',
+        status: 'booked',
+        adminNote: '',
+        createdAt: now,
+      },
+      {
+        id: 'b2',
+        startAt: week + 2 * 24 * HOUR + 14 * HOUR,
+        name: 'Omar',
+        email: 'omar@example.com',
+        phone: '',
+        business: '',
+        industry: '',
+        note: '',
+        lang: 'ar',
+        status: 'done',
+        adminNote: 'Good fit',
+        createdAt: now,
+      },
+    ];
     const audits = { gets: [], posts: [] };
-    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=audits', handler, extra: (surface, request) => {
-      if (surface === 'hasib') return request.method() === 'GET' ? { status: 200, json: hasibOverview('retail') } : null;
-      if (surface !== 'access-admin') return null;
-      if (request.method() === 'GET') { audits.gets.push(new URL(request.url()).searchParams); return { status: 200, json: { ok: true, bookings, upcoming: 1 } }; }
-      const body = request.postDataJSON(); audits.posts.push({ body, csrf: request.headers()['x-csrf-token'] });
-      Object.assign(bookings.find(b => b.id === body.bookingId), body.status ? { status: body.status } : {}, body.adminNote !== undefined ? { adminNote: body.adminNote } : {});
-      return { status: 200, json: { ok: true, booking: {} } };
-    } });
+    const { page, context } = await openPage(browser, {
+      width,
+      lang,
+      path: '/layla/dashboard?tab=audits',
+      handler,
+      extra: (surface, request) => {
+        if (surface === 'hasib')
+          return request.method() === 'GET' ? { status: 200, json: hasibOverview('retail') } : null;
+        if (surface !== 'access-admin') return null;
+        if (request.method() === 'GET') {
+          audits.gets.push(new URL(request.url()).searchParams);
+          return { status: 200, json: { ok: true, bookings, upcoming: 1 } };
+        }
+        const body = request.postDataJSON();
+        audits.posts.push({ body, csrf: request.headers()['x-csrf-token'] });
+        Object.assign(
+          bookings.find(b => b.id === body.bookingId),
+          body.status ? { status: body.status } : {},
+          body.adminNote !== undefined ? { adminNote: body.adminNote } : {},
+        );
+        return { status: 200, json: { ok: true, booking: {} } };
+      },
+    });
     const ar = lang === 'ar';
     await page.locator('#ld-audits-title').waitFor();
-    assert.ok(await page.locator('[data-section="audits"][aria-current="page"]').count() >= 1, 'the Audits tab is current'); count++;
-    assert.equal(audits.gets[0].get('op'), 'audits'); count++;
-    assert.equal(Number(audits.gets[0].get('to')) - Number(audits.gets[0].get('from')), 7 * 24 * HOUR, 'one week at a time'); count++;
+    assert.ok(
+      (await page.locator('[data-section="audits"][aria-current="page"]').count()) >= 1,
+      'the Audits tab is current',
+    );
+    count++;
+    assert.equal(audits.gets[0].get('op'), 'audits');
+    count++;
+    assert.equal(
+      Number(audits.gets[0].get('to')) - Number(audits.gets[0].get('from')),
+      7 * 24 * HOUR,
+      'one week at a time',
+    );
+    count++;
     const slot = page.locator('.ld-audit-slot.is-booked:visible').first();
     await slot.click();
-    await page.locator('.ld-audit-detail').getByText('sara@example.com').waitFor(); count++;
-    await page.locator('.ld-audit-detail').getByText(ar ? 'التجزئة والتجارة الإلكترونية' : 'Retail & e-commerce').waitFor(); count++;
+    await page.locator('.ld-audit-detail').getByText('sara@example.com').waitFor();
+    count++;
+    await page
+      .locator('.ld-audit-detail')
+      .getByText(ar ? 'التجزئة والتجارة الإلكترونية' : 'Retail & e-commerce')
+      .waitFor();
+    count++;
     await page.locator('.ld-audit-detail textarea').fill('Send the retail offer');
     await page.getByRole('button', { name: ar ? 'تم التدقيق' : 'Mark done' }).click();
     await page.getByText(ar ? 'تم التعليم كمكتمل.' : 'Marked done.').waitFor();
-    assert.deepEqual(audits.posts[0].body, { bookingId: 'b1', status: 'done', adminNote: 'Send the retail offer' }); count++;
-    assert.equal(audits.posts[0].csrf, 'a'.repeat(64), 'the change carries the dashboard CSRF token'); count++;
-    assert.ok(audits.gets.length >= 2, 'the calendar reloads after a change'); count++;
-    await Promise.all([page.waitForResponse(r => r.url().includes('op=audits') && r.request().method() === 'GET'), page.getByRole('button', { name: ar ? 'التالي' : 'Next' }).click()]);
-    assert.equal(Number(audits.gets.at(-1).get('from')), week + 7 * 24 * HOUR, 'next week'); count++;
-    assert.equal(await noOverflow(page), true); count++;
-    assert.deepEqual(await axe(page), []); count++;
+    assert.deepEqual(audits.posts[0].body, { bookingId: 'b1', status: 'done', adminNote: 'Send the retail offer' });
+    count++;
+    assert.equal(audits.posts[0].csrf, 'a'.repeat(64), 'the change carries the dashboard CSRF token');
+    count++;
+    assert.ok(audits.gets.length >= 2, 'the calendar reloads after a change');
+    count++;
+    await Promise.all([
+      page.waitForResponse(r => r.url().includes('op=audits') && r.request().method() === 'GET'),
+      page.getByRole('button', { name: ar ? 'التالي' : 'Next' }).click(),
+    ]);
+    assert.equal(Number(audits.gets.at(-1).get('from')), week + 7 * 24 * HOUR, 'next week');
+    count++;
+    assert.equal(await noOverflow(page), true);
+    count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
     await page.screenshot({ path: `${OUT}/audits-${lang}-${width}.png`, fullPage: true });
     await context.close();
   }
 
   // Someone other than the founder never gets the Audits tab, even from a link.
   {
-    const state = fixture(), handler = api(state);
-    const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard?tab=audits', handler, extra: surface => surface === 'hasib' ? { status: 200, json: hasibOverview('retail') } : null });
+    const state = fixture(),
+      handler = api(state);
+    const { page, context } = await openPage(browser, {
+      width: 1280,
+      path: '/layla/dashboard?tab=audits',
+      handler,
+      extra: surface => (surface === 'hasib' ? { status: 200, json: hasibOverview('retail') } : null),
+    });
     await page.locator('[data-section="work"][aria-current="page"]').waitFor();
-    assert.equal(await page.locator('[data-section="audits"]').count(), 0); count++;
+    assert.equal(await page.locator('[data-section="audits"]').count(), 0);
+    count++;
     await context.close();
   }
 
   // Every released industry opens its six-tab Work from an old Today link, bilingual, at phone, tablet and desktop sizes.
-  for (const packId of ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive']) for (const lang of ['en', 'ar']) for (const width of [320, 768, 1440]) {
-    const state = fixture(), handler = api(state);
-    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=today', handler, extra: (surface, request) => {
-      if (surface !== 'hasib') return null;
-      if (request.method() === 'GET') return { status: 200, json: hasibOverview(packId) };
-      const body = request.postDataJSON();
-      if (body.action === 'today') return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), date: '2026-09-29', needsYou: { ordersCount: 0, orders: [], chats: 0, lowStockCount: 0, lowStock: [], repairsReady: 0 }, industryActions: [], industryMetrics: hasibPack(packId).todayMetrics.map(metric => ({ id: metric.id, value: 0, format: 'number', detail: '' })), setup: { products: false, photos: false, services: false } } };
-      if (body.action === 'real_estate_overview') return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), workspaceRole: 'manager', counts: { opportunities: 0, unassigned: 0, slaBreaches: 0, staleListings: 0, todayViewings: 0, tasks: 0 }, pipeline: { new: 0, contacted: 0, qualified: 0, viewing: 0, offer: 0, won: 0, lost: 0 }, listings: { available: 0, reserved: 0, unavailable: 0, verifiedFresh: 0, stale: 0 }, viewings: { today: 0, upcoming: 0, outcomeMissing: 0 }, offers: { draft: 0, approvalPending: 0, active: 0, accepted: 0 }, approvals: { offers: 0, drafts: 0, total: 0 }, tasks: [] } };
-      if (body.action === 'real_estate_tasks') return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), items: [] } };
-      return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), items: [], members: [], cursor: null, limit: 5 } };
-    } });
-    if (packId === 'real-estate') {
-      // Real Estate is six tabs: an old Today link opens Deals, with what needs attention above the board.
-      await page.locator('.hb-attention').waitFor();
-      assert.equal(await page.locator('.ld-section-tabs a').count(), 4, `real-estate ${lang} Deals views at ${width}`); count++;
-      assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr'); count++;
-      assert.equal(await noOverflow(page), true, `real-estate ${lang} no overflow at ${width}`); count++;
-      assert.deepEqual(await axe(page), [], `real-estate ${lang} axe at ${width}`); count++;
-      await page.getByRole('button', { name: lang === 'ar' ? 'استفسار جديد' : 'New inquiry' }).first().click();
-      await page.locator('.hb-action-fields').waitFor(); count++;
-      if (width === 320 || width === 1440) await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
-      await context.close();
-      continue;
-    }
-    if (packId !== 'real-estate' && packId !== 'dental') {
-      // Six tabs since Releases A and B: an old Today link opens Work (Workshop, Projects, Orders or Store & repairs) on its first view.
-      const container = { automotive: '.hb-automotive-six', construction: '.hb-construction-six', retail: '.hb-store-six', 'retail-tech': '.hb-store-six' }[packId];
-      await page.locator(container).first().waitFor();
-      assert.equal(await page.locator('.ld-section-tabs a').count(), packId === 'construction' ? 3 : 4, `${packId} ${lang} Work views at ${width}`); count++;
-      assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr'); count++;
-      assert.equal(await noOverflow(page), true, `${packId} ${lang} no overflow at ${width}`); count++;
-      assert.deepEqual(await axe(page), [], `${packId} ${lang} axe at ${width}`); count++;
-      if (width === 320 || width === 1440) await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
-      await context.close();
-      continue;
-    }
-    if (packId === 'dental') {
-      // Dental is six tabs too: an old Today link opens the Visits day schedule.
-      await page.locator('.hb-day-nav').waitFor();
-      assert.equal(await page.locator('.ld-section-tabs a').count(), 4, `dental ${lang} Visits views at ${width}`); count++;
-      assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr'); count++;
-      assert.equal(await noOverflow(page), true, `dental ${lang} no overflow at ${width}`); count++;
-      assert.deepEqual(await axe(page), [], `dental ${lang} axe at ${width}`); count++;
-      await page.getByRole('button', { name: lang === 'ar' ? 'إضافة زيارة' : 'Add visit' }).first().click();
-      await page.locator('.hb-action-fields').waitFor(); count++;
-      if (width === 320 || width === 1440) await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
-      await context.close();
-      continue;
-    }
-    await context.close();
-  }
+  for (const packId of ['retail', 'retail-tech', 'dental', 'real-estate', 'construction', 'automotive'])
+    for (const lang of ['en', 'ar'])
+      for (const width of [320, 768, 1440]) {
+        const state = fixture(),
+          handler = api(state);
+        const { page, context } = await openPage(browser, {
+          width,
+          lang,
+          path: '/layla/dashboard?tab=today',
+          handler,
+          extra: (surface, request) => {
+            if (surface !== 'hasib') return null;
+            if (request.method() === 'GET') return { status: 200, json: hasibOverview(packId) };
+            const body = request.postDataJSON();
+            if (body.action === 'today')
+              return {
+                status: 200,
+                json: {
+                  ok: true,
+                  csrfToken: 'a'.repeat(64),
+                  date: '2026-09-29',
+                  needsYou: { ordersCount: 0, orders: [], chats: 0, lowStockCount: 0, lowStock: [], repairsReady: 0 },
+                  industryActions: [],
+                  industryMetrics: hasibPack(packId).todayMetrics.map(metric => ({
+                    id: metric.id,
+                    value: 0,
+                    format: 'number',
+                    detail: '',
+                  })),
+                  setup: { products: false, photos: false, services: false },
+                },
+              };
+            if (body.action === 'real_estate_overview')
+              return {
+                status: 200,
+                json: {
+                  ok: true,
+                  csrfToken: 'a'.repeat(64),
+                  workspaceRole: 'manager',
+                  counts: {
+                    opportunities: 0,
+                    unassigned: 0,
+                    slaBreaches: 0,
+                    staleListings: 0,
+                    todayViewings: 0,
+                    tasks: 0,
+                  },
+                  pipeline: { new: 0, contacted: 0, qualified: 0, viewing: 0, offer: 0, won: 0, lost: 0 },
+                  listings: { available: 0, reserved: 0, unavailable: 0, verifiedFresh: 0, stale: 0 },
+                  viewings: { today: 0, upcoming: 0, outcomeMissing: 0 },
+                  offers: { draft: 0, approvalPending: 0, active: 0, accepted: 0 },
+                  approvals: { offers: 0, drafts: 0, total: 0 },
+                  tasks: [],
+                },
+              };
+            if (body.action === 'real_estate_tasks')
+              return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), items: [] } };
+            return {
+              status: 200,
+              json: { ok: true, csrfToken: 'a'.repeat(64), items: [], members: [], cursor: null, limit: 5 },
+            };
+          },
+        });
+        if (packId === 'real-estate') {
+          // Real Estate is six tabs: an old Today link opens Deals, with what needs attention above the board.
+          await page.locator('.hb-attention').waitFor();
+          assert.equal(
+            await page.locator('.ld-section-tabs a').count(),
+            4,
+            `real-estate ${lang} Deals views at ${width}`,
+          );
+          count++;
+          assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr');
+          count++;
+          assert.equal(await noOverflow(page), true, `real-estate ${lang} no overflow at ${width}`);
+          count++;
+          assert.deepEqual(await axe(page), [], `real-estate ${lang} axe at ${width}`);
+          count++;
+          await page
+            .getByRole('button', { name: lang === 'ar' ? 'استفسار جديد' : 'New inquiry' })
+            .first()
+            .click();
+          await page.locator('.hb-action-fields').waitFor();
+          count++;
+          if (width === 320 || width === 1440)
+            await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
+          await context.close();
+          continue;
+        }
+        if (packId !== 'real-estate' && packId !== 'dental') {
+          // Six tabs since Releases A and B: an old Today link opens Work (Workshop, Projects, Orders or Store & repairs) on its first view.
+          const container = {
+            automotive: '.hb-automotive-six',
+            construction: '.hb-construction-six',
+            retail: '.hb-store-six',
+            'retail-tech': '.hb-store-six',
+          }[packId];
+          await page.locator(container).first().waitFor();
+          assert.equal(
+            await page.locator('.ld-section-tabs a').count(),
+            packId === 'construction' ? 3 : 4,
+            `${packId} ${lang} Work views at ${width}`,
+          );
+          count++;
+          assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr');
+          count++;
+          assert.equal(await noOverflow(page), true, `${packId} ${lang} no overflow at ${width}`);
+          count++;
+          assert.deepEqual(await axe(page), [], `${packId} ${lang} axe at ${width}`);
+          count++;
+          if (width === 320 || width === 1440)
+            await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
+          await context.close();
+          continue;
+        }
+        if (packId === 'dental') {
+          // Dental is six tabs too: an old Today link opens the Visits day schedule.
+          await page.locator('.hb-day-nav').waitFor();
+          assert.equal(await page.locator('.ld-section-tabs a').count(), 4, `dental ${lang} Visits views at ${width}`);
+          count++;
+          assert.equal(await page.locator('.ld').getAttribute('dir'), lang === 'ar' ? 'rtl' : 'ltr');
+          count++;
+          assert.equal(await noOverflow(page), true, `dental ${lang} no overflow at ${width}`);
+          count++;
+          assert.deepEqual(await axe(page), [], `dental ${lang} axe at ${width}`);
+          count++;
+          await page
+            .getByRole('button', { name: lang === 'ar' ? 'إضافة زيارة' : 'Add visit' })
+            .first()
+            .click();
+          await page.locator('.hb-action-fields').waitFor();
+          count++;
+          if (width === 320 || width === 1440)
+            await page.screenshot({ path: `${OUT}/live-${packId}-${lang}-${width}.png`, fullPage: true });
+          await context.close();
+          continue;
+        }
+        await context.close();
+      }
 
   for (const width of [1440, 1024, 768, 375, 320]) {
     const state = fixture();
     const { page, context } = await openPage(browser, { width, path: '/layla/dashboard', handler: api(state) });
     await page.getByRole('heading', { name: 'Chats', exact: true }).waitFor();
-    assert.equal(await page.locator('.ld-desktop-nav a').allTextContents().then(t => t.join('|')), 'Chats|Customers|Settings'); count++;
-    assert.equal(await page.locator('.ld-desktop-nav a[href*="tab=chats"]').getAttribute('aria-current'), 'page'); count++;
+    assert.equal(
+      await page
+        .locator('.ld-desktop-nav a')
+        .allTextContents()
+        .then(t => t.join('|')),
+      'Chats|Customers|Settings',
+    );
+    count++;
+    assert.equal(await page.locator('.ld-desktop-nav a[href*="tab=chats"]').getAttribute('aria-current'), 'page');
+    count++;
     await page.getByRole('button', { name: /Aisha Al Balushi/ }).click();
     await page.getByRole('heading', { name: 'Aisha Al Balushi' }).waitFor();
     const listVisible = await page.locator('.ld-list').isVisible();
-    assert.equal(listVisible, width > 768, `list beside thread at ${width}`); count++;
-    assert.match(await page.locator('.ld-messages').textContent(), /Text removed after 30 days/); count++;
+    assert.equal(listVisible, width > 768, `list beside thread at ${width}`);
+    count++;
+    assert.match(await page.locator('.ld-messages').textContent(), /Text removed after 30 days/);
+    count++;
     // Scrolling past the end of a pane never bounces the page and shows blank paper under the shell.
-    assert.deepEqual(await page.evaluate(() => [document.documentElement, document.body, ...document.querySelectorAll('.ld-main, .ld-messages, .ld-conversations')]
-      .map(e => getComputedStyle(e).overscrollBehaviorY)), ['none', 'none', 'contain', 'contain', 'contain'], `no page bounce at ${width}`); count++;
-    assert.equal(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight), true, `the page itself never scrolls at ${width}`); count++;
+    assert.deepEqual(
+      await page.evaluate(() =>
+        [
+          document.documentElement,
+          document.body,
+          ...document.querySelectorAll('.ld-main, .ld-messages, .ld-conversations'),
+        ].map(e => getComputedStyle(e).overscrollBehaviorY),
+      ),
+      ['none', 'none', 'contain', 'contain', 'contain'],
+      `no page bounce at ${width}`,
+    );
+    count++;
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight),
+      true,
+      `the page itself never scrolls at ${width}`,
+    );
+    count++;
     await page.getByRole('switch', { name: /Layla is live in this chat/ }).click();
     await page.getByRole('switch', { name: /Layla is stopped in this chat/ }).waitFor();
-    assert.ok(state.calls.some(c => c.action === 'takeover_handoff')); count++;
-    assert.equal(await noOverflow(page), true, `no horizontal overflow at ${width}`); count++;
-    assert.deepEqual(await axe(page), [], `axe at ${width}`); count++;
+    assert.ok(state.calls.some(c => c.action === 'takeover_handoff'));
+    count++;
+    assert.equal(await noOverflow(page), true, `no horizontal overflow at ${width}`);
+    count++;
+    assert.deepEqual(await axe(page), [], `axe at ${width}`);
+    count++;
     await page.screenshot({ path: `${OUT}/chats-en-${width}.png` });
-    if (width <= 768) { await page.getByRole('button', { name: 'Back' }).click(); await page.locator('.ld-list').waitFor(); count++; }
+    if (width <= 768) {
+      await page.getByRole('button', { name: 'Back' }).click();
+      await page.locator('.ld-list').waitFor();
+      count++;
+    }
     await context.close();
   }
 
   // Arabic: RTL mirroring, 24-hour window blocking, template action.
   for (const width of [1280, 375]) {
     const state = fixture();
-    const { page, context } = await openPage(browser, { width, lang: 'ar', path: '/layla/dashboard?tab=chats&chat=c-k2', handler: api(state) });
+    const { page, context } = await openPage(browser, {
+      width,
+      lang: 'ar',
+      path: '/layla/dashboard?tab=chats&chat=c-k2',
+      handler: api(state),
+    });
     await page.getByRole('heading', { name: 'محمد الحارثي' }).waitFor();
-    assert.equal(await page.locator('.ld').getAttribute('dir'), 'rtl'); count++;
-    if (width > 768) { const nav = await page.locator('.ld-nav').boundingBox(); assert.ok(nav.x > width / 2, 'rail on the right in RTL'); count++; }
-    assert.equal(await page.locator('#ld-reply').count(), 0, 'composer disabled outside 24h'); count++;
-    assert.match(await page.locator('.ld-window-closed').textContent(), /انتهت نافذة الرد/); count++;
-    assert.match(await page.locator('.ld-messages').textContent(), /131049/); count++;
-    assert.deepEqual(await axe(page), []); count++;
-    assert.equal(await noOverflow(page), true); count++;
+    assert.equal(await page.locator('.ld').getAttribute('dir'), 'rtl');
+    count++;
+    if (width > 768) {
+      const nav = await page.locator('.ld-nav').boundingBox();
+      assert.ok(nav.x > width / 2, 'rail on the right in RTL');
+      count++;
+    }
+    assert.equal(await page.locator('#ld-reply').count(), 0, 'composer disabled outside 24h');
+    count++;
+    assert.match(await page.locator('.ld-window-closed').textContent(), /انتهت نافذة الرد/);
+    count++;
+    assert.match(await page.locator('.ld-messages').textContent(), /131049/);
+    count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
+    assert.equal(await noOverflow(page), true);
+    count++;
     await page.screenshot({ path: `${OUT}/chats-ar-${width}.png` });
     await page.getByRole('button', { name: 'إرسال قالب' }).click();
-    await page.getByRole('dialog').getByRole('radio', { name: /autumn_offer/ }).check(); count++;
+    await page
+      .getByRole('dialog')
+      .getByRole('radio', { name: /autumn_offer/ })
+      .check();
+    count++;
     await context.close();
   }
 
   // Contacts and Broadcast wizard.
   {
     const state = fixture();
-    const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard?tab=contacts', handler: api(state) });
+    const { page, context } = await openPage(browser, {
+      width: 1280,
+      path: '/layla/dashboard?tab=contacts',
+      handler: api(state),
+    });
     await page.getByRole('heading', { name: 'Contacts', exact: true }).waitFor();
-    assert.equal(await page.locator('.ld-table tbody tr').count(), 3); count++;
-    assert.match(await page.locator('.ld-table').textContent(), /Opted out/); count++;
-    assert.deepEqual(await axe(page), []); count++;
+    assert.equal(await page.locator('.ld-table tbody tr').count(), 3);
+    count++;
+    assert.match(await page.locator('.ld-table').textContent(), /Opted out/);
+    count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
     await page.screenshot({ path: `${OUT}/contacts-en-1280.png`, fullPage: true });
     // Contacts and Broadcast now sit under Customers as two views.
-    await page.getByRole('navigation', { name: 'Views in this section' }).getByRole('link', { name: 'Message many' }).click();
+    await page
+      .getByRole('navigation', { name: 'Views in this section' })
+      .getByRole('link', { name: 'Message many' })
+      .click();
     await page.getByRole('heading', { name: 'Broadcast', exact: true }).waitFor();
     // No broadcast delivered yet: how to add the Meta payment method, and that BznsFlow doesn't charge for messages.
     const fees = page.getByRole('region', { name: 'Before your first broadcast: add a payment method in Meta' });
-    await fees.waitFor(); count++;
-    assert.match(await fees.textContent(), /BznsFlow doesn’t charge for messages/); count++;
-    for (const [name, href] of [['Open Meta Billing & payments', 'https://business.facebook.com/billing_hub/accounts'], ['Meta’s message prices', 'https://developers.facebook.com/docs/whatsapp/pricing']]) {
+    await fees.waitFor();
+    count++;
+    assert.match(await fees.textContent(), /BznsFlow doesn’t charge for messages/);
+    count++;
+    for (const [name, href] of [
+      ['Open Meta Billing & payments', 'https://business.facebook.com/billing_hub/accounts'],
+      ['Meta’s message prices', 'https://developers.facebook.com/docs/whatsapp/pricing'],
+    ]) {
       const a = fees.getByRole('link', { name });
-      assert.deepEqual([await a.getAttribute('href'), await a.getAttribute('target'), await a.getAttribute('rel')], [href, '_blank', 'noopener noreferrer']); count++;
+      assert.deepEqual(
+        [await a.getAttribute('href'), await a.getAttribute('target'), await a.getAttribute('rel')],
+        [href, '_blank', 'noopener noreferrer'],
+      );
+      count++;
     }
     await page.getByRole('button', { name: 'New broadcast' }).click();
     const dialog = page.getByRole('dialog');
     // Step 1: template, with its variables shown.
     await dialog.getByRole('radio', { name: /autumn_offer/ }).check();
-    assert.equal(await dialog.locator('.ld-var').count(), 2); count++;
+    assert.equal(await dialog.locator('.ld-var').count(), 2);
+    count++;
     await dialog.getByRole('button', { name: 'Continue' }).click();
     // Step 2: type a number, upload a list, pick a saved contact; each row has its own {{2}}.
     await dialog.getByLabel('Phone number').fill('9111 2222');
@@ -436,73 +1100,164 @@ try {
     await dialog.getByRole('button', { name: 'Add number' }).click();
     await dialog.getByRole('textbox', { name: '{{2}} · Salim' }).fill('20%');
     await dialog.getByRole('tab', { name: 'Upload list' }).click();
-    await dialog.locator('input[type=file]').setInputFiles({ name: 'list.csv', mimeType: 'text/csv', buffer: Buffer.from('phone,name,{{2}}\n+968 9333 4444,Huda,15%\n') });
+    await dialog.locator('input[type=file]').setInputFiles({
+      name: 'list.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('phone,name,{{2}}\n+968 9333 4444,Huda,15%\n'),
+    });
     await dialog.getByRole('button', { name: 'Add 1 to the list' }).click();
-    assert.equal(await dialog.getByRole('textbox', { name: '{{2}} · Huda' }).inputValue(), '15%', 'the {{2}} column fills that variable'); count++;
+    assert.equal(
+      await dialog.getByRole('textbox', { name: '{{2}} · Huda' }).inputValue(),
+      '15%',
+      'the {{2}} column fills that variable',
+    );
+    count++;
     await dialog.getByRole('tab', { name: 'Saved contacts' }).click();
-    assert.equal(await dialog.getByRole('checkbox', { name: /Aisha/ }).isDisabled(), true, 'no consent → not selectable'); count++;
+    assert.equal(
+      await dialog.getByRole('checkbox', { name: /Aisha/ }).isDisabled(),
+      true,
+      'no consent → not selectable',
+    );
+    count++;
     await dialog.getByRole('checkbox', { name: /محمد/ }).check();
-    await dialog.getByText('1 rows have an empty variable').waitFor(); count++;
-    assert.equal(await dialog.getByRole('button', { name: 'Continue' }).isDisabled(), true, 'an empty variable blocks sending'); count++;
+    await dialog.getByText('1 rows have an empty variable').waitFor();
+    count++;
+    assert.equal(
+      await dialog.getByRole('button', { name: 'Continue' }).isDisabled(),
+      true,
+      'an empty variable blocks sending',
+    );
+    count++;
     await dialog.getByRole('textbox', { name: '{{2}} · محمد الحارثي' }).fill('10%');
-    assert.equal(await dialog.getByRole('button', { name: 'Continue' }).isDisabled(), true, 'new numbers need the consent record'); count++;
+    assert.equal(
+      await dialog.getByRole('button', { name: 'Continue' }).isDisabled(),
+      true,
+      'new numbers need the consent record',
+    );
+    count++;
     await dialog.getByLabel('How did they agree?').selectOption('store');
     await dialog.getByRole('checkbox', { name: /I confirm each of these customers/ }).check();
-    assert.deepEqual(await axe(page), []); count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
     await page.screenshot({ path: `${OUT}/broadcast-numbers-1280.png` });
     await dialog.getByRole('button', { name: 'Continue' }).click();
     // Step 3: every customer's own message, then send.
-    await dialog.getByText('3 will receive it').waitFor(); count++;
-    await dialog.getByText('Meta bills your Messaging account for each delivered message. BznsFlow adds no charge.').waitFor(); count++;
+    await dialog.getByText('3 will receive it').waitFor();
+    count++;
+    await dialog
+      .getByText('Meta bills your Messaging account for each delivered message. BznsFlow adds no charge.')
+      .waitFor();
+    count++;
     const shown = [];
     for (let i = 0; i < 3; i++) {
       shown.push(await dialog.locator('.ld-per-contact p').textContent());
       if (i < 2) await dialog.getByRole('button', { name: 'Next customer' }).click();
     }
-    assert.deepEqual(shown, ['Hello Salim, enjoy 20% off this week.', 'Hello Huda, enjoy 15% off this week.', 'Hello محمد الحارثي, enjoy 10% off this week.'].map(t => `${t}\n\nTap Stop promotions to opt out`)); count++;
-    assert.deepEqual(await axe(page), []); count++;
+    assert.deepEqual(
+      shown,
+      [
+        'Hello Salim, enjoy 20% off this week.',
+        'Hello Huda, enjoy 15% off this week.',
+        'Hello محمد الحارثي, enjoy 10% off this week.',
+      ].map(t => `${t}\n\nTap Stop promotions to opt out`),
+    );
+    count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
     await page.screenshot({ path: `${OUT}/broadcast-send-1280.png` });
     await dialog.getByRole('button', { name: 'Send to 3 now' }).click();
-    await dialog.getByText('Broadcast saved.').waitFor(); count++;
+    await dialog.getByText('Broadcast saved.').waitFor();
+    count++;
     const sent = state.bodies.find(b => b.action === 'campaign_create');
-    assert.deepEqual(sent.values.map(v => v.values.find(x => x.key === 'body:2').text), ['20%', '15%', '10%']); count++;
-    assert.equal(state.bodies.find(b => b.action === 'import_contacts').consent.source, 'They signed up in store'); count++;
+    assert.deepEqual(
+      sent.values.map(v => v.values.find(x => x.key === 'body:2').text),
+      ['20%', '15%', '10%'],
+    );
+    count++;
+    assert.equal(state.bodies.find(b => b.action === 'import_contacts').consent.source, 'They signed up in store');
+    count++;
     await context.close();
   }
 
   // An image-header template: Continue waits for the owner's image, which then rides on preview. Arabic, phone width.
   {
     const state = fixture();
-    const { page, context } = await openPage(browser, { width: 375, lang: 'ar', path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state, { imageHeader: true }) });
-    await page.route('https://upload.test/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ storageId: 'kg2test' }) }));
+    const { page, context } = await openPage(browser, {
+      width: 375,
+      lang: 'ar',
+      path: '/layla/dashboard?tab=customers&view=broadcast',
+      handler: api(state, { imageHeader: true }),
+    });
+    await page.route('https://upload.test/**', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ storageId: 'kg2test' }) }),
+    );
     await page.getByRole('button', { name: 'رفع قائمة' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('radio', { name: /clinics_1/ }).check();
-    await dialog.getByText('صورة الرأس').waitFor(); count++;
-    assert.equal(await dialog.getByRole('button', { name: 'متابعة' }).isDisabled(), false, 'the approved template image is sent as is; a file is optional'); count++;
-    await dialog.getByText(/تُرسل الصورة المعتمدة مع هذا القالب/).waitFor(); count++;
-    const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4b80000000049454e44ae426082', 'hex');
-    await dialog.locator('.ld-header-media input[type=file]').setInputFiles({ name: 'clinic.png', mimeType: 'image/png', buffer: png });
-    await dialog.getByText('أُضيف').waitFor(); count++;
-    assert.deepEqual(state.bodies.find(b => b.action === 'campaign_media_register'), { action: 'campaign_media_register', storageId: 'kg2test', format: 'IMAGE', filename: 'clinic.png' }); count++;
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'file step fits 375'); count++;
-    assert.deepEqual(await axe(page), []); count++;
+    await dialog.getByText('صورة الرأس').waitFor();
+    count++;
+    assert.equal(
+      await dialog.getByRole('button', { name: 'متابعة' }).isDisabled(),
+      false,
+      'the approved template image is sent as is; a file is optional',
+    );
+    count++;
+    await dialog.getByText(/تُرسل الصورة المعتمدة مع هذا القالب/).waitFor();
+    count++;
+    const png = Buffer.from(
+      '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4b80000000049454e44ae426082',
+      'hex',
+    );
+    await dialog
+      .locator('.ld-header-media input[type=file]')
+      .setInputFiles({ name: 'clinic.png', mimeType: 'image/png', buffer: png });
+    await dialog.getByText('أُضيف').waitFor();
+    count++;
+    assert.deepEqual(
+      state.bodies.find(b => b.action === 'campaign_media_register'),
+      { action: 'campaign_media_register', storageId: 'kg2test', format: 'IMAGE', filename: 'clinic.png' },
+    );
+    count++;
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      true,
+      'file step fits 375',
+    );
+    count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
     await page.screenshot({ path: `${OUT}/broadcast-image-header-ar-375.png` });
     await dialog.getByRole('button', { name: 'متابعة' }).click();
     await dialog.getByRole('tab', { name: 'جهات محفوظة' }).click();
     await dialog.getByRole('checkbox', { name: /محمد/ }).check();
     await dialog.getByRole('button', { name: 'متابعة' }).click();
     await dialog.getByText(/سيستلمها/).waitFor();
-    assert.equal(state.bodies.find(b => b.action === 'campaign_preview').headerMediaId, 'media1', 'the file rides on preview'); count++;
-    await dialog.getByText('الرأس: ملفك clinic.png').waitFor(); count++;
-    assert.equal(state.bodies.some(b => b.action === 'sync_templates'), false, 'fresh templates are not re-synced'); count++;
+    assert.equal(
+      state.bodies.find(b => b.action === 'campaign_preview').headerMediaId,
+      'media1',
+      'the file rides on preview',
+    );
+    count++;
+    await dialog.getByText('الرأس: ملفك clinic.png').waitFor();
+    count++;
+    assert.equal(
+      state.bodies.some(b => b.action === 'sync_templates'),
+      false,
+      'fresh templates are not re-synced',
+    );
+    count++;
     await context.close();
   }
 
   // The same template sent as is: no file added, the review step names the approved image. Arabic, phone width.
   {
     const state = fixture();
-    const { page, context } = await openPage(browser, { width: 375, lang: 'ar', path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state, { imageHeader: true }) });
+    const { page, context } = await openPage(browser, {
+      width: 375,
+      lang: 'ar',
+      path: '/layla/dashboard?tab=customers&view=broadcast',
+      handler: api(state, { imageHeader: true }),
+    });
     await page.getByRole('button', { name: 'رفع قائمة' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('radio', { name: /clinics_1/ }).check();
@@ -510,11 +1265,28 @@ try {
     await dialog.getByRole('tab', { name: 'جهات محفوظة' }).click();
     await dialog.getByRole('checkbox', { name: /محمد/ }).check();
     await dialog.getByRole('button', { name: 'متابعة' }).click();
-    await dialog.getByText('الرأس: الصورة المعتمدة مع هذا القالب في واتساب.').waitFor(); count++;
-    assert.equal('headerMediaId' in state.bodies.find(b => b.action === 'campaign_preview'), false, 'no file is sent when the approved image is used'); count++;
-    assert.equal(state.bodies.some(b => b.action === 'campaign_media_upload_url'), false, 'nothing is uploaded from the browser'); count++;
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'review step fits 375'); count++;
-    assert.deepEqual(await axe(page), []); count++;
+    await dialog.getByText('الرأس: الصورة المعتمدة مع هذا القالب في واتساب.').waitFor();
+    count++;
+    assert.equal(
+      'headerMediaId' in state.bodies.find(b => b.action === 'campaign_preview'),
+      false,
+      'no file is sent when the approved image is used',
+    );
+    count++;
+    assert.equal(
+      state.bodies.some(b => b.action === 'campaign_media_upload_url'),
+      false,
+      'nothing is uploaded from the browser',
+    );
+    count++;
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      true,
+      'review step fits 375',
+    );
+    count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
     await page.screenshot({ path: `${OUT}/broadcast-image-header-as-is-ar-375.png` });
     await context.close();
   }
@@ -522,105 +1294,317 @@ try {
   // Templates stored before a rule change: Broadcasts re-syncs them once, and clinics_1 becomes selectable. Arabic, phone width.
   {
     const state = fixture();
-    const { page, context } = await openPage(browser, { width: 375, lang: 'ar', path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state, { staleTemplates: true }) });
-    await page.locator('.ld-template:not(.is-disabled)', { hasText: 'clinics_1' }).waitFor(); count++;
-    assert.equal(state.bodies.filter(b => b.action === 'sync_templates').length, 1, 'one automatic sync'); count++;
+    const { page, context } = await openPage(browser, {
+      width: 375,
+      lang: 'ar',
+      path: '/layla/dashboard?tab=customers&view=broadcast',
+      handler: api(state, { staleTemplates: true }),
+    });
+    await page.locator('.ld-template:not(.is-disabled)', { hasText: 'clinics_1' }).waitFor();
+    count++;
+    assert.equal(state.bodies.filter(b => b.action === 'sync_templates').length, 1, 'one automatic sync');
+    count++;
     await page.getByRole('button', { name: 'رفع قائمة' }).click();
-    assert.equal(await page.getByRole('dialog').getByRole('radio', { name: /clinics_1/ }).isDisabled(), false, 'clinics_1 can be chosen'); count++;
+    assert.equal(
+      await page
+        .getByRole('dialog')
+        .getByRole('radio', { name: /clinics_1/ })
+        .isDisabled(),
+      false,
+      'clinics_1 can be chosen',
+    );
+    count++;
     await context.close();
   }
 
   // Sending off: a broadcast can be built and checked, but Send stays disabled. Arabic, phone width.
   {
     const state = fixture();
-    const { page, context } = await openPage(browser, { width: 375, lang: 'ar', path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state, { broadcastEnabled: false }) });
+    const { page, context } = await openPage(browser, {
+      width: 375,
+      lang: 'ar',
+      path: '/layla/dashboard?tab=customers&view=broadcast',
+      handler: api(state, { broadcastEnabled: false }),
+    });
     await page.getByRole('button', { name: 'رفع قائمة' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('radio', { name: /autumn_offer/ }).check();
     await dialog.getByRole('button', { name: 'متابعة' }).click();
-    assert.equal(await dialog.getByRole('tab', { name: 'رفع قائمة' }).getAttribute('aria-selected'), 'true', 'Upload list opens on its tab'); count++;
+    assert.equal(
+      await dialog.getByRole('tab', { name: 'رفع قائمة' }).getAttribute('aria-selected'),
+      'true',
+      'Upload list opens on its tab',
+    );
+    count++;
     await dialog.getByRole('tab', { name: 'جهات محفوظة' }).click();
     await dialog.getByRole('checkbox', { name: /محمد/ }).check();
     await dialog.getByRole('textbox', { name: '{{2}} · محمد الحارثي' }).fill('١٠٪');
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'numbers step fits 375'); count++;
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      true,
+      'numbers step fits 375',
+    );
+    count++;
     await dialog.locator('.ld-recipient-table').scrollIntoViewIfNeeded();
     await page.screenshot({ path: `${OUT}/broadcast-numbers-ar-375.png` });
     await dialog.getByRole('button', { name: 'متابعة' }).click();
-    await dialog.getByText('الإرسال غير مفعّل بعد').waitFor(); count++;
-    await dialog.getByText('لا تضيف BznsFlow أي رسوم', { exact: false }).waitFor(); count++;
-    assert.equal(await dialog.getByRole('button', { name: /إرسال إلى 1 الآن/ }).isDisabled(), true); count++;
-    assert.equal(await page.locator('.ld').getAttribute('dir'), 'rtl'); count++;
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'no page overflow at 375'); count++;
-    assert.deepEqual(await axe(page), []); count++;
+    await dialog.getByText('الإرسال غير مفعّل بعد').waitFor();
+    count++;
+    await dialog.getByText('لا تضيف BznsFlow أي رسوم', { exact: false }).waitFor();
+    count++;
+    assert.equal(await dialog.getByRole('button', { name: /إرسال إلى 1 الآن/ }).isDisabled(), true);
+    count++;
+    assert.equal(await page.locator('.ld').getAttribute('dir'), 'rtl');
+    count++;
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      true,
+      'no page overflow at 375',
+    );
+    count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
     await page.screenshot({ path: `${OUT}/broadcast-off-ar-375.png`, fullPage: true });
     await context.close();
   }
 
   // Meta stopped a broadcast for billing (131042): the coral alert repeats the steps, and the stop reason and
   // each failure code are in words. Once a later broadcast is delivered, the card shrinks to one line.
-  for (const [width, lang] of [[1280, 'en'], [375, 'ar']]) {
+  for (const [width, lang] of [
+    [1280, 'en'],
+    [375, 'ar'],
+  ]) {
     const state = fixture();
     const counts = { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 2, blocked: 1 };
-    state.campaigns = [{ id: 'camp9', name: 'marketing_ar', origin: 'broadcast', status: 'blocked', reason: 'payment_method_required', template: { name: 'marketing_ar', language: 'ar', body: 'Hello {{1}}' },
-      scheduledAt: Date.now() - HOUR, timezone: 'Asia/Muscat', recipientCount: 3, createdAt: Date.now() - HOUR, counts,
-      recipients: [{ name: 'Huda', number: '+968 9333 4444', status: 'failed', reason: 'provider_delivery_failed', errorCode: 131042 }, { name: 'Salim', number: '+968 9111 2222', status: 'failed', reason: 'provider_delivery_failed', errorCode: 131026 }, { name: 'Aisha', number: '+968 9555 6666', status: 'blocked', reason: 'payment_method_required', errorCode: null }] }];
-    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state) });
+    state.campaigns = [
+      {
+        id: 'camp9',
+        name: 'marketing_ar',
+        origin: 'broadcast',
+        status: 'blocked',
+        reason: 'payment_method_required',
+        template: { name: 'marketing_ar', language: 'ar', body: 'Hello {{1}}' },
+        scheduledAt: Date.now() - HOUR,
+        timezone: 'Asia/Muscat',
+        recipientCount: 3,
+        createdAt: Date.now() - HOUR,
+        counts,
+        recipients: [
+          {
+            name: 'Huda',
+            number: '+968 9333 4444',
+            status: 'failed',
+            reason: 'provider_delivery_failed',
+            errorCode: 131042,
+          },
+          {
+            name: 'Salim',
+            number: '+968 9111 2222',
+            status: 'failed',
+            reason: 'provider_delivery_failed',
+            errorCode: 131026,
+          },
+          {
+            name: 'Aisha',
+            number: '+968 9555 6666',
+            status: 'blocked',
+            reason: 'payment_method_required',
+            errorCode: null,
+          },
+        ],
+      },
+    ];
+    const { page, context } = await openPage(browser, {
+      width,
+      lang,
+      path: '/layla/dashboard?tab=customers&view=broadcast',
+      handler: api(state),
+    });
     const ar = lang === 'ar';
-    const alert = page.getByRole('alert').filter({ hasText: ar ? 'أوقفت Meta رسالتك الجماعية' : 'Meta stopped your broadcast' });
-    await alert.waitFor(); count++;
-    assert.equal(await alert.locator('ol li').count(), 3); count++;
-    await page.getByText(ar ? 'توقفت: تحتاج Meta إلى وسيلة دفع صالحة في حساب المراسلة.' : 'Stopped: Meta needs a working payment method on your Messaging account.').waitFor(); count++;
+    const alert = page
+      .getByRole('alert')
+      .filter({ hasText: ar ? 'أوقفت Meta رسالتك الجماعية' : 'Meta stopped your broadcast' });
+    await alert.waitFor();
+    count++;
+    assert.equal(await alert.locator('ol li').count(), 3);
+    count++;
+    await page
+      .getByText(
+        ar
+          ? 'توقفت: تحتاج Meta إلى وسيلة دفع صالحة في حساب المراسلة.'
+          : 'Stopped: Meta needs a working payment method on your Messaging account.',
+      )
+      .waitFor();
+    count++;
     await page.getByRole('button', { name: ar ? 'التفاصيل' : 'Details' }).click();
     const table = page.locator('.ld-campaign .ld-table');
     await table.waitFor();
-    assert.match(await table.textContent(), ar ? /مشكلة دفع لدى Meta \(131042\)/ : /Meta payment issue \(131042\)/); count++;
-    assert.match(await table.textContent(), ar ? /لا يستقبل رسائل واتساب \(131026\)/ : /Can’t receive WhatsApp messages \(131026\)/); count++;
-    assert.equal(await noOverflow(page), true, `stopped ${lang} ${width} overflow`); count++;
-    assert.deepEqual(await axe(page), [], `stopped ${lang} ${width} axe`); count++;
+    assert.match(await table.textContent(), ar ? /مشكلة دفع لدى Meta \(131042\)/ : /Meta payment issue \(131042\)/);
+    count++;
+    assert.match(
+      await table.textContent(),
+      ar ? /لا يستقبل رسائل واتساب \(131026\)/ : /Can’t receive WhatsApp messages \(131026\)/,
+    );
+    count++;
+    assert.equal(await noOverflow(page), true, `stopped ${lang} ${width} overflow`);
+    count++;
+    assert.deepEqual(await axe(page), [], `stopped ${lang} ${width} axe`);
+    count++;
     await page.screenshot({ path: `${OUT}/broadcast-payment-stopped-${lang}-${width}.png`, fullPage: true });
     await context.close();
   }
   {
     const state = fixture();
-    state.campaigns = [{ id: 'camp10', name: 'autumn_offer', origin: 'broadcast', status: 'completed', reason: null, template: { name: 'autumn_offer', language: 'en', body: 'Hello {{1}}' },
-      scheduledAt: Date.now() - HOUR, timezone: 'Asia/Muscat', recipientCount: 2, createdAt: Date.now() - HOUR, counts: { submitted: 0, sent: 0, delivered: 1, read: 1, failed: 0 } }];
-    const { page, context } = await openPage(browser, { width: 1280, path: '/layla/dashboard?tab=customers&view=broadcast', handler: api(state) });
-    await page.getByText('Meta bills broadcast messages to your Messaging account. BznsFlow doesn’t charge for messages.').waitFor(); count++;
-    assert.equal(await page.locator('.ld-fees').count(), 0, 'the full card is gone once a broadcast was delivered'); count++;
+    state.campaigns = [
+      {
+        id: 'camp10',
+        name: 'autumn_offer',
+        origin: 'broadcast',
+        status: 'completed',
+        reason: null,
+        template: { name: 'autumn_offer', language: 'en', body: 'Hello {{1}}' },
+        scheduledAt: Date.now() - HOUR,
+        timezone: 'Asia/Muscat',
+        recipientCount: 2,
+        createdAt: Date.now() - HOUR,
+        counts: { submitted: 0, sent: 0, delivered: 1, read: 1, failed: 0 },
+      },
+    ];
+    const { page, context } = await openPage(browser, {
+      width: 1280,
+      path: '/layla/dashboard?tab=customers&view=broadcast',
+      handler: api(state),
+    });
+    await page
+      .getByText('Meta bills broadcast messages to your Messaging account. BznsFlow doesn’t charge for messages.')
+      .waitFor();
+    count++;
+    assert.equal(await page.locator('.ld-fees').count(), 0, 'the full card is gone once a broadcast was delivered');
+    count++;
     await context.close();
   }
 
   // Rasil on Ascend: its own Email tab, the same in every industry (Retail here, a six-tab dashboard). It opens on
   // Domain & form until the domain is ready; then subscribers with consent, then a campaign drafted, previewed and sent.
-  for (const [width, lang] of [[1280, 'en'], [375, 'ar']]) {
-    const ar = lang === 'ar', t = (en, arabic) => (ar ? arabic : en);
+  for (const [width, lang] of [
+    [1280, 'en'],
+    [375, 'ar'],
+  ]) {
+    const ar = lang === 'ar',
+      t = (en, arabic) => (ar ? arabic : en);
     const rs = { domain: null, subscribers: [], campaigns: [], calls: [] };
-    const records = status => [{ type: 'TXT', name: 'resend._domainkey', value: 'p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC', status }, { type: 'MX', name: 'send', value: 'feedback-smtp.eu-west-1.amazonses.com', priority: 10, status }, { type: 'TXT', name: '_dmarc', value: 'v=DMARC1; p=none;', status: 'recommended' }];
+    const records = status => [
+      { type: 'TXT', name: 'resend._domainkey', value: 'p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC', status },
+      { type: 'MX', name: 'send', value: 'feedback-smtp.eu-west-1.amazonses.com', priority: 10, status },
+      { type: 'TXT', name: '_dmarc', value: 'v=DMARC1; p=none;', status: 'recommended' },
+    ];
     const counts = () => ({ subscribed: rs.subscribers.length, pending: 0, unsubscribed: 0, suppressed: 0 });
-    const state = () => ({ ok: true, csrfToken: 'a'.repeat(64), domain: rs.domain, business: { name: 'Blue Studio Properties', address: 'Al Khuwair, Muscat' }, subscribers: counts(), usage: { month: 0, cap: 2000, today: 0, reserved: 0 } });
+    const state = () => ({
+      ok: true,
+      csrfToken: 'a'.repeat(64),
+      domain: rs.domain,
+      business: { name: 'Blue Studio Properties', address: 'Al Khuwair, Muscat' },
+      subscribers: counts(),
+      usage: { month: 0, cap: 2000, today: 0, reserved: 0 },
+    });
     const reply = value => ({ status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), ...value } });
     const rasilApi = (method, body) => {
       if (method === 'GET') return state();
       rs.calls.push(body);
       switch (body.action) {
-        case 'domain_connect': rs.domain = { domain: 'daralrayan.om', status: 'pending', records: records('not_started'), fromName: '', fromLocal: '', replyTo: '', formKey: 'fk_0123456789abcdefghij', verifiedAt: null, dailyLimit: 0, ready: false }; return { domain: rs.domain };
-        case 'domain_check': rs.domain = { ...rs.domain, status: 'verified', records: records('verified'), dailyLimit: 50 }; return { domain: rs.domain };
-        case 'sender_save': rs.domain = { ...rs.domain, fromName: body.fromName, fromLocal: body.fromLocal, replyTo: body.replyTo, ready: true }; return { domain: rs.domain };
-        case 'subscribers_import': rs.subscribers.push(...body.rows); return { added: body.rows.length, updated: 0, kept: 0, invalid: 0 };
-        case 'subscribers': return { items: rs.subscribers.map((r, i) => ({ id: `sub${i}`, email: r.email, name: r.name || '', status: 'subscribed', source: 'manual', reason: null, consentDate: '2026-10-01', createdAt: now })), cursor: null };
-        case 'campaigns': return { items: rs.campaigns, cursor: null };
-        case 'draft': return { draft: { subject: t('New flats in Al Khuwair', 'شقق جديدة في الخوير'), body: t('Hello {{name}},\n\nOur new two-bedroom flats are ready from 900 OMR.\nSee them at https://daralrayan.om/flats', 'أهلاً {{name}}،\n\nشققنا الجديدة بغرفتين جاهزة من 900 ر.ع.'), untracedPrice: '900 OMR' } };
-        case 'campaign_preview': return { eligible: rs.subscribers.length, remaining: 2000, cap: 2000, dailyLimit: 50, ready: true, reason: null, business: { name: 'Blue Studio Properties' }, sample: { name: rs.subscribers[0]?.name || '' } };
-        case 'campaign_create': rs.campaigns.unshift({ id: 'ec1', name: body.name || body.subject, subject: body.subject, body: body.body, lang: body.lang, status: 'scheduled', reason: null,
-          sender: { domain: 'daralrayan.om', fromName: rs.domain.fromName, fromLocal: rs.domain.fromLocal }, scheduledAt: now, timezone: 'Asia/Muscat', recipientCount: rs.subscribers.length, counts: { pending: rs.subscribers.length }, createdAt: now });
+        case 'domain_connect':
+          rs.domain = {
+            domain: 'daralrayan.om',
+            status: 'pending',
+            records: records('not_started'),
+            fromName: '',
+            fromLocal: '',
+            replyTo: '',
+            formKey: 'fk_0123456789abcdefghij',
+            verifiedAt: null,
+            dailyLimit: 0,
+            ready: false,
+          };
+          return { domain: rs.domain };
+        case 'domain_check':
+          rs.domain = { ...rs.domain, status: 'verified', records: records('verified'), dailyLimit: 50 };
+          return { domain: rs.domain };
+        case 'sender_save':
+          rs.domain = {
+            ...rs.domain,
+            fromName: body.fromName,
+            fromLocal: body.fromLocal,
+            replyTo: body.replyTo,
+            ready: true,
+          };
+          return { domain: rs.domain };
+        case 'subscribers_import':
+          rs.subscribers.push(...body.rows);
+          return { added: body.rows.length, updated: 0, kept: 0, invalid: 0 };
+        case 'subscribers':
+          return {
+            items: rs.subscribers.map((r, i) => ({
+              id: `sub${i}`,
+              email: r.email,
+              name: r.name || '',
+              status: 'subscribed',
+              source: 'manual',
+              reason: null,
+              consentDate: '2026-10-01',
+              createdAt: now,
+            })),
+            cursor: null,
+          };
+        case 'campaigns':
+          return { items: rs.campaigns, cursor: null };
+        case 'draft':
+          return {
+            draft: {
+              subject: t('New flats in Al Khuwair', 'شقق جديدة في الخوير'),
+              body: t(
+                'Hello {{name}},\n\nOur new two-bedroom flats are ready from 900 OMR.\nSee them at https://daralrayan.om/flats',
+                'أهلاً {{name}}،\n\nشققنا الجديدة بغرفتين جاهزة من 900 ر.ع.',
+              ),
+              untracedPrice: '900 OMR',
+            },
+          };
+        case 'campaign_preview':
+          return {
+            eligible: rs.subscribers.length,
+            remaining: 2000,
+            cap: 2000,
+            dailyLimit: 50,
+            ready: true,
+            reason: null,
+            business: { name: 'Blue Studio Properties' },
+            sample: { name: rs.subscribers[0]?.name || '' },
+          };
+        case 'campaign_create':
+          rs.campaigns.unshift({
+            id: 'ec1',
+            name: body.name || body.subject,
+            subject: body.subject,
+            body: body.body,
+            lang: body.lang,
+            status: 'scheduled',
+            reason: null,
+            sender: { domain: 'daralrayan.om', fromName: rs.domain.fromName, fromLocal: rs.domain.fromLocal },
+            scheduledAt: now,
+            timezone: 'Asia/Muscat',
+            recipientCount: rs.subscribers.length,
+            counts: { pending: rs.subscribers.length },
+            createdAt: now,
+          });
           return { campaign: rs.campaigns[0] };
-        default: return null;
+        default:
+          return null;
       }
     };
     const base = api(fixture());
     const handler = async (surface, method, body) => {
       const out = await base(surface, method, body);
-      if (surface === 'dashboard' && method === 'GET' && out.json?.ok) return { ...out, json: { ...out.json, rasilEnabled: true } };
+      if (surface === 'dashboard' && method === 'GET' && out.json?.ok)
+        return { ...out, json: { ...out.json, rasilEnabled: true } };
       return out;
     };
     const extra = (surface, request) => {
@@ -628,77 +1612,146 @@ try {
       const value = rasilApi(request.method(), request.method() === 'POST' ? request.postDataJSON() : null);
       return value ? reply(value) : { status: 400, json: { ok: false, reason: 'invalid_action' } };
     };
-    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=email', handler, extra });
-    await page.getByRole('heading', { name: t('Your sending domain', 'نطاق الإرسال') }).waitFor(); count++;
-    assert.equal(await page.locator('.ld-nav a[data-section="email"]').first().getAttribute('aria-current'), 'page', 'Email is its own tab'); count++;
-    assert.match(page.url(), /tab=email&view=setup/, 'no domain yet: it opens on Domain & form'); count++;
-    assert.equal(await page.locator('.ld-section-tabs a').count(), 3, 'Campaigns, Subscribers, Domain & form'); count++;
+    const { page, context } = await openPage(browser, {
+      width,
+      lang,
+      path: '/layla/dashboard?tab=email',
+      handler,
+      extra,
+    });
+    await page.getByRole('heading', { name: t('Your sending domain', 'نطاق الإرسال') }).waitFor();
+    count++;
+    assert.equal(
+      await page.locator('.ld-nav a[data-section="email"]').first().getAttribute('aria-current'),
+      'page',
+      'Email is its own tab',
+    );
+    count++;
+    assert.match(page.url(), /tab=email&view=setup/, 'no domain yet: it opens on Domain & form');
+    count++;
+    assert.equal(await page.locator('.ld-section-tabs a').count(), 3, 'Campaigns, Subscribers, Domain & form');
+    count++;
     await page.getByLabel(t('Your domain', 'نطاقك')).fill('daralrayan.om');
     await page.getByRole('button', { name: t('Connect domain', 'ربط النطاق') }).click();
-    await page.getByText('resend._domainkey').waitFor(); count++;
-    assert.equal(await page.locator('.ld-records tbody tr').count(), 3, 'DKIM, the return path and DMARC'); count++;
+    await page.getByText('resend._domainkey').waitFor();
+    count++;
+    assert.equal(await page.locator('.ld-records tbody tr').count(), 3, 'DKIM, the return path and DMARC');
+    count++;
     await page.getByRole('button', { name: t('Check records', 'فحص السجلات') }).click();
-    await page.getByText(t('Verified', 'موثّق'), { exact: true }).first().waitFor(); count++;
+    await page.getByText(t('Verified', 'موثّق'), { exact: true }).first().waitFor();
+    count++;
     await page.getByLabel(t('Sender name', 'اسم المُرسِل'), { exact: true }).fill('Blue Studio');
     await page.getByRole('button', { name: t('Save sender', 'حفظ المُرسِل') }).click();
-    await page.getByText(t('Saved.', 'حُفظ.')).waitFor(); count++;
-    assert.deepEqual(rs.calls.find(c => c.action === 'sender_save'), { action: 'sender_save', fromName: 'Blue Studio', fromLocal: 'news', replyTo: '' }); count++;
+    await page.getByText(t('Saved.', 'حُفظ.')).waitFor();
+    count++;
+    assert.deepEqual(
+      rs.calls.find(c => c.action === 'sender_save'),
+      { action: 'sender_save', fromName: 'Blue Studio', fromLocal: 'news', replyTo: '' },
+    );
+    count++;
     // The website form carries this owner's key and the hidden bot trap.
     const snippet = await page.locator('.ld-code').textContent();
-    assert.match(snippet, /action="http:\/\/127\.0\.0\.1:\d+\/email\/subscribe"/); count++;
-    assert.match(snippet, /name="k" value="fk_0123456789abcdefghij"/); count++;
-    assert.match(snippet, /name="website"/); count++;
+    assert.match(snippet, /action="http:\/\/127\.0\.0\.1:\d+\/email\/subscribe"/);
+    count++;
+    assert.match(snippet, /name="k" value="fk_0123456789abcdefghij"/);
+    count++;
+    assert.match(snippet, /name="website"/);
+    count++;
     await page.screenshot({ path: `${OUT}/email-setup-${lang}-${width}.png`, fullPage: true });
     // Subscribers need a consent record before they can be added.
     await page.locator('.ld-section-tabs a').nth(1).click();
     await page.getByRole('button', { name: t('Add subscribers', 'إضافة مشتركين') }).click();
     await page.getByLabel(t('Email addresses', 'عناوين البريد')).fill('huda@example.om, Huda\nsalim@example.om');
     const addTwo = page.getByRole('button', { name: t('Add 2', 'إضافة 2') });
-    assert.equal(await addTwo.isDisabled(), true, 'no consent record yet'); count++;
-    await page.getByLabel(t('How they agreed', 'كيف وافقوا'), { exact: false }).first().fill(t('Signed up in store', 'اشتركوا في المعرض'));
-    await page.getByLabel(t('What they agreed to receive', 'ما الذي وافقوا على استلامه'), { exact: false }).fill(t('Monthly offers', 'العروض الشهرية'));
+    assert.equal(await addTwo.isDisabled(), true, 'no consent record yet');
+    count++;
+    await page
+      .getByLabel(t('How they agreed', 'كيف وافقوا'), { exact: false })
+      .first()
+      .fill(t('Signed up in store', 'اشتركوا في المعرض'));
+    await page
+      .getByLabel(t('What they agreed to receive', 'ما الذي وافقوا على استلامه'), { exact: false })
+      .fill(t('Monthly offers', 'العروض الشهرية'));
     await page.getByRole('checkbox', { name: t(/marketing emails/, /بالبريد الإلكتروني/) }).check();
     await addTwo.click();
-    await page.getByText(t('Added 2, updated 0.', 'أُضيف 2، وحُدّث 0.'), { exact: false }).waitFor(); count++;
-    assert.deepEqual(rs.calls.find(c => c.action === 'subscribers_import').rows, [{ email: 'huda@example.om', name: 'Huda' }, { email: 'salim@example.om' }]); count++;
-    assert.deepEqual(await axe(page), [], `email subscribers ${lang} ${width}`); count++;
+    await page.getByText(t('Added 2, updated 0.', 'أُضيف 2، وحُدّث 0.'), { exact: false }).waitFor();
+    count++;
+    assert.deepEqual(rs.calls.find(c => c.action === 'subscribers_import').rows, [
+      { email: 'huda@example.om', name: 'Huda' },
+      { email: 'salim@example.om' },
+    ]);
+    count++;
+    assert.deepEqual(await axe(page), [], `email subscribers ${lang} ${width}`);
+    count++;
     await page.screenshot({ path: `${OUT}/email-subscribers-${lang}-${width}.png`, fullPage: true });
     await page.locator('.ld-section-tabs a').nth(0).click();
     // A campaign: Adiba drafts, a price that is not in the catalog is flagged, the preview is the real email.
     await page.getByRole('button', { name: t('New email campaign', 'حملة بريد جديدة') }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByRole('button', { name: t('Write a draft', 'اكتب مسودة') }).click();
-    await dialog.getByText(t('900 OMR is not in your services', '900 OMR غير موجود في خدماتك')).waitFor(); count++;
+    await dialog.getByText(t('900 OMR is not in your services', '900 OMR غير موجود في خدماتك')).waitFor();
+    count++;
     const frame = dialog.frameLocator('iframe');
-    await frame.getByText(t('Hello Huda,', 'أهلاً Huda،')).waitFor(); count++;
-    await frame.getByText(t('Unsubscribe', 'إلغاء الاشتراك')).waitFor(); count++;
-    await dialog.getByText(t('2 subscribers will receive it.', 'سيستلمها 2 مشترك.')).waitFor(); count++;
-    assert.equal(await noOverflow(page), true, `email compose ${lang} ${width}`); count++;
-    assert.deepEqual(await axe(page), [], `email compose ${lang} ${width}`); count++;
+    await frame.getByText(t('Hello Huda,', 'أهلاً Huda،')).waitFor();
+    count++;
+    await frame.getByText(t('Unsubscribe', 'إلغاء الاشتراك')).waitFor();
+    count++;
+    await dialog.getByText(t('2 subscribers will receive it.', 'سيستلمها 2 مشترك.')).waitFor();
+    count++;
+    assert.equal(await noOverflow(page), true, `email compose ${lang} ${width}`);
+    count++;
+    assert.deepEqual(await axe(page), [], `email compose ${lang} ${width}`);
+    count++;
     await page.screenshot({ path: `${OUT}/email-compose-${lang}-${width}.png` });
     await dialog.getByRole('button', { name: t('Send to 2 now', 'إرسال إلى 2 الآن') }).click();
-    await page.locator('.ld-campaign').filter({ hasText: t('New flats in Al Khuwair', 'شقق جديدة في الخوير') }).waitFor(); count++;
+    await page
+      .locator('.ld-campaign')
+      .filter({ hasText: t('New flats in Al Khuwair', 'شقق جديدة في الخوير') })
+      .waitFor();
+    count++;
     const created = rs.calls.find(c => c.action === 'campaign_create');
-    assert.deepEqual([created.confirm, created.lang, created.schedule.mode, created.schedule.timezone], [true, lang, 'now', 'Asia/Muscat']); count++;
-    assert.match(created.requestId, /^[a-f0-9-]{36}$/); count++;
-    assert.equal(await noOverflow(page), true, `email ${lang} ${width}`); count++;
-    assert.deepEqual(await axe(page), [], `email ${lang} ${width}`); count++;
+    assert.deepEqual(
+      [created.confirm, created.lang, created.schedule.mode, created.schedule.timezone],
+      [true, lang, 'now', 'Asia/Muscat'],
+    );
+    count++;
+    assert.match(created.requestId, /^[a-f0-9-]{36}$/);
+    count++;
+    assert.equal(await noOverflow(page), true, `email ${lang} ${width}`);
+    count++;
+    assert.deepEqual(await axe(page), [], `email ${lang} ${width}`);
+    count++;
     await page.screenshot({ path: `${OUT}/email-${lang}-${width}.png`, fullPage: true });
     // Broadcasts is WhatsApp again, with no email inside it.
     await page.goto(`${BASE}${ar ? '' : '/en'}/layla/dashboard?tab=customers&view=broadcast`);
-    await page.locator('.ld-broadcast h1').waitFor(); count++;
-    assert.equal(await page.getByText(t('Your sending domain', 'نطاق الإرسال')).count(), 0); count++;
+    await page.locator('.ld-broadcast h1').waitFor();
+    count++;
+    assert.equal(await page.getByText(t('Your sending domain', 'نطاق الإرسال')).count(), 0);
+    count++;
     await context.close();
   }
 
   // Every tab at narrow widths in both languages: no overflow, no serious accessibility issues.
-  for (const [width, lang] of [[375, 'ar'], [768, 'en'], [320, 'en']]) {
+  for (const [width, lang] of [
+    [375, 'ar'],
+    [768, 'en'],
+    [320, 'en'],
+  ]) {
     for (const tab of ['contacts', 'broadcast']) {
-      const { page, context } = await openPage(browser, { width, lang, path: `/layla/dashboard?tab=${tab}`, handler: api(fixture()) });
+      const { page, context } = await openPage(browser, {
+        width,
+        lang,
+        path: `/layla/dashboard?tab=${tab}`,
+        handler: api(fixture()),
+      });
       await page.locator('.ld-main h1').waitFor();
-      await page.waitForFunction(() => !document.querySelector('.ld-main [role=status]')?.textContent.match(/Loading|جارٍ التحميل/));
-      assert.equal(await noOverflow(page), true, `${tab} ${lang} ${width} overflow`); count++;
-      assert.deepEqual(await axe(page), [], `${tab} ${lang} ${width} axe`); count++;
+      await page.waitForFunction(
+        () => !document.querySelector('.ld-main [role=status]')?.textContent.match(/Loading|جارٍ التحميل/),
+      );
+      assert.equal(await noOverflow(page), true, `${tab} ${lang} ${width} overflow`);
+      count++;
+      assert.deepEqual(await axe(page), [], `${tab} ${lang} ${width} axe`);
+      count++;
       await page.screenshot({ path: `${OUT}/${tab}-${lang}-${width}.png`, fullPage: true });
       await context.close();
     }
@@ -706,66 +1759,222 @@ try {
 
   // Account recovery: a dashboard visitor sent to sign-in returns once their connected account is restored.
   {
-    const saved = { ok: true, csrfToken: 'a'.repeat(64), available: true, status: 'connected', profile: { businessName: 'Blue Studio Properties', sector: 'Real estate', services: 'Villas', prices: '', hours: '', location: '', humanContact: 'team@example.com', faqs: [], reviewed: true },
-      journeyStep: 3, profileVersion: 1, capabilities: {}, integration: { id: 'i1', sender: '96890000000', path: 'new_number', status: 'connected' }, account: { email: 'owner@example.test' }, savedToAccount: true, accountSaveAvailable: true, catalog: { entries: [], cursor: null } };
-    const { page, context } = await openPage(browser, { width: 390, path: '/catalyst/setup?next=dashboard', handler: api(fixture()), extra: surface => surface === 'customer' ? { status: 200, json: saved } : null });
-    await page.waitForURL(/\/en\/layla\/dashboard$/); count++;
+    const saved = {
+      ok: true,
+      csrfToken: 'a'.repeat(64),
+      available: true,
+      status: 'connected',
+      profile: {
+        businessName: 'Blue Studio Properties',
+        sector: 'Real estate',
+        services: 'Villas',
+        prices: '',
+        hours: '',
+        location: '',
+        humanContact: 'team@example.com',
+        faqs: [],
+        reviewed: true,
+      },
+      journeyStep: 3,
+      profileVersion: 1,
+      capabilities: {},
+      integration: { id: 'i1', sender: '96890000000', path: 'new_number', status: 'connected' },
+      account: { email: 'owner@example.test' },
+      savedToAccount: true,
+      accountSaveAvailable: true,
+      catalog: { entries: [], cursor: null },
+    };
+    const { page, context } = await openPage(browser, {
+      width: 390,
+      path: '/catalyst/setup?next=dashboard',
+      handler: api(fixture()),
+      extra: surface => (surface === 'customer' ? { status: 200, json: saved } : null),
+    });
+    await page.waitForURL(/\/en\/layla\/dashboard$/);
+    count++;
     await context.close();
     const signedOut = { ...saved, account: null, savedToAccount: false, integration: null, status: 'business_saved' };
-    const second = await openPage(browser, { width: 390, path: '/catalyst/setup?next=dashboard', handler: api(fixture()), extra: surface => surface === 'customer' ? { status: 200, json: signedOut } : surface === 'messaging' ? { status: 401, json: { ok: false, reason: 'sign_in_required' } } : null });
-    await second.page.getByRole('region', { name: 'Save your setup' }).waitFor(); count++;
+    const second = await openPage(browser, {
+      width: 390,
+      path: '/catalyst/setup?next=dashboard',
+      handler: api(fixture()),
+      extra: surface =>
+        surface === 'customer'
+          ? { status: 200, json: signedOut }
+          : surface === 'messaging'
+            ? { status: 401, json: { ok: false, reason: 'sign_in_required' } }
+            : null,
+    });
+    await second.page.getByRole('region', { name: 'Save your setup' }).waitFor();
+    count++;
     await second.context.close();
   }
 
   // Setup with a connected number: the WhatsApp switch turns Layla on and the page says she is live.
   {
-    const setup = { ok: true, csrfToken: 'a'.repeat(64), review: false, available: true, status: 'connected', profile: { businessName: 'Blue Studio Properties', sector: 'Real estate', services: 'Villas', prices: '', hours: '', location: '', humanContact: 'team@example.com', faqs: [], reviewed: true },
-      journeyStep: 3, profileVersion: 1, capabilities: {}, integration: { id: 'i1', sender: '96890000000', path: 'new_number', status: 'connected' }, account: { email: 'owner@example.test' }, savedToAccount: true, accountSaveAvailable: true };
+    const setup = {
+      ok: true,
+      csrfToken: 'a'.repeat(64),
+      review: false,
+      available: true,
+      status: 'connected',
+      profile: {
+        businessName: 'Blue Studio Properties',
+        sector: 'Real estate',
+        services: 'Villas',
+        prices: '',
+        hours: '',
+        location: '',
+        humanContact: 'team@example.com',
+        faqs: [],
+        reviewed: true,
+      },
+      journeyStep: 3,
+      profileVersion: 1,
+      capabilities: {},
+      integration: { id: 'i1', sender: '96890000000', path: 'new_number', status: 'connected' },
+      account: { email: 'owner@example.test' },
+      savedToAccount: true,
+      accountSaveAvailable: true,
+    };
     let active = false;
     const handler = api(fixture());
-    const { page, context } = await openPage(browser, { width: 1280, path: '/catalyst/setup', handler, extra: (surface, request) => {
-      if (surface === 'customer') return { status: 200, json: { ...setup, catalog: { entries: [], cursor: null, total: 0 } } };
-      if (surface === 'messaging') { if (request.method() === 'POST') active = true; return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), available: true, active, reason: active ? '' : 'not_activated', limits: { usedToday: 0 } } }; }
-      return null;
-    } });
+    const { page, context } = await openPage(browser, {
+      width: 1280,
+      path: '/catalyst/setup',
+      handler,
+      extra: (surface, request) => {
+        if (surface === 'customer')
+          return { status: 200, json: { ...setup, catalog: { entries: [], cursor: null, total: 0 } } };
+        if (surface === 'messaging') {
+          if (request.method() === 'POST') active = true;
+          return {
+            status: 200,
+            json: {
+              ok: true,
+              csrfToken: 'a'.repeat(64),
+              available: true,
+              active,
+              reason: active ? '' : 'not_activated',
+              limits: { usedToday: 0 },
+            },
+          };
+        }
+        return null;
+      },
+    });
     const toggle = page.locator('.layla-channel-card--whatsapp').getByRole('switch');
-    assert.equal(await toggle.isChecked(), false, 'already connected before this visit, so nothing switched on by itself'); count++;
+    assert.equal(
+      await toggle.isChecked(),
+      false,
+      'already connected before this visit, so nothing switched on by itself',
+    );
+    count++;
     await toggle.click();
-    await page.getByRole('heading', { name: 'Layla is live' }).waitFor(); count++;
-    assert.equal(await page.getByRole('link', { name: 'Open your inbox' }).getAttribute('href'), '/en/layla/dashboard'); count++;
-    assert.equal(await page.getByRole('button', { name: /Activate/ }).count(), 0, 'no separate Activate buttons remain'); count++;
+    await page.getByRole('heading', { name: 'Layla is live' }).waitFor();
+    count++;
+    assert.equal(await page.getByRole('link', { name: 'Open your inbox' }).getAttribute('href'), '/en/layla/dashboard');
+    count++;
+    assert.equal(
+      await page.getByRole('button', { name: /Activate/ }).count(),
+      0,
+      'no separate Activate buttons remain',
+    );
+    count++;
     await page.screenshot({ path: `${OUT}/setup-live-1280.png` });
     await context.close();
   }
   // Dashboard → Business: an existing customer converts saved details into bzns.md, edits and publishes.
-  for (const [lang, width] of [['en', 1280], ['ar', 375]]) {
+  for (const [lang, width] of [
+    ['en', 1280],
+    ['ar', 375],
+  ]) {
     const writes = [];
     const bzns = { markdown: null, version: 0, publishedRevision: 0, publishedAt: null, unpublishedChanges: false };
-    let setup = { ok: true, csrfToken: 'a'.repeat(64), available: true, status: 'connected', savedToAccount: true, profileVersion: 3, bzns,
-      profile: { businessName: 'Blue Studio', sector: 'Photography', services: 'Portraits', prices: '', hours: '', location: '', humanContact: 'team@example.test', faqs: [], reviewed: true } };
-    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=business', handler: api(fixture()), extra: (surface, request) => {
-      if (surface !== 'customer') return null;
-      const body = request.method() === 'POST' ? request.postDataJSON() : {};
-      if (body.action === 'bzns_publish') { writes.push(body); setup = { ...setup, profileVersion: 4, bzns: { markdown: body.markdown, version: body.version + 1, publishedRevision: 1, publishedAt: now, unpublishedChanges: false } }; }
-      if (body.action === 'catalog_list') return { status: 200, json: { ...setup, catalog: { entries: [], cursor: null } } };
-      if (body.operation || body.action === 'list') return { status: 200, json: { ...setup, sources: [], drafts: [] } };
-      return { status: 200, json: setup };
-    } });
-    const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
-    await page.getByRole('heading', { name: t('Your business', 'نشاطك التجاري'), exact: true }).waitFor(); count++;
-    await page.getByRole('heading', { name: t('Add information', 'إضافة معلومات') }).waitFor(); count++; // older accounts keep their Q&A until bzns.md is published
+    let setup = {
+      ok: true,
+      csrfToken: 'a'.repeat(64),
+      available: true,
+      status: 'connected',
+      savedToAccount: true,
+      profileVersion: 3,
+      bzns,
+      profile: {
+        businessName: 'Blue Studio',
+        sector: 'Photography',
+        services: 'Portraits',
+        prices: '',
+        hours: '',
+        location: '',
+        humanContact: 'team@example.test',
+        faqs: [],
+        reviewed: true,
+      },
+    };
+    const { page, context } = await openPage(browser, {
+      width,
+      lang,
+      path: '/layla/dashboard?tab=business',
+      handler: api(fixture()),
+      extra: (surface, request) => {
+        if (surface !== 'customer') return null;
+        const body = request.method() === 'POST' ? request.postDataJSON() : {};
+        if (body.action === 'bzns_publish') {
+          writes.push(body);
+          setup = {
+            ...setup,
+            profileVersion: 4,
+            bzns: {
+              markdown: body.markdown,
+              version: body.version + 1,
+              publishedRevision: 1,
+              publishedAt: now,
+              unpublishedChanges: false,
+            },
+          };
+        }
+        if (body.action === 'catalog_list')
+          return { status: 200, json: { ...setup, catalog: { entries: [], cursor: null } } };
+        if (body.operation || body.action === 'list')
+          return { status: 200, json: { ...setup, sources: [], drafts: [] } };
+        return { status: 200, json: setup };
+      },
+    });
+    const ar = lang === 'ar',
+      t = (en, arabic) => (ar ? arabic : en);
+    await page.getByRole('heading', { name: t('Your business', 'نشاطك التجاري'), exact: true }).waitFor();
+    count++;
+    await page.getByRole('heading', { name: t('Add information', 'إضافة معلومات') }).waitFor();
+    count++; // older accounts keep their Q&A until bzns.md is published
     await page.getByRole('button', { name: t('Start from my saved details', 'ابدأ من معلوماتي المحفوظة') }).click();
     const doc = page.locator('.bzns-field textarea');
-    assert.match(await doc.inputValue(), /name: Blue Studio[\s\S]*Portraits/, `${lang}: saved details become the starting document`); count++;
+    assert.match(
+      await doc.inputValue(),
+      /name: Blue Studio[\s\S]*Portraits/,
+      `${lang}: saved details become the starting document`,
+    );
+    count++;
     await doc.fill((await doc.inputValue()).replace('Portraits', t('Portraits and weddings', 'صور شخصية وحفلات زفاف')));
     const publish = page.getByRole('button', { name: t('Publish and continue', 'انشر وتابع') });
-    assert.equal(await publish.isDisabled(), true, `${lang}: publishing needs the owner's confirmation`); count++;
+    assert.equal(await publish.isDisabled(), true, `${lang}: publishing needs the owner's confirmation`);
+    count++;
     await page.getByLabel(t('I checked these business details', 'راجعت معلومات النشاط هذه')).check();
     await publish.click();
-    await page.getByText(t('Published. Layla now answers from this version.', 'تم النشر. تجيب ليلى الآن من هذه النسخة.')).waitFor(); count++;
-    assert.equal(await page.getByRole('heading', { name: t('Add information', 'إضافة معلومات') }).count(), 0, `${lang}: the legacy Q&A panel retires once bzns.md is published`); count++;
-    assert.equal(writes.length, 1); assert.match(writes[0].markdown, new RegExp(t('Portraits and weddings', 'صور شخصية وحفلات زفاف'))); count += 2;
-    assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`); count++;
+    await page
+      .getByText(t('Published. Layla now answers from this version.', 'تم النشر. تجيب ليلى الآن من هذه النسخة.'))
+      .waitFor();
+    count++;
+    assert.equal(
+      await page.getByRole('heading', { name: t('Add information', 'إضافة معلومات') }).count(),
+      0,
+      `${lang}: the legacy Q&A panel retires once bzns.md is published`,
+    );
+    count++;
+    assert.equal(writes.length, 1);
+    assert.match(writes[0].markdown, new RegExp(t('Portraits and weddings', 'صور شخصية وحفلات زفاف')));
+    count += 2;
+    assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`);
+    count++;
     await context.close();
   }
   // Ascend's free website (Ahmed, 2026-10-23): the reminder opens the Website tab, a seven-step wizard
@@ -773,73 +1982,207 @@ try {
   // review with edit links, then a tracker promising the site within 3 business days.
   // Online payments through Paymob (2026-10-31) are optional: English says yes (forms, a personal contact and
   // every required document, then a payments track); Arabic says not now.
-  for (const [lang, width] of [['en', 1280], ['ar', 375]]) {
+  for (const [lang, width] of [
+    ['en', 1280],
+    ['ar', 375],
+  ]) {
     const posts = [];
-    const server = { version: 0, fields: { nameEn: 'Blue Studio', phone: '+968 9000 0000', mailboxLocal: 'info', recoveryEmail: 'owner@example.test' },
-      prefilled: ['nameEn', 'phone'], draft: null, project: null };
-    const view = () => ({ account: { email: 'owner@example.test', name: 'Sara' }, version: server.version, submittedAt: server.version ? now : null, emailedAt: server.version ? now : null,
-      fields: server.fields, prefilled: server.draft ? [] : server.prefilled, draft: server.draft, project: server.project, logo: null, photos: [] });
-    const setup = { ok: true, csrfToken: 'a'.repeat(64), available: true, status: 'connected', savedToAccount: true, profileVersion: 3,
-      bzns: { markdown: '# Blue Studio', version: 1, publishedRevision: 1, publishedAt: now, unpublishedChanges: false },
-      profile: { businessName: 'Blue Studio', sector: 'Photography', services: 'Portraits', prices: '', hours: '', location: '', humanContact: 'team@example.test', faqs: [], reviewed: true } };
-    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=chats', handler: api(fixture()),
+    const server = {
+      version: 0,
+      fields: {
+        nameEn: 'Blue Studio',
+        phone: '+968 9000 0000',
+        mailboxLocal: 'info',
+        recoveryEmail: 'owner@example.test',
+      },
+      prefilled: ['nameEn', 'phone'],
+      draft: null,
+      project: null,
+    };
+    const view = () => ({
+      account: { email: 'owner@example.test', name: 'Sara' },
+      version: server.version,
+      submittedAt: server.version ? now : null,
+      emailedAt: server.version ? now : null,
+      fields: server.fields,
+      prefilled: server.draft ? [] : server.prefilled,
+      draft: server.draft,
+      project: server.project,
+      logo: null,
+      photos: [],
+    });
+    const setup = {
+      ok: true,
+      csrfToken: 'a'.repeat(64),
+      available: true,
+      status: 'connected',
+      savedToAccount: true,
+      profileVersion: 3,
+      bzns: {
+        markdown: '# Blue Studio',
+        version: 1,
+        publishedRevision: 1,
+        publishedAt: now,
+        unpublishedChanges: false,
+      },
+      profile: {
+        businessName: 'Blue Studio',
+        sector: 'Photography',
+        services: 'Portraits',
+        prices: '',
+        hours: '',
+        location: '',
+        humanContact: 'team@example.test',
+        faqs: [],
+        reviewed: true,
+      },
+    };
+    const { page, context } = await openPage(browser, {
+      width,
+      lang,
+      path: '/layla/dashboard?tab=chats',
+      handler: api(fixture()),
       // The Arabic pass is an Apex holder: Apex has everything Ascend has, the free website included (2026-10-27).
-      authAccount: { id: 'a1', email: 'owner@example.test', accessPlan: lang === 'ar' ? 'apex' : 'ascend', profileComplete: true },
+      authAccount: {
+        id: 'a1',
+        email: 'owner@example.test',
+        accessPlan: lang === 'ar' ? 'apex' : 'ascend',
+        profileComplete: true,
+      },
       extra: (surface, request) => {
         if (surface === 'website-brief') {
           const body = request.method() === 'POST' ? request.postDataJSON() : null;
           if (!body) return { status: 200, json: { ok: true, csrfToken: 'a'.repeat(64), brief: view() } };
           posts.push(body);
-          if (body.action === 'save_draft') { server.fields = body.fields; server.draft = { step: body.step, updatedAt: now }; return { status: 200, json: { ok: true, step: body.step } }; }
-          if (body.action === 'domain_check') return { status: 200, json: { ok: true, results: [
-            { domain: 'blue-studio.com', status: 'available' }, { domain: 'blue-studio.net', status: 'taken' }, { domain: 'blue-studio.co', status: 'unavailable' }] } };
-          if (body.action === 'upload_url') return { status: 200, json: { ok: true, url: `https://upload.convex.test/${posts.length}` } };
+          if (body.action === 'save_draft') {
+            server.fields = body.fields;
+            server.draft = { step: body.step, updatedAt: now };
+            return { status: 200, json: { ok: true, step: body.step } };
+          }
+          if (body.action === 'domain_check')
+            return {
+              status: 200,
+              json: {
+                ok: true,
+                results: [
+                  { domain: 'blue-studio.com', status: 'available' },
+                  { domain: 'blue-studio.net', status: 'taken' },
+                  { domain: 'blue-studio.co', status: 'unavailable' },
+                ],
+              },
+            };
+          if (body.action === 'upload_url')
+            return { status: 200, json: { ok: true, url: `https://upload.convex.test/${posts.length}` } };
           if (body.action === 'file_register') return { status: 200, json: { ok: true, fileId: body.storageId } };
           if (body.action === 'submit') {
-            Object.assign(server, { version: 1, fields: body.fields, draft: null, project: { stage: 'received', stageAt: { received: now }, dueAt: addBusinessDays(now),
-              domain: body.fields.domainChoice, mailbox: `${body.fields.mailboxLocal}@${body.fields.domainChoice}`, liveUrl: '', delayReason: '',
-              ...(body.fields.payments === 'yes' ? { payments: { stage: 'received', stageAt: { received: now } } } : {}) } });
+            Object.assign(server, {
+              version: 1,
+              fields: body.fields,
+              draft: null,
+              project: {
+                stage: 'received',
+                stageAt: { received: now },
+                dueAt: addBusinessDays(now),
+                domain: body.fields.domainChoice,
+                mailbox: `${body.fields.mailboxLocal}@${body.fields.domainChoice}`,
+                liveUrl: '',
+                delayReason: '',
+                ...(body.fields.payments === 'yes'
+                  ? { payments: { stage: 'received', stageAt: { received: now } } }
+                  : {}),
+              },
+            });
             return { status: 200, json: { ok: true, version: 1, emailed: true } };
           }
           return { status: 400, json: { ok: false, reason: 'invalid_action' } };
         }
         if (surface !== 'customer') return null;
         const body = request.method() === 'POST' ? request.postDataJSON() : {};
-        if (body.action === 'catalog_list') return { status: 200, json: { ...setup, catalog: { entries: [], cursor: null } } };
-        if (body.operation || body.action === 'list') return { status: 200, json: { ...setup, sources: [], drafts: [] } };
+        if (body.action === 'catalog_list')
+          return { status: 200, json: { ...setup, catalog: { entries: [], cursor: null } } };
+        if (body.operation || body.action === 'list')
+          return { status: 200, json: { ...setup, sources: [], drafts: [] } };
         return { status: 200, json: setup };
-      } });
-    const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en;
+      },
+    });
+    const ar = lang === 'ar',
+      t = (en, arabic) => (ar ? arabic : en);
     // Documents go straight to Convex storage; each upload gets a storage id back.
     const uploads = [];
-    await page.route('https://upload.convex.test/**', route => { uploads.push(route.request().headers()['content-type']); return route.fulfill({ status: 200, json: { storageId: `kg2doc${String(uploads.length).padStart(6, '0')}` } }); });
+    await page.route('https://upload.convex.test/**', route => {
+      uploads.push(route.request().headers()['content-type']);
+      return route.fulfill({ status: 200, json: { storageId: `kg2doc${String(uploads.length).padStart(6, '0')}` } });
+    });
     const wizard = page.locator('.ld-web');
     const next = () => wizard.getByRole('button', { name: t('Next', 'التالي'), exact: true }).click();
-    const onStep = (n, name) => wizard.getByRole('heading', { name, exact: true }).waitFor().then(async () => {
-      assert.equal(await wizard.locator('.ld-web-step-count').textContent(), t(`Step ${n} of 7`, `الخطوة ${n} من 7`)); count++;
-    });
-    const required = async what => { await wizard.getByText(t('Fill in the required fields.', 'أكمل الحقول المطلوبة.')).waitFor(); count++; assert.equal(posts.length, what, `${lang}: nothing saved while a required answer is missing`); count++; };
+    const onStep = (n, name) =>
+      wizard
+        .getByRole('heading', { name, exact: true })
+        .waitFor()
+        .then(async () => {
+          assert.equal(
+            await wizard.locator('.ld-web-step-count').textContent(),
+            t(`Step ${n} of 7`, `الخطوة ${n} من 7`),
+          );
+          count++;
+        });
+    const required = async what => {
+      await wizard.getByText(t('Fill in the required fields.', 'أكمل الحقول المطلوبة.')).waitFor();
+      count++;
+      assert.equal(posts.length, what, `${lang}: nothing saved while a required answer is missing`);
+      count++;
+    };
 
-    await page.getByRole('heading', { name: t('Your free website is waiting for your details', 'موقعك المجاني بانتظار تفاصيلك') }).waitFor(); count++;
-    if (width > 768) { assert.equal(await page.locator('.ld-nav a[data-section="website"]').count(), 1, `${lang}: Website is a tab for the Ascend owner`); count++; }
+    await page
+      .getByRole('heading', {
+        name: t('Your free website is waiting for your details', 'موقعك المجاني بانتظار تفاصيلك'),
+      })
+      .waitFor();
+    count++;
+    if (width > 768) {
+      assert.equal(
+        await page.locator('.ld-nav a[data-section="website"]').count(),
+        1,
+        `${lang}: Website is a tab for the Ascend owner`,
+      );
+      count++;
+    }
     await page.getByRole('link', { name: t('Send website details', 'أرسل تفاصيل الموقع') }).click();
-    await wizard.getByRole('heading', { name: t('Your free website', 'موقعك المجاني'), level: 1 }).waitFor(); count++;
-    assert.equal(new URL(page.url()).searchParams.get('tab'), 'website'); count++;
+    await wizard.getByRole('heading', { name: t('Your free website', 'موقعك المجاني'), level: 1 }).waitFor();
+    count++;
+    assert.equal(new URL(page.url()).searchParams.get('tab'), 'website');
+    count++;
 
     // 1 Business: prefilled from BznsBrain, and it says so.
     await onStep(1, t('Your business', 'نشاطك'));
-    assert.equal(await wizard.getByLabel(t('Business name in English', 'اسم النشاط بالإنجليزية')).inputValue(), 'Blue Studio'); count++;
-    assert.equal(await wizard.locator('.ld-web-from-brain').count(), 1, `${lang}: the prefilled name is marked as from BznsBrain`); count++;
+    assert.equal(
+      await wizard.getByLabel(t('Business name in English', 'اسم النشاط بالإنجليزية')).inputValue(),
+      'Blue Studio',
+    );
+    count++;
+    assert.equal(
+      await wizard.locator('.ld-web-from-brain').count(),
+      1,
+      `${lang}: the prefilled name is marked as from BznsBrain`,
+    );
+    count++;
     await next();
     // 2 Contact: the phone came prefilled too.
     await onStep(2, t('Contact & location', 'التواصل والموقع'));
-    assert.deepEqual(posts.map(p => [p.action, p.step]), [['save_draft', 1]], `${lang}: Next saves a draft that resumes at the next step`); count++;
+    assert.deepEqual(
+      posts.map(p => [p.action, p.step]),
+      [['save_draft', 1]],
+      `${lang}: Next saves a draft that resumes at the next step`,
+    );
+    count++;
     await next();
     // 3 Look: a logo or a request to design one.
     await onStep(3, t('Look & feel', 'الهوية البصرية'));
     await next();
     await required(2);
-    await wizard.getByLabel(t('I don’t have a logo. Please design a simple one.', 'ليس لدي شعار. صمّموا لي شعارًا بسيطًا.')).check();
+    await wizard
+      .getByLabel(t('I don’t have a logo. Please design a simple one.', 'ليس لدي شعار. صمّموا لي شعارًا بسيطًا.'))
+      .check();
     await wizard.getByRole('radio', { name: t('Minimal', 'بسيط') }).check();
     await next();
     // 4 Pages & languages: a language is required.
@@ -856,15 +2199,35 @@ try {
     // 5 Domain & email: a name must be chosen from the live search.
     await next();
     await required(4);
-    assert.equal(await wizard.locator('#ld-web-domain-q').inputValue(), 'Blue Studio', `${lang}: the search starts from the business name`); count++;
+    assert.equal(
+      await wizard.locator('#ld-web-domain-q').inputValue(),
+      'Blue Studio',
+      `${lang}: the search starts from the business name`,
+    );
+    count++;
     await wizard.getByRole('button', { name: t('Check', 'تحقّق'), exact: true }).click();
     const results = wizard.locator('.ld-web-domain-results li');
     await results.first().waitFor();
-    assert.deepEqual(await results.evaluateAll(rows => rows.map(r => r.className)), ['is-available', 'is-taken', 'is-unavailable']); count++;
-    assert.equal(await results.nth(1).getByRole('button').count(), 0, `${lang}: a taken name cannot be chosen`); count++;
-    await results.first().getByRole('button', { name: t('Choose', 'اختر') }).click();
-    assert.match(await wizard.locator('.ld-web-domain-chosen').textContent(), /blue-studio\.com/); count++;
-    assert.equal(await wizard.locator('.ld-web-mailbox-row span').textContent(), '@blue-studio.com', `${lang}: the mailbox shows on the chosen domain`); count++;
+    assert.deepEqual(await results.evaluateAll(rows => rows.map(r => r.className)), [
+      'is-available',
+      'is-taken',
+      'is-unavailable',
+    ]);
+    count++;
+    assert.equal(await results.nth(1).getByRole('button').count(), 0, `${lang}: a taken name cannot be chosen`);
+    count++;
+    await results
+      .first()
+      .getByRole('button', { name: t('Choose', 'اختر') })
+      .click();
+    assert.match(await wizard.locator('.ld-web-domain-chosen').textContent(), /blue-studio\.com/);
+    count++;
+    assert.equal(
+      await wizard.locator('.ld-web-mailbox-row span').textContent(),
+      '@blue-studio.com',
+      `${lang}: the mailbox shows on the chosen domain`,
+    );
+    count++;
     await page.screenshot({ path: `${OUT}/website-domain-${lang}-${width}.png`, fullPage: true });
     await next();
     // 6 Online payments: optional, but an answer is required.
@@ -872,28 +2235,59 @@ try {
     await next();
     await required(6);
     // A slot by its own label, not its hint (the ID slot's hint mentions the commercial register).
-    const docSlot = name => wizard.locator('.ld-web-doc').filter({ has: page.locator('.ld-web-doc-label', { hasText: name }) }).locator('input[type="file"]');
+    const docSlot = name =>
+      wizard
+        .locator('.ld-web-doc')
+        .filter({ has: page.locator('.ld-web-doc-label', { hasText: name }) })
+        .locator('input[type="file"]');
     if (ar) {
       await wizard.getByRole('radio', { name: 'ليس الآن' }).check();
-      assert.equal(await wizard.locator('.ld-web-doc').count(), 0, 'ar: no documents asked for when payments are not wanted'); count++;
+      assert.equal(
+        await wizard.locator('.ld-web-doc').count(),
+        0,
+        'ar: no documents asked for when payments are not wanted',
+      );
+      count++;
     } else {
       await wizard.getByRole('radio', { name: 'Yes, set up online payments' }).check();
       // Paymob's two forms download from the signed-in API, not a public file.
-      assert.deepEqual(await wizard.locator('.ld-web-pay-forms a').evaluateAll(a => a.map(x => [x.getAttribute('href'), x.hasAttribute('download')])),
-        [['/api/layla-meta?surface=website-brief&form=application', true], ['/api/layla-meta?surface=website-brief&form=vat', true]]); count++;
-      assert.equal(await wizard.locator('.ld-web-doc').count(), 6, 'en: six document slots'); count++;
+      assert.deepEqual(
+        await wizard
+          .locator('.ld-web-pay-forms a')
+          .evaluateAll(a => a.map(x => [x.getAttribute('href'), x.hasAttribute('download')])),
+        [
+          ['/api/layla-meta?surface=website-brief&form=application', true],
+          ['/api/layla-meta?surface=website-brief&form=vat', true],
+        ],
+      );
+      count++;
+      assert.equal(await wizard.locator('.ld-web-doc').count(), 6, 'en: six document slots');
+      count++;
       await next();
       await required(6);
-      assert.equal(await wizard.getByLabel('Full name').getAttribute('aria-invalid'), 'true', 'en: the personal contact is asked for first'); count++;
+      assert.equal(
+        await wizard.getByLabel('Full name').getAttribute('aria-invalid'),
+        'true',
+        'en: the personal contact is asked for first',
+      );
+      count++;
       await wizard.getByLabel('Full name').fill('Sara Al Balushi');
       await wizard.getByLabel('Personal mobile number').fill('+968 9123 4567');
       await next();
       await required(6);
-      assert.match(await wizard.locator('.ld-web-doc.is-invalid').textContent(), /Commercial register/, 'en: the first missing document is pointed out'); count++;
+      assert.match(
+        await wizard.locator('.ld-web-doc.is-invalid').textContent(),
+        /Commercial register/,
+        'en: the first missing document is pointed out',
+      );
+      count++;
       const pdf = name => ({ name, mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7 synthetic') });
       await docSlot('Commercial register').setInputFiles(pdf('cr.pdf'));
       await wizard.locator('.ld-web-doc-files li', { hasText: 'cr.pdf' }).waitFor();
-      await docSlot('ID cards').setInputFiles([pdf('id-sara.pdf'), { name: 'id-ali.jpg', mimeType: 'image/jpeg', buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0]) }]);
+      await docSlot('ID cards').setInputFiles([
+        pdf('id-sara.pdf'),
+        { name: 'id-ali.jpg', mimeType: 'image/jpeg', buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0]) },
+      ]);
       await wizard.locator('.ld-web-doc-files li', { hasText: 'id-ali.jpg' }).waitFor();
       await docSlot('Proof of bank account').setInputFiles(pdf('statement.pdf'));
       await wizard.locator('.ld-web-doc-files li', { hasText: 'statement.pdf' }).waitFor();
@@ -902,164 +2296,442 @@ try {
       await docSlot('Invoices').setInputFiles(pdf('invoice.pdf'));
       await wizard.locator('.ld-web-doc-files li', { hasText: 'invoice.pdf' }).waitFor();
       // The wrong kind of file is refused before it is uploaded.
-      await docSlot('Tax card').setInputFiles({ name: 'tax.exe', mimeType: 'application/x-msdownload', buffer: Buffer.from('MZ') });
-      await wizard.locator('.ld-web-doc.is-invalid .ld-inline-error', { hasText: 'Use a PDF, JPG or PNG file.' }).waitFor(); count++;
-      assert.match(await wizard.locator('.ld-web-doc.is-invalid .ld-web-doc-label').textContent(), /Tax card/, 'en: the refusal is shown in the slot it belongs to'); count++;
-      assert.equal(await wizard.locator('.ld-web-pay-progress').textContent(), '5 of 5 required documents added'); count++;
-      assert.equal(await wizard.locator('.ld-web-doc.is-added').count(), 5, 'en: every required slot is marked added'); count++;
-      assert.deepEqual(uploads, ['application/pdf', 'application/pdf', 'image/jpeg', 'application/pdf', 'application/pdf', 'application/pdf'], 'en: six documents uploaded as they are'); count++;
-      assert.deepEqual(posts.filter(p => p.action === 'file_register').map(p => [p.kind, p.name]), [['doc_cr', 'cr.pdf'], ['doc_id', 'id-sara.pdf'], ['doc_id', 'id-ali.jpg'],
-        ['doc_bank', 'statement.pdf'], ['doc_forms', 'signed.pdf'], ['doc_invoice', 'invoice.pdf']], 'en: each registered under its slot with its name'); count++;
+      await docSlot('Tax card').setInputFiles({
+        name: 'tax.exe',
+        mimeType: 'application/x-msdownload',
+        buffer: Buffer.from('MZ'),
+      });
+      await wizard
+        .locator('.ld-web-doc.is-invalid .ld-inline-error', { hasText: 'Use a PDF, JPG or PNG file.' })
+        .waitFor();
+      count++;
+      assert.match(
+        await wizard.locator('.ld-web-doc.is-invalid .ld-web-doc-label').textContent(),
+        /Tax card/,
+        'en: the refusal is shown in the slot it belongs to',
+      );
+      count++;
+      assert.equal(await wizard.locator('.ld-web-pay-progress').textContent(), '5 of 5 required documents added');
+      count++;
+      assert.equal(await wizard.locator('.ld-web-doc.is-added').count(), 5, 'en: every required slot is marked added');
+      count++;
+      assert.deepEqual(
+        uploads,
+        ['application/pdf', 'application/pdf', 'image/jpeg', 'application/pdf', 'application/pdf', 'application/pdf'],
+        'en: six documents uploaded as they are',
+      );
+      count++;
+      assert.deepEqual(
+        posts.filter(p => p.action === 'file_register').map(p => [p.kind, p.name]),
+        [
+          ['doc_cr', 'cr.pdf'],
+          ['doc_id', 'id-sara.pdf'],
+          ['doc_id', 'id-ali.jpg'],
+          ['doc_bank', 'statement.pdf'],
+          ['doc_forms', 'signed.pdf'],
+          ['doc_invoice', 'invoice.pdf'],
+        ],
+        'en: each registered under its slot with its name',
+      );
+      count++;
       await page.screenshot({ path: `${OUT}/website-payments-${lang}-${width}.png`, fullPage: true });
     }
     await next();
     // 7 Review: every answer grouped by step, each with a way back.
     await onStep(7, t('Review & send', 'المراجعة والإرسال'));
-    assert.equal(await wizard.locator('.ld-web-review').count(), 6); count++;
-    assert.match(await wizard.locator('.ld-web-review').nth(4).textContent(), /info@blue-studio\.com/); count++;
-    if (!ar) { assert.match(await wizard.locator('.ld-web-review').nth(5).textContent(), /ID cards of all partners and managers: 2 file/); count++; }
+    assert.equal(await wizard.locator('.ld-web-review').count(), 6);
+    count++;
+    assert.match(await wizard.locator('.ld-web-review').nth(4).textContent(), /info@blue-studio\.com/);
+    count++;
+    if (!ar) {
+      assert.match(
+        await wizard.locator('.ld-web-review').nth(5).textContent(),
+        /ID cards of all partners and managers: 2 file/,
+      );
+      count++;
+    }
     await wizard.getByRole('button', { name: `${t('Edit', 'تعديل')}: ${t('Look & feel', 'الهوية البصرية')}` }).click();
     await onStep(3, t('Look & feel', 'الهوية البصرية'));
-    for (const n of [4, 5, 6, 7]) { await next(); await wizard.locator('.ld-web-step-count', { hasText: t(`Step ${n} of 7`, `الخطوة ${n} من 7`) }).waitFor(); }
+    for (const n of [4, 5, 6, 7]) {
+      await next();
+      await wizard.locator('.ld-web-step-count', { hasText: t(`Step ${n} of 7`, `الخطوة ${n} من 7`) }).waitFor();
+    }
     count++;
     await page.screenshot({ path: `${OUT}/website-review-${lang}-${width}.png`, fullPage: true });
     await wizard.getByRole('button', { name: t('Send to BznsFlow', 'أرسل إلى BznsFlow') }).click();
 
     // The tracker replaces the wizard: five stages and the promised date.
-    await wizard.getByRole('heading', { name: t('Your website is on its way', 'موقعك في الطريق') }).waitFor(); count++;
+    await wizard.getByRole('heading', { name: t('Your website is on its way', 'موقعك في الطريق') }).waitFor();
+    count++;
     const submitted = posts.find(p => p.action === 'submit');
-    assert.deepEqual(submitted.fields, { nameEn: 'Blue Studio', phone: '+968 9000 0000', mailboxLocal: 'info', recoveryEmail: 'owner@example.test',
-      designLogo: true, style: 'minimal', languages: 'both', domainChoice: 'blue-studio.com',
-      ...(ar ? { payments: 'no' } : { payments: 'yes', payContactName: 'Sara Al Balushi', payContactPhone: '+968 9123 4567' }) }, `${lang}: the brief as entered`); count++;
-    assert.deepEqual([submitted.version, submitted.logoId, submitted.photoIds], [0, null, []]); count++;
-    assert.deepEqual(submitted.docIds.map(d => d.kind), ar ? [] : ['doc_cr', 'doc_id', 'doc_id', 'doc_bank', 'doc_forms', 'doc_invoice'], `${lang}: documents only with a yes`); count++;
-    const due = new Intl.DateTimeFormat(ar ? 'ar-OM-u-nu-latn' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Muscat' }).format(new Date(addBusinessDays(now)));
-    assert.equal(await wizard.locator('.ld-web-due').textContent(), t(`Ready by ${due}`, `جاهز بحلول ${due}`)); count++;
-    assert.deepEqual(await wizard.locator('.ld-web-tracker > .ld-web-stages li').evaluateAll(li => li.map(x => x.className)), ['is-done', 'is-current', '', '', ''], `${lang}: details received; the domain is underway`); count++;
-    assert.match(await wizard.locator('.ld-web-facts').textContent(), /info@blue-studio\.com/); count++;
+    assert.deepEqual(
+      submitted.fields,
+      {
+        nameEn: 'Blue Studio',
+        phone: '+968 9000 0000',
+        mailboxLocal: 'info',
+        recoveryEmail: 'owner@example.test',
+        designLogo: true,
+        style: 'minimal',
+        languages: 'both',
+        domainChoice: 'blue-studio.com',
+        ...(ar
+          ? { payments: 'no' }
+          : { payments: 'yes', payContactName: 'Sara Al Balushi', payContactPhone: '+968 9123 4567' }),
+      },
+      `${lang}: the brief as entered`,
+    );
+    count++;
+    assert.deepEqual([submitted.version, submitted.logoId, submitted.photoIds], [0, null, []]);
+    count++;
+    assert.deepEqual(
+      submitted.docIds.map(d => d.kind),
+      ar ? [] : ['doc_cr', 'doc_id', 'doc_id', 'doc_bank', 'doc_forms', 'doc_invoice'],
+      `${lang}: documents only with a yes`,
+    );
+    count++;
+    const due = new Intl.DateTimeFormat(ar ? 'ar-OM-u-nu-latn' : 'en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      timeZone: 'Asia/Muscat',
+    }).format(new Date(addBusinessDays(now)));
+    assert.equal(await wizard.locator('.ld-web-due').textContent(), t(`Ready by ${due}`, `جاهز بحلول ${due}`));
+    count++;
+    assert.deepEqual(
+      await wizard.locator('.ld-web-tracker > .ld-web-stages li').evaluateAll(li => li.map(x => x.className)),
+      ['is-done', 'is-current', '', '', ''],
+      `${lang}: details received; the domain is underway`,
+    );
+    count++;
+    assert.match(await wizard.locator('.ld-web-facts').textContent(), /info@blue-studio\.com/);
+    count++;
     // A yes adds the payments track: documents received, Paymob's review next, and no date promised.
-    assert.equal(await wizard.locator('.ld-web-pay-track').count(), ar ? 0 : 1); count++;
+    assert.equal(await wizard.locator('.ld-web-pay-track').count(), ar ? 0 : 1);
+    count++;
     if (!ar) {
-      assert.deepEqual(await wizard.locator('.ld-web-pay-track li').evaluateAll(li => li.map(x => x.className)), ['is-done', 'is-current', '', '', ''], 'en: documents received; sending to Paymob is next'); count++;
-      assert.match(await wizard.locator('.ld-web-pay-track').textContent(), /no fixed date/); count++;
+      assert.deepEqual(
+        await wizard.locator('.ld-web-pay-track li').evaluateAll(li => li.map(x => x.className)),
+        ['is-done', 'is-current', '', '', ''],
+        'en: documents received; sending to Paymob is next',
+      );
+      count++;
+      assert.match(await wizard.locator('.ld-web-pay-track').textContent(), /no fixed date/);
+      count++;
     }
-    const violations = (await new AxeBuilder({ page }).include('.ld-web').analyze()).violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
-    assert.deepEqual(violations, [], `${lang} ${width}: website tracker accessibility`); count++;
-    assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`); count++;
+    const violations = (await new AxeBuilder({ page }).include('.ld-web').analyze()).violations
+      .filter(v => ['critical', 'serious'].includes(v.impact))
+      .map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
+    assert.deepEqual(violations, [], `${lang} ${width}: website tracker accessibility`);
+    count++;
+    assert.equal(await noOverflow(page), true, `${lang} ${width}: no horizontal overflow`);
+    count++;
     await page.screenshot({ path: `${OUT}/website-tracker-${lang}-${width}.png`, fullPage: true });
     // Changing the details reopens the wizard with what was sent, and can be abandoned.
     await wizard.getByRole('button', { name: t('Change my details', 'عدّل بياناتي') }).click();
     await onStep(1, t('Your business', 'نشاطك'));
     await wizard.getByRole('button', { name: t('Keep my sent details', 'أبقِ ما أرسلته') }).click();
-    await wizard.getByRole('heading', { name: t('Your website is on its way', 'موقعك في الطريق') }).waitFor(); count++;
-    assert.equal(await page.locator('.ld-website-reminder').count(), 0, `${lang}: no reminder once the details are sent`); count++;
+    await wizard.getByRole('heading', { name: t('Your website is on its way', 'موقعك في الطريق') }).waitFor();
+    count++;
+    assert.equal(
+      await page.locator('.ld-website-reminder').count(),
+      0,
+      `${lang}: no reminder once the details are sent`,
+    );
+    count++;
     await context.close();
   }
   // Phones (2026-10-31): a one-row header, a bottom tab bar in thumb reach with More for everything else, buttons
   // big enough to tap, one solid primary per screen, colour contrast that passes, and a full-screen conversation.
-  for (const [lang, width] of [['en', 320], ['en', 375], ['ar', 375]]) {
-    const ar = lang === 'ar', t = (en, arabic) => ar ? arabic : en, tag = `${lang} ${width} phone`;
-    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=customers', handler: api(fixture()),
-      authAccount: { id: 'a1', email: 'owner@example.test', accessPlan: 'ascend', profileComplete: true } });
+  for (const [lang, width] of [
+    ['en', 320],
+    ['en', 375],
+    ['ar', 375],
+  ]) {
+    const ar = lang === 'ar',
+      t = (en, arabic) => (ar ? arabic : en),
+      tag = `${lang} ${width} phone`;
+    const { page, context } = await openPage(browser, {
+      width,
+      lang,
+      path: '/layla/dashboard?tab=customers',
+      handler: api(fixture()),
+      authAccount: { id: 'a1', email: 'owner@example.test', accessPlan: 'ascend', profileComplete: true },
+    });
     await page.locator('.ld-tabbar').waitFor();
     await page.getByRole('heading', { name: t('Contacts', 'جهات الاتصال') }).waitFor();
     const top = await page.locator('.ld-top').boundingBox();
-    assert.ok(top.height <= 64, `${tag}: the header is one row (${top.height}px)`); count++;
-    for (const hidden of ['.ld-mcp-link', '.ld-lang', '.ld-brand']) { assert.equal(await page.locator(hidden).isVisible(), false, `${tag}: ${hidden} moves into More`); count++; }
+    assert.ok(top.height <= 64, `${tag}: the header is one row (${top.height}px)`);
+    count++;
+    for (const hidden of ['.ld-mcp-link', '.ld-lang', '.ld-brand']) {
+      assert.equal(await page.locator(hidden).isVisible(), false, `${tag}: ${hidden} moves into More`);
+      count++;
+    }
     const bar = page.locator('.ld-tabbar');
     const barBox = await bar.boundingBox();
-    assert.ok(barBox.y + barBox.height >= 900 - 2, `${tag}: the tab bar sits at the bottom of the screen`); count++;
-    const items = await bar.locator('a, button').evaluateAll(els => els.map(el => [el.textContent.trim(), el.getBoundingClientRect().height, el.getAttribute('aria-current')]));
-    assert.ok(items.length >= 3 && items.length <= 5, `${tag}: 3–5 tabs (${items.length})`); count++;
-    assert.ok(items.every(([label, h]) => label && h >= 48), `${tag}: every tab is labelled and at least 48px tall`); count++;
-    const clipped = await bar.locator('span:not(.ld-nav-badge)').evaluateAll(spans => spans.filter(x => x.scrollWidth > x.clientWidth + 1).map(x => x.textContent));
-    assert.deepEqual(clipped, [], `${tag}: no tab label is cut off`); count++;
-    assert.deepEqual(items.filter(([, , current]) => current === 'page').map(([label]) => label), [t('Customers', 'العملاء')], `${tag}: the open section is marked`); count++;
+    assert.ok(barBox.y + barBox.height >= 900 - 2, `${tag}: the tab bar sits at the bottom of the screen`);
+    count++;
+    const items = await bar
+      .locator('a, button')
+      .evaluateAll(els =>
+        els.map(el => [el.textContent.trim(), el.getBoundingClientRect().height, el.getAttribute('aria-current')]),
+      );
+    assert.ok(items.length >= 3 && items.length <= 5, `${tag}: 3–5 tabs (${items.length})`);
+    count++;
+    assert.ok(
+      items.every(([label, h]) => label && h >= 48),
+      `${tag}: every tab is labelled and at least 48px tall`,
+    );
+    count++;
+    const clipped = await bar
+      .locator('span:not(.ld-nav-badge)')
+      .evaluateAll(spans => spans.filter(x => x.scrollWidth > x.clientWidth + 1).map(x => x.textContent));
+    assert.deepEqual(clipped, [], `${tag}: no tab label is cut off`);
+    count++;
+    assert.deepEqual(
+      items.filter(([, , current]) => current === 'page').map(([label]) => label),
+      [t('Customers', 'العملاء')],
+      `${tag}: the open section is marked`,
+    );
+    count++;
     // Every visible button is big enough to tap, and the screen has exactly one solid primary.
-    const small = await page.locator('.ld-main .ld-button:visible').evaluateAll(els => els.filter(el => el.getBoundingClientRect().height < 44).map(el => el.textContent.trim()));
-    assert.deepEqual(small, [], `${tag}: no button under 44px`); count++;
-    assert.equal(await page.locator('.ld-main .ld-primary:visible').count(), 1, `${tag}: one primary action on the customer list`); count++;
-    const primary = await page.locator('.ld-main .ld-primary:visible').evaluate(el => [getComputedStyle(el).backgroundColor, getComputedStyle(el).color]);
-    assert.deepEqual(primary, ['rgb(31, 79, 122)', 'rgb(255, 255, 255)'], `${tag}: the primary is Action Blue with white text`); count++;
-    const contrast = (await new AxeBuilder({ page }).withRules(['color-contrast', 'target-size']).analyze()).violations.map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
-    assert.deepEqual(contrast, [], `${tag}: colour contrast and target size`); count++;
-    assert.equal(await noOverflow(page), true, `${tag}: no horizontal overflow`); count++;
+    const small = await page
+      .locator('.ld-main .ld-button:visible')
+      .evaluateAll(els => els.filter(el => el.getBoundingClientRect().height < 44).map(el => el.textContent.trim()));
+    assert.deepEqual(small, [], `${tag}: no button under 44px`);
+    count++;
+    assert.equal(
+      await page.locator('.ld-main .ld-primary:visible').count(),
+      1,
+      `${tag}: one primary action on the customer list`,
+    );
+    count++;
+    const primary = await page
+      .locator('.ld-main .ld-primary:visible')
+      .evaluate(el => [getComputedStyle(el).backgroundColor, getComputedStyle(el).color]);
+    assert.deepEqual(
+      primary,
+      ['rgb(31, 79, 122)', 'rgb(255, 255, 255)'],
+      `${tag}: the primary is Action Blue with white text`,
+    );
+    count++;
+    const contrast = (
+      await new AxeBuilder({ page }).withRules(['color-contrast', 'target-size']).analyze()
+    ).violations.map(v => `${v.id}: ${v.nodes.map(n => n.target).join(' ')}`);
+    assert.deepEqual(contrast, [], `${tag}: colour contrast and target size`);
+    count++;
+    assert.equal(await noOverflow(page), true, `${tag}: no horizontal overflow`);
+    count++;
     // More opens every section plus the language and AI Connections.
     await bar.getByRole('button', { name: t('More', 'المزيد') }).click();
     const drawer = page.locator('.ld-drawer-nav');
     await drawer.waitFor();
-    assert.equal(await drawer.locator('a[data-section]').count(), await page.locator('.ld-desktop-nav a[data-section]').count(), `${tag}: More lists every section`); count++;
-    assert.deepEqual(await drawer.locator('.ld-drawer-extras a').evaluateAll(a => a.map(x => x.textContent.trim())),
-      [t('العربية', 'English'), t('AI Connections', 'اتصالات الذكاء الاصطناعي')], `${tag}: language and AI Connections live in More`); count++;
+    assert.equal(
+      await drawer.locator('a[data-section]').count(),
+      await page.locator('.ld-desktop-nav a[data-section]').count(),
+      `${tag}: More lists every section`,
+    );
+    count++;
+    assert.deepEqual(
+      await drawer.locator('.ld-drawer-extras a').evaluateAll(a => a.map(x => x.textContent.trim())),
+      [t('العربية', 'English'), t('AI Connections', 'اتصالات الذكاء الاصطناعي')],
+      `${tag}: language and AI Connections live in More`,
+    );
+    count++;
     await page.screenshot({ path: `${OUT}/phone-more-${lang}-${width}.png` });
     await page.keyboard.press('Escape');
     // Tapping a tab moves there; an open conversation then takes the whole screen.
     await bar.getByRole('link', { name: t('Chats', 'المحادثات') }).click();
     await page.getByRole('button', { name: /Aisha Al Balushi/ }).click();
     await page.getByRole('heading', { name: 'Aisha Al Balushi' }).waitFor();
-    assert.equal(await bar.isVisible(), false, `${tag}: no tab bar inside a conversation`); count++;
+    assert.equal(await bar.isVisible(), false, `${tag}: no tab bar inside a conversation`);
+    count++;
     const send = page.locator('.ld-composer .ld-primary');
-    assert.equal(await send.isDisabled(), true, `${tag}: Send waits for a message`); count++;
-    assert.equal(Number(await send.evaluate(el => getComputedStyle(el).opacity)) < 1, true, `${tag}: a disabled Send is the same blue, faded`); count++;
+    assert.equal(await send.isDisabled(), true, `${tag}: Send waits for a message`);
+    count++;
+    assert.equal(
+      Number(await send.evaluate(el => getComputedStyle(el).opacity)) < 1,
+      true,
+      `${tag}: a disabled Send is the same blue, faded`,
+    );
+    count++;
     await page.screenshot({ path: `${OUT}/phone-thread-${lang}-${width}.png` });
     // A keyboard user sees where they are.
     await page.keyboard.press('Tab');
     const ring = await page.evaluate(() => getComputedStyle(document.activeElement).outlineWidth);
-    assert.equal(ring, '3px', `${tag}: the focus ring is 3px`); count++;
+    assert.equal(ring, '3px', `${tag}: the focus ring is 3px`);
+    count++;
     await context.close();
   }
   // A chat opened by a broadcast: the list says so, and the thread shows the image the template carried. Arabic, phone and desktop.
   for (const width of [375, 1280]) {
     const state = fixture();
-    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-    state.messages['c-k1'] = [{ id: 'b1', direction: 'template', templateName: 'clinics_1', text: 'مرحباً فريق عيادة الابتسامة، احجزوا تدقيقاً مجانياً.', status: 'read', at: now - HOUR,
-      media: { kind: 'image', url: png } }];
-    const { page, context } = await openPage(browser, { width, lang: 'ar', path: '/layla/dashboard?tab=chats', handler: api(state) });
+    const png =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+    state.messages['c-k1'] = [
+      {
+        id: 'b1',
+        direction: 'template',
+        templateName: 'clinics_1',
+        text: 'مرحباً فريق عيادة الابتسامة، احجزوا تدقيقاً مجانياً.',
+        status: 'read',
+        at: now - HOUR,
+        media: { kind: 'image', url: png },
+      },
+    ];
+    const { page, context } = await openPage(browser, {
+      width,
+      lang: 'ar',
+      path: '/layla/dashboard?tab=chats',
+      handler: api(state),
+    });
     const row = page.getByRole('button', { name: /Aisha Al Balushi/ });
-    await row.getByText('بث ·').waitFor(); count++;
+    await row.getByText('بث ·').waitFor();
+    count++;
     await row.click();
     const bubble = page.locator('.ld-bubble.is-template');
-    await bubble.getByText('قالب · clinics_1').waitFor(); count++;
-    assert.equal(await bubble.locator('img').getAttribute('src'), png, 'the header image shows in the bubble'); count++;
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `broadcast chat fits ${width}`); count++;
-    assert.deepEqual(await axe(page), []); count++;
+    await bubble.getByText('قالب · clinics_1').waitFor();
+    count++;
+    assert.equal(await bubble.locator('img').getAttribute('src'), png, 'the header image shows in the bubble');
+    count++;
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      true,
+      `broadcast chat fits ${width}`,
+    );
+    count++;
+    assert.deepEqual(await axe(page), []);
+    count++;
     await page.screenshot({ path: `${OUT}/broadcast-chat-ar-${width}.png` });
     await context.close();
   }
   // What customers send: a photo with what Layla saw, a voice note with its transcript, a file, one still loading and one that failed.
-  for (const [width, lang] of [[375, 'ar'], [1280, 'ar'], [375, 'en'], [1440, 'en']]) {
+  for (const [width, lang] of [
+    [375, 'ar'],
+    [1280, 'ar'],
+    [375, 'en'],
+    [1440, 'en'],
+  ]) {
     const state = fixture();
-    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+    const png =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
     const wav = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
     state.messages['c-k1'] = [
-      { id: 'p1', direction: 'in', text: 'هل هذه متوفرة؟', status: 'received', at: now - 5 * 60000, media: { kind: 'image', status: 'ready', url: png, text: 'A white villa with a pool.' } },
-      { id: 'v1', direction: 'in', text: '', status: 'received', at: now - 4 * 60000, media: { kind: 'audio', voice: true, status: 'ready', url: wav, text: 'عندكم فلل للإيجار في السيب؟' } },
-      { id: 'd1', direction: 'in', text: '', status: 'received', at: now - 3 * 60000, media: { kind: 'document', status: 'ready', url: 'https://files.test/q.pdf', filename: 'quote.pdf', size: 245760 } },
-      { id: 'w1', direction: 'in', text: '', status: 'received', at: now - 2 * 60000, media: { kind: 'image', status: 'pending', url: null } },
-      { id: 'f1', direction: 'in', text: '', status: 'received', at: now - 60000, media: { kind: 'audio', voice: true, status: 'failed', url: null } },
+      {
+        id: 'p1',
+        direction: 'in',
+        text: 'هل هذه متوفرة؟',
+        status: 'received',
+        at: now - 5 * 60000,
+        media: { kind: 'image', status: 'ready', url: png, text: 'A white villa with a pool.' },
+      },
+      {
+        id: 'v1',
+        direction: 'in',
+        text: '',
+        status: 'received',
+        at: now - 4 * 60000,
+        media: { kind: 'audio', voice: true, status: 'ready', url: wav, text: 'عندكم فلل للإيجار في السيب؟' },
+      },
+      {
+        id: 'd1',
+        direction: 'in',
+        text: '',
+        status: 'received',
+        at: now - 3 * 60000,
+        media: {
+          kind: 'document',
+          status: 'ready',
+          url: 'https://files.test/q.pdf',
+          filename: 'quote.pdf',
+          size: 245760,
+        },
+      },
+      {
+        id: 'w1',
+        direction: 'in',
+        text: '',
+        status: 'received',
+        at: now - 2 * 60000,
+        media: { kind: 'image', status: 'pending', url: null },
+      },
+      {
+        id: 'f1',
+        direction: 'in',
+        text: '',
+        status: 'received',
+        at: now - 60000,
+        media: { kind: 'audio', voice: true, status: 'failed', url: null },
+      },
     ];
-    const t = (en, ar) => (lang === 'ar' ? ar : en), tag = `media ${lang} ${width}`;
-    const { page, context } = await openPage(browser, { width, lang, path: '/layla/dashboard?tab=chats', handler: api(state) });
+    const t = (en, ar) => (lang === 'ar' ? ar : en),
+      tag = `media ${lang} ${width}`;
+    const { page, context } = await openPage(browser, {
+      width,
+      lang,
+      path: '/layla/dashboard?tab=chats',
+      handler: api(state),
+    });
     await page.getByRole('button', { name: /Aisha Al Balushi/ }).click();
     const bubbles = page.locator('.ld-messages .ld-bubble');
     await bubbles.first().waitFor();
-    assert.equal(await bubbles.nth(0).locator('img').getAttribute('src'), png, `${tag}: the photo shows`); count++;
-    assert.equal(await bubbles.nth(0).locator('img').getAttribute('alt'), 'A white villa with a pool.', `${tag}: the photo is described for screen readers`); count++;
-    await bubbles.nth(0).getByText(t('What Layla saw', 'ما رأته ليلى')).waitFor(); count++;
-    await bubbles.nth(0).getByText('هل هذه متوفرة؟').waitFor(); count++;
+    assert.equal(await bubbles.nth(0).locator('img').getAttribute('src'), png, `${tag}: the photo shows`);
+    count++;
+    assert.equal(
+      await bubbles.nth(0).locator('img').getAttribute('alt'),
+      'A white villa with a pool.',
+      `${tag}: the photo is described for screen readers`,
+    );
+    count++;
+    await bubbles.nth(0).getByText(t('What Layla saw', 'ما رأته ليلى')).waitFor();
+    count++;
+    await bubbles.nth(0).getByText('هل هذه متوفرة؟').waitFor();
+    count++;
     const audio = bubbles.nth(1).locator('audio');
-    assert.deepEqual([await audio.getAttribute('src'), await audio.getAttribute('controls'), await audio.getAttribute('aria-label')], [wav, '', t('Voice note', 'رسالة صوتية')], `${tag}: the voice note plays`); count++;
-    assert.ok((await audio.boundingBox()).height >= 44, `${tag}: the player is a 44px target`); count++;
-    await bubbles.nth(1).getByText('عندكم فلل للإيجار في السيب؟').waitFor(); count++;
-    assert.match(await bubbles.nth(2).locator('a').textContent(), /quote\.pdf · 240 KB/, `${tag}: a file shows its name and size`); count++;
-    await bubbles.nth(3).getByText(t('Loading…', 'جارٍ التحميل…')).waitFor(); count++;
-    await bubbles.nth(4).getByText(t('Couldn’t load this file', 'تعذّر تحميل الملف')).waitFor(); count++;
-    assert.equal(await page.locator('.ld-messages').getByText(/The customer sent/).count(), 0, `${tag}: no placeholder text`); count++;
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `${tag}: fits`); count++;
-    assert.deepEqual(await axe(page), [], tag); count++;
+    assert.deepEqual(
+      [await audio.getAttribute('src'), await audio.getAttribute('controls'), await audio.getAttribute('aria-label')],
+      [wav, '', t('Voice note', 'رسالة صوتية')],
+      `${tag}: the voice note plays`,
+    );
+    count++;
+    assert.ok((await audio.boundingBox()).height >= 44, `${tag}: the player is a 44px target`);
+    count++;
+    await bubbles.nth(1).getByText('عندكم فلل للإيجار في السيب؟').waitFor();
+    count++;
+    assert.match(
+      await bubbles.nth(2).locator('a').textContent(),
+      /quote\.pdf · 240 KB/,
+      `${tag}: a file shows its name and size`,
+    );
+    count++;
+    await bubbles.nth(3).getByText(t('Loading…', 'جارٍ التحميل…')).waitFor();
+    count++;
+    await bubbles.nth(4).getByText(t('Couldn’t load this file', 'تعذّر تحميل الملف')).waitFor();
+    count++;
+    assert.equal(
+      await page
+        .locator('.ld-messages')
+        .getByText(/The customer sent/)
+        .count(),
+      0,
+      `${tag}: no placeholder text`,
+    );
+    count++;
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      true,
+      `${tag}: fits`,
+    );
+    count++;
+    assert.deepEqual(await axe(page), [], tag);
+    count++;
     await page.screenshot({ path: `${OUT}/customer-media-${lang}-${width}.png`, fullPage: false });
     await context.close();
   }
 
-  console.log(`${count} dashboard browser assertions passed at 320–1440px in English and Arabic. Synthetic API; no external network.`);
-} finally { await browser.close(); }
+  console.log(
+    `${count} dashboard browser assertions passed at 320–1440px in English and Arabic. Synthetic API; no external network.`,
+  );
+} finally {
+  await browser.close();
+}

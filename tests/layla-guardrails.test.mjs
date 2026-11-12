@@ -7,8 +7,10 @@ import { clinicIngressDecision } from '../config/clinic-safety.js';
 import { isOptOut, STOP_BUTTON } from '../config/layla-optout.js';
 
 test('STOP is a whole-message decision in both languages, never a word inside a question', () => {
-  for (const text of ['STOP', 'stop', 'Please stop', 'unsubscribe', 'opt out', 'توقف', 'إيقاف', 'لا تراسلني', 'stop!']) assert.equal(isOptOut(text), true, text);
-  for (const text of ['stop by tomorrow?', 'does the bus stop near you?', 'I want to stop renting', 'hello']) assert.equal(isOptOut(text), false, text);
+  for (const text of ['STOP', 'stop', 'Please stop', 'unsubscribe', 'opt out', 'توقف', 'إيقاف', 'لا تراسلني', 'stop!'])
+    assert.equal(isOptOut(text), true, text);
+  for (const text of ['stop by tomorrow?', 'does the bus stop near you?', 'I want to stop renting', 'hello'])
+    assert.equal(isOptOut(text), false, text);
   assert.ok(STOP_BUTTON.test('Stop promotions') && STOP_BUTTON.test('إيقاف العروض'));
 });
 

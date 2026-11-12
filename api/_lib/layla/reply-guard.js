@@ -17,13 +17,16 @@ export const byteLength = text => encoder.encode(String(text ?? '')).length;
 export function safeReply(text, max = 1000, { maxBytes } = {}) {
   let out = cut(text, max);
   for (let budget = max; maxBytes && byteLength(out) > maxBytes && budget > 1;) {
-    budget = Math.max(1, Math.floor(budget * maxBytes / byteLength(out)) - 1);
+    budget = Math.max(1, Math.floor((budget * maxBytes) / byteLength(out)) - 1);
     out = cut(text, budget);
   }
   return out;
 }
 function cut(text, max) {
-  const clean = String(text ?? '').replace(CONTROL, '').replace(/\n{3,}/g, '\n\n').trim();
+  const clean = String(text ?? '')
+    .replace(CONTROL, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
   if (clean.length <= max) return clean;
   const room = clean.slice(0, max - 1);
   let end = -1;

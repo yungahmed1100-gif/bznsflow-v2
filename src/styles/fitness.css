@@ -4,19 +4,55 @@
    problem (attendance gap, ended without renewal, no-show). No gradients. */
 
 /* The member action list (row tones are in sector-records.css): chips sit beside the name. */
-.hb-members .ld-chip { margin-inline-start: 4px; }
+.hb-members .ld-chip {
+  margin-inline-start: 4px;
+}
 
 /* Classes: one panel per class, its roster below; a full class reads orange, a cancelled one is muted. */
-.hb-class { display: grid; gap: 8px; }
-.hb-class[data-status="cancelled"] { opacity: .75; }
-.hb-class .hb-status-line { flex-wrap: wrap; gap: 6px 12px; justify-content: flex-start; }
-.hb-roster { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.hb-roster li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 10px; background: var(--card); border: 1px solid var(--rule);
-  border-inline-start: 4px solid var(--tone, var(--rule-strong)); border-radius: var(--radius); min-inline-size: 0; }
-.hb-roster li > * { min-inline-size: 0; overflow-wrap: anywhere; }
+.hb-class {
+  display: grid;
+  gap: 8px;
+}
+.hb-class[data-status='cancelled'] {
+  opacity: 0.75;
+}
+.hb-class .hb-status-line {
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  justify-content: flex-start;
+}
+.hb-roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.hb-roster li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 6px 10px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-inline-start: 4px solid var(--tone, var(--rule-strong));
+  border-radius: var(--radius);
+  min-inline-size: 0;
+}
+.hb-roster li > * {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
 
 /* Plans and the trial funnel. */
-.hb-plans > li { display: grid; gap: 4px; }
-.hb-plans > li:not([data-active]) { opacity: .8; }
-.hb-funnel p { margin: 0; }
-
+.hb-plans > li {
+  display: grid;
+  gap: 4px;
+}
+.hb-plans > li:not([data-active]) {
+  opacity: 0.8;
+}
+.hb-funnel p {
+  margin: 0;
+}

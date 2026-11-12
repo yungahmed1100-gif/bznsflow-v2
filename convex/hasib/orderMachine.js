@@ -22,6 +22,7 @@ export const deductsStock = s => DEDUCTED.has(s);
 
 /** -1 take stock, +1 return stock, 0 no movement. */
 export function stockEffect(from, to) {
-  const before = deductsStock(from), after = deductsStock(to);
+  const before = deductsStock(from),
+    after = deductsStock(to);
   return before === after ? 0 : after ? -1 : 1;
 }

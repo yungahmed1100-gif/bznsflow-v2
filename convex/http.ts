@@ -13,280 +13,458 @@ const http = httpRouter();
 // is refused. Keep it that way — an early `return` on first mismatch would be
 // the natural "tidy-up" and would reintroduce the leak.
 function serviceAuthorized(request: Request) {
-  const secret=process.env.CONVEX_SERVICE_SECRET;
-  const supplied=request.headers.get('Authorization') || '', expected=`Bearer ${secret}`;
-  let mismatch=supplied.length ^ expected.length;
-  for(let i=0;i<expected.length;i++) mismatch|=(supplied.charCodeAt(i)||0)^expected.charCodeAt(i);
+  const secret = process.env.CONVEX_SERVICE_SECRET;
+  const supplied = request.headers.get('Authorization') || '',
+    expected = `Bearer ${secret}`;
+  let mismatch = supplied.length ^ expected.length;
+  for (let i = 0; i < expected.length; i++) mismatch |= (supplied.charCodeAt(i) || 0) ^ expected.charCodeAt(i);
   return !!secret && /^[a-f0-9]{64}$/i.test(secret) && !mismatch;
 }
 
 function greenMigrationAuthorized(request: Request) {
-  const secret=process.env.CONVEX_SERVICE_SECRET, supplied=request.headers.get('Authorization') || '', expected=`Bearer ${secret}`;
-  let mismatch=supplied.length ^ expected.length;
-  for(let i=0;i<expected.length;i++) mismatch|=(supplied.charCodeAt(i)||0)^(expected.charCodeAt(i)||0);
+  const secret = process.env.CONVEX_SERVICE_SECRET,
+    supplied = request.headers.get('Authorization') || '',
+    expected = `Bearer ${secret}`;
+  let mismatch = supplied.length ^ expected.length;
+  for (let i = 0; i < expected.length; i++) mismatch |= (supplied.charCodeAt(i) || 0) ^ (expected.charCodeAt(i) || 0);
   return !!secret && /^[a-f0-9]{64}$/i.test(secret) && !mismatch;
 }
 
-http.route({ path: '/blue-review', method: 'POST', handler: httpAction(async (ctx, request) => {
-  if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
-  const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
-  try {
-    const text = await request.text();
-    if (text.length > 16000) return new Response(null, { status: 413 });
-    const args = JSON.parse(text);
-    if (!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null, { status: 400 });
-    const result = await ctx.runMutation(internal.review.execute, args);
-    return new Response(JSON.stringify(result), { headers });
-  } catch { return new Response(JSON.stringify({ ok: false, reason: 'review_backend_unavailable' }), { status: 503, headers }); }
-}) });
-http.route({path:'/blue-auth',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text(); if(raw.length>4000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.blueAuth.execute,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch {return new Response(JSON.stringify({ok:false,reason:'account_unavailable'}),{status:503,headers});}
-})});
-http.route({path:'/blue-messaging',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>262144) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.blueMessaging.execute,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch {return new Response(JSON.stringify({ok:false,reason:'messaging_unavailable'}),{status:503,headers});}
-})});
-http.route({path:'/blue-dashboard',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>262144) return new Response(null,{status:413});
-    const args=JSON.parse(raw);
-    if(!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null,{status:400});
-    const result=await ctx.runMutation(internal.blueDashboard.execute,args);
-    return new Response(JSON.stringify(result),{headers});
-  } catch {return new Response(JSON.stringify({ok:false,reason:'dashboard_unavailable'}),{status:503,headers});}
-})});
-http.route({path:'/blue-hasib',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>65536) return new Response(null,{status:413});
-    const args=JSON.parse(raw);
-    if(!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null,{status:400});
-    // Only this route may say whether an uploaded photo's bytes are a real image.
-    delete args.photoCheck;
-    if(args.operation==='photo_register') args.photoCheck=await checkPhotoBytes(ctx,args.storageId);
-    const result=await ctx.runMutation((internal as any).blueHasib.execute,args);
-    return new Response(JSON.stringify(result),{headers});
-  } catch (error) {
-    // The mutation rolled back; the owner sees a retry message and the Convex log records that it failed.
-    // Only the error class: a validator's message can quote the arguments, which include the session hash.
-    console.error('hasib_failed',JSON.stringify({kind:String((error as any)?.name || 'Error').slice(0,60)}));
-    return new Response(JSON.stringify({ok:false,reason:'hasib_unavailable'}),{status:503,headers});
-  }
-})});
-http.route({path:'/blue-campaign',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>16000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.blueCampaign.execute,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch {return new Response(JSON.stringify({ok:false,reason:'campaign_unavailable'}),{status:503,headers});}
-})});
-http.route({path:'/blue-catalog',method:'POST',handler:httpAction(async(ctx,request)=>{
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};if(!serviceAuthorized(request))return new Response(null,{status:401});
-  try{const raw=await request.text();if(raw.length>262144)return new Response(null,{status:413});const result=await ctx.runMutation((internal as any).blueCatalog.execute,JSON.parse(raw));return new Response(JSON.stringify(result),{headers});}catch{return new Response(JSON.stringify({ok:false,reason:'catalog_unavailable'}),{status:503,headers});}
-})});
-http.route({path:'/blue-brain',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>65536) return new Response(null,{status:413});
-    const args=JSON.parse(raw);
-    if(!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null,{status:400});
-    const result=await ctx.runMutation((internal as any).brain.execute,args);
-    return new Response(JSON.stringify(result),{headers});
-  } catch {return new Response(JSON.stringify({ok:false,reason:'brain_unavailable'}),{status:503,headers});}
-})});
-http.route({path:'/blue-instagram',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>20000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.blueInstagram.execute,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch {return new Response(JSON.stringify({ok:false,reason:'instagram_unavailable'}),{status:503,headers});}
-})});
-http.route({path:'/website-brief',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>20000) return new Response(null,{status:413});
-    const args=JSON.parse(raw);
-    if(!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null,{status:400});
-    // Only this route may say whether an uploaded file's bytes are a real image, or a real document for Paymob.
-    delete args.fileCheck;
-    if(args.operation==='file_register') args.fileCheck=String(args.kind || '').startsWith('doc_')
-      ? await checkDocumentBytes(ctx,args.storageId,PAYMENT_DOC_MAX_BYTES) : await checkPhotoBytes(ctx,args.storageId);
-    const result=await ctx.runMutation(internal.websiteBrief.execute,args);
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'brief_unavailable'}),{status:503,headers}); }
-})});
+http.route({
+  path: '/blue-review',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const text = await request.text();
+      if (text.length > 16000) return new Response(null, { status: 413 });
+      const args = JSON.parse(text);
+      if (!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null, { status: 400 });
+      const result = await ctx.runMutation(internal.review.execute, args);
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'review_backend_unavailable' }), {
+        status: 503,
+        headers,
+      });
+    }
+  }),
+});
+http.route({
+  path: '/blue-auth',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 4000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.blueAuth.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'account_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/blue-messaging',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 262144) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.blueMessaging.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'messaging_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/blue-dashboard',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 262144) return new Response(null, { status: 413 });
+      const args = JSON.parse(raw);
+      if (!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null, { status: 400 });
+      const result = await ctx.runMutation(internal.blueDashboard.execute, args);
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'dashboard_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/blue-hasib',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 65536) return new Response(null, { status: 413 });
+      const args = JSON.parse(raw);
+      if (!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null, { status: 400 });
+      // Only this route may say whether an uploaded photo's bytes are a real image.
+      delete args.photoCheck;
+      if (args.operation === 'photo_register') args.photoCheck = await checkPhotoBytes(ctx, args.storageId);
+      const result = await ctx.runMutation((internal as any).blueHasib.execute, args);
+      return new Response(JSON.stringify(result), { headers });
+    } catch (error) {
+      // The mutation rolled back; the owner sees a retry message and the Convex log records that it failed.
+      // Only the error class: a validator's message can quote the arguments, which include the session hash.
+      console.error('hasib_failed', JSON.stringify({ kind: String((error as any)?.name || 'Error').slice(0, 60) }));
+      return new Response(JSON.stringify({ ok: false, reason: 'hasib_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/blue-campaign',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 16000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.blueCampaign.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'campaign_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/blue-catalog',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    try {
+      const raw = await request.text();
+      if (raw.length > 262144) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation((internal as any).blueCatalog.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'catalog_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/blue-brain',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 65536) return new Response(null, { status: 413 });
+      const args = JSON.parse(raw);
+      if (!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null, { status: 400 });
+      const result = await ctx.runMutation((internal as any).brain.execute, args);
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'brain_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/blue-instagram',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 20000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.blueInstagram.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'instagram_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/website-brief',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 20000) return new Response(null, { status: 413 });
+      const args = JSON.parse(raw);
+      if (!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null, { status: 400 });
+      // Only this route may say whether an uploaded file's bytes are a real image, or a real document for Paymob.
+      delete args.fileCheck;
+      if (args.operation === 'file_register')
+        args.fileCheck = String(args.kind || '').startsWith('doc_')
+          ? await checkDocumentBytes(ctx, args.storageId, PAYMENT_DOC_MAX_BYTES)
+          : await checkPhotoBytes(ctx, args.storageId);
+      const result = await ctx.runMutation(internal.websiteBrief.execute, args);
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'brief_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
 
 // Ahmed's free-website queue (convex/websiteProjectsState.js), from the owner page's access-admin endpoint.
-http.route({path:'/website-admin',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>4000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.websiteBrief.admin,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'websites_unavailable'}),{status:503,headers}); }
-})});
+http.route({
+  path: '/website-admin',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 4000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.websiteBrief.admin, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'websites_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
 
 // The free audit (convex/auditState.js): public times and booking, and Ahmed's Audits tab.
-http.route({path:'/audit',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>4000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.audit.execute,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'audit_unavailable'}),{status:503,headers}); }
-})});
-http.route({path:'/audit-admin',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>4000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.audit.admin,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'audit_unavailable'}),{status:503,headers}); }
-})});
+http.route({
+  path: '/audit',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 4000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.audit.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'audit_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/audit-admin',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 4000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.audit.admin, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'audit_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
 
 // Apex requests (convex/apexState.js): the public request page and Ahmed's queue.
-http.route({path:'/apex',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>8000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.apex.execute,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'apex_unavailable'}),{status:503,headers}); }
-})});
-http.route({path:'/apex-admin',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>4000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.apex.admin,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'apex_unavailable'}),{status:503,headers}); }
-})});
+http.route({
+  path: '/apex',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 8000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.apex.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'apex_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/apex-admin',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 4000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.apex.admin, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'apex_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
 
 // Rasil (convex/rasilState.js): the owner's email campaigns, and the worker, webhook and public links.
-http.route({path:'/rasil',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>131072) return new Response(null,{status:413});
-    const args=JSON.parse(raw);
-    if(!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null,{status:400});
-    const result=await ctx.runMutation(internal.rasil.execute,args);
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'email_unavailable'}),{status:503,headers}); }
-})});
-http.route({path:'/rasil-worker',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text();if(raw.length>16000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.rasil.worker,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'email_unavailable'}),{status:503,headers}); }
-})});
-http.route({path:'/billing',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text(); if(raw.length>4000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.billing.execute,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'billing_unavailable'}),{status:503,headers}); }
-})});
-
-http.route({path:'/blue-access',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text(); if(raw.length>4000) return new Response(null,{status:413});
-    const args=JSON.parse(raw);
-    if(!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null,{status:400});
-    const result=await ctx.runMutation(internal.blueAccess.execute,args);
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'access_unavailable'}),{status:503,headers}); }
-})});
-http.route({path:'/green-core',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text(); if(raw.length>16000) return new Response(null,{status:413});
-    const args=JSON.parse(raw);
-    const result=await ctx.runMutation(internal.greenCore.execute,args);
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'core_unavailable'}),{status:503,headers}); }
-})});
-http.route({path:'/green-migrate',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if (!greenMigrationAuthorized(request) || process.env.GREEN_MIGRATION_ENABLED !== 'true') return new Response(null,{status:404});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text(); if(raw.length>850000) return new Response(null,{status:413});
-    const args=JSON.parse(raw);
-    if(args.operation==='import') {
-      const {operation: _operation,...data}=args;
-      const result=await ctx.runMutation(internal.migrate.importReviewed,data);
-      return new Response(JSON.stringify(result),{headers});
+http.route({
+  path: '/rasil',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 131072) return new Response(null, { status: 413 });
+      const args = JSON.parse(raw);
+      if (!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null, { status: 400 });
+      const result = await ctx.runMutation(internal.rasil.execute, args);
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'email_unavailable' }), { status: 503, headers });
     }
-    if(args.operation==='verify') {
-      const result=await ctx.runQuery(internal.migrate.verify,{expected:args.expected});
-      return new Response(JSON.stringify(result),{headers});
+  }),
+});
+http.route({
+  path: '/rasil-worker',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 16000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.rasil.worker, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'email_unavailable' }), { status: 503, headers });
     }
-    return new Response(null,{status:400});
-  } catch {
-    return new Response(JSON.stringify({ok:false,reason:'migration_failed'}),{status:503,headers});
-  }
-})});
-http.route({path:'/product-setup',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request)) return new Response(null,{status:401});
-  const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
-  try {
-    const raw=await request.text(); if(raw.length>5000) return new Response(null,{status:413});
-    const result=await ctx.runMutation(internal.productSetup.execute,JSON.parse(raw));
-    return new Response(JSON.stringify(result),{headers});
-  } catch { return new Response(JSON.stringify({ok:false,reason:'setup_unavailable'}),{status:503,headers}); }
-})});
-http.route({ path: '/knowledge-sources', method: 'POST', handler: httpAction(async (ctx, request) => {
-  if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
-  const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
-  try {
-    const raw = await request.text();
-    if (raw.length > 450000) return new Response(null, { status: 413 });
-    const result = await ctx.runMutation((internal as any).knowledgeSources.execute, JSON.parse(raw));
-    return new Response(JSON.stringify(result), { headers });
-  } catch { return new Response(JSON.stringify({ ok: false, reason: 'knowledge_unavailable' }), { status: 503, headers }); }
-}) });
+  }),
+});
+http.route({
+  path: '/billing',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 4000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.billing.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'billing_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
 
-http.route({path:'/mcp-internal',method:'POST',handler:httpAction(async(ctx,request)=>{
-  if(!serviceAuthorized(request))return new Response(null,{status:401});
-  try {
-    const raw=await request.text();if(raw.length>700000)return new Response(null,{status:413});
-    const input=JSON.parse(raw);
-    const value=await ctx.runMutation((internal as any).mcp.execute,input);
-    return Response.json({ok:true,value},{headers:{'Cache-Control':'no-store'}});
-  }catch(error){const message=String((error as any)?.message||'');const reason=message.match(/(?:Error: )([a-z_]{3,60})(?:\n|$)/)?.[1]||'mcp_unavailable';return Response.json({ok:false,reason},{headers:{'Cache-Control':'no-store'}});}
-})});
+http.route({
+  path: '/blue-access',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 4000) return new Response(null, { status: 413 });
+      const args = JSON.parse(raw);
+      if (!/^[a-f0-9]{64}$/.test(args.sessionHash || '')) return new Response(null, { status: 400 });
+      const result = await ctx.runMutation(internal.blueAccess.execute, args);
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'access_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/green-core',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 16000) return new Response(null, { status: 413 });
+      const args = JSON.parse(raw);
+      const result = await ctx.runMutation(internal.greenCore.execute, args);
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'core_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/green-migrate',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!greenMigrationAuthorized(request) || process.env.GREEN_MIGRATION_ENABLED !== 'true')
+      return new Response(null, { status: 404 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 850000) return new Response(null, { status: 413 });
+      const args = JSON.parse(raw);
+      if (args.operation === 'import') {
+        const { operation: _operation, ...data } = args;
+        const result = await ctx.runMutation(internal.migrate.importReviewed, data);
+        return new Response(JSON.stringify(result), { headers });
+      }
+      if (args.operation === 'verify') {
+        const result = await ctx.runQuery(internal.migrate.verify, { expected: args.expected });
+        return new Response(JSON.stringify(result), { headers });
+      }
+      return new Response(null, { status: 400 });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'migration_failed' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/product-setup',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 5000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation(internal.productSetup.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'setup_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+http.route({
+  path: '/knowledge-sources',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    try {
+      const raw = await request.text();
+      if (raw.length > 450000) return new Response(null, { status: 413 });
+      const result = await ctx.runMutation((internal as any).knowledgeSources.execute, JSON.parse(raw));
+      return new Response(JSON.stringify(result), { headers });
+    } catch {
+      return new Response(JSON.stringify({ ok: false, reason: 'knowledge_unavailable' }), { status: 503, headers });
+    }
+  }),
+});
+
+http.route({
+  path: '/mcp-internal',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    if (!serviceAuthorized(request)) return new Response(null, { status: 401 });
+    try {
+      const raw = await request.text();
+      if (raw.length > 700000) return new Response(null, { status: 413 });
+      const input = JSON.parse(raw);
+      const value = await ctx.runMutation((internal as any).mcp.execute, input);
+      return Response.json({ ok: true, value }, { headers: { 'Cache-Control': 'no-store' } });
+    } catch (error) {
+      const message = String((error as any)?.message || '');
+      const reason = message.match(/(?:Error: )([a-z_]{3,60})(?:\n|$)/)?.[1] || 'mcp_unavailable';
+      return Response.json({ ok: false, reason }, { headers: { 'Cache-Control': 'no-store' } });
+    }
+  }),
+});
 
 export default http;

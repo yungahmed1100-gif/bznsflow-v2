@@ -5,7 +5,20 @@ import { expireInboundMedia } from './blueInboundMedia.js';
 import { grantLive } from './grantStatus.js';
 import { anonymizeContactOrders } from './hasib/contactLink.js';
 import { langOf } from '../config/layla-tones.js';
-import { NAME_FIELD, extractBareName, isQuestion, extractQualification, isSensitiveSector, mergeFields, planQuestions, planReception, qualificationPack, qualificationStatus, sectorIdFor, validateFieldValue } from '../config/layla-qualification.js';
+import {
+  NAME_FIELD,
+  extractBareName,
+  isQuestion,
+  extractQualification,
+  isSensitiveSector,
+  mergeFields,
+  planQuestions,
+  planReception,
+  qualificationPack,
+  qualificationStatus,
+  sectorIdFor,
+  validateFieldValue,
+} from '../config/layla-qualification.js';
 import { declinesName, overrideFor, wantsAppointment } from '../config/layla-overrides.js';
 
 const MEDICAL = new Set(['dental', 'clinic']);
@@ -18,7 +31,8 @@ export const MESSAGE_RETENTION_MS = 30 * DAY;
 export const CLINICAL_TEXT_RETENTION_MS = DAY;
 const CLINICAL_TEXT = new Set(['dental', 'clinic']);
 /** How long a message's text is kept, from Layla's sector or the Hasib industry the owner chose. */
-export const textRetentionFor = (sectorId, packId) => CLINICAL_TEXT.has(sectorId) || CLINICAL_TEXT.has(packId) ? CLINICAL_TEXT_RETENTION_MS : TEXT_RETENTION_MS;
+export const textRetentionFor = (sectorId, packId) =>
+  CLINICAL_TEXT.has(sectorId) || CLINICAL_TEXT.has(packId) ? CLINICAL_TEXT_RETENTION_MS : TEXT_RETENTION_MS;
 /**
  * Bring an account's stored chat text down to the clinical window: text older than
  * 24 hours is erased now, newer text expires 24 hours after its message. Newest first,
@@ -26,40 +40,77 @@ export const textRetentionFor = (sectorId, packId) => CLINICAL_TEXT.has(sectorId
  * again with `next` (an `at` to continue below) until it returns null.
  */
 export async function shortenClinicalText(ctx, accountId, now, before = now + 1, limit = 500) {
-  const rows = await ctx.db.query('blueMessages').withIndex('by_account_at', q => q.eq('accountId', accountId).gte('at', now - MESSAGE_RETENTION_MS).lt('at', before)).order('desc').take(limit);
+  const rows = await ctx.db
+    .query('blueMessages')
+    .withIndex('by_account_at', q =>
+      q
+        .eq('accountId', accountId)
+        .gte('at', now - MESSAGE_RETENTION_MS)
+        .lt('at', before),
+    )
+    .order('desc')
+    .take(limit);
   let shortened = 0;
   for (const m of rows) {
     const until = (m.at || now) + CLINICAL_TEXT_RETENTION_MS;
     if (m.text === undefined || m.textExpiresAt <= until) continue;
     // A message still being sent keeps its text until the send settles; the sweep clears it after.
     const sending = ['queued', 'attempting'].includes(m.status);
-    await ctx.db.patch(m._id, until <= now && !sending ? { text: undefined, textExpiresAt: Number.MAX_SAFE_INTEGER } : { textExpiresAt: until });
+    await ctx.db.patch(
+      m._id,
+      until <= now && !sending ? { text: undefined, textExpiresAt: Number.MAX_SAFE_INTEGER } : { textExpiresAt: until },
+    );
     shortened++;
   }
   return { shortened, next: rows.length === limit ? rows.at(-1).at : null };
 }
 export async function textRetention(ctx, accountId, row) {
   if (!(await onIndustryPlan(ctx, accountId))) return TEXT_RETENTION_MS;
-  const settings = await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
+  const settings = await ctx.db
+    .query('hasibSettings')
+    .withIndex('by_account', q => q.eq('accountId', accountId))
+    .unique();
   return textRetentionFor(sectorIdFor(row?.profile?.sector), settings?.packId);
 }
 export const contactKey = (accountId, waId) => `${accountId}:${waId}`;
-const clean = (value, n) => typeof value === 'string' ? value.replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n) : '';
+const clean = (value, n) =>
+  typeof value === 'string'
+    ? value
+        .replace(/[\x00-\x1f\x7f]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, n)
+    : '';
 
 /** Owner edit → customer-provided name → channel profile name (WhatsApp name or Instagram @username) → number. */
 export function displayName(contact) {
   const profileSource = contact?.channel === 'instagram' ? 'instagram' : 'whatsapp';
-  for (const [field, source] of [['ownerName', 'owner'], ['customerName', 'customer'], ['profileName', profileSource]]) {
+  for (const [field, source] of [
+    ['ownerName', 'owner'],
+    ['customerName', 'customer'],
+    ['profileName', profileSource],
+  ]) {
     if (contact?.[field]) return { name: contact[field], source };
   }
-  if (contact?.channel==='instagram') return {name:`Instagram ${contact.igId || ''}`,source:'instagram'};
+  if (contact?.channel === 'instagram') return { name: `Instagram ${contact.igId || ''}`, source: 'instagram' };
   return { name: contact?.waId ? `+${contact.waId}` : '', source: 'number' };
 }
 export function searchTextFor(contact) {
-  return [contact.ownerName, contact.customerName, contact.profileName, contact.waId, contact.igId, ...(contact.fields || []).map(f => f.value)]
-    .filter(Boolean).join(' ').slice(0, 1000);
+  return [
+    contact.ownerName,
+    contact.customerName,
+    contact.profileName,
+    contact.waId,
+    contact.igId,
+    ...(contact.fields || []).map(f => f.value),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .slice(0, 1000);
 }
-export function sectorFor(row) { return sectorIdFor(row?.profile?.sector); }
+export function sectorFor(row) {
+  return sectorIdFor(row?.profile?.sector);
+}
 
 // Ascend and Apex are the industry plans. Read straight from the grant (not hasib/plans.js, which
 // imports this module through hasib/shared.js).
@@ -69,9 +120,12 @@ const INDUSTRY_PLANS = new Set(['ascend', 'apex']);
 export const FOUNDER_EMAIL = 'ahmed@bznsflowai.com';
 export const GENERAL_SECTOR = 'other';
 export async function onIndustryPlan(ctx, accountId) {
-  const account = accountId && await ctx.db.get(accountId);
+  const account = accountId && (await ctx.db.get(accountId));
   if (!account?.email || String(account.email).toLowerCase().trim() === FOUNDER_EMAIL) return false;
-  const grant = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', String(account.email).toLowerCase().trim())).unique();
+  const grant = await ctx.db
+    .query('blueAccessGrants')
+    .withIndex('by_email', q => q.eq('email', String(account.email).toLowerCase().trim()))
+    .unique();
   return grantLive(grant) && INDUSTRY_PLANS.has(grant.plan);
 }
 /**
@@ -80,18 +134,24 @@ export async function onIndustryPlan(ctx, accountId) {
  * the business's sector.
  */
 export async function laylaSectorFor(ctx, row) {
-  return await onIndustryPlan(ctx, row?.accountId) ? sectorFor(row) : GENERAL_SECTOR;
+  return (await onIndustryPlan(ctx, row?.accountId)) ? sectorFor(row) : GENERAL_SECTOR;
 }
 
 /** Approved catalog names, which sensitive packs need to accept an owner-typed service. Other packs skip the read. */
 export async function catalogForFields(ctx, accountId, sectorId) {
   if (!isSensitiveSector(sectorId)) return [];
-  const rows = await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved')).take(200);
+  const rows = await ctx.db
+    .query('blueCatalogEntries')
+    .withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved'))
+    .take(200);
   return rows.map(r => ({ nameEn: r.nameEn, nameAr: r.nameAr }));
 }
 
 async function tombstoneFor(ctx, accountId, hash) {
-  const rows = await ctx.db.query('blueContacts').withIndex('by_account_hash', q => q.eq('accountId', accountId).eq('numberHash', hash)).take(20);
+  const rows = await ctx.db
+    .query('blueContacts')
+    .withIndex('by_account_hash', q => q.eq('accountId', accountId).eq('numberHash', hash))
+    .take(20);
   return rows.find(r => r.state === 'deleted' && r.optout) || null;
 }
 
@@ -99,11 +159,28 @@ async function tombstoneFor(ctx, accountId, hash) {
  * Find or create the active contact for a number. New contacts inherit a
  * deleted contact's opt-out through the keyed hash, never through the number.
  */
-export async function ensureContact(ctx, { accountId, waId, sectorId, source = 'inbound', now, secret, profileName, countryIso, channel='whatsapp', igAccount }) {
-  if (!(channel==='instagram' ? /^\d{1,30}$/ : /^\d{7,15}$/).test(waId || '')) throw new Error('invalid_wa_id');
-  const identity=channel==='instagram'?`instagram:${igAccount}:${waId}`:waId;
+export async function ensureContact(
+  ctx,
+  {
+    accountId,
+    waId,
+    sectorId,
+    source = 'inbound',
+    now,
+    secret,
+    profileName,
+    countryIso,
+    channel = 'whatsapp',
+    igAccount,
+  },
+) {
+  if (!(channel === 'instagram' ? /^\d{1,30}$/ : /^\d{7,15}$/).test(waId || '')) throw new Error('invalid_wa_id');
+  const identity = channel === 'instagram' ? `instagram:${igAccount}:${waId}` : waId;
   const key = contactKey(accountId, identity);
-  const existing = await ctx.db.query('blueContacts').withIndex('by_key', q => q.eq('key', key)).unique();
+  const existing = await ctx.db
+    .query('blueContacts')
+    .withIndex('by_key', q => q.eq('key', key))
+    .unique();
   if (existing) {
     const name = clean(profileName, 80);
     if (name && existing.profileName !== name) {
@@ -115,24 +192,53 @@ export async function ensureContact(ctx, { accountId, waId, sectorId, source = '
   }
   const hash = numberHash(secret, accountId, identity);
   const tomb = await tombstoneFor(ctx, accountId, hash);
-  const record = { accountId, key, state: 'active', ...(channel==='instagram'?{channel,igId:waId,igAccount}:{waId}), numberHash: hash, source, sectorId, fields: [], qualificationStatus: 'new',
-    consent: { status: tomb ? 'revoked' : 'unknown' }, optout: !!tomb, ...(tomb?.optoutAt ? { optoutAt: tomb.optoutAt } : {}),
-    lastActivityAt: now, createdAt: now, updatedAt: now,
-    ...(clean(profileName, 80) ? { profileName: clean(profileName, 80) } : {}), ...(countryIso ? { countryIso } : {}) };
+  const record = {
+    accountId,
+    key,
+    state: 'active',
+    ...(channel === 'instagram' ? { channel, igId: waId, igAccount } : { waId }),
+    numberHash: hash,
+    source,
+    sectorId,
+    fields: [],
+    qualificationStatus: 'new',
+    consent: { status: tomb ? 'revoked' : 'unknown' },
+    optout: !!tomb,
+    ...(tomb?.optoutAt ? { optoutAt: tomb.optoutAt } : {}),
+    lastActivityAt: now,
+    createdAt: now,
+    updatedAt: now,
+    ...(clean(profileName, 80) ? { profileName: clean(profileName, 80) } : {}),
+    ...(countryIso ? { countryIso } : {}),
+  };
   record.searchText = searchTextFor(record);
   const id = await ctx.db.insert('blueContacts', record);
   return { _id: id, ...record };
 }
 
 /** Lazy migration: link a pre-dashboard conversation to its contact record. */
-export async function linkConversation(ctx, conversation, { sectorId, now, secret, igAccount=undefined }) {
+export async function linkConversation(ctx, conversation, { sectorId, now, secret, igAccount = undefined }) {
   if (conversation.contactId) {
     const contact = await ctx.db.get(conversation.contactId);
     if (contact?.state === 'active') return contact;
   }
-  const contact = await ensureContact(ctx, { accountId: conversation.accountId, waId: conversation.number, sectorId, now, secret, source: 'inbound',channel:conversation.channel || 'whatsapp',igAccount:igAccount || conversation.igAccount || conversation.integrationId });
+  const contact = await ensureContact(ctx, {
+    accountId: conversation.accountId,
+    waId: conversation.number,
+    sectorId,
+    now,
+    secret,
+    source: 'inbound',
+    channel: conversation.channel || 'whatsapp',
+    igAccount: igAccount || conversation.igAccount || conversation.integrationId,
+  });
   if (conversation.optout && !contact.optout) {
-    await ctx.db.patch(contact._id, { optout: true, optoutAt: now, consent: { ...contact.consent, status: 'revoked' }, updatedAt: now });
+    await ctx.db.patch(contact._id, {
+      optout: true,
+      optoutAt: now,
+      consent: { ...contact.consent, status: 'revoked' },
+      updatedAt: now,
+    });
     contact.optout = true;
   }
   await ctx.db.patch(conversation._id, { contactId: contact._id });
@@ -142,9 +248,19 @@ export async function linkConversation(ctx, conversation, { sectorId, now, secre
 /** Opt-out: suppress the contact and block every unclaimed campaign job for it. */
 export async function applyOptout(ctx, contact, now) {
   if (!contact) return;
-  await ctx.db.patch(contact._id, { optout: true, optoutAt: contact.optoutAt || now, consent: { ...contact.consent, status: 'revoked' }, updatedAt: now });
-  const jobs = await ctx.db.query('blueCampaignRecipients').withIndex('by_contact_at', q => q.eq('contactId', contact._id)).take(500);
-  for (const job of jobs) if (['pending', 'queued'].includes(job.status)) await ctx.db.patch(job._id, { status: 'blocked', reason: 'contact_opted_out', updatedAt: now });
+  await ctx.db.patch(contact._id, {
+    optout: true,
+    optoutAt: contact.optoutAt || now,
+    consent: { ...contact.consent, status: 'revoked' },
+    updatedAt: now,
+  });
+  const jobs = await ctx.db
+    .query('blueCampaignRecipients')
+    .withIndex('by_contact_at', q => q.eq('contactId', contact._id))
+    .take(500);
+  for (const job of jobs)
+    if (['pending', 'queued'].includes(job.status))
+      await ctx.db.patch(job._id, { status: 'blocked', reason: 'contact_opted_out', updatedAt: now });
 }
 
 /**
@@ -161,25 +277,53 @@ export async function applyInbound(ctx, contact, input) {
  * What one inbound message does to a contact, without writing it: the patch, and the question plan
  * Layla may append. Test Layla runs this on a simulated contact, so preview and live plan alike.
  */
-export function planInbound(contact, { text, intent, handoff, at, now, sectorId, catalog, tone, mode = 'legacy', behaviour = null }) {
+export function planInbound(
+  contact,
+  { text, intent, handoff, at, now, sectorId, catalog, tone, mode = 'legacy', behaviour = null },
+) {
   // A short reply only answers Layla's question if that question is recent.
   const askedRecently = !!contact.lastAskedAt && now - contact.lastAskedAt < DAY;
-  const extracted = extractQualification({ text, sectorId, catalog, asked: contact.asked || [], askedRecently, existing: contact.fields, intent });
+  const extracted = extractQualification({
+    text,
+    sectorId,
+    catalog,
+    asked: contact.asked || [],
+    askedRecently,
+    existing: contact.fields,
+    intent,
+  });
   const merged = mergeFields(contact.fields, extracted.updates, now);
   const answeredNow = merged.changed;
-  const patch = { lastActivityAt: Math.max(contact.lastActivityAt || 0, at), lastInboundAt: Math.max(contact.lastInboundAt || 0, at), sectorId, updatedAt: now };
-  if (merged.changed) { patch.fields = merged.fields; patch.qualificationStatus = qualificationStatus(sectorId, merged.fields); }
+  const patch = {
+    lastActivityAt: Math.max(contact.lastActivityAt || 0, at),
+    lastInboundAt: Math.max(contact.lastInboundAt || 0, at),
+    sectorId,
+    updatedAt: now,
+  };
+  if (merged.changed) {
+    patch.fields = merged.fields;
+    patch.qualificationStatus = qualificationStatus(sectorId, merged.fields);
+  }
   // Layla asked for the name moments ago: a short bare reply ("Sara") is the answer.
   // Only when the reply filled no other field: "Al Mawaleh" answers the area question, not the name.
   // `ai`: the model answers this turn, so any message may be the reply to Layla's last question.
   const open = intent === 'unknown' || intent === 'ai';
-  const bareName = open && !extracted.customerName && !extracted.updates.length && askedRecently && (contact.asked || []).includes(NAME_FIELD.key) && !contact.customerName ? extractBareName(text) : null;
+  const bareName =
+    open &&
+    !extracted.customerName &&
+    !extracted.updates.length &&
+    askedRecently &&
+    (contact.asked || []).includes(NAME_FIELD.key) &&
+    !contact.customerName
+      ? extractBareName(text)
+      : null;
   const customerName = extracted.customerName || bareName;
   if (customerName && customerName !== contact.customerName) patch.customerName = customerName;
   const lang = langOf(text);
   // A reply that only gives details is not a question for the team: an answer to Layla's
   // question ("Al Mawaleh"), or a stated interest ("looking for a villa to rent in Al Mouj").
-  const filled = answeredNow || !!bareName, statement = !isQuestion(text);
+  const filled = answeredNow || !!bareName,
+    statement = !isQuestion(text);
   const answeredOnly = filled && ((open && (askedRecently || statement)) || (intent === 'services' && statement));
   // Catalyst's BznsBrain reception flow (dental first): one detail at a time, held back by a person
   // request or a health question, never repeating a declined name, the WhatsApp name never counting
@@ -187,24 +331,72 @@ export function planInbound(contact, { text, intent, handoff, at, now, sectorId,
   const reception = mode === 'brain' && qualificationPack(sectorId).flow === 'reception';
   if (reception) {
     const override = overrideFor(text, { medical: MEDICAL.has(sectorId) });
-    const declined = !customerName && !contact.customerName && askedRecently && (contact.asked || []).includes(NAME_FIELD.key) && declinesName(text);
+    const declined =
+      !customerName &&
+      !contact.customerName &&
+      askedRecently &&
+      (contact.asked || []).includes(NAME_FIELD.key) &&
+      declinesName(text);
     if (declined) patch.nameDeclined = true;
     if (!contact.appointmentInterestAt && wantsAppointment(text)) patch.appointmentInterestAt = now;
     const known = !!(customerName || contact.customerName || contact.ownerName);
-    const plan = contact.optout ? { text: '', keys: [] } : planReception({ sectorId, fields: merged.fields, askCounts: contact.askCounts || [], asked: contact.asked || [], lastAskedAt: contact.lastAskedAt || 0,
-      answeredNow: answeredNow || !!bareName, now, knownName: known, nameDeclined: !!(contact.nameDeclined || declined), appointmentInterest: !!(contact.appointmentInterestAt || patch.appointmentInterestAt), override, behaviour });
+    const plan = contact.optout
+      ? { text: '', keys: [] }
+      : planReception({
+          sectorId,
+          fields: merged.fields,
+          askCounts: contact.askCounts || [],
+          asked: contact.asked || [],
+          lastAskedAt: contact.lastAskedAt || 0,
+          answeredNow: answeredNow || !!bareName,
+          now,
+          knownName: known,
+          nameDeclined: !!(contact.nameDeclined || declined),
+          appointmentInterest: !!(contact.appointmentInterestAt || patch.appointmentInterestAt),
+          override,
+          behaviour,
+        });
     const next = { ...contact, ...patch };
     next.searchText = searchTextFor(next);
     // Reception takes over once the customer wants to come in and nothing is left to ask.
     const hasService = merged.fields.some(f => f.key === 'service' && f.value);
-    return { patch, contact: next, plan, updates: extracted.updates, answeredOnly, override, reception: !!next.appointmentInterestAt && hasService && !plan.keys.length && !override };
+    return {
+      patch,
+      contact: next,
+      plan,
+      updates: extracted.updates,
+      answeredOnly,
+      override,
+      reception: !!next.appointmentInterestAt && hasService && !plan.keys.length && !override,
+    };
   }
-  const plan = contact.optout ? { text: '', keys: [] } : planQuestions({ sectorId, fields: merged.fields, askCounts: contact.askCounts || [], asked: contact.asked || [],
-    lastAskedAt: contact.lastAskedAt || 0, answeredNow: answeredNow || !!bareName, intent: answeredOnly || intent === 'ai' ? 'faq' : intent, handoff: answeredOnly ? false : handoff, now, lang, tone,
-    // An Instagram @handle is not a name, so Layla still asks for it.
-    knownName: !!(customerName || contact.customerName || contact.ownerName || (contact.profileName && !String(contact.profileName).startsWith('@'))) });
+  const plan = contact.optout
+    ? { text: '', keys: [] }
+    : planQuestions({
+        sectorId,
+        fields: merged.fields,
+        askCounts: contact.askCounts || [],
+        asked: contact.asked || [],
+        lastAskedAt: contact.lastAskedAt || 0,
+        answeredNow: answeredNow || !!bareName,
+        intent: answeredOnly || intent === 'ai' ? 'faq' : intent,
+        handoff: answeredOnly ? false : handoff,
+        now,
+        lang,
+        tone,
+        // An Instagram @handle is not a name, so Layla still asks for it.
+        knownName: !!(
+          customerName ||
+          contact.customerName ||
+          contact.ownerName ||
+          (contact.profileName && !String(contact.profileName).startsWith('@'))
+        ),
+      });
   // BznsBrain: once the owner has saved behaviour settings, only the details they chose are asked.
-  const allowed = mode === 'brain' && behaviour && !behaviour.legacy ? new Set([...(behaviour.askName ? [NAME_FIELD.key] : []), ...behaviour.ask]) : null;
+  const allowed =
+    mode === 'brain' && behaviour && !behaviour.legacy
+      ? new Set([...(behaviour.askName ? [NAME_FIELD.key] : []), ...behaviour.ask])
+      : null;
   const asking = allowed ? { ...plan, keys: plan.keys.filter(k => allowed.has(k)) } : plan;
   const next = { ...contact, ...patch };
   next.searchText = searchTextFor(next);
@@ -216,7 +408,12 @@ export async function recordQuestions(ctx, contact, keys, now) {
   if (!keys.length) return;
   const counts = new Map((contact.askCounts || []).map(c => [c.key, c.count]));
   for (const key of keys) counts.set(key, (counts.get(key) || 0) + 1);
-  await ctx.db.patch(contact._id, { asked: keys, askCounts: [...counts].map(([key, count]) => ({ key, count })), lastAskedAt: now, updatedAt: now });
+  await ctx.db.patch(contact._id, {
+    asked: keys,
+    askCounts: [...counts].map(([key, count]) => ({ key, count })),
+    lastAskedAt: now,
+    updatedAt: now,
+  });
 }
 
 /** Owner edits. Owner-entered field values outrank anything a message extracts. */
@@ -231,7 +428,10 @@ export function ownerContactPatch(contact, input, now, catalog = []) {
     const map = new Map(contact.fields.map(f => [f.key, f]));
     for (const f of input.fields) {
       if (typeof f?.key !== 'string') return { error: 'invalid_contact' };
-      if (f.value === '' || f.value === null) { map.delete(f.key); continue; }
+      if (f.value === '' || f.value === null) {
+        map.delete(f.key);
+        continue;
+      }
       const value = validateFieldValue(contact.sectorId, f.key, f.value, catalog);
       if (!value) return { error: 'invalid_contact_field' };
       map.set(f.key, { key: f.key, value, source: 'owner', confidence: 1, at: now });
@@ -240,7 +440,8 @@ export function ownerContactPatch(contact, input, now, catalog = []) {
     patch.qualificationStatus = qualificationStatus(contact.sectorId, patch.fields);
   }
   if (input.qualificationOverride !== undefined) {
-    if (![null, 'qualified', 'not_qualified', 'in_progress'].includes(input.qualificationOverride)) return { error: 'invalid_contact' };
+    if (![null, 'qualified', 'not_qualified', 'in_progress'].includes(input.qualificationOverride))
+      return { error: 'invalid_contact' };
     patch.qualificationOverride = input.qualificationOverride || undefined;
   }
   const next = { ...contact, ...patch };
@@ -254,39 +455,118 @@ export function ownerContactPatch(contact, input, now, catalog = []) {
  * stay reconcilable and are never retried.
  */
 export async function deleteContact(ctx, contact, now) {
-  const conversations = await ctx.db.query('blueConversations').withIndex('by_contact', q => q.eq('contactId', contact._id)).take(20);
+  const conversations = await ctx.db
+    .query('blueConversations')
+    .withIndex('by_contact', q => q.eq('contactId', contact._id))
+    .take(20);
   for (const person of conversations) {
-    const messages = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', person._id)).take(1000);
+    const messages = await ctx.db
+      .query('blueMessages')
+      .withIndex('by_conversation_at', q => q.eq('conversationId', person._id))
+      .take(1000);
     for (const m of messages) {
-      if (['attempting', 'ambiguous'].includes(m.status)) await ctx.db.patch(m._id, { text: undefined, textExpiresAt: Number.MAX_SAFE_INTEGER });
-      else if (m.status === 'queued') await ctx.db.patch(m._id, { status: 'blocked', reason: 'contact_deleted', text: undefined, textExpiresAt: Number.MAX_SAFE_INTEGER });
-      else { await expireInboundMedia(ctx, m); await ctx.db.delete(m._id); }
+      if (['attempting', 'ambiguous'].includes(m.status))
+        await ctx.db.patch(m._id, { text: undefined, textExpiresAt: Number.MAX_SAFE_INTEGER });
+      else if (m.status === 'queued')
+        await ctx.db.patch(m._id, {
+          status: 'blocked',
+          reason: 'contact_deleted',
+          text: undefined,
+          textExpiresAt: Number.MAX_SAFE_INTEGER,
+        });
+      else {
+        await expireInboundMedia(ctx, m);
+        await ctx.db.delete(m._id);
+      }
     }
     await ctx.db.delete(person._id);
   }
-  const jobs = await ctx.db.query('blueCampaignRecipients').withIndex('by_contact_at', q => q.eq('contactId', contact._id)).take(500);
+  const jobs = await ctx.db
+    .query('blueCampaignRecipients')
+    .withIndex('by_contact_at', q => q.eq('contactId', contact._id))
+    .take(500);
   for (const job of jobs) {
     const unclaimed = ['pending', 'queued'].includes(job.status);
-    await ctx.db.patch(job._id, { waId: undefined, name: undefined, parameters: [], ...(unclaimed ? { status: 'blocked', reason: 'contact_deleted' } : {}), updatedAt: now });
+    await ctx.db.patch(job._id, {
+      waId: undefined,
+      name: undefined,
+      parameters: [],
+      ...(unclaimed ? { status: 'blocked', reason: 'contact_deleted' } : {}),
+      updatedAt: now,
+    });
   }
   await anonymizeContactOrders(ctx, contact, now);
-  await ctx.db.patch(contact._id, { state: 'deleted', key: `deleted:${contact._id}`, waId: undefined, igId:undefined, igAccount:undefined, countryIso: undefined, ownerName: undefined, customerName: undefined,
-    profileName: undefined, undeliverableAt: undefined, fields: [], asked: undefined, askCounts: undefined, qualificationOverride: undefined, searchText: undefined,
-    appointment: undefined, appointmentInterestAt: undefined, nameDeclined: undefined,
-    consent: { status: contact.optout ? 'revoked' : 'unknown' }, deletedAt: now, updatedAt: now });
+  await ctx.db.patch(contact._id, {
+    state: 'deleted',
+    key: `deleted:${contact._id}`,
+    waId: undefined,
+    igId: undefined,
+    igAccount: undefined,
+    countryIso: undefined,
+    ownerName: undefined,
+    customerName: undefined,
+    profileName: undefined,
+    undeliverableAt: undefined,
+    fields: [],
+    asked: undefined,
+    askCounts: undefined,
+    qualificationOverride: undefined,
+    searchText: undefined,
+    appointment: undefined,
+    appointmentInterestAt: undefined,
+    nameDeclined: undefined,
+    consent: { status: contact.optout ? 'revoked' : 'unknown' },
+    deletedAt: now,
+    updatedAt: now,
+  });
 }
 
 /** Public contact shape. Never includes hashes, tenant ids or consent batch ids. */
 export function publicContact(contact, conversation) {
   const { name, source } = displayName(contact);
   const window = conversation?.lastInbound ? conversation.lastInbound + DAY : 0;
-  return { id: contact._id, channel:contact.channel || 'whatsapp', igId:contact.igId, name, nameSource: source, number: contact.waId, ownerName: contact.ownerName || '', customerName: contact.customerName || '',
-    profileName: contact.profileName || '', source: contact.source, sectorId: contact.sectorId,
-    fields: contact.fields.map(({ key, value, source: from, confidence, at }) => ({ key, value, source: from, confidence, at })),
-    qualificationStatus: contact.qualificationStatus, qualificationOverride: contact.qualificationOverride || null,
+  return {
+    id: contact._id,
+    channel: contact.channel || 'whatsapp',
+    igId: contact.igId,
+    name,
+    nameSource: source,
+    number: contact.waId,
+    ownerName: contact.ownerName || '',
+    customerName: contact.customerName || '',
+    profileName: contact.profileName || '',
+    source: contact.source,
+    sectorId: contact.sectorId,
+    fields: contact.fields.map(({ key, value, source: from, confidence, at }) => ({
+      key,
+      value,
+      source: from,
+      confidence,
+      at,
+    })),
+    qualificationStatus: contact.qualificationStatus,
+    qualificationOverride: contact.qualificationOverride || null,
     status: contact.qualificationOverride || contact.qualificationStatus,
-    consent: { status: contact.consent.status, source: contact.consent.source || '', date: contact.consent.date || '', purpose: contact.consent.purpose || '' },
-    optout: contact.optout, notOnWhatsApp: !!contact.undeliverableAt && !((contact.lastInboundAt || 0) > contact.undeliverableAt), lastActivityAt: contact.lastActivityAt, lastInboundAt: contact.lastInboundAt || null,
-    takeover: !!conversation?.takeover, conversationId: conversation?._id || null, windowOpenUntil: window,
-    appointment: contact.appointment ? { service: contact.appointment.service || '', preferences: contact.appointment.preferences || '', requestedAt: contact.appointment.requestedAt } : null, nameDeclined: !!contact.nameDeclined };
+    consent: {
+      status: contact.consent.status,
+      source: contact.consent.source || '',
+      date: contact.consent.date || '',
+      purpose: contact.consent.purpose || '',
+    },
+    optout: contact.optout,
+    notOnWhatsApp: !!contact.undeliverableAt && !((contact.lastInboundAt || 0) > contact.undeliverableAt),
+    lastActivityAt: contact.lastActivityAt,
+    lastInboundAt: contact.lastInboundAt || null,
+    takeover: !!conversation?.takeover,
+    conversationId: conversation?._id || null,
+    windowOpenUntil: window,
+    appointment: contact.appointment
+      ? {
+          service: contact.appointment.service || '',
+          preferences: contact.appointment.preferences || '',
+          requestedAt: contact.appointment.requestedAt,
+        }
+      : null,
+    nameDeclined: !!contact.nameDeclined,
+  };
 }

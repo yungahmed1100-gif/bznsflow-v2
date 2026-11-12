@@ -22,12 +22,16 @@ export function SolutionsSection({ t, trackEvent }) {
     <section className="section" id="solutions">
       <div className="container">
         <h2 className="section-title" data-reveal dangerouslySetInnerHTML={{ __html: t.sol_title }} />
-        <p className="section-subtitle" data-reveal>{t.sol_sub}</p>
+        <p className="section-subtitle" data-reveal>
+          {t.sol_sub}
+        </p>
 
         <div className="solutions-grid">
           {SOLUTIONS.map(({ key, icon, tone }) => (
             <div key={key} className="solution-tile" data-tone={tone} data-reveal>
-              <span className="solution-emoji" aria-hidden="true"><Icon name={icon} size={26} strokeWidth={1.8} /></span>
+              <span className="solution-emoji" aria-hidden="true">
+                <Icon name={icon} size={26} strokeWidth={1.8} />
+              </span>
               <h3 className="solution-tile-title">{t[`${key}_title`]}</h3>
               <p className="solution-tile-desc">{t[`${key}_desc`]}</p>
             </div>

@@ -17,8 +17,12 @@
 // nothing useful to show them anywhere else.
 
 import {
-  providerFor, isProviderEnabled, buildAuthorizeUrl, pkceChallenge,
-  redirectUriFor, signinPath,
+  providerFor,
+  isProviderEnabled,
+  buildAuthorizeUrl,
+  pkceChallenge,
+  redirectUriFor,
+  signinPath,
 } from './_lib/oidc.js';
 import { randomToken, setOauthCookie } from './_lib/cookies.js';
 import { NEXT_PATH } from '../config/signin-destination.js';

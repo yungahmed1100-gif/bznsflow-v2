@@ -3,7 +3,16 @@
 // credentials, hashes or internal integration identifiers.
 import { publicInstagram } from './blueInstagramState.js';
 import { resolveTenant, ownsIntegration, owned, encodeCursor, decodeCursor, afterCursor } from './blueTenant.js';
-import { DAY, GENERAL_SECTOR, catalogForFields, deleteContact, laylaSectorFor, linkConversation, ownerContactPatch, publicContact } from './blueContacts.js';
+import {
+  DAY,
+  GENERAL_SECTOR,
+  catalogForFields,
+  deleteContact,
+  laylaSectorFor,
+  linkConversation,
+  ownerContactPatch,
+  publicContact,
+} from './blueContacts.js';
 import { messagingReady, executeMessaging, stopQueuedJobs, RATE_LIMITS } from './blueMessagingState.js';
 import { packDescription } from '../config/layla-qualification.js';
 import { mediaHeaderOf } from '../config/layla-templates.js';
@@ -12,24 +21,46 @@ import { planFor } from './hasib/plans.js';
 import { actorWorkspace } from './hasib/workspaceState.js';
 import { capabilitiesFor, effectivePlan } from './hasib/capabilities.js';
 
-const PAGE = 25, SEARCH_LIMIT = 30, THREAD_PAGE = 50, EXPORT_MESSAGES = 1000;
-const ok = value => ({ ok: true, value }), fail = reason => ({ ok: false, reason });
+const PAGE = 25,
+  SEARCH_LIMIT = 30,
+  THREAD_PAGE = 50,
+  EXPORT_MESSAGES = 1000;
+const ok = value => ({ ok: true, value }),
+  fail = reason => ({ ok: false, reason });
 const clampLimit = (value, max) => Math.min(max, Math.max(1, Number.isSafeInteger(value) ? value : max));
 export const TIMEZONE_PATTERN = /^(?:UTC|[A-Za-z]+(?:[/_+-][A-Za-z0-9]+){1,3})$/;
 
 async function publicMessage(ctx, m, now) {
   const kept = m.textExpiresAt > now;
   const media = m.media ? await messageMedia(ctx, m, kept) : null;
-  return { id: m._id, direction: m.direction, text: kept ? m.text : null, textExpired: !kept, ...(media ? { media } : {}),
-    status: m.status, reason: m.reason || null, errorCode: m.errorCode ?? null, manual: !!m.manual, at: m.at };
+  return {
+    id: m._id,
+    direction: m.direction,
+    text: kept ? m.text : null,
+    textExpired: !kept,
+    ...(media ? { media } : {}),
+    status: m.status,
+    reason: m.reason || null,
+    errorCode: m.errorCode ?? null,
+    manual: !!m.manual,
+    at: m.at,
+  };
 }
 // A message's photo, voice note, video or file, and what it says (a transcript or what the photo shows),
 // while the message's text is kept. Layla's product photos show the same way.
 async function messageMedia(ctx, m, kept) {
   const { kind, status = 'ready', mimeType, size, filename, voice } = m.media;
   const url = kept && m.media.storageId ? await ctx.storage.getUrl(m.media.storageId) : null;
-  return { kind, status: kept ? (url || status !== 'ready' ? status : 'failed') : 'expired', url: url || null, ...(mimeType ? { mimeType } : {}), ...(size ? { size } : {}),
-    ...(filename ? { filename } : {}), ...(voice ? { voice: true } : {}), ...(kept && m.mediaText ? { text: m.mediaText } : {}) };
+  return {
+    kind,
+    status: kept ? (url || status !== 'ready' ? status : 'failed') : 'expired',
+    url: url || null,
+    ...(mimeType ? { mimeType } : {}),
+    ...(size ? { size } : {}),
+    ...(filename ? { filename } : {}),
+    ...(voice ? { voice: true } : {}),
+    ...(kept && m.mediaText ? { text: m.mediaText } : {}),
+  };
 }
 // The header file a broadcast sent, shown in the bubble while the campaign still keeps it.
 async function headerMedia(ctx, campaign) {
@@ -42,71 +73,165 @@ async function headerMedia(ctx, campaign) {
 async function publicTemplateSend(ctx, { send: r, campaign }, now) {
   const text = sentText({ send: r, campaign }, now);
   const media = text === null ? null : await headerMedia(ctx, campaign);
-  return { id: r._id, direction: 'template', templateName: campaign.template.name || '', text, textExpired: text === null, ...(media ? { media } : {}),
-    status: r.status, reason: r.reason || null, errorCode: r.errorCode ?? null, manual: true, at: r.at };
+  return {
+    id: r._id,
+    direction: 'template',
+    templateName: campaign.template.name || '',
+    text,
+    textExpired: text === null,
+    ...(media ? { media } : {}),
+    status: r.status,
+    reason: r.reason || null,
+    errorCode: r.errorCode ?? null,
+    manual: true,
+    at: r.at,
+  };
 }
 
 async function messagingState(ctx, tenant, now) {
-  const global = await ctx.db.query('blueMessagingSettings').withIndex('by_key', q => q.eq('key', 'global')).unique();
-  const broadcast = await ctx.db.query('blueMessagingSettings').withIndex('by_key', q => q.eq('key', 'broadcast')).unique();
+  const global = await ctx.db
+    .query('blueMessagingSettings')
+    .withIndex('by_key', q => q.eq('key', 'global'))
+    .unique();
+  const broadcast = await ctx.db
+    .query('blueMessagingSettings')
+    .withIndex('by_key', q => q.eq('key', 'broadcast'))
+    .unique();
   const enabled = global?.enabled === true;
-  const control = tenant.integration && await ctx.db.query('blueMessagingControls').withIndex('by_integration', q => q.eq('integrationId', tenant.integration.id)).unique();
-  const row = tenant.row, ready = messagingReady(row, now);
+  const control =
+    tenant.integration &&
+    (await ctx.db
+      .query('blueMessagingControls')
+      .withIndex('by_integration', q => q.eq('integrationId', tenant.integration.id))
+      .unique());
+  const row = tenant.row,
+    ready = messagingReady(row, now);
   const active = enabled && control?.active === true && ready;
-  const rate = tenant.integration && await ctx.db.query('blueMessageRates').withIndex('by_key', q => q.eq('key', `day:${tenant.integration.id}:${Math.floor(now / DAY)}`)).unique();
-  return { available: enabled, active, broadcastAvailable: broadcast?.enabled === true,
-    reason: !enabled ? 'messaging_unavailable' : active ? '' : control?.reason || (control?.active ? 'activation_not_ready' : 'not_activated'),
-    limits: { perMinute: RATE_LIMITS.perMinute, perDay: RATE_LIMITS.perDay, usedToday: rate?.count || 0 } };
+  const rate =
+    tenant.integration &&
+    (await ctx.db
+      .query('blueMessageRates')
+      .withIndex('by_key', q => q.eq('key', `day:${tenant.integration.id}:${Math.floor(now / DAY)}`))
+      .unique());
+  return {
+    available: enabled,
+    active,
+    broadcastAvailable: broadcast?.enabled === true,
+    reason: !enabled
+      ? 'messaging_unavailable'
+      : active
+        ? ''
+        : control?.reason || (control?.active ? 'activation_not_ready' : 'not_activated'),
+    limits: { perMinute: RATE_LIMITS.perMinute, perDay: RATE_LIMITS.perDay, usedToday: rate?.count || 0 },
+  };
 }
 
 // The chat's latest line: a message, or the broadcast that opened or last touched the chat.
 async function lastMessage(ctx, conversationId, contactId, now) {
-  const [m] = await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', conversationId)).order('desc').take(1);
+  const [m] = await ctx.db
+    .query('blueMessages')
+    .withIndex('by_conversation_at', q => q.eq('conversationId', conversationId))
+    .order('desc')
+    .take(1);
   const [sent] = await templateSendsFor(ctx, contactId, { since: m ? m.at + 1 : 0, limit: 1 });
   if (sent) {
     const text = sentText(sent, now);
-    return { direction: 'template', templateName: sent.campaign.template.name || '', text: text === null ? null : text.slice(0, 140), status: sent.send.status, at: sent.send.at };
+    return {
+      direction: 'template',
+      templateName: sent.campaign.template.name || '',
+      text: text === null ? null : text.slice(0, 140),
+      status: sent.send.status,
+      at: sent.send.at,
+    };
   }
-  return m ? { direction: m.direction, text: m.textExpiresAt > now ? String(m.text || '').slice(0, 140) : null, ...(m.media ? { media: { kind: m.media.kind, ...(m.media.voice ? { voice: true } : {}) } } : {}), status: m.status, at: m.at } : null;
+  return m
+    ? {
+        direction: m.direction,
+        text: m.textExpiresAt > now ? String(m.text || '').slice(0, 140) : null,
+        ...(m.media ? { media: { kind: m.media.kind, ...(m.media.voice ? { voice: true } : {}) } } : {}),
+        status: m.status,
+        at: m.at,
+      }
+    : null;
 }
 function handoffFor(person) {
-  return { state: person.handoffState || (person.takeover ? 'open' : 'none'), reason: person.handoffReason || (person.takeover ? 'human_attention' : ''), openedAt: person.handoffOpenedAt || null,
-    resolvedAt: person.handoffResolvedAt || null, version: person.version || 0 };
+  return {
+    state: person.handoffState || (person.takeover ? 'open' : 'none'),
+    reason: person.handoffReason || (person.takeover ? 'human_attention' : ''),
+    openedAt: person.handoffOpenedAt || null,
+    resolvedAt: person.handoffResolvedAt || null,
+    version: person.version || 0,
+  };
 }
 async function conversationItem(ctx, person, tenant, now) {
-  const contact = await linkConversation(ctx, person, { sectorId: await laylaSectorFor(ctx, tenant.row), now, secret: tenant.secret });
-  return { id: person._id, channel:person.channel || 'whatsapp', contact: publicContact(contact, person), lastMessage: await lastMessage(ctx, person._id, contact._id, now),
-    updatedAt: person.updatedAt, takeover: person.takeover, handoff: handoffFor(person), optout: person.optout || contact.optout, windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0 };
+  const contact = await linkConversation(ctx, person, {
+    sectorId: await laylaSectorFor(ctx, tenant.row),
+    now,
+    secret: tenant.secret,
+  });
+  return {
+    id: person._id,
+    channel: person.channel || 'whatsapp',
+    contact: publicContact(contact, person),
+    lastMessage: await lastMessage(ctx, person._id, contact._id, now),
+    updatedAt: person.updatedAt,
+    takeover: person.takeover,
+    handoff: handoffFor(person),
+    optout: person.optout || contact.optout,
+    windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0,
+  };
 }
 
 /** Link a bounded number of pre-dashboard conversations for this account. */
 export async function migrateAccount(ctx, tenant, now, limit = 25) {
-  const rows = await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', tenant.accountId)).order('desc').take(500);
+  const rows = await ctx.db
+    .query('blueConversations')
+    .withIndex('by_account_updated', q => q.eq('accountId', tenant.accountId))
+    .order('desc')
+    .take(500);
   const pending = rows.filter(r => !r.contactId);
   const sectorId = await laylaSectorFor(ctx, tenant.row);
-  for (const person of pending.slice(0, limit)) await linkConversation(ctx, person, { sectorId, now, secret: tenant.secret });
+  for (const person of pending.slice(0, limit))
+    await linkConversation(ctx, person, { sectorId, now, secret: tenant.secret });
   return Math.max(0, pending.length - limit);
 }
 
 async function searchContacts(ctx, accountId, text, limit) {
   const digits = text.replace(/\D/g, '');
-  const bySearch = await ctx.db.query('blueContacts').withSearchIndex('search_contacts', q => q.search('searchText', text).eq('accountId', accountId).eq('state', 'active')).take(limit);
+  const bySearch = await ctx.db
+    .query('blueContacts')
+    .withSearchIndex('search_contacts', q =>
+      q.search('searchText', text).eq('accountId', accountId).eq('state', 'active'),
+    )
+    .take(limit);
   if (digits.length < 3) return bySearch;
   // Number fragments are not whole search tokens; scan recent activity for them.
-  const recent = await ctx.db.query('blueContacts').withIndex('by_account_state_activity', q => q.eq('accountId', accountId).eq('state', 'active')).order('desc').take(500);
+  const recent = await ctx.db
+    .query('blueContacts')
+    .withIndex('by_account_state_activity', q => q.eq('accountId', accountId).eq('state', 'active'))
+    .order('desc')
+    .take(500);
   const seen = new Set(bySearch.map(c => c._id));
   return [...bySearch, ...recent.filter(c => !seen.has(c._id) && c.waId?.includes(digits))].slice(0, limit);
 }
 async function conversationFor(ctx, contact) {
-  const rows = await ctx.db.query('blueConversations').withIndex('by_contact', q => q.eq('contactId', contact._id)).take(5);
+  const rows = await ctx.db
+    .query('blueConversations')
+    .withIndex('by_contact', q => q.eq('contactId', contact._id))
+    .take(5);
   return rows.sort((a, b) => b.updatedAt - a.updatedAt)[0] || null;
 }
 
 async function threadMessages(ctx, person, contact, before, limit, now) {
-  const query = ctx.db.query('blueMessages').withIndex('by_conversation_at', q => before ? q.eq('conversationId', person._id).lt('at', before) : q.eq('conversationId', person._id));
+  const query = ctx.db
+    .query('blueMessages')
+    .withIndex('by_conversation_at', q =>
+      before ? q.eq('conversationId', person._id).lt('at', before) : q.eq('conversationId', person._id),
+    );
   const messages = await Promise.all((await query.order('desc').take(limit)).map(m => publicMessage(ctx, m, now)));
   const templates = [];
-  for (const sent of await templateSendsFor(ctx, contact?._id, { before, limit })) templates.push(await publicTemplateSend(ctx, sent, now));
+  for (const sent of await templateSendsFor(ctx, contact?._id, { before, limit }))
+    templates.push(await publicTemplateSend(ctx, sent, now));
   const merged = [...messages, ...templates].sort((a, b) => b.at - a.at).slice(0, limit);
   return { messages: merged.reverse(), before: merged.length === limit ? merged[0].at : null };
 }
@@ -116,35 +241,93 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
   if (tenant.error) return fail(tenant.error);
   tenant.secret = a.hashSecret;
   const { accountId, row } = tenant;
-  const rawPlan = await planFor(ctx, accountId), plan = effectivePlan(rawPlan);
+  const rawPlan = await planFor(ctx, accountId),
+    plan = effectivePlan(rawPlan);
   if (!rawPlan) return fail('access_required');
-  const actor = rawPlan ? await actorWorkspace(ctx, accountId, a.actorAccountId, now) : { role: 'manager', actorAccountId: accountId, workspace: null };
+  const actor = rawPlan
+    ? await actorWorkspace(ctx, accountId, a.actorAccountId, now)
+    : { role: 'manager', actorAccountId: accountId, workspace: null };
   if (!actor) return fail('workspace_access_revoked');
   const capabilities = capabilitiesFor(plan, actor.role);
-  if (actor.role !== 'manager' && ['set_timezone', 'contact_delete', 'export_chat', 'export_contacts', 'export_account'].includes(a.operation)) return fail('manager_required');
+  if (
+    actor.role !== 'manager' &&
+    ['set_timezone', 'contact_delete', 'export_chat', 'export_contacts', 'export_account'].includes(a.operation)
+  )
+    return fail('manager_required');
   if (['export_chat', 'export_account'].includes(a.operation) && !capabilities.exports) return fail('plan_required');
   if (a.operation === 'export_contacts' && !capabilities.customerExport) return fail('plan_required');
   const sectorId = await laylaSectorFor(ctx, row);
 
   if (a.operation === 'overview') {
-    const settings = await ctx.db.query('blueBusinessSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
-    const unlinked = (await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).order('desc').take(500)).some(r => !r.contactId);
-    const open = await ctx.db.query('blueConversations').withIndex('by_account_updated', q => q.eq('accountId', accountId)).order('desc').take(400);
-    const handoffsOpen = open.filter(p => p.takeover && !['resolved', 'returned'].includes(p.handoffState) && ownsIntegration(tenant, p.integrationId)).length;
+    const settings = await ctx.db
+      .query('blueBusinessSettings')
+      .withIndex('by_account', q => q.eq('accountId', accountId))
+      .unique();
+    const unlinked = (
+      await ctx.db
+        .query('blueConversations')
+        .withIndex('by_account_updated', q => q.eq('accountId', accountId))
+        .order('desc')
+        .take(500)
+    ).some(r => !r.contactId);
+    const open = await ctx.db
+      .query('blueConversations')
+      .withIndex('by_account_updated', q => q.eq('accountId', accountId))
+      .order('desc')
+      .take(400);
+    const handoffsOpen = open.filter(
+      p => p.takeover && !['resolved', 'returned'].includes(p.handoffState) && ownsIntegration(tenant, p.integrationId),
+    ).length;
     // What the owner still has to add after going live: approved services and a person customers can reach.
-    const services = !!(await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved')).first());
-    return ok({ handoffsOpen, business: { name: row.profile?.businessName || '', sector: sectorId === GENERAL_SECTOR ? '' : row.profile?.sector || '', sectorId },
+    const services = !!(await ctx.db
+      .query('blueCatalogEntries')
+      .withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved'))
+      .first());
+    return ok({
+      handoffsOpen,
+      business: {
+        name: row.profile?.businessName || '',
+        sector: sectorId === GENERAL_SECTOR ? '' : row.profile?.sector || '',
+        sectorId,
+      },
       setup: { services, teamContact: !!row.profile?.teamContact },
-      connected: tenant.connected, integration: tenant.integration ? { sender: tenant.integration.sender, path: tenant.integration.path, status: row.status,
-        checks: row.connectionChecks || null, checkedAt: row.checkedAt || null } : null,
-      instagram:publicInstagram(tenant.instagramConnection), instagramMessaging:tenant.instagram ? await messagingState(ctx,{...tenant,row:tenant.instagram,integration:tenant.instagram.integration},now) : null,
-      messaging: await messagingState(ctx, tenant, now), timezone: settings?.timezone || null, migrationPending: unlinked,
-      qualification: packDescription(sectorId), plan, workspaceRole: actor.role, capabilities,
-      teamSummary: actor.workspace ? { role: actor.role, actorAccountId: actor.actorAccountId, employeeLimit: actor.workspace.employeeLimit } : { role: 'manager', actorAccountId: accountId, employeeLimit: 0 } });
+      connected: tenant.connected,
+      integration: tenant.integration
+        ? {
+            sender: tenant.integration.sender,
+            path: tenant.integration.path,
+            status: row.status,
+            checks: row.connectionChecks || null,
+            checkedAt: row.checkedAt || null,
+          }
+        : null,
+      instagram: publicInstagram(tenant.instagramConnection),
+      instagramMessaging: tenant.instagram
+        ? await messagingState(
+            ctx,
+            { ...tenant, row: tenant.instagram, integration: tenant.instagram.integration },
+            now,
+          )
+        : null,
+      messaging: await messagingState(ctx, tenant, now),
+      timezone: settings?.timezone || null,
+      migrationPending: unlinked,
+      qualification: packDescription(sectorId),
+      plan,
+      workspaceRole: actor.role,
+      capabilities,
+      teamSummary: actor.workspace
+        ? { role: actor.role, actorAccountId: actor.actorAccountId, employeeLimit: actor.workspace.employeeLimit }
+        : { role: 'manager', actorAccountId: accountId, employeeLimit: 0 },
+    });
   }
   if (a.operation === 'set_timezone') {
-    if (typeof a.timezone !== 'string' || a.timezone.length > 64 || !TIMEZONE_PATTERN.test(a.timezone)) return fail('invalid_timezone');
-    const settings = await ctx.db.query('blueBusinessSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
+    if (typeof a.timezone !== 'string' || a.timezone.length > 64 || !TIMEZONE_PATTERN.test(a.timezone))
+      return fail('invalid_timezone');
+    const settings = await ctx.db
+      .query('blueBusinessSettings')
+      .withIndex('by_account', q => q.eq('accountId', accountId))
+      .unique();
     if (settings) await ctx.db.patch(settings._id, { timezone: a.timezone, updatedAt: now });
     else await ctx.db.insert('blueBusinessSettings', { accountId, timezone: a.timezone, updatedAt: now });
     return ok({ timezone: a.timezone });
@@ -153,43 +336,101 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
   if (['resolve_handoff', 'takeover_handoff', 'return_handoff'].includes(a.operation)) {
     const person = await owned(ctx, a.conversationId, accountId, 'blueConversations');
     if (!person || !ownsIntegration(tenant, person.integrationId)) return fail('conversation_not_found');
-    const target = { resolve_handoff: 'resolved', takeover_handoff: 'handling', return_handoff: 'returned' }[a.operation];
-    if (person.handoffState === target && person.takeover === (target !== 'returned') && a.expectedVersion === (person.version || 0) - 1) return ok({ handoff: handoffFor(person) });
-    if (!Number.isSafeInteger(a.expectedVersion) || a.expectedVersion !== (person.version || 0)) return fail('handoff_changed');
+    const target = { resolve_handoff: 'resolved', takeover_handoff: 'handling', return_handoff: 'returned' }[
+      a.operation
+    ];
+    if (
+      person.handoffState === target &&
+      person.takeover === (target !== 'returned') &&
+      a.expectedVersion === (person.version || 0) - 1
+    )
+      return ok({ handoff: handoffFor(person) });
+    if (!Number.isSafeInteger(a.expectedVersion) || a.expectedVersion !== (person.version || 0))
+      return fail('handoff_changed');
     if (a.operation !== 'resolve_handoff') {
-      const result = await executeMessaging(ctx, { ...a, operation: target === 'returned' ? 'resume_conversation' : 'takeover' }, now);
+      const result = await executeMessaging(
+        ctx,
+        { ...a, operation: target === 'returned' ? 'resume_conversation' : 'takeover' },
+        now,
+      );
       if (!result.ok) return result.reason === 'sign_in_required' ? fail('connection_not_ready') : result;
       const updated = await ctx.db.get(person._id);
-      await ctx.db.insert('blueHandoffAudit', { accountId, conversationId: person._id, actorAccountId: String(actor.actorAccountId || accountId), action: target === 'returned' ? 'return' : 'takeover', at: now, version: updated.version || 0 });
+      await ctx.db.insert('blueHandoffAudit', {
+        accountId,
+        conversationId: person._id,
+        actorAccountId: String(actor.actorAccountId || accountId),
+        action: target === 'returned' ? 'return' : 'takeover',
+        at: now,
+        version: updated.version || 0,
+      });
       return ok({ handoff: handoffFor(updated) });
     }
     if (!person.takeover) return fail('takeover_required');
     // Resolving needs no live channel: the version bump fences stale actions, queued automatic
     // jobs are blocked and owner replies are kept.
-    const patch = { handoffState: 'resolved', handoffResolvedAt: now, handoffResolvedBy: String(actor.actorAccountId || accountId), updatedAt: now, version: (person.version || 0) + 1 };
+    const patch = {
+      handoffState: 'resolved',
+      handoffResolvedAt: now,
+      handoffResolvedBy: String(actor.actorAccountId || accountId),
+      updatedAt: now,
+      version: (person.version || 0) + 1,
+    };
     await ctx.db.patch(person._id, patch);
     await stopQueuedJobs(ctx, person.integrationId, person._id, 'human_takeover');
     // Owner replies stay valid under the new version; only automatic work is fenced.
-    for (const job of await ctx.db.query('blueMessages').withIndex('by_conversation_at', q => q.eq('conversationId', person._id).gte('at', now - DAY)).take(500)) if (job.manual && ['queued', 'attempting'].includes(job.status)) await ctx.db.patch(job._id, { conversationVersion: patch.version });
-    await ctx.db.insert('blueHandoffAudit', { accountId, conversationId: person._id, actorAccountId: patch.handoffResolvedBy, action: 'resolve', at: now, version: patch.version });
+    for (const job of await ctx.db
+      .query('blueMessages')
+      .withIndex('by_conversation_at', q => q.eq('conversationId', person._id).gte('at', now - DAY))
+      .take(500))
+      if (job.manual && ['queued', 'attempting'].includes(job.status))
+        await ctx.db.patch(job._id, { conversationVersion: patch.version });
+    await ctx.db.insert('blueHandoffAudit', {
+      accountId,
+      conversationId: person._id,
+      actorAccountId: patch.handoffResolvedBy,
+      action: 'resolve',
+      at: now,
+      version: patch.version,
+    });
     return ok({ handoff: handoffFor({ ...person, ...patch }) });
   }
   if (a.operation === 'handoffs') {
-    const cursor = decodeCursor(a.cursor), limit = clampLimit(a.limit, PAGE);
-    const query = ctx.db.query('blueConversations').withIndex('by_account_updated', q => cursor ? q.eq('accountId', accountId).lte('updatedAt', cursor.at) : q.eq('accountId', accountId));
+    const cursor = decodeCursor(a.cursor),
+      limit = clampLimit(a.limit, PAGE);
+    const query = ctx.db
+      .query('blueConversations')
+      .withIndex('by_account_updated', q =>
+        cursor ? q.eq('accountId', accountId).lte('updatedAt', cursor.at) : q.eq('accountId', accountId),
+      );
     const rows = afterCursor(await query.order('desc').take(125), cursor, 'updatedAt').slice(0, 100);
     const items = [];
     let scanned = null;
     for (const person of rows) {
       scanned = person;
-      if (!person.takeover || ['resolved', 'returned'].includes(person.handoffState) || !ownsIntegration(tenant, person.integrationId) || (a.channel && (person.channel || 'whatsapp') !== a.channel)) continue;
+      if (
+        !person.takeover ||
+        ['resolved', 'returned'].includes(person.handoffState) ||
+        !ownsIntegration(tenant, person.integrationId) ||
+        (a.channel && (person.channel || 'whatsapp') !== a.channel)
+      )
+        continue;
       const item = await conversationItem(ctx, person, tenant, now);
-      const [last] = await ctx.db.query('blueMessages').withIndex('by_conversation_direction_at', q => q.eq('conversationId', person._id).eq('direction', 'in')).order('desc').take(1);
+      const [last] = await ctx.db
+        .query('blueMessages')
+        .withIndex('by_conversation_direction_at', q => q.eq('conversationId', person._id).eq('direction', 'in'))
+        .order('desc')
+        .take(1);
       item.lastCustomerMessage = last ? await publicMessage(ctx, last, now) : null;
       items.push(item);
       if (items.length >= limit) break;
     }
-    return ok({ items, cursor: scanned && (items.length === limit || rows.length === 100) ? encodeCursor(scanned.updatedAt, scanned._id) : null });
+    return ok({
+      items,
+      cursor:
+        scanned && (items.length === limit || rows.length === 100)
+          ? encodeCursor(scanned.updatedAt, scanned._id)
+          : null,
+    });
   }
   if (a.operation === 'conversations') {
     const limit = clampLimit(a.limit, PAGE);
@@ -198,33 +439,56 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
       const items = [];
       for (const contact of await searchContacts(ctx, accountId, a.search.trim(), SEARCH_LIMIT)) {
         const person = await conversationFor(ctx, contact);
-        if (ownsIntegration(tenant,person?.integrationId) && (!a.channel || (person.channel || 'whatsapp')===a.channel)) items.push(await conversationItem(ctx, person, tenant, now));
+        if (
+          ownsIntegration(tenant, person?.integrationId) &&
+          (!a.channel || (person.channel || 'whatsapp') === a.channel)
+        )
+          items.push(await conversationItem(ctx, person, tenant, now));
       }
       return ok({ items, cursor: null });
     }
     const cursor = decodeCursor(a.cursor);
-    const query = ctx.db.query('blueConversations').withIndex('by_account_updated', q => cursor ? q.eq('accountId', accountId).lte('updatedAt', cursor.at) : q.eq('accountId', accountId));
+    const query = ctx.db
+      .query('blueConversations')
+      .withIndex('by_account_updated', q =>
+        cursor ? q.eq('accountId', accountId).lte('updatedAt', cursor.at) : q.eq('accountId', accountId),
+      );
     // Chats belong to the currently connected number; an old number's threads stay out of the list.
     const rows = afterCursor(await query.order('desc').take(limit + 50), cursor, 'updatedAt').slice(0, limit);
     const items = [];
-    for (const person of rows) if (ownsIntegration(tenant,person.integrationId) && (!a.channel || (person.channel || 'whatsapp')===a.channel)) items.push(await conversationItem(ctx, person, tenant, now));
+    for (const person of rows)
+      if (ownsIntegration(tenant, person.integrationId) && (!a.channel || (person.channel || 'whatsapp') === a.channel))
+        items.push(await conversationItem(ctx, person, tenant, now));
     return ok({ items, cursor: rows.length === limit ? encodeCursor(rows.at(-1).updatedAt, rows.at(-1)._id) : null });
   }
   if (a.operation === 'thread') {
     const person = await owned(ctx, a.conversationId, accountId, 'blueConversations');
-    if (!person || !ownsIntegration(tenant,person.integrationId)) return fail('conversation_not_found');
+    if (!person || !ownsIntegration(tenant, person.integrationId)) return fail('conversation_not_found');
     const contact = await linkConversation(ctx, person, { sectorId, now, secret: tenant.secret });
     const before = Number.isSafeInteger(a.before) && a.before > 0 ? a.before : null;
     const page = await threadMessages(ctx, person, contact, before, THREAD_PAGE, now);
-    return ok({ conversation: { id: person._id, channel:person.channel || 'whatsapp', takeover: person.takeover, handoff: handoffFor(person), optout: person.optout || contact.optout, windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0 },
-      contact: publicContact(contact, person), qualification: packDescription(contact.sectorId || sectorId), ...page });
+    return ok({
+      conversation: {
+        id: person._id,
+        channel: person.channel || 'whatsapp',
+        takeover: person.takeover,
+        handoff: handoffFor(person),
+        optout: person.optout || contact.optout,
+        windowOpenUntil: person.lastInbound ? person.lastInbound + DAY : 0,
+      },
+      contact: publicContact(contact, person),
+      qualification: packDescription(contact.sectorId || sectorId),
+      ...page,
+    });
   }
 
   if (a.operation === 'contacts') {
     const remaining = await migrateAccount(ctx, tenant, now);
     const limit = clampLimit(a.limit, 50);
     // `appointment`: customers whose appointment request waits for reception (Catalyst's reception flow).
-    const status = ['new', 'in_progress', 'qualified', 'not_qualified', 'appointment'].includes(a.status) ? a.status : null;
+    const status = ['new', 'in_progress', 'qualified', 'not_qualified', 'appointment'].includes(a.status)
+      ? a.status
+      : null;
     let rows;
     let next = null;
     if (typeof a.search === 'string' && a.search.trim()) {
@@ -232,7 +496,13 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
       rows = await searchContacts(ctx, accountId, a.search.trim(), 50);
     } else {
       const cursor = decodeCursor(a.cursor);
-      const query = ctx.db.query('blueContacts').withIndex('by_account_state_activity', q => cursor ? q.eq('accountId', accountId).eq('state', 'active').lte('lastActivityAt', cursor.at) : q.eq('accountId', accountId).eq('state', 'active'));
+      const query = ctx.db
+        .query('blueContacts')
+        .withIndex('by_account_state_activity', q =>
+          cursor
+            ? q.eq('accountId', accountId).eq('state', 'active').lte('lastActivityAt', cursor.at)
+            : q.eq('accountId', accountId).eq('state', 'active'),
+        );
       const page = afterCursor(await query.order('desc').take(limit + 50), cursor, 'lastActivityAt').slice(0, limit);
       next = page.length === limit ? encodeCursor(page.at(-1).lastActivityAt, page.at(-1)._id) : null;
       rows = page;
@@ -247,7 +517,12 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
   if (a.operation === 'contact_update') {
     const contact = await owned(ctx, a.contactId, accountId, 'blueContacts');
     if (!contact || contact.state !== 'active') return fail('contact_not_found');
-    const { patch, error } = ownerContactPatch(contact, a.patch || {}, now, await catalogForFields(ctx, accountId, contact.sectorId));
+    const { patch, error } = ownerContactPatch(
+      contact,
+      a.patch || {},
+      now,
+      await catalogForFields(ctx, accountId, contact.sectorId),
+    );
     if (error) return fail(error);
     await ctx.db.patch(contact._id, patch);
     return ok({ contact: publicContact({ ...contact, ...patch }, await conversationFor(ctx, contact)) });
@@ -262,28 +537,45 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
 
   if (a.operation === 'export_chat') {
     const person = await owned(ctx, a.conversationId, accountId, 'blueConversations');
-    if (!person || !ownsIntegration(tenant,person.integrationId)) return fail('conversation_not_found');
+    if (!person || !ownsIntegration(tenant, person.integrationId)) return fail('conversation_not_found');
     const contact = await linkConversation(ctx, person, { sectorId, now, secret: tenant.secret });
     const page = await threadMessages(ctx, person, contact, null, EXPORT_MESSAGES, now);
     return ok(exportChat(contact, person, page.messages));
   }
   if (a.operation === 'export_contacts') {
     const cursor = decodeCursor(a.cursor);
-    const query = ctx.db.query('blueContacts').withIndex('by_account_state_activity', q => cursor ? q.eq('accountId', accountId).eq('state', 'active').lte('lastActivityAt', cursor.at) : q.eq('accountId', accountId).eq('state', 'active'));
+    const query = ctx.db
+      .query('blueContacts')
+      .withIndex('by_account_state_activity', q =>
+        cursor
+          ? q.eq('accountId', accountId).eq('state', 'active').lte('lastActivityAt', cursor.at)
+          : q.eq('accountId', accountId).eq('state', 'active'),
+      );
     const rows = afterCursor(await query.order('desc').take(250), cursor, 'lastActivityAt').slice(0, 200);
     const items = [];
     for (const contact of rows) items.push(exportContact(publicContact(contact, await conversationFor(ctx, contact))));
-    return ok({ items, cursor: rows.length === 200 ? encodeCursor(rows.at(-1).lastActivityAt, rows.at(-1)._id) : null });
+    return ok({
+      items,
+      cursor: rows.length === 200 ? encodeCursor(rows.at(-1).lastActivityAt, rows.at(-1)._id) : null,
+    });
   }
   if (a.operation === 'export_account') {
     // Paged by conversation so one mutation stays inside Convex read limits.
     const cursor = decodeCursor(a.cursor);
-    const query = ctx.db.query('blueConversations').withIndex('by_account_updated', q => cursor ? q.eq('accountId', accountId).lte('updatedAt', cursor.at) : q.eq('accountId', accountId));
-    const rows = afterCursor(await query.order('desc').take(60), cursor, 'updatedAt').filter(r => ownsIntegration(tenant,r.integrationId)).slice(0, 10);
+    const query = ctx.db
+      .query('blueConversations')
+      .withIndex('by_account_updated', q =>
+        cursor ? q.eq('accountId', accountId).lte('updatedAt', cursor.at) : q.eq('accountId', accountId),
+      );
+    const rows = afterCursor(await query.order('desc').take(60), cursor, 'updatedAt')
+      .filter(r => ownsIntegration(tenant, r.integrationId))
+      .slice(0, 10);
     const chats = [];
     for (const person of rows) {
       const contact = await linkConversation(ctx, person, { sectorId, now, secret: tenant.secret });
-      chats.push(exportChat(contact, person, (await threadMessages(ctx, person, contact, null, EXPORT_MESSAGES, now)).messages));
+      chats.push(
+        exportChat(contact, person, (await threadMessages(ctx, person, contact, null, EXPORT_MESSAGES, now)).messages),
+      );
     }
     return ok({ chats, cursor: rows.length === 10 ? encodeCursor(rows.at(-1).updatedAt, rows.at(-1)._id) : null });
   }
@@ -292,13 +584,35 @@ export async function executeDashboard(ctx, a, now = Date.now()) {
 
 // Export shapes contain only retained, human-readable data for this tenant.
 function exportContact(c) {
-  return { name: c.name, number: c.number ? `+${c.number}` : '', channel:c.channel, instagramId:c.igId || '', source: c.source, status: c.status, consent: c.consent.status,
-    consentSource: c.consent.source, consentDate: c.consent.date, consentPurpose: c.consent.purpose, optedOut: c.optout,
-    lastActivity: c.lastActivityAt ? new Date(c.lastActivityAt).toISOString() : '', takeover: c.takeover,
-    fields: Object.fromEntries(c.fields.map(f => [f.key, f.value])) };
+  return {
+    name: c.name,
+    number: c.number ? `+${c.number}` : '',
+    channel: c.channel,
+    instagramId: c.igId || '',
+    source: c.source,
+    status: c.status,
+    consent: c.consent.status,
+    consentSource: c.consent.source,
+    consentDate: c.consent.date,
+    consentPurpose: c.consent.purpose,
+    optedOut: c.optout,
+    lastActivity: c.lastActivityAt ? new Date(c.lastActivityAt).toISOString() : '',
+    takeover: c.takeover,
+    fields: Object.fromEntries(c.fields.map(f => [f.key, f.value])),
+  };
 }
 function exportChat(contact, person, messages) {
   const c = publicContact(contact, person);
-  return { contact: exportContact(c), messages: messages.filter(m => !m.textExpired).map(m => ({ at: new Date(m.at).toISOString(), direction: m.direction,
-    template: m.templateName || '', status: m.status, text: m.text || '' })) };
+  return {
+    contact: exportContact(c),
+    messages: messages
+      .filter(m => !m.textExpired)
+      .map(m => ({
+        at: new Date(m.at).toISOString(),
+        direction: m.direction,
+        template: m.templateName || '',
+        status: m.status,
+        text: m.text || '',
+      })),
+  };
 }

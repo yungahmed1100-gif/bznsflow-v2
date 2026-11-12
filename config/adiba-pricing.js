@@ -3,7 +3,18 @@
 // price or a value the owner set in settings; anything else stays unpriced for the owner to fill.
 
 /** Why an offer needs the owner, in the order they are shown. */
-export const OFFER_REASONS = Object.freeze(['unpriced_line', 'price_from', 'price_range', 'price_quote', 'custom_deliverable', 'rush', 'above_limit', 'auto_quote_off', 'extra_scope', 'discount_requested']);
+export const OFFER_REASONS = Object.freeze([
+  'unpriced_line',
+  'price_from',
+  'price_range',
+  'price_quote',
+  'custom_deliverable',
+  'rush',
+  'above_limit',
+  'auto_quote_off',
+  'extra_scope',
+  'discount_requested',
+]);
 export const PRICE_SOURCES = Object.freeze(['catalog_fixed', 'settings', 'owner', 'unpriced']);
 const MAX_MINOR = 1e10;
 
@@ -39,11 +50,18 @@ export function priceReason(prices = []) {
 export function priceLines(lines = []) {
   return lines.map(l => {
     const qty = Number.isInteger(l.qty) && l.qty > 0 ? l.qty : 1;
-    if (Number.isInteger(l.ownerMinor) && l.ownerMinor >= 0) return { name: l.name, qty, unitPriceMinor: l.ownerMinor, priceSource: 'owner' };
-    if (Number.isInteger(l.settingsMinor) && l.settingsMinor >= 0) return { name: l.name, qty, unitPriceMinor: l.settingsMinor, priceSource: 'settings' };
+    if (Number.isInteger(l.ownerMinor) && l.ownerMinor >= 0)
+      return { name: l.name, qty, unitPriceMinor: l.ownerMinor, priceSource: 'owner' };
+    if (Number.isInteger(l.settingsMinor) && l.settingsMinor >= 0)
+      return { name: l.name, qty, unitPriceMinor: l.settingsMinor, priceSource: 'settings' };
     const fixed = l.custom ? null : fixedPriceMinor(l.catalogPrices);
     if (fixed !== null) return { name: l.name, qty, unitPriceMinor: fixed, priceSource: 'catalog_fixed' };
-    return { name: l.name, qty, priceSource: 'unpriced', reason: l.custom ? 'custom_deliverable' : priceReason(l.catalogPrices) };
+    return {
+      name: l.name,
+      qty,
+      priceSource: 'unpriced',
+      reason: l.custom ? 'custom_deliverable' : priceReason(l.catalogPrices),
+    };
   });
 }
 
@@ -58,7 +76,10 @@ export function offerTotal(lines = []) {
  * @param {object[]} priced lines from priceLines
  * @param {{ limitMinor?: number, rush?: boolean, extraScope?: boolean, discountRequested?: boolean }} [flags]
  */
-export function offerReasons(priced, { limitMinor = 0, rush = false, extraScope = false, discountRequested = false } = {}) {
+export function offerReasons(
+  priced,
+  { limitMinor = 0, rush = false, extraScope = false, discountRequested = false } = {},
+) {
   const reasons = new Set(priced.filter(l => l.priceSource === 'unpriced').map(l => l.reason || 'unpriced_line'));
   const total = offerTotal(priced);
   // The automatic-quote limit is about quotes; extra scope is always the owner's decision.
@@ -71,4 +92,5 @@ export function offerReasons(priced, { limitMinor = 0, rush = false, extraScope 
 }
 
 /** A deposit from a percentage, rounded to the baisa; never above the total. */
-export const depositMinor = (totalMinor, percent) => Math.min(totalMinor, Math.round(totalMinor * Math.max(0, Math.min(100, percent || 0)) / 100));
+export const depositMinor = (totalMinor, percent) =>
+  Math.min(totalMinor, Math.round((totalMinor * Math.max(0, Math.min(100, percent || 0))) / 100));

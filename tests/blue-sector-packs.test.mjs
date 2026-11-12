@@ -10,7 +10,7 @@ test('every primary industry has a complete bilingual sector pack', () => {
     const pack = sectorPack(id);
     assert.ok(pack.intents.length >= 6 && pack.intents.length <= 10, id);
     assert.ok(pack.slots.length >= 3, id);
-    for (const key of ['greeting','services','price','human','missing']) {
+    for (const key of ['greeting', 'services', 'price', 'human', 'missing']) {
       assert.ok(pack.templates[key].en.length > 10, `${id} ${key} en`);
       assert.ok(pack.templates[key].ar.length > 10, `${id} ${key} ar`);
     }
@@ -23,6 +23,6 @@ test('sector packs expose only approved routing intents', () => {
   for (const id of PRIMARY_SECTOR_IDS) {
     const pack = sectorPack(id);
     assert.ok(pack.intents.includes('human') && pack.intents.includes('optout'));
-    assert.ok(['booking','catalog','project'].includes(pack.archetype));
+    assert.ok(['booking', 'catalog', 'project'].includes(pack.archetype));
   }
 });

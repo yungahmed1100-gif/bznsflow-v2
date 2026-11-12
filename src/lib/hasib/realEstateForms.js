@@ -1,7 +1,8 @@
-const listFromCsv = value => String(value || '')
-  .split(',')
-  .map(item => item.trim())
-  .filter(Boolean);
+const listFromCsv = value =>
+  String(value || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
 
 const omrToMinor = value => Math.round(Number(value || 0) * 1000);
 
@@ -42,7 +43,9 @@ export function buildRealEstateSubmission(form, values, context = {}) {
       return {
         operation: 'opportunity_save',
         body: {
-          ...(values.opportunityId ? { opportunityId: values.opportunityId, version: Number(values.version) } : { requestId }),
+          ...(values.opportunityId
+            ? { opportunityId: values.opportunityId, version: Number(values.version) }
+            : { requestId }),
           workflow: {
             ...(values.opportunityId ? {} : { contactId: values.contactId, source: 'manual' }),
             need: values.need,
@@ -91,7 +94,14 @@ export function buildRealEstateSubmission(form, values, context = {}) {
     case 'followup':
       return {
         operation: 'followup_save',
-        body: { requestId, contactId: values.contactId, reason: values.reason, dueAt: new Date(values.dueAt).getTime(), linkedType: 'opportunity', linkedId: values.opportunityId },
+        body: {
+          requestId,
+          contactId: values.contactId,
+          reason: values.reason,
+          dueAt: new Date(values.dueAt).getTime(),
+          linkedType: 'opportunity',
+          linkedId: values.opportunityId,
+        },
       };
     case 'draft': {
       const opportunity = context.opportunities?.find(row => row.id === values.opportunityId);
@@ -112,17 +122,34 @@ export function buildRealEstateSubmission(form, values, context = {}) {
     case 'outcome':
       return {
         operation: 'viewing_save',
-        body: { viewingId: values.viewingId, version: Number(values.version), workflow: { status: values.status, outcome: values.outcome || undefined, nextAction: values.nextAction || undefined } },
+        body: {
+          viewingId: values.viewingId,
+          version: Number(values.version),
+          workflow: {
+            status: values.status,
+            outcome: values.outcome || undefined,
+            nextAction: values.nextAction || undefined,
+          },
+        },
       };
     case 'counter':
       return {
         operation: 'offer_save',
-        body: { offerId: values.offerId, version: Number(values.version), workflow: { status: 'countered', amountMinor: omrToMinor(values.amount), terms: values.terms } },
+        body: {
+          offerId: values.offerId,
+          version: Number(values.version),
+          workflow: { status: 'countered', amountMinor: omrToMinor(values.amount), terms: values.terms },
+        },
       };
     case 'lost':
       return {
         operation: 'opportunity_stage',
-        body: { opportunityId: values.opportunityId, version: Number(values.version), status: 'lost', reason: values.reason },
+        body: {
+          opportunityId: values.opportunityId,
+          version: Number(values.version),
+          status: 'lost',
+          reason: values.reason,
+        },
       };
     case 'close':
       return {

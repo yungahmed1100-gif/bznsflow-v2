@@ -7,12 +7,26 @@ export function loadFacebook() {
   if (window.FB) return Promise.resolve();
   if (sdkPromise) return sdkPromise;
   sdkPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script'); script.src = 'https://connect.facebook.net/en_US/sdk.js'; script.async = true;
-    const fail = () => { clearTimeout(timer); script.remove(); reject(new Error('meta_sdk_unavailable')); };
+    const script = document.createElement('script');
+    script.src = 'https://connect.facebook.net/en_US/sdk.js';
+    script.async = true;
+    const fail = () => {
+      clearTimeout(timer);
+      script.remove();
+      reject(new Error('meta_sdk_unavailable'));
+    };
     const timer = setTimeout(fail, SDK_TIMEOUT_MS);
-    script.onload = () => { clearTimeout(timer); if (window.FB) resolve(); else fail(); };
-    script.onerror = fail; document.head.appendChild(script);
-  }).catch(error => { sdkPromise = null; throw error; });
+    script.onload = () => {
+      clearTimeout(timer);
+      if (window.FB) resolve();
+      else fail();
+    };
+    script.onerror = fail;
+    document.head.appendChild(script);
+  }).catch(error => {
+    sdkPromise = null;
+    throw error;
+  });
   return sdkPromise;
 }
 

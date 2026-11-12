@@ -32,12 +32,19 @@ const ROUTED = await routedPaths();
 const PRERENDERED = await prerenderedPaths();
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const read = (p) => readFileSync(join(root, p), 'utf8');
+const read = p => readFileSync(join(root, p), 'utf8');
 
-let pass = 0, fail = 0;
+let pass = 0,
+  fail = 0;
 const t = (name, fn) => {
-  try { fn(); console.log(`  ✓ ${name}`); pass++; }
-  catch (e) { console.log(`  ✗ ${name}\n      ${e.message}`); fail++; }
+  try {
+    fn();
+    console.log(`  ✓ ${name}`);
+    pass++;
+  } catch (e) {
+    console.log(`  ✗ ${name}\n      ${e.message}`);
+    fail++;
+  }
 };
 
 console.log('\nplaybook assets');
@@ -63,9 +70,9 @@ t('nothing fetches the retired email teaser', () => {
   // surviving reference would put a 404 back in the send path — and a failed
   // teaser fetch throws, which means the lead saves and the email silently
   // never goes. That is the 2026 incident this whole file exists for.
-  const sources = [
-    'api/lead.js', 'api/_lib/mailer.js', 'apps-script/Code.gs', 'src/lib/constants.js',
-  ].map(read).join('\n');
+  const sources = ['api/lead.js', 'api/_lib/mailer.js', 'apps-script/Code.gs', 'src/lib/constants.js']
+    .map(read)
+    .join('\n');
   assert.ok(
     !/bznsflow-email-teaser|teaserUrl|TEASER_URL/.test(sources),
     'a reference to the retired teaser survives — the playbook email would 404 again',
@@ -79,7 +86,7 @@ t('the Apps Script fetches the PDF and nothing else', () => {
   // One fetch left in the send path. Anything more is a new way for the email
   // to fail on something other than its own attachment.
   const gs = read('apps-script/Code.gs');
-  const fetches = [...gs.matchAll(/UrlFetchApp\.fetch\(\s*(\w+)/g)].map((m) => m[1]);
+  const fetches = [...gs.matchAll(/UrlFetchApp\.fetch\(\s*(\w+)/g)].map(m => m[1]);
   assert.deepEqual(fetches, ['playbook'], `unexpected UrlFetchApp calls: ${fetches.join(', ')}`);
 });
 t('the Apps Script fallback URL points at a file that exists', () => {
@@ -98,7 +105,7 @@ t('/playbook is a prerendered route AND is in the sitemap', () => {
   assert.ok(ROUTED.includes('playbook'), "src/routes.ts has no 'playbook' route");
   assert.ok(ROUTED.includes('en/playbook'), "src/routes.ts has no 'en/playbook' route");
   assert.ok(
-    PAGES.some((p) => p.path === '/playbook'),
+    PAGES.some(p => p.path === '/playbook'),
     '/playbook is missing from PAGES — the campaign landing page would not be in the sitemap',
   );
 });
@@ -108,7 +115,7 @@ t('every replies.* referenced in api/ resolves to a non-empty string', () => {
   // A typo yields `undefined` as the visitor-facing reply text, which is the
   // exact failure replies.js warns about in its own header.
   const sources = ['api/chat.js', 'api/_lib/guard.js'].map(read).join('\n');
-  const referenced = [...sources.matchAll(/\breplies\.([A-Z_][A-Z0-9_]*)/g)].map((m) => m[1]);
+  const referenced = [...sources.matchAll(/\breplies\.([A-Z_][A-Z0-9_]*)/g)].map(m => m[1]);
   assert.ok(referenced.length > 0, 'found no replies.* references — did the regex break?');
 
   for (const key of new Set(referenced)) {
@@ -121,8 +128,8 @@ console.log('\ntranslations');
 t('en and ar carry exactly the same keys', () => {
   // A key present in one language renders as `undefined` in the other — visible
   // to the visitor, invisible to the build.
-  const onlyEn = Object.keys(en).filter((k) => !(k in ar));
-  const onlyAr = Object.keys(ar).filter((k) => !(k in en));
+  const onlyEn = Object.keys(en).filter(k => !(k in ar));
+  const onlyAr = Object.keys(ar).filter(k => !(k in en));
   assert.deepEqual(onlyEn, [], `missing from ar.js: ${onlyEn.join(', ')}`);
   assert.deepEqual(onlyAr, [], `missing from en.js: ${onlyAr.join(', ')}`);
 });
@@ -147,7 +154,11 @@ console.log('\nroutes and the sitemap');
 t('/signin is noindex and absent from the sitemap', () => {
   const manifest = read('src/routes-manifest.js');
   assert.ok(!manifest.includes('signin'), '/signin must stay out of PAGES');
-  assert.match(read('src/lib/route-seo.js'), /path === '\/signin'.*noindex: true/, 'Sign-in route metadata must remain noindex');
+  assert.match(
+    read('src/lib/route-seo.js'),
+    /path === '\/signin'.*noindex: true/,
+    'Sign-in route metadata must remain noindex',
+  );
 });
 
 console.log('\nsocial sign-in wiring');
@@ -187,8 +198,7 @@ t('every cookie the server can set is disclosed in COOKIES.md', () => {
   // COOKIES.md states its own rule — "an unlisted cookie is an undisclosed
   // one". This makes that rule enforceable instead of aspirational.
   const doc = read('COOKIES.md');
-  for (const [, name] of read('api/_lib/cookies.js')
-    .matchAll(/^export const \w*COOKIE\s*=\s*'([^']+)'/gm)) {
+  for (const [, name] of read('api/_lib/cookies.js').matchAll(/^export const \w*COOKIE\s*=\s*'([^']+)'/gm)) {
     assert.ok(doc.includes(`\`${name}\``), `COOKIES.md does not document ${name}`);
   }
 });
@@ -199,7 +209,10 @@ t('every env var the API reads is listed in .env.example', () => {
     for (const [, name] of read(file).matchAll(/process\.env\.([A-Z0-9_]+)/g)) seen.add(name);
   }
   // The registry names its env vars as strings rather than property accesses.
-  for (const p of Object.values(PROVIDERS)) { seen.add(p.idEnv); seen.add(p.secretEnv); }
+  for (const p of Object.values(PROVIDERS)) {
+    seen.add(p.idEnv);
+    seen.add(p.secretEnv);
+  }
 
   for (const name of seen) {
     assert.ok(new RegExp(`^${name}=`, 'm').test(example), `.env.example is missing ${name}`);

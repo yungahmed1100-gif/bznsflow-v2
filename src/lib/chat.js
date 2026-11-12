@@ -94,7 +94,7 @@ export async function sendChatMessage(message, sessionId) {
       throw new Error(
         `${CHAT_ENDPOINT} returned 404. The Vite dev server does not run Vercel ` +
           'functions — run `npm run dev:api` (vercel dev) to serve the chat backend ' +
-          'locally, or test the chat on the deployed site.'
+          'locally, or test the chat on the deployed site.',
       );
     }
     throw new Error(`Empty chat reply (status ${res.status})`);

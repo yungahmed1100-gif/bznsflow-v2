@@ -82,7 +82,7 @@
   padding: 8px 0;
   border-bottom: 1px solid var(--border-hover);
 }
-.mcp-result[data-tone="neutral"] {
+.mcp-result[data-tone='neutral'] {
   color: var(--text-secondary);
 }
 
@@ -110,7 +110,7 @@
   outline: 2px solid var(--green-ink);
   outline-offset: 2px;
 }
-.mcp-confirm-identity input[aria-invalid="true"] {
+.mcp-confirm-identity input[aria-invalid='true'] {
   border-color: var(--coral-ink);
 }
 /* An action's answer, shown where the owner acted: in the card or its section. */

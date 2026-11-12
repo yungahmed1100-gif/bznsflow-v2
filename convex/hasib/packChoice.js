@@ -14,12 +14,17 @@ export async function applyPackChoice(ctx, accountId, pack, now) {
   if (textRetentionFor(null, pack.id) === CLINICAL_TEXT_RETENTION_MS) {
     // Newest first, up to 2,000 messages in this change; a busier account finishes with blueHasib:shortenDentalText.
     let next = now + 1;
-    for (let page = 0; page < 4 && next !== null; page++) next = (await shortenClinicalText(ctx, accountId, now, next)).next;
+    for (let page = 0; page < 4 && next !== null; page++)
+      next = (await shortenClinicalText(ctx, accountId, now, next)).next;
   }
   // Internal stock (a clinic's supplies) leaves Layla's catalog; treatments become chargeable.
   if (pack.internalStock) {
-    const published = await ctx.db.query('blueCatalogEntries').withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved')).take(500);
-    for (const entry of published.filter(e => e.source === STOCK_SOURCE)) await ctx.db.patch(entry._id, { status: 'archived', updatedAt: now });
+    const published = await ctx.db
+      .query('blueCatalogEntries')
+      .withIndex('by_owner_status_order', q => q.eq('ownerKey', String(accountId)).eq('status', 'approved'))
+      .take(500);
+    for (const entry of published.filter(e => e.source === STOCK_SOURCE))
+      await ctx.db.patch(entry._id, { status: 'archived', updatedAt: now });
   }
   if (pack.serviceItems) await syncServiceItems(ctx, accountId, now);
 }
@@ -30,7 +35,10 @@ export async function applyPackChoice(ctx, accountId, pack, now) {
  */
 export async function setAccountPack(ctx, accountId, packId, now, { onlyIfUnset = false } = {}) {
   if (!isLivePack(packId)) return false;
-  const settings = await ctx.db.query('hasibSettings').withIndex('by_account', q => q.eq('accountId', accountId)).unique();
+  const settings = await ctx.db
+    .query('hasibSettings')
+    .withIndex('by_account', q => q.eq('accountId', accountId))
+    .unique();
   if (onlyIfUnset && settings?.packId) return false;
   if (settings?.packId === packId) return false;
   if (settings) await ctx.db.patch(settings._id, { packId, updatedAt: now });
@@ -43,9 +51,14 @@ export async function setAccountPack(ctx, accountId, packId, now, { onlyIfUnset 
 
 /** A sector granted before the account existed reaches it at sign-in, unless the owner has chosen one. */
 export async function applyGrantedPack(ctx, account, now) {
-  const email = String(account?.email || '').toLowerCase().trim();
+  const email = String(account?.email || '')
+    .toLowerCase()
+    .trim();
   if (!email) return false;
-  const grant = await ctx.db.query('blueAccessGrants').withIndex('by_email', q => q.eq('email', email)).unique();
+  const grant = await ctx.db
+    .query('blueAccessGrants')
+    .withIndex('by_email', q => q.eq('email', email))
+    .unique();
   if (!grantLive(grant, now) || !['ascend', 'apex'].includes(grant.plan) || !grant.packId) return false;
   return setAccountPack(ctx, account._id, grant.packId, now, { onlyIfUnset: true });
 }

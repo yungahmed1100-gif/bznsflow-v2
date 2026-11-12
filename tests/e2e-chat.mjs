@@ -6,7 +6,7 @@ import handler from '../api/chat.js';
 
 // ── mint a service_role JWT matching PGRST_JWT_SECRET ──────────────────────
 const SECRET = 'local-test-secret-that-is-at-least-32-chars-long';
-const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
 const head = b64({ alg: 'HS256', typ: 'JWT' });
 const payload = b64({ role: 'service_role', iat: Math.floor(Date.now() / 1000) });
 const sig = crypto.createHmac('sha256', SECRET).update(`${head}.${payload}`).digest('base64url');
@@ -28,10 +28,11 @@ const proxy = http.createServer(async (creq, cres) => {
     cres.writeHead(r.status, { 'Content-Type': r.headers.get('content-type') || 'application/json' });
     cres.end(Buffer.from(await r.arrayBuffer()));
   } catch (e) {
-    cres.writeHead(502); cres.end(JSON.stringify({ error: String(e) }));
+    cres.writeHead(502);
+    cres.end(JSON.stringify({ error: String(e) }));
   }
 });
-await new Promise((r) => proxy.listen(3002, r));
+await new Promise(r => proxy.listen(3002, r));
 
 process.env.SUPABASE_URL = 'http://localhost:3002';
 process.env.SUPABASE_SERVICE_ROLE_KEY = `${head}.${payload}.${sig}`;
@@ -52,22 +53,35 @@ if (!REAL_OPENAI) {
       globalThis.__llmCalls = (globalThis.__llmCalls || 0) + 1;
       // Echo enough to assert on, and exercise handoff.
       const handoff = /sure|تمام|yes/i.test(user);
-      return new Response(JSON.stringify({
-        choices: [{ message: { content: JSON.stringify({
-          reply: `stub reply to: ${user.slice(0, 40)}`,
-          handoff,
-          handoff_context: handoff ? 'cafe owner, missed orders' : '',
-        }) } }],
-      }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  reply: `stub reply to: ${user.slice(0, 40)}`,
+                  handoff,
+                  handoff_context: handoff ? 'cafe owner, missed orders' : '',
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      );
     }
     return realFetch(url, opts);
   };
 } else {
   const env = Object.fromEntries(
-    (await import('node:fs')).readFileSync(new URL('../.env', import.meta.url), 'utf8')
-      .split('\n').filter((l) => /^[A-Z]/.test(l)).map((l) => {
-        const i = l.indexOf('='); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, '')];
-      })
+    (await import('node:fs'))
+      .readFileSync(new URL('../.env', import.meta.url), 'utf8')
+      .split('\n')
+      .filter(l => /^[A-Z]/.test(l))
+      .map(l => {
+        const i = l.indexOf('=');
+        return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, '')];
+      }),
   );
   process.env.OPENAI_API_KEY = env.OPENAI_API_KEY;
 }
@@ -75,31 +89,54 @@ if (!REAL_OPENAI) {
 // ── minimal req/res shims ──────────────────────────────────────────────────
 function mockRes() {
   const r = { _status: 200, _headers: {}, _body: null };
-  r.status = (s) => { r._status = s; return r; };
-  r.setHeader = (k, v) => { r._headers[k.toLowerCase()] = v; };
-  r.end = (b) => { r._body = b; r._done = true; };
+  r.status = s => {
+    r._status = s;
+    return r;
+  };
+  r.setHeader = (k, v) => {
+    r._headers[k.toLowerCase()] = v;
+  };
+  r.end = b => {
+    r._body = b;
+    r._done = true;
+  };
   return r;
 }
 async function call(body, { method = 'POST', headers = {} } = {}) {
   const req = {
     method,
-    headers: { host: 'www.bznsflowai.com', origin: 'https://www.bznsflowai.com',
-      'x-vercel-forwarded-for': '203.0.113.9', ...headers },
+    headers: {
+      host: 'www.bznsflowai.com',
+      origin: 'https://www.bznsflowai.com',
+      'x-vercel-forwarded-for': '203.0.113.9',
+      ...headers,
+    },
     body,
   };
   const res = mockRes();
   await handler(req, res);
   let json = null;
-  try { json = JSON.parse(res._body); } catch {}
+  try {
+    json = JSON.parse(res._body);
+  } catch {}
   return { status: res._status, json, headers: res._headers };
 }
 
-let pass = 0, fail = 0;
+let pass = 0,
+  fail = 0;
 const t = async (name, fn) => {
-  try { await fn(); console.log(`  ✓ ${name}`); pass++; }
-  catch (e) { console.log(`  ✗ ${name}\n      ${e.message}`); fail++; }
+  try {
+    await fn();
+    console.log(`  ✓ ${name}`);
+    pass++;
+  } catch (e) {
+    console.log(`  ✗ ${name}\n      ${e.message}`);
+    fail++;
+  }
 };
-const ok = (c, m) => { if (!c) throw new Error(m || 'assertion failed'); };
+const ok = (c, m) => {
+  if (!c) throw new Error(m || 'assertion failed');
+};
 
 const SID = () => 'web-' + crypto.randomUUID().slice(0, 20);
 
@@ -122,7 +159,7 @@ await t('403 foreign origin carries a reply', async () => {
 });
 await t('no CORS headers anywhere (same-origin)', async () => {
   const r = await call({ message: 'hello there', sessionId: SID() });
-  const cors = Object.keys(r.headers).filter((h) => h.startsWith('access-control'));
+  const cors = Object.keys(r.headers).filter(h => h.startsWith('access-control'));
   ok(cors.length === 0, `found ${cors.join(',')}`);
 });
 await t('no-store cache header', async () => {
@@ -175,7 +212,10 @@ await t('handoff LATCHES across a later non-handoff turn', async () => {
   const r = await call({ message: 'one more question about invoices', sessionId: sid });
   ok(r.json.handoff === false, 'this turn should not itself hand off');
   const res = await fetch(PGRST + '/web_conversations?select=handoff,lang,message_count&session_key=eq.web:' + sid, {
-    headers: { Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`, apikey: process.env.SUPABASE_SERVICE_ROLE_KEY },
+    headers: {
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    },
   });
   const [row] = await res.json();
   ok(row.handoff === true, 'DB handoff reverted to false');
@@ -196,19 +236,22 @@ await t('LLM failure → 200 + friendly reply, NOT persisted', async () => {
   const failSid = SID();
   const saved = globalThis.fetch;
   globalThis.fetch = async (u, o) =>
-    String(u).includes('api.openai.com')
-      ? new Response('upstream boom', { status: 500 })
-      : saved(u, o);
+    String(u).includes('api.openai.com') ? new Response('upstream boom', { status: 500 }) : saved(u, o);
   const r = await call({ message: 'hello there friend', sessionId: failSid });
   globalThis.fetch = saved;
   ok(r.status === 200, `status ${r.status}`);
   ok(r.json.reply.includes('Sorry') || r.json.reply.includes('عذراً'), r.json.reply);
   const res = await fetch(PGRST + '/web_messages?select=role,content&order=seq', {
-    headers: { Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`, apikey: process.env.SUPABASE_SERVICE_ROLE_KEY },
+    headers: {
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    },
   });
   const rows = await res.json();
-  ok(!rows.some((m) => m.role === 'assistant' && /glitch|عذراً/.test(m.content)),
-    'the error reply was persisted as an assistant turn');
+  ok(
+    !rows.some(m => m.role === 'assistant' && /glitch|عذراً/.test(m.content)),
+    'the error reply was persisted as an assistant turn',
+  );
 });
 
 console.log('\n── rate limiting (metering runs BEFORE validation) ──');
@@ -217,18 +260,28 @@ await t('invalid payloads still consume the bucket, then 429', async () => {
   const ip = '198.51.100.77';
   const codes = [];
   for (let i = 0; i < 8; i++) {
-    const r = await call({ message: '', sessionId: 'web-ratelimit-test' },
-      { headers: { 'x-vercel-forwarded-for': ip } });
+    const r = await call(
+      { message: '', sessionId: 'web-ratelimit-test' },
+      { headers: { 'x-vercel-forwarded-for': ip } },
+    );
     codes.push(r.status);
   }
-  ok(codes.slice(0, 5).every((c) => c === 400), `first five: ${codes.slice(0, 5)}`);
-  ok(codes.slice(5).every((c) => c === 429), `after limit: ${codes.slice(5)}`);
+  ok(
+    codes.slice(0, 5).every(c => c === 400),
+    `first five: ${codes.slice(0, 5)}`,
+  );
+  ok(
+    codes.slice(5).every(c => c === 429),
+    `after limit: ${codes.slice(5)}`,
+  );
   process.env.CHAT_RATE_IP_PER_MIN = '20';
 });
 await t('429 carries a reply string', async () => {
   process.env.CHAT_RATE_IP_PER_MIN = '0';
-  const r = await call({ message: 'hello there', sessionId: SID() },
-    { headers: { 'x-vercel-forwarded-for': '198.51.100.88' } });
+  const r = await call(
+    { message: 'hello there', sessionId: SID() },
+    { headers: { 'x-vercel-forwarded-for': '198.51.100.88' } },
+  );
   ok(r.status === 429, `status ${r.status}`);
   ok(r.json.reply.length > 0);
   process.env.CHAT_RATE_IP_PER_MIN = '20';

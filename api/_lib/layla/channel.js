@@ -41,11 +41,11 @@ const SENDER = Object.freeze({
   [INSTAGRAM]: /^\d{1,30}$/,
 });
 
-export const isChannel = (value) => CHANNELS.includes(value);
+export const isChannel = value => CHANNELS.includes(value);
 
 /** Normalises an absent channel to WhatsApp, which is what every row predating
  * this module is. Never infer a channel from anything client-supplied. */
-export const channelOf = (c) => (isChannel(c?.channel) ? c.channel : WHATSAPP);
+export const channelOf = c => (isChannel(c?.channel) ? c.channel : WHATSAPP);
 
 /** Is `value` a well-formed sender identity on this channel? */
 export function isSender(value, channel = WHATSAPP) {
@@ -59,7 +59,7 @@ export function isSender(value, channel = WHATSAPP) {
 // the parsers.
 
 /** The id Meta puts in `entry[].id` for this binding. */
-export const accountOf = (c) => (channelOf(c) === INSTAGRAM ? c.igAccount : c.waba);
+export const accountOf = c => (channelOf(c) === INSTAGRAM ? c.igAccount : c.waba);
 
 /** The identity our own outbound messages carry, used to skip self-traffic. */
-export const selfOf = (c) => (channelOf(c) === INSTAGRAM ? c.igAccount : c.sender);
+export const selfOf = c => (channelOf(c) === INSTAGRAM ? c.igAccount : c.sender);
