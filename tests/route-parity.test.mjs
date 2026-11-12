@@ -1,11 +1,14 @@
-// The site's routes are listed in three places: src/routes.ts (what the app
-// renders), react-router.config.ts (what is prerendered; Vercel serves no SPA
-// fallback, so an unprerendered route is a live 404) and src/routes-manifest.js
-// (what the sitemap and hreflang publish). They must agree, and every page must
-// exist in Arabic (no prefix) and English (/en).
+// The site's pages are listed once, in src/lib/route-table.js, and read from it
+// by src/routes.ts (what the app renders), react-router.config.ts (what is
+// prerendered; Vercel serves no SPA fallback, so an unprerendered route is a
+// live 404) and src/routes-manifest.js (the sitemap and hreflang). These tests
+// check the three results still agree, and that every page exists in Arabic
+// (no prefix) and English (/en).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PAGES } from '../src/routes-manifest.js';
+import { PREVIEW_PACKS } from '../src/lib/route-table.js';
+import { livePackSummaries } from '../config/hasib-packs.js';
 import { prerenderedPaths, routedPaths } from './helpers/source.mjs';
 
 const routed = (await routedPaths()).map(p => `/${p}`.replace(/\/$/, '') || '/');
@@ -67,4 +70,13 @@ test('every sitemap page is routed and prerendered in both languages', () => {
       `${path} is not prerendered in both languages`,
     );
   }
+});
+
+test('every live sector pack has an owner preview page, and only those', () => {
+  assert.deepEqual(
+    [...PREVIEW_PACKS].sort(),
+    livePackSummaries()
+      .map(pack => pack.id)
+      .sort(),
+  );
 });
