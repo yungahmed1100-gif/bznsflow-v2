@@ -24,6 +24,7 @@ import { KNOWN_BROKEN } from './helpers/nav-crawl/known-broken.mjs';
 import { intentProblems } from './helpers/nav-crawl/intents.mjs';
 import { clickEffect } from './helpers/nav-crawl/buttons.mjs';
 import { signedOut } from './helpers/browser-mocks.mjs';
+import { settle } from './helpers/settle.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:5199';
 const { default: config } = await import('../react-router.config.ts');
@@ -67,7 +68,7 @@ let checks = 0;
 async function open(context, url) {
   const page = await context.newPage();
   page.on('dialog', dialog => dialog.dismiss().catch(() => {}));
-  await page.goto(url, { waitUntil: 'networkidle' });
+  await settle(page, url);
   return page;
 }
 

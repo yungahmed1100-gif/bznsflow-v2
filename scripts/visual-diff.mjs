@@ -21,6 +21,7 @@ import { resolve, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 import { signedOut } from '../tests/helpers/browser-mocks.mjs';
+import { settle } from '../tests/helpers/settle.mjs';
 import { compareAria, comparePixels, differenceKey, matchExpectations } from './lib/visual-compare.mjs';
 
 const args = process.argv.slice(2);
@@ -84,7 +85,7 @@ async function capture(browser, url, viewport, mockApi) {
   const page = await context.newPage();
   page.on('dialog', dialog => dialog.dismiss().catch(() => {}));
   try {
-    await page.goto(url, { waitUntil: 'networkidle' });
+    await settle(page, url);
     // Lazy images below the fold would otherwise load in one capture and not the other.
     await page.evaluate(async () => {
       for (const image of document.images) image.loading = 'eager';
@@ -109,7 +110,7 @@ async function screens(browser, demoBase) {
     for (const prefix of ['', '/en']) {
       const root = `${prefix}/layla/dashboard`;
       const page = await browser.newPage({ viewport: VIEWPORTS.desktop });
-      await page.goto(`${demoBase(demo)}${root}`, { waitUntil: 'networkidle' });
+      await settle(page, `${demoBase(demo)}${root}`);
       const tabs = await page.$$eval('[data-section]', els => [...new Set(els.map(e => e.dataset.section))]);
       await page.close();
       for (const path of [root, ...tabs.map(tab => `${root}?tab=${tab}`)])
