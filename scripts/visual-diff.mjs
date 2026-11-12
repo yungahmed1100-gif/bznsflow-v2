@@ -18,6 +18,7 @@ import { spawn, execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 import { signedOut } from '../tests/helpers/browser-mocks.mjs';
 import { compareAria, comparePixels, differenceKey, matchExpectations } from './lib/visual-compare.mjs';
@@ -27,6 +28,7 @@ const option = name => (args.includes(name) ? args[args.indexOf(name) + 1] : und
 const OUT = resolve(option('--out') || 'work/visual-diff');
 const ONLY = option('--only') ? new RegExp(option('--only')) : null;
 const FROZEN = new Date('2026-11-12T08:00:00Z');
+const FIXED_CLOCK = pathToFileURL(resolve('scripts/lib/fixed-clock.mjs')).href;
 const VIEWPORTS = { desktop: { width: 1440, height: 900 }, phone: { width: 375, height: 812 } };
 const CONCURRENCY = 4;
 // Demo dashboards: name, demo flags. Each opens its home and every tab it lists.
@@ -53,7 +55,12 @@ function baseCheckout(ref) {
 
 /** Starts a server from `dir` and resolves once it prints `ready`. */
 function serve(dir, script, scriptArgs, ready) {
-  const child = spawn(process.execPath, [script, ...scriptArgs], { cwd: dir, stdio: ['ignore', 'pipe', 'inherit'] });
+  // The demo seeds its sample data from the process clock: start both builds at the browser's frozen instant.
+  const child = spawn(process.execPath, ['--import', FIXED_CLOCK, script, ...scriptArgs], {
+    cwd: dir,
+    env: { ...process.env, FIXED_CLOCK_START: FROZEN.toISOString() },
+    stdio: ['ignore', 'pipe', 'inherit'],
+  });
   const started = new Promise((resolveStart, reject) => {
     child.stdout.on('data', chunk => String(chunk).includes(ready) && resolveStart());
     child.on('exit', code => reject(new Error(`${script} in ${dir} exited with ${code}`)));

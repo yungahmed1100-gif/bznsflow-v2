@@ -172,6 +172,18 @@ function demo(port, flags) {
   return { child, ready, base: `http://127.0.0.1:${port}` };
 }
 
+/** Visible text that is a string key rather than words ("view_jobs"): a translation is missing. */
+const rawKeys = page =>
+  page.evaluate(() => {
+    const found = new Set();
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node.textContent.trim();
+      if (/^[a-z][a-z0-9]*(_[a-z0-9]+)+$/.test(text) && node.parentElement?.checkVisibility()) found.add(text);
+    }
+    return [...found];
+  });
+
 const tabsIn = (page, attribute) =>
   page.$$eval(
     `[${attribute}]`,
@@ -197,6 +209,10 @@ async function crawlDashboard(browser, name, flags, port) {
         checks++;
         if (current !== tab) report(`${name}${prefix}`, `?tab=${tab} opens ${current} instead`);
         queries.push(...(await checkLinks(desktop, page, `${name}${prefix} ?tab=${tab}`)));
+        for (const key of await rawKeys(page)) {
+          checks++;
+          report(`${name}${prefix} ?tab=${tab}`, `shows the string key ${key} instead of words`);
+        }
         const views = await page.$$eval('.ld-section-tabs a[href]', as => as.map(a => a.getAttribute('href')));
         await page.close();
         for (const href of views) {
@@ -209,6 +225,8 @@ async function crawlDashboard(browser, name, flags, port) {
           checks++;
           if (!shown || new URLSearchParams(shown.slice(1)).get('view') !== view)
             report(`${name}${prefix}`, `${href} does not open the ${view} view`);
+          for (const key of await rawKeys(viewPage))
+            report(`${name}${prefix} ${href}`, `shows the string key ${key} instead of words`);
           await viewPage.close();
         }
       }

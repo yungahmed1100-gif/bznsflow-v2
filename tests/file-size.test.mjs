@@ -25,7 +25,7 @@ const CAPPED = {
   'src/components/hasib/ConstructionDashboard.jsx': 1338,
   'src/components/hasib/RestaurantControls.jsx': 944,
   'src/components/hasib/media/ProductionRecord.jsx': 885,
-  'src/lib/dashboard/strings.js': 1270,
+  'src/lib/dashboard/strings.js': 1218,
   'src/lib/hasib/strings.js': 1945,
   'src/styles/brain.css': 1213,
   'src/styles/hasib.css': 1908,

@@ -53,6 +53,7 @@ export function AddInformation({ lang = 'ar', request: websiteRequest, operation
       'Unable to complete this step. Check the file or your access and retry. Your saved information is preserved.',
       'تعذر إكمال الخطوة. تحقق من الملف أو صلاحياتك وأعد المحاولة. تبقى معلوماتك المحفوظة كما هي.',
     );
+  const [loadFailure, setLoadFailure] = useState('');
   const [state, setState] = useState(null),
     [error, setError] = useState(''),
     [notice, setNotice] = useState('');
@@ -86,7 +87,8 @@ export function AddInformation({ lang = 'ar', request: websiteRequest, operation
   };
   useEffect(() => {
     live.current = true;
-    restore().catch(e => setError(e.message));
+    // A reason, worded where it is shown: the first load has no strings of its own to hand.
+    restore().catch(e => setLoadFailure(e.message));
     return () => {
       live.current = false;
       controller.current?.abort();
@@ -97,6 +99,7 @@ export function AddInformation({ lang = 'ar', request: websiteRequest, operation
     running.current = true;
     setBusy(true);
     setError('');
+    setLoadFailure('');
     setNotice('');
     try {
       await work();
@@ -173,9 +176,9 @@ export function AddInformation({ lang = 'ar', request: websiteRequest, operation
           'اختر المصدر ← استخراج ← مراجعة ← تحقق ← نشر. تبقى الملفات الأصلية في متصفحك. تُحفظ المسودات والنصوص المعتمدة في حساب نشاطك.',
         )}
       </p>
-      {error && (
+      {(error || loadFailure) && (
         <p role="alert" className="layla-error">
-          {error}{' '}
+          {error || explainError(loadFailure)}{' '}
           <button type="button" onClick={() => act(restore)}>
             {tr('Retry connection', 'إعادة المحاولة')}
           </button>
