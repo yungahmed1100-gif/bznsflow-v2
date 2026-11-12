@@ -161,5 +161,3 @@ export function brainStrings(lang = 'en') {
   const reason = code => (T[`err_${code}`] ? t(`err_${code}`) : t('err_generic'));
   return { lang, ar: lang === 'ar', t, reason };
 }
-export const BRAIN_STRING_KEYS = Object.freeze(Object.keys(T));
-export const brainStringPairs = () => Object.entries(T);

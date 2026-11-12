@@ -43,4 +43,3 @@ export const LOST_REASONS = [['bought_elsewhere', 'Bought or rented elsewhere', 
 export const VIEWING_NEXT = { requested: ['confirmed', 'completed', 'missed', 'cancelled'], confirmed: ['completed', 'missed', 'cancelled'] };
 export const OFFER_NEXT = { approved: ['presented', 'withdrawn'], presented: ['countered', 'accepted', 'rejected', 'withdrawn'], countered: ['countered', 'presented', 'accepted', 'rejected', 'withdrawn'] };
 /** Steps that end something, which ask for confirmation first. */
-export const FINAL_STEPS = new Set(['accepted', 'rejected', 'withdrawn', 'cancelled', 'missed']);

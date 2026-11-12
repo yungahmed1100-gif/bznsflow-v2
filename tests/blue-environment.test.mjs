@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { checkBlue } from '../scripts/check-blue-environment.mjs';
 import blueHandler from '../api/layla-meta.js';
-import { demoOptions } from '../api/_lib/layla/blue-demo.js';
 import { INDUSTRIES } from '../src/lib/industries.js';
 import { prefillFor, SECTOR_PREFILL } from '../src/lib/sector-prefill.generated.js';
 

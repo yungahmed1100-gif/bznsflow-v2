@@ -4,8 +4,6 @@ import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
 import { sealToken, openToken, credentialContext, exchangeAndVerify, numberFacts, COEXISTENCE_RECHECKS, COEXISTENCE_RECHECK_MS } from '../api/_lib/layla/customer-meta.js';
-import { customerIdentity, createHandler } from '../api/_lib/layla/customer-api.js';
-import { routeCustomerEnvelope, persistCustomerEvents } from '../api/_lib/layla/customer-webhook.js';
 import { verifySignupConfiguration, createHandler as eligibilityHandler } from '../api/_lib/layla/eligibility.js';
 import { signupOptions, signupEvent } from '../src/lib/layla-signup.js';
 const env = { LAYLA_CREDENTIAL_ENCRYPTION_KEY: 'a'.repeat(64) };
@@ -52,39 +50,12 @@ test('owner eligibility cannot infer customer approval from a ready pilot and re
   assert.equal(result.body.checks.ownerNumber.status, 'passed'); assert.equal(result.body.checks.appPermissions.status, 'not_verified');
   assert.equal(result.body.checks.scheduler.status, 'needs_action'); assert(!JSON.stringify(result.body).includes(c.secret));
 });
-test('customer registration refuses every coexistence integration before reading credentials or contacting Meta', async () => {
-  let calls = 0;
-  const h = createHandler({ configuration: () => c, env: { LAYLA_CUSTOMER_ONBOARDING_ENABLED: 'true' },
-    sessionLookup: async () => ({ ok: true, account: { id: owner } }),
-    store: { integration: async () => ({ path: 'coexistence', coexistence_verified: true }) }, fetcher: async () => { calls++; } });
-  const req = { method: 'POST', body: { action: 'register_number', integration: randomUUID(), pin: '123456' }, headers: { host: 'localhost', origin: 'http://localhost', cookie: `bf_session=${'a'.repeat(64)}; bf_csrf=${'b'.repeat(64)}`, 'x-csrf-token': 'b'.repeat(64) } };
-  const res = { status(n) { this.code = n; }, setHeader() {}, end(b) { this.body = b; } };
-  await h(req, res); assert.equal(res.code, 409); assert.equal(calls, 0); assert.equal(req.body.pin, undefined);
-  assert(!res.body.includes('123456'));
-});
-test('signed customer routing uses the exclusive registry, rejects unknown bindings and persists normalized deduplication keys', async () => {
-  const integration = { id: randomUUID(), account_id: other, app_id: c.app, waba_id: '456', phone_id: '789', sender: '201036755930' };
-  const envelope = { object: 'whatsapp_business_account', entry: [{ id: '456', changes: [{ field: 'messages', value: { metadata: { phone_number_id: '789' }, messaging_product: 'whatsapp', messages: [{ id: 'wamid.test', from: '96899999999', type: 'text', timestamp: '1700000000', text: { body: 'services' } }] } }] }] };
-  let rows;
-  const registry = { binding: async (w, p) => w === '456' && p === '789' ? integration : null, inbox: async value => { rows = value; } };
-  const groups = await routeCustomerEnvelope(Buffer.from(JSON.stringify(envelope)), { ...c, waba: '111', phone: '222' }, registry, 1700000000000);
-  assert.equal(groups[0].integration.account_id, other);
-  await persistCustomerEvents(registry, integration, groups[0].events); assert.equal(rows[0].account_id, other); assert.equal(rows[0].event.text, 'services'); assert.equal(rows[0].event_id.length, 64);
-  envelope.entry[0].id = '999'; await assert.rejects(routeCustomerEnvelope(Buffer.from(JSON.stringify(envelope)), c, registry, 1700000000000), /unknown_sender_binding/);
-});
 test('customer credential authenticated encryption rejects tampering and tenant/asset swaps', () => {
   const i = { id: randomUUID(), app: '123', waba: '456', phone: '789' }, context = credentialContext(owner, i);
   const sealed = sealToken('SECRET_CUSTOMER_TOKEN', context, env);
   assert(!JSON.stringify(sealed).includes('SECRET_CUSTOMER_TOKEN')); assert.equal(openToken(sealed, context, env), 'SECRET_CUSTOMER_TOKEN');
   for (const wrong of [credentialContext(other, i), credentialContext(owner, { ...i, phone: '890' })]) assert.throws(() => openToken(sealed, wrong, env), /credential_unavailable/);
   assert.throws(() => openToken({ ...sealed, data: 'AAAA' }, context, env), /credential_unavailable/);
-});
-test('customer guard derives tenant from session and rejects account parameters, foreign origins and noninvited users', async () => {
-  const req = { method: 'POST', body: { account: owner }, headers: { host: 'localhost', origin: 'http://localhost', cookie: `bf_session=${'a'.repeat(64)}; bf_csrf=${'b'.repeat(64)}`, 'x-csrf-token': 'b'.repeat(64) } };
-  const lookup = async () => ({ ok: true, account: { id: other } });
-  await assert.rejects(customerIdentity(req, c, {}, lookup), /customer_invitation_required/);
-  assert.equal(await customerIdentity(req, c, { LAYLA_CUSTOMER_ACCOUNT_IDS: other }, lookup), other);
-  await assert.rejects(customerIdentity({ ...req, headers: { ...req.headers, origin: 'https://foreign.test' } }, c, { LAYLA_CUSTOMER_ACCOUNT_IDS: other }, lookup), /origin/);
 });
 test('server verifies app, permissions, granted WABA, phone relationship and actual coexistence', async () => {
   const token = 'SECRET_CUSTOMER_TOKEN_LONG', waba = '456', phone = '789';

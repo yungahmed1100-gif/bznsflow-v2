@@ -87,7 +87,6 @@ const SIX_TAB_PACKS = Object.freeze({ 'real-estate': { views: REAL_ESTATE_VIEWS,
   fitness: { views: FITNESS_VIEWS, aliases: FITNESS_ALIASES }, dental: { views: DENTAL_VIEWS, aliases: DENTAL_ALIASES },
   automotive: { views: AUTOMOTIVE_VIEWS, aliases: AUTOMOTIVE_ALIASES }, construction: { views: CONSTRUCTION_VIEWS, aliases: CONSTRUCTION_ALIASES }, hvac: { views: HVAC_VIEWS, aliases: HVAC_ALIASES },
   retail: { views: RETAIL_VIEWS, aliases: RETAIL_ALIASES }, 'retail-tech': { views: TECH_VIEWS, aliases: TECH_ALIASES } });
-export const isSixTabPack = id => !!SIX_TAB_PACKS[id];
 /** Which BznsBrain tab a URL opens: `part`, else the old Services & prices links open the catalog. */
 export function brainPart(params) {
   const part = params.get('part');
