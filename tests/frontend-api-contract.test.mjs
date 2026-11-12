@@ -104,9 +104,9 @@ test("the AI Connections page only sends actions its handler accepts", () => {
     .map((p) => readFileSync(p, "utf8"))
     .join("\n");
   const sent = new Set(
-    [...page.matchAll(/action:\s*"([a-z_]+)"/g)].map((m) => m[1]),
+    [...page.matchAll(/action:\s*["']([a-z_]+)["']/g)].map((m) => m[1]),
   );
   assert.ok(sent.size > 0);
   for (const action of sent)
-    assert.match(handler, new RegExp(`"${action}"`), action);
+    assert.match(handler, new RegExp(`["']${action}["']`), action);
 });

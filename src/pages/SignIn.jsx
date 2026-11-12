@@ -7,6 +7,7 @@ import { countryOptions } from '../lib/countries';
 import { auditPath, WHATSAPP_URL } from '../lib/constants';
 import { NEXT_PATH, signinDestination } from '../../config/signin-destination.js';
 import { revealStep } from '../lib/reveal-step.js';
+import { OAUTH_ERRORS } from '../lib/auth/oauth-errors.js';
 import '../styles/auth.css';
 
 // Passwordless sign-in: email -> six-digit code -> (new accounts only) profile.
@@ -33,21 +34,6 @@ const PROVIDER_ORDER = [
   { id: 'microsoft', key: 'auth_oauth_microsoft' },
   { id: 'linkedin', key: 'auth_oauth_linkedin' },
 ];
-
-// The ?e= codes api/auth-callback.js redirects back with. Kept separate from
-// messageFor() below: those are JSON reason codes from a fetch, these arrive in
-// the URL after a full page navigation, and the two vocabularies only look
-// alike — `expired` means a stale OAuth attempt here and a stale OTP there.
-const OAUTH_ERRORS = {
-  cancelled: 'auth_err_cancelled',
-  provider: 'auth_err_provider',
-  state: 'auth_err_state',
-  expired: 'auth_err_expired_oauth',
-  no_email: 'auth_err_no_email',
-  email_unverified: 'auth_err_email_unverified',
-  rate: 'auth_err_rate',
-  unavailable: 'auth_err_unavailable',
-};
 
 /** Interpolate {name} placeholders in a translation string. */
 function fill(template, values) {

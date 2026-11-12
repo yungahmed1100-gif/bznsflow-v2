@@ -4,9 +4,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { WIZARD_EVENTS, isAnalyticsHost, isPrivatePath, privateEvent } from '../src/lib/posthog.js';
+import { readCompact, routedPaths } from './helpers/source.mjs';
 
 const read = file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
-const routePaths = [...read('src/routes.ts').matchAll(/"?path"?:\s*["']([^"']+)["']/g)].map(([, path]) => `/${path}`);
+const routePaths = (await routedPaths()).map(path => `/${path}`);
 const PRIVATE_ROOTS = /^\/(?:en\/)?(?:owner|layla|catalyst|mcp|signin)(?:\/|$)/;
 
 test('every private route in routes.ts is kept out of analytics, in Arabic and English', () => {
@@ -36,10 +37,10 @@ test('only the live site sends events; local, preview and test hosts never do', 
 });
 
 test('the key is the public project key, sent through our own /ingest proxy to PostHog US', () => {
-  const source = read('src/lib/posthog.js');
-  assert.match(source, /const PROJECT_KEY = 'phc_[A-Za-z0-9]{20,60}';/);
+  const source = readCompact('src/lib/posthog.js');
+  assert.match(source, /const PROJECT_KEY='phc_[A-Za-z0-9]{20,60}';/);
   assert.doesNotMatch(source, /phx_|sk-|secret/i, 'only the public key belongs in the page');
-  assert.match(source, /api_host: '\/ingest'/);
+  assert.match(source, /api_host:'\/ingest'/);
   const rewrites = JSON.parse(read('vercel.json')).rewrites;
   const ingest = rewrites.filter(r => r.source.startsWith('/ingest/'));
   assert.deepEqual(ingest.map(r => [r.source, r.destination]), [
@@ -52,7 +53,7 @@ test('the key is the public project key, sent through our own /ingest proxy to P
 
 test('PostHog is disclosed in COOKIES.md and in the privacy policy, in both languages', () => {
   assert.match(read('COOKIES.md'), /`ph_phc_…_posthog`/);
-  const privacy = read('src/content/privacy.js');
+  const privacy = readCompact('src/content/privacy.js');
   assert.equal(privacy.match(/\['PostHog'/g)?.length, 2, 'processor row in English and Arabic');
   assert.equal(privacy.match(/\['ph_phc_…_posthog'/g)?.length, 2, 'cookie row in English and Arabic');
 });
@@ -70,6 +71,6 @@ test('on a private page only the website brief\'s funnel events leave, stripped 
     $current_url: 'https://www.bznsflowai.com/layla/dashboard', $pathname: '/layla/dashboard', $session_entry_url: 'https://www.bznsflowai.com/layla/dashboard' } },
   'no file name, phone, long value, query string (in any URL property), referrer or person properties');
   assert.ok(WIZARD_EVENTS.every(name => name.startsWith('website_brief_')));
-  const source = read('src/lib/posthog.js');
-  assert.match(source, /persistence: 'memory', disable_session_recording: true/, 'private mode stores nothing and records nothing');
+  const source = readCompact('src/lib/posthog.js');
+  assert.match(source, /persistence:'memory',disable_session_recording:true/, 'private mode stores nothing and records nothing');
 });

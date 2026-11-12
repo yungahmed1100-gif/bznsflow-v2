@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { executeBlueAuth } from '../convex/blueAuthState.js';
 import { blueAccountsAvailable, sendBlueCode, createBlueAuthHandler } from '../api/_lib/blue-auth.js';
 import { GREEN_CLOUD as BLUE_CLOUD } from './helpers/green-env.mjs';
+import { readCompact } from './helpers/source.mjs';
 
 const env={CONVEX_CLOUD_URL:BLUE_CLOUD,BLUE_REVIEW_SERVICE_SECRET:'a'.repeat(64),LEAD_ENDPOINT:'https://script.test/exec',OTP_SHARED_SECRET:'test-secret-0123456789'};
 function memory() {
@@ -126,8 +127,7 @@ test('reviewer access is scoped to its own account and expires',async()=>{
 
 test('reviewer links last one year and can be revoked with their sessions',async()=>{
   // The Convex mutations are thin; pin the two properties Meta review depends on.
-  const {readFileSync}=await import('node:fs');
-  const source=readFileSync(new URL('../convex/blueAuth.ts',import.meta.url),'utf8');
+  const source=readCompact('convex/blueAuth.ts');
   assert.match(source,/REVIEW_ACCESS_TTL_MS=365\*86400000/);
   assert.match(source,/expiresAt=now\+REVIEW_ACCESS_TTL_MS/);
   assert.match(source,/export const revokeReviewAccess=internalMutation/);

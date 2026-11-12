@@ -25,6 +25,11 @@ import * as replies from '../api/_lib/replies.js';
 import { PROVIDERS } from '../api/_lib/oidc.js';
 import en from '../src/i18n/en.js';
 import ar from '../src/i18n/ar.js';
+import { OAUTH_ERRORS } from '../src/lib/auth/oauth-errors.js';
+import { prerenderedPaths, routedPaths } from './helpers/source.mjs';
+
+const ROUTED = await routedPaths();
+const PRERENDERED = await prerenderedPaths();
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(root, p), 'utf8');
@@ -90,9 +95,8 @@ t('/playbook is a prerendered route AND is in the sitemap', () => {
   // The page paid traffic lands on. A route that exists but is missing from
   // PAGES gets no sitemap entry and no hreflang pair — invisible in a way that
   // costs money rather than breaking a build.
-  const routes = read('src/routes.ts');
-  assert.ok( /"path": "playbook"/.test(routes), "src/routes.jsx has no 'playbook' route");
-  assert.ok( /"path": "en\/playbook"/.test(routes), "src/routes.jsx has no 'en/playbook' route");
+  assert.ok(ROUTED.includes('playbook'), "src/routes.ts has no 'playbook' route");
+  assert.ok(ROUTED.includes('en/playbook'), "src/routes.ts has no 'en/playbook' route");
   assert.ok(
     PAGES.some((p) => p.path === '/playbook'),
     '/playbook is missing from PAGES — the campaign landing page would not be in the sitemap',
@@ -167,18 +171,14 @@ t('every ?e= code the callback can emit has a message', () => {
   }
   assert.ok(emitted.size > 0, 'expected to find some reason codes to check');
 
-  const page = read('src/pages/SignIn.jsx');
-  const mapped = new Set(
-    [...page.matchAll(/^\s{2}([a-z_]+):\s*'(auth_err_[a-z_]+)',/gm)].map((m) => m[1]),
-  );
+  const mapped = new Set(Object.keys(OAUTH_ERRORS));
 
   for (const code of emitted) {
     assert.ok(mapped.has(code), `SignIn.jsx OAUTH_ERRORS has no entry for '${code}'`);
   }
 });
 t('every message OAUTH_ERRORS points at exists in both languages', () => {
-  const page = read('src/pages/SignIn.jsx');
-  for (const [, key] of page.matchAll(/^\s{2}[a-z_]+:\s*'(auth_err_[a-z_]+)',/gm)) {
+  for (const key of Object.values(OAUTH_ERRORS)) {
     assert.ok(en[key], `en.js is missing ${key}`);
     assert.ok(ar[key], `ar.js is missing ${key}`);
   }
@@ -226,10 +226,9 @@ t('every rewrite surface is registered in api/layla-meta.js', () => {
 
 t('every owner page route is prerendered (Vercel serves no SPA fallback for /owner/*)', () => {
   // 2026-10-27: /owner/apex shipped in routes.ts but not in the prerender list and 404'd live.
-  const routes = read('src/routes.ts'), config = read('react-router.config.ts');
-  const owner = [...routes.matchAll(/path"?: ?"((?:en\/)?owner\/[a-z-]+)"/g)].map(m => `/${m[1]}`).filter(p => !p.includes('/preview'));
+  const owner = ROUTED.filter(p => /^(en\/)?owner\/[a-z-]+$/.test(p)).map(p => `/${p}`);
   assert.ok(owner.includes('/owner/apex') && owner.includes('/en/owner/websites'), `found ${owner.join(', ')}`);
-  for (const path of owner) assert.ok(config.includes(`"${path}"`), `${path} is routed but not prerendered`);
+  for (const path of owner) assert.ok(PRERENDERED.includes(path), `${path} is routed but not prerendered`);
 });
 
 console.log(`\n${fail ? '✗' : '✓'} contracts: ${pass} passed, ${fail} failed\n`);
