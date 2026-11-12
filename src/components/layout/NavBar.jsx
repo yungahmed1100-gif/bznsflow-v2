@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import logoImg from '../../assets/logo_bznsflow.png';
 import { Icon } from '../ui/Icon';
+import { dashboardPath, homePath, localePath, signInPath } from '../../lib/paths';
+import { isPlainClick } from '../../lib/plain-click';
 
 /**
  * What to call someone in a slot two words wide.
@@ -82,12 +84,16 @@ export function NavBar({
     } catch {
       /* reload either way */
     }
-    window.location.assign(lang === 'en' ? '/en' : '/');
+    window.location.assign(homePath(lang));
   };
 
   // Signed out: the sign-in page. Signed in, the name opens a menu with Settings and Sign out.
-  const accountHref = lang === 'en' ? '/en/signin' : '/signin';
-  const settingsHref = `${lang === 'en' ? '/en' : ''}/layla/dashboard?tab=settings`;
+  // An employee's workspace has no Settings tab, so their menu opens the workspace itself.
+  const accountHref = signInPath(lang);
+  const employee = account?.workspaceRole === 'employee';
+  const workspaceLink = employee
+    ? { href: dashboardPath(lang), icon: 'home', label: t.nav_workspace }
+    : { href: dashboardPath(lang, { tab: 'settings' }), icon: 'settings', label: t.nav_settings };
   const name = account ? shortName(account) : '';
   const initial = name ? Array.from(name)[0].toLocaleUpperCase(lang) : '';
 
@@ -122,14 +128,14 @@ export function NavBar({
           <ul className={`nav-links ${isMenuOpen ? 'open' : ''}`} id="navLinks">
             {account && (
               <li>
-                <a className="nav-link" href={lang === 'ar' ? '/mcp' : '/en/mcp'}>
+                <a className="nav-link" href={localePath(lang, '/mcp')}>
                   {lang === 'ar' ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections'}
                 </a>
               </li>
             )}
             {account?.email?.trim().toLowerCase() === 'ahmed@bznsflowai.com' && (
               <li>
-                <a className="nav-link" href={lang === 'en' ? '/en/owner' : '/owner'}>
+                <a className="nav-link" href={localePath(lang, '/owner')}>
                   {lang === 'ar' ? 'لوحة الإدارة' : 'Admin dashboard'}
                 </a>
               </li>
@@ -184,13 +190,13 @@ export function NavBar({
                 {LANGUAGES.map(l => (
                   <a
                     key={l.code}
-                    href={l.code === 'en' ? '/en' : '/'}
+                    href={homePath(l.code)}
                     hrefLang={l.code}
                     role="menuitemradio"
                     aria-checked={lang === l.code}
                     className={`lang-item ${lang === l.code ? 'active' : ''}`}
                     onClick={e => {
-                      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      if (!isPlainClick(e)) return;
                       handleLangSelect(l.code);
                     }}
                     title={l.label}
@@ -238,9 +244,9 @@ export function NavBar({
                   </button>
                   <div className="account-menu" role="menu" aria-label={t.nav_account}>
                     {account.email && <bdi className="account-menu-email">{account.email}</bdi>}
-                    <a href={settingsHref} role="menuitem" className="lang-item account-item">
-                      <Icon name="settings" size={16} aria-hidden="true" />
-                      <span>{t.nav_settings}</span>
+                    <a href={workspaceLink.href} role="menuitem" className="lang-item account-item">
+                      <Icon name={workspaceLink.icon} size={16} aria-hidden="true" />
+                      <span>{workspaceLink.label}</span>
                     </a>
                     <button
                       type="button"

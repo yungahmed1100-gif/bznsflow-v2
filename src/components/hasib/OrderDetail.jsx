@@ -431,7 +431,10 @@ export function OrderDetail({
               </p>
             )}
           {order.linkedJobId && (
-            <a className="ld-button" href={`?tab=orders&job=${order.linkedJobId}`}>
+            <a
+              className="ld-button"
+              href={`?${new URLSearchParams({ tab: 'work', view: 'jobs', job: order.linkedJobId })}`}
+            >
               {h.ar ? 'حدّث الحالة في الأعمال' : 'Update status in Jobs'}
             </a>
           )}

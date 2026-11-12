@@ -11,6 +11,7 @@ import { ActivityList, PastConnections } from '../components/mcp/ActivityList';
 import { AREAS, CATEGORIES, DONE, ERRORS, activityName, isActive } from '../components/mcp/copy';
 import { keepPendingPolicy, readPendingPolicy } from '../components/mcp/pending-policy';
 import { cardKeys, originOf, placeFor } from '../components/mcp/origin';
+import { dashboardPath, homePath, localePath, otherLanguagePath, plansPath, signInPath } from '../lib/paths';
 const COPIED_MS = 2500;
 // While the owner is mid-connection (a new connection not yet verified, or an
 // approval waiting), the page follows along without a manual reload.
@@ -19,7 +20,6 @@ const REFRESH_GAP_MS = 1500;
 const ENDPOINT = 'https://www.bznsflowai.com/api/mcp';
 export default function McpConnections({ lang = 'ar' }) {
   const ar = lang === 'ar',
-    prefix = ar ? '' : '/en',
     tr = (en, arabic) => (ar ? arabic : en);
   const [endpoint, setEndpoint] = useState(ENDPOINT);
   const [account, setAccount] = useState(undefined),
@@ -49,7 +49,7 @@ export default function McpConnections({ lang = 'ar' }) {
     const timer = setTimeout(() => setCopied(''), COPIED_MS);
     return () => clearTimeout(timer);
   }, [copied]);
-  const signIn = `${prefix}/signin?next=${encodeURIComponent(`${prefix}/mcp`)}`;
+  const signIn = signInPath(lang, localePath(lang, '/mcp'));
   const message = code =>
     (ERRORS[code] || ['Could not complete this request. Please try again.', 'تعذّر إكمال الطلب. حاول مرة أخرى.'])[
       ar ? 1 : 0
@@ -207,7 +207,7 @@ export default function McpConnections({ lang = 'ar' }) {
       {error === 'fresh_sign_in_required' ? (
         <a href={`${signIn}&fresh=1`}>{tr('Verify account', 'التحقق من الحساب')}</a>
       ) : error === 'access_required' ? (
-        <a href={`${prefix || ''}/#tiers`}>{tr('See plans', 'اطّلع على الباقات')}</a>
+        <a href={plansPath(lang)}>{tr('See plans', 'اطّلع على الباقات')}</a>
       ) : (
         <button className="mcp-secondary" onClick={() => load().catch(() => setError('unavailable'))}>
           {tr('Try again', 'حاول مجددًا')}
@@ -254,13 +254,13 @@ export default function McpConnections({ lang = 'ar' }) {
   return (
     <main className="mcp-page" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
       <nav className="mcp-nav" aria-label={tr('Account navigation', 'روابط الحساب')}>
-        <Link to={prefix || '/'} className="mcp-brand">
+        <Link to={homePath(lang)} className="mcp-brand">
           <img src={BZNSFLOW_ICON} width="36" height="36" alt="" />
           BznsFlow
         </Link>
         <div>
-          <Link to={`${prefix}/layla/dashboard`}>{tr('My workspace', 'مساحة عملي')}</Link>
-          <Link to={`${ar ? '/en' : ''}/mcp`}>{ar ? 'English' : 'العربية'}</Link>
+          <Link to={dashboardPath(lang)}>{tr('My workspace', 'مساحة عملي')}</Link>
+          <Link to={otherLanguagePath(lang, '/mcp')}>{ar ? 'English' : 'العربية'}</Link>
         </div>
       </nav>
       <McpHero ar={ar} compact={!!consent || !!data?.approvals?.length} />
@@ -397,7 +397,7 @@ export default function McpConnections({ lang = 'ar' }) {
             'Claude وClaude Code من منتجات Anthropic، وCodex من منتجات OpenAI. تُستخدم الشعارات للتعريف بخيارات الاتصال ولا تعني اعتمادًا من هذه الشركات.',
           )}
         </p>
-        <Link to={`${prefix}/privacy`}>{tr('Privacy', 'الخصوصية')}</Link>
+        <Link to={localePath(lang, '/privacy')}>{tr('Privacy', 'الخصوصية')}</Link>
       </footer>
     </main>
   );

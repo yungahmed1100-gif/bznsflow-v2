@@ -4,7 +4,7 @@ import { initReveals } from '../lib/reveal';
 import { trackEvent } from '../lib/analytics';
 import { useExitIntent } from '../hooks/useExitIntent';
 import { useAccount } from '../hooks/useAccount';
-import { auditPath, WHATSAPP_URL, LANGUAGES } from '../lib/constants';
+import { WHATSAPP_URL, LANGUAGES } from '../lib/constants';
 import { setCookie, COOKIE } from '../lib/cookies';
 import { HOME_SEO, buildSchemas } from '../lib/schemas';
 import { TIERS, TIERS_AR } from '../data/tiers';
@@ -22,6 +22,7 @@ import { FAQSection } from '../components/sections/FAQSection';
 import { Footer } from '../components/layout/Footer';
 import { StickyMobileCTA } from '../components/ui/StickyMobileCTA';
 import { PlaybookModal } from '../components/ui/PlaybookModal';
+import { auditPath } from '../lib/paths';
 
 // ─── Home page ───────────────────────────────────────────────────────────────
 // `lang` is the locale of THIS prerendered route ('ar' at /, 'en' at /en).
@@ -125,10 +126,10 @@ export default function Home({ lang: routeLang = 'ar' }) {
       />
 
       <main id="main-content">
-        <HeroSection t={t} CALENDAR_URL={auditPath(lang)} trackEvent={trackEvent} />
+        <HeroSection t={t} auditHref={auditPath(lang)} trackEvent={trackEvent} />
         <ClientTape t={t} />
         <TiersSection t={t} tiers={activeTiers} lang={lang} trackEvent={trackEvent} />
-        <AboutSection t={t} CALENDAR_URL={auditPath(lang)} trackEvent={trackEvent} />
+        <AboutSection t={t} auditHref={auditPath(lang)} trackEvent={trackEvent} />
         <FAQSection t={t} trackEvent={trackEvent} />
         <SolutionsSection t={t} trackEvent={trackEvent} />
       </main>
@@ -136,12 +137,12 @@ export default function Home({ lang: routeLang = 'ar' }) {
       <Footer
         t={t}
         lang={lang}
-        CALENDAR_URL={auditPath(lang)}
+        auditHref={auditPath(lang)}
         WHATSAPP_URL={WHATSAPP_URL}
         onSmoothScroll={handleSmoothScroll}
       />
 
-      <StickyMobileCTA t={t} CALENDAR_URL={auditPath(lang)} trackEvent={trackEvent} />
+      <StickyMobileCTA t={t} auditHref={auditPath(lang)} trackEvent={trackEvent} />
 
       <ChatWidget t={t} lang={lang} trackEvent={trackEvent} onOpenChange={setIsChatOpen} />
 

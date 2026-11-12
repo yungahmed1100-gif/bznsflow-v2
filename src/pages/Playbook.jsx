@@ -3,8 +3,9 @@ import { Icon } from '../components/ui/Icon';
 import { PlaybookForm, PlaybookSuccess } from '../components/ui/PlaybookForm';
 import { getStrings } from '../i18n';
 import { trackEvent } from '../lib/analytics';
-import { auditPath, WHATSAPP_URL } from '../lib/constants';
+import { WHATSAPP_URL } from '../lib/constants';
 import '../styles/playbook.css';
+import { auditPath, homePath, localePath, otherLanguagePath } from '../lib/paths';
 
 // /playbook — the page an ad campaign can point at.
 //
@@ -37,7 +38,7 @@ export default function Playbook({ lang = 'ar' }) {
     <>
       <main className="pb-page" id="main-content">
         <header className="pb-nav">
-          <a className="pb-brand" href={ar ? '/' : '/en'}>
+          <a className="pb-brand" href={homePath(lang)}>
             <img src="/logo.png" alt="BznsFlow" width="36" height="36" />
             <span>BznsFlow</span>
           </a>
@@ -45,11 +46,11 @@ export default function Playbook({ lang = 'ar' }) {
             {/* Back to the site, landing on what it sells rather than the top of
                 the home page. Labelled with the same string the main nav uses
                 for that section, so the two agree and no new copy is invented. */}
-            <a className="pb-services" href={ar ? '/#solutions' : '/en#solutions'}>
+            <a className="pb-services" href={`${homePath(lang)}#solutions`}>
               <span>{t.nav_solution}</span>
               <Icon name="arrow-right" size={15} className="pb-services-arrow" aria-hidden="true" />
             </a>
-            <a className="pb-lang" href={ar ? '/en/playbook' : '/playbook'}>
+            <a className="pb-lang" href={otherLanguagePath(lang, '/playbook')}>
               <Icon name="globe" size={15} />
               <span>{ar ? 'English' : 'العربية'}</span>
             </a>
@@ -111,8 +112,8 @@ export default function Playbook({ lang = 'ar' }) {
         </article>
 
         <footer className="pb-foot">
-          <a href={ar ? '/privacy' : '/en/privacy'}>{t.footer_privacy}</a>
-          <a href={ar ? '/' : '/en'}>{t.auth_back}</a>
+          <a href={localePath(lang, '/privacy')}>{t.footer_privacy}</a>
+          <a href={homePath(lang)}>{t.auth_back}</a>
         </footer>
       </main>
     </>

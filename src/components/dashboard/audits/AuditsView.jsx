@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AUDIT_CLOSE, AUDIT_OPEN, AUDIT_SLOT_MIN } from '../../../../config/audit.js';
 import { INDUSTRIES } from '../../../lib/industries';
 import { loadAudits, updateAudit } from '../../../lib/dashboard/api';
+import { auditPath } from '../../../lib/paths';
 
 const HOUR = 3600000,
   DAY = 24 * HOUR,
@@ -138,7 +139,7 @@ export function AuditsView({ s }) {
             {data
               ? tr(`${data.upcoming} upcoming · booked at`, `${data.upcoming} قادمة · تُحجز من`)
               : tr('Booked at', 'تُحجز من')}{' '}
-            <a href={s.ar ? '/audit' : '/en/audit'} target="_blank" rel="noopener noreferrer" dir="ltr">
+            <a href={auditPath(s.lang)} target="_blank" rel="noopener noreferrer" dir="ltr">
               bznsflowai.com/audit
             </a>
           </p>

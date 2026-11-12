@@ -5,7 +5,7 @@ import { InstagramConnection } from '../components/dashboard/InstagramConnection
 import '../styles/layla-dashboard.css';
 import { ChannelSwitch } from '../components/dashboard/ChannelSwitch';
 import { createStrings } from '../lib/dashboard/strings';
-import { dashboardPath } from '../lib/dashboard/api';
+
 import logoImg from '../assets/logo_bznsflow.png';
 import '../styles/layla-onboarding.css';
 import { createSignupAttempt, signupOptions } from '../lib/layla-signup.js';
@@ -16,6 +16,7 @@ import { SaveAccountPanel } from '../components/onboarding/SaveAccountPanel.jsx'
 import { WhatsAppConnect } from '../components/onboarding/WhatsAppConnect.jsx';
 import { explain as explainReason, instagramReturnMessage } from '../lib/onboarding/explanations.js';
 import { revealStep } from '../lib/reveal-step.js';
+import { dashboardPath, homePath, localePath, otherLanguagePath, setupPath } from '../lib/paths';
 
 // Three steps, one primary action each: your business, connect a channel, live.
 // Ids are the saved journeyStep values; older saved steps (2, 3, 4) open the channels step.
@@ -24,13 +25,7 @@ const WHATSAPP_LIVE = ['connected', 'paused'];
 const REFRESH_INTERVAL_MS = 5000,
   REFRESH_ROUNDS = 36;
 
-export default function LaylaOnboarding({
-  lang = 'ar',
-  reviewMode = false,
-  embedded = false,
-  onStageChange,
-  onAccountChange,
-}) {
+export default function LaylaOnboarding({ lang = 'ar', embedded = false, onStageChange, onAccountChange }) {
   const ar = lang === 'ar';
   const tr = (en, arabic) => (ar ? arabic : en);
   const s = createStrings(lang);
@@ -116,7 +111,7 @@ export default function LaylaOnboarding({
       if (!result.ok) throw Error(result.reason);
       setData(null);
       setPrepared(null);
-      window.location.replace(`${ar ? '' : '/en'}/catalyst/setup`);
+      window.location.replace(setupPath(lang));
     });
   }
   const pending = useRef(null),
@@ -131,9 +126,8 @@ export default function LaylaOnboarding({
   }, [error]);
   const explain = reason => explainReason(reason, lang);
   async function request(body) {
-    const surface = reviewMode ? 'customer-review' : 'customer';
     // 60s: signup and website import both wait on Meta or a third-party site.
-    return callApi(`/api/layla-meta?surface=${surface}`, { body, csrf, timeout: 60000 });
+    return callApi('/api/layla-meta?surface=customer', { body, csrf, timeout: 60000 });
   }
   async function act(task) {
     if (actionBusy.current) return;
@@ -156,7 +150,7 @@ export default function LaylaOnboarding({
   function applyState(r) {
     if (leaving.current) return;
     // Returning from the dashboard sign-in: a saved, connected account goes straight back.
-    if (!reviewMode && new URLSearchParams(window.location.search).get('next') === 'dashboard') {
+    if (new URLSearchParams(window.location.search).get('next') === 'dashboard') {
       if (r.account && r.savedToAccount && ['connected', 'paused'].includes(r.integration?.status)) {
         leaving.current = true;
         window.location.replace(dashboardPath(lang));
@@ -186,24 +180,6 @@ export default function LaylaOnboarding({
   }
   useEffect(() => {
     let active = true;
-    if (reviewMode && window.location.hash.startsWith('#access=')) {
-      let access = window.location.hash.slice(8);
-      window.history.replaceState(null, '', window.location.pathname);
-      authRequest('session', { reviewAccess: access })
-        .then(() => window.location.replace(`${ar ? '' : '/en'}/catalyst/setup`))
-        .catch(() => {
-          if (active) {
-            setError(explain('review_access_invalid'));
-            setChecking(false);
-          }
-        })
-        .finally(() => {
-          access = undefined;
-        });
-      return () => {
-        active = false;
-      };
-    }
     request()
       .then(r => {
         if (active) applyState(r);
@@ -278,7 +254,6 @@ export default function LaylaOnboarding({
   const claimTried = useRef(false);
   useEffect(() => {
     if (
-      reviewMode ||
       claimTried.current ||
       busy ||
       checking ||
@@ -393,7 +368,7 @@ export default function LaylaOnboarding({
   const steps = { 0: tr('Your business', 'نشاطك التجاري'), 1: tr('Connect a channel', 'اربط قناة') };
   const walk = [steps[0], steps[1], tr('Layla is live', 'ليلى تعمل')];
   const currentPosition = step === 0 ? 0 : live ? 2 : 1;
-  const needsAccount = !reviewMode && !data?.savedToAccount;
+  const needsAccount = !data?.savedToAccount;
   const errorNote = error ? (
     <p ref={errorRef} tabIndex={-1} className="layla-error" role="alert">
       {error}
@@ -424,15 +399,15 @@ export default function LaylaOnboarding({
   return (
     <Container className={`layla-customer ${embedded ? 'setup-embedded' : ''}`} dir={ar ? 'rtl' : 'ltr'} lang={lang}>
       <header className="layla-customer-nav">
-        <a href={ar ? '/' : '/en'} aria-label="BznsFlow">
+        <a href={homePath(lang)} aria-label="BznsFlow">
           <img src={logoImg} alt="" width="40" height="40" />
           BznsFlow
         </a>
         <nav aria-label={tr('Page navigation', 'التنقل في الصفحة')}>
-          <a className="layla-back-home" href={ar ? '/' : '/en'}>
+          <a className="layla-back-home" href={homePath(lang)}>
             {tr('Back to main website', 'العودة إلى الموقع الرئيسي')}
           </a>
-          <a href={`${ar ? '/en' : ''}/${reviewMode ? 'layla/review' : 'catalyst/setup'}`} lang={ar ? 'en' : 'ar'}>
+          <a href={otherLanguagePath(lang, '/catalyst/setup')} lang={ar ? 'en' : 'ar'}>
             {ar ? 'English' : 'العربية'}
           </a>
         </nav>
@@ -541,7 +516,7 @@ export default function LaylaOnboarding({
               )}
               {needsAccount && !data?.account && <SaveAccountPanel {...saveProps} />}
               {needsAccount && !data?.account && errorNote}
-              {!needsAccount && !reviewMode && (
+              {!needsAccount && (
                 <InstagramConnection
                   lang={lang}
                   inSetup
@@ -557,7 +532,6 @@ export default function LaylaOnboarding({
                 data={data}
                 busy={busy}
                 available={available}
-                reviewMode={reviewMode}
                 prepared={prepared}
                 preparing={preparing}
                 finishing={finishing}
@@ -571,7 +545,7 @@ export default function LaylaOnboarding({
                 request={request}
                 applyState={applyState}
                 liveSwitch={
-                  !reviewMode && data?.savedToAccount ? (
+                  data?.savedToAccount ? (
                     <ChannelSwitch
                       s={s}
                       channel="whatsapp"
@@ -590,7 +564,7 @@ export default function LaylaOnboarding({
             </section>
           )}
           <footer className="layla-customer-footer">
-            <a href={ar ? '/privacy' : '/en/privacy'}>{tr('Privacy', 'الخصوصية')}</a>
+            <a href={localePath(lang, '/privacy')}>{tr('Privacy', 'الخصوصية')}</a>
             <a href="mailto:ahmed@bznsflowai.com">{tr('Need a hand?', 'تحتاج مساعدة؟')}</a>
           </footer>
         </div>

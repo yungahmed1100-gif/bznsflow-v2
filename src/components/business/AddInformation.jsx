@@ -4,6 +4,7 @@ import { sampleCsv } from '../../lib/dashboard/import.js';
 import { sampleStockCsv } from '../../lib/hasib/stockImport.js';
 import { download } from '../../lib/dashboard/exports.js';
 import { extractInformation } from '../../lib/information-import.js';
+import { dashboardPath } from '../../lib/paths';
 
 /** Reviewed knowledge never invokes stock, customer, service or money mutations. */
 export function AddInformation({ lang = 'ar', request: websiteRequest, operationalHref }) {
@@ -200,10 +201,10 @@ export function AddInformation({ lang = 'ar', request: websiteRequest, operation
               'استخدم مستورد العمليات المناسب لمراجعة الأعمدة والصفوف غير الصالحة والتكرار والأسعار. لا تنشئ ملفات معلومات ليلى سجلات تشغيلية.',
             )}
           </p>
-          <a className="layla-secondary" href={operationalHref || `${ar ? '' : '/en'}/layla/dashboard?tab=stock`}>
+          <a className="layla-secondary" href={operationalHref || dashboardPath(lang, { tab: 'stock' })}>
             {tr('Open stock and operational imports', 'فتح المخزون واستيراد العمليات')}
           </a>
-          <a className="layla-secondary" href={`${ar ? '' : '/en'}/layla/dashboard?tab=customers`}>
+          <a className="layla-secondary" href={dashboardPath(lang, { tab: 'customers' })}>
             {tr('Open customer import', 'فتح استيراد العملاء')}
           </a>
           <button

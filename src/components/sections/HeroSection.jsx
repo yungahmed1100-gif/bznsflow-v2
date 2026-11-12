@@ -221,7 +221,7 @@ function PipelineDiagram({ t }) {
   );
 }
 
-export function HeroSection({ t, trackEvent, CALENDAR_URL }) {
+export function HeroSection({ t, trackEvent, auditHref }) {
   const trustVerticals = [
     t.trackA_v1,
     t.trackA_v2,
@@ -293,19 +293,24 @@ export function HeroSection({ t, trackEvent, CALENDAR_URL }) {
             <p className="hero-caption">{t.hero_badge}</p>
 
             <div className="hero-ctas">
+              {/* Every audit button opens the booking page; WhatsApp is the support line beside it. */}
+              <a
+                href={auditHref}
+                className="btn btn-primary btn-large hero-primary-cta"
+                onClick={() => trackEvent('HeroCallClick')}
+              >
+                <Icon name="calendar" size={20} />
+                <span>{t.hero_cta_primary}</span>
+              </a>
               <a
                 href={waLink(t.wa_msg_hero)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-primary btn-large hero-wa-cta"
+                className="btn btn-ghost btn-large"
                 onClick={() => trackEvent('WhatsAppClick', { source: 'hero' })}
               >
-                <Icon name="whatsapp" size={20} />
-                <span>{t.hero_cta_primary}</span>
-              </a>
-              <a href={CALENDAR_URL} className="btn btn-ghost btn-large" onClick={() => trackEvent('HeroCallClick')}>
-                <Icon name="calendar" size={18} />
-                <span>{t.secondary_cta_call}</span>
+                <Icon name="whatsapp" size={18} />
+                <span>{t.wa_cta}</span>
               </a>
             </div>
 

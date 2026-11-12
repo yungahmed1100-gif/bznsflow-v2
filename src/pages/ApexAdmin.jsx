@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { APEX_STATUSES } from '../../config/apex.js';
 import '../styles/owner.css';
+import { homePath, localePath, otherLanguagePath, signInPath } from '../lib/paths';
 
 const STATUS = {
   new: ['New', 'جديد'],
@@ -28,7 +29,6 @@ const SYSTEMS = {
  */
 export default function ApexAdmin({ lang = 'en' }) {
   const ar = lang === 'ar',
-    prefix = ar ? '' : '/en',
     tr = (en, arabic) => (ar ? arabic : en);
   const [csrf, setCsrf] = useState('');
   const [data, setData] = useState(null);
@@ -88,17 +88,17 @@ export default function ApexAdmin({ lang = 'en' }) {
   return (
     <main className="owner-home owner-websites owner-apex" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
       <nav aria-label={tr('Administration links', 'روابط الإدارة')}>
-        <Link className="owner-brand" to={prefix || '/'}>
+        <Link className="owner-brand" to={homePath(lang)}>
           <img src="/logo.png" alt="" width="32" height="32" />
           BznsFlow
         </Link>
-        <Link to={`${ar ? '/en' : ''}/owner/apex`} lang={ar ? 'en' : 'ar'}>
+        <Link to={otherLanguagePath(lang, '/owner/apex')} lang={ar ? 'en' : 'ar'}>
           {ar ? 'English' : 'العربية'}
         </Link>
       </nav>
       <header className="owner-heading">
         <p>
-          <Link to={`${prefix}/owner`}>{tr('Admin dashboard', 'لوحة الإدارة')}</Link>
+          <Link to={localePath(lang, '/owner')}>{tr('Admin dashboard', 'لوحة الإدارة')}</Link>
         </p>
         <h1>{tr('Apex requests', 'طلبات أبيكس')}</h1>
         <p>
@@ -115,7 +115,7 @@ export default function ApexAdmin({ lang = 'en' }) {
         {status}
       </p>
       {!data && (
-        <Link className="owner-primary" to={`${prefix}/signin`}>
+        <Link className="owner-primary" to={signInPath(lang, localePath(lang, '/owner/apex'))}>
           {tr('Sign in', 'تسجيل الدخول')}
         </Link>
       )}

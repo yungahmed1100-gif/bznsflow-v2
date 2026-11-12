@@ -12,6 +12,7 @@ import harisPortrait from '../../assets/agents/haris.png';
 import rashidPortrait from '../../assets/agents/rashid.png';
 import hatifPortrait from '../../assets/agents/hatif.png';
 import raqibPortrait from '../../assets/agents/raqib.png';
+import { dashboardPath, localePath, setupPath } from '../../lib/paths';
 
 const agentPortraits = {
   layla: laylaPortrait,
@@ -128,7 +129,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
       .trim()
       .toLowerCase() === 'ahmed@bznsflowai.com';
   const canSetup = key => key === 'catalyst' && (owner || ['catalyst', 'ascend', 'apex'].includes(account?.accessPlan));
-  const setupHref = `${lang === 'ar' ? '' : '/en'}/catalyst/setup`;
+  const setupHref = setupPath(lang);
   const planMsg = name => (t.wa_msg_plan || 'Hi BznsFlow, I am interested in {plan}.').replace('{plan}', name);
   // Paying online: a signed-in account without the plan (Ascend also over Catalyst), or a paid holder
   // that can extend. Operator grants have no end date and are never billed online.
@@ -148,19 +149,19 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
     catalyst: { monthly: t.tier_pay_monthly, yearly: t.tier_pay_yearly },
     ascend: { monthly: t.tier_pay_ascend_monthly, yearly: t.tier_pay_ascend_yearly },
   };
-  const websiteHref = `${lang === 'ar' ? '' : '/en'}/layla/dashboard?tab=website`;
+  const websiteHref = dashboardPath(lang, { tab: 'website' });
   const link = tier => {
     // An Apex holder opens their workspace; everyone else sends a request.
     if (tier.byRequest && plan === 'apex')
       return {
-        href: `${lang === 'ar' ? '' : '/en'}/layla/dashboard`,
+        href: dashboardPath(lang),
         icon: 'arrow-right',
         label: t.tier_open_apex,
         event: 'SetupClick',
       };
     if (tier.byRequest)
       return {
-        href: `${lang === 'ar' ? '' : '/en'}/apex`,
+        href: localePath(lang, '/apex'),
         icon: 'arrow-right',
         label: tier.cta,
         event: 'ApexRequestClick',
@@ -168,7 +169,7 @@ export function TiersSection({ t, tiers = [], lang = 'ar', trackEvent }) {
     if (canSetup(tier.key)) return { href: setupHref, icon: 'arrow-right', label: t.tier_setup, event: 'SetupClick' };
     if (tier.key === 'ascend' && (owner || account?.accessPlan === 'ascend'))
       return {
-        href: `${lang === 'ar' ? '' : '/en'}/layla/dashboard?tab=settings&view=business`,
+        href: dashboardPath(lang, { tab: 'settings', view: 'business' }),
         icon: 'arrow-right',
         label: t.tier_setup_ascend,
         event: 'SetupClick',

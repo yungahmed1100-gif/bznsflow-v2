@@ -22,7 +22,6 @@ import {
   loadOverview,
   loadHasib,
   setHasibPreviewIndustry,
-  setupPath,
   DashboardError,
 } from '../lib/dashboard/api';
 import { createHasibStrings } from '../lib/hasib/strings';
@@ -79,6 +78,7 @@ import '../styles/hvac.css';
 import '../styles/sector-records.css';
 import '../styles/product.css';
 import '../styles/dashboard-polish.css';
+import { localePath, otherLanguagePath, plansPath, setupPath } from '../lib/paths';
 
 export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const [params, setParams] = useSearchParams();
@@ -178,7 +178,10 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const workflow = hasibOverview?.pack ? hasibPack(hasibOverview.pack.id).ownerUi.workflow : 'orders';
   const unavailable = overview.error?.reason === 'dashboard_unavailable';
   const founder = account?.email?.trim().toLowerCase() === 'ahmed@bznsflowai.com';
-  const langHref = `${s.ar ? '/en' : ''}${previewPack ? '/owner/preview/' + previewPack : '/layla/dashboard'}${params.toString() ? `?${params}` : ''}`;
+  // The dashboard's own home: the owner's sector preview is a dashboard of its own.
+  const homePage = previewPack ? `/owner/preview/${previewPack}` : '/layla/dashboard';
+  const query = params.toString() ? `?${params}` : '';
+  const langHref = otherLanguagePath(lang, `${homePage}${query}`);
 
   return (
     <div className="ld" dir={s.ar ? 'rtl' : 'ltr'} lang={lang}>
@@ -187,11 +190,11 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
       </a>
       <header className="ld-top">
         {!previewIndustry && (
-          <a className="ld-mcp-link" href={lang === 'ar' ? '/mcp' : '/en/mcp'}>
+          <a className="ld-mcp-link" href={localePath(lang, '/mcp')}>
             {s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections'}
           </a>
         )}
-        <a className="ld-brand" href={setupPath(lang)} aria-label="BznsFlow">
+        <a className="ld-brand" href={localePath(lang, homePage)} aria-label="BznsFlow">
           <img src={logoImg} alt="" width="32" height="32" />
           <span>BznsFlow</span>
         </a>
@@ -204,7 +207,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
           />
         )}
         {founder && (
-          <a className="ld-button ld-owner-access" href={s.ar ? '/owner' : '/en/owner'}>
+          <a className="ld-button ld-owner-access" href={localePath(lang, '/owner')}>
             {s.ar ? 'لوحة الإدارة' : 'Admin dashboard'}
           </a>
         )}
@@ -238,13 +241,13 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
             ...(!previewIndustry
               ? [
                   {
-                    href: lang === 'ar' ? '/mcp' : '/en/mcp',
+                    href: localePath(lang, '/mcp'),
                     label: s.ar ? 'اتصالات الذكاء الاصطناعي' : 'AI Connections',
                   },
                 ]
               : []),
             ...(founder
-              ? [{ href: s.ar ? '/owner' : '/en/owner', label: s.ar ? 'لوحة الإدارة' : 'Admin dashboard' }]
+              ? [{ href: localePath(lang, '/owner'), label: s.ar ? 'لوحة الإدارة' : 'Admin dashboard' }]
               : []),
           ]}
         />
@@ -273,7 +276,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
             <div className="ld-state" role="alert">
               <p>{s.reason(overview.error.reason)}</p>
               {overview.error.reason === 'access_required' ? (
-                <a className="ld-button ld-primary" href={s.ar ? '/' : '/en'}>
+                <a className="ld-button ld-primary" href={plansPath(lang)}>
                   {s.t('choosePlan')}
                 </a>
               ) : (

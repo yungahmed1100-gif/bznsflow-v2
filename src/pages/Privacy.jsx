@@ -3,6 +3,7 @@ import { Icon } from '../components/ui/Icon';
 import { getStrings } from '../i18n';
 import { PRIVACY, PRIVACY_UPDATED_ISO, privacyTables } from '../content/privacy';
 import '../styles/legal.css';
+import { homePath, otherLanguagePath } from '../lib/paths';
 
 // The privacy policy, rendered from src/content/privacy.js.
 //
@@ -100,11 +101,11 @@ export default function Privacy({ lang = 'ar' }) {
     <>
       <main className="legal-shell" id="main-content">
         <header className="legal-nav">
-          <a className="legal-brand" href={ar ? '/' : '/en'}>
+          <a className="legal-brand" href={homePath(lang)}>
             <img src="/logo.png" alt="BznsFlow" width="36" height="36" />
             <span>BznsFlow</span>
           </a>
-          <a className="legal-lang" href={ar ? '/en/privacy' : '/privacy'}>
+          <a className="legal-lang" href={otherLanguagePath(lang, '/privacy')}>
             <Icon name="globe" size={15} />
             <span>{ar ? 'English' : 'العربية'}</span>
           </a>
@@ -124,7 +125,7 @@ export default function Privacy({ lang = 'ar' }) {
           ))}
 
           <p className="legal-back">
-            <a href={ar ? '/' : '/en'}>{t.auth_back}</a>
+            <a href={homePath(lang)}>{t.auth_back}</a>
           </p>
         </article>
       </main>

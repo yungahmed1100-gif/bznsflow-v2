@@ -4,6 +4,7 @@ import { callApi } from '../lib/api-client.js';
 import '../styles/layla-dashboard.css';
 import '../styles/product.css';
 import '../styles/product-setup.css';
+import { dashboardPath, homePath, localePath, otherLanguagePath, plansPath, signInPath } from '../lib/paths';
 const Catalyst = lazy(() => import('./LaylaOnboarding'));
 // Catalyst's setup page. Ascend has none: its sector, imports, VAT and team are set inside its dashboard.
 const STEPS = [
@@ -14,7 +15,6 @@ const STEPS = [
 export default function ProductSetup({ lang = 'ar' }) {
   const product = 'catalyst';
   const ar = lang === 'ar',
-    prefix = ar ? '' : '/en',
     tr = (en, arabic) => (ar ? arabic : en);
   const [params] = useSearchParams();
   const [data, setData] = useState(null),
@@ -87,17 +87,17 @@ export default function ProductSetup({ lang = 'ar' }) {
   // Signed-out visitors get the embedded onboarding and its sign-in panel.
   const signedOut = error === 'sign_in_required';
   const denied = ['access_required', 'manager_required'].includes(error);
-  const dashboard = `${prefix}/layla/dashboard`;
+  const dashboard = dashboardPath(lang);
   return (
     <main className="product-setup ld-app" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
       <header className="setup-header">
-        <a className="setup-brand" href={prefix || '/'}>
+        <a className="setup-brand" href={homePath(lang)}>
           <img src="/logo.png" alt="" width="32" height="32" />
           BznsFlow
         </a>
         <nav aria-label={tr('Setup navigation', 'تنقل الإعداد')}>
           {data?.workspaceReady && <a href={dashboard}>{tr('Workspace', 'مساحة العمل')}</a>}
-          <a href={`${ar ? '/en' : ''}/${product}/setup`} lang={ar ? 'en' : 'ar'}>
+          <a href={otherLanguagePath(lang, `/${product}/setup`)} lang={ar ? 'en' : 'ar'}>
             {ar ? 'English' : 'العربية'}
           </a>
         </nav>
@@ -157,7 +157,7 @@ export default function ProductSetup({ lang = 'ar' }) {
                           )}
               </p>
               {error === 'access_required' ? (
-                <a className="ld-button ld-primary" href={prefix || '/'}>
+                <a className="ld-button ld-primary" href={plansPath(lang)}>
                   {tr('Choose a plan', 'اختر خطة')}
                 </a>
               ) : denied ? (
@@ -175,7 +175,10 @@ export default function ProductSetup({ lang = 'ar' }) {
                 'لديك حساب في BznsFlow؟ سجّل الدخول لمتابعة إعدادك المحفوظ.',
               )}{' '}
               <a
-                href={`${prefix}/signin?next=${encodeURIComponent(params.get('next') === 'dashboard' ? dashboard : `${prefix}/${product}/setup`)}`}
+                href={signInPath(
+                  lang,
+                  params.get('next') === 'dashboard' ? dashboard : localePath(lang, `/${product}/setup`),
+                )}
               >
                 {tr('Sign in', 'تسجيل الدخول')}
               </a>

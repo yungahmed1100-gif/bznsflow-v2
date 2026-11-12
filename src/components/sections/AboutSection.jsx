@@ -8,7 +8,7 @@ import teamImageAvif480 from '../../assets/team-operations-meeting-480.avif';
 import teamImageAvif960 from '../../assets/team-operations-meeting-960.avif';
 import teamImageAvif1536 from '../../assets/team-operations-meeting-1536.avif';
 
-export function AboutSection({ t, CALENDAR_URL, trackEvent }) {
+export function AboutSection({ t, auditHref, trackEvent }) {
   return (
     <section className="section" id="about">
       <div className="container">
@@ -81,19 +81,19 @@ export function AboutSection({ t, CALENDAR_URL, trackEvent }) {
             </div>
 
             <div className="about-ctas">
+              <a href={auditHref} className="btn btn-primary" onClick={() => trackEvent?.('AboutCallClick')}>
+                <Icon name="calendar" size={18} />
+                <span>{t.about_cta1}</span>
+              </a>
               <a
                 href={waLink(t.wa_msg_about)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-primary"
+                className="btn btn-ghost"
                 onClick={() => trackEvent?.('WhatsAppClick', { source: 'about' })}
               >
-                <Icon name="whatsapp" size={18} />
-                <span>{t.about_cta1}</span>
-              </a>
-              <a href={CALENDAR_URL} className="btn btn-ghost" onClick={() => trackEvent?.('AboutCallClick')}>
-                <Icon name="calendar" size={16} />
-                <span>{t.secondary_cta_call}</span>
+                <Icon name="whatsapp" size={16} />
+                <span>{t.wa_cta}</span>
               </a>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { INDUSTRIES } from '../lib/industries';
 import { AUDIT_SLOT_MIN } from '../../config/audit.js';
 import '../styles/legal.css';
 import '../styles/audit.css';
+import { homePath, otherLanguagePath } from '../lib/paths';
 
 const COPY = {
   en: {
@@ -177,11 +178,11 @@ export default function AuditBooking({ lang = 'ar' }) {
   return (
     <main className="legal-shell audit-shell" id="main-content" dir={ar ? 'rtl' : 'ltr'} lang={ar ? 'ar' : 'en'}>
       <header className="legal-nav">
-        <a className="legal-brand" href={ar ? '/' : '/en'}>
+        <a className="legal-brand" href={homePath(lang)}>
           <img src="/logo.png" alt="BznsFlow" width="36" height="36" />
           <span>BznsFlow</span>
         </a>
-        <a className="legal-lang" href={ar ? '/en/audit' : '/audit'} lang={ar ? 'en' : 'ar'}>
+        <a className="legal-lang" href={otherLanguagePath(lang, '/audit')} lang={ar ? 'en' : 'ar'}>
           <Icon name="globe" size={15} />
           <span>{ar ? 'English' : 'العربية'}</span>
         </a>
@@ -196,7 +197,7 @@ export default function AuditBooking({ lang = 'ar' }) {
             <p>
               {c.zone} {c.doneLead}
             </p>
-            <a className="btn btn-ghost" href={ar ? '/' : '/en'}>
+            <a className="btn btn-ghost" href={homePath(lang)}>
               {c.another}
             </a>
           </section>

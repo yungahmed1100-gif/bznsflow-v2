@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { hasibPack, livePackSummaries, industryCatalog } from '../../../config/hasib-packs';
 import { Dialog } from './Dialog';
 import { dashboardSearch } from '../../lib/dashboard/navigation';
+import { inPlace } from '../../lib/plain-click';
 
 // One icon per section, in the order the owner meets them.
 const ICONS = {
@@ -84,12 +85,10 @@ export function DashboardNav({
       href={`?${dashboardSearch(search, id)}`}
       {...{ [attr]: id }}
       aria-current={tab === id ? 'page' : undefined}
-      onClick={e => {
-        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-        e.preventDefault();
+      onClick={inPlace(() => {
         onSelect(id);
         setOpen(false);
-      }}
+      })}
     >
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
         <path d={ICONS[id]} fill="currentColor" />

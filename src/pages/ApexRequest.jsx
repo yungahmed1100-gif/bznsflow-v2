@@ -5,6 +5,7 @@ import { APEX_NEED_MAX } from '../../config/apex.js';
 import '../styles/legal.css';
 import '../styles/audit.css';
 import '../styles/apex.css';
+import { homePath, otherLanguagePath } from '../lib/paths';
 
 // Apex (Ahmed, 2026-10-27): custom enterprise solutions by request. A company names the agent functions it
 // needs; the request reaches Ahmed by email and in /owner/apex, and he scopes and quotes it. Same frame and
@@ -183,11 +184,11 @@ export default function ApexRequest({ lang = 'ar' }) {
   return (
     <main className="legal-shell audit-shell" id="main-content" dir={ar ? 'rtl' : 'ltr'} lang={ar ? 'ar' : 'en'}>
       <header className="legal-nav">
-        <a className="legal-brand" href={ar ? '/' : '/en'}>
+        <a className="legal-brand" href={homePath(lang)}>
           <img src="/logo.png" alt="BznsFlow" width="36" height="36" />
           <span>BznsFlow</span>
         </a>
-        <a className="legal-lang" href={ar ? '/en/apex' : '/apex'} lang={ar ? 'en' : 'ar'}>
+        <a className="legal-lang" href={otherLanguagePath(lang, '/apex')} lang={ar ? 'en' : 'ar'}>
           <Icon name="globe" size={15} />
           <span>{ar ? 'English' : 'العربية'}</span>
         </a>
@@ -202,7 +203,7 @@ export default function ApexRequest({ lang = 'ar' }) {
             <p>{c.doneLead}</p>
             <div className="apex-done-actions">
               {whatsapp}
-              <a className="btn btn-ghost" href={ar ? '/' : '/en'}>
+              <a className="btn btn-ghost" href={homePath(lang)}>
                 {c.home}
               </a>
             </div>

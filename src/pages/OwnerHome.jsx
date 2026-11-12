@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { livePackSummaries, isLivePack } from '../../config/hasib-packs';
 import LaylaDashboard from './LaylaDashboard';
 import '../styles/owner.css';
+import { dashboardPath, homePath, localePath, otherLanguagePath, setupPath, signInPath } from '../lib/paths';
 
 const WORK = {
   retail: ['Sales, fulfilment and stock', 'المبيعات والتسليم والمخزون'],
@@ -12,9 +13,13 @@ const WORK = {
   construction: ['Projects, procurement and receivables', 'المشاريع والمشتريات والمستحقات'],
   automotive: ['Approvals, workshop and collection', 'الموافقات والورشة والاستلام'],
   hvac: ['AC jobs, visits and maintenance contracts', 'أعمال التكييف والزيارات وعقود الصيانة'],
+  fitness: ['Members, classes and plans', 'الأعضاء والحصص والباقات'],
+  media: ['Productions, schedule and resources', 'الإنتاج والجدول والموارد'],
 };
 
 export function OwnerGate({ lang = 'en', children }) {
+  // Signing in comes back to this admin page (the admin home or a sector preview).
+  const { pathname } = useLocation();
   const [state, setState] = useState('loading');
   const ar = lang === 'ar';
   useEffect(() => {
@@ -47,7 +52,7 @@ export function OwnerGate({ lang = 'en', children }) {
     <main className="owner-home" dir={ar ? 'rtl' : 'ltr'}>
       <h1>{ar ? 'لوحة الإدارة' : 'Admin dashboard'}</h1>
       <p role="status">{text[state]}</p>
-      {state === 'signed-out' && <Link to={ar ? '/signin' : '/en/signin'}>{ar ? 'تسجيل الدخول' : 'Sign in'}</Link>}
+      {state === 'signed-out' && <Link to={signInPath(lang, pathname)}>{ar ? 'تسجيل الدخول' : 'Sign in'}</Link>}
     </main>
   );
 }
@@ -95,17 +100,17 @@ function SetupStatus({ lang }) {
 }
 
 export default function OwnerHome({ lang = 'ar' }) {
-  const ar = lang === 'ar',
-    prefix = ar ? '' : '/en';
+  const previews = livePackSummaries();
+  const ar = lang === 'ar';
   return (
     <OwnerGate lang={lang}>
       <main className="owner-home" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
         <nav aria-label={ar ? 'روابط الإدارة' : 'Administration links'}>
-          <Link className="owner-brand" to={prefix || '/'}>
+          <Link className="owner-brand" to={homePath(lang)}>
             <img src="/logo.png" alt="" width="32" height="32" />
             BznsFlow
           </Link>
-          <Link to={`${ar ? '/en' : ''}/owner`} lang={ar ? 'en' : 'ar'}>
+          <Link to={otherLanguagePath(lang, '/owner')} lang={ar ? 'en' : 'ar'}>
             {ar ? 'English' : 'العربية'}
           </Link>
         </nav>
@@ -125,11 +130,11 @@ export default function OwnerHome({ lang = 'ar' }) {
               <span className="owner-label">{ar ? 'بيانات حقيقية' : 'Real workspace'}</span>
             </div>
             <SetupStatus lang={lang} />
-            <Link className="owner-primary" to={`${prefix}/layla/dashboard`}>
+            <Link className="owner-primary" to={dashboardPath(lang)}>
               {ar ? 'فتح نشاطي' : 'Open my business'} <span aria-hidden="true">{ar ? '←' : '→'}</span>
             </Link>
             <div className="owner-setup-links">
-              <Link to={`${prefix}/catalyst/setup`}>{ar ? 'إعداد Catalyst وليلى' : 'Set up Catalyst & Layla'}</Link>
+              <Link to={setupPath(lang)}>{ar ? 'إعداد Catalyst وليلى' : 'Set up Catalyst & Layla'}</Link>
             </div>
           </section>
           <section>
@@ -137,7 +142,7 @@ export default function OwnerHome({ lang = 'ar' }) {
             <p>
               {ar ? 'منح وإلغاء صلاحيات Catalyst وAscend وApex.' : 'Grant and revoke Catalyst, Ascend and Apex access.'}
             </p>
-            <Link className="owner-secondary" to={`${prefix}/owner/access`}>
+            <Link className="owner-secondary" to={localePath(lang, '/owner/access')}>
               {ar ? 'إدارة الوصول' : 'Manage product access'}
             </Link>
           </section>
@@ -148,7 +153,7 @@ export default function OwnerHome({ lang = 'ar' }) {
                 ? 'طلبات مواقع أسيند ومواعيد تسليمها خلال 3 أيام عمل.'
                 : 'Ascend website briefs and their 3-business-day delivery.'}
             </p>
-            <Link className="owner-secondary" to={`${prefix}/owner/websites`}>
+            <Link className="owner-secondary" to={localePath(lang, '/owner/websites')}>
               {ar ? 'قائمة المواقع' : 'Website queue'}
             </Link>
           </section>
@@ -159,14 +164,14 @@ export default function OwnerHome({ lang = 'ar' }) {
                 ? 'طلبات الشركات للحلول المخصّصة: المهام والأنظمة، للتحديد والتسعير.'
                 : 'Custom enterprise requests: the functions and systems, to scope and quote.'}
             </p>
-            <Link className="owner-secondary" to={`${prefix}/owner/apex`}>
+            <Link className="owner-secondary" to={localePath(lang, '/owner/apex')}>
               {ar ? 'قائمة الطلبات' : 'Request queue'}
             </Link>
           </section>
         </div>
         <section className="owner-previews">
           <div className="owner-section-heading">
-            <h2>{ar ? 'معاينات القطاعات الستة' : 'Six live sector previews'}</h2>
+            <h2>{ar ? `معاينات القطاعات (${previews.length})` : `Live sector previews (${previews.length})`}</h2>
             <span className="owner-label">{ar ? 'بيانات تجريبية · للقراءة فقط' : 'Sample data · Read only'}</span>
           </div>
           <p>
@@ -175,10 +180,10 @@ export default function OwnerHome({ lang = 'ar' }) {
               : 'Open a separate sample workspace to review each sector’s workflows.'}
           </p>
           <div className="owner-cards">
-            {livePackSummaries().map((pack, i) => (
-              <Link key={pack.id} to={`${prefix}/owner/preview/${pack.id}`}>
+            {previews.map((pack, i) => (
+              <Link key={pack.id} to={localePath(lang, `/owner/preview/${pack.id}`)}>
                 <span className="owner-sector-number" aria-hidden="true">
-                  0{i + 1}
+                  {String(i + 1).padStart(2, '0')}
                 </span>
                 <span>
                   <strong>{ar ? pack.ar : pack.en}</strong>

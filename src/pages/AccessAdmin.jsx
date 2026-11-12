@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { livePackSummaries } from '../../config/hasib-packs';
 import '../styles/owner.css';
+import { homePath, localePath, otherLanguagePath, signInPath } from '../lib/paths';
 
 const labels = {
   catalyst: ['Catalyst · Layla only', 'كاتاليست · ليلى فقط'],
@@ -11,7 +12,6 @@ const labels = {
 
 export default function AccessAdmin({ lang = 'en' }) {
   const ar = lang === 'ar',
-    prefix = ar ? '' : '/en',
     tr = (en, arabic) => (ar ? arabic : en);
   const [authorized, setAuthorized] = useState(false);
   const [packId, setPackId] = useState('');
@@ -94,17 +94,17 @@ export default function AccessAdmin({ lang = 'en' }) {
   return (
     <main className="owner-home owner-access" dir={ar ? 'rtl' : 'ltr'} lang={lang}>
       <nav aria-label={tr('Administration links', 'روابط الإدارة')}>
-        <Link className="owner-brand" to={prefix || '/'}>
+        <Link className="owner-brand" to={homePath(lang)}>
           <img src="/logo.png" alt="" width="32" height="32" />
           BznsFlow
         </Link>
-        <Link to={`${ar ? '/en' : ''}/owner/access`} lang={ar ? 'en' : 'ar'}>
+        <Link to={otherLanguagePath(lang, '/owner/access')} lang={ar ? 'en' : 'ar'}>
           {ar ? 'English' : 'العربية'}
         </Link>
       </nav>
       <header className="owner-heading">
         <p>
-          <Link to={`${prefix}/owner`}>{tr('Admin dashboard', 'لوحة الإدارة')}</Link>
+          <Link to={localePath(lang, '/owner')}>{tr('Admin dashboard', 'لوحة الإدارة')}</Link>
         </p>
         <h1>{tr('Product access', 'صلاحيات المنتجات')}</h1>
         <p>
@@ -211,7 +211,7 @@ export default function AccessAdmin({ lang = 'en' }) {
         {status}
       </p>
       {!authorized && (
-        <Link className="owner-primary" to={`${prefix}/signin`}>
+        <Link className="owner-primary" to={signInPath(lang, localePath(lang, '/owner/access'))}>
           {tr('Sign in', 'تسجيل الدخول')}
         </Link>
       )}

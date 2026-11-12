@@ -2,6 +2,7 @@ import React from 'react';
 import { Icon } from './Icon';
 import { getStrings } from '../../i18n';
 import '../../styles/legal.css';
+import { homePath, localePath, otherLanguagePath } from '../../lib/paths';
 
 // Shared shell for public information and legal pages.
 //
@@ -99,11 +100,11 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
     <>
       <main className="legal-shell" id="main-content">
         <header className="legal-nav">
-          <a className="legal-brand" href={ar ? '/' : '/en'}>
+          <a className="legal-brand" href={homePath(lang)}>
             <img src="/logo.png" alt="BznsFlow" width="36" height="36" />
             <span>BznsFlow</span>
           </a>
-          <a className="legal-lang" href={ar ? `/en${path}` : path}>
+          <a className="legal-lang" href={otherLanguagePath(lang, path)}>
             <Icon name="globe" size={15} />
             <span>{ar ? 'English' : 'العربية'}</span>
           </a>
@@ -130,7 +131,7 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
             ]
               .filter(([href]) => href !== path)
               .map(([href, label]) => (
-                <a key={href} href={ar ? href : `/en${href}`}>
+                <a key={href} href={localePath(lang, href)}>
                   {label}
                 </a>
               ))}
@@ -146,13 +147,13 @@ export function LegalPage({ lang = 'ar', path, doc, updatedIso, tables = {} }) {
               .map(([href, label], index) => (
                 <React.Fragment key={href}>
                   {index > 0 && ' · '}
-                  <a href={ar ? href : `/en${href}`}>{label}</a>
+                  <a href={localePath(lang, href)}>{label}</a>
                 </React.Fragment>
               ))}
           </nav>
 
           <p className="legal-back">
-            <a href={ar ? '/' : '/en'}>{t.auth_back}</a>
+            <a href={homePath(lang)}>{t.auth_back}</a>
           </p>
         </article>
       </main>

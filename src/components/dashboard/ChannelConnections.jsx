@@ -3,9 +3,10 @@ import { instagramReturnMessage } from '../../lib/onboarding/explanations.js';
 import { InstagramConnection } from './InstagramConnection';
 import { ChannelSwitch } from './ChannelSwitch';
 import { BrandMark } from '../ui/BrandMark';
-import { messaging, setupPath } from '../../lib/dashboard/api';
+import { messaging } from '../../lib/dashboard/api';
 import { channelsFrom } from '../../lib/dashboard/channels';
 import { formatPhone } from '../../lib/dashboard/phone';
+import { setupPath } from '../../lib/paths';
 
 /** Settings → Channels: one card per channel, each with its own Layla switch. */
 export function ChannelConnections({ s, data, onChange }) {

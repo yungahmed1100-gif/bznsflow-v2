@@ -36,8 +36,6 @@ export const loadRasil = () => call('rasil');
 export const rasil = (action, body = {}, options) => call('rasil', { action, ...body }, options);
 export const messagingState = (channel = 'whatsapp') =>
   call('messaging', undefined, { query: channel === 'instagram' ? { channel } : {} });
-export const dashboardPath = lang => `${lang === 'ar' ? '' : '/en'}/layla/dashboard`;
-export const setupPath = (lang, next) => `${lang === 'ar' ? '' : '/en'}/catalyst/setup${next ? `?next=${next}` : ''}`;
 /** Hasib (orders, stock, payments) shares this client's session and CSRF token. */
 let hasibPreviewIndustry = '';
 export const setHasibPreviewIndustry = value => {

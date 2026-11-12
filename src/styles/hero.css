@@ -67,8 +67,8 @@
   align-items: center;
 }
 
-/* WhatsApp secondary CTA in hero */
-.hero-wa-cta {
+/* The hero's primary call to action: the free audit, with its icon */
+.hero-primary-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;

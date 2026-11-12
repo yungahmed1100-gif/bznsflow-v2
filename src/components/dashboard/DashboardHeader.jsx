@@ -1,9 +1,11 @@
 import React from 'react';
-import { messaging, setupPath, DashboardError } from '../../lib/dashboard/api';
+import { messaging, DashboardError } from '../../lib/dashboard/api';
 import { channelName, channelsFrom, masterState, needsAttention, setAll } from '../../lib/dashboard/channels';
 import { formatPhone } from '../../lib/dashboard/phone';
 import { formatDateTime } from '../../lib/dashboard/format';
 import { LaylaSwitch } from './LaylaSwitch';
+import { setupPath } from '../../lib/paths';
+import { isPlainClick } from '../../lib/plain-click';
 
 /** Layla's master switch and one health signal for every connected channel, always visible. */
 export function DashboardHeader({ s, data, onChange, onOpenChannels }) {
@@ -62,7 +64,7 @@ export function DashboardHeader({ s, data, onChange, onOpenChannels }) {
                     href: '?tab=settings&view=channels',
                     onClick: e => {
                       // A plain click stays in the app, like the section links; modified clicks open a tab.
-                      if (!onOpenChannels || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                      if (!onOpenChannels || !isPlainClick(e)) return;
                       e.preventDefault();
                       onOpenChannels();
                     },

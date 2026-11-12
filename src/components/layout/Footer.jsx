@@ -1,8 +1,9 @@
 import React from 'react';
 import { Icon } from '../ui/Icon';
 import { MetaVerified } from '../ui/MetaVerified';
+import { localePath } from '../../lib/paths';
 
-export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) {
+export function Footer({ t, lang, auditHref, WHATSAPP_URL, onSmoothScroll }) {
   return (
     <>
       <footer className="footer" id="footer">
@@ -47,19 +48,15 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
                   </a>
                 </li>
                 <li>
-                  <a href={lang === 'en' ? '/en/services' : '/services'}>
-                    {lang === 'en' ? 'Service Scope' : 'نطاق الخدمات'}
-                  </a>
+                  <a href={localePath(lang, '/services')}>{lang === 'en' ? 'Service Scope' : 'نطاق الخدمات'}</a>
                 </li>
                 <li>
-                  <a href={lang === 'en' ? '/en/contact' : '/contact'}>
+                  <a href={localePath(lang, '/contact')}>
                     {lang === 'en' ? 'Company & Contact' : 'عن الشركة والتواصل'}
                   </a>
                 </li>
                 <li>
-                  <a href={lang === 'en' ? '/en/support' : '/support'}>
-                    {lang === 'en' ? 'Help & Support' : 'المساعدة والدعم'}
-                  </a>
+                  <a href={localePath(lang, '/support')}>{lang === 'en' ? 'Help & Support' : 'المساعدة والدعم'}</a>
                 </li>
               </ul>
             </div>
@@ -114,7 +111,7 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
                 </li>
                 <li>
                   <Icon name="calendar" size={15} />
-                  <a href={CALENDAR_URL}>{t.footer_book}</a>
+                  <a href={auditHref}>{t.footer_book}</a>
                 </li>
               </ul>
             </div>
@@ -123,11 +120,9 @@ export function Footer({ t, lang, CALENDAR_URL, WHATSAPP_URL, onSmoothScroll }) 
           <div className="footer-bottom">
             <p className="footer-copy">{t.footer_copy.replace(/©\s*\d{4}/, `© ${new Date().getFullYear()}`)}</p>
             <nav className="footer-legal" aria-label={lang === 'en' ? 'Policies' : 'السياسات'}>
-              <a href={lang === 'en' ? '/en/privacy' : '/privacy'}>{t.footer_privacy}</a>
-              <a href={lang === 'en' ? '/en/refund' : '/refund'}>
-                {lang === 'en' ? 'Refund Policy' : 'سياسة الاسترداد'}
-              </a>
-              <a href={lang === 'en' ? '/en/terms' : '/terms'}>{lang === 'en' ? 'Terms of Service' : 'شروط الخدمة'}</a>
+              <a href={localePath(lang, '/privacy')}>{t.footer_privacy}</a>
+              <a href={localePath(lang, '/refund')}>{lang === 'en' ? 'Refund Policy' : 'سياسة الاسترداد'}</a>
+              <a href={localePath(lang, '/terms')}>{lang === 'en' ? 'Terms of Service' : 'شروط الخدمة'}</a>
             </nav>
           </div>
         </div>

@@ -9,6 +9,8 @@ import { CompactChats, CompactBroadcasts, CompactBrain, CompactChannels } from '
 import logo from '../../assets/logo_bznsflow.png';
 import { customers, DRAFT_PACKS, draftMessage, MODES, pair, seedDraft, STATUS } from './data';
 import '../../styles/layla-dashboard.css';
+import { otherLanguagePath } from '../../lib/paths';
+import { inPlace } from '../../lib/plain-click';
 import '../../styles/product.css';
 import './draft.css';
 
@@ -303,7 +305,7 @@ function Workspace({ lang, industry, tab, view, params, navigate }) {
         <span className="ad-preview-tag">
           <span /> {tr('Local draft · sample data', 'مسودة محلية · بيانات تجريبية')}
         </span>
-        <a className="ld-lang" href={`${ar ? '/en' : ''}/owner/ascend-draft?${params}`} lang={ar ? 'en' : 'ar'}>
+        <a className="ld-lang" href={otherLanguagePath(lang, `/owner/ascend-draft?${params}`)} lang={ar ? 'en' : 'ar'}>
           {ar ? 'English' : 'العربية'}
         </a>
         <span className="ad-avatar ad-owner-avatar">A</span>
@@ -341,13 +343,11 @@ function Workspace({ lang, industry, tab, view, params, navigate }) {
               <a
                 href={`?${new URLSearchParams({ industry, tab: id, ...(sectionViews[id] ? { view: sectionViews[id][0] } : {}) })}`}
                 aria-current={tab === id ? 'page' : undefined}
-                onClick={e => {
-                  if (e.metaKey || e.ctrlKey) return;
-                  e.preventDefault();
+                onClick={inPlace(() => {
                   navigate({ tab: id });
                   setNotice('');
                   if (menuOpen) document.getElementById('draft-main')?.focus();
-                }}
+                })}
               >
                 <Icon name={id} />
                 <span>{titles[id]}</span>
@@ -422,11 +422,7 @@ function Workspace({ lang, industry, tab, view, params, navigate }) {
                     key={v}
                     href={`?${new URLSearchParams({ industry, tab, view: v })}`}
                     aria-current={view === v ? 'page' : undefined}
-                    onClick={e => {
-                      if (e.metaKey || e.ctrlKey) return;
-                      e.preventDefault();
-                      navigate({ tab, view: v });
-                    }}
+                    onClick={inPlace(() => navigate({ tab, view: v }))}
                   >
                     {viewNames[v]}
                   </a>

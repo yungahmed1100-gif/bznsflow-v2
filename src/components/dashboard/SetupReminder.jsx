@@ -1,4 +1,5 @@
 import React from 'react';
+import { inPlace } from '../../lib/plain-click';
 
 /**
  * What a live Catalyst owner still has to add: services and prices, and a team contact.
@@ -28,11 +29,7 @@ export function SetupReminder({ s, setup, onGo }) {
           <li key={item.id}>
             <a
               href={`?tab=settings&view=brain&part=${item.id === 'services' ? 'catalog' : 'bzns'}`}
-              onClick={e => {
-                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-                e.preventDefault();
-                item.go();
-              }}
+              onClick={inPlace(() => item.go())}
             >
               {item.label}
             </a>

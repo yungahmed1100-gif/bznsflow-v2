@@ -19,7 +19,7 @@ const CAPPED = {
   'convex/hasib/workflowSchema.ts': 865,
   'convex/rasilState.js': 889,
   'convex/schema.ts': 1692,
-  'src/components/ascend-draft/AscendDraft.jsx': 984,
+  'src/components/ascend-draft/AscendDraft.jsx': 980,
   'src/components/ascend-draft/draft.css': 1750,
   'src/components/hasib/AutomotiveDashboard.jsx': 1225,
   'src/components/hasib/ConstructionDashboard.jsx': 1338,

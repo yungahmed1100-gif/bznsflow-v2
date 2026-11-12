@@ -4,6 +4,7 @@ export default {
   nav_about: 'لماذا نحن',
   nav_signin: 'تسجيل الدخول',
   nav_settings: 'الإعدادات',
+  nav_workspace: 'مساحة عملي',
   nav_account: 'حسابك',
   skip_to_content: 'تخطَّ إلى المحتوى الرئيسي',
   lang_label: 'اختر اللغة',
@@ -133,7 +134,6 @@ export default {
   wa_msg_faq: 'مرحباً BznsFlow — لدي سؤال سريع قبل أن نبدأ.',
   wa_msg_about: 'مرحباً BznsFlow — أريد أن أعرف كيف ستجهّزون هذا لأعمالي.',
   wa_cta: 'تواصل عبر واتساب',
-  secondary_cta_call: 'احجز مكالمة بدلاً من ذلك',
 
   sol_title: 'مشاريع بنطاق مستقل <span class="mark">خارج كاتاليست</span>',
   sol_sub: 'لكل مشروع نطاق وعرض سعر مكتوب. أخبرنا بالمشكلة، ونخبرك بما سنبنيه.',

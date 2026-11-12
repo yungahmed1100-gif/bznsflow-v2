@@ -4,11 +4,12 @@ import { BrandMark } from '../components/ui/BrandMark';
 import { getStrings } from '../i18n';
 import { INDUSTRIES } from '../lib/industries';
 import { countryOptions } from '../lib/countries';
-import { auditPath, WHATSAPP_URL } from '../lib/constants';
+import { WHATSAPP_URL } from '../lib/constants';
 import { NEXT_PATH, signinDestination } from '../../config/signin-destination.js';
 import { revealStep } from '../lib/reveal-step.js';
 import { OAUTH_ERRORS } from '../lib/auth/oauth-errors.js';
 import '../styles/auth.css';
+import { auditPath, homePath, otherLanguagePath } from '../lib/paths';
 
 // Passwordless sign-in: email -> six-digit code -> (new accounts only) profile.
 //
@@ -354,11 +355,11 @@ export default function SignIn({ lang = 'ar' }) {
     <>
       <main className="auth-shell" id="main-content">
         <header className="auth-nav">
-          <a className="auth-brand" href={ar ? '/' : '/en'}>
+          <a className="auth-brand" href={homePath(lang)}>
             <img src="/logo.png" alt="BznsFlow" width="40" height="40" />
             <span>BznsFlow</span>
           </a>
-          <a className="auth-lang" href={ar ? '/en/signin' : '/signin'}>
+          <a className="auth-lang" href={otherLanguagePath(lang, '/signin')}>
             <Icon name="globe" size={15} />
             <span>{ar ? 'English' : 'العربية'}</span>
           </a>
@@ -643,7 +644,7 @@ export default function SignIn({ lang = 'ar' }) {
                 <button type="button" className="auth-link" onClick={signOut} disabled={busy}>
                   {t.auth_signout}
                 </button>
-                <a className="auth-link" href={ar ? '/' : '/en'}>
+                <a className="auth-link" href={homePath(lang)}>
                   {t.auth_back}
                 </a>
               </div>

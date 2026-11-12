@@ -10,9 +10,9 @@ import { SwitchToBusiness } from './SwitchToBusiness.jsx';
 const PATHS = ['coexistence', 'new_number'];
 
 /** Everything the customer must have before Meta's window can open, in order. */
-export function whatsappRequirements({ data, available, reviewMode }) {
+export function whatsappRequirements({ data, available }) {
   return [
-    ['account', reviewMode || !!data?.savedToAccount],
+    ['account', !!data?.savedToAccount],
     ['contact', !!(data?.profile?.humanContact || data?.profile?.handoffMode === 'inbox')],
     ['meta', !!available],
   ];
@@ -50,7 +50,6 @@ export function WhatsAppConnect({
   data,
   busy,
   available,
-  reviewMode,
   prepared,
   preparing,
   finishing = false,
@@ -66,7 +65,7 @@ export function WhatsAppConnect({
 }) {
   const [pin, setPin] = useState('');
   const phoneOnly = usePhoneOnly();
-  const requirements = whatsappRequirements({ data, available, reviewMode });
+  const requirements = whatsappRequirements({ data, available });
   const ready = requirements.every(([, ok]) => ok);
   const labels = {
     account: tr('Setup saved to your account', 'الإعداد محفوظ في حسابك'),

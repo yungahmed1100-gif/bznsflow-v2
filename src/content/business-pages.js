@@ -1,11 +1,12 @@
+import { localePath } from '../lib/paths';
+
 // Public service information. Legal identity and standard support/billing details
 // require the owner's confirmation before release; do not infer them from service area.
 export const BUSINESS_PAGES_UPDATED_ISO = '2026-10-12';
 const email = 'ahmed@bznsflowai.com';
 const whatsapp = 'https://wa.me/201036755930';
-const pathFor = (path, lang) => `${lang === 'en' ? '/en' : ''}${path}`;
 const emailLink = (label, subject) => ({ label, href: `mailto:${email}?subject=${encodeURIComponent(subject)}` });
-const pageLink = (label, path, lang) => ({ label, href: pathFor(path, lang) });
+const pageLink = (label, path, lang) => ({ label, href: localePath(lang, path) });
 
 export const BUSINESS_PAGES = {
   contact: {

@@ -40,3 +40,31 @@ test('only the known pages can be resumed', () => {
   for (const next of ['/en/', '/enx', '/en?x=1', '/\\evil.example'])
     assert.equal(signinDestination({ account: granted, lang: 'ar', next }), '/layla/dashboard', next);
 });
+
+test('the admin pages are resumed after sign-in, in either language', () => {
+  for (const next of [
+    '/owner',
+    '/en/owner',
+    '/owner/access',
+    '/en/owner/websites',
+    '/owner/apex',
+    '/en/owner/preview/real-estate',
+  ])
+    assert.equal(signinDestination({ account: granted, lang: 'ar', next }), next, next);
+});
+
+test('nothing that only resembles an admin page is resumed', () => {
+  for (const next of [
+    '/owner/',
+    '/owners',
+    '/owner/unknown',
+    '/owner/preview',
+    '/owner/preview/../../evil',
+    '/owner/preview/retail/extra',
+    '/owner/preview/Retail',
+    '/owner//evil.example',
+    '/owner/access?x=1',
+    '/en/owner/preview/%2e%2e',
+  ])
+    assert.equal(signinDestination({ account: granted, lang: 'ar', next }), '/layla/dashboard', next);
+});

@@ -5,6 +5,7 @@ export default {
   nav_about: 'Why Us',
   nav_signin: 'Sign in',
   nav_settings: 'Settings',
+  nav_workspace: 'My workspace',
   nav_account: 'Your account',
   skip_to_content: 'Skip to main content',
   lang_label: 'Choose language',
@@ -134,7 +135,6 @@ export default {
   wa_msg_faq: 'Hi BznsFlow, I have a quick question before we start.',
   wa_msg_about: "Hi BznsFlow, I'd like to learn how you'd set this up for my business.",
   wa_cta: 'Chat on WhatsApp',
-  secondary_cta_call: 'Book it as a call',
 
   sol_title: 'Scoped projects <span class="mark">beyond Catalyst</span>',
   sol_sub: 'Separately scoped and quoted in writing. Tell us the problem; we will tell you what we would build.',

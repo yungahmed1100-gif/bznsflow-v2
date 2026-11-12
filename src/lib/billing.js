@@ -1,6 +1,7 @@
 // Online payment: ask the server for a Paymob checkout, then leave for it.
 // The server names the amount; the browser only says which plan, monthly or yearly, and Ascend's industry.
 import { ApiError, callApi } from './api-client.js';
+import { homePath, signInPath } from './paths';
 
 /**
  * @param {'catalyst'|'ascend'} plan @param {'monthly'|'yearly'} interval @param {'ar'|'en'} lang
@@ -70,6 +71,5 @@ export function takeCheckout(plan) {
 
 /** Leave for sign-in, coming back to the plans. */
 export function signInToPay(lang) {
-  const home = lang === 'ar' ? '/' : '/en';
-  window.location.assign(`${lang === 'ar' ? '' : '/en'}/signin?next=${encodeURIComponent(home)}`);
+  window.location.assign(signInPath(lang, homePath(lang)));
 }
