@@ -1,1302 +1,338 @@
 // Explicit reviewed execution policy for every current Hasib operation.
-export const HASIB_POLICY = {
-  adiba_offer: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  adiba_offer_accept_record: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  adiba_offer_approve: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  adiba_offer_price: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  adiba_offer_withdraw: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  adiba_offers: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_appointment_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_appointment_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_appointments: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_approval_record: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_bay_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_bays: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_contacts: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_context: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_draft_approve: {
-    category: 'messages',
-    disposition: 'tool',
-  },
-  automotive_estimate_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  automotive_estimate_status: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  automotive_estimates: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_experience_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_followups: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_insights: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_inspection_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_labor_entries: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_labor_start: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_labor_stop: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_overview: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_part_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  automotive_part_status: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  automotive_parts: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_quality_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_request_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_request_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_requests: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_service_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  automotive_services: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_task_resolve: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_task_snooze: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_vehicle_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_vehicles: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_work_order: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  automotive_work_order_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  automotive_work_order_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  automotive_work_orders: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  baking_suggestions: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  batch_create: {
-    category: 'bulk',
-    disposition: 'tool',
-  },
-  booking_create: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  booking_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  booking_update: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  bookings: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  clinic_experience_save: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_governance: {
-    category: 'read',
-    disposition: 'unavailable',
-  },
-  clinic_governance_update: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_insights: {
-    category: 'read',
-    disposition: 'unavailable',
-  },
-  clinic_metric_snapshot: {
-    category: 'read',
-    disposition: 'unavailable',
-  },
-  clinic_notification_queue: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_notification_resolve: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_notification_retry: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_notifications: {
-    category: 'read',
-    disposition: 'unavailable',
-  },
-  clinic_overview: {
-    category: 'read',
-    disposition: 'unavailable',
-  },
-  clinic_patient_summary: {
-    category: 'read',
-    disposition: 'unavailable',
-  },
-  clinic_preference_update: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_preferences: {
-    category: 'read',
-    disposition: 'unavailable',
-  },
-  clinic_request_assign: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_request_book: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_request_decline: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_request_save: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_request_withdraw: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_requests: {
-    category: 'read',
-    disposition: 'unavailable',
-  },
-  clinic_task_resolve: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_tasks: {
-    category: 'read',
-    disposition: 'unavailable',
-  },
-  clinic_waitlist_cancel: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_waitlist_expire: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  clinic_waitlist_offer: {
-    category: 'edit',
-    disposition: 'unavailable',
-  },
-  commission_record: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  commissions: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  compliance: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  compliance_update: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_baseline_approve: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_claim_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_claim_status: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_claims: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_commitment_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_commitment_status: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_commitments: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_context: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_cost_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_costs: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_draft_approve: {
-    category: 'messages',
-    disposition: 'tool',
-  },
-  construction_experience_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_followups: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_insights: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_milestone_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_milestones: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_overview: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_progress: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_progress_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_project: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_project_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_project_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_projects: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_quality: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_quality_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_quality_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_retention_release: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_risk_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_risk_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_risks: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_site_report_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_site_reports: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_task_resolve: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_task_snooze: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  construction_tasks: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  construction_variation_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_variation_status: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  construction_variations: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  contact_summary: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  conversation_orders: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  deal_close: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  deal_history: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  dental_charge: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  dental_charge_dispute: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  dental_context: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  dental_draft_approve: {
-    category: 'messages',
-    disposition: 'tool',
-  },
-  dental_followups: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  dental_insights: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  dental_metric_records: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  dental_overview: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  dental_payment_record: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  dental_recall_set: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  dental_resource_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  dental_resources: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  dental_task_resolve: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  dental_task_snooze: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  dental_visit: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  dental_visit_book: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  dental_visit_reschedule: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  dental_visit_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  dental_visits: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  draft_approve: {
-    category: 'messages',
-    disposition: 'tool',
-  },
-  draft_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  drafts: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  equipment: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  equipment_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  expense_create: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  expense_void: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  expenses: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_cancel: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  fitness_checkin: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  fitness_class_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  fitness_classes: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_context: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_draft_approve: {
-    category: 'messages',
-    disposition: 'tool',
-  },
-  fitness_followups: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_freeze: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  fitness_insights: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_member: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_members: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_membership_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  fitness_metric_records: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_overview: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_payment_record: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  fitness_plan_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  fitness_plans: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  fitness_renew: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  fitness_seat_book: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  fitness_seat_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  fitness_task_resolve: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  fitness_task_snooze: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  followup_complete: {
-    category: 'messages',
-    disposition: 'tool',
-  },
-  followup_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  followups: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_approval_record: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_checklist_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_context: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_contract: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_contract_renew: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_contract_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_contract_status: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  hvac_contracts: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_cost_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  hvac_draft_approve: {
-    category: 'messages',
-    disposition: 'tool',
-  },
-  hvac_estimate_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  hvac_estimate_status: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  hvac_followups: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_insights: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_job: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_job_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_job_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_jobs: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_metric_records: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_overview: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_payment_record: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  hvac_schedule: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_task_resolve: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_task_snooze: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_unit_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_unit_service: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_units: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  hvac_visit_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  hvac_visit_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  insights: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  item_archive: {
-    category: 'bulk',
-    disposition: 'tool',
-  },
-  item_photo: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  item_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  items: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  items_import: {
-    category: 'bulk',
-    disposition: 'tool',
-    categories: ['bulk', 'finance'],
-  },
-  job: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  job_approve: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  job_create: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  job_estimate: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  job_repeat: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  job_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  job_update: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  jobs: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  low_stock: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  match_generate: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  match_update: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  matches: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_accept: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  media_calendar: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_change_order_decide: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  media_change_order_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  media_context: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_cost_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  media_cost_void: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  media_costs_final: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  media_cut_decide: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_cut_submit: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_draft_approve: {
-    category: 'messages',
-    disposition: 'tool',
-  },
-  media_draft_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_followups: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_handoff: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_insights: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_metric_records: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_overview: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_payment_record: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  media_prep_verify: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_production: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_production_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_production_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_productions: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_quote: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  media_reservation_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_reservation_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_resource_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  media_resources: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  media_shoot_complete: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_task_resolve: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  media_task_snooze: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  membership_attendance: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  membership_create: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  membership_credit_reverse: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  membership_credits: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  membership_update: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  memberships: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  offer_approve: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  offer_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  offers: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  opportunities: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  opportunity_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  opportunity_stage: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  order: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  order_create: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  order_preparation: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  order_status: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  orders: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  overview: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  payment_record: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  photo_register: {
-    category: 'edit',
-    disposition: 'handoff',
-  },
-  photo_upload_url: {
-    category: 'edit',
-    disposition: 'handoff',
-  },
-  product_request_create: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  product_request_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  product_requests: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  properties: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  property_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  property_verify: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  real_estate_context: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  real_estate_followups: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  real_estate_insights: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  real_estate_metric_records: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  real_estate_overview: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  real_estate_task_resolve: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  real_estate_task_snooze: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  real_estate_tasks: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  recipe_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  recipes: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  repair: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  repair_approval: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  repair_create: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  repair_status: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  repair_update: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  repairs: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  resource_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  resources: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  restaurant_summary: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  serial_lookup: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  serials: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  service_save: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  services: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  services_sync: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  settings_update: {
-    category: 'publish',
-    disposition: 'tool',
-    categories: ['publish', 'finance'],
-  },
-  stock_count: {
-    category: 'bulk',
-    disposition: 'tool',
-  },
-  stock_expiry: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  stock_move: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  stock_moves: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  stock_receive: {
-    category: 'bulk',
-    disposition: 'tool',
-    categories: ['bulk', 'finance'],
-  },
-  store_context: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  store_draft_approve: {
-    category: 'messages',
-    disposition: 'tool',
-  },
-  store_followups: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  store_overview: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  store_task_resolve: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  store_task_snooze: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  team_invite: {
-    category: 'team',
-    disposition: 'tool',
-  },
-  team_list: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  team_resend: {
-    category: 'team',
-    disposition: 'tool',
-  },
-  team_revoke: {
-    category: 'team',
-    disposition: 'tool',
-  },
-  today: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  trade_in: {
-    category: 'finance',
-    disposition: 'tool',
-  },
-  viewing_save: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  viewings: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  waitlist: {
-    category: 'read',
-    disposition: 'tool',
-  },
-  waitlist_add: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  waitlist_book: {
-    category: 'edit',
-    disposition: 'tool',
-  },
-  waste_create: {
-    category: 'edit',
-    disposition: 'tool',
-  },
+// One row per operation: [category, disposition, categories?]
+//   category     what the operation does (read, edit, finance, messages, bulk, team, publish)
+//   disposition  'tool' (offered to assistants), 'unavailable' or 'handoff'
+//   categories   every approval category it touches, when more than one
+const ROWS = {
+  adiba_offer: ['read', 'tool'],
+  adiba_offer_accept_record: ['finance', 'tool'],
+  adiba_offer_approve: ['finance', 'tool'],
+  adiba_offer_price: ['finance', 'tool'],
+  adiba_offer_withdraw: ['edit', 'tool'],
+  adiba_offers: ['read', 'tool'],
+  automotive_appointment_save: ['edit', 'tool'],
+  automotive_appointment_status: ['edit', 'tool'],
+  automotive_appointments: ['read', 'tool'],
+  automotive_approval_record: ['edit', 'tool'],
+  automotive_bay_save: ['edit', 'tool'],
+  automotive_bays: ['read', 'tool'],
+  automotive_contacts: ['read', 'tool'],
+  automotive_context: ['read', 'tool'],
+  automotive_draft_approve: ['messages', 'tool'],
+  automotive_estimate_save: ['finance', 'tool'],
+  automotive_estimate_status: ['finance', 'tool'],
+  automotive_estimates: ['read', 'tool'],
+  automotive_experience_save: ['edit', 'tool'],
+  automotive_followups: ['read', 'tool'],
+  automotive_insights: ['read', 'tool'],
+  automotive_inspection_save: ['edit', 'tool'],
+  automotive_labor_entries: ['read', 'tool'],
+  automotive_labor_start: ['edit', 'tool'],
+  automotive_labor_stop: ['edit', 'tool'],
+  automotive_overview: ['read', 'tool'],
+  automotive_part_save: ['finance', 'tool'],
+  automotive_part_status: ['finance', 'tool'],
+  automotive_parts: ['read', 'tool'],
+  automotive_quality_save: ['edit', 'tool'],
+  automotive_request_save: ['edit', 'tool'],
+  automotive_request_status: ['edit', 'tool'],
+  automotive_requests: ['read', 'tool'],
+  automotive_service_save: ['finance', 'tool'],
+  automotive_services: ['read', 'tool'],
+  automotive_task_resolve: ['edit', 'tool'],
+  automotive_task_snooze: ['edit', 'tool'],
+  automotive_vehicle_save: ['edit', 'tool'],
+  automotive_vehicles: ['read', 'tool'],
+  automotive_work_order: ['read', 'tool'],
+  automotive_work_order_save: ['finance', 'tool'],
+  automotive_work_order_status: ['edit', 'tool'],
+  automotive_work_orders: ['read', 'tool'],
+  baking_suggestions: ['read', 'tool'],
+  batch_create: ['bulk', 'tool'],
+  booking_create: ['edit', 'tool'],
+  booking_status: ['edit', 'tool'],
+  booking_update: ['edit', 'tool'],
+  bookings: ['read', 'tool'],
+  clinic_experience_save: ['edit', 'unavailable'],
+  clinic_governance: ['read', 'unavailable'],
+  clinic_governance_update: ['edit', 'unavailable'],
+  clinic_insights: ['read', 'unavailable'],
+  clinic_metric_snapshot: ['read', 'unavailable'],
+  clinic_notification_queue: ['edit', 'unavailable'],
+  clinic_notification_resolve: ['edit', 'unavailable'],
+  clinic_notification_retry: ['edit', 'unavailable'],
+  clinic_notifications: ['read', 'unavailable'],
+  clinic_overview: ['read', 'unavailable'],
+  clinic_patient_summary: ['read', 'unavailable'],
+  clinic_preference_update: ['edit', 'unavailable'],
+  clinic_preferences: ['read', 'unavailable'],
+  clinic_request_assign: ['edit', 'unavailable'],
+  clinic_request_book: ['edit', 'unavailable'],
+  clinic_request_decline: ['edit', 'unavailable'],
+  clinic_request_save: ['edit', 'unavailable'],
+  clinic_request_withdraw: ['edit', 'unavailable'],
+  clinic_requests: ['read', 'unavailable'],
+  clinic_task_resolve: ['edit', 'unavailable'],
+  clinic_tasks: ['read', 'unavailable'],
+  clinic_waitlist_cancel: ['edit', 'unavailable'],
+  clinic_waitlist_expire: ['edit', 'unavailable'],
+  clinic_waitlist_offer: ['edit', 'unavailable'],
+  commission_record: ['finance', 'tool'],
+  commissions: ['read', 'tool'],
+  compliance: ['read', 'tool'],
+  compliance_update: ['edit', 'tool'],
+  construction_baseline_approve: ['finance', 'tool'],
+  construction_claim_save: ['finance', 'tool'],
+  construction_claim_status: ['finance', 'tool'],
+  construction_claims: ['read', 'tool'],
+  construction_commitment_save: ['finance', 'tool'],
+  construction_commitment_status: ['finance', 'tool'],
+  construction_commitments: ['read', 'tool'],
+  construction_context: ['read', 'tool'],
+  construction_cost_save: ['finance', 'tool'],
+  construction_costs: ['read', 'tool'],
+  construction_draft_approve: ['messages', 'tool'],
+  construction_experience_save: ['edit', 'tool'],
+  construction_followups: ['read', 'tool'],
+  construction_insights: ['read', 'tool'],
+  construction_milestone_save: ['edit', 'tool'],
+  construction_milestones: ['read', 'tool'],
+  construction_overview: ['read', 'tool'],
+  construction_progress: ['read', 'tool'],
+  construction_progress_save: ['edit', 'tool'],
+  construction_project: ['read', 'tool'],
+  construction_project_save: ['finance', 'tool'],
+  construction_project_status: ['edit', 'tool'],
+  construction_projects: ['read', 'tool'],
+  construction_quality: ['read', 'tool'],
+  construction_quality_save: ['edit', 'tool'],
+  construction_quality_status: ['edit', 'tool'],
+  construction_retention_release: ['finance', 'tool'],
+  construction_risk_save: ['edit', 'tool'],
+  construction_risk_status: ['edit', 'tool'],
+  construction_risks: ['read', 'tool'],
+  construction_site_report_save: ['edit', 'tool'],
+  construction_site_reports: ['read', 'tool'],
+  construction_task_resolve: ['edit', 'tool'],
+  construction_task_snooze: ['edit', 'tool'],
+  construction_tasks: ['read', 'tool'],
+  construction_variation_save: ['finance', 'tool'],
+  construction_variation_status: ['finance', 'tool'],
+  construction_variations: ['read', 'tool'],
+  contact_summary: ['read', 'tool'],
+  conversation_orders: ['read', 'tool'],
+  deal_close: ['finance', 'tool'],
+  deal_history: ['read', 'tool'],
+  dental_charge: ['finance', 'tool'],
+  dental_charge_dispute: ['finance', 'tool'],
+  dental_context: ['read', 'tool'],
+  dental_draft_approve: ['messages', 'tool'],
+  dental_followups: ['read', 'tool'],
+  dental_insights: ['read', 'tool'],
+  dental_metric_records: ['read', 'tool'],
+  dental_overview: ['read', 'tool'],
+  dental_payment_record: ['finance', 'tool'],
+  dental_recall_set: ['edit', 'tool'],
+  dental_resource_save: ['edit', 'tool'],
+  dental_resources: ['read', 'tool'],
+  dental_task_resolve: ['edit', 'tool'],
+  dental_task_snooze: ['edit', 'tool'],
+  dental_visit: ['read', 'tool'],
+  dental_visit_book: ['edit', 'tool'],
+  dental_visit_reschedule: ['edit', 'tool'],
+  dental_visit_status: ['edit', 'tool'],
+  dental_visits: ['read', 'tool'],
+  draft_approve: ['messages', 'tool'],
+  draft_save: ['edit', 'tool'],
+  drafts: ['read', 'tool'],
+  equipment: ['read', 'tool'],
+  equipment_save: ['edit', 'tool'],
+  expense_create: ['finance', 'tool'],
+  expense_void: ['finance', 'tool'],
+  expenses: ['read', 'tool'],
+  fitness_cancel: ['finance', 'tool'],
+  fitness_checkin: ['edit', 'tool'],
+  fitness_class_save: ['finance', 'tool'],
+  fitness_classes: ['read', 'tool'],
+  fitness_context: ['read', 'tool'],
+  fitness_draft_approve: ['messages', 'tool'],
+  fitness_followups: ['read', 'tool'],
+  fitness_freeze: ['finance', 'tool'],
+  fitness_insights: ['read', 'tool'],
+  fitness_member: ['read', 'tool'],
+  fitness_members: ['read', 'tool'],
+  fitness_membership_save: ['finance', 'tool'],
+  fitness_metric_records: ['read', 'tool'],
+  fitness_overview: ['read', 'tool'],
+  fitness_payment_record: ['finance', 'tool'],
+  fitness_plan_save: ['finance', 'tool'],
+  fitness_plans: ['read', 'tool'],
+  fitness_renew: ['finance', 'tool'],
+  fitness_seat_book: ['edit', 'tool'],
+  fitness_seat_status: ['edit', 'tool'],
+  fitness_task_resolve: ['edit', 'tool'],
+  fitness_task_snooze: ['edit', 'tool'],
+  followup_complete: ['messages', 'tool'],
+  followup_save: ['edit', 'tool'],
+  followups: ['read', 'tool'],
+  hvac_approval_record: ['edit', 'tool'],
+  hvac_checklist_save: ['edit', 'tool'],
+  hvac_context: ['read', 'tool'],
+  hvac_contract: ['read', 'tool'],
+  hvac_contract_renew: ['edit', 'tool'],
+  hvac_contract_save: ['edit', 'tool'],
+  hvac_contract_status: ['finance', 'tool'],
+  hvac_contracts: ['read', 'tool'],
+  hvac_cost_save: ['finance', 'tool'],
+  hvac_draft_approve: ['messages', 'tool'],
+  hvac_estimate_save: ['finance', 'tool'],
+  hvac_estimate_status: ['finance', 'tool'],
+  hvac_followups: ['read', 'tool'],
+  hvac_insights: ['read', 'tool'],
+  hvac_job: ['read', 'tool'],
+  hvac_job_save: ['edit', 'tool'],
+  hvac_job_status: ['edit', 'tool'],
+  hvac_jobs: ['read', 'tool'],
+  hvac_metric_records: ['read', 'tool'],
+  hvac_overview: ['read', 'tool'],
+  hvac_payment_record: ['finance', 'tool'],
+  hvac_schedule: ['read', 'tool'],
+  hvac_task_resolve: ['edit', 'tool'],
+  hvac_task_snooze: ['edit', 'tool'],
+  hvac_unit_save: ['edit', 'tool'],
+  hvac_unit_service: ['edit', 'tool'],
+  hvac_units: ['read', 'tool'],
+  hvac_visit_save: ['edit', 'tool'],
+  hvac_visit_status: ['edit', 'tool'],
+  insights: ['read', 'tool'],
+  item_archive: ['bulk', 'tool'],
+  item_photo: ['edit', 'tool'],
+  item_save: ['finance', 'tool'],
+  items: ['read', 'tool'],
+  items_import: ['bulk', 'tool', ['bulk', 'finance']],
+  job: ['read', 'tool'],
+  job_approve: ['finance', 'tool'],
+  job_create: ['finance', 'tool'],
+  job_estimate: ['finance', 'tool'],
+  job_repeat: ['finance', 'tool'],
+  job_status: ['edit', 'tool'],
+  job_update: ['finance', 'tool'],
+  jobs: ['read', 'tool'],
+  low_stock: ['read', 'tool'],
+  match_generate: ['edit', 'tool'],
+  match_update: ['edit', 'tool'],
+  matches: ['read', 'tool'],
+  media_accept: ['finance', 'tool'],
+  media_calendar: ['read', 'tool'],
+  media_change_order_decide: ['finance', 'tool'],
+  media_change_order_save: ['finance', 'tool'],
+  media_context: ['read', 'tool'],
+  media_cost_save: ['finance', 'tool'],
+  media_cost_void: ['finance', 'tool'],
+  media_costs_final: ['finance', 'tool'],
+  media_cut_decide: ['edit', 'tool'],
+  media_cut_submit: ['edit', 'tool'],
+  media_draft_approve: ['messages', 'tool'],
+  media_draft_save: ['edit', 'tool'],
+  media_followups: ['read', 'tool'],
+  media_handoff: ['edit', 'tool'],
+  media_insights: ['read', 'tool'],
+  media_metric_records: ['read', 'tool'],
+  media_overview: ['read', 'tool'],
+  media_payment_record: ['finance', 'tool'],
+  media_prep_verify: ['edit', 'tool'],
+  media_production: ['read', 'tool'],
+  media_production_save: ['edit', 'tool'],
+  media_production_status: ['edit', 'tool'],
+  media_productions: ['read', 'tool'],
+  media_quote: ['finance', 'tool'],
+  media_reservation_save: ['edit', 'tool'],
+  media_reservation_status: ['edit', 'tool'],
+  media_resource_save: ['finance', 'tool'],
+  media_resources: ['read', 'tool'],
+  media_shoot_complete: ['edit', 'tool'],
+  media_task_resolve: ['edit', 'tool'],
+  media_task_snooze: ['edit', 'tool'],
+  membership_attendance: ['edit', 'tool'],
+  membership_create: ['finance', 'tool'],
+  membership_credit_reverse: ['finance', 'tool'],
+  membership_credits: ['read', 'tool'],
+  membership_update: ['finance', 'tool'],
+  memberships: ['read', 'tool'],
+  offer_approve: ['finance', 'tool'],
+  offer_save: ['finance', 'tool'],
+  offers: ['read', 'tool'],
+  opportunities: ['read', 'tool'],
+  opportunity_save: ['edit', 'tool'],
+  opportunity_stage: ['edit', 'tool'],
+  order: ['read', 'tool'],
+  order_create: ['finance', 'tool'],
+  order_preparation: ['edit', 'tool'],
+  order_status: ['finance', 'tool'],
+  orders: ['read', 'tool'],
+  overview: ['read', 'tool'],
+  payment_record: ['finance', 'tool'],
+  photo_register: ['edit', 'handoff'],
+  photo_upload_url: ['edit', 'handoff'],
+  product_request_create: ['edit', 'tool'],
+  product_request_status: ['edit', 'tool'],
+  product_requests: ['read', 'tool'],
+  properties: ['read', 'tool'],
+  property_save: ['finance', 'tool'],
+  property_verify: ['edit', 'tool'],
+  real_estate_context: ['read', 'tool'],
+  real_estate_followups: ['read', 'tool'],
+  real_estate_insights: ['read', 'tool'],
+  real_estate_metric_records: ['read', 'tool'],
+  real_estate_overview: ['read', 'tool'],
+  real_estate_task_resolve: ['edit', 'tool'],
+  real_estate_task_snooze: ['edit', 'tool'],
+  real_estate_tasks: ['read', 'tool'],
+  recipe_save: ['finance', 'tool'],
+  recipes: ['read', 'tool'],
+  repair: ['read', 'tool'],
+  repair_approval: ['finance', 'tool'],
+  repair_create: ['finance', 'tool'],
+  repair_status: ['edit', 'tool'],
+  repair_update: ['finance', 'tool'],
+  repairs: ['read', 'tool'],
+  resource_save: ['edit', 'tool'],
+  resources: ['read', 'tool'],
+  restaurant_summary: ['read', 'tool'],
+  serial_lookup: ['read', 'tool'],
+  serials: ['read', 'tool'],
+  service_save: ['finance', 'tool'],
+  services: ['read', 'tool'],
+  services_sync: ['edit', 'tool'],
+  settings_update: ['publish', 'tool', ['publish', 'finance']],
+  stock_count: ['bulk', 'tool'],
+  stock_expiry: ['read', 'tool'],
+  stock_move: ['finance', 'tool'],
+  stock_moves: ['read', 'tool'],
+  stock_receive: ['bulk', 'tool', ['bulk', 'finance']],
+  store_context: ['read', 'tool'],
+  store_draft_approve: ['messages', 'tool'],
+  store_followups: ['read', 'tool'],
+  store_overview: ['read', 'tool'],
+  store_task_resolve: ['edit', 'tool'],
+  store_task_snooze: ['edit', 'tool'],
+  team_invite: ['team', 'tool'],
+  team_list: ['read', 'tool'],
+  team_resend: ['team', 'tool'],
+  team_revoke: ['team', 'tool'],
+  today: ['read', 'tool'],
+  trade_in: ['finance', 'tool'],
+  viewing_save: ['edit', 'tool'],
+  viewings: ['read', 'tool'],
+  waitlist: ['read', 'tool'],
+  waitlist_add: ['edit', 'tool'],
+  waitlist_book: ['edit', 'tool'],
+  waste_create: ['edit', 'tool'],
 };
+
+export const HASIB_POLICY = Object.fromEntries(
+  Object.entries(ROWS).map(([operation, [category, disposition, categories]]) => [
+    operation,
+    categories ? { category, disposition, categories } : { category, disposition },
+  ]),
+);

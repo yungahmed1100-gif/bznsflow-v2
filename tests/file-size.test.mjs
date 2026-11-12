@@ -11,7 +11,6 @@ const CAPPED = {
   'api/_lib/hasib/validate.js': 1237,
   'api/_lib/layla/review-api.js': 1034,
   'config/layla-qualification.js': 1214,
-  'config/mcp/hasib-policy.js': 1311,
   'convex/blueMessagingState.js': 1286,
   'convex/hasib/automotiveState.js': 1269,
   'convex/hasib/constructionState.js': 984,
