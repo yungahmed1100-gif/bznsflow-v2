@@ -45,7 +45,7 @@ export function BrainSetup({ lang, onPublished }) {
     if (!setup || started.current || markdown.trim()) return;
     started.current = true;
     act('template', async () => take(await request({ action: 'bzns_save', markdown: brainTemplate(setup.account?.industry, lang, { general: true }), version: setup.bzns?.version || 0 })));
-  }, [setup, markdown]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [setup, markdown]);
   useEffect(() => {
     if (step === null) return;
     if (shown.current !== null && shown.current !== step) revealStep(heading.current);

@@ -61,7 +61,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
     whatsappSeen.current = whatsappLive;
   }, [data, whatsappLive]);
   // Reported only once the saved setup has loaded, so the first render never overwrites stored progress.
-  useEffect(() => { if (data) onStageChange?.(step === 0 ? 0 : live ? 2 : 1); }, [!!data, step, live]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (data) onStageChange?.(step === 0 ? 0 : live ? 2 : 1); }, [!!data, step, live]);
   const authCsrf = useRef('');
   async function authRequest(action, body) {
     if (!authCsrf.current) {
@@ -126,7 +126,7 @@ export default function LaylaOnboarding({ lang = 'ar', reviewMode = false, embed
   }, []);
   // The standalone page starts on its heading; the setup page focuses its own. After that, every move
   // to another step scrolls the new step into view, so a click never seems to do nothing.
-  useEffect(() => { if (!embedded) heading.current?.focus({ preventScroll: true }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!embedded) heading.current?.focus({ preventScroll: true }); }, []);
   const shownStep = useRef(null);
   useEffect(() => {
     if (!data) return;

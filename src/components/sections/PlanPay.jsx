@@ -50,7 +50,7 @@ export function PlanPay({ plan, labels, t, lang, account, payment, trackEvent, w
     if (!choice || (picksIndustry && !HASIB_LIVE_PACKS.includes(choice.packId))) return;
     if (picksIndustry) setIndustry(choice.packId);
     checkout(choice.interval, choice.packId);
-  }, [account?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [account?.id]);
 
   return (
     <div className="tier-pay">

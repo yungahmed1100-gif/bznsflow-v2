@@ -27,7 +27,7 @@ export function ServiceView({ s, h, timezone, onChanged, initialRepairId, initia
   };
   useEffect(() => { if (initialAction === 'warranty') focusLookup(); }, [initialAction]);
   // A trade-in link opened by an employee has nothing to show (trade-ins are the manager's); drop it from the URL.
-  useEffect(() => { if (staff && initialAction === 'trade-in') onClearLink?.(); }, [staff, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (staff && initialAction === 'trade-in') onClearLink?.(); }, [staff, initialAction]);
   const list = usePolling(() => hasib('repairs', status ? { status } : {}), [status], { interval: 20000 });
   const items = [...(list.data?.items || []), ...more.items.filter(i => !(list.data?.items || []).some(x => x.id === i.id))];
   const cursor = more.cursor === undefined ? list.data?.cursor : more.cursor;

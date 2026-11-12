@@ -62,7 +62,8 @@
     "no-unused-vars": 2
   },
   "src/components/brain/BrainSetup.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/brain/BznsTab.jsx": {
     "no-unused-vars": 1
@@ -75,7 +76,8 @@
     "react-hooks/exhaustive-deps": 1
   },
   "src/components/brain/EssentialsCard.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/brain/ReviewCard.jsx": {
     "no-unused-vars": 1
@@ -90,7 +92,8 @@
     "no-unused-vars": 1
   },
   "src/components/business/CatalogManager.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/chat/ChatWidget.jsx": {
     "no-unused-vars": 1
@@ -123,7 +126,8 @@
     "no-unused-vars": 1
   },
   "src/components/dashboard/ChannelSwitch.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 2
   },
   "src/components/dashboard/ChatsView.jsx": {
     "no-unused-vars": 1
@@ -179,16 +183,18 @@
   },
   "src/components/dashboard/audits/AuditsView.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 1
+    "react-hooks/exhaustive-deps": 3
   },
   "src/components/dashboard/rasil/EmailCampaigns.jsx": {
     "no-unused-vars": 1
   },
   "src/components/dashboard/rasil/EmailCompose.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/dashboard/rasil/EmailDomain.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/dashboard/rasil/EmailSignup.jsx": {
     "no-unused-vars": 1
@@ -197,7 +203,8 @@
     "no-unused-vars": 1
   },
   "src/components/dashboard/rasil/EmailView.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/dashboard/rasil/LangSwitch.jsx": {
     "no-unused-vars": 1
@@ -209,7 +216,8 @@
     "no-unused-vars": 1
   },
   "src/components/dashboard/website/WebsiteWizard.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/dashboard/website/fields.jsx": {
     "no-unused-vars": 1
@@ -254,13 +262,15 @@
     "no-unused-vars": 1
   },
   "src/components/hasib/DentalDashboard.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/hasib/ExpensesView.jsx": {
     "no-unused-vars": 1
   },
   "src/components/hasib/FitnessDashboard.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 2
   },
   "src/components/hasib/FollowupView.jsx": {
     "no-unused-vars": 1
@@ -272,7 +282,8 @@
     "no-unused-vars": 1
   },
   "src/components/hasib/HvacDashboard.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/hasib/IndustrySetup.jsx": {
     "no-unused-vars": 1
@@ -287,7 +298,8 @@
     "no-unused-vars": 1
   },
   "src/components/hasib/MediaDashboard.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 2
   },
   "src/components/hasib/OrderComposer.jsx": {
     "no-unused-vars": 2
@@ -302,7 +314,8 @@
     "no-unused-vars": 1
   },
   "src/components/hasib/RealEstateDashboard.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/hasib/RepairDialogs.jsx": {
     "no-unused-vars": 1
@@ -311,7 +324,8 @@
     "no-unused-vars": 1
   },
   "src/components/hasib/ServiceView.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/hasib/StockImporter.jsx": {
     "no-unused-vars": 1
@@ -524,7 +538,8 @@
     "no-unused-vars": 1
   },
   "src/components/hasib/workspace/RulesForm.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 2
   },
   "src/components/hasib/workspace/TeamView.jsx": {
     "no-unused-vars": 1
@@ -600,7 +615,8 @@
     "no-unused-vars": 1
   },
   "src/components/sections/PlanPay.jsx": {
-    "no-unused-vars": 1
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/sections/SolutionsSection.jsx": {
     "no-unused-vars": 1
@@ -629,6 +645,9 @@
   "src/components/ui/StickyMobileCTA.jsx": {
     "no-unused-vars": 1
   },
+  "src/hooks/usePolling.js": {
+    "react-hooks/exhaustive-deps": 2
+  },
   "src/layouts/RootLayout.jsx": {
     "no-unused-vars": 1
   },
@@ -644,7 +663,7 @@
   },
   "src/pages/ApexAdmin.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 1
+    "react-hooks/exhaustive-deps": 2
   },
   "src/pages/ApexRequest.jsx": {
     "no-unused-vars": 1
@@ -663,11 +682,11 @@
   },
   "src/pages/LaylaDashboard.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 1
+    "react-hooks/exhaustive-deps": 2
   },
   "src/pages/LaylaOnboarding.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 3,
+    "react-hooks/exhaustive-deps": 6,
     "react/no-unknown-property": 1
   },
   "src/pages/McpConnections.jsx": {
@@ -690,12 +709,15 @@
   "src/pages/Refund.jsx": {
     "no-unused-vars": 1
   },
+  "src/pages/SignIn.jsx": {
+    "react-hooks/exhaustive-deps": 1
+  },
   "src/pages/Terms.jsx": {
     "no-unused-vars": 1
   },
   "src/pages/WebsitesAdmin.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 1
+    "react-hooks/exhaustive-deps": 2
   },
   "src/root.jsx": {
     "no-unused-vars": 1

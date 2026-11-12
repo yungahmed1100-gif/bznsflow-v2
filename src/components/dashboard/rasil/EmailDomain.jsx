@@ -13,7 +13,7 @@ function CopyButton({ s, value }) {
 export function EmailDomain({ s, domain, onChanged }) {
   const [name, setName] = useState(''), [busy, setBusy] = useState(''), [error, setError] = useState(''), [saved, setSaved] = useState(false);
   const [sender, setSender] = useState({ fromName: domain?.fromName || '', fromLocal: domain?.fromLocal || 'news', replyTo: domain?.replyTo || '' });
-  useEffect(() => { if (domain) setSender({ fromName: domain.fromName || '', fromLocal: domain.fromLocal || 'news', replyTo: domain.replyTo || '' }); }, [domain?.domain]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (domain) setSender({ fromName: domain.fromName || '', fromLocal: domain.fromLocal || 'news', replyTo: domain.replyTo || '' }); }, [domain?.domain]);
   const run = async (label, task) => {
     setBusy(label); setError(''); setSaved(false);
     try { await task(); await onChanged(); } catch (e) { setError(emailReason(s, e.reason)); } finally { setBusy(''); }

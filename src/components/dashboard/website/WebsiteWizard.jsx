@@ -42,7 +42,7 @@ export function WebsiteWizard({ s, brief, csrf, onSent }) {
   const [error, setError] = useState({ reason: '', field: '' });
   const heading = useRef(null);
   // The step the owner opens on (a new brief, or a draft resumed) starts the funnel.
-  useEffect(() => { captureWizardEvent('website_brief_step', { step: STEPS[step].step, index: step + 1 }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { captureWizardEvent('website_brief_step', { step: STEPS[step].step, index: step + 1 }); }, []);
 
   // Editing a field ends its "from BznsBrain" note and the error it was flagged with.
   const touch = keys => {

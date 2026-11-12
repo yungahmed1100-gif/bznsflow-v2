@@ -67,8 +67,8 @@ export function FitnessDashboard({ section, view, s, h, overview, timezone = 'As
   const { busy, setError, perform, act, notices, changes, clear } = useWorkspaceActions({ ar, s, h, refresh: state.refresh, onChanged });
   const data = { ...(lists || {}), ...(state.data || {}) };
   const actorAccountId = overview.teamSummary?.actorAccountId;
-  const owners = useMemo(() => new Map([...(data.team?.members || []).filter(m => m.accountId).map(m => [String(m.accountId), m.email]), ...(manager ? [] : [[String(actorAccountId), tr('Me', 'أنا')]])]), [data.team, manager, actorAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { clear(); if (initialAction === 'membership' && manager) openForm('membership'); else if (initialAction === 'class' && manager) openForm('class', { minutes: 60, capacity: 12, classType: 'class' }); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
+  const owners = useMemo(() => new Map([...(data.team?.members || []).filter(m => m.accountId).map(m => [String(m.accountId), m.email]), ...(manager ? [] : [[String(actorAccountId), tr('Me', 'أنا')]])]), [data.team, manager, actorAccountId]);
+  useEffect(() => { clear(); if (initialAction === 'membership' && manager) openForm('membership'); else if (initialAction === 'class' && manager) openForm('class', { minutes: 60, capacity: 12, classType: 'class' }); else closeForm(); }, [section, view, initialAction]);
 
   const submit = async e => {
     e.preventDefault();

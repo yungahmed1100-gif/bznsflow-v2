@@ -19,13 +19,13 @@ export function ChannelSwitch({ s, channel = 'whatsapp', state: given, autoOn = 
     await onChanged?.();
   };
   const tried = useRef(false);
-  useEffect(() => { if (state) onActive?.(!!state.active); }, [state?.active]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (state) onActive?.(!!state.active); }, [state?.active]);
   useEffect(() => {
     if (!autoOn || tried.current || !state || state.active || state.reason !== 'not_activated') return;
     tried.current = true;
     // A refusal (for example, business details not saved yet) shows on the switch after the refresh.
     messaging('activate', { ...channelBody(channel), auto: true }).catch(() => {}).finally(refresh);
-  }, [autoOn, state?.active, state?.reason]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoOn, state?.active, state?.reason]);
 
   async function toggle(next) {
     const result = await messaging(next ? 'activate' : 'pause', channelBody(channel));

@@ -118,7 +118,8 @@ export async function dentalMetricRecords(ctx, tenant, actor, a, now) {
   if (a.segment && (!DENTAL_SEGMENTS.includes(dimension) || !key)) return fail('invalid_segment');
   const accountId = tenant.accountId, tz = await businessTimezone(ctx, accountId), s = dentalSettings(await settingsFor(ctx, accountId));
   const range = periodOf(a, now, tz), clinic = await loadClinic(ctx, accountId, now), tasks = await openTasksOf(ctx, accountId, true);
-  const rows = populations(clinic, s, range, now, tasks, tz)[a.metric].filter(r => !a.segment || segmentOf(dimension, r, clinic) === key).slice(0, 300);
+  const metricRows = populations(clinic, s, range, now, tasks, tz)[a.metric];
+  const rows = metricRows.filter(r => !a.segment || segmentOf(dimension, r, clinic) === key).slice(0, 300);
   const nameOf = contactNames(ctx), items = [];
   for (const r of rows) {
     const v = r.visit;

@@ -46,7 +46,7 @@ export async function hvacMetricRecords(ctx, tenant, actor, a, now) {
   const [dimension, key] = String(a.segment || '').split(':');
   if (a.segment && (!HVAC_SEGMENTS.includes(dimension) || !key)) return fail('invalid_segment');
   const accountId = tenant.accountId, tz = await businessTimezone(ctx, accountId), shop = await loadShop(ctx, accountId, now);
-  const range = periodOf(a, now, tz), rows = populations(shop, shop.settings, range, now)[a.metric].filter(r => !a.segment || segmentOf(dimension, r, shop, tz) === key).slice(0, 300);
+  const range = periodOf(a, now, tz), metricRows = populations(shop, shop.settings, range, now)[a.metric], rows = metricRows.filter(r => !a.segment || segmentOf(dimension, r, shop, tz) === key).slice(0, 300);
   const nameOf = contactNames(ctx), items = [];
   for (const r of rows) {
     const job = r.job;

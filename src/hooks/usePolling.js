@@ -65,7 +65,6 @@ export function usePolling(load, deps = [], { interval = POLL_INTERVAL_MS, enabl
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('pageshow', onShow);
     return () => { active.current = false; if (timer) clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); window.removeEventListener('pageshow', onShow); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, interval, ...deps]);
   return { ...state, refresh, setData: data => setState(s => ({ ...s, data })) };
 }

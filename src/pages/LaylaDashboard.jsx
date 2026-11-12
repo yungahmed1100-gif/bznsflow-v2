@@ -109,7 +109,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
     // Back on Chats after Settings, the setup reminder reflects what was just added.
     if (next === 'chats' && tab !== 'chats' && map.catalyst) overview.refresh({ quiet: true });
   };
-  const refreshHasib = useCallback(() => hasibState.refresh({ quiet: true }), [hasibState.refresh]); // eslint-disable-line react-hooks/exhaustive-deps
+  const refreshHasib = useCallback(() => hasibState.refresh({ quiet: true }), [hasibState.refresh]);
   const changePreview = async value => {
     setHasibPreviewIndustry(value);
     setPreviewIndustry(value);

@@ -29,7 +29,7 @@ export function RulesForm({ ar, h, settings, busy, onSave, settingsKey, argKey, 
   const initial = settings?.[settingsKey];
   const extraInit = extra.init ? extra.init(settings, initial) : {};
   const [form, setForm] = useState(null), [saved, setSaved] = useState(false);
-  useEffect(() => { if (initial) setForm({ ...initial, ...extraInit, rules: initial.rules.map(r => ({ ...r, unit: unitFor(r.offsetMinutes), amount: r.offsetMinutes / unitFor(r.offsetMinutes) })) }); }, [initial, ...Object.values(extraInit)]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (initial) setForm({ ...initial, ...extraInit, rules: initial.rules.map(r => ({ ...r, unit: unitFor(r.offsetMinutes), amount: r.offsetMinutes / unitFor(r.offsetMinutes) })) }); }, [initial, ...Object.values(extraInit)]);
   if (!form) return <p className="ld-state" role="status">{tr('Loading…', 'جارٍ التحميل…')}</p>;
   const setRule = (id, patch) => setForm(f => ({ ...f, rules: f.rules.map(r => r.id === id ? { ...r, ...patch } : r) }));
   const submit = async e => {

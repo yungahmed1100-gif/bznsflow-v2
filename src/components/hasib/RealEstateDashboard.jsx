@@ -89,7 +89,7 @@ export function RealEstateDashboard({ section, view, s, h, overview, timezone = 
   const data = { ...(lists || {}), ...(state.data || {}) };
   const termsDays = overview.settings?.realEstate?.commissionTermsDays ?? 30;
   const agentNames = useMemo(() => new Map((data.team?.members || []).filter(m => m.accountId).map(m => [String(m.accountId), m.email])), [data.team]);
-  useEffect(() => { clear(); if (ACTIONS[initialAction]) openForm(ACTIONS[initialAction]); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { clear(); if (ACTIONS[initialAction]) openForm(ACTIONS[initialAction]); else closeForm(); }, [section, view, initialAction]);
 
   const submit = async e => {
     e.preventDefault();

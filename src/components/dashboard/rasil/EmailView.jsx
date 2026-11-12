@@ -16,7 +16,7 @@ export function EmailView({ s, overview, view = 'campaigns', explicitView = fals
   const refresh = () => state.refresh({ quiet: true });
   const data = state.data;
   const ready = !!data?.domain?.ready;
-  useEffect(() => { if (data && !ready && !explicitView && view !== 'setup') onGo?.('email', { view: 'setup' }); }, [data, ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (data && !ready && !explicitView && view !== 'setup') onGo?.('email', { view: 'setup' }); }, [data, ready]);
 
   const head = (
     <div className="ld-page-head">

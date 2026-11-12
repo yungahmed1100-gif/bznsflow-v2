@@ -28,7 +28,7 @@ export default function ApexAdmin({ lang = 'en' }) {
     if (!response.ok) { setData(null); setStatus(body.reason === 'admin_required' ? tr('This account cannot see the requests.', 'هذا الحساب لا يملك الوصول إلى الطلبات.') : tr('Could not load the requests.', 'تعذّر تحميل الطلبات.')); return; }
     setData(body);
     setStatus(body.requests.length ? '' : tr('No Apex requests yet.', 'لا توجد طلبات أبيكس بعد.'));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => { load().catch(() => setStatus(tr('Could not load the requests.', 'تعذّر تحميل الطلبات.'))); }, [load]);
 

@@ -32,7 +32,7 @@ export default function WebsitesAdmin({ lang = 'en' }) {
     if (!response.ok) { setData(null); setStatus(body.reason === 'admin_required' ? tr('This account cannot see the queue.', 'هذا الحساب لا يملك الوصول إلى القائمة.') : tr('Could not load the queue.', 'تعذّر تحميل القائمة.')); return; }
     setData(body);
     setStatus(body.open.length ? '' : tr('Nothing waiting. Every website is live and every payment set-up is done.', 'لا شيء بالانتظار. كل المواقع منشورة وكل المدفوعات مفعّلة.'));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => { load().catch(() => setStatus(tr('Could not load the queue.', 'تعذّر تحميل القائمة.'))); }, [load]);
 

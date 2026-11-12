@@ -157,7 +157,8 @@ export async function mediaMetricRecords(ctx, tenant, actor, a, now) {
   if (a.segment && (!MEDIA_SEGMENTS.includes(dimension) || !key)) return fail('invalid_segment');
   const accountId = tenant.accountId, tz = await businessTimezone(ctx, accountId), s = await settingsOf(ctx, accountId);
   const range = periodOf(a, now, tz), data = await load(ctx, accountId);
-  const rows = populations(data, s, range, now, tz)[a.metric].filter(r => !a.segment || segmentOf(dimension, r, data) === key).filter(r => !r.production || canSeeProduction(actor, r.production)).slice(0, 300);
+  const metricRows = populations(data, s, range, now, tz)[a.metric];
+  const rows = metricRows.filter(r => !a.segment || segmentOf(dimension, r, data) === key).filter(r => !r.production || canSeeProduction(actor, r.production)).slice(0, 300);
   const nameOf = contactNames(ctx);
   const items = [];
   for (const r of rows) {

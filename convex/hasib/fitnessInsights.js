@@ -146,7 +146,8 @@ export async function fitnessMetricRecords(ctx, tenant, actor, a, now) {
   if (a.segment && (!FITNESS_SEGMENTS.includes(dimension) || !key)) return fail('invalid_segment');
   const accountId = tenant.accountId, tz = await businessTimezone(ctx, accountId), s = fitnessSettings(await settingsFor(ctx, accountId));
   const range = periodOf(a, now, tz), gym = await loadGym(ctx, accountId, now);
-  const rows = populations(gym, s, range, now)[a.metric].filter(r => !a.segment || segmentOf(dimension, r, gym) === key).slice(0, 300);
+  const metricRows = populations(gym, s, range, now)[a.metric];
+  const rows = metricRows.filter(r => !a.segment || segmentOf(dimension, r, gym) === key).slice(0, 300);
   const nameOf = contactNames(ctx), items = [];
   for (const r of rows) {
     const klass = r.entityType === 'class' ? r.entity : r.entityType === 'seat' ? gym.classById.get(String(r.entity.classId)) : null;

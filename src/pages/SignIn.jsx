@@ -202,7 +202,6 @@ export default function SignIn({ lang = 'ar' }) {
     window.history.replaceState({}, '', window.location.pathname);
     // Runs once on mount: the URL is read and cleared in the same pass, so
     // re-running on a language change would find nothing anyway.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Resend countdown, mirroring the server's 60-second per-address throttle so

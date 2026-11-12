@@ -83,7 +83,7 @@ export function HvacDashboard({ section, view, s, h, overview, timezone = 'Asia/
   const state = usePolling(() => load(section, view, manager, params, timezone), [key, manager], { interval: 30000 });
   const { busy, setError, perform, act, notices, changes, clear } = useWorkspaceActions({ ar, s, h, refresh: state.refresh, onChanged });
   const data = { ...(lists || {}), ...(state.data || {}), expenseCategories: overview.pack?.expenseCategories || [] };
-  useEffect(() => { clear(); if (initialAction === 'job') openForm('job', { jobType: 'repair' }); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { clear(); if (initialAction === 'job') openForm('job', { jobType: 'repair' }); else closeForm(); }, [section, view, initialAction]);
 
   const openContract = id => setParam({ contract: id, job: null });
   const openRow = id => (window.matchMedia?.(WIDE).matches && view === 'jobs' ? setPreview(id) : openJob(id));

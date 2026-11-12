@@ -29,13 +29,13 @@ export function AuditsView({ s }) {
     setError('');
     try { setData(await loadAudits(week, week + 7 * DAY)); }
     catch (e) { setError(e.reason === 'admin_required' ? tr('Only the BznsFlow admin sees audit bookings.', 'حجوزات التدقيق تظهر لمدير BznsFlow فقط.') : tr('Could not load the bookings.', 'تعذّر تحميل الحجوزات.')); }
-  }, [week]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [week]);
   useEffect(() => { load(); }, [load]);
 
   const bookings = data?.bookings || [];
   const byStart = useMemo(() => new Map(bookings.filter(b => b.status !== 'cancelled').map(b => [b.startAt, b])), [bookings]);
   const current = bookings.find(b => b.id === selected);
-  useEffect(() => { setNote(current?.adminNote || ''); setSaved(''); }, [current?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setNote(current?.adminNote || ''); setSaved(''); }, [current?.id]);
   const days = Array.from({ length: WORK_DAYS }, (_, i) => week + i * DAY);
   const today = weekStart(Date.now()) === week ? Math.floor((Date.now() + MUSCAT) / DAY) : null;
   const industry = id => INDUSTRIES.find(i => i.id === id)?.[s.ar ? 'ar' : 'en'] || id;

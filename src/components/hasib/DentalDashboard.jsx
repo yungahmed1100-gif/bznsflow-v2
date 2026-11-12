@@ -72,7 +72,7 @@ export function DentalDashboard({ section, view, s, h, overview, timezone = 'Asi
   const state = usePolling(() => load(section, view, manager, params, timezone), [key, manager], { interval: 30000 });
   const { busy, setError, perform, act, notices, changes, clear } = useWorkspaceActions({ ar, s, h, refresh: state.refresh, onChanged });
   const data = { ...(lists || {}), ...(state.data || {}), expenseCategories: overview.pack?.expenseCategories || [] };
-  useEffect(() => { clear(); if (initialAction === 'visit') openForm('visit'); else closeForm(); }, [section, view, initialAction]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { clear(); if (initialAction === 'visit') openForm('visit'); else closeForm(); }, [section, view, initialAction]);
 
   const openRow = id => (window.matchMedia?.(WIDE).matches && view === 'visits' ? setPreview(id) : openVisit(id));
   const submit = async e => {

@@ -14,7 +14,7 @@ export function EssentialsCard({ lang, markdown, version, request, take, act, bu
   const ar = lang === 'ar', tr = (en, arabic) => (ar ? arabic : en);
   const read = () => ({ name: written(parseBzns(markdown).meta.name), offer: written(sectionText(markdown, 'offer')), contact: written(sectionText(markdown, 'contact')) });
   const [form, setForm] = useState(read), [saved, setSaved] = useState(false);
-  useEffect(() => { setForm(read()); }, [markdown]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setForm(read()); }, [markdown]);
   const set = key => e => { setSaved(false); setForm(f => ({ ...f, [key]: e.target.value })); };
   const save = () => act('essentials', async () => {
     let next = markdown;

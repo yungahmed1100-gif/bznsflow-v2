@@ -23,7 +23,7 @@ export function EmailCompose({ s, overview, subscribers, business, onDone }) {
     if (!form.subject.trim() || !form.body.trim()) { setPreview(null); return undefined; }
     const timer = setTimeout(() => rasil('campaign_preview', { subject: form.subject, body: form.body, lang }).then(setPreview).catch(e => setError(emailReason(s, e.reason))), 400);
     return () => clearTimeout(timer);
-  }, [form.subject, form.body, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form.subject, form.body, lang]);
 
   const sample = preview?.sample?.name || (lang === 'ar' ? 'هدى' : 'Huda');
   const rendered = useMemo(() => form.subject.trim() && form.body.trim()

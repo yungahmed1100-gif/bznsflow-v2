@@ -30,7 +30,6 @@ export function CatalogManager({ lang, request, act, busy, onError, explain, web
     await loadCatalog();
   }
   // Loads once the setup is saved to an account; loadCatalog only reads props.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(()=>{if(savedToAccount)loadCatalog().catch(()=>{});},[savedToAccount]);
   return <>
           {websiteImportAvailable && <details><summary>{tr('Fill this in from your website — the fastest way', 'املأ هذا من موقعك — الطريقة الأسرع')}</summary>
