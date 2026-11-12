@@ -1,16 +1,19 @@
 // Run after npm run build with the static preview server running. Synthetic files only.
+//   node tests/knowledge-worker-browser.mjs http://127.0.0.1:5199
 import { chromium } from 'playwright';
 import JSZip from 'jszip';
 import ExcelJS from 'exceljs';
 import { readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
+
+const BASE = process.argv[2] || process.env.BASE_URL || 'http://127.0.0.1:5199';
 const asset = (await readdir(new URL('../dist/assets', import.meta.url))).find(n =>
   n.startsWith('information-worker-'),
 );
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage();
-  await page.goto(`${process.env.BASE_URL || 'http://127.0.0.1:5199'}/en/signin`);
+  await page.goto(`${BASE}/en/signin`);
   const pdfPage = await browser.newPage();
   await pdfPage.setContent('<p>Business hours Monday nine to five.</p>');
   const pdf = await pdfPage.pdf();
