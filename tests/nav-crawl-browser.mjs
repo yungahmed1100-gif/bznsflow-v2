@@ -23,6 +23,7 @@ import { classifyLink } from './helpers/nav-crawl/links.mjs';
 import { KNOWN_BROKEN } from './helpers/nav-crawl/known-broken.mjs';
 import { intentProblems } from './helpers/nav-crawl/intents.mjs';
 import { clickEffect } from './helpers/nav-crawl/buttons.mjs';
+import { signedOut } from './helpers/browser-mocks.mjs';
 
 const BASE = process.argv[2] || 'http://127.0.0.1:5199';
 const { default: config } = await import('../react-router.config.ts');
@@ -62,19 +63,6 @@ const report = (where, text, key = text.replace(/\/en(?=\/|$)/g, '')) => {
   findings.get(key).push(`${where}: ${text}`);
 };
 let checks = 0;
-
-/** Signed out, with every API answered synthetically so pages settle quickly. */
-async function signedOut(context) {
-  await context.route('**/api/**', route => {
-    const url = new URL(route.request().url());
-    if (url.pathname === '/api/auth-session')
-      return route.fulfill({ json: { account: null, csrfToken: 'c'.repeat(64) } });
-    if (route.request().method() === 'GET')
-      return route.fulfill({ status: 401, json: { ok: false, reason: 'sign_in_required' } });
-    return route.fulfill({ json: { ok: true } });
-  });
-  await context.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, route => route.abort());
-}
 
 async function open(context, url) {
   const page = await context.newPage();
