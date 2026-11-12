@@ -25,8 +25,10 @@ try {
         // The first consent is refused like a stale sign-in, as on 10 November.
         consentRefusals = 1,
         codesSent = 0,
+        // The first permission save is refused like a stale sign-in; the second succeeds.
+        policyRefusals = 1,
         policy = false;
-      const connection = {
+      let connection = {
         id: "synthetic-connection",
         version: 1,
         clientId: "synthetic-client",
@@ -98,7 +100,17 @@ try {
             }
             if (body.action === "policy") {
               policy = true;
-              return json({ ok: false, reason: "fresh_sign_in_required" }, 409);
+              if (policyRefusals > 0) {
+                policyRefusals--;
+                return json({ ok: false, reason: "fresh_sign_in_required" }, 409);
+              }
+              connection = {
+                ...connection,
+                direct: body.direct,
+                areas: body.areas,
+                scopes: body.scopes,
+                version: connection.version + 1,
+              };
             }
             return json({ ok: true });
           }
@@ -398,9 +410,11 @@ try {
           exact: true,
         })
         .click();
+      // The approval's answer appears in the approvals section, where the owner acted.
       await page
-        .getByText(lang === "ar" ? /تمت الموافقة\. اطلب من مساعدك/ : /Approved\. Ask your assistant to retry/)
+        .locator(".mcp-section")
         .first()
+        .getByText(lang === "ar" ? /تمت الموافقة\. اطلب من مساعدك/ : /Approved\. Ask your assistant to retry/)
         .waitFor();
       checks++;
       await page
@@ -442,13 +456,31 @@ try {
       assert.equal(await save.isDisabled(), false);
       checks++;
       await save.click();
-      // A permission change on a stale sign-in asks for the code in place too.
-      await page.locator(".mcp-section #mcp-identity-code").waitFor();
+      // A permission change on a stale sign-in asks for the code inside the same card,
+      // where the owner pressed Save, not elsewhere on the page.
+      const connectionCard = page.locator(".mcp-grid > article").first();
+      await connectionCard.locator("#mcp-identity-code").waitFor();
       assert.ok(policy);
       checks++;
       await page.getByRole("button", { name: lang === "ar" ? "إلغاء" : "Cancel", exact: true }).click();
       assert.equal(await page.locator("#mcp-identity-code").count(), 0);
       checks++;
+      // A successful save answers next to the button and stays until the next change
+      // (12 November 2026: the only confirmation was off-screen, so the page looked stuck).
+      await save.click();
+      const savedNote = connectionCard.getByText(
+        lang === "ar" ? /تم حفظ الصلاحيات/ : /Permissions saved/,
+      );
+      await savedNote.waitFor();
+      assert.ok(await savedNote.isVisible());
+      assert.ok(await savedNote.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top >= 0 && r.bottom <= innerHeight;
+      }), "the save confirmation is on screen");
+      await connectionCard.screenshot({ path: `${OUT}/${lang}-${width}-saved.png` });
+      await page.waitForTimeout(4500);
+      assert.ok(await savedNote.isVisible(), "the confirmation does not vanish on a timer");
+      checks += 3;
       await page
         .getByRole("button", {
           name: lang === "ar" ? "قطع الاتصال" : "Disconnect",

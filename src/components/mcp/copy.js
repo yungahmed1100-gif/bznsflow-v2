@@ -71,7 +71,10 @@ export function activityName(tool, ar) {
   return { area, action: rest.join(" ") };
 }
 export const DONE = {
-  policy: ["Permissions saved.", "تم حفظ الصلاحيات."],
+  policy: [
+    "Permissions saved. Your assistant follows them from its next request.",
+    "تم حفظ الصلاحيات. يلتزم بها مساعدك بدءًا من طلبه التالي.",
+  ],
   approve: [
     "Approved. Ask your assistant to retry the same request now.",
     "تمت الموافقة. اطلب من مساعدك إعادة المحاولة بالطلب نفسه الآن.",

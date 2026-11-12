@@ -113,3 +113,15 @@
 .mcp-confirm-identity input[aria-invalid="true"] {
   border-color: var(--coral-ink);
 }
+/* An action's answer, shown where the owner acted: in the card or its section. */
+.mcp-card-status,
+.mcp-section-status {
+  margin: 12px 0 0;
+  color: var(--green-ink);
+  font-weight: 600;
+  line-height: 1.6;
+}
+.mcp-card-status:empty,
+.mcp-section-status:empty {
+  margin: 0;
+}

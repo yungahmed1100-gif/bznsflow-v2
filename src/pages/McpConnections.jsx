@@ -16,8 +16,8 @@ import { ConsentCard } from "../components/mcp/ConsentCard";
 import { ActivityList, PastConnections } from "../components/mcp/ActivityList";
 import { AREAS, CATEGORIES, DONE, ERRORS, activityName, isActive } from "../components/mcp/copy";
 import { keepPendingPolicy, readPendingPolicy } from "../components/mcp/pending-policy";
+import { cardKeys, originOf, placeFor } from "../components/mcp/origin";
 const COPIED_MS = 2500;
-const SAVED_MS = 4000;
 // While the owner is mid-connection (a new connection not yet verified, or an
 // approval waiting), the page follows along without a manual reload.
 const REFRESH_MS = 5000;
@@ -33,7 +33,9 @@ export default function McpConnections({ lang = "ar" }) {
     [consent, setConsent] = useState(null),
     [csrf, setCsrf] = useState(""),
     [status, setStatus] = useState(""),
-    [error, setError] = useState(""),
+    [error, setErrorState] = useState(""),
+    // The card the error belongs to ("" for page-level errors such as loading).
+    [errorAt, setErrorAt] = useState(""),
     [busy, setBusy] = useState(false),
     [copied, setCopied] = useState(""),
     [saved, setSaved] = useState(false),
@@ -43,20 +45,16 @@ export default function McpConnections({ lang = "ar" }) {
     [target, setTarget] = useState(""),
     [savedId, setSavedId] = useState(""),
     [consentAreas, setConsentAreas] = useState(Object.keys(AREAS));
-  // Confirmations are brief; errors and copy guidance stay until the next action.
+  const setError = useCallback((reason, at = "") => {
+    setErrorState(reason);
+    setErrorAt(at);
+  }, []);
+  // "Copied" is brief; saved confirmations, errors and guidance stay until the next action.
   useEffect(() => {
     if (!copied) return undefined;
     const timer = setTimeout(() => setCopied(""), COPIED_MS);
     return () => clearTimeout(timer);
   }, [copied]);
-  useEffect(() => {
-    if (!saved) return undefined;
-    const timer = setTimeout(() => {
-      setSaved(false);
-      setSavedId("");
-    }, SAVED_MS);
-    return () => clearTimeout(timer);
-  }, [saved]);
   const signIn = `${prefix}/signin?next=${encodeURIComponent(`${prefix}/mcp`)}`;
   const message = (code) =>
     (ERRORS[code] || [
@@ -180,6 +178,8 @@ export default function McpConnections({ lang = "ar" }) {
     setError("");
     setStatus("");
     setSaved(false);
+    setSavedId("");
+    const at = originOf(body);
     try {
       const r = await post("/api/mcp/manage", body),
         value = await r.json();
@@ -194,7 +194,7 @@ export default function McpConnections({ lang = "ar" }) {
           value.reason === "fresh_sign_in_required"
         )
           keepPendingPolicy(body);
-        setError(value.reason);
+        setError(value.reason, at);
         return;
       }
       if (value.redirect) {
@@ -212,7 +212,7 @@ export default function McpConnections({ lang = "ar" }) {
       if (body.action === "policy") setSavedId(body.connectionId);
       await load();
     } catch {
-      setError("unavailable");
+      setError("unavailable", at);
     } finally {
       setBusy(false);
     }
@@ -253,6 +253,20 @@ export default function McpConnections({ lang = "ar" }) {
       onCancel={() => setConfirming(null)}
     />
   );
+  const cards = cardKeys({
+    consent,
+    approvals: data?.approvals,
+    connections: data?.connections.filter(isActive),
+  });
+  const errorPlace = placeFor(errorAt, cards, consent ? "consent" : "");
+  const noticeAt = (key) => (error && errorPlace === key ? errorNotice : null);
+  const confirmPlace = placeFor(originOf(confirming), cards);
+  const identityAt = (key) => (confirmPlace === key ? identity : null);
+  const doneIn = (actions) => (
+    <p className="mcp-section-status" role="status" aria-live="polite">
+      {saved && actions.includes(done) ? DONE[done][ar ? 1 : 0] : ""}
+    </p>
+  );
   async function copy(label, value) {
     try {
       await navigator.clipboard.writeText(value);
@@ -285,7 +299,6 @@ export default function McpConnections({ lang = "ar" }) {
       <McpHero ar={ar} compact={!!consent || !!data?.approvals?.length} />
       <div role="status" aria-live="polite">
         {status}
-        {saved && (DONE[done] || DONE.policy)[ar ? 1 : 0]}
         {copied && (
           <span className="sr-only">
             {tr(`${copied} copied.`, `تم نسخ ${copied}.`)}
@@ -294,7 +307,7 @@ export default function McpConnections({ lang = "ar" }) {
         {account === undefined &&
           tr("Loading your account…", "جارٍ تحميل حسابك…")}
       </div>
-      {error && !consent && errorNotice}
+      {error && !errorPlace && errorNotice}
       {account === null && (
         <section className="mcp-panel">
           <h2>
@@ -322,8 +335,8 @@ export default function McpConnections({ lang = "ar" }) {
           busy={busy}
           areas={consentAreas}
           onAreas={setConsentAreas}
-          notice={error && errorNotice}
-          identity={confirming?.action === "consent" && identity}
+          notice={noticeAt("consent")}
+          identity={identityAt("consent")}
           onAllow={() =>
             action({ action: "consent", allow: true, areas: consentAreas, interactionUid: consent.uid })
           }
@@ -334,6 +347,7 @@ export default function McpConnections({ lang = "ar" }) {
         <>
           <section className="mcp-section">
             <h2>{tr("Waiting for your approval", "بانتظار موافقتك")}</h2>
+            {doneIn(["approve", "reject"])}
             {!data.approvals.length && (
               <p>
                 {tr("No pending approvals.", "لا توجد طلبات بانتظار الموافقة.")}
@@ -353,6 +367,8 @@ export default function McpConnections({ lang = "ar" }) {
                   ar={ar}
                   busy={busy}
                   target={a.id === target}
+                  notice={noticeAt(`approval:${a.id}`)}
+                  identity={identityAt(`approval:${a.id}`)}
                   title={`${name.area} · ${name.action}`}
                   categories={(a.preview?.categories || [])
                     .filter((c) => CATEGORIES[c])
@@ -369,6 +385,7 @@ export default function McpConnections({ lang = "ar" }) {
           </section>
           <section className="mcp-section">
             <h2>{tr("Your connections", "اتصالاتك")}</h2>
+            {doneIn(["revoke"])}
             <p>
               {tr("Workspace: ", "مساحة العمل: ")}
               {data.workspace?.name || account?.email}
@@ -387,7 +404,7 @@ export default function McpConnections({ lang = "ar" }) {
                 )}
               </p>
             )}
-            {confirming && confirming.action !== "consent" && <div className="mcp-panel">{identity}</div>}
+            {confirming && !confirmPlace && <div className="mcp-panel">{identity}</div>}
             <div className="mcp-grid">
               {data.connections.filter(isActive).map((c) => (
                 <ConnectionCard
@@ -396,6 +413,8 @@ export default function McpConnections({ lang = "ar" }) {
                   ar={ar}
                   busy={busy}
                   saved={savedId === c.id}
+                  notice={noticeAt(`connection:${c.id}`)}
+                  identity={identityAt(`connection:${c.id}`)}
                   onSave={(connectionId, direct, write, areas) =>
                     action({
                       action: "policy",
