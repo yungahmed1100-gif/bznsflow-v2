@@ -1,0 +1,5773 @@
+{
+  "POST /blue-review": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"review_backend_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"review_backend_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "no session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "review.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"review_backend_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "review.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "review.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "review.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "review.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration other": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "review.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /blue-auth": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"account_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"account_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAuth.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 413,
+      "5000": 413,
+      "5001": 413,
+      "8000": 413,
+      "8001": 413,
+      "16000": 413,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /blue-messaging": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"messaging_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"messaging_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueMessaging.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 200,
+      "65536": 200,
+      "65537": 200,
+      "131072": 200,
+      "131073": 200,
+      "262144": 200,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /blue-dashboard": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"dashboard_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"dashboard_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "no session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueDashboard.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"dashboard_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueDashboard.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueDashboard.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueDashboard.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueDashboard.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration other": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueDashboard.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 200,
+      "65536": 200,
+      "65537": 200,
+      "131072": 200,
+      "131073": 200,
+      "262144": 200,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /blue-hasib": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"hasib_unavailable\"}",
+      "calls": [],
+      "logs": [
+        "hasib_failed {\"kind\":\"SyntaxError\"}"
+      ]
+    },
+    "JSON null": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"hasib_unavailable\"}",
+      "calls": [],
+      "logs": [
+        "hasib_failed {\"kind\":\"TypeError\"}"
+      ]
+    },
+    "no session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueHasib.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"hasib_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueHasib.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": [
+        "hasib_failed {\"kind\":\"Error\"}"
+      ]
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueHasib.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1",
+            "photoCheck": "missing"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueHasib.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueHasib.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration other": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueHasib.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 200,
+      "65536": 200,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /blue-campaign": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"campaign_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"campaign_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCampaign.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /blue-catalog": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"catalog_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"catalog_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueCatalog.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 200,
+      "65536": 200,
+      "65537": 200,
+      "131072": 200,
+      "131073": 200,
+      "262144": 200,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /blue-brain": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"brain_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"brain_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "no session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "brain.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"brain_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "brain.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "brain.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "brain.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "brain.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration other": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "brain.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 200,
+      "65536": 200,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /blue-instagram": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"instagram_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"instagram_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueInstagram.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /website-brief": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"brief_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"brief_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "no session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"brief_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1",
+            "fileCheck": "missing"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1",
+            "fileCheck": "missing"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration other": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /website-admin": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"websites_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"websites_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "websiteBrief.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 413,
+      "5000": 413,
+      "5001": 413,
+      "8000": 413,
+      "8001": 413,
+      "16000": 413,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /audit": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"audit_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"audit_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 413,
+      "5000": 413,
+      "5001": 413,
+      "8000": 413,
+      "8001": 413,
+      "16000": 413,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /audit-admin": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"audit_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"audit_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "audit.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 413,
+      "5000": 413,
+      "5001": 413,
+      "8000": 413,
+      "8001": 413,
+      "16000": 413,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /apex": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"apex_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"apex_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 413,
+      "16000": 413,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /apex-admin": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"apex_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"apex_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "apex.admin",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 413,
+      "5000": 413,
+      "5001": 413,
+      "8000": 413,
+      "8001": 413,
+      "16000": 413,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /rasil": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"email_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"email_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "no session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"email_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration other": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 200,
+      "65536": 200,
+      "65537": 200,
+      "131072": 200,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /rasil-worker": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"email_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"email_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "rasil.worker",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /billing": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"billing_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"billing_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "billing.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 413,
+      "5000": 413,
+      "5001": 413,
+      "8000": 413,
+      "8001": 413,
+      "16000": 413,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /blue-access": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"access_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"access_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "no session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAccess.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"access_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAccess.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAccess.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAccess.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAccess.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration other": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "blueAccess.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 413,
+      "5000": 413,
+      "5001": 413,
+      "8000": 413,
+      "8001": 413,
+      "16000": 413,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /green-core": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"core_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"core_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "greenCore.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /green-migrate": {
+    "no token": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "no session": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "success": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "function throws": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "photo register": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "migrate.importReviewed",
+          "args": {
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "query",
+          "fn": "migrate.verify",
+          "args": {
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 400,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 404,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 404,
+      "4001": 404,
+      "5000": 404,
+      "5001": 404,
+      "8000": 404,
+      "8001": 404,
+      "16000": 404,
+      "16001": 404,
+      "20000": 404,
+      "20001": 404,
+      "65536": 404,
+      "65537": 404,
+      "131072": 404,
+      "131073": 404,
+      "262144": 404,
+      "262145": 404,
+      "450000": 404,
+      "450001": 404,
+      "700000": 404,
+      "700001": 404,
+      "850000": 404,
+      "850001": 404
+    }
+  },
+  "POST /product-setup": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"setup_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"setup_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "productSetup.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 413,
+      "8000": 413,
+      "8001": 413,
+      "16000": 413,
+      "16001": 413,
+      "20000": 413,
+      "20001": 413,
+      "65536": 413,
+      "65537": 413,
+      "131072": 413,
+      "131073": 413,
+      "262144": 413,
+      "262145": 413,
+      "450000": 413,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /knowledge-sources": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"knowledge_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 503,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"knowledge_unavailable\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":\"v\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "knowledgeSources.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 200,
+      "65536": 200,
+      "65537": 200,
+      "131072": 200,
+      "131073": 200,
+      "262144": 200,
+      "262145": 200,
+      "450000": 200,
+      "450001": 413,
+      "700000": 413,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  },
+  "POST /mcp-internal": {
+    "no token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "wrong token": {
+      "status": 401,
+      "contentType": null,
+      "cacheControl": null,
+      "body": "",
+      "calls": [],
+      "logs": []
+    },
+    "bad JSON": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"mcp_unavailable\"}",
+      "calls": [],
+      "logs": []
+    },
+    "JSON null": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": null
+        }
+      ],
+      "logs": []
+    },
+    "no session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "malformed session": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "sessionHash": "bad",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "success": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "photoCheck": "x",
+            "fileCheck": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "function throws": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":false,\"reason\":\"probe_reason\"}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "photo register": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "photo_register",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (document)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "doc_id",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "file register (image)": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "file_register",
+            "kind": "logo",
+            "storageId": "s1"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration import": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "operation": "import",
+            "rows": []
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration verify": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "operation": "verify",
+            "expected": {
+              "a": 1
+            }
+          }
+        }
+      ],
+      "logs": []
+    },
+    "migration other": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "operation": "x"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "multibyte body": {
+      "status": 200,
+      "contentType": "application/json",
+      "cacheControl": "no-store",
+      "body": "{\"ok\":true,\"value\":{\"ok\":true,\"value\":\"v\"}}",
+      "calls": [
+        {
+          "kind": "mutation",
+          "fn": "mcp.execute",
+          "args": {
+            "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "operation": "probe",
+            "text": "<3000 chars>"
+          }
+        }
+      ],
+      "logs": []
+    },
+    "sizes": {
+      "4000": 200,
+      "4001": 200,
+      "5000": 200,
+      "5001": 200,
+      "8000": 200,
+      "8001": 200,
+      "16000": 200,
+      "16001": 200,
+      "20000": 200,
+      "20001": 200,
+      "65536": 200,
+      "65537": 200,
+      "131072": 200,
+      "131073": 200,
+      "262144": 200,
+      "262145": 200,
+      "450000": 200,
+      "450001": 200,
+      "700000": 200,
+      "700001": 413,
+      "850000": 413,
+      "850001": 413
+    }
+  }
+}
