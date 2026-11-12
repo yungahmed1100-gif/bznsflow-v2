@@ -26,6 +26,8 @@ const SUITES = [
   'tests/paymob-e2e-browser.mjs',
   'tests/geo-browser.mjs',
   'tests/knowledge-worker-browser.mjs',
+  // Where every link and button leads, on every page and dashboard (about 7 minutes).
+  'tests/nav-crawl-browser.mjs',
 ];
 
 const server = spawn(process.execPath, ['scripts/preview.mjs', '--port', String(PORT)], { stdio: 'ignore' });
