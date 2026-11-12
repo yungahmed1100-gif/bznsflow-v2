@@ -2,6 +2,9 @@ import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 const tests = readdirSync('tests').filter(name => name.endsWith('.test.mjs')).sort().map(name => `tests/${name}`);
 const checks = [
+  // Fast, cheap gates first: formatting and the lint ratchet.
+  ['npm', ['run', 'format:check']],
+  ['npm', ['run', 'lint']],
   ['node', ['--test', ...tests]],
   ['npm', ['run', 'typecheck:convex']],
   ['npm', ['run', 'build']],

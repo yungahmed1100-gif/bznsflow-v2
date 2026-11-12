@@ -1,0 +1,874 @@
+{
+  "api/_lib/audit-email.js": {
+    "no-useless-escape": 1
+  },
+  "config/layla-templates.js": {
+    "no-irregular-whitespace": 1
+  },
+  "convex/blueMessagingState.js": {
+    "no-empty": 1
+  },
+  "convex/hasib/dentalClinic.js": {
+    "no-unused-vars": 1
+  },
+  "convex/hasib/hvacBoard.js": {
+    "no-unused-vars": 1
+  },
+  "convex/hasib/matching.js": {
+    "no-useless-escape": 1
+  },
+  "convex/mcp/state.js": {
+    "no-unused-vars": 1
+  },
+  "convex/mcp/transfers.js": {
+    "no-unused-vars": 1
+  },
+  "scripts/gen-kb.mjs": {
+    "no-irregular-whitespace": 1
+  },
+  "scripts/hasib-demo-fitness.mjs": {
+    "no-unused-vars": 1
+  },
+  "scripts/hasib-demo-media.mjs": {
+    "no-unused-vars": 4
+  },
+  "scripts/hasib-demo.mjs": {
+    "no-unused-vars": 1
+  },
+  "scripts/product-preview.mjs": {
+    "no-unused-vars": 1
+  },
+  "src/components/ascend-draft/AscendDraft.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 2
+  },
+  "src/components/ascend-draft/CompactViews.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/ascend-draft/InsightsPreview.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/ascend-draft/WorkViews.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/brain/AddSource.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/brain/BehaviourCard.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/components/brain/BrainPage.jsx": {
+    "no-unused-vars": 2
+  },
+  "src/components/brain/BrainSetup.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/brain/BznsTab.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/brain/BznsWord.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/brain/CatalogTab.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/components/brain/EssentialsCard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/brain/ReviewCard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/brain/TestLaylaPanel.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/business/AddInformation.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/business/BznsEditor.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/business/CatalogManager.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/chat/ChatWidget.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/AccessNotice.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/AddNumbers.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/components/dashboard/Badges.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/BroadcastView.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/components/dashboard/BusinessDetails.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/CampaignWizard.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/components/dashboard/CapturedDetails.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/ChannelConnections.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/ChannelSwitch.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/ChatsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/ConsentForm.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/ContactImporter.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/ContactPanel.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/ContactsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/DashboardNav.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/Dialog.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/HeaderMediaField.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/InstagramConnection.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/LaylaSwitch.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/MetaBillingNotice.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/RecipientsStep.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/SectionTabs.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/SendStep.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/components/dashboard/SetupReminder.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/TemplateBody.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/WebsiteReminder.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/audits/AuditsView.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/components/dashboard/rasil/EmailCampaigns.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/rasil/EmailCompose.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/rasil/EmailDomain.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/rasil/EmailSignup.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/rasil/EmailSubscribers.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/rasil/EmailView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/rasil/LangSwitch.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/website/WebsiteOnboarding.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/website/WebsiteTracker.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/website/WebsiteWizard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/website/fields.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/website/payments.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/dashboard/website/steps.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/AccountsSettings.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/AutomotiveDashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/AutomotiveWorkspace.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/Badges.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/BookingWorkView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/ChatOrders.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/ClinicDashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/ConstructionDashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/ConstructionWorkspace.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/ContactOrders.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/DashboardVisuals.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/DentalDashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/ExpensesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/FitnessDashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/FollowupView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/FounderIndustryPreview.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/HasibContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/HvacDashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/IndustrySetup.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/InsightsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/ItemEditor.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/JobsWorkView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/MediaDashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/OrderComposer.jsx": {
+    "no-unused-vars": 2
+  },
+  "src/components/hasib/OrderDetail.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/OrdersView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/ProductRequests.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/RealEstateDashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/RepairDialogs.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/RestaurantControls.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/ServiceView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/StockImporter.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/StockMoveDialog.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/StockView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/StoreWorkspace.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/TeamView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/TodayView.jsx": {
+    "no-unused-vars": 2
+  },
+  "src/components/hasib/TradeInDialog.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/WarrantyLookup.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/automotive/AutomotiveContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/automotive/FollowupsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/automotive/RulesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/construction/ConstructionContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/construction/FollowupsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/construction/RulesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/dental/DentalContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/dental/DentalForm.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/dental/FollowupsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/dental/InsightsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/dental/MetricRecords.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/dental/RulesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/dental/ServicesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/dental/VisitRecord.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/dental/VisitsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/fitness/ClassesView.jsx": {
+    "no-unused-vars": 2
+  },
+  "src/components/hasib/fitness/FitnessContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/fitness/FitnessForm.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/fitness/FollowupsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/fitness/InsightsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/fitness/MemberRecord.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/fitness/MembersView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/fitness/MetricRecords.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/fitness/RulesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/ContractsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/FollowupsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/HvacContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/HvacForm.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/InsightsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/JobRecord.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/JobsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/MetricRecords.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/RulesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/hvac/UnitsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/media/BoardView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/media/CalendarView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/media/FollowupsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/media/InsightsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/media/MediaContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/media/MediaForm.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/media/MetricRecords.jsx": {
+    "no-unused-vars": 3
+  },
+  "src/components/hasib/media/ProductionRecord.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/media/ResourcesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/media/RulesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/BoardView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/DealContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/DealDetail.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/DealRecord.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/FollowupsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/InsightsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/MetricRecords.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/PropertiesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/RecordForm.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/RulesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/realestate/ViewingsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/store/FollowupsView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/store/RulesView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/store/StoreContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/AttentionStrip.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/OffersPanel.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/QueueList.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/RecordsTable.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/RulesForm.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/TeamView.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/WorkContext.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/contextCard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/kpi.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/queue.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/hasib/workspace/useWorkspaceActions.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/layout/Footer.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/layout/NavBar.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/mcp/ActivityList.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/mcp/ApprovalCard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/mcp/ConfirmIdentity.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/components/mcp/ConnectionCard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/mcp/ConnectionGuide.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/mcp/ConsentCard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/onboarding/MetaWindowGuide.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/onboarding/SaveAccountPanel.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/onboarding/SetupHelpLinks.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/onboarding/SwitchToBusiness.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/onboarding/WhatsAppConnect.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/sections/AboutSection.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/sections/ClientTape.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/sections/FAQSection.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/sections/HeroSection.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/sections/PaymobBadge.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/sections/PlanPay.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/sections/SolutionsSection.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/sections/TiersSection.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/ui/BrandMark.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/ui/Icon.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/ui/MetaVerified.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/ui/PlaybookForm.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/ui/PlaybookModal.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/ui/Seo.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/components/ui/StickyMobileCTA.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/layouts/RootLayout.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/lib/dashboard/csv.js": {
+    "no-irregular-whitespace": 2
+  },
+  "src/lib/layla-signup.js": {
+    "no-unused-vars": 1
+  },
+  "src/pages/AccessAdmin.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 2
+  },
+  "src/pages/ApexAdmin.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/pages/ApexRequest.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/pages/AuditBooking.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/pages/BusinessInfo.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/pages/DataDeletion.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/pages/Home.jsx": {
+    "no-unused-vars": 3
+  },
+  "src/pages/LaylaDashboard.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/pages/LaylaOnboarding.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 3,
+    "react/no-unknown-property": 1
+  },
+  "src/pages/McpConnections.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 2
+  },
+  "src/pages/OwnerHome.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/pages/Playbook.jsx": {
+    "no-unused-vars": 2
+  },
+  "src/pages/Privacy.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/pages/ProductSetup.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/pages/Refund.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/pages/Terms.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/pages/WebsitesAdmin.jsx": {
+    "no-unused-vars": 1,
+    "react-hooks/exhaustive-deps": 1
+  },
+  "src/root.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/apex.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/audit.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/catalyst-setup.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/contact.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/data-deletion.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-apex.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-audit.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-catalyst-setup.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-contact.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-data-deletion.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-layla-dashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-mcp.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-owner-access.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-owner-apex.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-owner-ascend-draft.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-owner-preview-packId.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-owner-websites.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-owner.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-playbook.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-privacy.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-refund.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-services.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-signin.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-support.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en-terms.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/en.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/home.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/layla-dashboard.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/mcp.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/owner-access.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/owner-apex.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/owner-ascend-draft.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/owner-preview-packId.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/owner-websites.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/owner.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/playbook.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/privacy.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/refund.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/services.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/signin.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/support.jsx": {
+    "no-unused-vars": 1
+  },
+  "src/route-modules/terms.jsx": {
+    "no-unused-vars": 1
+  },
+  "tests/adiba-offers.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/ascend-automotive-growth.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/ascend-construction-growth.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/ascend-e2e-browser.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/ascend-hvac-growth.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/blue-website-import.test.mjs": {
+    "no-useless-escape": 1
+  },
+  "tests/customer-journey-e2e.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/e2e-chat.mjs": {
+    "no-empty": 1
+  },
+  "tests/hasib-clinic.test.mjs": {
+    "no-unused-vars": 2
+  },
+  "tests/instagram-api.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/layla-meta.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/mcp-state.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/mcp-transport.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/real-estate-workspace.test.mjs": {
+    "no-unused-vars": 1
+  },
+  "tests/website-onboarding.test.mjs": {
+    "no-unused-vars": 1
+  }
+}

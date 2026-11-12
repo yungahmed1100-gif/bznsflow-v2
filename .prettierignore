@@ -1,0 +1,23 @@
+# Build output, vendored and generated files
+dist/
+build/
+.react-router/
+public/
+work/
+node_modules/
+convex/_generated/
+**/*.generated.*
+config/mcp/hasib-contracts.js
+package-lock.json
+tests/fixtures/
+# Prose is edited by hand
+**/*.md
+# Agent tooling and local platform state
+.*/
+# Release records and generated data snapshots
+docs/
+seo/**/*.json
+# Deployed by hand to Google Apps Script; edit there and here together
+apps-script/
+# Whitespace in this document affects the rendered PDF
+playbook/*.html
