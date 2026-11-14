@@ -218,7 +218,7 @@ test('orders and bookings are never confirmed by the model; order lines go out v
     '"confirmed information" is not an order claim',
   );
   const ack = 'Order #12 confirmed: 1 × Black abaya, total 25.000 OMR.';
-  const r = validateReply(out('Thank you, Noura!'), ctx({ acks: [ack] }));
+  const r = validateReply(out('Thank you, Noura!'), ctx({ acks: [ack], customer: { name: 'Noura' } }));
   assert.equal(r.ok, true);
   assert.ok(r.reply.endsWith(ack), r.reply);
 });
@@ -460,4 +460,26 @@ test('a price is the price of the item it is said about, with its qualifier', ()
     true,
     'Arabic digits and names',
   );
+});
+
+test('Layla never makes up a time, a day, a promise or the customer’s name', () => {
+  const refused = (reply, extra) => validateReply(out(reply), ctx(extra)).problem;
+  assert.equal(validateReply(out('We are open Sunday to Thursday, 8:30 to 17:30.'), ctx()).ok, true);
+  assert.equal(refused('We are open until 9 pm every day.'), 'untraced_time');
+  assert.equal(refused('Yes, we open on Friday.'), 'untraced_day');
+  assert.equal(refused('We will reply within 2 hours.'), 'untraced_wait');
+  assert.equal(refused('We can give you a discount on the villa.'), 'unbacked_promise');
+  assert.equal(refused('Hello Ahmed, property management is 8% of annual rent.'), 'wrong_name');
+  assert.equal(
+    validateReply(
+      out('Hello Ahmed, property management is 8% of annual rent.'),
+      ctx({ customer: { name: 'Ahmed Said' } }),
+    ).ok,
+    true,
+    'the name they gave is theirs to hear',
+  );
+  assert.equal(refused('Yes sir, valuations are free.'), 'gendered_address');
+  const arabic = { history: [{ role: 'customer', text: 'كم سعر إدارة العقارات؟' }] };
+  assert.equal(refused('عايز تعرف السعر؟', arabic), 'other_dialect');
+  assert.equal(validateReply(out('حياكم الله، إدارة العقارات 8% of annual rent.'), ctx(arabic)).ok, true);
 });

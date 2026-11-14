@@ -9,6 +9,7 @@
 import { phrase, toneOf, TONES, withTeamPointer, langOf, hasEmoji, stripEmoji } from './layla-tones.js';
 import { safeReply, byteLength } from '../api/_lib/layla/reply-guard.js';
 import { untracedAmount } from './layla-prices.js';
+import { untracedClaim } from './layla-claims.js';
 
 export const INTENTS = Object.freeze([
   'answer',
@@ -396,9 +397,15 @@ export function validateReply(out, ctx) {
     if (!lower.includes(e.toLowerCase())) return { ok: false, problem: 'untraced_contact' };
   for (const u of reply.match(URL_RE) || [])
     if (!lower.includes(u.toLowerCase().replace(/[.,]+$/, ''))) return { ok: false, problem: 'untraced_link' };
+  // Times, days, waits, promises and the customer's name: stated only when the data or the chat does.
+  const claim = untracedClaim(reply, `${sourceText(ctx)}\n${ctx.customer?.name || ''}`, {
+    customerName: ctx.customer?.name,
+    lang,
+  });
   const acks = (ctx.acks || []).filter(Boolean);
   if (!acks.length && (ORDER_CLAIM.test(reply) || (brain && BOOKED.test(reply))))
     return { ok: false, problem: 'unconfirmed_order' };
+  if (claim) return { ok: false, problem: claim };
   // Short conversations: one question per reply at most, never a questionnaire.
   if ((reply.match(/[?؟]/g) || []).length > 1) return { ok: false, problem: 'too_many_questions' };
   // Live stock lines and order lines are facts: they go out exactly as written, whatever the model did with them.
