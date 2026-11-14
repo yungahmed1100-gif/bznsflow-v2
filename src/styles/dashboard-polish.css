@@ -49,7 +49,7 @@
 .ld .ld-icon-button { inline-size: 44px; block-size: 44px; border: 1.5px solid rgba(0, 0, 0, .35); background: var(--card); }
 
 /* A focus ring nobody can miss (GOV.UK pattern, in Ledger blue). */
-.ld :focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.ld[dir] :focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
 
 /* Status chips: darker words on their tint, so the colour and the text say the same thing. */
 .ld .ld-chip.is-green { color: var(--green); }
@@ -83,7 +83,7 @@
 /* ── 3. Phones ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   /* Header, content, tab bar: the page still never scrolls, so the bar is always in reach. */
-  .ld, .ld[lang=ar] { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .ld[dir], .ld[dir][lang=ar] { grid-template-rows: auto minmax(0, 1fr) auto; }
   .ld .ld-top { flex-wrap: nowrap; padding: 8px 12px; gap: 10px; min-block-size: 56px; }
   .ld .ld-top > .ld-mcp-link, .ld .ld-brand, .ld .ld-lang, .ld .ld-owner-access { display: none; }
   .ld .ld-header { flex-wrap: nowrap; order: 0; flex-basis: auto; flex: 1 1 auto; gap: 10px; }

@@ -1,0 +1,7 @@
+.loading-status { display: grid; place-items: center; min-block-size: 120px; padding: 24px; color: var(--ink, var(--text-primary)); font: inherit; }
+.loading-status.is-compact { min-block-size: 72px; padding: 16px; }
+.loading-announcement { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.loading-visual { display: flex; flex-direction: column; align-items: center; gap: 14px; visibility: hidden; font-size: .85rem; }
+.loading-visual.is-visible { visibility: visible; }
+.loading-dots { display: flex; align-items: center; justify-content: center; gap: 8px; block-size: 20px; }
+.loading-dot { display: block; inline-size: 7px; block-size: 7px; border-radius: 50%; background: currentColor; }

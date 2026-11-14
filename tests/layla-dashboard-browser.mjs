@@ -367,6 +367,7 @@ try {
     await page.getByRole('heading', { name: 'Chats', exact: true }).waitFor();
     assert.equal(await page.locator('.ld-desktop-nav a').allTextContents().then(t => t.join('|')), 'Chats|Customers|Settings'); count++;
     assert.equal(await page.locator('.ld-desktop-nav a[href*="tab=chats"]').getAttribute('aria-current'), 'page'); count++;
+    assert.ok((await page.locator('.ld-main').boundingBox()).height > 400, `chat pane has usable height at ${width}`); count++;
     await page.getByRole('button', { name: /Aisha Al Balushi/ }).click();
     await page.getByRole('heading', { name: 'Aisha Al Balushi' }).waitFor();
     const listVisible = await page.locator('.ld-list').isVisible();
@@ -645,7 +646,7 @@ try {
     assert.deepEqual(rs.calls.find(c => c.action === 'sender_save'), { action: 'sender_save', fromName: 'Blue Studio', fromLocal: 'news', replyTo: '' }); count++;
     // The website form carries this owner's key and the hidden bot trap.
     const snippet = await page.locator('.ld-code').textContent();
-    assert.match(snippet, /action="http:\/\/127\.0\.0\.1:\d+\/email\/subscribe"/); count++;
+    assert.ok(snippet.includes(`action="${new URL('/email/subscribe', BASE).href}"`)); count++;
     assert.match(snippet, /name="k" value="fk_0123456789abcdefghij"/); count++;
     assert.match(snippet, /name="website"/); count++;
     await page.screenshot({ path: `${OUT}/email-setup-${lang}-${width}.png`, fullPage: true });

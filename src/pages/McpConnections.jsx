@@ -347,7 +347,8 @@ export default function McpConnections({ lang = "ar" }) {
       }),
       value = await r.json();
     if (!r.ok) {
-      if (quiet) return;
+      // Revoked access must remove stale controls even during a background refresh.
+      if (quiet && r.status !== 401 && r.status !== 403) return;
       setData(null);
       setConsent(null);
       setError(value.reason);

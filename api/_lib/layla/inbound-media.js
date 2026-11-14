@@ -119,7 +119,10 @@ export async function processMediaJob(job, { store, env = process.env, fetcher =
   await store('media_attach', { integrationId: job.integrationId, attach: { messageId: job.messageId, ...rest, ...(text ? { text } : {}) } });
 }
 
-/** Every media message of one webhook delivery, side by side; one failure never stops the others. */
+/** Bound simultaneous downloads to 20; excess items receive an explicit failure instead of remaining pending. */
 export async function processInboundMedia(jobs, options) {
-  await Promise.allSettled(jobs.slice(0, 20).map(job => processMediaJob(job, options)));
+  await Promise.allSettled([
+    ...jobs.slice(0, 20).map(job => processMediaJob(job, options)),
+    ...jobs.slice(20).map(job => options.store('media_attach', { integrationId: job.integrationId, attach: { messageId: job.messageId, status: 'failed', error: 'media_batch_limit' } })),
+  ]);
 }

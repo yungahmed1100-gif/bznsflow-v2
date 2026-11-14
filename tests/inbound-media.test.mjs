@@ -145,3 +145,56 @@ test('a late or repeated reading changes nothing and its file is removed', async
   const chats = (await b.h.dashboard('conversations', { sessionHash: b.tenant.sessionHash })).value.items;
   assert.deepEqual(chats.find(c => c.contact.number === '96891119999').lastMessage.media, { kind: 'image' });
 });
+
+for (const words of ['STOP', 'لا تراسلني']) test(`spoken opt-out ${words} revokes consent before another reply`, async () => {
+  const b = await business();
+  const from = '96891118888';
+  const { media: [job] } = await b.ingest(b.envelope(from, { type: 'audio', audio: { id: 'voice1', mime_type: 'audio/ogg', voice: true } }));
+  const storageId = b.h.m.putFile({ contentType: 'audio/ogg', size: 900 });
+  await b.store('media_attach', { integrationId: job.integrationId, attach: { messageId: job.messageId, storageId, status: 'ready', text: words } });
+  assert.equal(b.contact(from).optout, true);
+  assert.equal(b.contact(from).consent.status, 'revoked');
+  assert.equal(b.conversation(from).pendingReply, undefined);
+});
+
+test('paused ingress cannot create delayed automation when media finishes', async () => {
+  const b = await business();
+  const from = '96891117777';
+  const { media: [job] } = await ingestBlueEnvelope(b.envelope(from, { type: 'audio', audio: { id: 'voice2', mime_type: 'audio/ogg', voice: true } }), { store: b.store, now: b.h.m.now, sendingEnabled: false });
+  assert.equal(b.conversation(from).pendingReply, undefined);
+  const storageId = b.h.m.putFile({ contentType: 'audio/ogg', size: 900 });
+  await b.store('media_attach', { integrationId: job.integrationId, attach: { messageId: job.messageId, storageId, status: 'ready', text: 'Are viewings free?' } });
+  assert.equal(b.conversation(from).pendingReply, undefined);
+  assert.equal(b.h.m.table('blueMessages').filter(m => m.direction === 'out').length, 0);
+});
+
+test('a reading arriving during generation fences the stale reply and preserves a fresh turn', async () => {
+  const b = await business();
+  const from = '96891116666';
+  const { media: [job] } = await b.ingest(b.envelope(from, { type: 'audio', audio: { id: 'voice3', mime_type: 'audio/ogg', voice: true } }));
+  b.h.m.advance(20000);
+  const before = b.conversation(from);
+  await b.store('reply_context', { conversationId: before._id, key: before.pendingReply.key });
+  const staleKey = before.pendingReply.key;
+  const storageId = b.h.m.putFile({ contentType: 'audio/ogg', size: 900 });
+  await b.store('media_attach', { integrationId: job.integrationId, attach: { messageId: job.messageId, storageId, status: 'ready', text: 'Are viewings free?' } });
+  const stale = await b.store('reply_commit', { conversationId: before._id, key: staleKey, text: 'Please type your question.', intent: 'answer' });
+  assert.equal(stale.skip, 'superseded');
+  const pending = b.conversation(from).pendingReply;
+  assert.ok(pending);
+  const fresh = await b.store('reply_context', { conversationId: before._id, key: pending.key });
+  assert.match(fresh.context.history.at(-1).text, /Are viewings free/);
+});
+
+test('every media item in a large delivery leaves pending, including bounded overflow', async () => {
+  const { processInboundMedia } = await import('../api/_lib/layla/inbound-media.js');
+  const reports = [];
+  const jobs = Array.from({ length: 21 }, (_, index) => ({ integrationId: 'synthetic', messageId: String(index), kind: 'image' }));
+  await processInboundMedia(jobs, { store: async (operation, args) => {
+    if (operation === 'media_context') return null;
+    if (operation === 'media_attach') reports.push(args.attach);
+  } });
+  assert.equal(reports.length, 21);
+  assert.equal(new Set(reports.map(row => row.messageId)).size, 21);
+  assert.ok(reports.every(row => row.status !== 'pending'));
+});

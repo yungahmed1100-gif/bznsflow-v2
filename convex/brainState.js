@@ -206,6 +206,9 @@ export async function executeBrain(ctx, a, now = Date.now()) {
 
   if (a.operation === 'settle_publish') {
     // After bzns.md is published: merged old answers are retired, so Layla reads each fact from one place.
+    // Another tab may accept a proposal between publication and this mutation. Keep its live answer
+    // until that newer draft is published; the next cleanup can retire the whole accepted batch.
+    if (!row.bznsPublished || row.bznsDraft?.markdown !== row.bznsPublished.markdown) return ok({ retired: 0 });
     const accepted = await ctx.db.query('brainProposals').withIndex('by_review_status', q => q.eq('reviewId', row._id).eq('status', 'accepted')).take(MAX_OPEN);
     let retired = 0;
     for (const p of accepted.filter(p => p.kind === 'qa_migration' && (p.flags || []).includes('retire_on_publish'))) {

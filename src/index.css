@@ -1,6 +1,6 @@
 /* ============================================================
    BZNSFLOW — stylesheet entry point
-   Premium Dark Theme · Production Ready
+   The Ledger · Arabic and English
 
    This file is a MANIFEST, not a stylesheet. Every rule lives in
    ./styles/*.css and is pulled in below.
@@ -69,3 +69,6 @@
 
 /* Colour that means something (2026-10-10; appended last) */
 @import './styles/colour.css';
+
+@import './styles/hero-cinematic.css';
+@import './styles/loading-dots.css';

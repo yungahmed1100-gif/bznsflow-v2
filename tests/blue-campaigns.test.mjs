@@ -505,3 +505,15 @@ test('Layla reads the broadcast a customer is answering and may quote its price'
   assert.doesNotMatch(system.content, /start by greeting them/);
   assert.equal(turn.ai.fallback, undefined, 'the 10% from the broadcast passes the price check');
 });
+
+test('a receipt before the provider result opens exactly one broadcast chat', async () => {
+  const base = await campaignTenant({ contacts: 1 });
+  const { job, claim } = await sentTo(base);
+  const { h, t } = base;
+  await h.messaging('ingest', { integrationId: t.integration.id, events: [{ kind: 'receipt', id: 'wamid.early', intent: claim.value.intent, recipient: job.waId, status: 'delivered', at: h.m.now() }] });
+  await h.worker('result', { jobId: job._id, intent: claim.value.intent, status: 'submitted', providerId: 'wamid.early' });
+  assert.equal((await h.m.db.get(job._id)).status, 'delivered');
+  assert.equal(h.m.table('blueConversations').length, 1);
+  await h.worker('result', { jobId: job._id, intent: claim.value.intent, status: 'submitted', providerId: 'wamid.early' });
+  assert.equal(h.m.table('blueConversations').length, 1);
+});

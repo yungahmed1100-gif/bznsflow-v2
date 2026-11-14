@@ -23,6 +23,8 @@ export default {
   "hero_pipeline_step5": "You take the next step",
   "hero_pipeline_step5_sub": "Or take over any time",
   "hero_demo_label": "Example",
+  "hero_story_from": "One inquiry.",
+  "hero_story_to": "A clear next step.",
   "hero_demo_customer": "Customer",
   "hero_demo_layla": "Layla",
   "hero_demo_1": "Do you have a 3-bedroom villa in Al Mouj?",

@@ -21,6 +21,7 @@ import { byteLength } from '../api/_lib/layla/reply-guard.js';
 import { INSTAGRAM_MAX_BYTES, conversationHistory, runawayChat } from './laylaReply.js';
 import { MEDIA_WAIT_MS, REPLY_DEBOUNCE_MS, TOPIC_FOR_INTENT, turnContext, turnMode } from './laylaTurn.js';
 import { attachedMedia, expireInboundMedia } from './blueInboundMedia.js';
+import { isOptOut } from '../config/layla-optout.js';
 import { effectiveBehaviour } from '../config/layla-behaviour.js';
 import { recordGap } from './brainState.js';
 import { NAME_FIELD, mergeFields, qualificationStatus, validateFieldValue } from '../config/layla-qualification.js';
@@ -262,7 +263,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         if(id && await ctx.db.system.get(id) && !(await ctx.db.query('blueMessages').withIndex('by_media_storage',q=>q.eq('media.storageId',id)).first())) await ctx.storage.delete(id);
         return ok(null);
       }
-      incoming=[{kind:'message',id:a.attach.messageId,from:person.number,at:original.at,text:original.text || '',attach:a.attach}];
+      incoming=[{kind:'message',id:a.attach.messageId,from:person.number,at:original.at,text:original.text || '',suppressAutomation:original.media.suppressAutomation===true,attach:a.attach}];
     }
     if(row.integration.channel==='instagram') {
       const kept=[];
@@ -341,7 +342,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       } else {
         if(await message(msgKey)) continue;
         await ctx.db.insert('blueMessages',{key:msgKey,integrationId:a.integrationId,accountId:row.accountId,conversationId:person._id,direction:e.kind==='echo'?'human':'in',text:e.text,...(e.kind==='message'&&MESSAGE_TOPICS.has(e.intent)?{topic:e.intent}:{}),
-          ...(held?{media:{...e.media,status:'pending'}}:{}),at:e.at,expiresAt:now+MESSAGE_RETENTION_MS,textExpiresAt:e.medicalContentWithheld?Number.MAX_SAFE_INTEGER:now+textKeep,status:'received'});
+          ...(held?{media:{...e.media,status:'pending',...(a.suppressAutomation?{suppressAutomation:true}:{})}}:{}),at:e.at,expiresAt:now+MESSAGE_RETENTION_MS,textExpiresAt:e.medicalContentWithheld?Number.MAX_SAFE_INTEGER:now+textKeep,status:'received'});
       }
       if(e.kind==='echo') {
         await ctx.db.patch(person._id,{takeover:true,...nativeHandling(person,e,now),updatedAt:now,version:(person.version || 0)+1});
@@ -350,6 +351,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         continue;
       }
       const tone=row.profile?.tone, lang=langOf(text);
+      if(isOptOut(text)) e={...e,intent:'optout'};
       // Layla's own recent replies in this chat: the first reply welcomes, and a runaway chat stops.
       const history=await conversationHistory(ctx,person._id,now);
       let applied=null;
@@ -362,7 +364,7 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
         applied=await applyInbound(ctx,contact,{text,intent:e.intent || 'ai',handoff:false,at:e.at,now,sectorId,catalog,tone,mode:brain.mode,behaviour:brain.behaviour});
       }
       // Paused ingress keeps messages, contacts and opt-outs without creating work to replay.
-      const automate=!a.suppressAutomation && rolloutAllows(global,row.accountId,person.number,now) && !!control?.active;
+      const automate=!a.suppressAutomation && !e.suppressAutomation && rolloutAllows(global,row.accountId,person.number,now) && !!control?.active;
       let commerce=null, realEstate=null, adiba=null;
       if(automate && applied) {
         // Hasib's lost-demand report: a product question becomes a PII-free signal (no-op while Hasib is off).
@@ -406,10 +408,10 @@ export async function executeMessaging(ctx, a, now = Date.now()) {
       const prev=person.pendingReply?.version===version ? person.pendingReply : null;
       const liveFacts=[realEstate?.facts || commerce?.facts, ...(adiba?.facts || [])].filter(Boolean).join('\n');
       // A photo or voice note holds the reply until it is read (media_attach), never past MEDIA_WAIT_MS. Once read,
-      // the reply already waiting goes ahead; if it has gone, the reading gets its own reply under its own key.
+      // a fresh key fences any generation that read the incomplete media. Pending facts and the latest inbound stay together.
       const awaitMedia=[...(prev?.awaitMedia || []).filter(k=>k!==msgKey),...(held?[msgKey]:[])];
       const own={key:`reply:${a.integrationId}:${e.id}${e.attach?':media':''}`,inboundKey:msgKey,inboundAt:e.at};
-      const pending={...(e.attach && prev ? {key:prev.key,inboundKey:prev.inboundKey,inboundAt:prev.inboundAt} : own),version,profileVersion:row.profileVersion || 1,awaitMedia,
+      const pending={...own,...(e.attach && prev ? {inboundKey:prev.inboundKey,inboundAt:prev.inboundAt} : {}),version,profileVersion:row.profileVersion || 1,awaitMedia,
         firstReply:prev ? prev.firstReply : history.firstReply,
         facts:[...(prev?.facts || []),...(liveFacts?[liveFacts]:[])].slice(-4),
         acks:[...(prev?.acks || []),...(commerce?.ack?[commerce.ack]:[]),...(adiba?.ack?[adiba.ack]:[])].slice(-3),

@@ -1,4 +1,5 @@
 import React from 'react';
+import { LegalTable } from '../components/ui/LegalTable';
 import { Icon } from '../components/ui/Icon';
 import { getStrings } from '../i18n';
 import { PRIVACY, PRIVACY_UPDATED_ISO, privacyTables } from '../content/privacy';
@@ -28,7 +29,7 @@ function Block({ node, tables, headHtml: Head = 'h2' }) {
         </ul>
       )}
 
-      {node.table && <DataTable rows={tables[node.table]} head={tables[`${node.table}Head`]} />}
+      {node.table && <LegalTable rows={tables[node.table]} head={tables[`${node.table}Head`]} label={node.h} />}
 
       {node.p2?.map((text) => <p key={text}>{text}</p>)}
 
@@ -39,33 +40,6 @@ function Block({ node, tables, headHtml: Head = 'h2' }) {
   );
 }
 
-/**
- * Tables are the honest way to present "who else sees your data" — prose hides
- * how many parties there are. Wrapped so a narrow screen scrolls the table
- * rather than the whole page.
- */
-function DataTable({ rows, head }) {
-  return (
-    <div className="legal-table-wrap">
-      <table className="legal-table">
-        <thead>
-          <tr>{head.map((h) => <th key={h} scope="col">{h}</th>)}</tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row[0]}>
-              {row.map((cell, i) => (
-                i === 0
-                  ? <th key={cell} scope="row"><bdi>{cell}</bdi></th>
-                  : <td key={cell}>{cell}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 export default function Privacy({ lang = 'ar' }) {
   const t = getStrings(lang);

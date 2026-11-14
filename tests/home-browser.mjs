@@ -21,7 +21,12 @@ async function open(path, width, reducedMotion = 'no-preference') {
   return { page, context, errors };
 }
 const activeLabel = page => page.locator('.pipeline-step[data-state=active] .pipeline-node-label').textContent();
-const serious = async page => (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`);
+const serious = async page => {
+  const stable = await page.addStyleTag({ content: '[data-reveal] { transition: none !important; animation: none !important; }' });
+  try {
+    return (await new AxeBuilder({ page }).analyze()).violations.filter(v => ['serious', 'critical'].includes(v.impact)).map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`);
+  } finally { await stable.evaluate(element => element.remove()); }
+};
 
 async function checkApexDisclosure(page, lang, width) {
   const apex = page.locator('[data-tier="apex"]');
@@ -61,7 +66,7 @@ async function checkApexDisclosure(page, lang, width) {
 
 try {
   for (const [lang, path, first, record] of [['en', '/en', 'A customer asks', 'Need'], ['ar', '/', 'العميل يسأل', 'الاحتياج']]) {
-    // The pipeline cycles on its own, one step every few seconds.
+    // Scroll selects the step; the story never advances on a timer.
     const { page, context, errors } = await open(path, 1440);
     assert.equal(await activeLabel(page), first); count++;
     // Every "book the audit" link opens our own booking page, in the same tab (2026-10-24).
@@ -69,9 +74,10 @@ try {
     const booking = await page.locator('a[href$="/audit"], a[href*="calendar.app.google"]').evaluateAll(links => links.map(a => [a.getAttribute('href'), a.getAttribute('target')]));
     assert.ok(booking.length >= 3, `${lang}: hero, about and footer offer the audit`); count++;
     assert.deepEqual([...new Set(booking.map(([href, target]) => `${href}|${target}`))], [`${audit}|null`]); count++;
-    await page.waitForFunction(f => document.querySelector('.pipeline-step[data-state=active] .pipeline-node-label')?.textContent !== f, first, { timeout: 6000 });
+    await page.locator('.pipeline-step').nth(1).evaluate(el => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await page.waitForFunction(() => document.querySelector('.pipeline-step[data-state=active]')?.dataset.step === '1');
     count++;
-    // Picking a step shows its example and stops the cycle.
+    // Picking a step scrolls to it and shows its worked example.
     await page.mouse.move(0, 0);
     const fourth = page.locator('.pipeline-node').nth(3);
     await fourth.click();

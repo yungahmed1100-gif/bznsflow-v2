@@ -1,13 +1,8 @@
-# Project configuration. Global model, sandbox and approval preferences are inherited.
-# See README.md for tool scope, skills and verification commands.
-
 [mcp_servers.supabase]
-# Historical endpoint: https://mcp.supabase.com/mcp?project_ref=svmrfzahbgmvesclbqke
-# Inherit its global transport; specifying url here conflicts with a global stdio command.
-enabled = false # Historical source; Green no longer writes to Supabase.
+enabled = false
 
 [mcp_servers.convex-blue]
-enabled = false # Avoid targeting the other application's backend in this checkout.
+enabled = false
 
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
@@ -20,33 +15,63 @@ tool_timeout_sec = 60
 
 [mcp_servers.playwright]
 command = "npx"
-args = ["-y", "@playwright/mcp@0.0.83", "--headless", "--isolated"]
+args = [ "-y", "@playwright/mcp@0.0.83", "--headless", "--isolated" ]
 startup_timeout_sec = 60
 tool_timeout_sec = 90
 
 [mcp_servers.convex-green]
 command = "/Users/ramsis21/Desktop/bznsflow web/node_modules/.bin/convex"
-args = ["mcp", "start", "--project-dir", "/Users/ramsis21/Desktop/bznsflow web", "--deployment", "rare-fish-465", "--disable-tools", "data,logs,run,runOneoffQuery,envGet,envList,envSet,envRemove"]
-enabled_tools = ["status", "tables", "functionSpec", "insights"]
+args = [
+  "mcp",
+  "start",
+  "--project-dir",
+  "/Users/ramsis21/Desktop/bznsflow web",
+  "--deployment",
+  "rare-fish-465",
+  "--disable-tools",
+  "data,logs,run,runOneoffQuery,envGet,envList,envSet,envRemove"
+]
+enabled_tools = [ "status", "tables", "functionSpec", "insights" ]
 startup_timeout_sec = 30
 tool_timeout_sec = 60
 
-# Impeccable roles ported from .claude/agents (model inherited).
-
-# Pinned upstream GSC server; adapter exposes only read-only scopes and tools.
-# Transport can start without credentials. Property access still needs Google setup.
 [mcp_servers.gsc]
 command = "/Users/ramsis21/Desktop/bznsflow web/.codex/tools/seo/.venv/bin/python"
-args = ["/Users/ramsis21/Desktop/bznsflow web/.codex/scripts/gsc_readonly.py"]
-enabled_tools = ["get_capabilities", "list_properties", "get_site_details", "get_search_analytics", "get_performance_overview", "compare_search_periods", "get_search_by_page_query", "get_advanced_search_analytics", "inspect_url_enhanced", "batch_url_inspection", "check_indexing_issues", "get_sitemaps", "list_sitemaps_enhanced", "get_sitemap_details"]
+args = [
+  "/Users/ramsis21/Desktop/bznsflow web/.codex/scripts/gsc_readonly.py"
+]
+enabled_tools = [
+  "get_capabilities",
+  "list_properties",
+  "get_site_details",
+  "get_search_analytics",
+  "get_performance_overview",
+  "compare_search_periods",
+  "get_search_by_page_query",
+  "get_advanced_search_analytics",
+  "inspect_url_enhanced",
+  "batch_url_inspection",
+  "check_indexing_issues",
+  "get_sitemaps",
+  "list_sitemaps_enhanced",
+  "get_sitemap_details"
+]
 startup_timeout_sec = 30
 tool_timeout_sec = 90
 
-[mcp_servers.gsc.env]
-GSC_CONFIG_DIR = "/Users/ramsis21/.config/bznsflow/gsc"
-GSC_OAUTH_CLIENT_SECRETS_FILE = "/Users/ramsis21/.config/bznsflow/gsc/client-secrets.json"
-GSC_ALLOW_DESTRUCTIVE = "false"
-GSC_DATA_STATE = "final"
+  [mcp_servers.gsc.env]
+  GSC_CONFIG_DIR = "/Users/ramsis21/.config/bznsflow/gsc"
+  GSC_OAUTH_CLIENT_SECRETS_FILE = "/Users/ramsis21/.config/bznsflow/gsc/client-secrets.json"
+  GSC_ALLOW_DESTRUCTIVE = "false"
+  GSC_DATA_STATE = "final"
+
+[mcp_servers.motion]
+type = "http"
+url = "https://mcp.motion.dev"
+
+[mcp_servers.motion-plus]
+type = "http"
+url = "https://mcp.motion.dev/plus"
 
 [agents.impeccable_asset_producer]
 description = "Produces clean reusable raster assets from approved Impeccable mock references without redesigning the direction."
@@ -64,13 +89,13 @@ config_file = "/Users/ramsis21/Desktop/bznsflow web/.codex/agents/impeccable_fin
 description = "Applies leased Impeccable live manual copy-edit batches to source and returns canonical Apply results."
 config_file = "/Users/ramsis21/Desktop/bznsflow web/.codex/agents/impeccable_manual_edit_applier.toml"
 
-# Native local Codex hooks. Cloud-orchestrated sessions do not run local command hooks.
 [[hooks.PostToolUse]]
 matcher = "apply_patch|Edit|Write"
-[[hooks.PostToolUse.hooks]]
-type = "command"
-command = '"/Users/ramsis21/Desktop/bznsflow web/.codex/skills/impeccable/scripts/impeccable" hook'
-timeout = 5
+
+  [[hooks.PostToolUse.hooks]]
+  type = "command"
+  command = '"/Users/ramsis21/Desktop/bznsflow web/.codex/skills/impeccable/scripts/impeccable" hook'
+  timeout = 5
 
 [[hooks.Stop]]
 [[hooks.Stop.hooks]]

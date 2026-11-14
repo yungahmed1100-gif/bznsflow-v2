@@ -1,4 +1,5 @@
 import { ChannelConnections } from '../components/dashboard/ChannelConnections';
+import { LoadingDots } from '../components/ui/LoadingDots';
 import { BusinessDetails } from '../components/dashboard/BusinessDetails';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -154,7 +155,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
       <main id="ld-main" className={`ld-main ${hasibOverview?.readOnly ? 'hb-preview-mode' : ''}`} tabIndex={-1} data-tab={tab}>
         {!previewPack && <AccessNotice s={s} account={account} />}
         {!previewPack && tab !== 'website' && map.sections.includes('website') && <WebsiteReminder s={s} account={account} onGo={go} />}
-        {!ready || (overview.loading && !data) || hasibPending ? <p className="ld-state" role="status">{s.t('loading')}</p>
+        {!ready || (overview.loading && !data) || hasibPending ? <LoadingDots label={s.t('loading')} />
           : unavailable ? <div className="ld-state"><p>{s.t('dashboardUnavailable')}</p><a className="ld-button" href={setupPath(lang)}>{s.t('setup')}</a></div>
           : overview.error && !data ? <div className="ld-state" role="alert"><p>{s.reason(overview.error.reason)}</p>{overview.error.reason === 'access_required'
             ? <a className="ld-button ld-primary" href={s.ar ? '/' : '/en'}>{s.t('choosePlan')}</a>
@@ -199,7 +200,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
             {/* Loaded, but no channel yet (a Catalyst workspace has nothing to show without one). */}
             <p>{s.ar ? 'اربط واتساب أو إنستغرام لتبدأ ليلى بالرد على عملائك.' : 'Connect WhatsApp or Instagram and Layla starts answering your customers.'}</p>
             <a className="ld-button ld-primary" href={setupPath(lang)}>{s.ar ? 'اربط قناة' : 'Connect a channel'}</a>
-          </div> : <p className="ld-state" role="status">{s.t('loading')}</p>}
+          </div> : <LoadingDots label={s.t('loading')} />}
       </main>
       </HasibProvider>
     </div>

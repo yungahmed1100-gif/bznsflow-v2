@@ -190,6 +190,9 @@ try {
       }
       // ChatGPT: the address to paste, and the BznsFlow icon for the connector.
       await page.locator("#mcp-tab-chatgpt").click();
+      assert.match(await page.locator('.mcp-instructions').innerText(), /Plugins/);
+      assert.match(await page.locator('.mcp-instructions').innerText(), /OAuth/);
+      checks += 2;
       assert.equal(
         await page.locator(".mcp-command pre").textContent(),
         BASE + "/api/mcp",
@@ -433,7 +436,11 @@ try {
         fullPage: true,
       });
       denied = true;
-      await page.reload();
+      // Access changes while the page stays open: a quiet refresh must clear stale controls.
+      await Promise.all([
+        page.waitForResponse(r => r.url().includes('/api/mcp/manage') && r.request().method() === 'GET' && r.status() === 403),
+        page.evaluate(() => window.dispatchEvent(new Event('focus'))),
+      ]);
       await page
         .getByText(
           lang === "ar"
@@ -441,7 +448,7 @@ try {
             : "Only the business owner can manage AI connections.",
           { exact: false },
         )
-        .waitFor();
+        .waitFor({ timeout: 3000 });
       assert.equal(
         await page
           .getByRole("button", {

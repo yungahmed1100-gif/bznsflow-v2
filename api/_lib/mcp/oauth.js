@@ -9,6 +9,7 @@ import {
 import { mcpStore, McpError } from "./store.js";
 import { parseCookies, appendCookie, serializeCookie } from "../cookies.js";
 import { hashAccountToken } from "../blue-auth.js";
+import { MCP_NAME, MCP_ICON_PATH } from "../../../config/mcp/identity.js";
 export const tokenHash = (req) =>
   hashAccountToken(parseCookies(req).bf_session || "");
 export function mcpOrigin(env = process.env) {
@@ -27,7 +28,7 @@ export function protectedMetadata(env = process.env) {
     authorization_servers: [`${origin}/oauth`],
     scopes_supported: ["workspace:read", "workspace:write"],
     bearer_methods_supported: ["header"],
-    resource_name: "BznsFlow",
+    resource_name: MCP_NAME,
   };
 }
 const hash = (v) => createHash("sha256").update(v).digest("hex");
@@ -322,7 +323,7 @@ export function createOAuth({
     renderError: async (ctx) => {
       ctx.type = "html";
       ctx.body =
-        '<!doctype html><html lang="en"><title>Connection could not be completed</title><p>Connection could not be completed. Return to BznsFlow and try again.</p></html>';
+        `<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BznsFlow connection could not be completed</title><main><img src="${origin}${MCP_ICON_PATH}" width="48" height="48" alt="BznsFlow"><h1>Connection could not be completed</h1><p>Return to your AI assistant and restart the connection. Sign in with your business owner account when asked.</p><a href="${origin}/mcp">BznsFlow connection help</a></main></html>`;
     },
   });
   provider.proxy = true;
@@ -406,18 +407,18 @@ export async function completeInteraction(
   );
   if (interaction.uid !== interactionUid)
     throw new McpError("authorization_changed", 409);
-  // One owner decision finishes the request: the page never shows it again.
-  appendCookie(
-    res,
-    serializeCookie("bf_mcp_resume", "", { maxAge: 0, httpOnly: true }),
-  );
   if (!allow) {
-    return provider.interactionResult(
+    const redirect = await provider.interactionResult(
       req,
       res,
       { error: "access_denied", error_description: "Owner declined access" },
       { mergeWithLastSubmission: false },
     );
+    appendCookie(
+      res,
+      serializeCookie("bf_mcp_resume", "", { maxAge: 0, httpOnly: true }),
+    );
+    return redirect;
   }
   const identity = await store("browser_identity", {
     tokenHash: tokenHash(req),
@@ -463,7 +464,7 @@ export async function completeInteraction(
     accountId: identity.accountId,
     grantId: hash(grantId),
   });
-  return provider.interactionResult(
+  const redirect = await provider.interactionResult(
     req,
     res,
     {
@@ -474,4 +475,11 @@ export async function completeInteraction(
     },
     { mergeWithLastSubmission: !signingIn },
   );
+  // Clear only after the decision completes. A fresh-sign-in challenge must
+  // retain this cookie so returning to /mcp restores the pending consent.
+  appendCookie(
+    res,
+    serializeCookie("bf_mcp_resume", "", { maxAge: 0, httpOnly: true }),
+  );
+  return redirect;
 }

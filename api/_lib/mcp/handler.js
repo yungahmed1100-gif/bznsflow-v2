@@ -6,6 +6,7 @@ import {
   CallToolRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { TOOL_BY_NAME } from "../../../config/mcp/contracts.js";
+import { MCP_NAME, MCP_DESCRIPTION, MCP_INSTRUCTIONS, mcpIcons } from "../../../config/mcp/identity.js";
 import {
   createOAuth,
   protectedMetadata,
@@ -281,19 +282,14 @@ export function createMcpHandler({
       const server = new Server(
         {
           name: "bznsflow",
-          title: "BznsFlow",
+          title: MCP_NAME,
+          description: MCP_DESCRIPTION,
           version: "1.0.0",
           websiteUrl: origin,
           // Shown by clients next to the connector so the owner can recognise it.
-          icons: [
-            {
-              src: `${origin}/mcp/bznsflow-icon.png`,
-              mimeType: "image/png",
-              sizes: ["256x256"],
-            },
-          ],
+          icons: mcpIcons(origin),
         },
-        { capabilities: { tools: {} } },
+        { capabilities: { tools: {} }, instructions: MCP_INSTRUCTIONS },
       );
       server.setRequestHandler(ListToolsRequestSchema, async (request) => {
         const cursor = request.params?.cursor || "0";
@@ -306,6 +302,7 @@ export function createMcpHandler({
             const t = TOOL_BY_NAME.get(name);
             return {
               name: t.name,
+              icons: mcpIcons(origin),
               description: t.description,
               inputSchema: t.inputSchema,
               annotations: {

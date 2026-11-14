@@ -22,6 +22,8 @@ export default {
   "hero_pipeline_step5": "تأخذ الخطوة التالية",
   "hero_pipeline_step5_sub": "أو تستلم المحادثة متى شئت",
   "hero_demo_label": "مثال",
+  "hero_story_from": "استفسار واحد.",
+  "hero_story_to": "خطوة تالية واضحة.",
   "hero_demo_customer": "العميل",
   "hero_demo_layla": "ليلى",
   "hero_demo_1": "عندكم فيلا ٣ غرف في الموج؟",

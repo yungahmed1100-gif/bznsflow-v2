@@ -308,9 +308,9 @@ export async function executeCampaignWorker(ctx, a, now = Date.now()) {
         const status = a.status === 'retry' ? 'failed' : a.status;
         if (status === 'failed') await recordUndeliverable(ctx, job, a.errorCode, now);
         await ctx.db.patch(job._id, { status, ...(a.providerId ? { providerId: a.providerId } : {}), ...(a.reason ? { reason: String(a.reason).slice(0, 60) } : {}), ...code, updatedAt: now });
-        if (status === 'submitted') await openTemplateChat(ctx, job, now);
       }
     } else if (a.providerId && !job.providerId) await ctx.db.patch(job._id, { providerId: a.providerId, updatedAt: now });
+    if (a.status === 'submitted' && (job.status === 'attempting' || ACCEPTED.includes(job.status))) await openTemplateChat(ctx, job, now);
     for (const field of SECTOR_DRAFT_FIELDS) if (job[field]) await ctx.db.patch(job[field], { status: a.status === 'submitted' ? 'provider_submitted' : a.status === 'retry' ? 'queued_template' : a.status, updatedAt: now, ...(a.status === 'submitted' ? { providerSubmittedAt: now } : {}) });
     if (campaign && typeof a.campaignBlock === 'string' && campaign.status === 'processing') await blockCampaign(ctx, campaign, a.campaignBlock.slice(0, 60), now);
     else if (campaign) await nextQueued(ctx, a, campaign._id, now);

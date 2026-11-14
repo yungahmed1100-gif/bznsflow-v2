@@ -34,6 +34,7 @@ export default function Home({ lang: routeLang = 'ar' }) {
   const [activeLink,    setActiveLink]    = useState('');
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isChatOpen,    setIsChatOpen]    = useState(false);
+  const [storyVisible, setStoryVisible] = useState(false);
 
   // The popup must never stack on top of another surface that already
   // owns the screen — two dialogs at once is a trap, not a prompt.
@@ -74,6 +75,14 @@ export default function Home({ lang: routeLang = 'ar' }) {
 
   // Scroll reveals (single site-wide primitive). Re-runs on language switch.
   useEffect(() => initReveals(), [lang]);
+
+  useEffect(() => {
+    const story = document.querySelector('.inquiry-story');
+    if (!story) return;
+    const observer = new IntersectionObserver(([entry]) => setStoryVisible(entry.isIntersecting), { rootMargin: '0px 0px -80px 0px' });
+    observer.observe(story);
+    return () => observer.disconnect();
+  }, []);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -131,7 +140,7 @@ export default function Home({ lang: routeLang = 'ar' }) {
 
       <StickyMobileCTA t={t} CALENDAR_URL={auditPath(lang)} trackEvent={trackEvent} />
 
-      <ChatWidget t={t} lang={lang} trackEvent={trackEvent} onOpenChange={setIsChatOpen} />
+      <ChatWidget t={t} lang={lang} trackEvent={trackEvent} onOpenChange={setIsChatOpen} suppressLauncher={storyVisible} />
 
       <PlaybookModal
         t={t} lang={lang}

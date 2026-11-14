@@ -11,7 +11,7 @@ import laylaAvatar from '../../assets/layla-avatar.png';
 
 // `respond` replaces the live chat backend (the setup page answers from a fixed scenario list);
 // `suggestions` are one-tap questions shown under the greeting.
-export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange = () => {}, respond = null, suggestions = [] }) {
+export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange = () => {}, respond = null, suggestions = [], suppressLauncher = false }) {
   const isAr = lang === 'ar';
   const [isOpen, setIsOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
@@ -101,7 +101,7 @@ export function ChatWidget({ t, lang = 'en', trackEvent = () => {}, onOpenChange
   };
 
   return (
-    <div className={`chat-widget${isAr ? ' chat-widget--rtl' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
+    <div className={`chat-widget${isAr ? ' chat-widget--rtl' : ''}${suppressLauncher && !isOpen ? ' is-story-suppressed' : ''}`} dir={isAr ? 'rtl' : 'ltr'}>
       {/* Launcher bubble */}
       <button
         type="button"
