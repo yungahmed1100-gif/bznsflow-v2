@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { hasib } from '../../lib/dashboard/api';
+import { useViewData } from '../../hooks/useViewData.js';
 import { ActionCards, EmptyState, HorizontalBars, MetricCards, PageHeader } from './DashboardVisuals';
 import { StockView } from './StockView';
 import { channelsFrom } from '../../lib/dashboard/channels';
@@ -33,6 +34,80 @@ const nextWork = {
   collected: 'closed',
 };
 
+/** Everything one view of the automotive dashboard shows. */
+async function loadAutomotiveView(mode, { isTechnician, isManager }) {
+  if (mode === 'parts') return {};
+  if (mode === 'money') return hasib('automotive_insights');
+  if (mode === 'team') return hasib('team_list');
+  if (mode === 'settings') {
+    const [services, bays, team] = await Promise.all([
+      hasib('automotive_services'),
+      hasib('automotive_bays'),
+      hasib('team_list'),
+    ]);
+    return { services: services.items, bays: bays.items, team: team.members || [] };
+  }
+  if (mode === 'workshop') {
+    const calls = isTechnician
+      ? [
+          hasib('automotive_overview'),
+          Promise.resolve({ items: [] }),
+          hasib('automotive_vehicles'),
+          hasib('automotive_services'),
+          hasib('automotive_bays'),
+          Promise.resolve({ items: [] }),
+          hasib('automotive_work_orders'),
+          Promise.resolve({ items: [] }),
+          hasib('automotive_labor_entries'),
+          hasib('automotive_parts'),
+          hasib('items'),
+        ]
+      : [
+          hasib('automotive_overview'),
+          hasib('automotive_contacts'),
+          hasib('automotive_vehicles'),
+          hasib('automotive_services'),
+          hasib('automotive_bays'),
+          hasib('automotive_appointments'),
+          hasib('automotive_work_orders'),
+          hasib('automotive_estimates'),
+          hasib('automotive_labor_entries'),
+          hasib('automotive_parts'),
+          hasib('items'),
+        ];
+    if (isManager) calls.push(hasib('team_list'));
+    const [
+      summary,
+      contacts,
+      vehicles,
+      services,
+      bays,
+      appointments,
+      workOrders,
+      estimates,
+      labor,
+      parts,
+      items,
+      team,
+    ] = await Promise.all(calls);
+    return {
+      ...summary,
+      contacts: contacts.items,
+      vehicles: vehicles.items,
+      services: services.items,
+      bays: bays.items,
+      appointments: appointments.items,
+      workOrders: workOrders.items,
+      estimates: estimates.items,
+      labor: labor.items,
+      parts: parts.items,
+      items: items.items,
+      team: team?.members || [],
+    };
+  }
+  return hasib('automotive_overview');
+}
+
 export function AutomotiveDashboard({
   mode,
   s,
@@ -52,91 +127,15 @@ export function AutomotiveDashboard({
     tr = (en, arabic) => (ar ? arabic : en),
     readOnly = overview.readOnly === true;
   const isTechnician = overview.teamSummary?.operationalRole === 'technician';
-  const [data, setData] = useState(null),
-    [error, setError] = useState(''),
-    [busy, setBusy] = useState(false),
+  const [busy, setBusy] = useState(false),
     [form, setForm] = useState(initialAction);
   useEffect(() => setForm(initialAction), [initialAction]);
-  const load = useCallback(async () => {
-    setError('');
-    try {
-      if (mode === 'parts') return setData({});
-      if (mode === 'money') return setData(await hasib('automotive_insights'));
-      if (mode === 'team') return setData(await hasib('team_list'));
-      if (mode === 'settings') {
-        const [services, bays, team] = await Promise.all([
-          hasib('automotive_services'),
-          hasib('automotive_bays'),
-          hasib('team_list'),
-        ]);
-        return setData({ services: services.items, bays: bays.items, team: team.members || [] });
-      }
-      if (mode === 'workshop') {
-        const calls = isTechnician
-          ? [
-              hasib('automotive_overview'),
-              Promise.resolve({ items: [] }),
-              hasib('automotive_vehicles'),
-              hasib('automotive_services'),
-              hasib('automotive_bays'),
-              Promise.resolve({ items: [] }),
-              hasib('automotive_work_orders'),
-              Promise.resolve({ items: [] }),
-              hasib('automotive_labor_entries'),
-              hasib('automotive_parts'),
-              hasib('items'),
-            ]
-          : [
-              hasib('automotive_overview'),
-              hasib('automotive_contacts'),
-              hasib('automotive_vehicles'),
-              hasib('automotive_services'),
-              hasib('automotive_bays'),
-              hasib('automotive_appointments'),
-              hasib('automotive_work_orders'),
-              hasib('automotive_estimates'),
-              hasib('automotive_labor_entries'),
-              hasib('automotive_parts'),
-              hasib('items'),
-            ];
-        if (overview.workspaceRole === 'manager') calls.push(hasib('team_list'));
-        const [
-          summary,
-          contacts,
-          vehicles,
-          services,
-          bays,
-          appointments,
-          workOrders,
-          estimates,
-          labor,
-          parts,
-          items,
-          team,
-        ] = await Promise.all(calls);
-        return setData({
-          ...summary,
-          contacts: contacts.items,
-          vehicles: vehicles.items,
-          services: services.items,
-          bays: bays.items,
-          appointments: appointments.items,
-          workOrders: workOrders.items,
-          estimates: estimates.items,
-          labor: labor.items,
-          parts: parts.items,
-          items: items.items,
-          team: team?.members || [],
-        });
-      }
-      setData(await hasib('automotive_overview'));
-    } catch (e) {
-      setError(e.reason || 'automotive_unavailable');
-    }
-  }, [isTechnician, mode, overview.workspaceRole]);
-  useEffect(() => {
-    load();
-  }, [load]);
+  const isManager = overview.workspaceRole === 'manager';
+  const fetchView = useCallback(
+    () => loadAutomotiveView(mode, { isTechnician, isManager }),
+    [mode, isTechnician, isManager],
+  );
+  const { data, error, setError, load } = useViewData(mode, fetchView, 'automotive_unavailable');
   const mutate = async (operation, body = {}) => {
     if (readOnly) return null;
     setBusy(true);

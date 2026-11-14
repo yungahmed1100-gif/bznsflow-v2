@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { hasib, dashboard } from '../../lib/dashboard/api';
+import { useViewData } from '../../hooks/useViewData.js';
 import { ActionCards, EmptyState, MetricCards, PageHeader } from './DashboardVisuals';
 
 const money = (minor, ar) =>
@@ -32,12 +33,55 @@ const nextStatus = {
 const RECORD_ACTIONS = ['milestone', 'progress', 'cost', 'variation', 'claim'];
 const SITE_ACTIONS = ['commitment', 'report', 'quality', 'risk'];
 
+/** Everything one view of the construction dashboard shows. */
+async function loadConstructionView(mode) {
+  if (mode === 'money') return hasib('construction_insights');
+  if (mode === 'team') return hasib('team_list');
+  if (mode === 'procurement') {
+    const [overviewData, commitments, quality, risks, reports] = await Promise.all([
+      hasib('construction_overview'),
+      ...['construction_commitments', 'construction_quality', 'construction_risks', 'construction_site_reports'].map(
+        operation => hasib(operation),
+      ),
+    ]);
+    return {
+      projects: overviewData.projects,
+      commitments: commitments.items,
+      quality: quality.items,
+      risks: risks.items,
+      reports: reports.items,
+    };
+  }
+  if (mode === 'projects') {
+    const [summary, milestones, progress, costs, variations, claims] = await Promise.all(
+      [
+        'construction_overview',
+        'construction_milestones',
+        'construction_progress',
+        'construction_costs',
+        'construction_variations',
+        'construction_claims',
+      ].map(operation => hasib(operation)),
+    );
+    // The client is who Layla messages about a variation or a certified balance; staff without customer access see none.
+    const contacts = await dashboard('contacts', { limit: 50 }).catch(() => ({ items: [] }));
+    return {
+      ...summary,
+      milestones: milestones.items,
+      progress: progress.items,
+      costs: costs.items,
+      variations: variations.items,
+      claims: claims.items,
+      contacts: contacts.items || [],
+    };
+  }
+  return hasib('construction_overview');
+}
+
 export function ConstructionDashboard({ mode, s, overview, onChanged, onGo, initialAction = '', strip = null }) {
   const ar = s.ar,
     tr = (en, arabic) => (ar ? arabic : en);
-  const [data, setData] = useState(null),
-    [error, setError] = useState(''),
-    [busy, setBusy] = useState(false),
+  const [busy, setBusy] = useState(false),
     [showProject, setShowProject] = useState(initialAction === 'project'),
     [recordType, setRecordType] = useState(RECORD_ACTIONS.includes(initialAction) ? initialAction : ''),
     [siteAction, setSiteAction] = useState(SITE_ACTIONS.includes(initialAction) ? initialAction : ''),
@@ -48,58 +92,8 @@ export function ConstructionDashboard({ mode, s, overview, onChanged, onGo, init
     setSiteAction(SITE_ACTIONS.includes(initialAction) ? initialAction : '');
     setShowInvite(initialAction === 'invite');
   }, [initialAction]);
-  const load = useCallback(async () => {
-    setError('');
-    try {
-      if (mode === 'money') setData(await hasib('construction_insights'));
-      else if (mode === 'team') setData(await hasib('team_list'));
-      else if (mode === 'procurement') {
-        const [overviewData, commitments, quality, risks, reports] = await Promise.all([
-          hasib('construction_overview'),
-          ...[
-            'construction_commitments',
-            'construction_quality',
-            'construction_risks',
-            'construction_site_reports',
-          ].map(operation => hasib(operation)),
-        ]);
-        setData({
-          projects: overviewData.projects,
-          commitments: commitments.items,
-          quality: quality.items,
-          risks: risks.items,
-          reports: reports.items,
-        });
-      } else if (mode === 'projects') {
-        const [summary, milestones, progress, costs, variations, claims] = await Promise.all(
-          [
-            'construction_overview',
-            'construction_milestones',
-            'construction_progress',
-            'construction_costs',
-            'construction_variations',
-            'construction_claims',
-          ].map(operation => hasib(operation)),
-        );
-        // The client is who Layla messages about a variation or a certified balance; staff without customer access see none.
-        const contacts = await dashboard('contacts', { limit: 50 }).catch(() => ({ items: [] }));
-        setData({
-          ...summary,
-          milestones: milestones.items,
-          progress: progress.items,
-          costs: costs.items,
-          variations: variations.items,
-          claims: claims.items,
-          contacts: contacts.items || [],
-        });
-      } else setData(await hasib('construction_overview'));
-    } catch (e) {
-      setError(e.reason || 'construction_unavailable');
-    }
-  }, [mode]);
-  useEffect(() => {
-    load();
-  }, [load]);
+  const fetchView = useCallback(() => loadConstructionView(mode), [mode]);
+  const { data, error, setError, load } = useViewData(mode, fetchView, 'construction_unavailable');
   const mutate = async (operation, body) => {
     setBusy(true);
     setError('');

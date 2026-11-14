@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { hasib } from '../../lib/dashboard/api';
+import { useViewData } from '../../hooks/useViewData.js';
 import { BookingWorkView } from './BookingWorkView';
 import { EmptyState, MetricCards, PageHeader } from './DashboardVisuals';
 
@@ -21,22 +22,12 @@ const dateTime = (value, ar, timezone) =>
 export function ClinicDashboard({ mode, s, h, overview, timezone, onChanged, onGo, initialAction }) {
   const ar = s.ar,
     tr = (en, arabic) => (ar ? arabic : en);
-  const [data, setData] = useState(null),
-    [error, setError] = useState(''),
-    [busy, setBusy] = useState(false);
-  const load = useCallback(async () => {
-    setError('');
-    try {
-      if (mode === 'money') setData(await hasib('clinic_insights'));
-      else if (mode === 'team') setData(await hasib('team_list'));
-      else setData(await hasib('clinic_overview'));
-    } catch (e) {
-      setError(e.reason || 'clinic_unavailable');
-    }
-  }, [mode]);
-  useEffect(() => {
-    load();
-  }, [load]);
+  const [busy, setBusy] = useState(false);
+  const fetchView = useCallback(
+    () => hasib(mode === 'money' ? 'clinic_insights' : mode === 'team' ? 'team_list' : 'clinic_overview'),
+    [mode],
+  );
+  const { data, error, setError, load } = useViewData(mode, fetchView, 'clinic_unavailable');
   const mutate = async (action, body) => {
     setBusy(true);
     setError('');
