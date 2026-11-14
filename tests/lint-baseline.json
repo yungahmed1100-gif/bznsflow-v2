@@ -75,10 +75,6 @@
     "no-unused-vars": 1,
     "react-hooks/exhaustive-deps": 1
   },
-  "src/components/brain/EssentialsCard.jsx": {
-    "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 1
-  },
   "src/components/brain/ReviewCard.jsx": {
     "no-unused-vars": 1
   },

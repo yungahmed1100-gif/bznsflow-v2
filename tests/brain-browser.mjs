@@ -310,7 +310,9 @@ try {
           s,
           signedIn: false,
         });
-        const heading = page.getByRole('heading', { name: ar ? 'أضف معلوماتك' : 'Add your information' });
+        const heading = page.getByRole('heading', {
+          name: ar ? 'جهّز ما تجيب منه ليلى' : 'Give Layla what she answers from',
+        });
         await heading.waitFor();
         assert.equal(
           await page.getByLabel(ar ? 'المجال' : 'Industry').count(),
@@ -318,7 +320,15 @@ try {
           'no industry question in Catalyst setup',
         );
         count++;
-        assert.equal(await page.locator('.brain-setup-steps li').count(), 4);
+        assert.equal(
+          await page.locator('.brain-setup-steps, .brain-essentials, .brain-behaviour').count(),
+          0,
+          'setup asks nothing beyond bzns.md and the Catalog',
+        );
+        count++;
+        assert.equal(await page.locator('.brain-setup .brain-tab').count(), 2, 'two tabs only');
+        assert.equal(await page.getByRole('tab', { name: ar ? 'الكتالوج' : 'Catalog', exact: true }).count(), 1);
+        assert.equal(await page.getByRole('tab', { name: /bzns\.md/ }).count(), 1);
         count++;
         await expectDraft(s, brainTemplate(savedToAccount ? 'dental' : undefined, lang, { general: true }));
         assert.equal(
@@ -350,7 +360,7 @@ try {
       console.log(`Catalyst general setup passed (${lang}, ${width}px).`);
     }
 
-  // 1. Setup: information → review → behaviour → test and publish, then the channel step. Each finished card offers the next step.
+  // 1. Setup (Ahmed, 2026-11-14): one screen with bzns.md and the Catalog, then Publish and the channel step.
   for (const lang of ['en', 'ar'])
     for (const width of [320, 768, 1440]) {
       const ar = lang === 'ar',
@@ -364,9 +374,9 @@ try {
         signedIn: false,
       });
       await page.locator('.brain-setup').waitFor();
-      assert.equal(await page.locator('.brain-setup-steps li').count(), 4);
-      count++;
-      await page.getByRole('heading', { name: t('Add your information', 'أضف معلوماتك') }).waitFor();
+      await page
+        .getByRole('heading', { name: t('Give Layla what she answers from', 'جهّز ما تجيب منه ليلى') })
+        .waitFor();
       await expectDraft(s, brainTemplate(undefined, lang, { general: true }));
       assert.deepEqual(
         s.writes.filter(w => !['brain_state', 'catalog_list'].includes(w)),
@@ -390,28 +400,13 @@ try {
         'website is one of the three sources',
       );
       count++;
+      // Reading a price list fills both: its suggestions appear on the same screen.
       await page.getByRole('tab', { name: t('Text', 'نص'), exact: true }).click();
       await page.getByLabel(t('Paste text', 'الصق نصاً')).fill('Whitening: 60 OMR\nWe accept Dhofar Insurance.');
       await page.getByRole('button', { name: t('Read text', 'اقرأ النص') }).click();
       await page.getByText(t('2 suggestions to review', '2 اقتراحات للمراجعة')).waitFor();
       count++;
-      // Finishing a card points to the next step, and the new step is brought into view with focus.
-      await page
-        .locator('.brain-add')
-        .getByRole('button', { name: t('Next: Review the facts', 'التالي: راجع المعلومات') })
-        .click();
-      const reviewHeading = page.getByRole('heading', { name: t('Review the facts', 'راجع المعلومات') });
-      await reviewHeading.waitFor();
-      await page.waitForFunction(() => document.activeElement?.matches('.brain-setup-head h3'));
-      assert.equal(
-        await reviewHeading.evaluate(el => {
-          const r = el.getBoundingClientRect();
-          return r.top >= 0 && r.top < window.innerHeight;
-        }),
-        true,
-        'the new step is in view',
-      );
-      count++;
+      await page.locator('.brain-proposal').nth(1).waitFor();
       assert.equal(await page.locator('.brain-proposal').count(), 2);
       count++;
       assert.match(
@@ -425,7 +420,7 @@ try {
         .first()
         .getByRole('button', { name: t('Accept', 'اقبل') })
         .click();
-      await page.locator('.brain-proposal').nth(0).waitFor();
+      await page.waitForFunction(() => document.querySelectorAll('.brain-proposal').length === 1);
       assert.equal(s.catalog[0]?.nameEn, 'Whitening', 'an accepted price goes to the catalog draft');
       count++;
       await page
@@ -433,59 +428,39 @@ try {
         .first()
         .getByRole('button', { name: t('Accept', 'اقبل') })
         .click();
-      await page.getByText(t('Nothing to review.', 'لا شيء للمراجعة.')).waitFor();
+      await page.waitForFunction(() => document.querySelectorAll('.brain-proposal').length === 0);
       count++;
-      await page.getByRole('button', { name: t('Next: Configure Layla', 'التالي: اضبط ليلى') }).click();
-      await page.getByRole('heading', { name: t('Configure Layla', 'اضبط ليلى') }).waitFor();
-      await page.locator('.brain-tone').nth(1).click();
-      await page.getByRole('button', { name: t('Save behaviour', 'احفظ الإعدادات') }).click();
-      await page.locator('.brain-behaviour .brain-note').getByText(t('Saved.', 'تم الحفظ.')).waitFor();
-      assert.equal(s.behaviour?.tone !== undefined, true);
+      assert.equal(s.writes.includes('brain_behaviour'), false, 'setup never asks for behaviour settings');
+      assert.equal(s.writes.includes('brain_step'), false, 'there are no steps to record');
       count++;
-      await page
-        .locator('.brain-behaviour')
-        .getByRole('button', { name: t('Next: Test and publish', 'التالي: جرّب وانشر') })
-        .click();
-      await page.getByRole('heading', { name: t('Test and publish', 'جرّب وانشر') }).waitFor();
       // The template still has placeholders: publishing is refused with the reasons, nothing is sent.
       await page.getByRole('button', { name: t('Publish', 'انشر'), exact: true }).click();
-      await page.locator('.brain-problems').waitFor();
+      await page.locator('.brain-setup > .brain-problems').waitFor();
       assert.equal(s.writes.includes('brain_publish'), false, 'an incomplete bzns.md is never sent to publish');
       count++;
-      assert.ok((await page.locator('.brain-problems li').count()) <= 3, 'only the three essentials are asked for');
+      assert.ok(
+        (await page.locator('.brain-setup > .brain-problems li').count()) <= 3,
+        'only the three essentials are asked for',
+      );
       count++;
       assert.doesNotMatch(
-        await page.locator('.brain-problems').innerText(),
+        await page.locator('.brain-setup > .brain-problems').innerText(),
         ar ? /التأمين|ساعات/ : /Insurance|Hours/,
         'optional template sections are never listed as blockers',
       );
       count++;
-      // The owner fills the three essentials (name, what you offer, team contact) and publishes.
-      await page.getByRole('button', { name: t('Fill in the essentials', 'أكمل الأساسيات') }).click();
-      await page.getByRole('heading', { name: t('Add your information', 'أضف معلوماتك') }).waitFor();
-      const essentials = page.locator('.brain-essentials');
-      await essentials.getByLabel(t('Business name', 'اسم النشاط')).fill('Bright Smile Dental');
-      await essentials.getByLabel(t('What you offer', 'ما تقدمه')).fill('- Check-ups and cleaning\n- Whitening');
-      await essentials.getByLabel(t('Team contact', 'جهة اتصال الفريق')).fill('WhatsApp +968 9100 2000 (Sara)');
-      await essentials.getByRole('button', { name: t('Save', 'حفظ'), exact: true }).click();
-      await essentials
-        .getByText(t('Saved. Layla has what she needs to go live.', 'تم الحفظ. لدى ليلى ما تحتاجه لتبدأ.'))
-        .waitFor();
+      // The owner writes bzns.md and goes to the Catalog without saving: the text is still there.
+      const editor = page.locator('.brain-bzns textarea');
+      await editor.fill(VALID);
+      await page.getByRole('tab', { name: t('Catalog', 'الكتالوج'), exact: true }).click();
+      await page.locator('.brain-setup #brain-setup-panel').getByText('Whitening').first().waitFor();
       count++;
-      assert.equal(
-        await essentials.getByRole('button', { name: t('Next: Review the facts', 'التالي: راجع المعلومات') }).count(),
-        1,
-        'a saved card offers the next step',
-      );
+      await page.getByRole('tab', { name: /bzns\.md/ }).click();
+      assert.equal(await editor.inputValue(), VALID, 'switching tabs keeps unsaved text');
       count++;
-      assert.match(s.row.bznsDraft.markdown, /^name: Bright Smile Dental$/m, 'the name is written into bzns.md');
-      count++;
-      for (let i = 0; i < 3; i++) await page.getByRole('button', { name: t('Continue', 'متابعة') }).click();
-      await page.getByRole('heading', { name: t('Test and publish', 'جرّب وانشر') }).waitFor();
       await page.reload();
-      await page.getByRole('heading', { name: t('Test and publish', 'جرّب وانشر') }).waitFor();
-      assert.ok(s.brainStep >= 4, 'progress resumes on the saved step');
-      count++;
+      await page.locator('.brain-setup').waitFor();
+      await page.locator('.brain-bzns textarea').fill(VALID);
       await page.getByRole('button', { name: t('Test Layla', 'جرّب ليلى') }).click();
       await page.locator('.brain-sheet').waitFor();
       assert.match(
@@ -505,6 +480,12 @@ try {
       );
       count++;
       assert.doesNotMatch(s.row.bznsPublished.markdown, /\[[^\]\n]+\](?!\()/, 'no template hint is published');
+      count++;
+      assert.match(
+        s.row.bznsPublished.markdown,
+        /^name: Bright Smile Dental$/m,
+        'Publish saves what the owner typed first, then publishes it',
+      );
       count++;
       assert.deepEqual(errors, [], `${lang} ${width} setup page errors`);
       count++;

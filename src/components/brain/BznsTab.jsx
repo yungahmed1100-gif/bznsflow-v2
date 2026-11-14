@@ -18,9 +18,10 @@ export function bznsProgress(markdown) {
 
 /**
  * bzns.md: the business's own words. Saving a draft never changes Layla's answers; Publish (in the
- * BznsBrain header) does, after the same checks the server repeats.
+ * BznsBrain header) does, after the same checks the server repeats. `onEdit` hears the unsaved text
+ * (or null), so a Publish button outside this tab can save it first.
  */
-export function BznsTab({ b, lang, setup, request, take, act, busy, industry }) {
+export function BznsTab({ b, lang, setup, request, take, act, busy, industry, onEdit }) {
   const saved = setup?.bzns?.markdown ?? '';
   const [text, setText] = useState(saved),
     [notice, setNotice] = useState('');
@@ -33,6 +34,9 @@ export function BznsTab({ b, lang, setup, request, take, act, busy, industry }) 
   // The checks shown are the ones Publish applies: unreplaced template hints are left out, not errors.
   const check = useMemo(() => validateBzns(prepareForPublish(text).markdown), [text]);
   const dirty = text !== saved;
+  useEffect(() => {
+    onEdit?.(dirty ? text : null);
+  }, [onEdit, dirty, text]);
   const sectors = new Set(check.parsed.sections.filter(s => String(s.body || '').trim()).map(s => s.key));
   // An industry plan starts from its industry's template; Catalyst (no industry) from the general one.
   const industryName = (BUSINESS_INDUSTRIES.find(row => row.id === industry) || {})[lang === 'ar' ? 'ar' : 'en'];
