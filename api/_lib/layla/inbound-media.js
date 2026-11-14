@@ -13,6 +13,7 @@ import {
   photoText,
   transcribeVoice,
   understandingConfig,
+  mediaReadingOn,
 } from '../../../config/media-understanding.js';
 import { raceDeadline } from '../deadline.js';
 
@@ -140,10 +141,14 @@ async function upload(file, { store, integrationId, fetcher }) {
   return storageId;
 }
 
+const READING_OFF = 'reading_off';
 /** What the file says, or '' when it is not a kind Layla reads. A failed reading leaves the file kept and shown. */
 async function understand(job, file, context, { env, fetcher }) {
   const business = context.business || '',
     vocabulary = context.catalog || [];
+  // Reading is off by default: the file is kept for the owner and Layla asks the customer to type.
+  if (['audio', 'image', 'sticker'].includes(job.kind) && !mediaReadingOn(env))
+    return { status: 'unread', error: READING_OFF };
   if (job.kind === 'audio') {
     if (file.bytes.length > ASR_MAX_BYTES) return { status: 'unread', error: 'media_too_long' };
     return {
@@ -212,7 +217,7 @@ export async function processMediaJob(job, { store, env = process.env, fetcher =
     attach = { status: reasonOf(e) === 'media_too_large' ? 'too_large' : 'failed', error: reasonOf(e) };
   }
   // Codes only: never the file, the transcript or the description.
-  if (attach.error)
+  if (attach.error && attach.error !== READING_OFF)
     console.warn('inbound_media', JSON.stringify({ kind: job.kind, status: attach.status, error: attach.error }));
   const { text, ...rest } = attach;
   await store('media_attach', {

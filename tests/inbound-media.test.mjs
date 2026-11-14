@@ -185,10 +185,10 @@ test('a job that cannot be fetched or stored still reports back, so Layla is nev
     kind: 'image',
     ref: 'https://scontent.fbcdn.net/p.jpg',
   };
-  const run = async (context, fetcher) => {
+  const run = async (context, fetcher, settings = env) => {
     const calls = [];
     await processMediaJob(job, {
-      env,
+      env: settings,
       fetcher,
       store: async (op, args) => {
         calls.push([op, args]);
@@ -214,7 +214,7 @@ test('a job that cannot be fetched or stored still reports back, so Layla is nev
     )[1].attach.status,
     'failed',
   );
-  // Without Qwen settings the photo is still kept and shown; it is just not read.
+  // Reading is off by default: the photo is still kept and shown; it is just not read.
   const kept = (
     await run({}, url =>
       new URL(url).hostname === 'upload.test'
@@ -228,8 +228,20 @@ test('a job that cannot be fetched or stored still reports back, so Layla is nev
     mimeType: 'image/jpeg',
     size: 900,
     status: 'unread',
-    error: 'ai_not_configured',
+    error: 'reading_off',
   });
+  // Switched on without the AI settings: kept and shown, with the real reason recorded.
+  const on = (
+    await run(
+      {},
+      url =>
+        new URL(url).hostname === 'upload.test'
+          ? new Response(JSON.stringify({ storageId: 'kg2' }))
+          : file('image/jpeg')(),
+      { ...env, LAYLA_MEDIA_READING: 'on' },
+    )
+  )[1].attach;
+  assert.equal(on.error, 'ai_not_configured');
 });
 
 test('photo reading keeps only exact catalog names and a known kind; a voice note has model limits', async () => {

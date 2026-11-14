@@ -96,7 +96,7 @@ const en = {
   mediaTooLarge: 'Too large to keep (over 16 MB)',
   mediaTranscript: 'Transcript',
   mediaSeen: 'What Layla saw',
-  mediaUnread: 'Layla couldn’t read it',
+  mediaUnread: 'Layla doesn’t read voice notes or photos. She asks the customer to type it.',
   searchChats: 'Search name or number',
   noChats:
     'No conversations yet. When a customer messages your WhatsApp number, the chat appears here. Try it now: send your number a message from another phone to see Layla answer.',
@@ -598,7 +598,7 @@ const ar = {
   mediaTooLarge: 'أكبر من 16 ميغابايت ولم يُحفظ',
   mediaTranscript: 'النص',
   mediaSeen: 'ما رأته ليلى',
-  mediaUnread: 'لم تتمكن ليلى من قراءته',
+  mediaUnread: 'ليلى لا تقرأ الرسائل الصوتية ولا الصور، وتطلب من العميل كتابتها.',
   searchChats: 'ابحث بالاسم أو الرقم',
   noChats:
     'لا توجد محادثات بعد. عندما يراسل عميل رقم واتساب نشاطك ستظهر المحادثة هنا. جرّب الآن: أرسل رسالة إلى رقمك من هاتف آخر لترى ليلى ترد.',

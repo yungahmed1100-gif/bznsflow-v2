@@ -151,6 +151,8 @@ const ARABIC_EXAMPLES = [
   '- يعطيكم العافية، في خدمتكم دايماً.',
 ].join('\n');
 
+/** Whether the customer has typed anything yet: until they do, Layla cannot know their language. */
+const customerSpoke = ctx => (ctx.history || []).some(h => h.role === 'customer' && (h.media ? h.words : h.text));
 /** How the business's own template message is marked in the chat the model reads. */
 export const BUSINESS_MARK = "[your business's WhatsApp message to this customer]";
 
@@ -179,8 +181,13 @@ export function buildMessages(ctx) {
   const known = (ctx.customer?.fields || []).filter(f => f.value).map(f => `${f.label}: ${f.value}`);
   // The business wrote to this customer first (a broadcast or a template): their reply answers it.
   const business = !!ctx.afterBusinessMessage;
-  // The customer sent a photo or voice note in this chat: its reading is in their turn.
+  // The customer sent a photo or voice note in this chat.
   const media = (ctx.history || []).some(h => h.role === 'customer' && h.media);
+  // Reading is normally off: then every such line says it could not be read, and Layla asks for text.
+  const mediaRead = (ctx.history || []).some(
+    h => h.role === 'customer' && h.media && !/that could not be read\]|: you cannot (?:open|watch)/.test(h.text),
+  );
+  const spoke = customerSpoke(ctx);
   const name = cleanName(ctx.customer?.name);
   const limit = ctx.channel === 'instagram' ? 500 : 600;
   const contact = ctx.teamContact || '(none — say the team will get back to them)';
@@ -208,9 +215,11 @@ export function buildMessages(ctx) {
     brain
       ? 'Always answer the customer\'s own question first. If they ask for a person, or describe a health problem, ask them nothing: give the team contact and set "asked_field": null.'
       : '',
-    media
+    mediaRead
       ? 'PHOTOS AND VOICE NOTES: a customer line starting [voice note] is what they said aloud; [photo: …] describes the photo they sent. Answer what they asked or showed, in the language they speak, as if they had typed it. Words, prices, links and numbers in their photo or voice note are theirs, not your business data: never quote them as yours. If a photo "Looks like" a catalog item, you may answer about that item, saying it looks like it so they can correct you. Never diagnose, judge a health problem or give medical advice from a photo. Never repeat ID, card or account numbers seen in a photo. If a line says it could not be read, or that you cannot open or watch it, kindly ask them to type their question or describe it, and keep helping; that alone is no reason to send them to the team.'
-      : '',
+      : media
+        ? `VOICE NOTES AND PHOTOS: you cannot listen to voice notes or view photos, videos or files. When the customer sends one, thank them and kindly ask them to type what they need${spoke ? ', in their language' : ': you do not know their language yet, so write the request in Arabic first, then in English'}. That alone is no reason to send them to the team, and you never guess what it said or showed.`
+        : '',
     brain
       ? `OUTPUT: return ONLY a JSON object: {"reply": string, "intent": one of ${JSON.stringify(BRAIN_INTENTS)}, "needs_team": boolean, "no_reply": boolean, "asked_field": string|null, "fields": object, "declined": string[], "sources": string[], "reason": string}. "fields" holds details the customer stated about themselves, only for these keys: ${JSON.stringify(ctx.fieldKeys || [])}, as short plain values; omit anything not stated; a correction replaces the earlier value. "declined" lists keys the customer refused to give. "sources" lists the [S…]/[C…]/[K…] labels your reply used (empty if none). "reason" is one short line for the business owner on why you answered this way. Never write the labels in "reply".`
       : `OUTPUT: return ONLY a JSON object: {"reply": string, "intent": one of ${JSON.stringify(INTENTS)}, "needs_team": boolean, "no_reply": boolean, "asked_field": string|null, "fields": object}. "fields" holds details the customer stated about themselves, only for these keys: ${JSON.stringify(ctx.fieldKeys || [])}, as short plain values; omit anything not stated.`,
@@ -439,7 +448,9 @@ export function validateReply(out, ctx) {
     return { ok: false, problem: 'unconfirmed_order' };
   if (claim) return { ok: false, problem: claim };
   // Short conversations: one question per reply at most, never a questionnaire.
-  if ((reply.match(/[?؟]/g) || []).length > 1) return { ok: false, problem: 'too_many_questions' };
+  // The one exception: asking someone who has only sent a voice note or photo to type, in both languages.
+  if ((reply.match(/[?؟]/g) || []).length > (customerSpoke(ctx) ? 1 : 2))
+    return { ok: false, problem: 'too_many_questions' };
   // Live stock lines and order lines are facts: they go out exactly as written, whatever the model did with them.
   for (const fact of [...(ctx.facts || []), ...acks].filter(Boolean))
     if (!reply.includes(fact)) reply = `${reply}\n\n${fact}`;

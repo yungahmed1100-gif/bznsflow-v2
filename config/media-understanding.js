@@ -48,6 +48,13 @@ export const ASR_MAX_BYTES = 10 * MB;
 export const PHOTO_KINDS = Object.freeze(['product', 'screenshot', 'document', 'receipt', 'place', 'person', 'other']);
 export const MEDIA_TEXT_MAX = 2000;
 
+/**
+ * Whether Layla reads voice notes and photos at all. Off unless LAYLA_MEDIA_READING=on (Ahmed,
+ * 2026-11-14): the files are still kept and shown to the owner, and Layla politely asks the
+ * customer to type instead.
+ */
+export const mediaReadingOn = (env = {}) => String(env.LAYLA_MEDIA_READING || '').toLowerCase() === 'on';
+
 /** A MIME type without its parameters ("audio/ogg; codecs=opus" → "audio/ogg"), or ''. */
 export const mimeOf = value =>
   String(value || '')

@@ -179,8 +179,10 @@ test('stock lines are live facts in the prompt; order lines always go out word f
 
 // Photos and voice notes: the real webhook path keeps the media id, then processInboundMedia (run after Meta
 // is answered in production) fetches the file from a fake Meta, stores it and reads it with a fake Qwen.
-const aiEnv = { ...env, QWEN_API_KEY: 'test-key', QWEN_BASE_URL: 'https://qwen.test' };
-function mediaWorld(b, { transcript = '', photo = null, refuse = false, type = 'audio/ogg' } = {}) {
+// Reading is off unless LAYLA_MEDIA_READING=on; these tests cover both.
+const aiEnv = { ...env, QWEN_API_KEY: 'test-key', QWEN_BASE_URL: 'https://qwen.test', LAYLA_MEDIA_READING: 'on' };
+const { LAYLA_MEDIA_READING: _off, ...readingOffEnv } = aiEnv;
+function mediaWorld(b, { transcript = '', photo = null, refuse = false, type = 'audio/ogg', reading = true } = {}) {
   const calls = [];
   const fetcher = async (url, init = {}) => {
     const u = new URL(url);
@@ -215,7 +217,10 @@ function mediaWorld(b, { transcript = '', photo = null, refuse = false, type = '
     }
     return b.fetcher(url, init);
   };
-  return { calls, read: media => processInboundMedia(media, { store: b.store, env: aiEnv, fetcher }) };
+  return {
+    calls,
+    read: media => processInboundMedia(media, { store: b.store, env: reading ? aiEnv : readingOffEnv, fetcher }),
+  };
 }
 const say = async (b, from, message) => {
   b.h.m.advance(1000);
@@ -230,6 +235,34 @@ const answer = async b => {
 const thread = async (b, from) =>
   (await b.h.dashboard('thread', { sessionHash: b.tenant.sessionHash, conversationId: b.conversation(from)._id })).value
     .messages;
+
+test('by default Layla does not read a voice note or photo: she asks the customer to type, and the owner still gets the file', async () => {
+  const model = scriptedModel(() => ({
+    reply: 'شكراً لكم، ممكن تكتبون لنا طلبكم؟ Thank you, could you type what you need?',
+  }));
+  const b = await business({ model });
+  const world = mediaWorld(b, { transcript: 'هل المعاينة مجانية؟', reading: false });
+  const { media } = await say(b, '96891110040', {
+    type: 'audio',
+    audio: { id: 'media40', mime_type: 'audio/ogg; codecs=opus', voice: true },
+  });
+  await world.read(media);
+  const [reply] = await answer(b);
+  assert.match(reply, /تكتبون/);
+  assert.equal(world.calls.length, 0, 'no reading model is called, so nothing is spent or sent to it');
+  assert.equal(lastCustomer(model.calls[0]), '[voice note that could not be read]');
+  assert.match(system(model.calls[0]), /VOICE NOTES AND PHOTOS: you cannot listen to voice notes or view photos/);
+  assert.match(
+    system(model.calls[0]),
+    /write the request in Arabic first, then in English/,
+    'no words yet, so both languages',
+  );
+  assert.doesNotMatch(system(model.calls[0]), /PHOTOS AND VOICE NOTES: a customer line/);
+  const [message] = await thread(b, '96891110040');
+  assert.equal(message.media.status, 'unread');
+  assert.ok(message.media.url, 'the owner can still play it');
+  assert.equal(message.media.text, undefined);
+});
 
 test('a voice note is transcribed and answered in the language it was spoken', async () => {
   const model = scriptedModel(() => ({ reply: 'نعم، المعاينة مجانية دائماً.' }));

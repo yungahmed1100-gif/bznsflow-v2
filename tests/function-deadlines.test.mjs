@@ -148,7 +148,7 @@ test('a photo that cannot be read in time still reaches Layla, kept and marked',
       : new URL(url).hostname === 'qwen.test'
         ? new Promise(() => {})
         : new Response(new Uint8Array(900), { headers: { 'content-type': 'image/jpeg' } });
-  const env = { QWEN_API_KEY: 'k', QWEN_BASE_URL: 'https://qwen.test' };
+  const env = { QWEN_API_KEY: 'k', QWEN_BASE_URL: 'https://qwen.test', LAYLA_MEDIA_READING: 'on' };
   await processMediaJob(job, { store, env, fetcher, budgetMs: 50 });
   assert.deepEqual(calls.at(-1), [
     'media_attach',
