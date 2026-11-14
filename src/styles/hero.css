@@ -87,29 +87,6 @@
   max-width: 100%;
 }
 
-/* The sculpture above the steps: a band whose height is reserved, so nothing shifts when it loads. */
-.pipeline-art {
-  position: relative;
-  block-size: clamp(124px, 17vh, 172px);
-  margin-block-end: 12px;
-  color: var(--tone);
-  touch-action: pan-y;
-}
-.pipeline-art .cuboid-still,
-.pipeline-art .cuboid-canvas {
-  position: absolute;
-  inset: 0;
-  inline-size: 100%;
-  block-size: 100%;
-}
-.pipeline-art .cuboid-still {
-  fill: currentColor;
-}
-/* Once the canvas is drawing, it replaces the still drawing. */
-.pipeline-art[data-renderer='webgl'] .cuboid-still {
-  visibility: hidden;
-}
-
 .pipeline-diagram {
   list-style: none;
   margin: 0;
