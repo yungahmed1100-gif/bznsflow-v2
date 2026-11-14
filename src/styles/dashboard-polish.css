@@ -134,7 +134,7 @@
 }
 
 /* A focus ring nobody can miss (GOV.UK pattern, in Ledger blue). */
-.ld :focus-visible {
+.ld[dir] :focus-visible {
   outline: var(--focus-ring);
   outline-offset: 2px;
 }
@@ -256,9 +256,11 @@
 
 /* ── 3. Phones ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  /* Header, content, tab bar: the page still never scrolls, so the bar is always in reach. */
-  .ld,
-  .ld[lang='ar'] {
+  /* Header, content, tab bar: the page still never scrolls, so the bar is always in reach.
+     [dir] outranks layla-dashboard.css's phone rule, so the bundle's stylesheet order cannot undo it
+     (tests/dashboard-css-order.test.mjs). */
+  .ld[dir],
+  .ld[dir][lang='ar'] {
     grid-template-rows: auto minmax(0, 1fr) auto;
   }
   .ld .ld-top {
