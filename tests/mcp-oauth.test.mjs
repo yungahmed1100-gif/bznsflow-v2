@@ -157,9 +157,9 @@ for (const requestedScope of [
       MCP_OAUTH_ENCRYPTION_KEY: 'a'.repeat(64),
       MCP_OAUTH_JWKS: JSON.stringify({ keys: [jwk] }),
     };
-    let browserFresh = true;
     const store = async (op, args) => {
-      if (op === 'browser_identity' && args.fresh && !browserFresh) throw new McpError('fresh_sign_in_required', 409);
+      // Consent needs a live sign-in only, never a recent one (14 Nov 2026).
+      if (op === 'browser_identity') assert.equal(args.fresh, undefined, 'no recent-sign-in demand');
       if (op === 'manage' && args.operation === 'list') return { connections: [...durable.connections.values()] };
       return durable.call(op, args);
     };
@@ -271,26 +271,7 @@ for (const requestedScope of [
         }),
       });
       assert.equal(tampered.status, 409);
-      // Re-verification returns to /mcp without the interaction query string.
-      // The pending request must survive the rejected attempt in its cookie.
-      browserFresh = false;
-      const staleConsent = await request('/api/mcp/manage', {
-        method: 'POST',
-        headers: {
-          Origin: origin,
-          'Content-Type': 'application/json',
-          'x-csrf-token': 'c'.repeat(64),
-        },
-        body: JSON.stringify({
-          action: 'consent',
-          allow: true,
-          interactionUid: details.interaction.uid,
-        }),
-      });
-      assert.equal(staleConsent.status, 409);
-      assert.equal((await staleConsent.json()).reason, 'fresh_sign_in_required');
-      assert.equal(durable.connections.size, 0, 'stale sign-in creates no connection');
-      browserFresh = true;
+      // Returning to /mcp without the interaction query string resumes the request from its cookie.
       const resumed = await request('/api/mcp/manage');
       assert.equal(resumed.status, 200);
       assert.equal((await resumed.json()).resume, true, 'sign-in return resumes consent');

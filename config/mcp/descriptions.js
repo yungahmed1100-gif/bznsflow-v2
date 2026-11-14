@@ -233,5 +233,5 @@ export function behaviourNote(category, categories = [category]) {
   if (category === 'read') return 'Read only.';
   const gated = categories.filter(c => APPROVAL[c]);
   if (!gated.length) return 'Runs directly; new requestId per change.';
-  return `Owner approval unless allowed (${gated.map(c => APPROVAL[c]).join(', ')}); retry with the same requestId.`;
+  return `Direct unless owner approval is on (${gated.map(c => APPROVAL[c]).join(', ')}); retry same requestId.`;
 }

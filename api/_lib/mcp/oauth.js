@@ -339,10 +339,7 @@ export async function completeInteraction(provider, store, req, res, allow, area
     appendCookie(res, serializeCookie('bf_mcp_resume', '', { maxAge: 0, httpOnly: true }));
     return redirect;
   }
-  const identity = await store('browser_identity', {
-    tokenHash: tokenHash(req),
-    fresh: true,
-  });
+  const identity = await store('browser_identity', { tokenHash: tokenHash(req) });
   // The owner signs in and grants access with the same click, so the login
   // and consent prompts are answered together rather than as two pages.
   const signingIn = interaction.prompt.name === 'login';
@@ -381,8 +378,8 @@ export async function completeInteraction(provider, store, req, res, allow, area
     },
     { mergeWithLastSubmission: !signingIn },
   );
-  // Clear only after the decision completes. A fresh-sign-in challenge must
-  // retain this cookie so returning to /mcp restores the pending consent.
+  // Clear only after the decision completes, so a refused attempt can be
+  // resumed from /mcp.
   appendCookie(res, serializeCookie('bf_mcp_resume', '', { maxAge: 0, httpOnly: true }));
   return redirect;
 }

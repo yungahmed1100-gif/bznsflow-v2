@@ -1,4 +1,4 @@
-/* The /mcp page, continued from mcp.css: approvals and confirming identity in place.
+/* The /mcp page, continued from mcp.css: approvals and answers in place.
    Imported straight after mcp.css, so the cascade order is unchanged. */
 
 /* Approvals: what changes first, the exact request on demand. */
@@ -86,33 +86,6 @@
   color: var(--text-secondary);
 }
 
-/* Confirming identity in place: a short form, not a trip to the sign-in page. */
-.mcp-confirm-identity {
-  display: grid;
-  gap: 10px;
-  margin-block-start: 8px;
-}
-.mcp-confirm-identity h3 {
-  margin: 0;
-}
-.mcp-confirm-identity input {
-  max-width: 12rem;
-  min-height: 44px;
-  padding: 8px 12px;
-  font-size: 1.25rem;
-  letter-spacing: 0.2em;
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-sm);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-.mcp-confirm-identity input:focus-visible {
-  outline: 2px solid var(--green-ink);
-  outline-offset: 2px;
-}
-.mcp-confirm-identity input[aria-invalid='true'] {
-  border-color: var(--coral-ink);
-}
 /* An action's answer, shown where the owner acted: in the card or its section. */
 .mcp-card-status,
 .mcp-section-status {

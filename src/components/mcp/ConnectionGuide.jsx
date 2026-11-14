@@ -108,8 +108,8 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
           [
             tr('Sign in and choose permissions', 'سجّل الدخول واختر الصلاحيات'),
             tr(
-              'A BznsFlow page opens. Sign in with your business owner account, check the requested information, and continue. Important actions require your approval by default.',
-              'تفتح صفحة BznsFlow. سجّل الدخول بحساب مالك النشاط، وراجع المعلومات المطلوبة، ثم تابع. الإجراءات المهمة تحتاج إلى موافقتك افتراضيًا.',
+              'A BznsFlow page opens. Sign in with your business owner account, check the requested information, and continue. Your assistant can then act directly; you can make any category ask you first on this page.',
+              'تفتح صفحة BznsFlow. سجّل الدخول بحساب مالك النشاط، وراجع المعلومات المطلوبة، ثم تابع. بعدها ينفّذ المساعد مباشرة، ويمكنك من هذه الصفحة جعل أي فئة تطلب موافقتك أولًا.',
             ),
           ],
           [
@@ -139,8 +139,8 @@ export function ConnectionGuide({ ar, endpoint, copy, copied }) {
             [
               tr('Sign in and choose permissions', 'سجّل الدخول واختر الصلاحيات'),
               tr(
-                'A BznsFlow page opens. Sign in with your business owner account, check the requested information, and continue. Important actions require your approval by default.',
-                'تفتح صفحة BznsFlow. سجّل الدخول بحساب مالك النشاط، وراجع المعلومات المطلوبة، ثم تابع. الإجراءات المهمة تحتاج إلى موافقتك افتراضيًا.',
+                'A BznsFlow page opens. Sign in with your business owner account, check the requested information, and continue. Your assistant can then act directly; you can make any category ask you first on this page.',
+                'تفتح صفحة BznsFlow. سجّل الدخول بحساب مالك النشاط، وراجع المعلومات المطلوبة، ثم تابع. بعدها ينفّذ المساعد مباشرة، ويمكنك من هذه الصفحة جعل أي فئة تطلب موافقتك أولًا.',
               ),
             ],
             [
@@ -352,7 +352,11 @@ export function McpWalkthrough({ ar }) {
     ? [
         ['اربط', 'اختر ما يمكن للمساعد الوصول إليه.', 'تمنح الوصول بحسابك. ويمكنك قطعه في أي وقت.'],
         ['اسأل', 'اكتب طلبك بلغتك المعتادة.', '«ابحث عن العميل أحمد واعرض بياناته، دون تعديل.»'],
-        ['راجع', 'وافق على الإجراءات المهمة.', 'إذا احتاج الطلب إلى موافقة، راجع تفاصيله هنا قبل تنفيذه.'],
+        [
+          'اطلب التنفيذ',
+          'يُنفّذ المساعد ضمن الصلاحيات التي منحتها.',
+          'إذا جعلت فئة تطلب موافقتك أولًا، راجع تفاصيل طلبها هنا قبل تنفيذه.',
+        ],
         [
           'تابع النتيجة',
           'اعرف ما اكتمل وما زال قيد التنفيذ.',
@@ -371,9 +375,9 @@ export function McpWalkthrough({ ar }) {
           '“Find Ahmed’s customer record and show me the details. Don’t change anything.”',
         ],
         [
-          'Review',
-          'Approve important actions.',
-          'When a request needs approval, review its exact details here before it runs.',
+          'Act',
+          'Your assistant acts within the permissions you gave.',
+          'If you set a category to ask you first, review its request here before it runs.',
         ],
         [
           'See results',
@@ -421,7 +425,7 @@ export function McpHelp({ ar }) {
         ],
         [
           'المساعد يطلب موافقتي',
-          'هذا متوقّع للإجراءات المهمة. افتح طلب الموافقة في هذه الصفحة، وراجع التعديلات ثم وافق أو ارفض. بعد الموافقة اطلب من المساعد إعادة الطلب نفسه. تنتهي صلاحية الموافقة بعد ١٥ دقيقة؛ تغيّر البيانات يتطلب طلبًا جديدًا.',
+          'يحدث هذا فقط للفئات التي جعلتها تطلب موافقتك أولًا. افتح طلب الموافقة في هذه الصفحة، وراجع التعديلات ثم وافق أو ارفض. بعد الموافقة اطلب من المساعد إعادة الطلب نفسه. تنتهي صلاحية الموافقة بعد ١٥ دقيقة؛ تغيّر البيانات يتطلب طلبًا جديدًا.',
         ],
         [
           'يظهر بانتظار أول اتصال أو غير متصل',
@@ -429,7 +433,7 @@ export function McpHelp({ ar }) {
         ],
         [
           'هل يستطيع المساعد تنفيذ كل شيء؟',
-          'يستخدم المساعد فقط الميزات المتاحة في باقتك، والصلاحيات التي منحتها، والتكاملات المفعّلة. الرسائل والأسعار والتعديلات الحسّاسة تحتاج إلى موافقتك افتراضيًا. يمكنك مراجعة الصلاحيات وقطع الاتصال هنا.',
+          'يستخدم المساعد فقط الميزات المتاحة في باقتك، والصلاحيات التي منحتها، والتكاملات المفعّلة. يُنفّذ مباشرة، إلا في الفئات التي جعلتها تطلب موافقتك أولًا. يمكنك مراجعة الصلاحيات وقطع الاتصال هنا.',
         ],
       ]
     : [
@@ -447,7 +451,7 @@ export function McpHelp({ ar }) {
         ],
         [
           'My assistant is asking for approval',
-          'That is expected for important actions. Open the approval on this page, review the changes, and approve or reject. After approval, ask your assistant to retry the same request. Approval expires after 15 minutes; changed records need a new request.',
+          'That happens only for categories you set to ask you first. Open the approval on this page, review the changes, and approve or reject. After approval, ask your assistant to retry the same request. Approval expires after 15 minutes; changed records need a new request.',
         ],
         [
           'It says waiting for first connection or disconnected',
@@ -455,7 +459,7 @@ export function McpHelp({ ar }) {
         ],
         [
           'Can my assistant do everything?',
-          'It can use only features available in your plan, permissions you granted, and enabled integrations. Messages, prices and sensitive changes need your approval by default. Review permissions or disconnect here at any time.',
+          'It can use only features available in your plan, permissions you granted, and enabled integrations. It acts directly, except in categories you set to ask you first. Review permissions or disconnect here at any time.',
         ],
       ];
   return (

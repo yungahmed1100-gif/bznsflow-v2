@@ -4,12 +4,10 @@ import '../styles/mcp.css';
 import '../styles/mcp-approvals.css';
 import { McpHero, ConnectionGuide, McpWalkthrough, McpHelp, BZNSFLOW_ICON } from '../components/mcp/ConnectionGuide';
 import { ApprovalCard } from '../components/mcp/ApprovalCard';
-import { ConfirmIdentity } from '../components/mcp/ConfirmIdentity';
 import { ConnectionCard } from '../components/mcp/ConnectionCard';
 import { ConsentCard } from '../components/mcp/ConsentCard';
 import { ActivityList, PastConnections } from '../components/mcp/ActivityList';
 import { AREAS, CATEGORIES, DONE, ERRORS, activityName, isActive } from '../components/mcp/copy';
-import { keepPendingPolicy, readPendingPolicy } from '../components/mcp/pending-policy';
 import { cardKeys, originOf, placeFor } from '../components/mcp/origin';
 import { dashboardPath, homePath, localePath, otherLanguagePath, plansPath, signInPath } from '../lib/paths';
 const COPIED_MS = 2500;
@@ -34,8 +32,6 @@ export default function McpConnections({ lang = 'ar' }) {
     [copied, setCopied] = useState(''),
     [saved, setSaved] = useState(false),
     [done, setDone] = useState(''),
-    // The action waiting for the owner to confirm it's them with an emailed code.
-    [confirming, setConfirming] = useState(null),
     [target, setTarget] = useState(''),
     [savedId, setSavedId] = useState(''),
     [consentAreas, setConsentAreas] = useState(Object.keys(AREAS));
@@ -106,26 +102,16 @@ export default function McpConnections({ lang = 'ar' }) {
     setEndpoint(`${window.location.origin}/api/mcp`);
     setTarget(new URLSearchParams(window.location.search).get('approval') || '');
     let live = true;
-    load()
-      .then(() => {
-        const pending = live && readPendingPolicy();
-        if (pending) {
-          const { at: _at, ...body } = pending;
-          return action(body);
-        }
-        return undefined;
-      })
-      .catch(() => {
-        if (live) {
-          setAccount(null);
-          setError('unavailable');
-        }
-      });
+    load().catch(() => {
+      if (live) {
+        setAccount(null);
+        setError('unavailable');
+      }
+    });
     return () => {
       live = false;
     };
-    // `action` is recreated each render; the pending save runs once, on arrival.
-  }, [load]);
+  }, [load, setError]);
   const busyRef = useRef(false);
   busyRef.current = busy;
   const following =
@@ -167,12 +153,6 @@ export default function McpConnections({ lang = 'ar' }) {
       const r = await post('/api/mcp/manage', body),
         value = await r.json();
       if (!r.ok) {
-        if (value.reason === 'fresh_sign_in_required' && account?.email) {
-          // Confirm in place, then run the same action again.
-          setConfirming(body);
-          return;
-        }
-        if (body.action === 'policy' && value.reason === 'fresh_sign_in_required') keepPendingPolicy(body);
         setError(value.reason, at);
         return;
       }
@@ -204,9 +184,7 @@ export default function McpConnections({ lang = 'ar' }) {
   const errorNotice = error && (
     <div className="mcp-notice" role="alert" ref={errorRef} tabIndex={-1}>
       {message(error)}{' '}
-      {error === 'fresh_sign_in_required' ? (
-        <a href={`${signIn}&fresh=1`}>{tr('Verify account', 'التحقق من الحساب')}</a>
-      ) : error === 'access_required' ? (
+      {error === 'access_required' ? (
         <a href={plansPath(lang)}>{tr('See plans', 'اطّلع على الباقات')}</a>
       ) : (
         <button className="mcp-secondary" onClick={() => load().catch(() => setError('unavailable'))}>
@@ -215,20 +193,6 @@ export default function McpConnections({ lang = 'ar' }) {
       )}
     </div>
   );
-  // Shown in place of the action that needs a recent sign-in (consent or permissions).
-  const identity = confirming && account?.email && (
-    <ConfirmIdentity
-      ar={ar}
-      email={account.email}
-      csrf={csrf}
-      onConfirmed={() => {
-        const body = confirming;
-        setConfirming(null);
-        void action(body);
-      }}
-      onCancel={() => setConfirming(null)}
-    />
-  );
   const cards = cardKeys({
     consent,
     approvals: data?.approvals,
@@ -236,8 +200,6 @@ export default function McpConnections({ lang = 'ar' }) {
   });
   const errorPlace = placeFor(errorAt, cards, consent ? 'consent' : '');
   const noticeAt = key => (error && errorPlace === key ? errorNotice : null);
-  const confirmPlace = placeFor(originOf(confirming), cards);
-  const identityAt = key => (confirmPlace === key ? identity : null);
   const doneIn = actions => (
     <p className="mcp-section-status" role="status" aria-live="polite">
       {saved && actions.includes(done) ? DONE[done][ar ? 1 : 0] : ''}
@@ -294,7 +256,6 @@ export default function McpConnections({ lang = 'ar' }) {
           areas={consentAreas}
           onAreas={setConsentAreas}
           notice={noticeAt('consent')}
-          identity={identityAt('consent')}
           onAllow={() => action({ action: 'consent', allow: true, areas: consentAreas, interactionUid: consent.uid })}
           onDecline={() => action({ action: 'consent', allow: false, interactionUid: consent.uid })}
         />
@@ -320,7 +281,6 @@ export default function McpConnections({ lang = 'ar' }) {
                   busy={busy}
                   target={a.id === target}
                   notice={noticeAt(`approval:${a.id}`)}
-                  identity={identityAt(`approval:${a.id}`)}
                   title={`${name.area} · ${name.action}`}
                   categories={(a.preview?.categories || [])
                     .filter(c => CATEGORIES[c])
@@ -352,7 +312,6 @@ export default function McpConnections({ lang = 'ar' }) {
                 )}
               </p>
             )}
-            {confirming && !confirmPlace && <div className="mcp-panel">{identity}</div>}
             <div className="mcp-grid">
               {data.connections.filter(isActive).map(c => (
                 <ConnectionCard
@@ -362,7 +321,6 @@ export default function McpConnections({ lang = 'ar' }) {
                   busy={busy}
                   saved={savedId === c.id}
                   notice={noticeAt(`connection:${c.id}`)}
-                  identity={identityAt(`connection:${c.id}`)}
                   onSave={(connectionId, direct, write, areas) =>
                     action({
                       action: 'policy',

@@ -36,11 +36,13 @@ export async function owner(ctx, accountId, now = Date.now()) {
     capabilities: capabilitiesFor(plan, 'manager'),
   };
 }
-export async function browserOwner(ctx, tokenHash, now = Date.now(), fresh = false) {
+// Any live BznsFlow sign-in may connect an assistant or change its permissions.
+// Until 14 Nov 2026 those two also needed a sign-in from the last five minutes,
+// confirmed with an emailed code; Ahmed removed that step.
+export async function browserOwner(ctx, tokenHash, now = Date.now()) {
   demand(/^[a-f0-9]{64}$/.test(tokenHash || ''), 'sign_in_required');
   const session = await lookup(ctx, 'sessions', 'by_token_hash', 'tokenHash', tokenHash);
   demand(session && session.expiresAt > now, 'sign_in_required');
-  if (fresh) demand(session.createdAt > now - 5 * 60000, 'fresh_sign_in_required');
   return { ...(await owner(ctx, session.accountId, now)), session };
 }
 export async function connectionOwner(ctx, connectionId, now = Date.now()) {

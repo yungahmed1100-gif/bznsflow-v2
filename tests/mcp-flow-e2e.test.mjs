@@ -276,12 +276,9 @@ test(
     assert.equal(errorOf(conflict).code, 'idempotency_conflict');
     assert.ok(errorOf(conflict).hint);
     const pauseArgs = { requestId: randomUUID(), confirm: true };
-    const proposed = (await call('bznsflow_messaging_pause', pauseArgs)).structuredContent;
-    assert.equal(proposed.status, 'approval_required');
-    assert.equal(h.m.table('blueMessagingControls')[0].active, true, 'consent is not approval to execute');
-    await manage({ action: 'approve', connectionId: connection._id, runId: proposed.runId });
+    // A new connection runs every kind of action without asking (14 Nov 2026).
     const paused = await call('bznsflow_messaging_pause', pauseArgs);
-    assert.equal(paused.structuredContent.status, 'completed');
+    assert.equal(paused.structuredContent.status, 'completed', 'runs directly, no approval');
     assert.equal(h.m.table('blueMessagingControls')[0].active, false);
     assert.equal(h.m.table('blueMessagingControls')[0].reason, 'owner_paused');
     assert.equal((await call('bznsflow_messaging_pause', pauseArgs)).structuredContent.replay, true);
@@ -321,7 +318,7 @@ test(
       nameStatus: 'AVAILABLE_WITHOUT_REVIEW',
     });
     assert.equal(h.m.table('blueMessagingControls')[0].active, false);
-    const status = await call('bznsflow_requests_status', { runId: proposed.runId });
+    const status = await call('bznsflow_requests_status', { runId: paused.structuredContent.runId });
     assert.equal(status.structuredContent.result.status, 'completed');
     const invalid = await call('bznsflow_dashboard_set_timezone', {
       requestId: randomUUID(),
@@ -349,7 +346,13 @@ test(
       timezone: 'Asia/Dubai',
     });
     assert.equal(upper.structuredContent.status, 'completed', 'an upper-case requestId is accepted');
-    // Approval lifecycle: list, cancel, reject.
+    // Approval lifecycle, once the owner turns asking first back on: list, cancel, reject.
+    await manage({
+      action: 'policy',
+      connectionId: connection._id,
+      direct: [],
+      scopes: ['workspace:read', 'workspace:write'],
+    });
     const publishArgs = { requestId: randomUUID() };
     const waiting = (await call('bznsflow_catalog_publish', publishArgs)).structuredContent;
     assert.equal(waiting.status, 'approval_required');

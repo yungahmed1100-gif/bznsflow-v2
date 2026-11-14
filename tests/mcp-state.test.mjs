@@ -5,7 +5,7 @@ import { blueHarness, seedTenant } from './helpers/blue-tenant.mjs';
 import { manage, prepare, admit, recordMetric, requestStatus } from '../convex/mcp/state.js';
 import { executeApplication } from '../convex/mcp/application.js';
 import { connectionOwner, mcpEffectAllowed } from '../convex/mcp/access.js';
-import { TOOLS, toolsFor } from '../config/mcp/contracts.js';
+import { CATEGORIES, TOOLS, toolsFor } from '../config/mcp/contracts.js';
 import { HASIB_OPERATIONS } from '../convex/hasib/hasibState.js';
 import { HASIB_POLICY } from '../config/mcp/hasib-policy.js';
 import { valid } from '../config/mcp/validation.js';
@@ -34,6 +34,9 @@ async function fixture(plan = 'ascend') {
     },
     m.now(),
   );
+  // These tests exercise the approval path, which the owner can still turn on
+  // per category ("ask me first"); new connections start with none.
+  await m.db.patch(c.id, { direct: [] });
   const call = async (tool, args = {}) => {
     const p = await prepare(m.ctx, { connectionId: c.id, tool, args }, m.now());
     if (p.status === 'approval_required') return p;
@@ -250,7 +253,74 @@ test('stale and expired previews cannot be approved; foreign records denied', as
     /approval_expired/,
   );
 });
-test('permission changes need fresh account verification and invalidate pending approval', async () => {
+// Ahmed, 14 Nov 2026: no approvals and no emailed code; signing in with the
+// BznsFlow account is the only step. Asking first stays available per category.
+test('a new connection runs every kind of action directly', async () => {
+  const h = blueHarness({ start: Date.now() }),
+    { m } = h;
+  await h.enable();
+  const a = await seedTenant(m, { plan: 'ascend', sector: 'Real estate' });
+  await m.db.insert('sessions', {
+    accountId: a.accountId,
+    tokenHash: '2'.repeat(64),
+    createdAt: m.now(),
+    expiresAt: m.now() + 86400000,
+  });
+  const c = await manage(
+    m.ctx,
+    {
+      operation: 'connect',
+      tokenHash: '2'.repeat(64),
+      clientId: 'synthetic-client',
+      clientName: 'Synthetic',
+      scopes: ['workspace:read', 'workspace:write'],
+    },
+    m.now(),
+  );
+  assert.deepEqual((await m.db.get(c.id)).direct, CATEGORIES);
+  const pause = await prepare(
+    m.ctx,
+    { connectionId: c.id, tool: 'bznsflow_messaging_pause', args: { requestId: randomUUID(), confirm: true } },
+    m.now(),
+  );
+  assert.equal(pause.status, 'ready');
+});
+test('connecting and changing permissions accept any live sign-in, however old', async () => {
+  const h = blueHarness({ start: Date.now() }),
+    { m } = h;
+  await h.enable();
+  const a = await seedTenant(m, { plan: 'ascend', sector: 'Real estate' });
+  await m.db.insert('sessions', {
+    accountId: a.accountId,
+    tokenHash: '3'.repeat(64),
+    createdAt: m.now(),
+    expiresAt: m.now() + 30 * 86400000,
+  });
+  m.advance(3 * 86400000);
+  const c = await manage(
+    m.ctx,
+    {
+      operation: 'connect',
+      tokenHash: '3'.repeat(64),
+      clientId: 'synthetic-client',
+      clientName: 'Synthetic',
+      scopes: ['workspace:read', 'workspace:write'],
+    },
+    m.now(),
+  );
+  const changed = await manage(
+    m.ctx,
+    { operation: 'policy', tokenHash: '3'.repeat(64), connectionId: c.id, direct: [], scopes: ['workspace:read'] },
+    m.now(),
+  );
+  assert.deepEqual(changed, { updated: true });
+  m.advance(28 * 86400000);
+  await assert.rejects(
+    () => manage(m.ctx, { operation: 'list', tokenHash: '3'.repeat(64) }, m.now()),
+    /sign_in_required/,
+  );
+});
+test('permission changes invalidate pending approval', async () => {
   const { m, c, call } = await fixture();
   const args = { requestId: randomUUID() },
     pending = await call('bznsflow_messaging_pause', args);
@@ -278,22 +348,6 @@ test('permission changes need fresh account verification and invalidate pending 
         m.now(),
       ),
     /approval_stale/,
-  );
-  m.advance(6 * 60000);
-  await assert.rejects(
-    () =>
-      manage(
-        m.ctx,
-        {
-          operation: 'policy',
-          tokenHash: '1'.repeat(64),
-          connectionId: c.id,
-          direct: [],
-          scopes: ['workspace:read'],
-        },
-        m.now(),
-      ),
-    /fresh_sign_in_required/,
   );
 });
 test('plan downgrade filters discovery and forbids previously available tools', async () => {

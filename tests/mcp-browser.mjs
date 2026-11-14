@@ -22,11 +22,8 @@ try {
         revoked = false,
         approved = false,
         consented = false,
-        // The first consent is refused like a stale sign-in, as on 10 November.
-        consentRefusals = 1,
+        // Signing in with the BznsFlow account is the only step: no emailed code (14 Nov 2026).
         codesSent = 0,
-        // The first permission save is refused like a stale sign-in; the second succeeds.
-        policyRefusals = 1,
         policy = false;
       let connection = {
         id: 'synthetic-connection',
@@ -50,16 +47,10 @@ try {
             contentType: 'application/json',
             body: JSON.stringify(body),
           });
-        // The in-place identity check: one emailed code, then a fresh session.
         if (url.pathname === '/api/auth-code') {
-          assert.equal(route.request().postDataJSON().email, 'synthetic@example.com');
           codesSent++;
           return json({ ok: true });
         }
-        if (url.pathname === '/api/auth-session' && route.request().method() === 'POST')
-          return route.request().postDataJSON().code === '123456'
-            ? json({ ok: true, account: { email: 'synthetic@example.com' } })
-            : json({ ok: false, reason: 'code_invalid' }, 409);
         if (url.pathname === '/api/auth-session')
           return json({
             ok: true,
@@ -74,10 +65,6 @@ try {
             assert.equal(route.request().headers()['x-csrf-token'], 'c'.repeat(64));
             if (body.action === 'revoke') revoked = true;
             if (body.action === 'approve') approved = true;
-            if (body.action === 'consent' && consentRefusals > 0) {
-              consentRefusals--;
-              return json({ ok: false, reason: 'fresh_sign_in_required' }, 409);
-            }
             if (body.action === 'consent') {
               assert.equal(body.interactionUid, 'synthetic');
               assert.equal(body.allow, true);
@@ -86,10 +73,6 @@ try {
             }
             if (body.action === 'policy') {
               policy = true;
-              if (policyRefusals > 0) {
-                policyRefusals--;
-                return json({ ok: false, reason: 'fresh_sign_in_required' }, 409);
-              }
               connection = {
                 ...connection,
                 direct: body.direct,
@@ -269,47 +252,20 @@ try {
       writeFileSync(`${OUT}/${lang}-${width}-axe.json`, JSON.stringify(axe.violations, null, 2));
       assert.deepEqual(axe.violations, [], `${lang} ${width} accessibility`);
       checks++;
-      // A stale sign-in is confirmed inside the card with an emailed code, then the same
-      // consent continues by itself; the owner is never sent away to sign in again.
-      await page
-        .getByRole('button', {
-          name: lang === 'ar' ? 'المتابعة بهذا الحساب' : 'Continue with this account',
-          exact: true,
-        })
-        .click();
-      const codeInput = page.locator('.mcp-consent #mcp-identity-code');
-      await codeInput.waitFor();
-      await page
-        .getByRole('button', { name: lang === 'ar' ? 'تأكيد ومتابعة' : 'Confirm and continue', exact: true })
-        .isEnabled();
-      await page.waitForFunction(() => document.activeElement?.id === 'mcp-identity-code');
-      const box = await codeInput.boundingBox(),
-        viewport = page.viewportSize();
-      assert.ok(box && box.y >= 0 && box.y + box.height <= viewport.height, `${lang} ${width} code field is in view`);
-      assert.equal(codesSent, 1, 'one code is sent when the step opens');
-      assert.equal(
-        await page.getByText(lang === 'ar' ? 'التحقق من الحساب' : 'Verify account').count(),
-        0,
-        'no detour to sign-in',
-      );
-      checks++;
-      await codeInput.fill('000000');
-      await page
-        .getByRole('button', { name: lang === 'ar' ? 'تأكيد ومتابعة' : 'Confirm and continue', exact: true })
-        .click();
-      await page.locator('#mcp-identity-problem').waitFor();
-      assert.equal(consented, false, 'a wrong code does not connect');
-      checks++;
-      await codeInput.fill('123456');
+      // Continuing connects at once: the signed-in BznsFlow account is the only check.
       await Promise.all([
         page.waitForResponse(
           response => response.url().includes('/api/mcp/manage') && response.request().method() === 'GET',
         ),
         page
-          .getByRole('button', { name: lang === 'ar' ? 'تأكيد ومتابعة' : 'Confirm and continue', exact: true })
+          .getByRole('button', {
+            name: lang === 'ar' ? 'المتابعة بهذا الحساب' : 'Continue with this account',
+            exact: true,
+          })
           .click(),
       ]);
       assert.ok(consented);
+      assert.equal(await page.locator('#mcp-identity-code').count(), 0, 'no code step');
       checks++;
       // The approval reads as an action with its values, not as raw JSON.
       const card = page.locator('#approval-run-1');
@@ -352,18 +308,9 @@ try {
       await page.locator('.mcp-grid fieldset').first().locator('input[type="checkbox"]').first().click();
       assert.equal(await save.isDisabled(), false);
       checks++;
-      await save.click();
-      // A permission change on a stale sign-in asks for the code inside the same card,
-      // where the owner pressed Save, not elsewhere on the page.
-      const connectionCard = page.locator('.mcp-grid > article').first();
-      await connectionCard.locator('#mcp-identity-code').waitFor();
-      assert.ok(policy);
-      checks++;
-      await page.getByRole('button', { name: lang === 'ar' ? 'إلغاء' : 'Cancel', exact: true }).click();
-      assert.equal(await page.locator('#mcp-identity-code').count(), 0);
-      checks++;
       // A successful save answers next to the button and stays until the next change
       // (12 November 2026: the only confirmation was off-screen, so the page looked stuck).
+      const connectionCard = page.locator('.mcp-grid > article').first();
       await save.click();
       const savedNote = connectionCard.getByText(lang === 'ar' ? /تم حفظ الصلاحيات/ : /Permissions saved/);
       await savedNote.waitFor();
@@ -378,7 +325,8 @@ try {
       await connectionCard.screenshot({ path: `${OUT}/${lang}-${width}-saved.png` });
       await page.waitForTimeout(4500);
       assert.ok(await savedNote.isVisible(), 'the confirmation does not vanish on a timer');
-      checks += 3;
+      assert.ok(policy);
+      checks += 4;
       await page
         .getByRole('button', {
           name: lang === 'ar' ? 'قطع الاتصال' : 'Disconnect',
@@ -430,8 +378,9 @@ try {
         0,
       );
       checks++;
+      assert.equal(codesSent, 0, 'no code is ever emailed');
       assert.deepEqual(errors, []);
-      checks++;
+      checks += 2;
       await ctx.close();
     }
   for (const lang of ['ar', 'en']) {

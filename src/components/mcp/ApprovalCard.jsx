@@ -28,18 +28,7 @@ const fieldLabel = key =>
  * An approval as the owner reads it: what the assistant wants to do, the records and
  * values involved, then the exact request for anyone who wants to check it.
  */
-export function ApprovalCard({
-  approval: a,
-  ar,
-  busy,
-  target,
-  title,
-  categories,
-  notice,
-  identity,
-  onApprove,
-  onReject,
-}) {
+export function ApprovalCard({ approval: a, ar, busy, target, title, categories, notice, onApprove, onReject }) {
   const tr = (en, arabic) => (ar ? arabic : en);
   const heading = useRef(null);
   useEffect(() => {
@@ -103,16 +92,14 @@ export function ApprovalCard({
         <pre dir="ltr">{JSON.stringify({ args: a.args, preview: a.preview }, null, 2)}</pre>
       </details>
       {notice}
-      {identity || (
-        <div className="mcp-actions">
-          <button disabled={busy} onClick={onApprove}>
-            {tr('Approve this action', 'الموافقة على الإجراء')}
-          </button>
-          <button className="mcp-secondary" disabled={busy} onClick={onReject}>
-            {tr('Reject', 'رفض')}
-          </button>
-        </div>
-      )}
+      <div className="mcp-actions">
+        <button disabled={busy} onClick={onApprove}>
+          {tr('Approve this action', 'الموافقة على الإجراء')}
+        </button>
+        <button className="mcp-secondary" disabled={busy} onClick={onReject}>
+          {tr('Reject', 'رفض')}
+        </button>
+      </div>
     </article>
   );
 }

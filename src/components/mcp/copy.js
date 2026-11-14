@@ -101,10 +101,6 @@ export const ERRORS = {
     'This connection request expired. Start a new connection from your AI assistant.',
     'انتهت صلاحية طلب الاتصال. ابدأ اتصالًا جديدًا من مساعدك.',
   ],
-  fresh_sign_in_required: [
-    'Verify your account again to change permissions or connect an assistant.',
-    'تحقّق من حسابك مجددًا لتغيير الصلاحيات أو ربط المساعد.',
-  ],
   access_required: [
     'AI connections come with every BznsFlow plan. Your account doesn’t have an active plan yet.',
     'اتصالات الذكاء الاصطناعي متاحة مع جميع باقات BznsFlow. لا توجد باقة فعّالة في حسابك بعد.',

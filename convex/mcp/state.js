@@ -156,7 +156,7 @@ export async function rate(ctx, key, max, now, window = 60000) {
     });
 }
 export async function manage(ctx, a, now = Date.now()) {
-  const p = await browserOwner(ctx, a.tokenHash, now, a.operation === 'connect' || a.operation === 'policy');
+  const p = await browserOwner(ctx, a.tokenHash, now);
   if (a.operation === 'list') {
     const recent = await ctx.db
       .query('mcpConnections')
@@ -234,7 +234,8 @@ export async function manage(ctx, a, now = Date.now()) {
       scopes: a.scopes,
       grantedScopes: a.scopes,
       areas: a.areas || AREAS,
-      direct: [],
+      // Every kind of action runs without asking; the owner can turn asking back on per category.
+      direct: [...CATEGORIES],
       createdAt: now,
       expiresAt: now + 30 * DAY,
       version: 1,

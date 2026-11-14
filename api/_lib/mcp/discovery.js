@@ -5,7 +5,7 @@ import { mcpIcons } from '../../../config/mcp/identity.js';
 import { McpError } from './store.js';
 
 // Bump when tool names, schemas or descriptions change, so clients refresh their cache.
-export const SERVER_VERSION = '1.1.0';
+export const SERVER_VERSION = '1.2.0';
 export const TOOLS_PER_PAGE = 60;
 // A schema above this size is advertised by its top-level fields only.
 const ADVERTISED_SCHEMA_BYTES = 2500;

@@ -4,10 +4,9 @@ import { AREAS } from './copy';
 
 /**
  * The connection request an AI assistant sent: who is asking, which business areas it may
- * reach, and what it may do. `notice` is a refusal shown next to the buttons; `identity`
- * replaces the buttons while the owner confirms a stale sign-in with an emailed code.
+ * reach, and what it may do. `notice` is a refusal shown next to the buttons.
  */
-export function ConsentCard({ consent, email, ar, busy, areas, onAreas, notice, identity, onAllow, onDecline }) {
+export function ConsentCard({ consent, email, ar, busy, areas, onAreas, notice, onAllow, onDecline }) {
   const tr = (en, arabic) => (ar ? arabic : en);
   return (
     <section className="mcp-panel mcp-consent">
@@ -46,8 +45,8 @@ export function ConsentCard({ consent, email, ar, busy, areas, onAreas, notice, 
         {consent.scopes.includes('workspace:write') && (
           <li>
             {tr(
-              'Make routine edits and prepare important actions for your approval.',
-              'إجراء تعديلات اعتيادية وإعداد الإجراءات المهمة لموافقتك.',
+              'Make changes and take actions within your plan directly. You can make any category ask you first after connecting.',
+              'إجراء التعديلات وتنفيذ الإجراءات ضمن باقتك مباشرة. يمكنك بعد الربط جعل أي فئة تطلب موافقتك أولًا.',
             )}
           </li>
         )}
@@ -59,26 +58,24 @@ export function ConsentCard({ consent, email, ar, busy, areas, onAreas, notice, 
         )}
       </p>
       {notice}
-      {identity || (
-        <div className="mcp-actions">
-          {!areas.length && (
-            <p className="mcp-muted" id="mcp-consent-empty">
-              {tr('Choose at least one area to continue.', 'اختر مجالًا واحدًا على الأقل للمتابعة.')}
-            </p>
-          )}
-          <button
-            disabled={busy || !areas.length}
-            aria-describedby={areas.length ? undefined : 'mcp-consent-empty'}
-            onClick={onAllow}
-            aria-busy={busy || undefined}
-          >
-            {busy ? tr('Connecting…', 'جارٍ الربط…') : tr('Continue with this account', 'المتابعة بهذا الحساب')}
-          </button>
-          <button className="mcp-secondary" disabled={busy} onClick={onDecline}>
-            {tr('Decline', 'رفض')}
-          </button>
-        </div>
-      )}
+      <div className="mcp-actions">
+        {!areas.length && (
+          <p className="mcp-muted" id="mcp-consent-empty">
+            {tr('Choose at least one area to continue.', 'اختر مجالًا واحدًا على الأقل للمتابعة.')}
+          </p>
+        )}
+        <button
+          disabled={busy || !areas.length}
+          aria-describedby={areas.length ? undefined : 'mcp-consent-empty'}
+          onClick={onAllow}
+          aria-busy={busy || undefined}
+        >
+          {busy ? tr('Connecting…', 'جارٍ الربط…') : tr('Continue with this account', 'المتابعة بهذا الحساب')}
+        </button>
+        <button className="mcp-secondary" disabled={busy} onClick={onDecline}>
+          {tr('Decline', 'رفض')}
+        </button>
+      </div>
     </section>
   );
 }

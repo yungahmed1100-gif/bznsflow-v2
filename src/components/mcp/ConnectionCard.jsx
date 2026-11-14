@@ -65,10 +65,9 @@ function DisconnectButton({ name, ar, busy, onRevoke }) {
 
 /**
  * One active assistant connection: its status, permissions and execution policy.
- * `notice` (a refusal) and `identity` (the emailed-code check, shown in place of the
- * buttons) belong to this card's own Save or Disconnect, so they appear here.
+ * `notice` (a refusal) belongs to this card's own Save or Disconnect, so it appears here.
  */
-export function ConnectionCard({ connection: c, ar, busy, saved, notice, identity, onSave, onRevoke }) {
+export function ConnectionCard({ connection: c, ar, busy, saved, notice, onSave, onRevoke }) {
   const initialAreas = c.areas || Object.keys(AREAS);
   const [areas, setAreas] = useState(initialAreas),
     [direct, setDirect] = useState(c.direct),
@@ -124,20 +123,18 @@ export function ConnectionCard({ connection: c, ar, busy, saved, notice, identit
         <legend>{ar ? 'تنفيذ مباشر بدون موافقة لكل طلب' : 'Direct execution without approval for each request'}</legend>
         <p className="mcp-muted">
           {ar
-            ? 'الخيارات غير المحددة تتطلب موافقتك هنا قبل التنفيذ.'
-            : 'Unchecked categories require your approval here before execution.'}
+            ? 'كل الفئات تُنفَّذ مباشرة. أزل التحديد عن فئة لتوافق على طلباتها هنا أولًا.'
+            : 'Every category runs directly. Uncheck one to approve its requests here first.'}
         </p>
         <Checklist options={CATEGORIES} chosen={direct} onChange={setDirect} ar={ar} />
       </fieldset>
       {notice}
-      {identity || (
-        <div className="mcp-actions">
-          <button disabled={busy || !changed} onClick={() => onSave(c.id, direct, write, areas)}>
-            {saved && !changed ? (ar ? 'تم الحفظ' : 'Saved') : ar ? 'حفظ الصلاحيات' : 'Save permissions'}
-          </button>
-          <DisconnectButton name={c.clientName} ar={ar} busy={busy} onRevoke={() => onRevoke(c.id)} />
-        </div>
-      )}
+      <div className="mcp-actions">
+        <button disabled={busy || !changed} onClick={() => onSave(c.id, direct, write, areas)}>
+          {saved && !changed ? (ar ? 'تم الحفظ' : 'Saved') : ar ? 'حفظ الصلاحيات' : 'Save permissions'}
+        </button>
+        <DisconnectButton name={c.clientName} ar={ar} busy={busy} onRevoke={() => onRevoke(c.id)} />
+      </div>
       <p className="mcp-card-status" role="status" aria-live="polite">
         {saved && !changed ? DONE.policy[ar ? 1 : 0] : ''}
       </p>

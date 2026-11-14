@@ -571,10 +571,6 @@
   "src/components/mcp/ApprovalCard.jsx": {
     "no-unused-vars": 1
   },
-  "src/components/mcp/ConfirmIdentity.jsx": {
-    "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 1
-  },
   "src/components/mcp/ConnectionCard.jsx": {
     "no-unused-vars": 1
   },
@@ -691,7 +687,7 @@
   },
   "src/pages/McpConnections.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 2
+    "react-hooks/exhaustive-deps": 1
   },
   "src/pages/OwnerHome.jsx": {
     "no-unused-vars": 1

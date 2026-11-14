@@ -225,7 +225,7 @@ export const execute = internalMutation({
       return transfer(ctx, linked, input.transferId, now);
     }
     if (operation === 'browser_identity') {
-      const p = await browserOwner(ctx, input.tokenHash, now, !!input.fresh);
+      const p = await browserOwner(ctx, input.tokenHash, now);
       return { accountId: p.account._id, email: p.account.email, plan: p.plan };
     }
     if (operation === 'rate') {
