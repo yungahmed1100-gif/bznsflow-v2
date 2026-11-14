@@ -10,6 +10,7 @@ import { hvacTables } from './hasib/hvacSchema';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 import { aiMeta } from './aiMeta';
+import { websiteTables } from './websiteSchema';
 
 // Shared Green production schema: website state, authentication, Catalyst and
 // Ascend tables live in this deployment. Blue testing uses a separate deployment.
@@ -87,6 +88,7 @@ export default defineSchema({
   ...fitnessTables,
   ...dentalTables,
   ...hvacTables,
+  ...websiteTables,
   // ── Hasib: orders, stock and payments (docs/hasib-engineering.md). Money is integer baisa. ──
   hasibSettings: defineTable({
     accountId: v.id('accounts'),
@@ -320,46 +322,6 @@ export default defineSchema({
   })
     .index('by_email', ['email'])
     .index('by_status', ['status']),
-  // Ascend's free website: the owner's brief (config/website-brief.js), emailed to Ahmed on each submit.
-  websiteBriefs: defineTable({
-    accountId: v.id('accounts'),
-    version: v.number(),
-    fields: v.record(v.string(), v.union(v.string(), v.array(v.string()), v.boolean())),
-    logoId: v.optional(v.id('_storage')),
-    photoIds: v.array(v.id('_storage')),
-    docIds: v.optional(v.array(v.object({ kind: v.string(), id: v.id('_storage') }))),
-    submittedAt: v.number(),
-    emailedAt: v.optional(v.number()),
-    emailId: v.optional(v.string()),
-  }).index('by_account', ['accountId']),
-  // Logo, photos and Paymob documents uploaded for a brief, byte-checked by the HTTP route. A row keeps its file from the orphan sweep.
-  // A website brief being filled in, step by step, so the owner can leave and resume on any device.
-  websiteDrafts: defineTable({
-    accountId: v.id('accounts'),
-    fields: v.record(v.string(), v.union(v.string(), v.array(v.string()), v.boolean())),
-    step: v.number(),
-    logoId: v.optional(v.id('_storage')),
-    photoIds: v.array(v.id('_storage')),
-    docIds: v.optional(v.array(v.object({ kind: v.string(), id: v.id('_storage') }))),
-    updatedAt: v.number(),
-  }).index('by_account', ['accountId']),
-  // The free website's delivery, from the first brief to live (config/website-brief.js WEBSITE_STAGES). Promised by dueAt.
-  websiteProjects: defineTable({
-    accountId: v.id('accounts'),
-    stage: v.string(),
-    stageAt: v.record(v.string(), v.number()),
-    dueAt: v.number(),
-    domain: v.optional(v.string()),
-    mailbox: v.optional(v.string()),
-    liveUrl: v.optional(v.string()),
-    note: v.optional(v.string()),
-    delayReason: v.optional(v.string()),
-    payments: v.optional(v.object({ stage: v.string(), stageAt: v.record(v.string(), v.number()) })),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index('by_account', ['accountId'])
-    .index('by_stage_due', ['stage', 'dueAt']),
   // Free-audit bookings from bznsflowai.com/audit (config/audit.js, convex/auditState.js). One `booked` row per startAt.
   // Apex requests from /apex (config/apex.js, convex/apexState.js): a company's demanded agent functions, for Ahmed to scope and quote.
   apexRequests: defineTable({
@@ -397,24 +359,6 @@ export default defineSchema({
   })
     .index('by_start', ['startAt'])
     .index('by_email', ['email', 'startAt']),
-  websiteBriefFiles: defineTable({
-    accountId: v.id('accounts'),
-    storageId: v.id('_storage'),
-    kind: v.union(
-      v.literal('logo'),
-      v.literal('photo'),
-      v.literal('doc_cr'),
-      v.literal('doc_id'),
-      v.literal('doc_bank'),
-      v.literal('doc_tax'),
-      v.literal('doc_forms'),
-      v.literal('doc_invoice'),
-    ),
-    name: v.optional(v.string()),
-    at: v.number(),
-  })
-    .index('by_storage', ['storageId'])
-    .index('by_account', ['accountId']),
   // Online Catalyst and Ascend payments through Paymob (convex/billingState.js). `amount` is what Paymob was asked for, in its unit.
   billingPayments: defineTable({
     reference: v.string(),

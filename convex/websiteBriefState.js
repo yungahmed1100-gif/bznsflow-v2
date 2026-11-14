@@ -155,7 +155,7 @@ export async function websiteDraftFiles(ctx, accountId) {
 }
 
 async function briefFor(ctx, account, a, now) {
-  if (a.operation === 'get') return ok(await view(ctx, account));
+  if (a.operation === 'get') return ok(await view(ctx, account, a.submittedOnly === true));
   if (a.operation === 'upload_url') {
     if (!(await spend(ctx, `website-brief:${account._id}:${Math.floor(now / DAY)}`, UPLOADS_PER_DAY, 2 * DAY, now)))
       return fail('upload_limit');
@@ -186,21 +186,24 @@ async function briefFor(ctx, account, a, now) {
 }
 
 /** The saved brief, or a start prefilled from the business details the owner already confirmed. */
-async function view(ctx, account) {
+async function view(ctx, account, submittedOnly = false) {
   const [brief, draft, project] = [
     await briefOf(ctx, account._id),
-    await draftOf(ctx, account._id),
+    submittedOnly ? null : await draftOf(ctx, account._id),
     await projectOf(ctx, account._id),
   ];
+  // An email retry shows what the submitted email showed: its name and date, whatever changed since.
+  // Briefs submitted before this was recorded fall back to the current details.
+  const emailContext = submittedOnly ? brief?.emailContext : null;
   const base = {
-    account: { email: account.email, name: account.name || '' },
+    account: emailContext?.account || { email: account.email, name: account.name || '' },
     version: brief?.version || 0,
     submittedAt: brief?.submittedAt || null,
     emailedAt: brief?.emailedAt || null,
-    project: publicProject(project),
+    project: publicProject(project && emailContext ? { ...project, dueAt: emailContext.dueAt } : project),
     draft: draft ? { step: draft.step, updatedAt: draft.updatedAt } : null,
   };
-  // A draft in progress wins; then the last brief sent; then a start from what the owner already confirmed.
+  // The editor resumes the draft in progress; an email retry reads only the submitted brief and its files.
   const source = draft || brief;
   if (source) {
     return {
@@ -376,6 +379,8 @@ async function submit(ctx, account, a, now) {
       await ctx.storage.delete(f.storageId);
     }
   const version = (brief?.version || 0) + 1;
+  const project = await startProject(ctx, account._id, checked.value, now);
+  const emailContext = { account: { email: account.email, name: account.name || '' }, dueAt: project.dueAt };
   const next = {
     accountId: account._id,
     version,
@@ -383,17 +388,17 @@ async function submit(ctx, account, a, now) {
     photoIds,
     docIds,
     submittedAt: now,
+    emailContext,
     ...(a.logoId ? { logoId: a.logoId } : {}),
   };
   if (brief) await ctx.db.replace(brief._id, next);
   else await ctx.db.insert('websiteBriefs', next);
   const draft = await draftOf(ctx, account._id);
   if (draft) await ctx.db.delete(draft._id);
-  const project = await startProject(ctx, account._id, checked.value, now);
   return ok({
     version,
     update: version > 1,
-    account: { email: account.email, name: account.name || '' },
+    account: emailContext.account,
     fields: checked.value,
     project: publicProject(project),
     logo: a.logoId ? await fileUrl(ctx, a.logoId) : null,

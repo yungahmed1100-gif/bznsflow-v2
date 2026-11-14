@@ -451,6 +451,9 @@ export async function executeBrain(ctx, a, now = Date.now()) {
 
   if (a.operation === 'settle_publish') {
     // After bzns.md is published: merged old answers are retired, so Layla reads each fact from one place.
+    // Another tab may accept an answer between publication and this cleanup. Its live answer stays
+    // until that newer draft is published; the next cleanup retires the whole accepted batch.
+    if (!row.bznsPublished || row.bznsDraft?.markdown !== row.bznsPublished.markdown) return ok({ retired: 0 });
     const accepted = await ctx.db
       .query('brainProposals')
       .withIndex('by_review_status', q => q.eq('reviewId', row._id).eq('status', 'accepted'))

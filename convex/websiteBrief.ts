@@ -15,6 +15,7 @@ export const execute = internalMutation({
       v.literal('domain_rate'),
     ),
     sessionHash: v.string(),
+    submittedOnly: v.optional(v.boolean()),
     storageId: v.optional(v.string()),
     kind: v.optional(v.string()),
     fileCheck: v.optional(v.string()),

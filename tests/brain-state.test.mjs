@@ -661,3 +661,42 @@ test("the currency written on the page wins over the model's guess", () => {
     undefined,
   ]);
 });
+
+test('publish cleanup never retires Q&A accepted into a newer unpublished draft', async () => {
+  const s = await setup();
+  await s.h.m.db.insert('knowledgeSources', {
+    accountId: s.tenant.accountId,
+    sourceKey: 'guided-race',
+    title: 'Guided answers',
+    approvedAnswers: [
+      { question: 'Is parking free?', answer: 'Yes, behind the clinic.', label: 'Guided' },
+      { question: 'Do you open Fridays?', answer: 'Yes, in the evening.', label: 'Guided' },
+    ],
+    kind: 'guided',
+    contentHash: 'race',
+    status: 'published',
+    revision: 1,
+    updatedAt: 1,
+    createdAt: 1,
+  });
+  const proposals = (await s.brain('state')).value.proposals;
+  await s.brain('accept', { proposalId: proposals[0].id });
+  assert.equal(
+    (await s.brain('settle_publish')).value.retired,
+    0,
+    'accepting into a draft alone must not retire live answers',
+  );
+  const published = await s.row();
+  await s.review('bzns_publish', { markdown: published.bznsDraft.markdown, version: published.bznsDraft.version });
+  // A second tab accepts another answer after publication but before its cleanup mutation.
+  await s.brain('accept', { proposalId: proposals[1].id });
+  const version = (await s.row()).profileVersion;
+  assert.equal((await s.brain('settle_publish')).value.retired, 0);
+  assert.ok(s.h.m.table('knowledgeSources')[0].approvedAnswers.every(a => !a.retiredAt));
+  assert.equal((await s.row()).profileVersion, version, 'deferred cleanup changes no live context');
+  assert.ok(s.h.m.table('brainProposals').every(p => p.flags.includes('retire_on_publish')));
+  const latest = await s.row();
+  await s.review('bzns_publish', { markdown: latest.bznsDraft.markdown, version: latest.bznsDraft.version });
+  assert.equal((await s.brain('settle_publish')).value.retired, 2);
+  assert.equal((await s.brain('settle_publish')).value.retired, 0, 'cleanup is idempotent');
+});

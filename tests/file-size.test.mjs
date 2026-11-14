@@ -18,7 +18,7 @@ const CAPPED = {
   'convex/hasib/mediaState.js': 921,
   'convex/hasib/workflowSchema.ts': 865,
   'convex/rasilState.js': 889,
-  'convex/schema.ts': 1684,
+  'convex/schema.ts': 1628,
   'src/components/ascend-draft/AscendDraft.jsx': 980,
   'src/components/ascend-draft/draft.css': 1750,
   'src/components/hasib/AutomotiveDashboard.jsx': 1225,
