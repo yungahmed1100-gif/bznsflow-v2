@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import '../../styles/loading-dots.css';
 
 const SHOW_AFTER_MS = 160;
 

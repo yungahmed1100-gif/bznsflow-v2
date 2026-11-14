@@ -1,4 +1,3 @@
-import { LoadingDots } from '../components/ui/LoadingDots';
 import { ChannelConnections } from '../components/dashboard/ChannelConnections';
 import { BusinessDetails } from '../components/dashboard/BusinessDetails';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -80,6 +79,7 @@ import '../styles/sector-records.css';
 import '../styles/product.css';
 import '../styles/dashboard-polish.css';
 import { localePath, otherLanguagePath, plansPath, setupPath } from '../lib/paths';
+import { LoadingDots } from '../components/ui/LoadingDots';
 
 export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
   const [params, setParams] = useSearchParams();

@@ -69,3 +69,6 @@
 
 /* Colour that means something (2026-10-10; appended last) */
 @import './styles/colour.css';
+
+/* Loading dots: shared by every dashboard screen, so they live here and never change a page chunk's stylesheet order */
+@import './styles/loading-dots.css';

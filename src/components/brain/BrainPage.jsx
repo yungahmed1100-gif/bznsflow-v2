@@ -1,4 +1,3 @@
-import { LoadingDots } from '../ui/LoadingDots.jsx';
 import React, { useMemo, useRef, useState } from 'react';
 import { parseBzns, prepareForPublish, validateBzns } from '../../lib/bzns-doc.js';
 import { bznsMessages, serverBznsProblems } from '../../lib/bzns-messages.js';
@@ -14,6 +13,7 @@ import { ReviewCard } from './ReviewCard.jsx';
 import { BehaviourCard } from './BehaviourCard.jsx';
 import { TestLaylaPanel } from './TestLaylaPanel.jsx';
 import '../../styles/brain.css';
+import { LoadingDots } from '../ui/LoadingDots.jsx';
 
 const TABS = ['bzns', 'catalog'];
 

@@ -1,4 +1,3 @@
-import { LoadingDots } from '../components/ui/LoadingDots';
 import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { callApi } from '../lib/api-client.js';
@@ -168,7 +167,7 @@ export default function ProductSetup({ lang = 'ar' }) {
               )}
             </div>
           )}
-          {!data && !error && <LoadingDots label={tr('Loading saved setup…', 'جارٍ تحميل الإعداد المحفوظ…')} />}
+          {!data && !error && <p role="status">{tr('Loading saved setup…', 'جارٍ تحميل الإعداد المحفوظ…')}</p>}
           {signedOut && (
             <p className="setup-signin" role="status">
               {tr(
@@ -198,7 +197,7 @@ export default function ProductSetup({ lang = 'ar' }) {
           )}
           {/* One setup, mounted once: signing in part-way keeps the owner on the step they were on. */}
           {(signedOut || (data && !denied)) && (
-            <Suspense fallback={<LoadingDots label={tr('Loading…', 'جارٍ التحميل…')} />}>
+            <Suspense fallback={<p role="status">{tr('Loading…', 'جارٍ التحميل…')}</p>}>
               <Catalyst
                 key="catalyst"
                 lang={lang}

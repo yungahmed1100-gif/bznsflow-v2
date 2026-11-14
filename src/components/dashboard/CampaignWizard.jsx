@@ -1,4 +1,3 @@
-import { LoadingDots } from '../ui/LoadingDots';
 import React, { useEffect, useState } from 'react';
 import { dashboard } from '../../lib/dashboard/api';
 import { IMPORT_PAGE } from '../../lib/dashboard/import';
@@ -8,6 +7,7 @@ import { SendStep } from './SendStep';
 import { TemplateBody } from './TemplateBody';
 import { HeaderMediaField } from './HeaderMediaField';
 import { mediaHeaderOf } from '../../../config/layla-templates.js';
+import { LoadingDots } from '../ui/LoadingDots';
 
 const STEPS = ['template', 'recipients', 'send'];
 const today = () => new Date().toISOString().slice(0, 10);

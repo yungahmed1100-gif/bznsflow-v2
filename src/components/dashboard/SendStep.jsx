@@ -1,4 +1,3 @@
-import { LoadingDots } from '../ui/LoadingDots';
 import React, { useEffect, useMemo, useState } from 'react';
 import { dashboard } from '../../lib/dashboard/api';
 import { mayBeUsNumber } from '../../lib/dashboard/phone';
@@ -7,6 +6,7 @@ import { recipientValues, serverMapping } from '../../lib/dashboard/broadcast';
 import { mediaHeaderOf, renderTemplate } from '../../../config/layla-templates.js';
 import { ConsentForm, consentComplete } from './ConsentForm';
 import { META_PRICING_URL } from './MetaBillingNotice';
+import { LoadingDots } from '../ui/LoadingDots';
 
 /** Step 3: each customer's own message, who is left out and why, then send now or later. */
 export function SendStep({ s, overview, template, media, rules, rows, single, onTimezone, onCreated, onBack }) {

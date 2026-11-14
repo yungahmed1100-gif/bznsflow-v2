@@ -1,4 +1,3 @@
-import { LoadingDots } from '../ui/LoadingDots.jsx';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { prepareForPublish, validateBzns } from '../../lib/bzns-doc.js';
 import { bznsMessages, serverBznsProblems } from '../../lib/bzns-messages.js';
@@ -13,6 +12,7 @@ import { ReviewCard } from './ReviewCard.jsx';
 import { TestLaylaPanel } from './TestLaylaPanel.jsx';
 import { BznsWord } from './BznsWord.jsx';
 import '../../styles/brain.css';
+import { LoadingDots } from '../ui/LoadingDots.jsx';
 
 /**
  * Catalyst setup's first stage (Ahmed, 2026-11-14): only the two things Layla answers from, bzns.md

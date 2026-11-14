@@ -451,6 +451,7 @@ try {
       0,
       `${lang}: no endless loading line`,
     );
+    assert.equal(await page.locator('.ld-main .loading-status').count(), 0, `${lang}: no endless loading dots`);
     count++;
     await context.close();
   }
@@ -464,6 +465,25 @@ try {
     await page
       .getByText('Try it now: send your number a message from another phone to see Layla answer.', { exact: false })
       .waitFor();
+    count++;
+    // The base dashboard stylesheet must load before the dashboard's overrides (dashboard-polish.css):
+    // they share selector weights, so order decides. On 14 Nov 2026 a shared component flipped the
+    // bundle's order and moved every dashboard screen; this fails whenever that happens again.
+    const sheets = await page.evaluate(() =>
+      [...document.styleSheets].map(sheet => {
+        try {
+          return [...sheet.cssRules].map(rule => rule.cssText).join('\n');
+        } catch {
+          return '';
+        }
+      }),
+    );
+    const base = sheets.findIndex(text => text.includes('.ld-split'));
+    const polish = sheets.findIndex(text => text.includes('.ld-tabbar-nav'));
+    assert.ok(
+      base >= 0 && polish >= 0 && base < polish,
+      `base stylesheet ${base} loads before the overrides ${polish}`,
+    );
     count++;
     await context.close();
   }
