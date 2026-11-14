@@ -54,6 +54,8 @@ async function open(path, width, access = 200) {
         contentType: 'application/json',
         body: JSON.stringify({ ok: status === 200, csrfToken: 'a'.repeat(64), ...data }),
       });
+    // An answer without its list must not crash the page (Apex requests, 14 Nov 2026).
+    if (url.pathname === '/api/access-admin' && url.searchParams.get('op') === 'apex') return reply({});
     if (url.pathname === '/api/access-admin' && url.searchParams.get('op') === 'websites') {
       if (req.method() === 'POST') {
         writes.push(req.postDataJSON());
@@ -279,6 +281,16 @@ try {
         await context.close();
         checked++;
       }
+  }
+  for (const [path, empty] of [
+    ['/en/owner/apex', 'No Apex requests yet.'],
+    ['/owner/apex', 'لا توجد طلبات أبيكس بعد.'],
+  ]) {
+    const { page, context, errors } = await open(path, 1280);
+    await page.getByText(empty).waitFor();
+    assert.deepEqual(errors, [], `${path} errors`);
+    await context.close();
+    checked++;
   }
   console.log(`Owner browser: ${checked} authorization and bilingual viewport cases passed`);
 } finally {

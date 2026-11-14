@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { loadAdminList } from '../lib/admin-api.js';
 import { Link } from 'react-router-dom';
 import { APEX_STATUSES } from '../../config/apex.js';
 import '../styles/owner.css';
@@ -36,32 +37,20 @@ export default function ApexAdmin({ lang = 'en' }) {
   const [busy, setBusy] = useState('');
 
   const load = useCallback(async () => {
-    const session = await fetch('/api/auth-session', { credentials: 'same-origin', cache: 'no-store' }).then(r =>
-      r.json(),
+    const result = await loadAdminList('apex', ['requests']);
+    setCsrf(result.csrf);
+    setData(result.data || null);
+    setStatus(
+      {
+        signed_out: tr('Sign in with the administrator account.', 'سجّل الدخول بحساب المدير.'),
+        denied: tr('This account cannot see the requests.', 'هذا الحساب لا يملك الوصول إلى الطلبات.'),
+        failed: tr('Could not load the requests.', 'تعذّر تحميل الطلبات.'),
+      }[result.state] ?? (result.data.requests.length ? '' : tr('No Apex requests yet.', 'لا توجد طلبات أبيكس بعد.')),
     );
-    setCsrf(session?.csrfToken || '');
-    if (!session?.account) {
-      setData(null);
-      setStatus(tr('Sign in with the administrator account.', 'سجّل الدخول بحساب المدير.'));
-      return;
-    }
-    const response = await fetch('/api/access-admin?op=apex', { credentials: 'same-origin', cache: 'no-store' });
-    const body = await response.json();
-    if (!response.ok) {
-      setData(null);
-      setStatus(
-        body.reason === 'admin_required'
-          ? tr('This account cannot see the requests.', 'هذا الحساب لا يملك الوصول إلى الطلبات.')
-          : tr('Could not load the requests.', 'تعذّر تحميل الطلبات.'),
-      );
-      return;
-    }
-    setData(body);
-    setStatus(body.requests.length ? '' : tr('No Apex requests yet.', 'لا توجد طلبات أبيكس بعد.'));
   }, []);
 
   useEffect(() => {
-    load().catch(() => setStatus(tr('Could not load the requests.', 'تعذّر تحميل الطلبات.')));
+    load();
   }, [load]);
 
   const update = async (requestId, body) => {

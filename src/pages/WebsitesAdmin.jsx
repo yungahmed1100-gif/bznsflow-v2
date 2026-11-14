@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { loadAdminList } from '../lib/admin-api.js';
 import { Link } from 'react-router-dom';
 import { PAYMENT_STAGES, WEBSITE_STAGES } from '../../config/website-brief.js';
 import '../styles/owner.css';
@@ -42,39 +43,26 @@ export default function WebsitesAdmin({ lang = 'en' }) {
   const [busy, setBusy] = useState('');
 
   const load = useCallback(async () => {
-    const session = await fetch('/api/auth-session', { credentials: 'same-origin', cache: 'no-store' }).then(r =>
-      r.json(),
-    );
-    setCsrf(session?.csrfToken || '');
-    if (!session?.account) {
-      setData(null);
-      setStatus(tr('Sign in with the administrator account.', 'سجّل الدخول بحساب المدير.'));
-      return;
-    }
-    const response = await fetch('/api/access-admin?op=websites', { credentials: 'same-origin', cache: 'no-store' });
-    const body = await response.json();
-    if (!response.ok) {
-      setData(null);
-      setStatus(
-        body.reason === 'admin_required'
-          ? tr('This account cannot see the queue.', 'هذا الحساب لا يملك الوصول إلى القائمة.')
-          : tr('Could not load the queue.', 'تعذّر تحميل القائمة.'),
-      );
-      return;
-    }
-    setData(body);
+    const result = await loadAdminList('websites', ['open', 'live']);
+    setCsrf(result.csrf);
+    setData(result.data || null);
     setStatus(
-      body.open.length
-        ? ''
-        : tr(
-            'Nothing waiting. Every website is live and every payment set-up is done.',
-            'لا شيء بالانتظار. كل المواقع منشورة وكل المدفوعات مفعّلة.',
-          ),
+      {
+        signed_out: tr('Sign in with the administrator account.', 'سجّل الدخول بحساب المدير.'),
+        denied: tr('This account cannot see the queue.', 'هذا الحساب لا يملك الوصول إلى القائمة.'),
+        failed: tr('Could not load the queue.', 'تعذّر تحميل القائمة.'),
+      }[result.state] ??
+        (result.data.open.length
+          ? ''
+          : tr(
+              'Nothing waiting. Every website is live and every payment set-up is done.',
+              'لا شيء بالانتظار. كل المواقع منشورة وكل المدفوعات مفعّلة.',
+            )),
     );
   }, []);
 
   useEffect(() => {
-    load().catch(() => setStatus(tr('Could not load the queue.', 'تعذّر تحميل القائمة.')));
+    load();
   }, [load]);
 
   const update = async (projectId, body) => {

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { loadAdminList } from '../lib/admin-api.js';
 import { Link } from 'react-router-dom';
 import { livePackSummaries } from '../../config/hasib-packs';
 import '../styles/owner.css';
@@ -26,34 +27,30 @@ export default function AccessAdmin({ lang = 'en' }) {
 
   const load = useCallback(async () => {
     setAuthorized(false);
-    const session = await fetch('/api/auth-session', { credentials: 'same-origin', cache: 'no-store' }).then(r =>
-      r.json(),
-    );
-    setCsrf(session?.csrfToken || '');
-    if (!session?.account) {
+    const result = await loadAdminList('', ['grants', 'revoked']);
+    setCsrf(result.csrf);
+    if (result.state !== 'ready') {
       setStatus(
-        tr('Sign in with the administrator account to manage access.', 'سجّل الدخول بحساب المدير لإدارة الصلاحيات.'),
+        {
+          signed_out: tr(
+            'Sign in with the administrator account to manage access.',
+            'سجّل الدخول بحساب المدير لإدارة الصلاحيات.',
+          ),
+          denied: tr('This account cannot manage access.', 'هذا الحساب لا يملك إدارة الصلاحيات.'),
+          failed: tr('Could not load access grants.', 'تعذّر تحميل الصلاحيات.'),
+        }[result.state],
       );
       return;
     }
-    const response = await fetch('/api/access-admin', { credentials: 'same-origin', cache: 'no-store' });
-    const data = await response.json();
-    if (!response.ok) {
-      setStatus(
-        data.reason === 'admin_required'
-          ? tr('This account cannot manage access.', 'هذا الحساب لا يملك إدارة الصلاحيات.')
-          : tr('Could not load access grants.', 'تعذّر تحميل الصلاحيات.'),
-      );
-      return;
-    }
+    const { grants: granted, revoked: removed } = result.data;
     setAuthorized(true);
-    setGrants(data.grants || []);
-    setRevoked((data.revoked || []).filter(row => !(data.grants || []).some(g => g.email === row.email)));
+    setGrants(granted);
+    setRevoked(removed.filter(row => !granted.some(g => g.email === row.email)));
     setStatus(tr('Access list is up to date.', 'قائمة الصلاحيات محدّثة.'));
   }, []);
 
   useEffect(() => {
-    load().catch(() => setStatus(tr('Could not load access grants.', 'تعذّر تحميل الصلاحيات.')));
+    load();
   }, [load]);
 
   async function changeAccess(method, body) {

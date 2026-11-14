@@ -655,11 +655,11 @@
   },
   "src/pages/AccessAdmin.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 2
+    "react-hooks/exhaustive-deps": 1
   },
   "src/pages/ApexAdmin.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 2
+    "react-hooks/exhaustive-deps": 1
   },
   "src/pages/ApexRequest.jsx": {
     "no-unused-vars": 1
@@ -713,7 +713,7 @@
   },
   "src/pages/WebsitesAdmin.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 2
+    "react-hooks/exhaustive-deps": 1
   },
   "src/root.jsx": {
     "no-unused-vars": 1
