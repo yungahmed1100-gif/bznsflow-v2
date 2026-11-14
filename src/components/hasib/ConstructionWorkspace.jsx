@@ -97,7 +97,7 @@ export function ConstructionWorkspace({
     { interval: 30000 },
   );
   const { busy, perform, act, notices } = useWorkspaceActions({ ar, s, h, refresh: state.refresh, onChanged });
-  const shared = { s, overview, onChanged, onGo, initialAction };
+  const shared = { s, h, overview, onChanged, onGo, initialAction };
   const wrap = body => (
     <div className="hb-workspace hb-construction-six">
       {notices}

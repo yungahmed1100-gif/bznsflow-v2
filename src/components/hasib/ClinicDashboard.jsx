@@ -44,7 +44,7 @@ export function ClinicDashboard({ mode, s, h, overview, timezone, onChanged, onG
   if (error)
     return (
       <div className="ld-state" role="alert">
-        <p>{error}</p>
+        <p>{h?.reason(error) || s.reason(error)}</p>
         <button className="ld-button" onClick={load}>
           {tr('Retry', 'إعادة المحاولة')}
         </button>

@@ -78,7 +78,7 @@ async function loadConstructionView(mode) {
   return hasib('construction_overview');
 }
 
-export function ConstructionDashboard({ mode, s, overview, onChanged, onGo, initialAction = '', strip = null }) {
+export function ConstructionDashboard({ mode, s, h, overview, onChanged, onGo, initialAction = '', strip = null }) {
   const ar = s.ar,
     tr = (en, arabic) => (ar ? arabic : en);
   const [busy, setBusy] = useState(false),
@@ -138,7 +138,7 @@ export function ConstructionDashboard({ mode, s, overview, onChanged, onGo, init
   if (error)
     return (
       <div className="ld-state" role="alert">
-        <p>{error}</p>
+        <p>{h?.reason(error) || s.reason(error)}</p>
         <button className="ld-button" onClick={load}>
           {tr('Retry', 'إعادة المحاولة')}
         </button>
