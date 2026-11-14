@@ -31,6 +31,7 @@
     "typecheck:convex": "tsc -p convex/tsconfig.json --noEmit",
     "test:release": "node scripts/verify-release.mjs",
     "test:browser": "node scripts/run-browser-tests.mjs",
+    "test:cross-browser": "node tests/cross-browser-smoke.mjs",
     "preview:product": "node scripts/product-preview.mjs",
     "diagnose:global": "node scripts/check-global-reachability.mjs",
     "monitoring:test": "checkly test",

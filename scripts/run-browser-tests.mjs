@@ -20,6 +20,7 @@ const SUITES = [
   'tests/product-setup-browser.mjs',
   'tests/brain-browser.mjs',
   'tests/home-browser.mjs',
+  'tests/hero-motion-browser.mjs',
   'tests/audit-browser.mjs',
   'tests/apex-browser.mjs',
   'tests/posthog-browser.mjs',

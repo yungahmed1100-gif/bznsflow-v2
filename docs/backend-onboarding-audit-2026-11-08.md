@@ -36,8 +36,8 @@ The earlier full browser/build/release result in `website-audit-2026-11-08.md` p
 
 ## Release and rollback
 
-Deploy the additive Convex schema/function changes before the API candidate that sends `submittedOnly`. The owner's subsequent 8 November authorization narrows the production release to MCP and onboarding fixes. The earlier media suppression schema addition and separate messaging fixes are excluded from this candidate and remain local. See `green-release-2026-11-08-mcp-onboarding.md` for the release evidence.
+An authorized future release must deploy the additive Convex schema/function changes before the API candidate that sends `submittedOnly`. No release is authorized by this report. Retain the earlier media suppression schema addition as well.
 
-Rollback only this pass's website-brief API/state/argument, brain cleanup and regression changes; keep the optional schema field compatible with any records already written. Preserve unrelated working-tree edits. Do not revert the whole schema or checkout as a shortcut.
+Rollback only this pass's website-brief API/state/argument, brain cleanup and regression changes; keep the optional schema field compatible with any records already written. Preserve earlier messaging fixes and unrelated working-tree edits. Do not revert the whole schema or checkout as a shortcut.
 
 Remaining acceptance includes real provider/email delivery, authenticated production onboarding, Meta channel eligibility, and historical email retries without a captured context. These local tests establish none of those external outcomes.

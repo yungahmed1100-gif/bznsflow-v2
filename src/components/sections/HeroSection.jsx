@@ -1,7 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Icon } from '../ui/Icon';
 import { MetaVerified } from '../ui/MetaVerified';
 import { waLink } from '../../lib/whatsapp';
+import { CuboidStill } from './CuboidStill';
+
+// The moving sculpture and the animation library load after the page is interactive.
+const CuboidSculpture = lazy(() => import('./CuboidSculpture'));
 
 const PIPELINE_ICONS = [
   <svg
@@ -155,6 +159,15 @@ function PipelineDiagram({ t }) {
     sub: t[`hero_pipeline_step${n}_sub`],
   }));
   const tone = STEP_TONES[active];
+  // The sculpture starts once the page is idle; until then, and without WebGL, the still drawing shows.
+  const [animated, setAnimated] = useState(false),
+    [moving, setMoving] = useState(false);
+  useEffect(() => {
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(() => setAnimated(true), { timeout: 1500 })
+      : setTimeout(() => setAnimated(true), 300);
+    return () => (window.cancelIdleCallback ? window.cancelIdleCallback(idle) : clearTimeout(idle));
+  }, []);
   return (
     <div
       className="pipeline"
@@ -165,6 +178,19 @@ function PipelineDiagram({ t }) {
         if (!e.currentTarget.contains(e.relatedTarget)) setHeld(false);
       }}
     >
+      {/* The five steps as one form: the blocks take each step's shape and colour. Decoration only. */}
+      <div
+        className={`pipeline-art pipeline-step${tone ? ` tone-${tone}` : ''}`}
+        data-renderer={moving ? 'webgl' : 'still'}
+        aria-hidden="true"
+      >
+        <CuboidStill stage={active} />
+        {animated && (
+          <Suspense fallback={null}>
+            <CuboidSculpture stage={active} onReady={setMoving} />
+          </Suspense>
+        )}
+      </div>
       <ol className="pipeline-diagram" aria-label={t.hero_pipeline_label}>
         {steps.map((step, i) => (
           <li
