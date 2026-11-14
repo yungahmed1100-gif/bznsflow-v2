@@ -44,7 +44,8 @@ export async function qwenChat({
   fetcher = globalThis.fetch,
   timeoutMs = TIMEOUT_MS,
   maxTokens = 400,
-  temperature = 0.3,
+  // Low: Layla copies facts and varies only her wording.
+  temperature = 0.2,
   json = true,
   now = Date.now,
 }) {

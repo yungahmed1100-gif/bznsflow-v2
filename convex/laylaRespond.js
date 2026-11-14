@@ -17,6 +17,7 @@ export async function runReplyTurn({ exec, conversationId, key, generate }) {
     tokensIn: turn.ai.tokensIn || 0,
     tokensOut: turn.ai.tokensOut || 0,
     attempts: turn.ai.attempts || 0,
+    ...(turn.ai.prompt ? { prompt: String(turn.ai.prompt).slice(0, 20) } : {}),
     ...(turn.ai.fallback ? { fallback: String(turn.ai.fallback).slice(0, 40) } : {}),
   };
   const committed = await exec('reply_commit', {

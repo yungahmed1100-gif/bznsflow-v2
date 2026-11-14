@@ -9,6 +9,7 @@ import { dentalTables } from './hasib/dentalSchema';
 import { hvacTables } from './hasib/hvacSchema';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { aiMeta } from './aiMeta';
 
 // Shared Green production schema: website state, authentication, Catalyst and
 // Ascend tables live in this deployment. Blue testing uses a separate deployment.
@@ -1031,16 +1032,7 @@ export default defineSchema({
       }),
     ),
     mediaText: v.optional(v.string()),
-    ai: v.optional(
-      v.object({
-        model: v.string(),
-        ms: v.number(),
-        tokensIn: v.number(),
-        tokensOut: v.number(),
-        attempts: v.number(),
-        fallback: v.optional(v.string()),
-      }),
-    ),
+    ai: v.optional(aiMeta),
   })
     .index('by_key', ['key'])
     .index('by_account_at', ['accountId', 'at'])

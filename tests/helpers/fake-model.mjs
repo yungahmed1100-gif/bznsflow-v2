@@ -34,7 +34,7 @@ export function groundedModel() {
     calls.push(messages);
     const system = messages[0].content;
     const question = [...messages].reverse().find(m => m.role === 'user')?.content || '';
-    const data = system.split('=== BUSINESS DATA')[1] || '';
+    const data = (system.split('=== BUSINESS DATA')[1] || '').split('=== END BUSINESS DATA')[0];
     // Each data line carries the words of the section heading above it ("## Hours" answers "opening hours").
     let heading = '';
     const lines = [];

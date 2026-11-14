@@ -3,6 +3,7 @@ import { internal } from './_generated/api';
 import { v, type Value } from 'convex/values';
 import { executeMessaging } from './blueMessagingState.js';
 import { runReplyTurn, qwenGenerator } from './laylaRespond.js';
+import { aiMeta } from './aiMeta';
 import { expireInboundMedia } from './blueInboundMedia.js';
 
 // A photo, voice note, video or file at arrival: its kind and type only (the media id never leaves Vercel).
@@ -46,14 +47,7 @@ const event = v.object({
   media: v.optional(v.union(v.boolean(), inboundMedia)),
   tooLong: v.optional(v.boolean()),
 });
-export const aiMeta = v.object({
-  model: v.string(),
-  ms: v.number(),
-  tokensIn: v.number(),
-  tokensOut: v.number(),
-  attempts: v.number(),
-  fallback: v.optional(v.string()),
-});
+export { aiMeta };
 export const execute = internalMutation({
   args: {
     operation: v.union(
