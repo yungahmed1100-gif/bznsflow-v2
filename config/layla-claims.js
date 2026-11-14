@@ -94,37 +94,25 @@ const PROMISES = [
   /\b\d{1,3}\s?% (?:off|discount)\b|\bdiscount of\b|\b(?:we|i)(?:'ll| will| can) (?:give|offer|apply)[^.!?\n]{0,30}\bdiscount\b/i,
   /خصم\s*\d|نعطيك\s+خصم|لك\s+خصم|بنسوي\s+لك\s+خصم/u,
   /\bfree (?:delivery|shipping)\b|توصيل\s+مجاني|التوصيل\s+مجاني/iu,
-  /\b(?:we|i) guarantee\b|\bguaranteed\b|نضمن\s+لك|مضمون/iu,
+  /\b(?:we|i) guarantee\b|\bguaranteed\b|نضمن\s+لك/iu,
   /(?<![\p{L}])ابشر(?:ي|وا)?(?![\p{L}])/u,
 ];
 
 // Gendered or titled address: Layla does not know who she is talking to, so she never guesses.
-const GENDERED =
-  /\b(?:mr|mrs|ms|miss|sir|madam|ma'am|brother|sister)\b\.?|(?<![\p{L}])(?:استاذ|استاذه|استاذي|استاذتي|اخوي|اختي|اخي|سيدي|سيدتي|يا\s+(?:اخ|اخت|غالي|غاليه|طيب|طيبه))(?![\p{L}])/iu;
-// A name she addresses the customer by: "Hi Ahmed", "Thank you, Noura", "يا أحمد".
+// Read from the reply as written: a title before a capitalised name, or a bare "sir" or "madam".
+const GENDERED_EN = /\b(?:Mr|Mrs|Ms)\.?\s+[A-Z]|\b(?:sir|madam|ma'am)\b/;
+const GENDERED_AR =
+  /(?<![\p{L}])(?:استاذ|استاذه|استاذي|استاذتي|اخوي|اختي|اخي|سيدي|سيدتي|يا\s+(?:اخ|اخت|غالي|غاليه|طيب|طيبه))(?![\p{L}])/u;
+// A name she addresses the customer by: "Hi Ahmed,", "Thank you, Noura!", "يا أحمد". In English the name
+// must end the greeting ("Hello, I'm Layla" and "Hello, This is…" are not names).
 const ADDRESSED = [
-  /(?:^|[.!?\n]\s*)(?i:hi|hello|hey|dear|welcome(?: back)?|thanks|thank you|good (?:morning|afternoon|evening))[,]?\s+([A-Z][\p{L}'-]{1,29})(?=[\s,!.?]|$)/gu,
+  /(?:^|[.!?\n]\s*)(?i:hi|hello|hey|dear|welcome(?: back)?|thanks|thank you|good (?:morning|afternoon|evening))[,]?\s+([A-Z][\p{L}'’-]{1,29})(?=[,!.?]|$)/gu,
   /(?<![\p{L}])يا\s+([\p{Script=Arabic}]{2,20})(?![\p{L}])/gu,
 ];
 const NOT_NAMES = new Set(
   [
-    'there',
-    'and',
-    'again',
-    'everyone',
-    'team',
-    'for',
-    'you',
-    'so',
-    'هلا',
-    'مرحبا',
-    'اهلا',
-    'هلا والله',
-    'ريت',
-    'ليت',
-    'رب',
-    'الله',
-    'سلام',
+    ...['there', 'again', 'everyone', 'team', 'welcome', 'layla', 'sure', 'yes', 'certainly', 'thanks'],
+    ...['هلا', 'مرحبا', 'اهلا', 'ريت', 'ليت', 'رب', 'الله', 'سلام', 'طويل', 'جماعه', 'حي', 'مساء', 'صباح'],
   ].map(fold),
 );
 /** The names Layla addressed someone by in a reply, folded for comparison. */
@@ -163,7 +151,7 @@ export function untracedClaim(reply, sources, about = {}) {
     const made = said.match(pattern);
     if (made && !known.includes(made[0])) return 'unbacked_promise';
   }
-  if (GENDERED.test(said)) return 'gendered_address';
+  if (GENDERED_EN.test(String(reply || '')) || GENDERED_AR.test(said)) return 'gendered_address';
   const first = fold(about.customerName || '').split(/\s+/)[0];
   for (const name of addressedNames(reply))
     if (name !== first && !new RegExp(`(?<![\\p{L}])${name}(?![\\p{L}])`, 'u').test(known)) return 'wrong_name';

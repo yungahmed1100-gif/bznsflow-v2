@@ -71,3 +71,23 @@ test('Arabic replies stay Gulf or formal, never another dialect', () => {
   assert.equal(check('حياكم الله، شو تحتاجون؟', { lang: 'ar' }), '', '"شو" is also Gulf');
   assert.equal(check('هلا والله، كيف أقدر أخدمكم؟', { lang: 'ar' }), '');
 });
+
+test('ordinary greetings and wording are never mistaken for a name, a title or a promise', () => {
+  for (const fine of [
+    "Hello, I'm Layla from Qurum Coast Properties.",
+    'Hello, This is Layla.',
+    'Hello! Welcome.',
+    'Hi Layla here, how can I help?',
+    'Thank you. Valuations are free.',
+    "Don't miss our valuation service.",
+    'Bring your sister along to the viewing.',
+    'يا طويل العمر، حياكم الله',
+    'يا هلا والله ومسهلا',
+    'مضمون الرسالة واضح، شكراً لكم',
+  ])
+    assert.equal(check(fine), '', fine);
+  assert.equal(check('Hello Ahmed, welcome.'), 'wrong_name');
+  assert.equal(check('Hi Ahmed!'), 'wrong_name');
+  assert.equal(check('Dear Mr. Ahmed, welcome.'), 'gendered_address');
+  assert.equal(check('Yes madam.'), 'gendered_address');
+});

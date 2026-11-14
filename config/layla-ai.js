@@ -539,6 +539,18 @@ export function groundedFields(fields = {}, ctx) {
   return kept;
 }
 
+// What to change on the second try, in the model's terms: a bare code fixes little.
+const RETRY_HINTS = {
+  untraced_time: 'you stated a time that is not in BUSINESS DATA; remove it or copy the one written there',
+  untraced_day: 'you named a day that is not in BUSINESS DATA; remove it',
+  untraced_wait: 'you stated how long something takes, which BUSINESS DATA does not say; remove it',
+  unbacked_promise: 'you promised a discount, free delivery, a guarantee or said "أبشر"; promise nothing',
+  wrong_name: "you used a name that is not the customer's; use no name",
+  gendered_address: 'you used sir, madam, أستاذ or similar; use the respectful plural or no title',
+  other_dialect: 'you used Egyptian or Levantine words; write polite Gulf Arabic',
+  too_many_questions: 'ask at most one question',
+  wrong_language: 'reply in Arabic script',
+};
 /** The honest reply when the model is unavailable or keeps failing the checks. */
 export function fallbackReply(ctx) {
   const tone = toneOf(ctx.tone);
@@ -577,7 +589,7 @@ export async function aiTurn(ctx, generate) {
               ...messages,
               {
                 role: 'user',
-                content: `(Your previous reply was rejected: ${problem}. Follow the rules and return the JSON again.)`,
+                content: `(Your previous reply was rejected: ${problem}${RETRY_HINTS[problem] ? ` — ${RETRY_HINTS[problem]}` : ''}. Follow the rules and return the JSON again.)`,
               },
             ]
           : messages,
