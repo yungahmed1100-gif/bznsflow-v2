@@ -16,10 +16,27 @@ const API_PORT = Number(process.env.INDUSTRY_BROWSER_API_PORT || 5399);
 const BASE = `http://127.0.0.1:${API_PORT}`;
 const journeysOnly = process.argv.includes('--journeys-only');
 const requested = process.argv.slice(2).filter(arg => !arg.startsWith('--'));
-// Real Estate, Fitness and Air conditioning have their own dashboards and suites (tests/real-estate-browser.mjs,
-// tests/fitness-browser.mjs, tests/hvac-browser.mjs); their generic scenarios are retired.
+// Packs whose dashboards moved to the six-tab workspace have their own suites, and their generic
+// per-viewport Today scenarios are retired: Real Estate, Fitness, Air conditioning, Dental (whole pack), and
+// Retail, Electronics & repair and Media (their extra journeys below still run). Clinic (not live) has its own
+// Today screen outside the generic layout. Packs without a synthetic journey in scripts/hasib-demo-industries.mjs
+// are left out of the default run, which until 14 Nov 2026 stopped at the first of them (logistics).
+const RETIRED = ['real-estate', 'fitness', 'hvac', 'dental', 'clinic'];
+const OWN_TODAY = new Set(['retail', 'retail-tech', 'media']);
+const DEFAULT = new Set([
+  'automotive',
+  'beauty',
+  'cafe',
+  'cakes',
+  'cleaning',
+  'construction',
+  'education',
+  'restaurant',
+  'retail',
+  'retail-tech',
+]);
 const packs = (requested.length ? requested : industryCatalog().map(p => p.id)).filter(
-  id => !['real-estate', 'fitness', 'hvac'].includes(id),
+  id => !RETIRED.includes(id) && (requested.length > 0 || DEFAULT.has(id)),
 );
 const results = [];
 await mkdir(OUT, { recursive: true });
@@ -115,7 +132,7 @@ try {
     const pack = hasibPack(packId);
     const backend = await start(['scripts/hasib-demo.mjs', String(API_PORT), `--pack=${packId}`], /Hasib demo/);
     try {
-      for (const lang of journeysOnly ? [] : ['en', 'ar'])
+      for (const lang of journeysOnly || OWN_TODAY.has(packId) ? [] : ['en', 'ar'])
         for (const width of [1440, 768, 320]) {
           const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
           await context.tracing.start({ screenshots: true, snapshots: true });
