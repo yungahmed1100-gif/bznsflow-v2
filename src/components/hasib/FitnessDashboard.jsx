@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
 import { insightsReturn } from '../../lib/hasib/workspaceLinks.js';
@@ -174,6 +174,18 @@ export function FitnessDashboard({
   const ar = s.ar,
     tr = (en, arabic) => (ar ? arabic : en);
   const manager = overview.workspaceRole === 'manager';
+  // Only a manager adds memberships and classes; the form follows the role if it arrives late.
+  const fitnessFormFor = useCallback(
+    action =>
+      !manager
+        ? null
+        : action === 'membership'
+          ? ['membership']
+          : action === 'class'
+            ? ['class', { minutes: 60, capacity: 12, classType: 'class' }]
+            : null,
+    [manager],
+  );
   const {
     params,
     setParam,
@@ -196,6 +208,10 @@ export function FitnessDashboard({
     setError: message => setError(message),
     reasonOf: reason => h.reason(reason) || s.reason(reason),
     onGo,
+    formFor: fitnessFormFor,
+    initialAction,
+    place: `${section}|${view}`,
+    onPlaceChange: () => clear(),
   });
   const key = [
     section,
@@ -225,12 +241,6 @@ export function FitnessDashboard({
       ]),
     [data.team, manager, actorAccountId],
   );
-  useEffect(() => {
-    clear();
-    if (initialAction === 'membership' && manager) openForm('membership');
-    else if (initialAction === 'class' && manager) openForm('class', { minutes: 60, capacity: 12, classType: 'class' });
-    else closeForm();
-  }, [section, view, initialAction]);
 
   const submit = async e => {
     e.preventDefault();

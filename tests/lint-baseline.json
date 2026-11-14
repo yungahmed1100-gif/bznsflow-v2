@@ -262,15 +262,14 @@
     "no-unused-vars": 1
   },
   "src/components/hasib/DentalDashboard.jsx": {
-    "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 1
+    "no-unused-vars": 1
   },
   "src/components/hasib/ExpensesView.jsx": {
     "no-unused-vars": 1
   },
   "src/components/hasib/FitnessDashboard.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 2
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/hasib/FollowupView.jsx": {
     "no-unused-vars": 1
@@ -282,8 +281,7 @@
     "no-unused-vars": 1
   },
   "src/components/hasib/HvacDashboard.jsx": {
-    "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 1
+    "no-unused-vars": 1
   },
   "src/components/hasib/IndustrySetup.jsx": {
     "no-unused-vars": 1
@@ -299,7 +297,7 @@
   },
   "src/components/hasib/MediaDashboard.jsx": {
     "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 2
+    "react-hooks/exhaustive-deps": 1
   },
   "src/components/hasib/OrderComposer.jsx": {
     "no-unused-vars": 2
@@ -314,8 +312,7 @@
     "no-unused-vars": 1
   },
   "src/components/hasib/RealEstateDashboard.jsx": {
-    "no-unused-vars": 1,
-    "react-hooks/exhaustive-deps": 1
+    "no-unused-vars": 1
   },
   "src/components/hasib/RepairDialogs.jsx": {
     "no-unused-vars": 1

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
 import { insightsReturn } from '../../lib/hasib/workspaceLinks.js';
@@ -153,6 +153,9 @@ function NeedsAttention({ ar, summary, onGo }) {
   );
 }
 
+/** The form a link's ?action= opens. */
+const formFor = action => (action === 'visit' ? ['visit'] : null);
+
 /**
  * Dental clinics on Ascend (ascend/dental.md): Visits (schedule, visit list, services, follow-ups),
  * Insights and the rules and team in Settings. A visit is the same record everywhere.
@@ -178,6 +181,10 @@ export function DentalDashboard({
     setError: message => setError(message),
     reasonOf: reason => h.reason(reason) || s.reason(reason),
     onGo,
+    formFor,
+    initialAction,
+    place: `${section}|${view}`,
+    onPlaceChange: () => clear(),
   });
   const {
     params,
@@ -214,11 +221,6 @@ export function DentalDashboard({
     onChanged,
   });
   const data = { ...(lists || {}), ...(state.data || {}), expenseCategories: overview.pack?.expenseCategories || [] };
-  useEffect(() => {
-    clear();
-    if (initialAction === 'visit') openForm('visit');
-    else closeForm();
-  }, [section, view, initialAction]);
 
   const openRow = id => (window.matchMedia?.(WIDE).matches && view === 'visits' ? setPreview(id) : openVisit(id));
   const submit = async e => {

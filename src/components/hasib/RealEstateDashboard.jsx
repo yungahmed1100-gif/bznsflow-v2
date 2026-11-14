@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
 import { photoProblem, uploadProductPhoto } from '../../lib/hasib/photo.js';
@@ -142,6 +142,9 @@ function NeedsAttention({ ar, summary, onGo }) {
   return <AttentionStrip ar={ar} items={items} onGo={onGo} />;
 }
 
+/** The form a link's ?action= opens. */
+const formFor = action => (Object.hasOwn(ACTIONS, action) ? [ACTIONS[action]] : null);
+
 /**
  * Real Estate on Ascend (ascend/real-estate.md): Deals (board, viewings, properties, follow-ups),
  * Insights and the rules and team in Settings. Every record is the same deal id everywhere.
@@ -188,6 +191,10 @@ export function RealEstateDashboard({
     setError: message => setError(message),
     reasonOf: reason => h.reason(reason) || s.reason(reason),
     onGo,
+    formFor,
+    initialAction,
+    place: `${section}|${view}`,
+    onPlaceChange: () => clear(),
     onOpenForm: type => {
       if (type !== 'property') clearPhotos();
     },
@@ -216,11 +223,6 @@ export function RealEstateDashboard({
     () => new Map((data.team?.members || []).filter(m => m.accountId).map(m => [String(m.accountId), m.email])),
     [data.team],
   );
-  useEffect(() => {
-    clear();
-    if (ACTIONS[initialAction]) openForm(ACTIONS[initialAction]);
-    else closeForm();
-  }, [section, view, initialAction]);
 
   const submit = async e => {
     e.preventDefault();

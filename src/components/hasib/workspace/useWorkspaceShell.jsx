@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 const WIDE = '(min-width: 1100px)';
@@ -14,8 +14,25 @@ const WIDE = '(min-width: 1100px)';
  * @param {(section:string, extra?:object) => void} o.onGo
  * @param {(type:string) => void} [o.onOpenForm] runs before a form opens (Real Estate clears photos)
  * @param {() => void} [o.onCloseForm] runs when a form closes
+ * @param {string} [o.initialAction] the link's ?action=, which may open a form
+ * @param {(action: string) => [string, object?] | null} [o.formFor] the form (and preset) an action opens; keep it
+ *   stable (module level, or useCallback over what it reads) so the form reopens only when that changes
+ * @param {string} [o.place] where the workspace is (section and view); moving clears notices and re-applies the action
+ * @param {() => void} [o.onPlaceChange] clears the previous place's notices
  */
-export function useWorkspaceShell({ recordParam, loadLists, setError, reasonOf, onGo, onOpenForm, onCloseForm }) {
+export function useWorkspaceShell({
+  recordParam,
+  loadLists,
+  setError,
+  reasonOf,
+  onGo,
+  onOpenForm,
+  onCloseForm,
+  initialAction = '',
+  formFor,
+  place = '',
+  onPlaceChange,
+}) {
   const [params, setParams] = useSearchParams();
   const [form, setForm] = useState(null),
     [values, setValues] = useState({}),
@@ -62,6 +79,19 @@ export function useWorkspaceShell({ recordParam, loadLists, setError, reasonOf, 
     if (from === 'customers') return onGo('customers');
     setParam({ [recordParam]: null });
   };
+  // Five workspaces copied this effect, each leaving out what it read (Fitness missed the role).
+  // The latest openForm/closeForm/onPlaceChange are read through a ref, so the effect runs when
+  // the place, the action or the action's form changes, and only then.
+  const latest = useRef(null);
+  latest.current = { openForm, closeForm, onPlaceChange };
+  useEffect(() => {
+    if (!formFor) return;
+    const { openForm: open, closeForm: close, onPlaceChange: moved } = latest.current;
+    moved?.();
+    const next = formFor(initialAction);
+    if (next) open(...next);
+    else close();
+  }, [place, initialAction, formFor]);
   useLayoutEffect(() => {
     if (!recordId && scroll.current) {
       window.scrollTo(0, scroll.current);

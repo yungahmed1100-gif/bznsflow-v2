@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
 import { insightsReturn } from '../../lib/hasib/workspaceLinks.js';
@@ -164,6 +164,9 @@ function NeedsAttention({ ar, summary, onGo }) {
   );
 }
 
+/** The form a link's ?action= opens. */
+const formFor = action => (action === 'job' ? ['job', { jobType: 'repair' }] : null);
+
 /**
  * AC service businesses on Ascend (ascend/hvac.md): Jobs (schedule, job list, contracts, units,
  * follow-ups), Insights and the rules and team in Settings. A job is the same record everywhere.
@@ -190,6 +193,10 @@ export function HvacDashboard({
     setError: message => setError(message),
     reasonOf: reason => h.reason(reason) || s.reason(reason),
     onGo,
+    formFor,
+    initialAction,
+    place: `${section}|${view}`,
+    onPlaceChange: () => clear(),
   });
   const {
     params,
@@ -227,11 +234,6 @@ export function HvacDashboard({
     onChanged,
   });
   const data = { ...(lists || {}), ...(state.data || {}), expenseCategories: overview.pack?.expenseCategories || [] };
-  useEffect(() => {
-    clear();
-    if (initialAction === 'job') openForm('job', { jobType: 'repair' });
-    else closeForm();
-  }, [section, view, initialAction]);
 
   const openContract = id => setParam({ contract: id, job: null });
   const openRow = id => (window.matchMedia?.(WIDE).matches && view === 'jobs' ? setPreview(id) : openJob(id));

@@ -27,6 +27,8 @@ const checks = [
   ['node', ['tests/hasib-industries-browser.mjs', 'construction', 'automotive']],
   // A slow answer for the view just left never replaces the new view (automotive, construction).
   ['node', ['tests/latest-response-browser.mjs']],
+  // A link's ?action= opens its form in every six-tab workspace (dental, hvac, media, real estate, fitness).
+  ['node', ['tests/action-links-browser.mjs']],
   // End to end on the real-logic demo: rules that send themselves, Adiba's offers and the customer's yes, Layla's intake (Releases A and B, and Air conditioning).
   ['node', ['tests/ascend-e2e-browser.mjs']],
 ];

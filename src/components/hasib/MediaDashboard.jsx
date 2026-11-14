@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { hasib, dashboard } from '../../lib/dashboard/api';
 import { metricSearch, insightsReturn } from '../../lib/hasib/workspaceLinks.js';
@@ -141,6 +141,9 @@ function NeedsAttention({ ar, summary, onGo }) {
   );
 }
 
+/** The form a link's ?action= opens. */
+const formFor = action => (action === 'brief' ? ['brief', BRIEF_DEFAULTS] : null);
+
 /**
  * Media & production on Ascend (ascend/media.md): Productions (board, shoot calendar, resources,
  * follow-ups), Insights and the rules and team in Settings. Every record is the same production id everywhere.
@@ -182,6 +185,10 @@ export function MediaDashboard({
     setError: message => setError(message),
     reasonOf: reason => h.reason(reason) || s.reason(reason),
     onGo,
+    formFor,
+    initialAction,
+    place: `${section}|${view}`,
+    onPlaceChange: () => clear(),
   });
   const key = [
     section,
@@ -210,11 +217,6 @@ export function MediaDashboard({
       ]),
     [data.team, manager, actorAccountId],
   );
-  useEffect(() => {
-    clear();
-    if (initialAction === 'brief') openForm('brief', BRIEF_DEFAULTS);
-    else closeForm();
-  }, [section, view, initialAction]);
 
   const submit = async e => {
     e.preventDefault();
