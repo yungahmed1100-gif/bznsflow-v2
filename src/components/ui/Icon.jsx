@@ -141,6 +141,7 @@ const ICONS = {
   chevron: <polyline points="6 9 12 15 18 9" />,
   check: <polyline points="20 6 9 17 4 12" />,
   'arrow-right': <path d="M5 12h14M12 5l7 7-7 7" />,
+  'arrow-down': <path d="M12 5v14M5 12l7 7 7-7" />,
   close: (
     <>
       <line x1="18" y1="6" x2="6" y2="18" />

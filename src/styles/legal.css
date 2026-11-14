@@ -151,6 +151,10 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
 }
+.legal-table-wrap:focus-visible {
+  outline: 2px solid var(--blue-ink);
+  outline-offset: 4px;
+}
 
 .legal-table {
   inline-size: 100%;

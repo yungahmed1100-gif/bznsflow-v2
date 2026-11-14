@@ -1,3 +1,4 @@
+import { LoadingDots } from '../ui/LoadingDots.jsx';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { prepareForPublish, validateBzns } from '../../lib/bzns-doc.js';
 import { bznsMessages, serverBznsProblems } from '../../lib/bzns-messages.js';
@@ -54,12 +55,7 @@ export function BrainSetup({ lang, onPublished }) {
         </button>
       </div>
     );
-  if (!setup || !brain)
-    return (
-      <p className="ld-state" role="status">
-        {b.t('loading')}
-      </p>
-    );
+  if (!setup || !brain) return <LoadingDots label={b.t('loading')} />;
   const publish = () =>
     act('publish', async () => {
       // What the owner typed and has not saved is saved first: Publish never ships an older text.

@@ -1,3 +1,4 @@
+import { LoadingDots } from '../components/ui/LoadingDots';
 import { ChannelConnections } from '../components/dashboard/ChannelConnections';
 import { BusinessDetails } from '../components/dashboard/BusinessDetails';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -262,9 +263,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
             <WebsiteReminder s={s} account={account} onGo={go} />
           )}
           {!ready || (overview.loading && !data) || hasibPending ? (
-            <p className="ld-state" role="status">
-              {s.t('loading')}
-            </p>
+            <LoadingDots label={s.t('loading')} />
           ) : unavailable ? (
             <div className="ld-state">
               <p>{s.t('dashboardUnavailable')}</p>
@@ -559,9 +558,7 @@ export default function LaylaDashboard({ lang = 'ar', previewPack = '' }) {
               </a>
             </div>
           ) : (
-            <p className="ld-state" role="status">
-              {s.t('loading')}
-            </p>
+            <LoadingDots label={s.t('loading')} />
           )}
         </main>
       </HasibProvider>

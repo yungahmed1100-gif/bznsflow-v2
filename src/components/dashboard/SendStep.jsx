@@ -1,3 +1,4 @@
+import { LoadingDots } from '../ui/LoadingDots';
 import React, { useEffect, useMemo, useState } from 'react';
 import { dashboard } from '../../lib/dashboard/api';
 import { mayBeUsNumber } from '../../lib/dashboard/phone';
@@ -80,7 +81,7 @@ export function SendStep({ s, overview, template, media, rules, rows, single, on
             {error}
           </p>
         ) : (
-          <p role="status">{s.t('loading')}</p>
+          <LoadingDots label={s.t('loading')} compact />
         )}
         <div className="ld-actions ld-wizard-nav">
           <button type="button" className="ld-button ld-quiet" onClick={onBack}>

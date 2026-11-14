@@ -1,3 +1,4 @@
+import { LoadingDots } from '../ui/LoadingDots.jsx';
 import React, { useMemo, useRef, useState } from 'react';
 import { parseBzns, prepareForPublish, validateBzns } from '../../lib/bzns-doc.js';
 import { bznsMessages, serverBznsProblems } from '../../lib/bzns-messages.js';
@@ -53,12 +54,7 @@ export function BrainPage({ lang, part = 'bzns', onPart, channel = false, active
         </button>
       </div>
     );
-  if (!setup || !brain)
-    return (
-      <p className="ld-state" role="status">
-        {b.t('loading')}
-      </p>
-    );
+  if (!setup || !brain) return <LoadingDots label={b.t('loading')} />;
   const markdown = setup.bzns?.markdown || '';
   // The industry starter is for the industry plans only; Catalyst's sector comes back as the general pack.
   const industry =

@@ -1,3 +1,4 @@
+import { LoadingDots } from '../ui/LoadingDots';
 import React, { useEffect, useMemo, useState } from 'react';
 import { dashboard } from '../../lib/dashboard/api';
 import { countryOptions } from '../../lib/countries';
@@ -254,7 +255,7 @@ export function SavedPicker({ s, rows, setRows }) {
         </p>
       )}
       {!data ? (
-        <p role="status">{s.t('loading')}</p>
+        <LoadingDots label={s.t('loading')} compact />
       ) : (
         <ul className="ld-recipients">
           {data.items.map(c => (

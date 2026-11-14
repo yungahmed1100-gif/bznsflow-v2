@@ -1,3 +1,4 @@
+import { LoadingDots } from '../ui/LoadingDots';
 import React, { useEffect, useState } from 'react';
 import { dashboard } from '../../lib/dashboard/api';
 import { IMPORT_PAGE } from '../../lib/dashboard/import';
@@ -119,7 +120,7 @@ export function CampaignWizard({ s, overview, templates: given, single, tab = 'm
         ))}
       </ol>
       {!templates ? (
-        <p role="status">{s.t('loading')}</p>
+        <LoadingDots label={s.t('loading')} compact />
       ) : (
         <div className="ld-step">
           {current === 'template' && (
