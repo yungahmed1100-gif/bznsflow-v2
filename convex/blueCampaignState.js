@@ -2,6 +2,7 @@ import { mcpEffectAllowed } from './mcp/access.js';
 import { rolloutAllows } from './greenRollout.js';
 import { SECTOR_DRAFT_FIELDS } from './hasib/workspace/sectors.js';
 import { openTemplateChat } from './blueTemplateSends.js';
+import { resendCampaign, resendableRecipients } from './blueCampaignResend.js';
 // Broadcast campaigns: approved marketing templates sent to consented contacts.
 // Separate tables, rate counters and failure state from Layla's conversational
 // replies, so a broadcast can never pause or duplicate a chat response.
@@ -104,6 +105,9 @@ async function publicCampaign(ctx, c, withRecipients = false) {
     completedAt: c.completedAt || null,
     cancelledAt: c.cancelledAt || null,
     counts: await counts(ctx, c._id),
+    resendOf: c.resendOf || null,
+    // How many people did not get this broadcast and can still be sent it again.
+    resendable: (await resendableRecipients(ctx, c, recipientsFor)).length,
   };
   if (!withRecipients) return base;
   const recipients = [];
@@ -359,6 +363,14 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
     const c = await owned(ctx, a.campaignId, accountId, 'blueCampaigns');
     return c ? ok({ campaign: await publicCampaign(ctx, c, true) }) : fail('campaign_not_found');
   }
+  if (a.operation === 'campaign_resend')
+    return resendCampaign(ctx, a, tenant, now, {
+      broadcastEnabled,
+      publicCampaign,
+      sentInLastDay,
+      recipientsFor,
+      maxRecipients: MAX_RECIPIENTS,
+    });
   if (a.operation === 'campaign_cancel') {
     const c = await owned(ctx, a.campaignId, accountId, 'blueCampaigns');
     if (!c) return fail('campaign_not_found');

@@ -31,7 +31,7 @@ export function runtimeGate(tool, args, env) {
     throw new McpError('messaging_unavailable', 503);
   if (
     tool.domain === 'dashboard' &&
-    ['campaign_create', 'campaign_cancel'].includes(tool.operation) &&
+    ['campaign_create', 'campaign_cancel', 'campaign_resend'].includes(tool.operation) &&
     !broadcastMessagingEnabled(env)
   )
     throw new McpError('broadcast_unavailable', 503);

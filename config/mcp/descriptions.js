@@ -79,6 +79,8 @@ export const DESCRIPTIONS = {
   dashboard_campaign_create:
     'Send or schedule a WhatsApp template broadcast to up to 100 customers. Needs confirm:true.',
   dashboard_campaign_cancel: 'Cancel a scheduled or running broadcast.',
+  dashboard_campaign_resend:
+    'Resend a stopped or finished broadcast to the recipients who did not get it; each failure once. Needs confirm:true.',
 
   // Messaging channel
   messaging_state: 'WhatsApp and Instagram channel status: connected, paused, Layla on or off.',

@@ -298,6 +298,17 @@ add(
   { capability: 'broadcasts', service: true },
 );
 add('dashboard', 'campaign_cancel', 'messages', { campaignId: id }, ['campaignId'], { capability: 'broadcasts' });
+add(
+  'dashboard',
+  'campaign_resend',
+  'messages',
+  { campaignId: id, confirm: { const: true } },
+  ['campaignId', 'confirm'],
+  {
+    capability: 'broadcasts',
+    service: true,
+  },
+);
 const channel = { enum: ['whatsapp', 'instagram'] };
 const MESSAGING = {
   state: ['read', {}, []],

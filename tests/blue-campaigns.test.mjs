@@ -1042,3 +1042,171 @@ test('Layla reads the broadcast a customer is answering and may quote its price'
   assert.doesNotMatch(system.content, /start by greeting them/);
   assert.equal(turn.ai.fallback, undefined, 'the 10% from the broadcast passes the price check');
 });
+
+// Resend: the owner sends a stopped broadcast again to the people who never got it.
+async function stoppedForPayment(contacts = 3) {
+  const base = await campaignTenant({ contacts });
+  const { h, t } = base;
+  const campaign = (await base.create()).value.campaign;
+  await h.maintain();
+  await h.worker('start_result', { campaignId: campaign.id, ready: true, allowance: 250 });
+  const [first] = h.m.table('blueCampaignRecipients');
+  const claim = await h.worker('claim', { jobId: first._id, intent: randomUUID() });
+  await h.worker('result', {
+    jobId: first._id,
+    intent: claim.value.intent,
+    status: 'submitted',
+    providerId: 'wamid.r',
+  });
+  await h.messaging('ingest', {
+    integrationId: t.integration.id,
+    events: [
+      {
+        kind: 'receipt',
+        id: 'wamid.r',
+        intent: claim.value.intent,
+        recipient: first.waId,
+        status: 'failed',
+        errorCode: 131042,
+        at: h.m.now(),
+      },
+    ],
+  });
+  const resend = (extra = {}) =>
+    h.campaigns('campaign_resend', {
+      sessionHash: t.sessionHash,
+      campaignId: campaign.id,
+      allowance: 250,
+      requestId: randomUUID(),
+      confirm: true,
+      ...extra,
+    });
+  const listed = async id =>
+    (await h.campaigns('campaigns', { sessionHash: t.sessionHash })).value.items.find(c => c.id === id);
+  return { ...base, campaign, resend, listed };
+}
+
+test('a stopped broadcast is resent once to everyone who did not get it, with the values first sent', async () => {
+  const { h, campaign, resend, listed } = await stoppedForPayment();
+  assert.equal((await listed(campaign.id)).resendable, 3, 'one failed and two never sent');
+  const preview = await resend({ confirm: false, requestId: undefined });
+  assert.deepEqual(
+    [preview.value.preview.eligible.length, preview.value.preview.excluded.length, preview.value.preview.cap],
+    [3, 0, 100],
+  );
+  assert.equal(h.m.table('blueCampaigns').length, 1, 'looking sends nothing');
+  const requestId = randomUUID();
+  const sent = await resend({ requestId });
+  assert.deepEqual(
+    [sent.value.campaign.status, sent.value.campaign.resendOf, sent.value.campaign.recipientCount],
+    ['scheduled', campaign.id, 3],
+  );
+  assert.equal((await resend({ requestId })).value.campaign.id, sent.value.campaign.id, 'a double click sends once');
+  assert.equal(h.m.table('blueCampaigns').length, 2);
+  const fresh = h.m.table('blueCampaignRecipients').filter(r => r.campaignId === sent.value.campaign.id);
+  assert.deepEqual(
+    fresh.map(r => [r.status, r.attempts, r.parameters.map(p => p.text).join('|')]),
+    [0, 1, 2].map(i => ['pending', 0, `Lead ${i}|Lead ${i}|10%`]),
+  );
+  assert.equal((await listed(campaign.id)).resendable, 0);
+  assert.equal((await resend()).reason, 'no_eligible_recipients', 'a failure is resent once');
+  // The resent broadcast runs through the ordinary sender.
+  await h.maintain();
+  await h.worker('start_result', { campaignId: sent.value.campaign.id, ready: true, allowance: 250 });
+  const claim = await h.worker('claim', { jobId: fresh[0]._id, intent: randomUUID() });
+  assert.equal(claim.value.waId, fresh[0].waId);
+  await h.worker('result', { jobId: fresh[0]._id, intent: claim.value.intent, status: 'submitted', providerId: 'w2' });
+  assert.equal((await h.m.db.get(fresh[0]._id)).status, 'submitted');
+});
+
+test('a resend checks every person again and refuses what an ordinary broadcast would refuse', async () => {
+  const { h, t, resend } = await stoppedForPayment();
+  await h.inbound(t, { from: '96891000001', text: 'stop', intent: 'optout', reply: null });
+  const [, , third] = h.m.table('blueCampaignRecipients');
+  await h.m.db.patch(third._id, { status: 'ambiguous', reason: 'worker_outcome_unknown' });
+  const preview = (await resend({ confirm: false })).value.preview;
+  assert.deepEqual(
+    preview.eligible.map(e => e.number.replace(/\D/g, '')),
+    ['96891000000'],
+    'an unknown outcome may have arrived, so it is not resent',
+  );
+  assert.deepEqual(
+    preview.excluded.map(e => e.reason),
+    ['opted_out'],
+  );
+  assert.equal((await resend({ allowance: 0 })).reason, 'messaging_limit');
+  assert.equal((await resend({ requestId: 'nope' })).reason, 'invalid_request');
+  const intruder = await seedTenant(h.m, { name: 'z', phone: '7777', waba: '6666', sender: '96890000009' });
+  assert.equal((await resend({ sessionHash: intruder.sessionHash })).reason, 'campaign_not_found');
+  const row = h.m.table('blueMessagingSettings').find(s => s.key === 'broadcast');
+  await h.m.db.patch(row._id, { enabled: false });
+  assert.equal((await resend()).reason, 'broadcast_unavailable');
+  await h.m.db.patch(row._id, { enabled: true });
+  await h.m.db.patch(h.m.table('blueTemplates')[0]._id, { status: 'PAUSED' });
+  assert.equal((await resend()).reason, 'template_not_sendable');
+  await h.m.db.patch(h.m.table('blueTemplates')[0]._id, { status: 'APPROVED' });
+  const sent = await resend();
+  assert.equal(sent.value.campaign.recipientCount, 1);
+  assert.deepEqual(
+    sent.value.excluded.map(e => e.reason),
+    ['opted_out'],
+  );
+});
+
+test('only a broadcast that has stopped with failures can be resent', async () => {
+  const { h, t, create } = await campaignTenant({ contacts: 2 });
+  const resend = campaignId =>
+    h.campaigns('campaign_resend', {
+      sessionHash: t.sessionHash,
+      campaignId,
+      allowance: 250,
+      requestId: randomUUID(),
+      confirm: true,
+    });
+  const scheduled = (await create({ scheduledAt: h.m.now() + 3600000 })).value.campaign;
+  assert.equal(scheduled.resendable, 0);
+  assert.equal((await resend(scheduled.id)).reason, 'campaign_not_resendable');
+  await h.campaigns('campaign_cancel', { sessionHash: t.sessionHash, campaignId: scheduled.id });
+  assert.equal((await resend(scheduled.id)).reason, 'campaign_not_resendable', 'a cancelled broadcast stays cancelled');
+  const running = (await create()).value.campaign;
+  await h.maintain();
+  await h.worker('start_result', { campaignId: running.id, ready: true, allowance: 250 });
+  assert.equal((await resend(running.id)).reason, 'campaign_not_resendable');
+  for (const job of h.m.table('blueCampaignRecipients').filter(r => r.campaignId === running.id)) {
+    const claim = await h.worker('claim', { jobId: job._id, intent: randomUUID() });
+    await h.worker('result', { jobId: job._id, intent: claim.value.intent, status: 'submitted', providerId: job._id });
+  }
+  assert.equal((await h.m.db.get(running.id)).status, 'completed');
+  assert.equal((await resend(running.id)).reason, 'no_eligible_recipients');
+});
+
+test('a resent media-header broadcast keeps its file, or asks for a fresh one when the file is gone', async () => {
+  const { h, t, register, createImage } = await imageTenant();
+  const file = h.m.putFile();
+  const media = (await register(file)).value.media;
+  const campaign = (await createImage({ headerMediaId: media.id })).value.campaign;
+  await h.maintain();
+  await h.worker('start_result', { campaignId: campaign.id, ready: false, reason: 'messaging_limit_unknown' });
+  const resend = (extra = {}) =>
+    h.campaigns('campaign_resend', {
+      sessionHash: t.sessionHash,
+      campaignId: campaign.id,
+      allowance: 250,
+      requestId: randomUUID(),
+      confirm: true,
+      ...extra,
+    });
+  assert.equal((await resend({ confirm: false })).value.preview.needsHeaderMedia, false);
+  const kept = (await resend()).value.campaign;
+  assert.equal((await h.m.db.get(kept.id)).headerMediaId, media.id);
+  assert.equal((await h.m.db.get(media.id)).campaignId, kept.id, 'the file is kept for the newest broadcast');
+  // Stop the resend too, then lose the file: the next resend needs a fresh copy.
+  await h.maintain();
+  await h.worker('start_result', { campaignId: kept.id, ready: false, reason: 'messaging_limit_unknown' });
+  await h.m.ctx.storage.delete(file);
+  const again = extra => resend({ campaignId: kept.id, ...extra });
+  assert.equal((await again({ confirm: false })).value.preview.needsHeaderMedia, true);
+  assert.equal((await again()).reason, 'header_media_required');
+  const fresh = (await register(h.m.putFile())).value.media;
+  assert.equal((await again({ headerMediaId: fresh.id })).value.campaign.recipientCount, 2);
+});

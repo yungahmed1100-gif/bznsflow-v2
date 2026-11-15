@@ -344,3 +344,59 @@ test('dashboard API requires sign-in, a saved setup, its gate and CSRF, and deri
   })(request('GET'), apiOn);
   assert.deepEqual([apiOn.body.broadcastApiEnabled, apiOn.body.broadcastEnabled], [true, false]);
 });
+
+test('the resend action looks first, then sends; a lost header file is replaced by the template’s sample', async () => {
+  const { sealToken, credentialContext } = await import('../api/_lib/layla/customer-meta.js');
+  const env = { ...apiEnv, BLUE_BROADCAST_ENABLED: 'true', BLUE_LIVE_MESSAGING_ENABLED: 'true' };
+  const sessionHash = 'd'.repeat(64);
+  const integration = { id: 'i1', phoneNumberId: '1', wabaId: '2', path: 'new_number' };
+  integration.credential = sealToken('synthetic-token-value', credentialContext(sessionHash, integration), env);
+  const requestId = randomUUID();
+  const run = async (body, { needsHeaderMedia = false, options = {} } = {}) => {
+    const calls = [];
+    const store = async (operation, args) => {
+      calls.push([operation, args]);
+      if (operation === 'campaign_media_upload_url') return { url: 'https://upload.invalid/u' };
+      if (operation === 'campaign_media_register') return { media: { id: 'media9' } };
+      return args.confirm
+        ? { campaign: { id: 'c2' }, excluded: [] }
+        : { preview: { eligible: [{}], excluded: [], cap: 100, templateId: '222', needsHeaderMedia } };
+    };
+    const res = response();
+    await createDashboardApi({
+      env,
+      store,
+      accounts: async () => ({ id: 'acct', email: 'a@example.com', draftHash: sessionHash }),
+      reviews: async () => ({ status: 'connected', integration }),
+      allowance: async () => 250,
+      templateSample: async ({ templateId }) => ({
+        templateId,
+        format: 'IMAGE',
+        contentType: 'image/jpeg',
+        bytes: 'x',
+      }),
+      fetcher: async () => ({ ok: true, json: async () => ({ storageId: 'kg2abc' }) }),
+      ...options,
+    })(request('POST', { action: 'campaign_resend', campaignId: 'c1', ...body }), res);
+    return { res, calls };
+  };
+  const looked = await run({});
+  assert.equal(looked.res.body.preview.cap, 100);
+  assert.deepEqual(looked.calls, [
+    ['campaign_resend', { sessionHash, actorAccountId: 'acct', campaignId: 'c1', allowance: 250 }],
+  ]);
+  const sent = await run({ confirm: true, requestId, allowance: 9999, headerMediaId: 'theirs' });
+  assert.equal(sent.res.body.campaign.id, 'c2');
+  assert.deepEqual(sent.calls.at(-1), [
+    'campaign_resend',
+    { sessionHash, actorAccountId: 'acct', campaignId: 'c1', allowance: 250, requestId, confirm: true },
+  ]);
+  const replaced = await run({ confirm: true, requestId }, { needsHeaderMedia: true });
+  assert.deepEqual(
+    replaced.calls.map(c => c[0]),
+    ['campaign_resend', 'campaign_media_upload_url', 'campaign_media_register', 'campaign_resend'],
+  );
+  assert.equal(replaced.calls.at(-1)[1].headerMediaId, 'media9');
+  const off = await run({}, { options: { env: apiEnv } });
+  assert.equal(off.res.body.reason, 'broadcast_unavailable', 'resending stays behind the broadcast switch');
+});

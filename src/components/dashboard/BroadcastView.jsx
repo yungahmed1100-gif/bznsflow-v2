@@ -5,6 +5,7 @@ import { formatDateTime } from '../../lib/dashboard/format';
 import { CampaignWizard } from './CampaignWizard';
 import { Dialog } from './Dialog';
 import { MetaBillingNotice } from './MetaBillingNotice';
+import { ResendBroadcast } from './ResendBroadcast';
 import { campaignReasonKey, metaErrorKey } from '../../lib/dashboard/strings';
 
 const MANAGER_URL = 'https://business.facebook.com/wa/manage/message-templates/';
@@ -17,7 +18,8 @@ export function BroadcastView({ s, overview, onTimezone }) {
   const [busy, setBusy] = useState(''),
     [error, setError] = useState(''),
     [wizard, setWizard] = useState(null),
-    [openId, setOpenId] = useState(null);
+    [openId, setOpenId] = useState(null),
+    [resend, setResend] = useState(null);
   const detail = usePolling(() => dashboard('campaign_detail', { campaignId: openId }), [openId], {
     interval: 10000,
     enabled: !!openId,
@@ -111,6 +113,7 @@ export function BroadcastView({ s, overview, onTimezone }) {
                   >
                     {s.t(`camp_${c.status}`)}
                   </span>
+                  {c.resendOf && <span className="ld-chip">{s.t('resendChip')}</span>}
                   <small>
                     {s.t('scheduledFor', { time: formatDateTime(c.scheduledAt, s.lang, c.timezone) })} · {c.timezone}
                   </small>
@@ -141,6 +144,11 @@ export function BroadcastView({ s, overview, onTimezone }) {
                   >
                     {s.t('details')}
                   </button>
+                  {c.resendable > 0 && (
+                    <button type="button" className="ld-button" disabled={!!busy} onClick={() => setResend(c)}>
+                      {s.t('resendFailed', { count: c.resendable })}
+                    </button>
+                  )}
                   {['scheduled', 'starting'].includes(c.status) && (
                     <button
                       type="button"
@@ -248,6 +256,18 @@ export function BroadcastView({ s, overview, onTimezone }) {
           </ul>
         )}
       </section>
+      {resend && (
+        <ResendBroadcast
+          s={s}
+          campaign={resend}
+          sendingEnabled={sending}
+          onClose={() => setResend(null)}
+          onSent={() => {
+            setResend(null);
+            campaigns.refresh({ quiet: true });
+          }}
+        />
+      )}
       {wizard && (
         <Dialog s={s} title={s.t('newBroadcast')} onClose={() => setWizard(null)} wide>
           <CampaignWizard

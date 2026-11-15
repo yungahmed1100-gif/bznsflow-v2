@@ -39,7 +39,7 @@ const READ_ACTIONS = new Set([
 // Sending is behind the broadcast switch. Syncing approved templates only reads them from Meta, so an owner
 // can prepare templates before sending is switched on (Ahmed, 2026-10-09).
 // Preview sends nothing, so a broadcast can be built and checked before sending is switched on.
-const BROADCAST_ACTIONS = new Set(['campaign_create', 'campaign_cancel']);
+const BROADCAST_ACTIONS = new Set(['campaign_create', 'campaign_cancel', 'campaign_resend']);
 // Per-recipient values ride on preview and create; Convex's dashboard route accepts up to 256 KiB.
 const LIMITS = { import_contacts: 60000, campaign_preview: 240000, campaign_create: 240000 };
 const DEFAULT_BODY_LIMIT = 6000;
@@ -316,6 +316,35 @@ export function createDashboardApi({
             storageId: id(body.storageId) || '',
             format: optionalString(body.format, 10) || '',
             ...(filename ? { filename } : {}),
+          }),
+        );
+      }
+      // Resend a stopped broadcast to the people who did not get it. Without `confirm` it only reports who
+      // would be sent to; the same checks run again when the owner confirms.
+      if (action === 'campaign_resend') {
+        const { integration, token, c } = await graphContext(sessionHash);
+        const limit = await allowance({ c, integration, token, fetcher });
+        const args = {
+          sessionHash,
+          actorAccountId: account.id,
+          campaignId: id(body.campaignId) || '',
+          allowance: Number.isFinite(limit) ? Math.min(limit, 1e9) : 1e9,
+        };
+        const looked = await store('campaign_resend', args);
+        if (body.confirm !== true) return reply(looked);
+        // The first broadcast's header file may be gone by now; the template's approved sample replaces it.
+        const sample = looked.preview.needsHeaderMedia
+          ? await templateSample({ c, templateId: looked.preview.templateId, token, fetcher })
+          : null;
+        const headerMediaId = sample
+          ? await storeTemplateSample({ sample, store, sessionHash, actorAccountId: account.id, fetcher })
+          : undefined;
+        return reply(
+          await store('campaign_resend', {
+            ...args,
+            ...(headerMediaId ? { headerMediaId } : {}),
+            requestId: uuid(body.requestId) || '',
+            confirm: true,
           }),
         );
       }

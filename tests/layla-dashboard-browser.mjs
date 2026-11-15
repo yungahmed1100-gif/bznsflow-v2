@@ -319,6 +319,34 @@ function api(
           counts: { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 0 },
         });
         return ok({ campaign: state.campaigns[0] });
+      case 'campaign_resend': {
+        if (!body.confirm)
+          return ok({
+            preview: {
+              eligible: [{ contactId: 'c9', name: 'Huda', number: '+968 9333 4444' }],
+              excluded: [{ contactId: 'c8', name: 'Salim', number: '+968 9111 2222', reason: 'not_on_whatsapp' }],
+              cap: 100,
+              allowance: 250,
+              sendingAvailable: broadcastEnabled,
+              templateId: '111',
+              needsHeaderMedia: false,
+            },
+          });
+        const source = state.campaigns.find(c => c.id === body.campaignId);
+        source.resendable = 0;
+        const resent = {
+          ...source,
+          id: 'camp-resent',
+          status: 'scheduled',
+          reason: null,
+          resendOf: source.id,
+          recipientCount: 1,
+          counts: { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 0, blocked: 0 },
+          recipients: [],
+        };
+        state.campaigns.unshift(resent);
+        return ok({ campaign: resent });
+      }
       default:
         return { status: 400, json: { ok: false, reason: 'invalid_action' } };
     }
@@ -1409,6 +1437,7 @@ try {
         recipientCount: 3,
         createdAt: Date.now() - HOUR,
         counts,
+        resendable: 2,
         recipients: [
           {
             name: 'Huda',
@@ -1471,6 +1500,42 @@ try {
     assert.deepEqual(await axe(page), [], `stopped ${lang} ${width} axe`);
     count++;
     await page.screenshot({ path: `${OUT}/broadcast-payment-stopped-${lang}-${width}.png`, fullPage: true });
+    // Resend: the owner sees who will get it and who is left out, and nothing is sent before "Send now".
+    await page
+      .getByRole('button', { name: ar ? 'إعادة الإرسال إلى 2 لم تصلهم' : 'Resend to 2 who didn’t get it' })
+      .click();
+    const dialog = page.getByRole('dialog', { name: ar ? 'إعادة إرسال الرسالة الجماعية' : 'Resend broadcast' });
+    await dialog.getByText(ar ? 'سيستلمها 1' : '1 will receive it').waitFor();
+    count++;
+    await dialog
+      .getByText(ar ? 'تعذّر على واتساب التوصيل لهذا الرقم سابقاً' : 'WhatsApp couldn’t deliver to this number before')
+      .waitFor();
+    count++;
+    await dialog.getByText(ar ? 'أصلح وسيلة الدفع أولاً' : 'Fix the payment method first').waitFor();
+    count++;
+    assert.equal(
+      state.bodies.some(b => b.action === 'campaign_resend' && b.confirm),
+      false,
+      'opening the dialog sends nothing',
+    );
+    count++;
+    assert.equal(await noOverflow(page), true, `resend ${lang} ${width} overflow`);
+    count++;
+    assert.deepEqual(await axe(page), [], `resend ${lang} ${width} axe`);
+    count++;
+    await page.screenshot({ path: `${OUT}/broadcast-resend-${lang}-${width}.png`, fullPage: true });
+    await dialog.getByRole('button', { name: ar ? 'إرسال الآن' : 'Send now' }).click();
+    await page.locator('.ld-campaign .ld-chip', { hasText: ar ? 'إعادة إرسال' : 'Resend' }).waitFor();
+    count++;
+    const confirmed = state.bodies.filter(b => b.action === 'campaign_resend' && b.confirm);
+    assert.deepEqual(
+      confirmed.map(b => [b.campaignId, /^[a-f0-9-]{36}$/.test(b.requestId)]),
+      [['camp9', true]],
+      'one confirmed resend with a request id',
+    );
+    count++;
+    assert.equal(await page.getByRole('button', { name: /Resend to|إعادة الإرسال إلى/ }).count(), 0);
+    count++;
     await context.close();
   }
   {
