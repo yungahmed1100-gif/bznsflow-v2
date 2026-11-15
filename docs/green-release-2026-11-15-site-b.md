@@ -38,5 +38,5 @@
 
 ## Open
 
-- The live English home page measured a layout shift of 0.57 at 1440 px on 14 November (target under 0.1); local builds measure 0.03. Not changed by this release; worth measuring with real-user data.
+- The live English home page measured a layout shift of 0.57 at 1440 px on 14 November (target under 0.1), and so did one local run of the same build; other local runs, made with the since-removed sculpture, measured 0.03. The cause is not established and this release does not change the home page. Worth measuring with real-user data.
 - Firefox and Safari were not tested: their Playwright browsers are not installed on this machine.
