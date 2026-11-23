@@ -36,6 +36,23 @@ const pack = {
   ],
 };
 
+// A broadcast Meta stopped for billing (131042), with two people still to resend to.
+const paymentStopped = (recipients = []) => ({
+  id: 'camp9',
+  name: 'marketing_ar',
+  origin: 'broadcast',
+  status: 'blocked',
+  reason: 'payment_method_required',
+  template: { name: 'marketing_ar', language: 'ar', body: 'Hello {{1}}' },
+  scheduledAt: Date.now() - HOUR,
+  timezone: 'Asia/Muscat',
+  recipientCount: 3,
+  createdAt: Date.now() - HOUR,
+  counts: { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 2, blocked: 1 },
+  resendable: 2,
+  recipients,
+});
+
 function fixture() {
   const contact = (id, name, number, extra = {}) => ({
     id,
@@ -319,6 +336,12 @@ function api(
           counts: { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 0 },
         });
         return ok({ campaign: state.campaigns[0] });
+      case 'campaign_billing_check': {
+        if (!state.funded) return ok({ funded: false });
+        const stopped = state.campaigns.find(c => c.id === body.campaignId);
+        stopped.billingCheckedAt = now;
+        return ok({ funded: true, campaign: stopped });
+      }
       case 'campaign_resend': {
         if (!body.confirm)
           return ok({
@@ -1423,45 +1446,30 @@ try {
     [375, 'ar'],
   ]) {
     const state = fixture();
-    const counts = { submitted: 0, sent: 0, delivered: 0, read: 0, failed: 2, blocked: 1 };
     state.campaigns = [
-      {
-        id: 'camp9',
-        name: 'marketing_ar',
-        origin: 'broadcast',
-        status: 'blocked',
-        reason: 'payment_method_required',
-        template: { name: 'marketing_ar', language: 'ar', body: 'Hello {{1}}' },
-        scheduledAt: Date.now() - HOUR,
-        timezone: 'Asia/Muscat',
-        recipientCount: 3,
-        createdAt: Date.now() - HOUR,
-        counts,
-        resendable: 2,
-        recipients: [
-          {
-            name: 'Huda',
-            number: '+968 9333 4444',
-            status: 'failed',
-            reason: 'provider_delivery_failed',
-            errorCode: 131042,
-          },
-          {
-            name: 'Salim',
-            number: '+968 9111 2222',
-            status: 'failed',
-            reason: 'provider_delivery_failed',
-            errorCode: 131026,
-          },
-          {
-            name: 'Aisha',
-            number: '+968 9555 6666',
-            status: 'blocked',
-            reason: 'payment_method_required',
-            errorCode: null,
-          },
-        ],
-      },
+      paymentStopped([
+        {
+          name: 'Huda',
+          number: '+968 9333 4444',
+          status: 'failed',
+          reason: 'provider_delivery_failed',
+          errorCode: 131042,
+        },
+        {
+          name: 'Salim',
+          number: '+968 9111 2222',
+          status: 'failed',
+          reason: 'provider_delivery_failed',
+          errorCode: 131026,
+        },
+        {
+          name: 'Aisha',
+          number: '+968 9555 6666',
+          status: 'blocked',
+          reason: 'payment_method_required',
+          errorCode: null,
+        },
+      ]),
     ];
     const { page, context } = await openPage(browser, {
       width,
@@ -1500,6 +1508,18 @@ try {
     assert.deepEqual(await axe(page), [], `stopped ${lang} ${width} axe`);
     count++;
     await page.screenshot({ path: `${OUT}/broadcast-payment-stopped-${lang}-${width}.png`, fullPage: true });
+    // Check again while Meta still shows no payment method: the alert stays and says so.
+    await alert
+      .getByRole('button', { name: ar ? 'تحقّق من وسيلة الدفع مجدداً' : 'Check payment method again' })
+      .click();
+    await alert
+      .getByText(ar ? 'لا تُظهر Meta وسيلة دفع في حساب المراسلة بعد' : 'Meta doesn’t show a payment method')
+      .waitFor();
+    count++;
+    assert.equal(await alert.isVisible(), true, 'the alert stays while Meta shows no payment method');
+    count++;
+    assert.deepEqual(await axe(page), [], `not funded ${lang} ${width} axe`);
+    count++;
     // Resend: the owner sees who will get it and who is left out, and nothing is sent before "Send now".
     await page
       .getByRole('button', { name: ar ? 'إعادة الإرسال إلى 2 لم تصلهم' : 'Resend to 2 who didn’t get it' })
@@ -1536,6 +1556,60 @@ try {
     count++;
     assert.equal(await page.getByRole('button', { name: /Resend to|إعادة الإرسال إلى/ }).count(), 0);
     count++;
+    await context.close();
+  }
+  // Once the owner fixes billing in Meta, "check again" finds the payment method and the alert goes.
+  for (const [width, lang] of [
+    [1280, 'en'],
+    [375, 'ar'],
+  ]) {
+    const state = fixture();
+    state.funded = true;
+    state.campaigns = [paymentStopped()];
+    const { page, context } = await openPage(browser, {
+      width,
+      lang,
+      path: '/layla/dashboard?tab=customers&view=broadcast',
+      handler: api(state),
+    });
+    const ar = lang === 'ar';
+    const stopped = ar ? 'أوقفت Meta رسالتك الجماعية' : 'Meta stopped your broadcast';
+    await page.getByRole('alert').filter({ hasText: stopped }).waitFor();
+    await page.getByRole('button', { name: ar ? 'تحقّق من وسيلة الدفع مجدداً' : 'Check payment method again' }).click();
+    await page
+      .getByRole('status')
+      .filter({ hasText: ar ? 'تُظهر Meta وسيلة دفع في حساب المراسلة' : 'Meta shows a payment method' })
+      .waitFor();
+    count++;
+    assert.equal(await page.getByRole('alert').filter({ hasText: stopped }).count(), 0, 'the alert is gone');
+    count++;
+    assert.equal(
+      await page.getByText(ar ? 'قبل أول رسالة جماعية' : 'Before your first broadcast').count(),
+      0,
+      'no "add a payment method" steps once Meta shows one',
+    );
+    count++;
+    await page.locator('.ld-fees-short').waitFor();
+    count++;
+    assert.equal(state.bodies.filter(b => b.action === 'campaign_billing_check').length, 1);
+    count++;
+    await page
+      .getByRole('button', { name: ar ? 'إعادة الإرسال إلى 2 لم تصلهم' : 'Resend to 2 who didn’t get it' })
+      .click();
+    const dialog = page.getByRole('dialog', { name: ar ? 'إعادة إرسال الرسالة الجماعية' : 'Resend broadcast' });
+    await dialog.getByText(ar ? 'سيستلمها 1' : '1 will receive it').waitFor();
+    assert.equal(
+      await dialog.getByText(ar ? 'أصلح وسيلة الدفع أولاً' : 'Fix the payment method first').count(),
+      0,
+      'no payment warning once Meta shows a payment method',
+    );
+    count++;
+    await dialog.getByRole('button', { name: ar ? 'إلغاء' : 'Cancel' }).click();
+    assert.equal(await noOverflow(page), true, `funded ${lang} ${width} overflow`);
+    count++;
+    assert.deepEqual(await axe(page), [], `funded ${lang} ${width} axe`);
+    count++;
+    await page.screenshot({ path: `${OUT}/broadcast-payment-checked-${lang}-${width}.png`, fullPage: true });
     await context.close();
   }
   {

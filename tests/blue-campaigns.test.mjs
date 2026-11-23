@@ -489,41 +489,45 @@ test('receipts reconcile campaign sends in order, ignore mismatched recipients a
 
 // Meta reports a WhatsApp Business account without a working payment method (131042) only in the
 // delivery receipt, after accepting the send. Every later recipient would fail the same way.
-test('a Meta payment failure stops the campaign; an undeliverable number does not', async () => {
-  const sendFirst = async (contacts, errorCode) => {
-    const { h, t, create } = await campaignTenant({ contacts });
-    const campaign = (await create()).value.campaign;
-    await h.maintain();
-    await h.worker('start_result', { campaignId: campaign.id, ready: true, allowance: 250 });
-    const [first, ...rest] = h.m.table('blueCampaignRecipients');
-    const claim = await h.worker('claim', { jobId: first._id, intent: randomUUID() });
-    await h.worker('result', {
-      jobId: first._id,
-      intent: claim.value.intent,
-      status: 'submitted',
-      providerId: 'wamid.p',
-    });
-    await h.messaging('ingest', {
-      integrationId: t.integration.id,
-      events: [
-        {
-          kind: 'receipt',
-          id: 'wamid.p',
-          intent: claim.value.intent,
-          recipient: first.waId,
-          status: 'failed',
-          errorCode,
-          at: h.m.now(),
-        },
-      ],
-    });
-    return {
-      h,
-      campaign: await h.m.db.get(campaign.id),
-      first: await h.m.db.get(first._id),
-      rest: await Promise.all(rest.map(r => h.m.db.get(r._id))),
-    };
+// The first recipient's send is accepted, then its receipt fails with `errorCode`.
+const sendFirst = async (contacts, errorCode) => {
+  const { h, t, create } = await campaignTenant({ contacts });
+  const campaign = (await create()).value.campaign;
+  await h.maintain();
+  await h.worker('start_result', { campaignId: campaign.id, ready: true, allowance: 250 });
+  const [first, ...rest] = h.m.table('blueCampaignRecipients');
+  const claim = await h.worker('claim', { jobId: first._id, intent: randomUUID() });
+  await h.worker('result', {
+    jobId: first._id,
+    intent: claim.value.intent,
+    status: 'submitted',
+    providerId: 'wamid.p',
+  });
+  await h.messaging('ingest', {
+    integrationId: t.integration.id,
+    events: [
+      {
+        kind: 'receipt',
+        id: 'wamid.p',
+        intent: claim.value.intent,
+        recipient: first.waId,
+        status: 'failed',
+        errorCode,
+        at: h.m.now(),
+      },
+    ],
+  });
+  return {
+    h,
+    t,
+    campaignId: campaign.id,
+    campaign: await h.m.db.get(campaign.id),
+    first: await h.m.db.get(first._id),
+    rest: await Promise.all(rest.map(r => h.m.db.get(r._id))),
   };
+};
+
+test('a Meta payment failure stops the campaign; an undeliverable number does not', async () => {
   const paid = await sendFirst(3, 131042);
   assert.deepEqual([paid.campaign.status, paid.campaign.reason], ['blocked', 'payment_method_required']);
   assert.deepEqual([paid.first.status, paid.first.errorCode], ['failed', 131042]);
@@ -540,6 +544,38 @@ test('a Meta payment failure stops the campaign; an undeliverable number does no
     gone.rest.map(r => r.status),
     ['queued'],
   );
+});
+
+// The owner fixes billing in Meta, then BznsFlow confirms Meta shows a payment method and the alert goes.
+test('a payment stop is marked checked once Meta shows a payment method; nothing else changes', async () => {
+  const { h, t, campaignId } = await sendFirst(2, 131042);
+  const before = (await h.campaigns('campaigns', { sessionHash: t.sessionHash })).value.items[0];
+  assert.deepEqual([before.reason, before.billingCheckedAt], ['payment_method_required', null]);
+
+  const checked = await h.campaigns('campaign_billing_checked', {
+    sessionHash: t.sessionHash,
+    campaignId,
+  });
+  assert.equal(checked.ok, true);
+  assert.equal(checked.value.campaign.billingCheckedAt, h.m.now());
+  // The record of why it stopped, and who can still be resent to, stay as they were.
+  assert.deepEqual(
+    [checked.value.campaign.status, checked.value.campaign.reason, checked.value.campaign.resendable],
+    ['blocked', 'payment_method_required', before.resendable],
+  );
+
+  const intruder = await seedTenant(h.m, { name: 'z', phone: '7777', waba: '6666', sender: '96890000009' });
+  assert.equal(
+    (await h.campaigns('campaign_billing_checked', { sessionHash: intruder.sessionHash, campaignId })).reason,
+    'campaign_not_found',
+  );
+});
+
+test('only a broadcast Meta stopped for payment can be marked checked', async () => {
+  const { h, t, create } = await campaignTenant({ contacts: 1 });
+  const campaign = (await create({ scheduledAt: h.m.now() + 3600000 })).value.campaign;
+  const result = await h.campaigns('campaign_billing_checked', { sessionHash: t.sessionHash, campaignId: campaign.id });
+  assert.equal(result.reason, 'campaign_not_payment_stopped');
 });
 
 test('a new opt-out blocks every unclaimed campaign job and closes the send gate for an in-flight one', async () => {

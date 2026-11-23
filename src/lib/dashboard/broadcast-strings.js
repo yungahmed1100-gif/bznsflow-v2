@@ -28,6 +28,11 @@ export const BROADCAST_STRINGS = {
     resendOverLimit: 'That’s more than WhatsApp allows for this number today ({cap} left). Try again tomorrow.',
     resendChip: 'Resend',
     reason_contact_changed: 'Number changed since the broadcast',
+    feesCheck: 'Check payment method again',
+    feesNotFound:
+      'Meta doesn’t show a payment method on your Messaging account yet. Add one in Meta Billing & payments, then check again.',
+    feesFound:
+      'Meta shows a payment method on your Messaging account. You can resend to the people the broadcast didn’t reach.',
   },
   ar: {
     campReason_payment_method_required: 'توقفت: تحتاج Meta إلى وسيلة دفع صالحة في حساب المراسلة.',
@@ -55,10 +60,22 @@ export const BROADCAST_STRINGS = {
     resendOverLimit: 'العدد أكبر مما يسمح به واتساب لهذا الرقم اليوم (المتبقي {cap}). حاول غداً.',
     resendChip: 'إعادة إرسال',
     reason_contact_changed: 'تغيّر الرقم بعد الرسالة',
+    feesCheck: 'تحقّق من وسيلة الدفع مجدداً',
+    feesNotFound:
+      'لا تُظهر Meta وسيلة دفع في حساب المراسلة بعد. أضفها في «الفوترة والمدفوعات» في Meta، ثم تحقّق مجدداً.',
+    feesFound: 'تُظهر Meta وسيلة دفع في حساب المراسلة. يمكنك إعادة الإرسال إلى من لم تصلهم الرسالة.',
   },
 };
 /** Refusals of the resend action, merged into the dashboard's reasons. */
 export const BROADCAST_REASONS = {
-  en: { campaign_not_resendable: 'This broadcast can’t be resent until it has finished or stopped.' },
-  ar: { campaign_not_resendable: 'لا يمكن إعادة إرسال هذه الرسالة قبل أن تكتمل أو تتوقف.' },
+  en: {
+    campaign_not_resendable: 'This broadcast can’t be resent until it has finished or stopped.',
+    meta_connection_unavailable: 'Couldn’t reach Meta to check. Try again in a minute.',
+    campaign_not_payment_stopped: 'This broadcast wasn’t stopped for a payment problem.',
+  },
+  ar: {
+    campaign_not_resendable: 'لا يمكن إعادة إرسال هذه الرسالة قبل أن تكتمل أو تتوقف.',
+    meta_connection_unavailable: 'تعذّر الوصول إلى Meta للتحقق. حاول بعد دقيقة.',
+    campaign_not_payment_stopped: 'لم تتوقف هذه الرسالة الجماعية بسبب مشكلة في الدفع.',
+  },
 };

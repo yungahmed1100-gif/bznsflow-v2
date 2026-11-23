@@ -76,7 +76,13 @@ export function BroadcastView({ s, overview, onTimezone }) {
           {s.t('broadcastSendingOff')}
         </p>
       )}
-      {campaigns.data && <MetaBillingNotice s={s} campaigns={campaigns.data.items} />}
+      {campaigns.data && (
+        <MetaBillingNotice
+          s={s}
+          campaigns={campaigns.data.items}
+          onChecked={() => campaigns.refresh({ quiet: true })}
+        />
+      )}
       {error && (
         <p className="ld-inline-error" role="alert">
           {error}

@@ -36,6 +36,8 @@ export const campaignTables = {
     startedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
     cancelledAt: v.optional(v.number()),
+    // When the owner pressed "check again" after a payment stop and Meta showed a payment method.
+    billingCheckedAt: v.optional(v.number()),
     // Set on a broadcast the owner made by resending another one's failed recipients.
     resendOf: v.optional(v.id('blueCampaigns')),
   })

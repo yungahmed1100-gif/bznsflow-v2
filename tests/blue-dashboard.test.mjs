@@ -400,3 +400,62 @@ test('the resend action looks first, then sends; a lost header file is replaced 
   const off = await run({}, { options: { env: apiEnv } });
   assert.equal(off.res.body.reason, 'broadcast_unavailable', 'resending stays behind the broadcast switch');
 });
+
+test('check again asks Meta for the payment method and clears the payment alert only when Meta shows one', async () => {
+  const { sealToken, credentialContext } = await import('../api/_lib/layla/customer-meta.js');
+  const { PilotError } = await import('../api/_lib/layla/config.js');
+  const sessionHash = 'd'.repeat(64);
+  const integration = { id: 'i1', phone: '1', waba: '2', path: 'new_number' };
+  integration.credential = sealToken('synthetic-token-value', credentialContext(sessionHash, integration), apiEnv);
+  const run = async (funding, { detail = { id: 'c1', reason: 'payment_method_required' }, refuse } = {}) => {
+    const calls = [],
+      asked = [];
+    const res = response();
+    await createDashboardApi({
+      env: apiEnv,
+      store: async (operation, args) => {
+        calls.push([operation, args]);
+        if (operation === 'campaign_detail') {
+          if (refuse) throw new PilotError(refuse, 403);
+          return { campaign: detail };
+        }
+        return { campaign: { id: 'c1', billingCheckedAt: 1 } };
+      },
+      accounts: async () => ({ id: 'acct', email: 'a@example.com', draftHash: sessionHash }),
+      reviews: async () => ({ status: 'connected', integration }),
+      fundingSource: async args => {
+        asked.push(args.integration.waba);
+        return funding();
+      },
+    })(request('POST', { action: 'campaign_billing_check', campaignId: 'c1' }), res);
+    return { res, ops: calls.map(c => c[0]), calls, asked };
+  };
+  const args = { sessionHash, actorAccountId: 'acct', campaignId: 'c1' };
+  // Broadcast sending is off in apiEnv: checking reads Meta only, so it is not behind that switch.
+  const found = await run(async () => '555');
+  assert.deepEqual(found.asked, ['2']);
+  assert.equal(found.res.body.funded, true);
+  assert.deepEqual(found.calls, [
+    ['campaign_detail', args],
+    ['campaign_billing_checked', args],
+  ]);
+  assert.equal(found.res.body.campaign.billingCheckedAt, 1);
+
+  const missing = await run(async () => null);
+  assert.equal(missing.res.body.funded, false);
+  assert.deepEqual(missing.ops, ['campaign_detail'], 'nothing is cleared while Meta shows no payment method');
+
+  const down = await run(async () => {
+    throw new PilotError('meta_connection_unavailable', 502);
+  });
+  assert.equal(down.res.body.reason, 'meta_connection_unavailable');
+  assert.deepEqual(down.ops, ['campaign_detail']);
+
+  // Plan, role and ownership are settled in Convex before anyone's Meta account is read.
+  const employee = await run(async () => '555', { refuse: 'manager_required' });
+  assert.equal(employee.res.body.reason, 'manager_required');
+  assert.deepEqual(employee.asked, []);
+  const other = await run(async () => '555', { detail: { id: 'c1', reason: null } });
+  assert.equal(other.res.body.reason, 'campaign_not_payment_stopped');
+  assert.deepEqual(other.asked, []);
+});

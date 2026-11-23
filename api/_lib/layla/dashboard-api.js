@@ -12,6 +12,7 @@ import { credentialContext, openToken } from './customer-meta.js';
 import { dashboardStore } from './dashboard-store.js';
 import {
   fetchApprovedTemplates,
+  fetchFundingSource,
   fetchMessagingAllowance,
   fetchTemplateSample,
   storeTemplateSample,
@@ -96,6 +97,7 @@ export function createDashboardApi({
   templates = fetchApprovedTemplates,
   allowance = fetchMessagingAllowance,
   templateSample = fetchTemplateSample,
+  fundingSource = fetchFundingSource,
 } = {}) {
   async function graphContext(sessionHash) {
     const row = await reviews('get', { sessionHash });
@@ -347,6 +349,17 @@ export function createDashboardApi({
             confirm: true,
           }),
         );
+      }
+      // After a payment stop: the owner fixed billing in Meta and asks to check. Only reads Meta, so it is
+      // not behind the broadcast switch. The alert clears only when Meta shows a payment method.
+      if (action === 'campaign_billing_check') {
+        const args = { sessionHash, actorAccountId: account.id, campaignId: id(body.campaignId) || '' };
+        // Convex settles plan, role and ownership before anyone's Meta account is read.
+        const { campaign } = await store('campaign_detail', args);
+        if (campaign.reason !== 'payment_method_required') throw new PilotError('campaign_not_payment_stopped', 409);
+        const { integration, token, c } = await graphContext(sessionHash);
+        if (!(await fundingSource({ c, integration, token, fetcher }))) return reply({ funded: false });
+        return reply({ funded: true, ...(await store('campaign_billing_checked', args)) });
       }
       if (action === 'campaign_cancel')
         return reply(

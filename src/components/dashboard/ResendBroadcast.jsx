@@ -48,7 +48,9 @@ export function ResendBroadcast({ s, campaign, sendingEnabled, onClose, onSent }
   return (
     <Dialog s={s} title={s.t('resendTitle')} onClose={busy ? undefined : onClose}>
       <p>{s.t('resendIntro', { name: campaign.name })}</p>
-      {campaign.reason === 'payment_method_required' && <p className="ld-issue">{s.t('resendPaymentNote')}</p>}
+      {campaign.reason === 'payment_method_required' && !campaign.billingCheckedAt && (
+        <p className="ld-issue">{s.t('resendPaymentNote')}</p>
+      )}
       {!preview && !error && <LoadingDots label={s.t('loading')} compact />}
       {preview && (
         <>

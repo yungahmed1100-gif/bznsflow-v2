@@ -47,6 +47,17 @@ export async function fetchMessagingAllowance({ c, integration, token, fetcher }
   return messagingAllowance(result.whatsapp_business_manager_messaging_limit);
 }
 
+/**
+ * The payment source Meta has on the business's Messaging account (WABA `primary_funding_id`), or null
+ * when Meta shows none. It proves a card is attached, not that the bank will accept the next charge.
+ * @returns {Promise<string|null>}
+ */
+export async function fetchFundingSource({ c, integration, token, fetcher }) {
+  const result = await metaRequest(c, `${integration.waba}?fields=primary_funding_id`, token, fetcher);
+  const id = result.primary_funding_id;
+  return typeof id === 'string' && /^\d{1,40}$/.test(id) ? id : null;
+}
+
 export async function fetchTemplateState({ c, templateId, token, fetcher }) {
   if (!/^\d{1,30}$/.test(templateId || '')) throw new PilotError('template_not_sendable', 409);
   const result = await metaRequest(c, `${templateId}?fields=status,category`, token, fetcher);

@@ -104,6 +104,7 @@ async function publicCampaign(ctx, c, withRecipients = false) {
     startedAt: c.startedAt || null,
     completedAt: c.completedAt || null,
     cancelledAt: c.cancelledAt || null,
+    billingCheckedAt: c.billingCheckedAt || null,
     counts: await counts(ctx, c._id),
     resendOf: c.resendOf || null,
     // How many people did not get this broadcast and can still be sent it again.
@@ -379,6 +380,14 @@ export async function executeCampaigns(ctx, a, now = Date.now()) {
     await ctx.db.patch(c._id, { status: 'cancelled', cancelledAt: now, updatedAt: now });
     for (const r of await recipientsFor(ctx, c._id, 'pending'))
       await ctx.db.patch(r._id, { status: 'cancelled', updatedAt: now });
+    return ok({ campaign: await publicCampaign(ctx, await ctx.db.get(c._id)) });
+  }
+  // The API calls this only after Meta showed a payment method on the Messaging account.
+  if (a.operation === 'campaign_billing_checked') {
+    const c = await owned(ctx, a.campaignId, accountId, 'blueCampaigns');
+    if (!c) return fail('campaign_not_found');
+    if (c.reason !== 'payment_method_required') return fail('campaign_not_payment_stopped');
+    await ctx.db.patch(c._id, { billingCheckedAt: now, updatedAt: now });
     return ok({ campaign: await publicCampaign(ctx, await ctx.db.get(c._id)) });
   }
   return fail('invalid_action');

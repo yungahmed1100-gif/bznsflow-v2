@@ -10,6 +10,7 @@ export const CAMPAIGN_OPERATIONS = Object.freeze([
   'campaign_detail',
   'campaign_cancel',
   'campaign_resend',
+  'campaign_billing_checked',
   'campaign_media_upload_url',
   'campaign_media_register',
 ]);

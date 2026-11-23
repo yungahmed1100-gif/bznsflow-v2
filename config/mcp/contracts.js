@@ -510,6 +510,13 @@ for (const op of ['campaign_media_upload_url', 'campaign_media_register'])
     capability: 'broadcasts',
     description: "Add the header image, video or PDF in the website's broadcast wizard.",
   });
+// After Meta stops a broadcast for payment, the owner fixes billing in Meta and checks again on the website.
+add('dashboard', 'campaign_billing_check', 'read', {}, [], {
+  disposition: 'handoff',
+  path: '/layla/dashboard',
+  capability: 'broadcasts',
+  description: "After fixing the payment method in Meta Billing, press Check again on the website's Broadcast page.",
+});
 registerProductTools(add, { s, b, arr, obj, id, version });
 for (const tool of rows) {
   const key = tool.name.replace(/^bznsflow_/, '');
